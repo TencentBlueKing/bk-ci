@@ -28,6 +28,7 @@
 package com.tencent.devops.ai.service
 
 import com.tencent.devops.ai.dao.AgentSysPromptDao
+import com.tencent.devops.ai.pojo.AgentSysPromptVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -113,10 +114,24 @@ class AgentSysPromptService @Autowired constructor(
     }
 
     /**
+     * 运营侧：列出全部智能体系统提示词（含说明）。
+     */
+    fun listAllAgentSysPromptInfos(): List<AgentSysPromptVO> {
+        return dao.listAll(dslContext).map { record ->
+            AgentSysPromptVO(
+                agentName = record.agentName,
+                promptTemplate = record.promptTemplate,
+                description = record.description,
+                enabled = record.enabled
+            )
+        }
+    }
+
+    /**
      * 运营侧：列出全部智能体系统提示词（agentName -> promptTemplate）。
      */
     fun listAllAgentSysPrompts(): Map<String, String> {
-        return dao.listAll(dslContext).associateBy({ it.agentName }, { it.promptTemplate })
+        return listAllAgentSysPromptInfos().associate { it.agentName to it.promptTemplate }
     }
 
     /**

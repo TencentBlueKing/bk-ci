@@ -28,6 +28,7 @@
 package com.tencent.devops.ai.api.op
 
 import com.tencent.devops.ai.pojo.AgentSysPromptCreateRequest
+import com.tencent.devops.ai.pojo.AgentSysPromptVO
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -51,7 +52,7 @@ interface OpAiAgentSysPromptResource {
     @Operation(summary = "获取智能体系统提示词列表")
     @GET
     @Path("/")
-    fun list(): Result<Map<String, String>>
+    fun list(): Result<List<AgentSysPromptVO>>
 
     @Operation(summary = "创建智能体系统提示词")
     @POST
