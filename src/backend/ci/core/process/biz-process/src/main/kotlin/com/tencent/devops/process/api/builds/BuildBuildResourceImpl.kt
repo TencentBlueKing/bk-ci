@@ -33,8 +33,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.engine.service.MutexGroupQueryService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
@@ -46,7 +48,8 @@ class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService,
     private val vMBuildService: EngineVMBuildService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val mutexGroupQueryService: MutexGroupQueryService
 ) : BuildBuildResource {
 
     @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
@@ -146,5 +149,18 @@ class BuildBuildResourceImpl @Autowired constructor(
             taskId = taskId
         )
         return Result(task?.taskParams ?: mapOf())
+    }
+
+    @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
+    override fun getMutexGroupTasks(
+        projectId: String,
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>> {
+        return Result(
+            data = mutexGroupQueryService.queryMutexGroupTasks(
+                projectId = projectId,
+                mutexGroupName = mutexGroupName
+            )
+        )
     }
 }

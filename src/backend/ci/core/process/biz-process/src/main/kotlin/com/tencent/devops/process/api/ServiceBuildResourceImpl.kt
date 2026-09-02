@@ -51,9 +51,11 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
+import com.tencent.devops.process.engine.service.MutexGroupQueryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -63,6 +65,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -86,7 +89,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val containerBuildRecordService: ContainerBuildRecordService
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val mutexGroupQueryService: MutexGroupQueryService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : ServiceBuildResource {
 
     companion object {
@@ -1041,6 +1046,19 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount
+            )
+        )
+    }
+
+    override fun getMutexGroupTasks(
+        userId: String,
+        projectId: String,
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>> {
+        return Result(
+            data = mutexGroupQueryService.queryMutexGroupTasks(
+                projectId = projectId,
+                mutexGroupName = mutexGroupName
             )
         )
     }
