@@ -327,6 +327,12 @@ spring:
       - index: 88
         name: T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD
         databaseShardingStrategy: SHARDING
+      - index: 89
+        name: T_PIPELINE_BUILD_VAR_OVERFLOW
+        databaseShardingStrategy: SHARDING
+      - index: 90
+        name: T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:

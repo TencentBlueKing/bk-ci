@@ -473,8 +473,9 @@ class BuildStartControl @Autowired constructor(
                     varValue = buildNo
                 )
 
+                // 这里只为刷新 BUILD_NO / 推荐版本号，无需把大启动参数引用解析为真实值（updateBuildParameters 会再次引用化）
                 var parameters = pipelineRuntimeService.getBuildParametersFromStartup(
-                    projectId = projectId, buildId = buildId
+                    projectId = projectId, buildId = buildId, resolveOverflow = false
                 )
                 val startParamMap = mutableMapOf<String, BuildParameters>()
                 parameters.associateByTo(startParamMap) { it.key }

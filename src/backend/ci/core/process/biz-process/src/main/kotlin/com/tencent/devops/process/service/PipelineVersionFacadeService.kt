@@ -105,14 +105,13 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     companion object {
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         fun getReleaseBranchName(pipelineId: String, version: Int): String =
             "$PAC_BRANCH_PREFIX$pipelineId-$version"
-
     }
 
     /**

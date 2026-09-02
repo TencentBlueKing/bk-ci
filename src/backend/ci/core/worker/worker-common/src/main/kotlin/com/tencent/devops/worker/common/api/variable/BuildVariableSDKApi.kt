@@ -7,7 +7,7 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
+    10| *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -25,35 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.worker.common.api.variable
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.ExpressionOutput
-import com.tencent.devops.common.expression.expression.IFunctionInfo
-import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 /**
- * 表达式替换上下文
+ * Worker 按需拉取构建变量真实值（大变量溢出表）。
  */
-@Schema(title = "表达式替换参数")
-data class ExprReplacementOptions @JvmOverloads constructor(
-    @get:Schema(title = "环境变量", required = true)
-    val contextMap: Map<String, String>,
-    @get:Schema(title = "值是否能不存在", required = true)
-    val contextNotNull: Boolean = false,
-    @get:Schema(title = "表达式上下文", required = true)
-    val contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
-    val functions: Iterable<IFunctionInfo>? = null,
-    val output: ExpressionOutput? = null,
+interface BuildVariableSDKApi : WorkerRestApiSDK {
     /**
-     * "溢出"变量名集合（对应主表 VALUE 仅存摘要的大变量）。
-     * 仅 ${{ xxx }} 表达式语法可以解析其完整值。
+     * @param pipelineId 流水线 ID（写入请求头）
+     * @param varName 变量名
      */
-    val overflowKeys: Set<String> = emptySet(),
-    /**
-     * 当表达式访问溢出变量时调用，按需拉取完整值。
-     * 如果没有溢出变量，可以为 null。
-     */
-    val overflowLoader: ((String) -> String?)? = null
-)
+    fun getBuildVariableValue(pipelineId: String, varName: String): Result<String?>
+}

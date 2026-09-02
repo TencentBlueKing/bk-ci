@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.process.service.PipelineVarOverflowConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -56,14 +57,16 @@ class PipelineModelConfigure {
         @Autowired stageCommonSettingConfig: StageCommonSettingConfig,
         @Autowired jobCommonSettingConfig: JobCommonSettingConfig,
         @Autowired taskCommonSettingConfig: TaskCommonSettingConfig,
-        @Autowired elementBizPluginServices: List<IElementBizPluginService>
+        @Autowired elementBizPluginServices: List<IElementBizPluginService>,
+        @Autowired pipelineVarOverflowConfig: PipelineVarOverflowConfig
     ) = DefaultModelCheckPlugin(
         client = client,
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
         taskCommonSettingConfig = taskCommonSettingConfig,
-        elementBizPluginServices = elementBizPluginServices
+        elementBizPluginServices = elementBizPluginServices,
+        pipelineVarOverflowConfig = pipelineVarOverflowConfig
     )
 
     @Bean
