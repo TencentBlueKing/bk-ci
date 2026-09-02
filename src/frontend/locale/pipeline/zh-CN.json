@@ -2372,6 +2372,7 @@
     "remove": "移除",
     "hasRefNumTips": "变量已被引用，无法移除变量组",
     "hasRefNumDeleteTips": "变量已被引用，无法删除变量组",
+    "hasRefVarDeleteTips": "变量已被引用，不能删除",
     "noViewPermissionCopyTips": "无变量组权限，不可复制",
     "noViewPermissionExportTips": "暂无变量组权限，不可导出",
     "viewGroup": "查看变量组",
