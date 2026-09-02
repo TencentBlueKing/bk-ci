@@ -6,6 +6,7 @@
     "typeCodelib": "{0}のコードリポジトリ",
     "link": "リンク",
     "linkRepo": "{0}のリポジトリをリンク",
+    "editRepo": "{0}リポジトリを編集",
     "codelibDesc": "コードリポジトリサービスは、プロジェクトの既存の SVN および GIT エンジニアリングをCIにリンクします。これはパイプラインの原材料として使用されます。",
     "laodingTitle": "リポジトリリストを読み込んでいます",
     "aliasNamePlaceholder": "別名を入力し、Enterキーを押して検索してください",

@@ -13,6 +13,7 @@
         >
             <bk-radio-group
                 v-model="codelib.authType"
+                :disabled="enablePac && isEditMode"
             >
                 <bk-radio
                     class="mr20"
@@ -51,7 +52,7 @@
                     :clearable="false"
                 >
                     <bk-option
-                        v-for="user in oauthUserList"
+                        v-for="user in oauthUserOptions"
                         :key="user.username"
                         :id="user.username"
                         :name="user.username"
@@ -65,12 +66,19 @@
                 property="url"
                 error-display-type="normal"
             >
+                <bk-input
+                    v-if="usePacUrlInput"
+                    v-model.trim="codelib.url"
+                    :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                >
+                </bk-input>
                 <bk-select
+                    v-else
                     v-model="codelib.url"
                     v-bind="selectComBindData"
                 >
                     <bk-option
-                        v-for="option in oAuth.project"
+                        v-for="option in oauthProjectList"
                         :key="option.httpUrl"
                         :id="option.httpUrl"
                         :name="option.httpUrl"
@@ -87,6 +95,7 @@
                 <bk-input
                     v-model.trim="codelib.aliasName"
                     :maxlength="60"
+                    :disabled="enablePac"
                     :placeholder="$t('codelib.aliasNameEnter')"
                 >
                 </bk-input>

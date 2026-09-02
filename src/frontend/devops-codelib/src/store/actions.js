@@ -309,11 +309,12 @@ const actions = {
                 oAuth: res,
                 type
             })
-            commit(DIALOG_LOADING_MUTATION, false)
         } catch (e) {
             commit(FETCH_ERROR, e, {
                 root: true
             })
+        } finally {
+            commit(DIALOG_LOADING_MUTATION, false)
         }
     },
     /**
@@ -351,11 +352,12 @@ const actions = {
                 oAuth: res,
                 type
             })
-            commit(DIALOG_LOADING_MUTATION, false)
         } catch (e) {
             commit(FETCH_ERROR, e, {
                 root: true
             })
+        } finally {
+            commit(DIALOG_LOADING_MUTATION, false)
         }
     },
     /**
