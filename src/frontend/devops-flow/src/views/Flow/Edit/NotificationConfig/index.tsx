@@ -26,6 +26,8 @@ export default defineComponent({
     // Notification data (from flowSetting)
     const successSubscriptionList = ref<Subscription[]>([])
     const failSubscriptionList = ref<Subscription[]>([])
+    const cancelSubscriptionList = ref<Subscription[]>([])
+    const publishSubscriptionList = ref<Subscription[]>([])
 
 
     // Sideslider state
@@ -43,6 +45,8 @@ export default defineComponent({
         if (setting) {
           successSubscriptionList.value = setting.successSubscriptionList || []
           failSubscriptionList.value = setting.failSubscriptionList || []
+          cancelSubscriptionList.value = setting.cancelSubscriptionList || []
+          publishSubscriptionList.value = setting.publishSubscriptionList || []
         }
       },
       { immediate: true },
@@ -56,6 +60,8 @@ export default defineComponent({
         ...flowSetting.value,
         successSubscriptionList: successSubscriptionList.value,
         failSubscriptionList: failSubscriptionList.value,
+        cancelSubscriptionList: cancelSubscriptionList.value,
+        publishSubscriptionList: publishSubscriptionList.value,
       })
     }
 
@@ -70,6 +76,16 @@ export default defineComponent({
         type: 'failSubscriptionList',
         name: t('flow.content.runFailed'),
         notifications: failSubscriptionList.value,
+      },
+      {
+        type: 'cancelSubscriptionList',
+        name: t('flow.content.runCanceled'),
+        notifications: cancelSubscriptionList.value,
+      },
+      {
+        type: 'publishSubscriptionList',
+        name: t('flow.content.newVersionPublished'),
+        notifications: publishSubscriptionList.value,
       },
     ])
 
@@ -87,6 +103,10 @@ export default defineComponent({
           return successSubscriptionList.value
         case 'failSubscriptionList':
           return failSubscriptionList.value
+        case 'cancelSubscriptionList':
+          return cancelSubscriptionList.value
+        case 'publishSubscriptionList':
+          return publishSubscriptionList.value
         default:
           return []
       }
@@ -96,6 +116,32 @@ export default defineComponent({
     const getNotifyTypeName = (type: string): string => {
       const item = notifyList.value.find((n) => n.type === type)
       return item?.name || ''
+    }
+
+    // Get default notification content by notify type (for new notification)
+    const getDefaultContent = (type: string): string => {
+      switch (type) {
+        case 'successSubscriptionList':
+          return t('flow.content.defaultRunSuccess')
+        case 'failSubscriptionList':
+          return t('flow.content.defaultRunFailed')
+        case 'cancelSubscriptionList':
+          return t('flow.content.defaultRunCanceled')
+        case 'publishSubscriptionList':
+          return t('flow.content.defaultNewVersionPublished')
+        default:
+          return ''
+      }
+    }
+
+    // Get default notification receivers by notify type (for new notification)
+    const getDefaultUsers = (type: string): string => {
+      switch (type) {
+        case 'publishSubscriptionList':
+          return '${{ci.pipeline_owner}}'
+        default:
+          return '${{ci.actor}}'
+      }
     }
 
     // Handle add notification
@@ -173,6 +219,8 @@ export default defineComponent({
           notification={currentNotification.value}
           notifyTypeName={currentNotifyTypeName.value}
           isEdit={isEditMode.value}
+          defaultContent={getDefaultContent(currentNotifyType.value)}
+          defaultUsers={getDefaultUsers(currentNotifyType.value)}
           onUpdate:visible={(val: boolean) => {
             sidesliderVisible.value = val
           }}
