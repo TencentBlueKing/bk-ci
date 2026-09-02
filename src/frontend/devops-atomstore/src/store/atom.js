@@ -256,6 +256,13 @@ export const actions = {
     },
 
     /**
+     * 结束分支测试版本测试
+     */
+    endAtomBranchTest ({ commit }, { atomId }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/${atomId}/test/version/end`)
+    },
+
+    /**
      * 流水线插件已安装的项目
      */
     requestRelativeProject ({ commit }, atomCode) {
@@ -372,6 +379,13 @@ export const actions = {
      */
     requestVersionList ({ commit }, params) {
         return vue.$ajax.get(`${prefix}/user/market/atom/version/list`, { params })
+    },
+
+    /**
+     * 校验插件是否可以新增主版本
+     */
+    requestCanAddMainVersion ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/desk/atom/release/check/canAddMainVersion?atomCode=${atomCode}`)
     },
 
     /**

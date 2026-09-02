@@ -12,8 +12,12 @@
                 :version-list="versionList"
                 :has-promission="hasPromission"
                 :pagination="pagination"
+                :version-type="versionType"
+                :loading="listLoading"
+                :can-add-main-version="canAddMainVersion"
                 @pageChanged="pageChanged"
                 @pageLimitChanged="pageLimitChanged"
+                @versionTypeChanged="versionTypeChanged"
             ></component>
         </main>
     </article>
@@ -36,7 +40,10 @@
             return {
                 hasPromission: false,
                 isLoading: true,
+                listLoading: false,
                 versionList: [],
+                versionType: 'FORMAL',
+                canAddMainVersion: true,
                 pagination: {
                     current: 1,
                     count: 1,
@@ -51,6 +58,15 @@
             })
         },
 
+        watch: {
+            'detail.atomCode': {
+                immediate: true,
+                handler (atomCode) {
+                    if (atomCode) this.checkCanAddMainVersion()
+                }
+            }
+        },
+
         created () {
             if (this.$route.params.type === 'template') {
                 this.getTemplateUserValidate()
@@ -63,7 +79,8 @@
                 'requestVersionList',
                 'requestImageVersionList',
                 'templateUserValidate',
-                'requestTemplateReleasedList'
+                'requestTemplateReleasedList',
+                'requestCanAddMainVersion'
             ]),
 
             async getTemplateUserValidate () {
@@ -82,17 +99,37 @@
 
                 this.pagination.current = 1
                 this.pagination.limit = currentLimit
-                this.getVersionList()
+                this.getVersionList(false)
             },
 
             pageChanged (page) {
                 if (page) this.pagination.current = page
-                this.getVersionList()
+                this.getVersionList(false)
             },
 
-            async getVersionList () {
+            versionTypeChanged (versionType) {
+                this.versionType = versionType
+                this.pagination.current = 1
+                this.getVersionList(false)
+            },
+
+            checkCanAddMainVersion () {
+                const atomCode = this.detail?.atomCode
+                if (!atomCode) return
+                this.requestCanAddMainVersion({ atomCode }).then((res) => {
+                    this.canAddMainVersion = res?.canAddMainVersion ?? res
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                })
+            },
+
+            async getVersionList (showLoading = true) {
                 try {
-                    this.isLoading = true
+                    if (showLoading) {
+                        this.isLoading = true
+                    } else {
+                        this.listLoading = true
+                    }
                     const type = this.$route.params.type
                     const apiMethodMap = {
                         atom: this.requestVersionList,
@@ -102,7 +139,8 @@
                     const res = await apiMethodMap[type]({
                         [`${type}Code`]: this.detail[`${type}Code`],
                         page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        pageSize: this.pagination.limit,
+                        ...(type === 'atom' ? { versionType: this.versionType } : {})
                     })
                     this.versionList = res.records || []
                     this.pagination.count = res.count
@@ -112,6 +150,7 @@
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 } finally {
                     this.isLoading = false
+                    this.listLoading = false
                 }
             },
            
