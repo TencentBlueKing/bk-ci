@@ -60,7 +60,11 @@ object ProjectFavorHelper {
                     val result = when (sortType) {
                         ProjectSortType.ENGLISH_NAME ->
                             left.englishName.compareTo(right.englishName, ignoreCase = true)
-                        else -> nameCollator.compare(left.projectName, right.projectName)
+                        else -> ProjectNamePinyinHelper.compare(
+                            left = left.projectName,
+                            right = right.projectName,
+                            collator = nameCollator
+                        )
                     }
                     if (descending) -result else result
                 }
