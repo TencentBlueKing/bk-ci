@@ -49,16 +49,16 @@
                     name: 'TemplateManageList'
                 },
                 {
+                    label: vm.proxy.$t('publicVar.publicVariable'),
+                    name: 'PublicVarList'
+                },
+                {
                     label: vm.proxy.$t('pipelineDataBoard'),
                     name: 'PipelineDataBoard'
                 },
                 {
                     label: vm.proxy.$t('pipelineRealTimeMonitor'),
                     name: 'realTimeMonitor'
-                },
-                {
-                    label: vm.proxy.$t('publicVar.publicVariable'),
-                    name: 'PublicVarList'
                 }
             ]
 
