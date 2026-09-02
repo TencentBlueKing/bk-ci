@@ -100,12 +100,31 @@
                                         class="value-operate-row"
                                         style="justify-content: space-between;"
                                     >
-                                        <div class="param-value">
+                                        <div
+                                            :class="['param-value', {
+                                                'is-long-value': param.isLongValue
+                                            }]"
+                                        >
                                             <span
                                                 v-if="param.readOnly"
                                                 class="read-only"
                                             >{{ $t('readonlyParams') }}</span>
+                                            <template v-if="param.isLongValue">
+                                                <span class="default-value long-value-placeholder">
+                                                    {{ longValuePlaceholder(param) }}
+                                                </span>
+                                                <bk-button
+                                                    v-if="param.longValueViewable !== false"
+                                                    text
+                                                    size="small"
+                                                    class="view-long-value-btn"
+                                                    @click.stop="handleViewLongValue(param)"
+                                                >
+                                                    {{ $t('details.loadParamValue') }}
+                                                </bk-button>
+                                            </template>
                                             <span
+                                                v-else
                                                 :class="['default-value', {
                                                     'param-deleted': param.isDeleted
                                                 }]"
@@ -204,6 +223,10 @@
                 type: Function,
                 default: () => {}
             },
+            handleViewLongValue: {
+                type: Function,
+                default: () => {}
+            },
             editable: {
                 type: Boolean,
                 default: true
@@ -246,6 +269,12 @@
                 this.isShow = !this.isShow
             },
           
+            longValuePlaceholder (param) {
+                if (param.overflowLength != null) {
+                    return this.$t('details.longParamValueHiddenWithLength', [param.overflowLength])
+                }
+                return this.$t('details.longParamValueHidden')
+            },
             triggerSort (event, key, index) {
                 const { element, newIndex, oldIndex } = event?.moved
                 const paramList = this.listMap[key]
@@ -488,10 +517,21 @@
                         .param-value {
                             display: flex;
                             align-items: center;
+                            flex: 1;
+                            min-width: 0;
                             .default-value {
                                 color: #979BA5;
-                                max-width: 286px;
-                                @include ellipsis();
+                                min-width: 0;
+                                flex: 1;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                            }
+                            &.is-long-value {
+                                .view-long-value-btn {
+                                    flex-shrink: 0;
+                                    margin-left: 8px;
+                                }
                             }
                             .read-only {
                                 flex-shrink: 0;

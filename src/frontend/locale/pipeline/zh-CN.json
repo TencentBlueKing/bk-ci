@@ -394,10 +394,7 @@
     "concurrentMaxConcurrency": "最大可并发数",
     "concurrentTimeout": "超限时排队，排队超时时间",
     "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
-    "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
-    "whenVariableExceedsLength": "流水线变量值超长(>4K)时",
-    "clearTheValue": "值清空，继续运行",
-    "errorAndHalt": "报错，终止运行"
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
   },
   "template": {
     "addTemplate": "新建模板",
@@ -932,6 +929,14 @@
     "outputs": "产出物",
     "codeRecords": "代码变更",
     "startupParams": "启动参数",
+    "longParamValueHidden": "超长变量值默认隐藏",
+    "longParamValueHiddenWithLength": "超长变量值默认隐藏（{0} 字符）",
+    "longParamValueLoaded": "超长变量值已加载",
+    "longParamValueLoadFailed": "超长变量值加载失败",
+    "longParamValueEntered": "已输入超长变量值（{0} 字符）",
+    "longParamUnsavedTitle": "确认关闭参数详情",
+    "longParamUnsavedTips": "当前修改尚未保存，关闭后修改不会生效，并将恢复为原来的值。",
+    "loadParamValue": "查看变量值",
     "canceller": "取消人",
     "executor": "执行人",
     "trigger": "触发人",
@@ -1487,8 +1492,7 @@
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
     "minutes": "分钟",
-    "customConditionExpPlaceholder": "如：variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'",
-    "paramLengthLimitTips": "流水线变量［{0}］长度［{1}］超过限制［{2}］"
+    "customConditionExpPlaceholder": "如：variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
