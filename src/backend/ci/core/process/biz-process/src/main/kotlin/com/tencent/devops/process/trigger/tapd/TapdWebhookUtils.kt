@@ -61,7 +61,6 @@ import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildEventDesc
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildObjectUrl
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildPipelineBuildMsg
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildStartParams
-import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.extractHost
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getTitle
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
@@ -69,15 +68,13 @@ import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
-import org.slf4j.LoggerFactory
-import java.net.URI
 
 /**
  * TAPD Webhook 工具类
  *
  * 汇集 TAPD webhook 请求与触发过程中所需的纯计算工具：
  * - body 字段读取（[getHookField]）
- * - 派生字段计算（[buildObjectUrl] / [extractHost] / [getTitle]）
+ * - 派生字段计算（[buildObjectUrl] / [getTitle]）
  * - 启动参数组装（[buildStartParams]）
  * - 事件描述组装（[buildEventDesc]）
  * - 触发消息生成（[buildPipelineBuildMsg]）
@@ -88,8 +85,6 @@ import java.net.URI
  */
 @Suppress("TooManyFunctions")
 object TapdWebhookUtils {
-
-    private val logger = LoggerFactory.getLogger(TapdWebhookUtils::class.java)
 
     /**
      * 从 body 中读取字段
@@ -202,12 +197,12 @@ object TapdWebhookUtils {
      * 构造工单详情页 URL（仅 STORY / BUG 提供跳转，其它事件类型返回空串）
      */
     fun buildObjectUrl(
-        tapdHost: String,
+        tapdWebUrl: String,
         workspaceId: String,
         objectId: String,
         eventType: TapdEventType
     ): String {
-        if (tapdHost.isBlank() || workspaceId.isBlank() || objectId.isBlank()) {
+        if (tapdWebUrl.isBlank() || workspaceId.isBlank() || objectId.isBlank()) {
             return ""
         }
         val pattern = when (eventType) {
@@ -215,29 +210,7 @@ object TapdWebhookUtils {
             TapdEventType.BUG -> TAPD_BUG_URL_PATTERN
             else -> return ""
         }
-        return pattern.format(tapdHost.trimEnd('/'), workspaceId, objectId)
-    }
-
-    /**
-     * 从 TAPD referer 中提取 host（保留 scheme 与端口）
-     */
-    fun extractHost(referer: String?): String {
-        if (referer.isNullOrBlank()) {
-            return ""
-        }
-        return try {
-            val uri = URI(referer)
-            val scheme = uri.scheme
-            val host = uri.host
-            when {
-                scheme.isNullOrBlank() || host.isNullOrBlank() -> ""
-                uri.port > 0 -> "$scheme://$host:${uri.port}"
-                else -> "$scheme://$host"
-            }
-        } catch (ignored: Exception) {
-            logger.warn("fail to parse tapd referer|referer=$referer", ignored)
-            ""
-        }
+        return pattern.format(tapdWebUrl.trimEnd('/'), workspaceId, objectId)
     }
 
     private fun buildPipelineBuildMsg(

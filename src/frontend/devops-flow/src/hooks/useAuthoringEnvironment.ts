@@ -49,12 +49,6 @@ export interface UseAuthoringEnvironmentOptions {
   autoLoadEnvList?: boolean
 
   /**
-   * Environment type for filtering
-   * @default 'CREATE'
-   */
-  envType?: string
-
-  /**
    * Auto load node list when environment changes
    * @default true
    */
@@ -90,7 +84,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     projectId: optionProjectId,
     flowId: optionFlowId,
     autoLoadEnvList = false,
-    envType = 'CREATE',
     resetOnUnmount = false,
   } = options
 
@@ -136,10 +129,9 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
 
   /**
    * Load environment list
-   * @param customEnvType - Optional custom environment type
    */
-  const loadEnvList = async (customEnvType?: string): Promise<void> => {
-    await store.loadEnvList(projectId.value, customEnvType || envType)
+  const loadEnvList = async (createMode: boolean = true): Promise<void> => {
+    await store.loadEnvList(projectId.value, createMode)
   }
 
   /**
@@ -153,8 +145,8 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   /**
    * Refresh environment list
    */
-  const refreshEnvList = async (): Promise<void> => {
-    await store.refreshEnvList(projectId.value, envType)
+  const refreshEnvList = async (createMode: boolean = true): Promise<void> => {
+    await store.refreshEnvList(projectId.value, createMode)
   }
 
   /**
@@ -196,12 +188,16 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     }
   })
 
-  function goEnvironment(envHashId?: string) {
+  function getEnvironmentUrl(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
     if (envHashId) {
       url += `/creative-stream/env/ALL/${envHashId}/node`
     }
-    window.open(url, '_blank')
+    return url
+  }
+
+  function goEnvironment(envHashId?: string) {
+    window.open(getEnvironmentUrl(envHashId), '_blank')
   }
 
   // ============ Return ============
@@ -232,6 +228,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     refreshNodeList,
     getEnvByHashId,
     resetState,
+    getEnvironmentUrl,
     goEnvironment,
   }
 }

@@ -22,6 +22,7 @@ export interface AuthoringEnvItem {
   desc: string
   envType: string
   envNodeType: string
+  os?: string
   nodeCount: number
   tags: Array<{
     tagKeyId: number
@@ -50,6 +51,17 @@ export interface AuthoringEnvItem {
   canDelete: boolean
   canUse: boolean
   projectName: string
+}
+
+export const OS_LABEL_MAP: Record<string, string> = {
+  LINUX: 'Linux',
+  MACOS: 'macOS',
+  WINDOWS: 'Windows',
+}
+
+export function getEnvOsDisplayName(os?: string): string {
+  if (!os) return ''
+  return OS_LABEL_MAP[os] || os
 }
 
 /**
@@ -127,7 +139,7 @@ export interface EnvSelectItem extends AuthoringEnvItem {
  */
 export interface FetchEnvListParams {
   projectId: string
-  envType?: string
+  createMode?: boolean
 }
 
 /**
@@ -148,10 +160,10 @@ export interface FetchNodeListParams {
 export async function fetchAuthoringEnvList(
   params: FetchEnvListParams,
 ): Promise<AuthoringEnvItem[]> {
-  const { projectId, envType = 'CREATE' } = params
+  const { projectId, createMode = true } = params
   try {
     const res = await get<AuthoringEnvItem[]>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}?envType=${envType}`,
+      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}?createMode=${createMode}`,
     )
 
     return res

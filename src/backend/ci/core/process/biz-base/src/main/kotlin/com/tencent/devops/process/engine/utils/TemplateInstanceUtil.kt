@@ -79,7 +79,7 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
 
@@ -93,7 +93,8 @@ object TemplateInstanceUtil {
             templateId = templateResource.templateId,
             srcTemplateId = templateResource.srcTemplateId,
             template = template,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = overrideTemplateField,
+            publicVarGroups = templateModel.publicVarGroups
         )
     }
 
@@ -168,7 +169,7 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
     }

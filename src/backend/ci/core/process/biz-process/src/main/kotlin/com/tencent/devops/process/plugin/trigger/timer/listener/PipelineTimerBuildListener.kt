@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -156,6 +157,15 @@ class PipelineTimerBuildListener @Autowired constructor(
                 }
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
+            } catch (e: PermissionForbiddenException) {
+                logger.warn("[$pipelineId]|TimerTrigger no permission|event=$this|msg=${e.message}")
+                // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
+                saveTriggerEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    reasonDetail = PipelineTriggerFailedMsg(e.defaultMessage ?: e.message ?: "")
+                )
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
                 // 保存触发失败事件
