@@ -25,7 +25,7 @@
                 </template>
             </router-link>
 
-            <template v-if="showProjectList">
+            <template v-if="!showProjectList">
                 <bk-select
                     ref="projectDropdown"
                     class="bkdevops-project-selector"
@@ -39,7 +39,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
-                    :popover-width="250"
+                    :popover-width="318"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -51,7 +51,7 @@
                             <div class="option-item">
                                 <div
                                     class="project-name"
-                                    v-bk-tooltips="{ content: item.projectName, allowHTML: false, delay: [300, 0] }"
+                                    :title="item.projectName"
                                 >
                                     <span class="project-name-text">{{ item.projectName }}</span>
                                     <span
@@ -69,7 +69,7 @@
                                             'is-selected': projectId === item.projectCode,
                                             'is-disabled': !item.managePermission
                                         }"
-                                        v-bk-tooltips="$t('userManage')"
+                                        :title="$t('userManage')"
                                         @click.stop.prevent="goToUserManage(item)"
                                     >
                                         <img
@@ -112,6 +112,18 @@
                                     class="mr5"
                                 />
                                 <span class="text">{{ $t('joinProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="goToPm"
+                            >
+                                <icon
+                                    name="fenzu"
+                                    size="14"
+                                    class="mr5"
+                                />
+                                <span class="text">{{ $t('projectManage') }}</span>
                             </span>
                         </div>
                     </template>
