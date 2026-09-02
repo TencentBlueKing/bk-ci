@@ -68,7 +68,12 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
     private val assignDbFusibleSwitch: Boolean = true
 
     @Value("\${sharding.database.dataTag.modules:#{null}}")
-    private val dataTagModulesConfig: String = SystemModuleEnum.PROCESS.name
+    private val dataTagModulesConfig: String? = SystemModuleEnum.PROCESS.name
+
+    // 配置项在启动后不再变化，解析一次即可，避免每次分配规则都做字符串切割
+    private val dataTagModules: List<String> by lazy {
+        dataTagModulesConfig?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
+    }
 
     /**
      * 为项目分配分片路由规则
@@ -126,9 +131,7 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             DEFAULT_DATA_SOURCE_NAME
         }
         // 根据模块查找还有空余容量的数据源
-        val dataTagModules = dataTagModulesConfig.split(",")
         val dbDataTag = getDbDataTag(
-            dataTagModules = dataTagModules,
             moduleCode = moduleCode,
             ruleType = ruleType,
             dataTag = dataTag
@@ -172,13 +175,11 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             routingName = routingName,
             routingRule = validDataSourceName
         )
-        // 保存db分片规则
-        shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, dbShardingRoutingRule)
-        return dbShardingRoutingRule
+        // 保存db分片规则，并发分配时以已入库的规则为准，避免同一项目被路由到不同的数据源
+        return shardingRoutingRuleService.addShardingRoutingRuleIfAbsent(SYSTEM, dbShardingRoutingRule)
     }
 
     private fun getDbDataTag(
-        dataTagModules: List<String>,
         moduleCode: SystemModuleEnum,
         ruleType: ShardingRuleTypeEnum,
         dataTag: String?
@@ -212,8 +213,7 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             routingName = routingName,
             routingRule = validTableName
         )
-        // 保存数据库表分片规则
-        shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, tableShardingRoutingRule)
-        return tableShardingRoutingRule
+        // 保存数据库表分片规则，并发分配时以已入库的规则为准，避免同一项目被路由到不同的分表
+        return shardingRoutingRuleService.addShardingRoutingRuleIfAbsent(SYSTEM, tableShardingRoutingRule)
     }
 }
