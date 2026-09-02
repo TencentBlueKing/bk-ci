@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -19,12 +20,12 @@ func TestSwap_Name(t *testing.T) {
 
 func TestSwap_Gather_Success(t *testing.T) {
 	s := &Swap{
-		swapMemFn: func() (*mem.SwapMemoryStat, error) {
+		swapMemFn: func(_ context.Context) (*mem.SwapMemoryStat, error) {
 			return &mem.SwapMemoryStat{Total: 2048, Used: 1024, Free: 1024, UsedPercent: 50, Sin: 10, Sout: 20}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := s.Gather()
+	metrics, err := s.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,15 +44,15 @@ func TestSwap_Gather_Success(t *testing.T) {
 
 func TestSwap_Gather_Error(t *testing.T) {
 	sentinel := errors.New("boom")
-	s := &Swap{swapMemFn: func() (*mem.SwapMemoryStat, error) { return nil, sentinel }, nowFn: time.Now}
-	if _, err := s.Gather(); err == nil || !errors.Is(err, sentinel) {
+	s := &Swap{swapMemFn: func(_ context.Context) (*mem.SwapMemoryStat, error) { return nil, sentinel }, nowFn: time.Now}
+	if _, err := s.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }
 
 func TestSwap_Gather_Nil(t *testing.T) {
-	s := &Swap{swapMemFn: func() (*mem.SwapMemoryStat, error) { return nil, nil }, nowFn: time.Now}
-	if _, err := s.Gather(); err == nil {
+	s := &Swap{swapMemFn: func(_ context.Context) (*mem.SwapMemoryStat, error) { return nil, nil }, nowFn: time.Now}
+	if _, err := s.Gather(context.Background()); err == nil {
 		t.Error("nil stat should error")
 	}
 }

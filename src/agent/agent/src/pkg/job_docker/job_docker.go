@@ -56,6 +56,16 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 		args = append(args, "--user", strings.TrimSpace(o.User))
 	}
 
+	// --cpus 限制容器可用的 CPU 数量（支持小数，如 "1.5"）。
+	if len(strings.TrimSpace(o.Cpus)) != 0 {
+		args = append(args, "--cpus", strings.TrimSpace(o.Cpus))
+	}
+
+	// --memory 限制容器可用的内存上限（支持带单位，如 "512m" / "4g"）。
+	if len(strings.TrimSpace(o.Memory)) != 0 {
+		args = append(args, "--memory", strings.TrimSpace(o.Memory))
+	}
+
 	return args
 }
 
@@ -63,7 +73,7 @@ func BuildUserDockerArgs(userOptions api.DockerOptions) ([]string, error) {
 	argv := parseApiDockerOptions(userOptions)
 	for i := 0; i < len(argv); i++ {
 		switch argv[i] {
-		case "--volume", "--mount", "--network", "--user", "--gpus":
+		case "--volume", "--mount", "--network", "--user", "--gpus", "--cpus", "--memory":
 			if i+1 >= len(argv) || strings.TrimSpace(argv[i+1]) == "" {
 				return nil, fmt.Errorf("docker option %s requires a non-empty value", argv[i])
 			}

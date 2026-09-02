@@ -262,7 +262,9 @@ class AgentUpgradeJob @Autowired constructor(
             }
             val res = when (type) {
                 AgentUpgradeType.GO_AGENT -> {
-                    goAgentCurrentVersion.trim() != record.masterVersion.trim()
+                    // 如果存在稳定版本则不参与升级
+                    !agentPropsScope.checkInReleaseVersion(record.masterVersion.trim()) &&
+                            goAgentCurrentVersion.trim() != record.masterVersion.trim()
                 }
 
                 AgentUpgradeType.WORKER -> {

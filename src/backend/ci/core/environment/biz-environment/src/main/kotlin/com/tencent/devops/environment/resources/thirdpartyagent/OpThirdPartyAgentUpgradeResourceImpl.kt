@@ -206,6 +206,11 @@ class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun setAgentReleaseVersion(versionList: List<String>): Result<Boolean> {
+        agentPropsScope.setReleaseVersion(versionList.toSet())
+        return Result(true)
+    }
+
     override fun getAllUpgradeScope(): Result<OpAgentUpgradeInfo> {
         return Result(
             OpAgentUpgradeInfo(
@@ -248,6 +253,7 @@ class OpThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
                     AgentUpgradeType.GO_AGENT
                 ),
                 agentMaxUpgradeCount = agentScope.getAgentMaxUpgradeCount(),
+                releaseVersionList = agentPropsScope.getReleaseVersion(),
                 // JDK
                 jdkVersions = agentPropsScope.getAllJdkVersions(),
                 jdkForceIds = agentScope.getAllUpgradeAgents(

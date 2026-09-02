@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -39,14 +40,14 @@ func TestAllInputs_LiveSmoke(t *testing.T) {
 		t.Run(e.name, func(t *testing.T) {
 			if e.needTwoCalls {
 				// 预热一次
-				if _, err := e.input.Gather(); err != nil {
+				if _, err := e.input.Gather(context.Background()); err != nil {
 					t.Fatalf("warmup Gather: %v", err)
 				}
 				// CPU 时间是累加计数器，相邻两次采样间至少需要一次调度
 				// tick 才会有差。sleep 150ms 足够跨一次 Windows 默认调度周期。
 				time.Sleep(150 * time.Millisecond)
 			}
-			metrics, err := e.input.Gather()
+			metrics, err := e.input.Gather(context.Background())
 			if err != nil {
 				t.Fatalf("Gather: %v", err)
 			}

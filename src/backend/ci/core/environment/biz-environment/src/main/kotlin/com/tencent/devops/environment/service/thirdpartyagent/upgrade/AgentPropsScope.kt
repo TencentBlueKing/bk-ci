@@ -201,13 +201,63 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
         }
     }
 
+    /**
+     * 如果[version]在稳定版本列表中，则不升级，返回true，否则返回false
+     */
+    fun checkInReleaseVersion(version: String?): Boolean {
+        version ?: return false
+        return getReleaseVersion().contains(version)
+    }
+
+    fun setReleaseVersion(
+        versionList: Set<String>
+    ): Result<Boolean> {
+        val cacheKey = AGENT_RELEASE_MASTER_VERSION_LIST
+        logger.info("setReleaseVersion $versionList")
+        val failList = mutableSetOf<String>()
+        // 每次都是覆盖，先刷新防止没有缓存时读取到了被删除的数据
+        releaseVersionCache.refresh(AGENT_RELEASE_MASTER_VERSION_LIST)
+        redisOperation.delete(cacheKey, isDistinguishCluster = true)
+        versionList.forEach { version ->
+            if (!redisOperation.addSetValue(cacheKey, version, isDistinguishCluster = true)) {
+                failList.add(version)
+            }
+        }
+
+        if (failList.size < versionList.size) {
+            releaseVersionCache.invalidate(cacheKey)
+        }
+
+        if (failList.isNotEmpty()) {
+            return Result(data = false, message = "fail list: $failList")
+        }
+
+        return success
+    }
+
+    fun getReleaseVersion() = releaseVersionCache.get(AGENT_RELEASE_MASTER_VERSION_LIST) ?: setOf()
+
+    private val releaseVersionCache: LoadingCache<String, Set<String>> = Caffeine.newBuilder()
+        .maximumSize(SET_CACHE_SIZE)
+        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
+        .build { cacheKey ->
+            redisOperation.getSetMembers(cacheKey, isDistinguishCluster = true)
+                ?.filter { it.isNotBlank() }
+                ?.toSet()
+                ?: setOf()
+        }
+
     companion object {
 
         private const val CACHE_EXPIRE_MIN = 1L
 
         private const val CACHE_SIZE = 100L
 
+        private const val SET_CACHE_SIZE = 16L
+
         private const val CURRENT_AGENT_MASTER_VERSION = "environment.thirdparty.agent.master.version"
+
+        private const val AGENT_RELEASE_MASTER_VERSION_LIST = "environment.thirdparty.agent.master.version.release"
 
         private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
 

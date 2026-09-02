@@ -5,8 +5,6 @@ package monitor
 
 import (
 	"context"
-	"runtime"
-	"sync/atomic"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
@@ -30,57 +28,22 @@ import (
 const (
 	// gatherInterval 和 telegraf agent.interval = "1m" 对齐。
 	gatherInterval = time.Minute
-	// gatherTimeout 单轮 Gather 最长耗时；超过则强制取消，避免堆积。
-	// 留足 45s 给上报（reporter 超时由全局 config.TimeoutSec 控制）。
-	gatherTimeout = 45 * time.Second
 	// eBusID IP 事件订阅者标识，与 collector 包互不冲突。
 	eBusID = "Monitor"
 	// restartBackoff 主循环 panic 后重进之前的退避，避免崩溃风暴刷爆日志。
 	// 正常路径（IP 变更）走过这里时也会等一下，保持行为一致。
 	restartBackoff = 10 * time.Second
-	// inflightHardCap 上限保护：正在 pending 的 input goroutine 总数
-	// 超过该值时跳过当轮，只记日志。防止某个 input 长期卡死导致
-	// goroutine 持续累积。典型值：input 数 × 并发轮数裕度。
-	inflightHardCap = 64
-	// stackDumpInterval 触发 inflightHardCap 保护时，dump 一次全量
-	// goroutine stack 的最小间隔。用于定位到底卡在哪个 input，但避免
-	// 每轮（1min）都打一大坨 stack 刷爆日志，故做节流。
-	stackDumpInterval = 10 * time.Minute
 )
 
-// lastStackDumpUnixNano 上次 dump goroutine stack 的时间戳（UnixNano）。
-// 与 stackDumpInterval 配合做节流，用 atomic 避免多轮之间竞争。
-var lastStackDumpUnixNano atomic.Int64
-
-// dumpGoroutineStacks 在超出 inflightHardCap 时抓取全量 goroutine stack
-// 打到日志，便于定位到底是哪个 input 的 Gather 卡在哪一行（典型是底层
-// syscall / cgo 调用无法被 context 打断）。
+// perInputTimeout 单个 input 的 Gather 超时。对齐 gopsutil 内部 shell-out
+// 命令超时（internal/common.Timeout = 3s）与 telegraf 的预期：正常采集应在
+// 毫秒级完成，卡到秒级即视为异常。透传到 gopsutil 的 *WithContext API 后，
+// 能打断"已 exec 成功但在跑"的外部命令（netstat/lsof/ps）。对无法被
+// context 打断的内核阻塞，由 inputRunner 的不重入状态兜底：该 input 保持
+// running，后续轮次持续跳过，直到原 Gather 真正返回。
 //
-// 做了两重节流：
-//   - 距上次 dump 不足 stackDumpInterval 则跳过，避免每分钟刷一大坨；
-//   - stack 缓冲上限 1MB，超大进程也不会无节制占内存。
-func dumpGoroutineStacks() {
-	now := time.Now().UnixNano()
-	last := lastStackDumpUnixNano.Load()
-	if last != 0 && now-last < int64(stackDumpInterval) {
-		return
-	}
-	// CAS 抢占 dump 权，防止多轮并发时重复 dump。
-	if !lastStackDumpUnixNano.CompareAndSwap(last, now) {
-		return
-	}
-
-	buf := make([]byte, 1<<20) // 1MB
-	n := runtime.Stack(buf, true /* all goroutines */)
-	logs.Warnf("monitor|inflight cap hit, dumping goroutine stacks (total=%d):\n%s",
-		runtime.NumGoroutine(), buf[:n])
-}
-
-// inflightInputs 跨轮累计的"未完成 input goroutine"计数。每个 input goroutine
-// 起时 +1、返回时 -1。若 input 因底层 syscall 卡死而永不返回，该计数
-// 会持续增长；doOneGather 发现超出 inflightHardCap 时直接跳过本轮，
-// 等待卡死的 goroutine 自然完成或进程退出。
-var inflightInputs atomic.Int32
+// 用 var 而非 const 便于单测调小以加速。
+var perInputTimeout = 3 * time.Second
 
 // Collect 是 monitor 主循环入口，应由 Agent 启动流程用 safeGo 包装调起。
 //
@@ -99,7 +62,10 @@ func Collect() {
 	}()
 
 	reporter := NewReporter()
-	ins := newDefaultInputs()
+	// runners 在 Collect 的整个生命周期内复用。即使 IP 变化或某轮 panic 导致
+	// gather loop 重启，仍保留每个 input 的 running 状态，避免重新进入一个
+	// 已经卡住的 Gather。
+	runners := newInputRunners(newDefaultInputs())
 
 	for {
 		// 每一轮都在 closure 里跑，保证 panic 只杀掉当前一轮、不会让整个
@@ -121,7 +87,7 @@ func Collect() {
 				case <-ctx.Done():
 				}
 			}()
-			runGatherLoop(ctx, ins, reporter, dumper)
+			runGatherLoop(ctx, runners, reporter, dumper)
 		}()
 		// 轮次间隔：正常退出（IP 变更）几乎立即重进；panic 后给点缓冲
 		time.Sleep(restartBackoff)
@@ -156,9 +122,9 @@ func newDefaultInputs() []Input {
 
 // runGatherLoop 在 ctx 有效期间按 gatherInterval 周期采集上报。
 // 首次采集不等待 ticker，以便 agent 启动后 1 分钟内就有一条指标落盘。
-func runGatherLoop(ctx context.Context, ins []Input, reporter *Reporter, dumper *Dumper) {
+func runGatherLoop(ctx context.Context, runners []*inputRunner, reporter *Reporter, dumper *Dumper) {
 	// 立即采集一次（CPU 首次采样会返回空，正常；后续 ticker 会补齐）
-	doOneGather(ctx, ins, reporter, dumper)
+	doOneGather(ctx, runners, reporter, dumper)
 
 	ticker := time.NewTicker(gatherInterval)
 	defer ticker.Stop()
@@ -168,7 +134,7 @@ func runGatherLoop(ctx context.Context, ins []Input, reporter *Reporter, dumper 
 			logs.Info("monitor|gather loop exit: ctx done")
 			return
 		case <-ticker.C:
-			doOneGather(ctx, ins, reporter, dumper)
+			doOneGather(ctx, runners, reporter, dumper)
 		}
 	}
 }
@@ -176,71 +142,45 @@ func runGatherLoop(ctx context.Context, ins []Input, reporter *Reporter, dumper 
 // doOneGather 并发调所有 input 的 Gather，聚合后 rename -> dump -> report。
 // 单个 input 的 error / panic 只记录日志，不阻断其他 input。
 //
-// goroutine 泄漏保护：
-//   - 每个 input goroutine 进入时对 inflightInputs +1、退出时 -1。某个
-//     input 若因底层 syscall 永久卡死，该计数会持续增长；下一轮检查发现
-//     超出 inflightHardCap 时跳过整轮，防止卡死的 input 被一遍遍触发新
-//     goroutine 累积。
-//   - wg.Wait 的 watcher goroutine 在本轮返回前不会新产生：收集结果走一个
-//     缓冲 channel，超时路径直接读已到的部分，剩下的 input goroutine 继续
-//     后台跑完后把结果发到同一 channel（channel 容量 = len(ins) 确保不阻塞），
-//     不再额外新建"等待者"。
-func doOneGather(ctx context.Context, ins []Input, reporter *Reporter, dumper *Dumper) {
-	if n := inflightInputs.Load(); n >= inflightHardCap {
-		logs.Warnf("monitor|skip round: inflight input goroutines=%d >= cap=%d (some inputs may be stuck)", n, inflightHardCap)
-		// 超阈值大概率有 input 卡在 syscall/cgo，dump 一次 goroutine
-		// stack（内部节流，不会每轮都打）以便定位卡点。
-		dumpGoroutineStacks()
-		return
-	}
-
-	gatherCtx, cancel := context.WithTimeout(ctx, gatherTimeout)
+// 每个 inputRunner 通过 CAS 保证同一时刻最多执行一次 Gather。某个 Gather
+// 超时后仍不返回时，当前轮不再等待；后续轮次只跳过它，健康 input 照常采集。
+func doOneGather(ctx context.Context, runners []*inputRunner, reporter *Reporter, dumper *Dumper) {
+	gatherCtx, cancel := context.WithTimeout(ctx, perInputTimeout)
 	defer cancel()
 
-	// 缓冲足够大，保证超时后仍在跑的 goroutine 能把结果塞进来而不阻塞
-	// （它们的 send 不会因 receiver 走开而 block；本方法返回后 channel
-	// 被 GC，只要没人再读，发送端继续 runtime 不会泄漏 — 唯一的"尾巴"
-	// 是 input goroutine 本身，它必然会走完）。
-	resCh := make(chan []Metric, len(ins))
-
-	for _, in := range ins {
-		in := in
-		inflightInputs.Add(1)
-		go func() {
-			defer inflightInputs.Add(-1)
-			defer func() {
-				if r := recover(); r != nil {
-					logs.Errorf("monitor|input %s panic: %v", in.Name(), r)
-					// 非阻塞 send 保证 panic 路径也能尝试喂结果（空切片）
-					select {
-					case resCh <- nil:
-					default:
-					}
-				}
-			}()
-			metrics, err := in.Gather()
-			if err != nil {
-				logs.WithError(err).Warnf("monitor|input %s gather failed", in.Name())
-				resCh <- nil
-				return
-			}
-			resCh <- metrics
-		}()
+	// 每个 runner 每轮最多发送一个结果，所以容量等于 runner 数足以容纳轮次
+	// 返回后的迟到结果，不会把已完成的 Gather 卡在 channel send 上。
+	resCh := make(chan inputResult, len(runners))
+	started := 0
+	for _, runner := range runners {
+		if !runner.start(gatherCtx, resCh) {
+			logs.Warnf("monitor|input %s previous collection still running; scheduled collection skipped", runner.input.Name())
+			continue
+		}
+		started++
 	}
 
 	all := make([]Metric, 0, 64)
 	received := 0
 collect:
-	for received < len(ins) {
+	for received < started {
 		select {
-		case m := <-resCh:
+		case result := <-resCh:
 			received++
-			if len(m) > 0 {
-				all = append(all, m...)
+			if result.panicValue != nil {
+				logs.Errorf("monitor|input %s panic: %v", result.name, result.panicValue)
+				continue
+			}
+			if result.err != nil {
+				logs.WithError(result.err).Warnf("monitor|input %s gather failed", result.name)
+				continue
+			}
+			if len(result.metrics) > 0 {
+				all = append(all, result.metrics...)
 			}
 		case <-gatherCtx.Done():
-			logs.Warnf("monitor|gather timed out after %s, proceeding with %d/%d inputs",
-				gatherTimeout, received, len(ins))
+			logs.Warnf("monitor|gather deadline reached after %s, proceeding with %d/%d started inputs; unfinished inputs will not be started again",
+				perInputTimeout, received, started)
 			break collect
 		}
 	}

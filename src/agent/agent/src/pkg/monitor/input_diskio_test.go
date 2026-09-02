@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ func TestDiskIO_Name(t *testing.T) {
 
 func TestDiskIO_Gather_AllDevices(t *testing.T) {
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{
 				"sda": {Name: "sda", ReadCount: 10, WriteCount: 5, ReadBytes: 1024, WriteBytes: 2048},
 				"sdb": {Name: "sdb", ReadCount: 1},
@@ -27,7 +28,7 @@ func TestDiskIO_Gather_AllDevices(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,10 +53,10 @@ func TestDiskIO_Gather_AllDevices(t *testing.T) {
 func TestDiskIO_Gather_ErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) { return nil, sentinel },
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) { return nil, sentinel },
 		nowFn:        time.Now,
 	}
-	_, err := d.Gather()
+	_, err := d.Gather(context.Background())
 	if err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
@@ -63,12 +64,12 @@ func TestDiskIO_Gather_ErrorPropagates(t *testing.T) {
 
 func TestDiskIO_Gather_EmptyMap(t *testing.T) {
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
