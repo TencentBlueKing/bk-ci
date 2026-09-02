@@ -186,24 +186,13 @@
     import { mapState } from 'vuex'
     import ParamValueOption from './children/param-value-option'
     import {
+        DEFAULT_DISPLAY_CONDITION_OPERATOR,
+        DISPLAY_CONDITION_OPERATORS,
         CONST_TYPE_LIST,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
-
-    const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
-    const DISPLAY_CONDITION_OPERATORS = [
-        { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
-        { id: '>=', name: '>=' },
-        { id: '<=', name: '<=' },
-        { id: '>', name: '>' },
-        { id: '<', name: '<' },
-        { id: 'IN', name: 'in' },
-        { id: 'CONTAINS', name: 'Contains' },
-        { id: 'STARTS_WITH', name: 'StartWith' },
-        { id: 'ENDS_WITH', name: 'EndWith' }
-    ]
 
     export default {
         components: {

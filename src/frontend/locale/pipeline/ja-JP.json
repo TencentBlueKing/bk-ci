@@ -2216,6 +2216,8 @@
   "notGrouped": "グループ化されていません",
   "attributeValue": "属性値",
   "attributeName": "属性名",
+  "keyPlaceholder": "キー（例：quality-gate）",
+  "valuePlaceholder": "値（例：passed）",
   "metadataAttributeName": "メタデータ属性名",
   "metadataAttributeValue": "メタデータ属性値",
   "artifactQuality": "アーティファクトの品質",
