@@ -118,12 +118,6 @@ class NodeArtifactEventHandler(
         if (skip) {
             return WebhookMatchResult(false)
         }
-        // 根路径仅自定义仓库有值
-        val rootPath = if (node.repoName == REPO_CUSTOM) {
-            ArtifactWebhookUtils.getCustomRootPath(node.path)
-        } else {
-            null
-        }
         // 制品名称仅流水线仓库有值
         val artifactsName = if (node.repoName == REPO_PIPELINE) {
             if (isSentinel) {
@@ -134,19 +128,17 @@ class NodeArtifactEventHandler(
         } else {
             null
         }
-        // 匹配路径仅自定义仓库有值，均去掉根目录：文件取相对路径（含文件名），目录取归档目录路径（不含其中文件）
-        val paths = if (node.repoName == REPO_CUSTOM) {
-            val rawPath = if (isSentinel) node.path else node.fullPath
-            listOf(ArtifactWebhookUtils.getCustomRelativePath(rawPath))
+        // 自定义仓库完整路径：文件用 fullPath，目录用归档目录 path
+        val path = if (node.repoName == REPO_CUSTOM) {
+            if (isSentinel) node.path else node.fullPath
         } else {
             null
         }
         val factParam = ArtifactFactParam(
             projectId = node.projectId,
             repoName = node.repoName,
-            rootPath = rootPath,
+            path = path,
             artifactsName = artifactsName,
-            paths = paths,
             sourcePipelineId = metadata[METADATA_PIPELINE_ID]?.toString(),
             sourceBuildId = ArtifactWebhookUtils.metadataBuildId(metadata),
             metadata = metadata

@@ -51,14 +51,16 @@ class ArtifactWebhookRequestService(
         val eventType = convertToTriggerEventType(rawEventType).name
         logger.info("parse artifact event|$eventType|${JsonUtil.toJson(artifactEvent, false)}")
         val eventSource = artifactEvent.getAssociationId()
+        val eventScopes = ArtifactWebhookUtils.buildQueryScopes(artifactEvent)
         val subscribers = pipelineEventSubscriptionDao.listEventSubscriber(
             dslContext = dslContext,
             eventSource = eventSource,
             eventType = eventType,
-            eventCode = ArtifactTriggerElement.classType
+            eventCode = ArtifactTriggerElement.classType,
+            eventScopes = eventScopes
         )
         if (subscribers.isEmpty()) {
-            logger.info("no pipelines subscribed|eventSource=$eventSource")
+            logger.info("no pipelines subscribed|eventSource=$eventSource|eventScopes=$eventScopes")
             return
         }
         subscribers.groupBy { it.projectId }
@@ -102,7 +104,8 @@ class ArtifactWebhookRequestService(
         }
         val eventSource = sourceTriggerEvent.eventSource ?: artifactEvent.getAssociationId()
         val eventType = sourceTriggerEvent.eventType
-        val pipelines = resolveReplayPipelines(replayEvent, eventSource, eventType)
+        val eventScopes = ArtifactWebhookUtils.buildQueryScopes(artifactEvent)
+        val pipelines = resolveReplayPipelines(replayEvent, eventSource, eventType, eventScopes)
         if (pipelines.isEmpty()) {
             logger.info(
                 "no pipelines for artifact replay|eventId=${replayEvent.eventId}|" +
@@ -122,7 +125,8 @@ class ArtifactWebhookRequestService(
     private fun resolveReplayPipelines(
         replayEvent: ReplayWebhookEvent,
         eventSource: String,
-        eventType: String
+        eventType: String,
+        eventScopes: List<String>?
     ): List<PipelineEventSubscriber> {
         val targetPipelineId = replayEvent.pipelineId
         return if (targetPipelineId.isNullOrBlank()) {
@@ -130,7 +134,8 @@ class ArtifactWebhookRequestService(
                 dslContext = dslContext,
                 eventSource = eventSource,
                 eventType = eventType,
-                eventCode = ArtifactTriggerElement.classType
+                eventCode = ArtifactTriggerElement.classType,
+                eventScopes = eventScopes
             ).filter { it.projectId == replayEvent.projectId }
                 .distinctBy { it.pipelineId }
         } else {

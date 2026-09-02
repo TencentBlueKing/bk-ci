@@ -6,8 +6,7 @@ on:
       name: 制品到达触发
       repository: pipeline
       kind: file
-      watch-pipeline:
-        - .ci/plugins/archive.yml
+      watch-pipeline: p-xxxxx
       artifacts-name:
         - "*.msi"
         - "setup-*.exe"

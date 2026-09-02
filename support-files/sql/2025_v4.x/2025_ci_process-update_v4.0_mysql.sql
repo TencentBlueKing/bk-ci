@@ -257,6 +257,40 @@ BEGIN
                 COMMENT '来源的草稿版本';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_EVENT_SUBSCRIPTION'
+                    AND COLUMN_NAME = 'EVENT_SCOPE') THEN
+        ALTER TABLE T_PIPELINE_EVENT_SUBSCRIPTION
+            ADD COLUMN `EVENT_SCOPE` varchar(255) DEFAULT NULL
+            COMMENT '事件作用域,svn路径/制品路径,无则NULL';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.TABLES
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_EVENT_REGISTER') THEN
+        CREATE TABLE IF NOT EXISTS `T_PIPELINE_EVENT_REGISTER` (
+            `ID` bigint(20) NOT NULL COMMENT '主键ID',
+            `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+            `EVENT_CODE` varchar(64) NOT NULL COMMENT '事件编码',
+            `EVENT_SOURCE` varchar(255) NOT NULL COMMENT '事件源',
+            `EVENT_TYPE` varchar(64) NOT NULL COMMENT '事件类型',
+            `EVENT_SCOPE` varchar(255) NOT NULL DEFAULT '' COMMENT '事件作用域,svn路径/制品路径,无则空串',
+            `CALLBACK_URL` varchar(1024) DEFAULT NULL COMMENT '回调地址',
+            `EXTERNAL_ID` varchar(255) DEFAULT NULL COMMENT '外部系统webhook ID',
+            `CREATOR` varchar(64) NOT NULL COMMENT '创建人',
+            `MODIFIER` varchar(64) NOT NULL COMMENT '修改人',
+            `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+            `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+            PRIMARY KEY (`ID`),
+            UNIQUE KEY `UNI_EVENT_REGISTER` (
+                `PROJECT_ID`,`EVENT_CODE`,`EVENT_SOURCE`,`EVENT_TYPE`,`EVENT_SCOPE`
+            )
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='外部事件注册记录表';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>

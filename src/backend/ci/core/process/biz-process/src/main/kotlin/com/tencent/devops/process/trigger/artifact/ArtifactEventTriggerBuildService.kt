@@ -125,13 +125,15 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
     ) {
         // 下发事件仅按 pipelineId 去重丢失了 taskId，这里按订阅表精确圈定订阅了本次事件的触发器，
         // 避免同一流水线混配多仓库触发器时对不相关触发器做匹配
+        val eventScopes = ArtifactWebhookUtils.buildQueryScopes(artifactEvent)
         val subscribedTaskIds = pipelineEventSubscriptionDao.listSubscribedTaskIds(
             dslContext = dslContext,
             projectId = event.projectId,
             pipelineId = event.pipelineId,
             eventSource = event.eventSource,
             eventType = event.eventType,
-            eventCode = ArtifactTriggerElement.classType
+            eventCode = ArtifactTriggerElement.classType,
+            eventScopes = eventScopes
         )
         val elements = resource.model.getTriggerContainer().elements
             .filterIsInstance<ArtifactTriggerElement>()

@@ -20,8 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  *       name: 制品到达事件触发
  *       repository: pipeline
  *       kind: file
- *       watch-pipeline:
- *         - .ci/plugins/archive.yml
+ *       watch-pipeline: p-xxxxx
  *       artifacts-name:
  *         - "*.msi"
  *         - "setup-*.exe"
@@ -55,8 +54,8 @@ data class ArrivedRule(
     @get:Schema(title = "监听仓库 pipeline/custom/image")
     val repository: String? = null,
     @JsonProperty("watch-pipeline")
-    @get:Schema(title = "监听流水线")
-    val watchPipeline: List<String>? = null,
+    @get:Schema(title = "监听流水线（单选）")
+    val watchPipeline: String? = null,
     @JsonProperty("watch-root-path")
     @get:Schema(title = "监听根路径")
     val watchRootPath: String? = null,

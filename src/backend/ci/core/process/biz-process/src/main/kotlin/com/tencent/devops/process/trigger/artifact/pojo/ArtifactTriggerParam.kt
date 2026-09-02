@@ -12,8 +12,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactRep
  */
 data class ArtifactTriggerParam(
     val repository: ArtifactRepositoryType,
-    val watchPipeline: List<String>,
-    val watchRootPath: List<String>,
+    val watchPipeline: String?,
+    val watchRootPath: String?,
     val kind: ArtifactKind?,
     val artifactsName: List<String>,
     val artifactsNameIgnore: List<String>,

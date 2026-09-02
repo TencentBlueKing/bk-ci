@@ -88,17 +88,20 @@ class ArtifactTriggerMatcher(
     ): ArtifactTriggerParam {
         fun parse(value: String?) = value?.let { EnvUtils.parseEnv(it, variables) }
         fun parseList(value: String?) = WebhookUtils.convert(parse(value))
+        val watchRootPath = parse(input.watchRootPath)?.ifBlank { null }
         return ArtifactTriggerParam(
             repository = input.repository,
-            watchPipeline = (input.watchPipeline ?: emptyList())
-                .mapNotNull { parse(it) }
-                .filter { it.isNotBlank() },
-            watchRootPath = parseList(input.watchRootPath),
+            watchPipeline = parse(input.watchPipeline)?.ifBlank { null },
+            watchRootPath = watchRootPath,
             kind = input.kind,
             artifactsName = parseList(input.artifactsName),
             artifactsNameIgnore = parseList(input.artifactsNameIgnore),
-            paths = parseList(input.paths),
-            pathsIgnore = parseList(input.pathsIgnore),
+            paths = parseList(input.paths).map {
+                ArtifactWebhookUtils.joinPath(watchRootPath, it)
+            },
+            pathsIgnore = parseList(input.pathsIgnore).map {
+                ArtifactWebhookUtils.joinPath(watchRootPath, it)
+            },
             image = parse(input.image),
             tags = parseList(input.tags),
             tagsIgnore = parseList(input.tagsIgnore),

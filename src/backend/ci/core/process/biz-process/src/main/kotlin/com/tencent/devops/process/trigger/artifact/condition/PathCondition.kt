@@ -8,11 +8,10 @@ import com.tencent.devops.process.trigger.artifact.pojo.ArtifactConditionContext
 
 class PathCondition : ArtifactCondition {
     override fun match(context: ArtifactConditionContext): Boolean {
-        val paths = context.factParam.paths ?: emptyList()
         val input = context.triggerParam
         val filter = PathRegexFilter(
             pipelineId = context.pipelineId,
-            triggerOnPath = paths,
+            triggerOnPath = listOfNotNull(context.factParam.path),
             includedPaths = input.paths,
             excludedPaths = input.pathsIgnore,
             includedFailedReason = I18Variable(

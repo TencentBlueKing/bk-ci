@@ -58,7 +58,7 @@ class ArtifactTriggerConverter : TriggerConverter {
                 name = element.name,
                 enable = element.elementEnabled().nullIfDefault(true),
                 repository = input.repository.value,
-                watchPipeline = input.watchPipeline.nonEmptyOrNull(),
+                watchPipeline = input.watchPipeline?.ifBlank { null },
                 watchRootPath = input.watchRootPath?.ifBlank { null },
                 kind = input.kind?.value.nullIfDefault("file"),
                 artifactsName = input.artifactsName?.takeIf { it.isNotBlank() }?.split(","),
@@ -88,7 +88,7 @@ class ArtifactTriggerConverter : TriggerConverter {
                 input = ArtifactTriggerInput(
                     repository = rule.repository?.let { ArtifactRepositoryType.valueOf(it.uppercase()) }
                         ?: ArtifactRepositoryType.PIPELINE,
-                    watchPipeline = rule.watchPipeline.nonEmptyOrNull(),
+                    watchPipeline = rule.watchPipeline,
                     watchRootPath = rule.watchRootPath,
                     kind = ArtifactKind.parse(rule.kind),
                     eventType = ArtifactTriggerEventType.ARRIVED,

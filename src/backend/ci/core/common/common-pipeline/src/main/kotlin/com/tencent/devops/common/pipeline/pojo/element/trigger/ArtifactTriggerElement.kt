@@ -49,9 +49,9 @@ data class ArtifactTriggerData(
 data class ArtifactTriggerInput(
     @get:Schema(title = "监听仓库 (pipeline/custom/image)", required = true)
     val repository: ArtifactRepositoryType,
-    @get:Schema(title = "监听流水线 (可多选，留空不限定来源流水线)", required = false)
-    val watchPipeline: List<String>? = null,
-    @get:Schema(title = "监听根路径 (仅自定义仓库)", required = false)
+    @get:Schema(title = "监听流水线 (单选，流水线仓库必填)", required = false)
+    val watchPipeline: String? = "",
+    @get:Schema(title = "监听根路径 (仅自定义仓库必填，可为 /aaa/bbb/)", required = false)
     val watchRootPath: String? = "",
     @get:Schema(title = "监听范围 (file/folder)", required = false)
     val kind: ArtifactKind? = ArtifactKind.FILE,

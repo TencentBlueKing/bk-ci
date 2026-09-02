@@ -40,7 +40,7 @@ class ArtifactTriggerConverterTest {
                     ArrivedRule(
                         name = "制品到达触发",
                         repository = "pipeline",
-                        watchPipeline = listOf(".ci/plugins/archive.yml"),
+                        watchPipeline = "p-xxxxx",
                         artifactsName = listOf("*.msi", "setup-*.exe"),
                         artifactsNameIgnore = listOf("*_unsigned.exe"),
                         metadata = listOf(
@@ -56,7 +56,7 @@ class ArtifactTriggerConverterTest {
         val input = element.data.input
         assertEquals("制品到达触发", element.name)
         assertEquals("pipeline", input.repository.value)
-        assertEquals(listOf(".ci/plugins/archive.yml"), input.watchPipeline)
+        assertEquals("p-xxxxx", input.watchPipeline)
         assertEquals("*.msi,setup-*.exe", input.artifactsName)
         assertEquals("*_unsigned.exe", input.artifactsNameIgnore)
         assertEquals("quality-gate", input.metadata?.single()?.key)
@@ -68,7 +68,7 @@ class ArtifactTriggerConverterTest {
         val origin = ArrivedRule(
             name = "MSI 归档触发",
             repository = "pipeline",
-            watchPipeline = listOf(".ci/plugins/archive.yml"),
+            watchPipeline = "p-xxxxx",
             artifactsName = listOf("*.msi", "setup-*.exe"),
             artifactsNameIgnore = listOf("*_unsigned.exe"),
             metadata = listOf(

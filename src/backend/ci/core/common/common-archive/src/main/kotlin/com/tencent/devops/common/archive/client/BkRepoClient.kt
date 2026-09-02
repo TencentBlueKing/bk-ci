@@ -1302,6 +1302,7 @@ class BkRepoClient constructor(
      * associationId 规则：
      * - PROJECT: associationId = {projectId}
      * - REPO: associationId = {projectId}:{repoName}
+     * - PATH: associationId = {projectId}:{repoName}:{path}
      */
     fun listWebhooks(
         userId: String,

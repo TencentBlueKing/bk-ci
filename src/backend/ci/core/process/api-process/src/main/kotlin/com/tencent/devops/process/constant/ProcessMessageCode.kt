@@ -549,6 +549,11 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
     const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
+    const val ERROR_ARTIFACT_TRIGGER_PARAM_INVALID = "2101504" // 插件[{0}]的字段[{1}]不能为空或者无法解析
+    const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_PIPELINE = "bkArtifactTriggerFieldWatchPipeline" // 监听流水线
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_ROOT_PATH = "bkArtifactTriggerFieldWatchRootPath" // 监听根路径
+    const val BK_ARTIFACT_TRIGGER_FIELD_IMAGE = "bkArtifactTriggerFieldImage" // 镜像名
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

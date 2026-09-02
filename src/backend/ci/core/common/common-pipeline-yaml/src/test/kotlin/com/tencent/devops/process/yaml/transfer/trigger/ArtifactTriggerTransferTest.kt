@@ -90,7 +90,7 @@ class ArtifactTriggerTransferTest {
         assertEquals("制品到达触发", arrived.name)
         assertEquals("pipeline", arrived.repository)
         assertEquals("file", arrived.kind)
-        assertEquals(listOf(".ci/plugins/archive.yml"), arrived.watchPipeline)
+        assertEquals("p-xxxxx", arrived.watchPipeline)
         assertEquals(listOf("*.msi", "setup-*.exe"), arrived.artifactsName)
         assertEquals(listOf("*_unsigned.exe"), arrived.artifactsNameIgnore)
         assertEquals("quality-gate", arrived.metadata?.single()?.key)
