@@ -2,14 +2,20 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
+import com.tencent.devops.worker.common.task.script.ScriptTask
 import java.io.File
+import java.util.concurrent.TimeUnit
 import kotlin.text.Charsets
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 
 class BatScriptUtilTest {
 
     private val tmpDir = File(System.getProperty("java.io.tmpdir"))
+    private val jobId = "job_xx"
+    private val stepId = "step_xx"
 
     @Test
     fun formatMultipleLinesInjectedTest() {
@@ -164,6 +170,7 @@ class BatScriptUtilTest {
         )
 
         file.delete()
+        deleteBlockFiles(buildId)
         workspace.deleteRecursively()
     }
 
@@ -221,6 +228,7 @@ class BatScriptUtilTest {
         Assertions.assertTrue(content.contains("echo done"))
 
         file.delete()
+        deleteBlockFiles(buildId)
         workspace.deleteRecursively()
     }
 
@@ -248,6 +256,128 @@ class BatScriptUtilTest {
         Assertions.assertTrue(exception.message!!.contains("CONFIG"))
         Assertions.assertTrue(exception.message!!.contains("1"))
 
+        workspace.deleteRecursively()
+    }
+
+    /**
+     * 用 cmd.exe 真实执行生成的 .bat。
+     * 输出重定向到文件后再 waitFor(timeout)：避免管道读阻塞导致超时保护失效。
+     */
+    private fun runBat(bat: File, workspace: File): Pair<Int, String> {
+        val consoleFile = File.createTempFile("bat_e2e_console_", ".log")
+        consoleFile.deleteOnExit()
+        val process = ProcessBuilder("cmd.exe", "/C", bat.absolutePath)
+            .directory(workspace)
+            .redirectErrorStream(true)
+            .redirectOutput(consoleFile)
+            .start()
+        val finished = process.waitFor(60, TimeUnit.SECONDS)
+        if (!finished) {
+            process.destroyForcibly()
+        }
+        Assertions.assertTrue(finished, "bat 执行超时")
+        return process.exitValue() to consoleFile.readText()
+    }
+
+    /** block 临时文件已写入 java.io.tmpdir，workspace 递归删除不再覆盖，需按前缀单独清理 */
+    private fun deleteBlockFiles(buildId: String) {
+        tmpDir.listFiles { f -> f.isFile && f.name.startsWith("ml_block_${buildId}_") }
+            ?.forEach { it.delete() }
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesFileEndToEndTest() {
+        val buildId = "bat_e2e_file"
+        /* 上一次断言失败会跳过清理留下旧 multiLine.log，先重建 workspace 避免读到陈旧值 */
+        val workspace = File(tmpDir, "bat_e2e_file_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CRLF */
+        val content = "line1\r\n100% done\r\nliteral %0A here\r\n中文"
+        val blockFile = File(workspace, "result.txt").apply { writeText(content, Charsets.UTF_8) }
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call:format_multiple_lines RESULT \"${blockFile.absolutePath}\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        /* 解码结果与原始文件逐字节一致 */
+        Assertions.assertEquals(content, decoded["jobs.$jobId.steps.$stepId.outputs.RESULT"])
+
+        bat.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesInlineBlockEndToEndTest() {
+        val buildId = "bat_e2e_inline"
+        val workspace = File(tmpDir, "bat_e2e_inline_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        /* script 用 \n（ScriptTask 传参前会 replace("\r","")），块内容由后端拼接为 CRLF */
+        val script = "call:format_multiple_lines CONFIG \"\n[server]\nhost=0.0.0.0\nport=8080\n\""
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = script,
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals(
+            "[server]\r\nhost=0.0.0.0\r\nport=8080",
+            decoded["jobs.$jobId.steps.$stepId.outputs.CONFIG"]
+        )
+
+        bat.delete()
+        deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesMissingFileFailsLoudlyTest() {
+        val buildId = "bat_e2e_missing"
+        val workspace = File(tmpDir, "bat_e2e_missing_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val missing = File(workspace, "does_not_exist.txt").canonicalPath
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call:format_multiple_lines RESULT \"$missing\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        /* 契约：目标文件不存在必须让进程非 0 退出（响亮失败），不能静默丢弃 */
+        Assertions.assertTrue(exitCode != 0, "expected non-zero exit code, got $exitCode. console: $console")
+
+        bat.delete()
         workspace.deleteRecursively()
     }
 }

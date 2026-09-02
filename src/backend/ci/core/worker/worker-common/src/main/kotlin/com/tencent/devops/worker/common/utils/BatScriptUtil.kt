@@ -73,11 +73,12 @@ object BatScriptUtil {
 
     private const val formatMultipleLines = ":format_multiple_lines\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
-        "        \"\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
+        "        \"try{\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
         "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
-        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)\"\r\n" +
+        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)}catch{exit 1}\"\r\n" +
+        "    if errorlevel 1 exit 1\r\n" +
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
@@ -259,13 +260,12 @@ object BatScriptUtil {
      * 内容由 Kotlin 直接写入临时文件（UTF-8），不经 cmd 解析，避免换行被当作命令分隔。
      * 该预处理为纯增量：不满足开始行特征的行一律原样透传。
      *
-     * 注意：block 临时文件写入 dir，由 ScriptEnvUtils.cleanWhenEnd(workspace) 按前缀清理，
-     * 依赖调用链中 dir == workspace 的不变量（ScriptTask.execute 传入 dir = workspace）。
+     * 注意：block 临时文件写入 java.io.tmpdir（与生成的 .bat 同目录），由 deleteOnExit 回收，
+     * 不依赖 dir 与 workspace 的关系；retry 会覆盖同名文件，不产生累积。
      */
     private fun preprocessMultilineBlocks(
         script: String,
-        buildId: String,
-        dir: File
+        buildId: String
     ): String {
         val lines = script.split("\n").map { it.removeSuffix("\r") }
         val out = StringBuilder()
@@ -281,7 +281,7 @@ object BatScriptUtil {
             val key = start.groupValues[1]
             val block = extractMultilineBlock(lines, i, key)
             val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
-            val file = File(dir, fileName)
+            val file = File(System.getProperty("java.io.tmpdir"), fileName)
             file.writeText(block.content, Charsets.UTF_8)
             file.deleteOnExit()
             out.append("call:format_multiple_lines $key \"${file.absolutePath}\"\r\n")
@@ -357,7 +357,7 @@ object BatScriptUtil {
             .append("call:ciTaskSetFlag $FLAG_SCRIPT\r\n")
             .append("\r\n")
 
-        val processed = preprocessMultilineBlocks(script, buildId, dir)
+        val processed = preprocessMultilineBlocks(script, buildId)
         command.append(processed)
             .append("\r\n")
             .append("exit")
