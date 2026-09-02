@@ -145,7 +145,7 @@ class CheckPauseReviewStageCmd(
                     realReviewer.addAll(projectRoleUsers.value[group]!!.userIdList)
                 }
             }
-            review.reviewers = realReviewer.toList()
+            review.reviewers = StagePauseCheck.sanitizeIds(realReviewer)
         }
     }
 

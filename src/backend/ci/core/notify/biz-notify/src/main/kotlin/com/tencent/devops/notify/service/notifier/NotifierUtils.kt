@@ -15,7 +15,8 @@ object NotifierUtils {
         body: String,
         sender: String,
         weworkService: WeworkService,
-        userUseDomain: Boolean
+        userUseDomain: Boolean,
+        templateCard: com.tencent.devops.notify.pojo.wework.WeworkTemplateCard? = null
     ) {
         val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
         wechatNotifyMessage.sender = sender
@@ -25,6 +26,7 @@ object NotifierUtils {
         wechatNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
             ?: EnumNotifySource.BUSINESS_LOGIC
         wechatNotifyMessage.markdownContent = sendNotifyMessageTemplateRequest.markdownContent ?: false
+        wechatNotifyMessage.templateCard = templateCard
         weworkService.sendMqMsg(wechatNotifyMessage)
     }
 
