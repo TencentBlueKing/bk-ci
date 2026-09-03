@@ -8,6 +8,7 @@ import (
 	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/kubeclient"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -96,6 +97,44 @@ func TestN4_NonCreatorSameProjectCanStopDeleteDebugBuilder(t *testing.T) {
 		authz.HeaderProjectID: "proj-a",
 	})
 	assert.True(t, authorizeBuilderLifecycle(c, "build888-debugaa", false), "同项目非创建者应能探活")
+}
+
+func TestN7_StartOwnedBuilderRequiresMatchingIdentity(t *testing.T) {
+	listBuilderDeployment = func(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
+		return []*appsv1.Deployment{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: workloadCoreLabel,
+				Labels: map[string]string{
+					authz.LabelProjectID: "proj-a",
+					authz.LabelUserID:    "alice",
+				},
+			},
+		}}, nil
+	}
+	defer func() { listBuilderDeployment = kubeclient.ListDeployment }()
+
+	c, w := newTestContextUnsigned(http.MethodPut, "/api/builders/build777-victim1/start", map[string]string{
+		authz.HeaderUserID:    "mallory",
+		authz.HeaderProjectID: "proj-b",
+	})
+	c.Params = []gin.Param{{Key: "builderName", Value: "build777-victim1"}}
+	startBuilder(c)
+	assert.Equal(t, http.StatusForbidden, w.Code, "无签名伪造头不得 start 已属主构建机")
+
+	c, w = newTestContext(http.MethodPut, "/api/builders/build777-victim1/start", map[string]string{
+		authz.HeaderUserID:    "mallory",
+		authz.HeaderProjectID: "proj-b",
+	})
+	c.Params = []gin.Param{{Key: "builderName", Value: "build777-victim1"}}
+	startBuilder(c)
+	assert.Equal(t, http.StatusForbidden, w.Code, "跨项目即使有签名也不得 start")
+
+	c, w = newTestContext(http.MethodPut, "/api/builders/build777-victim1/start", map[string]string{
+		authz.HeaderUserID:    "carol",
+		authz.HeaderProjectID: "proj-a",
+	})
+	assert.True(t, authorizeBuilderLifecycle(c, "build777-victim1", true), "同项目已签名应能 start")
+	assert.NotEqual(t, http.StatusForbidden, w.Code)
 }
 
 func TestN4_NonCreatorSameProjectCanIssueLoginDebug(t *testing.T) {

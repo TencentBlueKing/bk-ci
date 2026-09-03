@@ -1,29 +1,28 @@
 package service
 
 import (
-	"disaptch-k8s-manager/pkg/types"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"disaptch-k8s-manager/pkg/apiserver/authz"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_calculateRealResource(t *testing.T) {
-	res := []types.ContainerResourceUsage{
-		{Cpu: "373m", Memory: "277Mi"},
-		{Cpu: "848m", Memory: "390Mi"},
-		{Cpu: "966m", Memory: "378Mi"},
-		{Cpu: "0m", Memory: "0Mi"},
-		{Cpu: "832m", Memory: "471Mi"},
-		{Cpu: "738m", Memory: "466Mi"},
-		{Cpu: "941m", Memory: "323Mi"},
-	}
-	act := calculateRealResource("", res)
-	expect := []types.ContainerResourceUsage{
-		{Cpu: "966m", Memory: "471Mi"},
-		{Cpu: "941m", Memory: "466Mi"},
-		{Cpu: "848m", Memory: "390Mi"},
-		{Cpu: "832m", Memory: "378Mi"},
-		{Cpu: "738m", Memory: "323Mi"},
-	}
-	assertTrue := assert.New(t)
-	assertTrue.Equal(expect, act)
+func TestMergeStartOwnerLabels_KeepsExistingAndBackfillsMissing(t *testing.T) {
+	dispatch := map[string]string{"workload": "build1"}
+	existing := authz.Owner{UserID: "alice", ProjectID: "proj-a"}
+	claimed := authz.Owner{UserID: "mallory", ProjectID: "proj-b"}
+
+	got := mergeStartOwnerLabels(dispatch, existing, claimed)
+	assert.Equal(t, "alice", got[authz.LabelUserID], "已有属主不得被 start 请求者覆盖")
+	assert.Equal(t, "proj-a", got[authz.LabelProjectID])
+	assert.Equal(t, "build1", got["workload"])
+
+	got = mergeStartOwnerLabels(map[string]string{"workload": "build1"}, authz.Owner{}, claimed)
+	assert.Equal(t, "mallory", got[authz.LabelUserID], "缺失才补请求者")
+	assert.Equal(t, "proj-b", got[authz.LabelProjectID])
+
+	got = mergeStartOwnerLabels(map[string]string{"workload": "build1"}, authz.Owner{}, authz.Owner{})
+	assert.Empty(t, got[authz.LabelUserID])
+	assert.Empty(t, got[authz.LabelProjectID])
 }

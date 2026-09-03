@@ -364,19 +364,16 @@ func buildDedicatedBuilder(builder *Builder) ([]corev1.Toleration, []kubeclient.
 func StartBuilder(builderName string, start *BuilderStart, owner authz.Owner) (taskId string, err error) {
 	taskId = generateTaskId()
 
+	existingOwner := existingBuilderOwner(builderName)
 	labels := getDispatchLabel(builderName, taskId, types.TaskActionStart, types.BuilderTaskLabel)
-	if !owner.IsEmpty() {
-		labels = authz.ApplyOwnerLabels(labels, owner)
-	}
+	labels = mergeStartOwnerLabels(labels, existingOwner, owner)
 
 	// 重新拿一次node缓存，方便在启动构建机时重新调度
 	annotations, err := getBuilderAnnotations(builderName)
 	if err != nil {
 		return "", err
 	}
-	if !owner.IsEmpty() {
-		annotations = authz.ApplyOwnerAnnotations(annotations, owner)
-	}
+	annotations = mergeStartOwnerAnnotations(annotations, existingOwner, owner)
 
 	data, err := json.Marshal([]map[string]interface{}{
 		{
@@ -430,4 +427,34 @@ func StartBuilder(builderName string, start *BuilderStart, owner authz.Owner) (t
 	go task.DoStartBuilder(taskId, builderName, data)
 
 	return taskId, nil
+}
+
+func existingBuilderOwner(builderName string) authz.Owner {
+	deps, err := kubeclient.ListDeployment(builderName)
+	if err != nil || len(deps) == 0 {
+		return authz.Owner{}
+	}
+	return authz.OwnerFromMetadata(deps[0].ObjectMeta)
+}
+
+// mergeStartOwnerLabels：JSON patch replace 会整表替换 labels。
+// 已有属主必须保留，禁止被请求者覆盖；仅缺失时才补请求者（create 新建打标仍走 CreateBuilder）。
+func mergeStartOwnerLabels(dispatchLabels map[string]string, existing, claimed authz.Owner) map[string]string {
+	if !existing.IsEmpty() {
+		return authz.ApplyOwnerLabels(dispatchLabels, existing)
+	}
+	if !claimed.IsEmpty() {
+		return authz.ApplyOwnerLabels(dispatchLabels, claimed)
+	}
+	return dispatchLabels
+}
+
+func mergeStartOwnerAnnotations(annotations map[string]string, existing, claimed authz.Owner) map[string]string {
+	if !existing.IsEmpty() {
+		return authz.ApplyOwnerAnnotations(annotations, existing)
+	}
+	if !claimed.IsEmpty() {
+		return authz.ApplyOwnerAnnotations(annotations, claimed)
+	}
+	return annotations
 }

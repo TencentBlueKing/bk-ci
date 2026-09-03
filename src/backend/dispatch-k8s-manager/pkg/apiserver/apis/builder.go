@@ -106,6 +106,9 @@ func startBuilder(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
+	if !authorizeBuilderLifecycle(c, builderName, true) {
+		return
+	}
 
 	start := &service.BuilderStart{}
 
@@ -245,7 +248,7 @@ func debugBuilder(c *gin.Context) {
 }
 
 // authorizeBuilderLifecycle 分级授权：判定轴是对象有无属主。
-// mutate=false 为 status（已属主无身份可探活）；mutate=true 为 stop/delete（已属主无身份拒绝）。
+// mutate=false 为 status（已属主无身份可探活）；mutate=true 为 start/stop/delete（已属主无身份拒绝）。
 func authorizeBuilderLifecycle(c *gin.Context, builderName string, mutate bool) bool {
 	deps, err := listBuilderDeployment(builderName)
 	if err != nil || len(deps) == 0 {
