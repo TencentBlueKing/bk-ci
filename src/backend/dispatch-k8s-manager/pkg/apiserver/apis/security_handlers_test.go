@@ -30,6 +30,7 @@ func init() {
 
 func TestMain(m *testing.M) {
 	logs.Init(filepath.Join(os.TempDir(), "dispatch-k8s-manager-security-test.log"))
+	authz.SetDebugTicketSecretForTest([]byte(authz.UnitTestDebugTicketSecret))
 	os.Exit(m.Run())
 }
 

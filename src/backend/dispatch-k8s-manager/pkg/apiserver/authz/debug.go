@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"os"
 	"strings"
 	"time"
 
@@ -15,9 +16,13 @@ import (
 
 const (
 	debugTicketTTL = 10 * time.Minute
-	// DefaultDebugTicketSecret 未配置时的确定回退，保证多副本签发/验签一致。
-	// 该值随仓库公开，生产必须在 Helm/config.yaml 覆盖为高熵随机串。绝不回退共享 ApiToken。
+	// EnvDebugTicketSecret Helm Secret 注入的票据密钥。优先于 config.yaml。
+	EnvDebugTicketSecret = "K8S_MANAGER_DEBUG_TICKET_SECRET"
+	// DefaultDebugTicketSecret 是曾经写进仓库的公开串，仅作拒绝名单与回归靶标。
+	// 绝不能再作为空配置兜底，否则读过源码即可自签票据。
 	DefaultDebugTicketSecret = "bkci-k8s-manager-debug-ticket-change-in-prod"
+	// UnitTestDebugTicketSecret 单测专用，禁止出现在配置与 Helm 默认值。
+	UnitTestDebugTicketSecret = "unit-test-debug-ticket-secret"
 )
 
 type debugTicket struct {
@@ -34,6 +39,10 @@ func IssueDebugTicket(caller Caller, podName, containerName string, now time.Tim
 	if caller.IsEmpty() || podName == "" || containerName == "" {
 		return "", ErrMissingIdentity
 	}
+	secret := debugTicketSecret()
+	if len(secret) == 0 {
+		return "", ErrDebugDisabled
+	}
 	payload, err := json.Marshal(debugTicket{
 		PodName:       podName,
 		ContainerName: containerName,
@@ -45,7 +54,7 @@ func IssueDebugTicket(caller Caller, podName, containerName string, now time.Tim
 	if err != nil {
 		return "", err
 	}
-	return signDebugPayload(payload, debugTicketSecret()), nil
+	return signDebugPayload(payload, secret), nil
 }
 
 func signDebugPayload(payload, secret []byte) string {
@@ -71,6 +80,9 @@ func SignDebugTicketWithSecret(caller Caller, podName, containerName string, now
 }
 
 func VerifyDebugTicket(token string, caller Caller, podName, containerName string, now time.Time) error {
+	if len(debugTicketSecret()) == 0 {
+		return ErrDebugDisabled
+	}
 	if token == "" {
 		return ErrInvalidTicket
 	}
@@ -179,15 +191,26 @@ func SetDebugTicketSecretForTest(secret []byte) {
 	testTicketSecret = append([]byte(nil), secret...)
 }
 
+func DebugTicketConfigured() bool {
+	return len(debugTicketSecret()) > 0
+}
+
 func debugTicketSecret() []byte {
 	if len(testTicketSecret) > 0 {
 		return testTicketSecret
 	}
-	// 独立密钥：配置优先，空配置回退确定默认值。绝不回退共享 Devops-Token，也不用进程内随机。
-	if config.Config != nil && strings.TrimSpace(config.Config.ApiServer.Auth.DebugTicketSecret) != "" {
-		return []byte(config.Config.ApiServer.Auth.DebugTicketSecret)
+	candidates := []string{os.Getenv(EnvDebugTicketSecret)}
+	if config.Config != nil {
+		candidates = append(candidates, config.Config.ApiServer.Auth.DebugTicketSecret)
 	}
-	return []byte(DefaultDebugTicketSecret)
+	for _, raw := range candidates {
+		raw = strings.TrimSpace(raw)
+		if raw == "" || raw == DefaultDebugTicketSecret {
+			continue
+		}
+		return []byte(raw)
+	}
+	return nil
 }
 
 // FormatDebugBuilderURL 把票据放在 path 最后一段，避免 WebConsole 追加 ?targetHost= 时出现第二个 '?'。

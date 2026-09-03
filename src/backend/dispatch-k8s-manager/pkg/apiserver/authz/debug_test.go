@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"disaptch-k8s-manager/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,7 +74,7 @@ func TestIssueDebugTicketForPod_UsesOwnerNotClaimedCaller(t *testing.T) {
 func TestKnownSharedTokenSignedTicketRejected(t *testing.T) {
 	now := time.Now()
 	SetDebugTicketSecretForTest([]byte("server-high-entropy-secret"))
-	defer SetDebugTicketSecretForTest(nil)
+	defer SetDebugTicketSecretForTest([]byte(UnitTestDebugTicketSecret))
 
 	victim := Caller{UserID: "alice", ProjectID: "proj-a"}
 	forgedToken, err := SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte("shared-devops-token"))
@@ -88,24 +90,43 @@ func TestKnownSharedTokenSignedTicketRejected(t *testing.T) {
 	assert.NoError(t, VerifyDebugTicket(legit, victim, "pod-1", "ctr-1", now))
 }
 
-func TestDebugTicketSecretConsistentWhenUnconfigured(t *testing.T) {
+func TestDebugTicketSecretUnconfiguredDisablesDebug(t *testing.T) {
 	SetDebugTicketSecretForTest(nil)
-	// 模拟副本 A/B：空配置必须读到同一确定密钥，而不能是进程内随机。
-	replicaA := append([]byte(nil), debugTicketSecret()...)
-	replicaB := append([]byte(nil), debugTicketSecret()...)
-	assert.Equal(t, DefaultDebugTicketSecret, string(replicaA))
-	assert.Equal(t, replicaA, replicaB)
+	defer SetDebugTicketSecretForTest([]byte(UnitTestDebugTicketSecret))
+
+	assert.False(t, DebugTicketConfigured())
+	assert.Empty(t, debugTicketSecret())
 
 	now := time.Now()
 	caller := Caller{UserID: "alice", ProjectID: "proj-a"}
-	ticket, err := IssueDebugTicket(caller, "pod-1", "ctr-1", now)
-	assert.NoError(t, err)
-	assert.NoError(t, VerifyDebugTicket(ticket, caller, "pod-1", "ctr-1", now))
+	_, err := IssueDebugTicket(caller, "pod-1", "ctr-1", now)
+	assert.ErrorIs(t, err, ErrDebugDisabled)
+	assert.ErrorIs(t, VerifyDebugTicket("anything", caller, "pod-1", "ctr-1", now), ErrDebugDisabled)
+}
 
-	// 知道公开默认值即可自签：这是多副本可用性的取舍，生产必须覆盖 Helm/config。
-	forged, err := SignDebugTicketWithSecret(caller, "pod-1", "ctr-1", now, []byte(DefaultDebugTicketSecret))
+func TestPublishedDefaultInConfigIsIgnored(t *testing.T) {
+	SetDebugTicketSecretForTest(nil)
+	defer SetDebugTicketSecretForTest([]byte(UnitTestDebugTicketSecret))
+	old := config.Config.ApiServer.Auth.DebugTicketSecret
+	config.Config.ApiServer.Auth.DebugTicketSecret = DefaultDebugTicketSecret
+	defer func() { config.Config.ApiServer.Auth.DebugTicketSecret = old }()
+	assert.False(t, DebugTicketConfigured(), "配置里的公开常量必须当作未配置")
+}
+
+func TestPoC_R1_PublishedDefaultTicketSecretRejected(t *testing.T) {
+	SetDebugTicketSecretForTest([]byte("server-high-entropy-secret"))
+	defer SetDebugTicketSecretForTest([]byte(UnitTestDebugTicketSecret))
+
+	now := time.Now()
+	victim := Caller{UserID: "alice", ProjectID: "proj-a"}
+	forged, err := SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte(DefaultDebugTicketSecret))
 	assert.NoError(t, err)
-	assert.NoError(t, VerifyDebugTicket(forged, caller, "pod-1", "ctr-1", now))
+	assert.ErrorIs(t, VerifyDebugTicket(forged, victim, "pod-1", "ctr-1", now), ErrInvalidTicket,
+		"仓库内公开常量不得再能自签通过")
+
+	legit, err := IssueDebugTicket(victim, "pod-1", "ctr-1", now)
+	assert.NoError(t, err)
+	assert.NoError(t, VerifyDebugTicket(legit, victim, "pod-1", "ctr-1", now))
 }
 
 func TestDebugTicketSurvivesWebConsoleProxyRewrite(t *testing.T) {

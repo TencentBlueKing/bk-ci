@@ -84,6 +84,12 @@ spec:
             - name: KUBERNETES_MANAGER_DEBUG_ENABLE
               value: "true"
             {{- end}}
+            - name: K8S_MANAGER_DEBUG_TICKET_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kubernetes-manager-auth
+                  key: debugTicketSecret
+                  optional: true
           workingDir: /data/workspace/kubernetes-manager
           livenessProbe:
             tcpSocket:

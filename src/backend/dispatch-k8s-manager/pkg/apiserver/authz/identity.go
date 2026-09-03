@@ -36,6 +36,7 @@ var (
 	ErrInvalidTicket     = errors.New("forbidden: debug ticket invalid or expired")
 	ErrNamespaceDenied   = errors.New("forbidden: namespace is not owned by caller or is a system namespace")
 	ErrUntrustedIdentity = errors.New("forbidden: identity must come from trusted headers, not query")
+	ErrDebugDisabled     = errors.New("debug disabled: debugTicketSecret is not configured")
 )
 
 // Caller 是请求侧“自称身份”，不能单独作为授权依据。

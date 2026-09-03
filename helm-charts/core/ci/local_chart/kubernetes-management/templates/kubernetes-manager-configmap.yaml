@@ -132,8 +132,8 @@ data:
         apiToken:
           key: {{ .Values.kubernetesManager.apiserver.auth.apiToken.key }}
           value: {{ .Values.kubernetesManager.apiserver.auth.apiToken.value }}
-        # 多副本必须读同一份；生产覆盖 .Values.kubernetesManager.apiserver.auth.debugTicketSecret
-        debugTicketSecret: {{ .Values.kubernetesManager.apiserver.auth.debugTicketSecret }}
+        # 票据密钥改由 Secret kubernetes-manager-auth 注入环境变量，不进 ConfigMap。
+        debugTicketSecret: ""
         # 仅 manager+dispatch 持有，禁止注入构建容器
         identitySigningKey: {{ .Values.kubernetesManager.apiserver.auth.identitySigningKey }}
         rsaPrivateKey: |

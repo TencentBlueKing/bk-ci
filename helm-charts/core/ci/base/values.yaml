@@ -371,8 +371,8 @@ kubernetes-manager:
         apiToken:
           key: Devops-Token
           value: landun
-        # debug HMAC 票据密钥。chart HPA maxReplicas=3，多副本必须一致。生产务必覆盖。
-        debugTicketSecret: bkci-k8s-manager-debug-ticket-change-in-prod
+        # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
+        debugTicketSecret: ""
         identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
         rsaPrivateKey: ""
     volumeMount:

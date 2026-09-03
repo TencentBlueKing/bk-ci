@@ -25,7 +25,7 @@ func TestPoC_R1_KnownSharedTokenForgedTicketRejected(t *testing.T) {
 	nowFunc = func() time.Time { return now }
 	defer func() { nowFunc = time.Now }()
 	authz.SetDebugTicketSecretForTest([]byte("server-high-entropy-secret"))
-	defer authz.SetDebugTicketSecretForTest(nil)
+	defer authz.SetDebugTicketSecretForTest([]byte(authz.UnitTestDebugTicketSecret))
 
 	victim := authz.Caller{UserID: "alice", ProjectID: "proj-a"}
 	forged, err := authz.SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte("shared-devops-token"))
@@ -51,6 +51,40 @@ func TestPoC_R1_KnownSharedTokenForgedTicketRejected(t *testing.T) {
 		{Key: "ticket", Value: forged},
 	}
 	assert.ErrorIs(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"), authz.ErrInvalidTicket)
+}
+
+func TestPoC_R1_PublishedDefaultTicketSecretRejected(t *testing.T) {
+	now := time.Now()
+	nowFunc = func() time.Time { return now }
+	defer func() { nowFunc = time.Now }()
+	authz.SetDebugTicketSecretForTest([]byte("server-high-entropy-secret"))
+	defer authz.SetDebugTicketSecretForTest([]byte(authz.UnitTestDebugTicketSecret))
+
+	victim := authz.Caller{UserID: "alice", ProjectID: "proj-a"}
+	forged, err := authz.SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte(authz.DefaultDebugTicketSecret))
+	assert.NoError(t, err)
+
+	loadDebugPod = func(podName string) (*corev1.Pod, error) {
+		return &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   podName,
+				Labels: map[string]string{authz.LabelProjectID: "proj-a", authz.LabelUserID: "alice"},
+			},
+		}, nil
+	}
+	defer func() { loadDebugPod = kubeclient.GetPod }()
+
+	c, _ := newTestContext(http.MethodGet, "/api/builders/debug/pod-1/ctr-1/"+forged, map[string]string{
+		authz.HeaderUserID:    "alice",
+		authz.HeaderProjectID: "proj-a",
+	})
+	c.Params = gin.Params{
+		{Key: "podName", Value: "pod-1"},
+		{Key: "containerName", Value: "ctr-1"},
+		{Key: "ticket", Value: forged},
+	}
+	assert.ErrorIs(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"), authz.ErrInvalidTicket,
+		"公开常量 DefaultDebugTicketSecret 自签必须被拒，不能只挡 landun")
 }
 
 func TestPoC_R2_QueryIdentityCannotIssueOrDebug(t *testing.T) {

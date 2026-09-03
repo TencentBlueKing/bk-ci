@@ -204,7 +204,9 @@ func debugBuilderUrl(c *gin.Context) {
 	debugUrl, err := service.DebugBuilderUrl("/api/builders/debug", builderName, caller)
 	if err != nil {
 		status := http.StatusInternalServerError
-		if errors.Is(err, authz.ErrForbidden) || errors.Is(err, authz.ErrObjectUnowned) ||
+		if errors.Is(err, authz.ErrDebugDisabled) {
+			status = http.StatusServiceUnavailable
+		} else if errors.Is(err, authz.ErrForbidden) || errors.Is(err, authz.ErrObjectUnowned) ||
 			errors.Is(err, authz.ErrMissingIdentity) || errors.Is(err, authz.ErrInvalidTicket) {
 			status = http.StatusForbidden
 		}
@@ -232,7 +234,11 @@ func debugBuilder(c *gin.Context) {
 	}
 
 	if err := authorizeDebugBuilder(c, podName, containerName); err != nil {
-		fail(c, http.StatusForbidden, err)
+		status := http.StatusForbidden
+		if errors.Is(err, authz.ErrDebugDisabled) {
+			status = http.StatusServiceUnavailable
+		}
+		fail(c, status, err)
 		return
 	}
 
@@ -269,6 +275,9 @@ func authorizeBuilderLifecycle(c *gin.Context, builderName string, mutate bool) 
 }
 
 func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error {
+	if !authz.DebugTicketConfigured() {
+		return authz.ErrDebugDisabled
+	}
 	if authz.HasQueryIdentity(c) {
 		return authz.ErrUntrustedIdentity
 	}
