@@ -76,7 +76,9 @@ class DeploymentClient @Autowired constructor(
         projectId: String
     ): KubernetesResult<Deployment> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
-        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId, method = "GET").get().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = projectId, method = "GET"
+        ).get().build()
         logger.info("Get deployment: $deploymentName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -100,7 +102,9 @@ class DeploymentClient @Autowired constructor(
         projectId: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
-        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId, method = "DELETE").delete().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = projectId, method = "DELETE"
+        ).delete().build()
         logger.info("Delete deployment: $deploymentName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()

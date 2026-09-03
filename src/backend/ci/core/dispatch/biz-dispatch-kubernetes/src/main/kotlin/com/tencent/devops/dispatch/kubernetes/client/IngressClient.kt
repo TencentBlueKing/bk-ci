@@ -97,7 +97,9 @@ class IngressClient @Autowired constructor(
         ingressName: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/ingress/$ingressName"
-        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "DELETE").delete().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = "", method = "DELETE"
+        ).delete().build()
         logger.info("Delete ingress: $ingressName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()

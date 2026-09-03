@@ -97,7 +97,9 @@ class ServiceClient @Autowired constructor(
         serviceName: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/services/$serviceName"
-        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "DELETE").delete().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = "", method = "DELETE"
+        ).delete().build()
         logger.info("Delete service: $serviceName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
