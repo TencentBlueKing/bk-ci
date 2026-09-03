@@ -119,6 +119,7 @@ class DispatchBaseDebugService @Autowired constructor(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
+            projectId = projectId,
             builderName = builderName
         )
         if (statusResponse.isOk()) {
@@ -249,6 +250,7 @@ class DispatchBaseDebugService @Autowired constructor(
                         buildId = "",
                         vmSeqId = vmSeqId,
                         userId = userId,
+                        projectId = projectId,
                         builderName = debugBuilderName,
                         param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.STOP, null)
                     )
@@ -263,6 +265,7 @@ class DispatchBaseDebugService @Autowired constructor(
                             buildId = "",
                             vmSeqId = vmSeqId,
                             userId = userId,
+                            projectId = projectId,
                             builderName = debugBuilderName,
                             param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
                         )
@@ -301,6 +304,7 @@ class DispatchBaseDebugService @Autowired constructor(
             buildId = buildId ?: "",
             vmSeqId = vmSeqId,
             userId = userId,
+            projectId = projectId,
             builderName = builderName,
             param = DispatchBuildOperateBuilderParams(
                 type = DispatchBuildOperateBuilderType.START_SLEEP,

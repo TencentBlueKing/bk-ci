@@ -146,6 +146,7 @@ class KubernetesContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         retryTime: Int
     ): Result<DispatchBuildBuilderStatus> {
@@ -154,6 +155,7 @@ class KubernetesContainerService @Autowired constructor(
             vmSeqId = vmSeqId,
             userId = userId,
             name = builderName,
+            projectId = projectId,
             retryTime = retryTime
         )
         if (result.isNotOk()) {
@@ -176,6 +178,7 @@ class KubernetesContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         param: DispatchBuildOperateBuilderParams
     ): String {
@@ -184,6 +187,7 @@ class KubernetesContainerService @Autowired constructor(
             vmSeqId = vmSeqId,
             userId = userId,
             name = builderName,
+            projectId = projectId,
             param = when (param.type) {
                 DispatchBuildOperateBuilderType.DELETE -> DeleteBuilderParams()
                 DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
@@ -218,6 +222,7 @@ class KubernetesContainerService @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
+                projectId = projectId,
                 builder = Builder(
                     name = builderName,
                     image = "$host/$name:$tag",
@@ -282,6 +287,7 @@ class KubernetesContainerService @Autowired constructor(
                 vmSeqId = vmSeqId,
                 userId = userId,
                 name = builderName,
+                projectId = projectId,
                 param = StartBuilderParams(
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,

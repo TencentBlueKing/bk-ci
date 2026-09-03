@@ -69,11 +69,12 @@ class KubernetesBuilderClient @Autowired constructor(
         vmSeqId: String,
         userId: String,
         name: String,
+        projectId: String,
         retryTime: Int = 3
     ): KubernetesResult<KubernetesBuilderStatus> {
         val url = "/api/builders/$name/status"
         logger.info("[$buildId]|[$vmSeqId] Get detail builderName: $name request url: $url")
-        val request = clientCommon.baseRequest(userId, url).get().build()
+        val request = clientCommon.baseRequest(userId, url, projectId = projectId).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
@@ -84,7 +85,7 @@ class KubernetesBuilderClient @Autowired constructor(
 
                 if (retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
-                    return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
+                    return getBuilderDetail(buildId, vmSeqId, userId, name, projectId, retryTimeLocal)
                 }
 
                 throw BuildFailureException(
@@ -101,7 +102,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     "[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException." +
                         " retry:$retryTime"
                 )
-                return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
+                return getBuilderDetail(buildId, vmSeqId, userId, name, projectId, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
                 throw BuildFailureException(
@@ -119,27 +120,28 @@ class KubernetesBuilderClient @Autowired constructor(
         vmSeqId: String,
         userId: String,
         name: String,
-        param: OperateBuilderParams
+        param: OperateBuilderParams,
+        projectId: String
     ): String {
         val url = "/api/builders/$name"
         val body = ObjectMapper().writeValueAsString(param)
         val (request, action) = when (param) {
             is DeleteBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, url)
+                clientCommon.baseRequest(userId, url, projectId = projectId)
                     .delete(RequestBody.create(null, ""))
                     .build(),
                 ""
             )
 
             is StopBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, "$url/stop")
+                clientCommon.baseRequest(userId, "$url/stop", projectId = projectId)
                     .put(RequestBody.create(null, ""))
                     .build(),
                 "stop"
             )
 
             is StartBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, "$url/start")
+                clientCommon.baseRequest(userId, "$url/start", projectId = projectId)
                     .put(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "start"
@@ -189,13 +191,14 @@ class KubernetesBuilderClient @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
-        builder: Builder
+        builder: Builder,
+        projectId: String
     ): String {
         val url = "/api/builders"
         val body = ObjectMapper().writeValueAsString(builder)
         logger.info("[$buildId]|[$vmSeqId] create builder request url: $url")
         logger.info("[$buildId]|[$vmSeqId] create builder request body: $body")
-        val request = clientCommon.baseRequest(userId, url)
+        val request = clientCommon.baseRequest(userId, url, projectId = projectId)
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
@@ -258,7 +261,7 @@ class KubernetesBuilderClient @Autowired constructor(
             // 轮询容器状态
             var success = true
             var isFinish = false
-            val statusResponse = getBuilderDetail(buildId, vmSeqId, userId, containerName)
+            val statusResponse = getBuilderDetail(buildId, vmSeqId, userId, containerName, projectId)
             if (statusResponse.isOk()) {
                 val status = statusResponse.data!!
                 if (status.isRunning()) {
@@ -292,7 +295,7 @@ class KubernetesBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(
             staffName,
             url,
-            clientCommon.identityHeaders(staffName, projectId)
+            projectId = projectId
         )
             .get()
             .build()

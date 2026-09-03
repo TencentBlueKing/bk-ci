@@ -40,6 +40,13 @@ func TestAuthorizeBuilderObserveAndMutate(t *testing.T) {
 	assert.ErrorIs(t, AuthorizeBuilderMutate(Caller{UserID: "bob", ProjectID: "proj-b"}, owner), ErrForbidden)
 }
 
+func TestN4_UserOnlyCallerCannotMutateProjectOwnedBuilder(t *testing.T) {
+	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
+	// 只带 UID：项目级匹配永远命不中，退化成用户名必须相等。
+	assert.ErrorIs(t, AuthorizeBuilderMutate(Caller{UserID: "carol"}, owner), ErrForbidden)
+	assert.NoError(t, AuthorizeBuilderMutate(Caller{UserID: "carol", ProjectID: "proj-a"}, owner))
+}
+
 func TestOwnerFromPod(t *testing.T) {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

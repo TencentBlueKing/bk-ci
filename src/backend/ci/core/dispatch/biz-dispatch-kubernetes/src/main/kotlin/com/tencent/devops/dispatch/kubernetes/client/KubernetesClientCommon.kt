@@ -51,9 +51,14 @@ class KubernetesClientCommon @Autowired constructor(
     @Value("\${kubernetes.apiUrl}")
     val kubernetesApiUrl: String = ""
 
-    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
+    fun baseRequest(
+        userId: String,
+        url: String,
+        headers: Map<String, String>? = null,
+        projectId: String = ""
+    ): Request.Builder {
         return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(
-            headers(identityHeaders(userId) + (headers ?: emptyMap()))
+            headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
         )
     }
 
