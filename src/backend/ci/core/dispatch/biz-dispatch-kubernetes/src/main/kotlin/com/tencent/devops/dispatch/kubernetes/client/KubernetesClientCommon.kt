@@ -49,6 +49,8 @@ class KubernetesClientCommon @Autowired constructor(
         private const val TENANT_ID_KEY = "X-DEVOPS-TENANT-ID"
         private const val IDENTITY_SIG_KEY = "X-DEVOPS-IDENTITY-SIG"
         private const val IDENTITY_TS_KEY = "X-DEVOPS-IDENTITY-TS"
+        // 曾经写进仓库的公开串，仅作拒绝名单；不得再当 @Value 兜底。
+        private const val PUBLISHED_DEFAULT_IDENTITY_KEY = "bkci-k8s-manager-identity-sig-change-in-prod"
     }
 
     @Value("\${kubernetes.token}")
@@ -57,8 +59,8 @@ class KubernetesClientCommon @Autowired constructor(
     @Value("\${kubernetes.apiUrl}")
     val kubernetesApiUrl: String = ""
 
-    // 仅 dispatch 持有，禁止注入构建容器。须与 manager Secret identitySigningKey 一致。
-    // 空配置不回退仓库公开串，不发 SIG，manager 会丢弃自称头。
+    // 仅 dispatch 持有，禁止注入构建容器。Helm 同 namespace 挂 kubernetes-manager-auth。
+    // 空配置或公开串不发 SIG，manager 会丢弃自称头。
     @Value("\${kubernetes.identitySigningKey:}")
     val identitySigningKey: String = ""
 
@@ -95,21 +97,30 @@ class KubernetesClientCommon @Autowired constructor(
         if (tenantId.isNotBlank()) {
             result[TENANT_ID_KEY] = tenantId
         }
-        if (result.isNotEmpty() && identitySigningKey.isNotBlank()) {
+        val key = effectiveIdentitySigningKey()
+        if (result.isNotEmpty() && key.isNotBlank()) {
             val ts = Instant.now().epochSecond.toString()
             result[IDENTITY_TS_KEY] = ts
             result[IDENTITY_SIG_KEY] = signIdentity(
                 userId = result[USER_ID_KEY] ?: "",
                 projectId = result[PROJECT_ID_KEY] ?: "",
                 tenantId = result[TENANT_ID_KEY] ?: "",
-                ts = ts
+                ts = ts,
+                key = key
             )
         }
         return result
     }
 
-    private fun signIdentity(userId: String, projectId: String, tenantId: String, ts: String): String {
-        val key = identitySigningKey
+    private fun effectiveIdentitySigningKey(): String {
+        val key = identitySigningKey.trim()
+        if (key.isBlank() || key == PUBLISHED_DEFAULT_IDENTITY_KEY) {
+            return ""
+        }
+        return key
+    }
+
+    private fun signIdentity(userId: String, projectId: String, tenantId: String, ts: String, key: String): String {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
         val payload = "$userId|$projectId|$tenantId|$ts"

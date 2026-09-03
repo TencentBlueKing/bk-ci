@@ -106,6 +106,13 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
+            # 与 manager 共读同一 Secret：首装 rand、升级 lookup 保值。跨命名空间时 optional 为空，不发 SIG。
+            - name: KUBERNETES_IDENTITY_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubernetes-manager-auth
+                  key: identitySigningKey
+                  optional: true
           workingDir: /data/workspace/dispatch
           {{ if .Values.entrypoint.override }}
           command:

@@ -1,9 +1,15 @@
 package authz
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
+
+	"disaptch-k8s-manager/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -47,11 +53,30 @@ func TestAttachIdentitySignatureSkipsEmptyCaller(t *testing.T) {
 func TestPublishedDefaultIdentityKeyRejected(t *testing.T) {
 	defer SetIdentitySigningKeyForTest([]byte(UnitTestIdentitySigningKey))
 	now := time.Now()
+	caller := Caller{UserID: "alice", ProjectID: "proj-a"}
+	h := http.Header{}
+	h.Set(HeaderUserID, caller.UserID)
+	h.Set(HeaderProjectID, caller.ProjectID)
+	ts := strconv.FormatInt(now.Unix(), 10)
+	mac := hmac.New(sha256.New, []byte(DefaultIdentitySigningKey))
+	_, _ = mac.Write([]byte(identitySigPayload(caller, ts)))
+	h.Set(HeaderIdentityTS, ts)
+	h.Set(HeaderIdentitySig, base64.RawURLEncoding.EncodeToString(mac.Sum(nil)))
+
+	SetIdentitySigningKeyForTest([]byte("server-high-entropy-identity"))
+	assert.True(t, CallerFromHeader(h).IsEmpty(), "公开常量 identitySigningKey 自签必须被拒")
+}
+
+func TestPublishedDefaultIdentityKeyInConfigIsIgnored(t *testing.T) {
+	SetIdentitySigningKeyForTest(nil)
+	defer SetIdentitySigningKeyForTest([]byte(UnitTestIdentitySigningKey))
+	old := config.Config.ApiServer.Auth.IdentitySigningKey
+	config.Config.ApiServer.Auth.IdentitySigningKey = DefaultIdentitySigningKey
+	defer func() { config.Config.ApiServer.Auth.IdentitySigningKey = old }()
+	assert.Empty(t, identitySigningKey(), "配置里的公开常量必须当作未配置")
+
 	h := http.Header{}
 	h.Set(HeaderUserID, "alice")
 	h.Set(HeaderProjectID, "proj-a")
-	SetIdentitySigningKeyForTest([]byte(DefaultIdentitySigningKey))
-	AttachIdentitySignature(h, now)
-	SetIdentitySigningKeyForTest([]byte("server-high-entropy-identity"))
-	assert.True(t, CallerFromHeader(h).IsEmpty(), "公开常量 identitySigningKey 自签必须被拒")
+	assert.True(t, CallerFromHeader(h).IsEmpty(), "空配置自称头降级匿名")
 }
