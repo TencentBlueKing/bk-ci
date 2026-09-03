@@ -20,13 +20,16 @@ func TestAuthorizeObject(t *testing.T) {
 	assert.NoError(t, AuthorizeObject(Caller{UserID: "carol", ProjectID: "proj-a"}, owner))
 }
 
-func TestAuthorizeObjectIfOwned(t *testing.T) {
+func TestAuthorizeBuilderObserveAndMutate(t *testing.T) {
 	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
-	// 灰度豁免：无属主、无自称都不拦截。
-	assert.NoError(t, AuthorizeObjectIfOwned(Caller{UserID: "alice", ProjectID: "proj-a"}, Owner{}))
-	assert.NoError(t, AuthorizeObjectIfOwned(Caller{}, owner))
-	assert.NoError(t, AuthorizeObjectIfOwned(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
-	assert.ErrorIs(t, AuthorizeObjectIfOwned(Caller{UserID: "bob", ProjectID: "proj-b"}, owner), ErrForbidden)
+	assert.NoError(t, AuthorizeBuilderObserve(Caller{}, Owner{}))
+	assert.NoError(t, AuthorizeBuilderMutate(Caller{}, Owner{}))
+	assert.NoError(t, AuthorizeBuilderObserve(Caller{}, owner))
+	assert.ErrorIs(t, AuthorizeBuilderMutate(Caller{}, owner), ErrMissingIdentity)
+	assert.NoError(t, AuthorizeBuilderObserve(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
+	assert.NoError(t, AuthorizeBuilderMutate(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
+	assert.ErrorIs(t, AuthorizeBuilderObserve(Caller{UserID: "bob", ProjectID: "proj-b"}, owner), ErrForbidden)
+	assert.ErrorIs(t, AuthorizeBuilderMutate(Caller{UserID: "bob", ProjectID: "proj-b"}, owner), ErrForbidden)
 }
 
 func TestOwnerFromPod(t *testing.T) {

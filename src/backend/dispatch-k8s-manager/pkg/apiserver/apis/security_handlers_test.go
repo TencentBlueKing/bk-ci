@@ -104,8 +104,10 @@ func TestAuthorizeBuilderLifecycle_ExemptsUnowned(t *testing.T) {
 	defer func() { listBuilderDeployment = kubeclient.ListDeployment }()
 
 	c, w := newTestContext(http.MethodGet, "/api/builders/build123-abcd1234/status", nil)
-	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234", false))
 	assert.NotEqual(t, http.StatusForbidden, w.Code)
+	c, w = newTestContext(http.MethodPut, "/api/builders/build123-abcd1234/stop", nil)
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234", true))
 
 	listBuilderDeployment = func(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
 		return []*appsv1.Deployment{{
@@ -115,18 +117,27 @@ func TestAuthorizeBuilderLifecycle_ExemptsUnowned(t *testing.T) {
 			},
 		}}, nil
 	}
+	c, w = newTestContext(http.MethodGet, "/api/builders/build123-abcd1234/status", nil)
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234", false), "已属主无身份 status 可探活")
+	c, w = newTestContext(http.MethodPut, "/api/builders/build123-abcd1234/stop", nil)
+	assert.False(t, authorizeBuilderLifecycle(c, "build123-abcd1234", true), "已属主无身份不得 stop")
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	c, w = newTestContext(http.MethodDelete, "/api/builders/build123-abcd1234", nil)
+	assert.False(t, authorizeBuilderLifecycle(c, "build123-abcd1234", true), "已属主无身份不得 delete")
+	assert.Equal(t, http.StatusForbidden, w.Code)
+
 	c, w = newTestContext(http.MethodPut, "/api/builders/build123-abcd1234/stop", map[string]string{
 		authz.HeaderUserID:    "bob",
 		authz.HeaderProjectID: "proj-b",
 	})
-	assert.False(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
+	assert.False(t, authorizeBuilderLifecycle(c, "build123-abcd1234", true))
 	assert.Equal(t, http.StatusForbidden, w.Code)
 
 	c, w = newTestContext(http.MethodDelete, "/api/builders/build123-abcd1234", map[string]string{
 		authz.HeaderUserID:    "alice",
 		authz.HeaderProjectID: "proj-a",
 	})
-	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234", true))
 }
 
 func sampleClaimTask() *types.BuildLessTask {

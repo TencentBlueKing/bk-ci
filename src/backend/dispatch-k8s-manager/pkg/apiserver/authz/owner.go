@@ -34,12 +34,26 @@ func AuthorizeObject(caller Caller, owner Owner) error {
 	return nil
 }
 
-// AuthorizeObjectIfOwned 分级策略：无属主或调用方未带身份则放行。
-// 用于 getBuilderStatus/stop/delete，避免灰度期无属主的在跑构建被 default-deny 打挂。
-// 新创建的 builder 已打属主 label，有自称身份时仍做匹配。
-func AuthorizeObjectIfOwned(caller Caller, owner Owner) error {
-	if owner.IsEmpty() || caller.IsEmpty() {
+// AuthorizeBuilderObserve 用于 status：判定轴是对象有无属主。
+// 无属主放行（存量构建）；已属主但无身份也放行（只读探活）；有身份则必须匹配。
+func AuthorizeBuilderObserve(caller Caller, owner Owner) error {
+	if owner.IsEmpty() {
 		return nil
+	}
+	if caller.IsEmpty() {
+		return nil
+	}
+	return AuthorizeObject(caller, owner)
+}
+
+// AuthorizeBuilderMutate 用于 stop/delete：无属主放行；已属主则必须带匹配身份。
+// 不发身份头不得对他人已打标构建机做破坏操作。
+func AuthorizeBuilderMutate(caller Caller, owner Owner) error {
+	if owner.IsEmpty() {
+		return nil
+	}
+	if caller.IsEmpty() {
+		return ErrMissingIdentity
 	}
 	return AuthorizeObject(caller, owner)
 }

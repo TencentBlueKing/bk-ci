@@ -50,7 +50,7 @@ func getBuilderStatus(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
-	if !authorizeBuilderLifecycle(c, builderName) {
+	if !authorizeBuilderLifecycle(c, builderName, false) {
 		return
 	}
 
@@ -136,7 +136,7 @@ func stopBuilder(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
-	if !authorizeBuilderLifecycle(c, builderName) {
+	if !authorizeBuilderLifecycle(c, builderName, true) {
 		return
 	}
 
@@ -163,7 +163,7 @@ func deleteBuilder(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
-	if !authorizeBuilderLifecycle(c, builderName) {
+	if !authorizeBuilderLifecycle(c, builderName, true) {
 		return
 	}
 
@@ -242,14 +242,21 @@ func debugBuilder(c *gin.Context) {
 	service.DebugBuilder(ws, podName, containerName)
 }
 
-// authorizeBuilderLifecycle 分级授权：无属主或未带身份放行，避免打挂灰度期在跑构建。
-func authorizeBuilderLifecycle(c *gin.Context, builderName string) bool {
+// authorizeBuilderLifecycle 分级授权：判定轴是对象有无属主。
+// mutate=false 为 status（已属主无身份可探活）；mutate=true 为 stop/delete（已属主无身份拒绝）。
+func authorizeBuilderLifecycle(c *gin.Context, builderName string, mutate bool) bool {
 	deps, err := listBuilderDeployment(builderName)
 	if err != nil || len(deps) == 0 {
 		return true
 	}
 	owner := authz.OwnerFromMetadata(deps[0].ObjectMeta)
-	if err := authz.AuthorizeObjectIfOwned(authz.CallerFromRequest(c), owner); err != nil {
+	caller := authz.CallerFromRequest(c)
+	if mutate {
+		err = authz.AuthorizeBuilderMutate(caller, owner)
+	} else {
+		err = authz.AuthorizeBuilderObserve(caller, owner)
+	}
+	if err != nil {
 		fail(c, http.StatusForbidden, err)
 		return false
 	}
