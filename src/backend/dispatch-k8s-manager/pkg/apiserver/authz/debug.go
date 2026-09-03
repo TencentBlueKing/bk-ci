@@ -109,3 +109,49 @@ func debugTicketSecret() []byte {
 	}
 	return []byte("dispatch-k8s-manager-debug-ticket")
 }
+
+// FormatDebugBuilderURL 把票据放在 path 最后一段，避免 WebConsole 追加 ?targetHost= 时出现第二个 '?'。
+func FormatDebugBuilderURL(gateway, prefix, podName, containerName, ticket string) string {
+	return "ws://" + gateway + prefix + "/" + podName + "/" + containerName + "/" + ticket
+}
+
+// DebugTicketFromRequest 优先读 path，其次 query，兼容旧客户端。
+func DebugTicketFromRequest(pathTicket, queryTicket string) string {
+	if strings.TrimSpace(pathTicket) != "" {
+		return strings.TrimSpace(pathTicket)
+	}
+	return strings.TrimSpace(queryTicket)
+}
+
+// RewriteWebConsoleProxy 复现 Kotlin getDebugWebsocketUrl 的拆散重组。
+func RewriteWebConsoleProxy(wsURL, proxy string) string {
+	list := strings.Split(wsURL, "/")
+	if len(list) < 4 {
+		return wsURL
+	}
+	targetHost := list[2]
+	rest := strings.Join(list[3:], "/")
+	sep := "?"
+	if strings.Contains(rest, "?") {
+		sep = "&"
+	}
+	return strings.TrimRight(proxy, "/") + "/" + rest + sep + "targetHost=" + targetHost
+}
+
+// TicketFromRewrittenDebugURL 从重组后的 URL 取出 path 末段票据。
+func TicketFromRewrittenDebugURL(rewritten string) string {
+	withoutScheme := rewritten
+	if i := strings.Index(rewritten, "://"); i >= 0 {
+		withoutScheme = rewritten[i+3:]
+	}
+	path := withoutScheme
+	if i := strings.Index(path, "?"); i >= 0 {
+		path = path[:i]
+	}
+	path = strings.Trim(path, "/")
+	if path == "" {
+		return ""
+	}
+	parts := strings.Split(path, "/")
+	return parts[len(parts)-1]
+}

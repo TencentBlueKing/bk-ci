@@ -36,7 +36,9 @@ var (
 	ErrNamespaceDenied = errors.New("forbidden: namespace is not owned by caller or is a system namespace")
 )
 
-// Caller 是请求侧身份，来自 Header（WebSocket 也可走 Query）。
+// Caller 是请求侧“自称身份”，不能单独作为授权依据。
+// 可信上下文依次是：1) 服务端签发的 HMAC debug ticket；2) 集群内对象 label/annotation/env 属主；
+// 3) namespace 属主登记。Header 只用来与上述服务端状态做比对，自报不一致即拒绝。
 type Caller struct {
 	UserID    string
 	ProjectID string

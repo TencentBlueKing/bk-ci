@@ -12,7 +12,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"sync"
 	"time"
 
@@ -180,8 +179,7 @@ func DebugBuilderUrl(urlPerfix string, builderName string, caller authz.Caller) 
 		return "", err
 	}
 
-	return fmt.Sprintf("ws://%s%s/%s/%s?ticket=%s",
-		config.Config.Gateway.Url, urlPerfix, podName, containerName, url.QueryEscape(ticket)), nil
+	return authz.FormatDebugBuilderURL(config.Config.Gateway.Url, urlPerfix, podName, containerName, ticket), nil
 }
 
 const defaultCols = 144

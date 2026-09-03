@@ -374,10 +374,14 @@ class KubernetesContainerService @Autowired constructor(
         val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
         val list = websocketUrl.split("/").toList()
         val targetHost = list[2]
+        val pathAndQuery = list.subList(3, list.size).stream().collect(Collectors.joining("/"))
+        // 原 URL 若已有 query（历史 ticket=?），必须用 & 追加，否则第二个 '?' 会并进票据。
+        val separator = if (pathAndQuery.contains("?")) "&" else "?"
         val newWsUrl = StringBuilder(webConsoleProxy)
             .append("/")
-            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
-            .append("?targetHost=$targetHost")
+            .append(pathAndQuery)
+            .append(separator)
+            .append("targetHost=$targetHost")
         return newWsUrl.toString()
     }
 

@@ -16,8 +16,9 @@ var loadDebugPod = kubeclient.GetPod
 var nowFunc = time.Now
 
 const (
-	builderPrefix   = "/builders"
-	builderDebugUrl = "/debug/:podName/:containerName"
+	builderPrefix         = "/builders"
+	builderDebugUrl       = "/debug/:podName/:containerName"
+	builderDebugTicketUrl = "/debug/:podName/:containerName/:ticket"
 )
 
 func initBuilderApis(r *gin.RouterGroup) {
@@ -29,6 +30,7 @@ func initBuilderApis(r *gin.RouterGroup) {
 		builders.PUT("/:builderName/start", startBuilder)
 		builders.DELETE("/:builderName", deleteBuilder)
 		builders.GET("/:builderName/terminal", debugBuilderUrl)
+		builders.GET(builderDebugTicketUrl, debugBuilder)
 		builders.GET(builderDebugUrl, debugBuilder)
 	}
 }
@@ -235,7 +237,7 @@ func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error 
 	if err != nil {
 		return err
 	}
-	ticket := c.Query(authz.QueryTicket)
+	ticket := authz.DebugTicketFromRequest(c.Param("ticket"), c.Query(authz.QueryTicket))
 	pod, err := loadDebugPod(podName)
 	if err != nil || pod == nil {
 		return authz.ErrObjectUnowned

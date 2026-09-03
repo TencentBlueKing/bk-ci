@@ -73,6 +73,18 @@ func TestAuthorizeDebugBuilder_BlocksCrossTenant(t *testing.T) {
 		authz.HeaderProjectID: "proj-a",
 	})
 	assert.NoError(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"))
+
+	// 主路径：票据在 path 末段，WebConsole 追加 ?targetHost= 后签名仍完整。
+	c, _ = newTestContext(http.MethodGet, "/api/builders/debug/pod-1/ctr-1/"+ticket, map[string]string{
+		authz.HeaderUserID:    "alice",
+		authz.HeaderProjectID: "proj-a",
+	})
+	c.Params = gin.Params{
+		{Key: "podName", Value: "pod-1"},
+		{Key: "containerName", Value: "ctr-1"},
+		{Key: "ticket", Value: ticket},
+	}
+	assert.NoError(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"))
 }
 
 func sampleClaimTask() *types.BuildLessTask {
