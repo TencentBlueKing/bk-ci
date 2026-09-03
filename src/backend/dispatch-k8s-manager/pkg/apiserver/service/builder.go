@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/db/mysql"
 	"disaptch-k8s-manager/pkg/kubeclient"
@@ -11,11 +12,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	corev1 "k8s.io/api/core/v1"
+	"net/url"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	corev1 "k8s.io/api/core/v1"
 )
+
+var getPodForDebug = kubeclient.GetPod
 
 func GetBuilderStatus(workloadName string) (*BuilderStatus, error) {
 	// 先查询deployment有可能deployment存在但是pod为空证明是停止等待启动
@@ -153,7 +158,7 @@ func DeleteBuilder(builderName string) (taskId string, err error) {
 	return taskId, nil
 }
 
-func DebugBuilderUrl(urlPerfix string, builderName string) (url string, err error) {
+func DebugBuilderUrl(urlPerfix string, builderName string, caller authz.Caller) (string, error) {
 	podName, containerName, err := getPodAndContainerName(builderName)
 	if err != nil {
 		return "", err
@@ -162,7 +167,21 @@ func DebugBuilderUrl(urlPerfix string, builderName string) (url string, err erro
 		return "", fmt.Errorf("登录调试容器 %s 不存在", builderName)
 	}
 
-	return fmt.Sprintf("ws://%s%s/%s/%s", config.Config.Gateway.Url, urlPerfix, podName, containerName), nil
+	pod, err := getPodForDebug(podName)
+	if err != nil {
+		return "", err
+	}
+	if err = authz.AuthorizeObject(caller, authz.OwnerFromPod(pod)); err != nil {
+		return "", err
+	}
+
+	ticket, err := authz.IssueDebugTicket(caller, podName, containerName, time.Now())
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("ws://%s%s/%s/%s?ticket=%s",
+		config.Config.Gateway.Url, urlPerfix, podName, containerName, url.QueryEscape(ticket)), nil
 }
 
 const defaultCols = 144

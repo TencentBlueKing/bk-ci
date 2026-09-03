@@ -1,6 +1,7 @@
 package service
 
 import (
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/db/mysql"
 	"disaptch-k8s-manager/pkg/kubeclient"
@@ -17,7 +18,7 @@ import (
 	"time"
 )
 
-func CreateBuilder(builder *Builder) (taskId string, err error) {
+func CreateBuilder(builder *Builder, owner authz.Owner) (taskId string, err error) {
 
 	volumes, volumeMounts := getBuilderVolumeAndMount(builder.Name, builder.NFSs)
 
@@ -41,11 +42,17 @@ func CreateBuilder(builder *Builder) (taskId string, err error) {
 	}
 
 	labels := getDispatchLabel(builder.Name, taskId, types.TaskActionCreate, types.BuilderTaskLabel)
+	if !owner.IsEmpty() {
+		labels = authz.ApplyOwnerLabels(labels, owner)
+	}
 	matchlabels := getDispatchCoreLabel(builder.Name)
 
 	annotations, err := getBuilderAnnotations(builder.Name)
 	if err != nil {
 		return "", err
+	}
+	if !owner.IsEmpty() {
+		annotations = authz.ApplyOwnerAnnotations(annotations, owner)
 	}
 
 	pullImageSecret := getPullImageDockerSecret(builder.Name, []*types.Registry{builder.ImageRegistry})
@@ -354,15 +361,21 @@ func buildDedicatedBuilder(builder *Builder) ([]corev1.Toleration, []kubeclient.
 	return nil, nil
 }
 
-func StartBuilder(builderName string, start *BuilderStart) (taskId string, err error) {
+func StartBuilder(builderName string, start *BuilderStart, owner authz.Owner) (taskId string, err error) {
 	taskId = generateTaskId()
 
 	labels := getDispatchLabel(builderName, taskId, types.TaskActionStart, types.BuilderTaskLabel)
+	if !owner.IsEmpty() {
+		labels = authz.ApplyOwnerLabels(labels, owner)
+	}
 
 	// 重新拿一次node缓存，方便在启动构建机时重新调度
 	annotations, err := getBuilderAnnotations(builderName)
 	if err != nil {
 		return "", err
+	}
+	if !owner.IsEmpty() {
+		annotations = authz.ApplyOwnerAnnotations(annotations, owner)
 	}
 
 	data, err := json.Marshal([]map[string]interface{}{

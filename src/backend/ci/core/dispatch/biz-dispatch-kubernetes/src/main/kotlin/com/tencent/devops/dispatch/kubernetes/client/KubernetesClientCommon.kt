@@ -40,6 +40,9 @@ class KubernetesClientCommon @Autowired constructor(
 
     companion object {
         private const val TOKEN_KEY = "Devops-Token"
+        private const val USER_ID_KEY = "X-DEVOPS-UID"
+        private const val PROJECT_ID_KEY = "X-DEVOPS-PROJECT-ID"
+        private const val TENANT_ID_KEY = "X-DEVOPS-TENANT-ID"
     }
 
     @Value("\${kubernetes.token}")
@@ -49,11 +52,34 @@ class KubernetesClientCommon @Autowired constructor(
     val kubernetesApiUrl: String = ""
 
     fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(headers(headers))
+        return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(
+            headers(identityHeaders(userId) + (headers ?: emptyMap()))
+        )
     }
 
-    fun microBaseRequest(url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(kubernetesApiUrl + url).headers(headers(headers))
+    fun microBaseRequest(
+        url: String,
+        headers: Map<String, String>? = null,
+        userId: String = "",
+        projectId: String = ""
+    ): Request.Builder {
+        return Request.Builder().url(kubernetesApiUrl + url).headers(
+            headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
+        )
+    }
+
+    fun identityHeaders(userId: String, projectId: String = "", tenantId: String = ""): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        if (userId.isNotBlank()) {
+            result[USER_ID_KEY] = userId
+        }
+        if (projectId.isNotBlank()) {
+            result[PROJECT_ID_KEY] = projectId
+        }
+        if (tenantId.isNotBlank()) {
+            result[TENANT_ID_KEY] = tenantId
+        }
+        return result
     }
 
     fun headers(otherHeaders: Map<String, String>? = null): Headers {

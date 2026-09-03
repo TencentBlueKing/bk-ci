@@ -289,7 +289,11 @@ class KubernetesBuilderClient @Autowired constructor(
         val url = "/api/builders/$builderName/terminal"
         logger.info("$projectId|$staffName|$builderName Get websocketUrl request url: $url, staffName: $staffName")
 
-        val request = clientCommon.baseRequest(staffName, url)
+        val request = clientCommon.baseRequest(
+            staffName,
+            url,
+            clientCommon.identityHeaders(staffName, projectId)
+        )
             .get()
             .build()
 

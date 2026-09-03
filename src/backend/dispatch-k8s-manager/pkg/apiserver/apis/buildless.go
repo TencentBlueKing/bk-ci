@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/service"
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var claimBuildLessTask = service.ClaimBuildLessTask
 
 const (
 	buildlessPrefix = "/buildless"
@@ -81,11 +84,18 @@ func claimBuildless(c *gin.Context) {
 	podId := c.Query("podId")
 	logs.Info(fmt.Sprintf("podId: %s start claim buildLessTask", podId))
 
-	buildLessTask, err := service.ClaimBuildLessTask(podId)
+	buildLessTask, err := claimBuildLessTask(podId)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	ok(c, buildLessTask)
+	caller := authz.CallerFromRequest(c)
+	if err := authz.AuthorizeBuildLessClaim(caller, buildLessTask); err != nil {
+		fail(c, http.StatusForbidden, err)
+		return
+	}
+
+	// 只返回脱敏视图，禁止 secretKey / agentId 等凭据出站
+	ok(c, authz.SanitizeBuildLessTask(buildLessTask))
 }

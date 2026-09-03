@@ -1,13 +1,19 @@
 package apis
 
 import (
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/service"
+	"disaptch-k8s-manager/pkg/kubeclient"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"net/http"
-	"time"
 )
+
+var loadDebugPod = kubeclient.GetPod
+var nowFunc = time.Now
 
 const (
 	builderPrefix   = "/builders"
@@ -67,7 +73,8 @@ func createBuilder(c *gin.Context) {
 		return
 	}
 
-	taskId, err := service.CreateBuilder(builder)
+	owner := builderOwnerFromRequest(c, builder.Env)
+	taskId, err := service.CreateBuilder(builder, owner)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -99,7 +106,8 @@ func startBuilder(c *gin.Context) {
 		return
 	}
 
-	taskId, err := service.StartBuilder(builderName, start)
+	owner := builderOwnerFromRequest(c, start.Env)
+	taskId, err := service.StartBuilder(builderName, start, owner)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -171,13 +179,23 @@ func debugBuilderUrl(c *gin.Context) {
 		return
 	}
 
-	url, err := service.DebugBuilderUrl("/api/builders/debug", builderName)
-	if err != nil {
-		fail(c, http.StatusInternalServerError, errors.Wrap(err, "登录调试错误"))
+	caller, okCaller := requireTenantCaller(c)
+	if !okCaller {
 		return
 	}
 
-	ok(c, url)
+	debugUrl, err := service.DebugBuilderUrl("/api/builders/debug", builderName, caller)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, authz.ErrForbidden) || errors.Is(err, authz.ErrObjectUnowned) ||
+			errors.Is(err, authz.ErrMissingIdentity) || errors.Is(err, authz.ErrInvalidTicket) {
+			status = http.StatusForbidden
+		}
+		fail(c, status, errors.Wrap(err, "登录调试错误"))
+		return
+	}
+
+	ok(c, debugUrl)
 }
 
 var wsUpGrader = websocket.Upgrader{
@@ -193,16 +211,40 @@ func debugBuilder(c *gin.Context) {
 
 	if podName == "" || containerName == "" {
 		fail(c, http.StatusBadRequest, errors.New("podName或containerName名称不能为空"))
+		return
+	}
+
+	if err := authorizeDebugBuilder(c, podName, containerName); err != nil {
+		fail(c, http.StatusForbidden, err)
+		return
 	}
 
 	//升级原get请求为webSocket协议
 	ws, err := wsUpGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, errors.Wrap(err, "登录调试建立与manager的websocket链接错误"))
+		return
 	}
 	defer ws.Close()
 
 	service.DebugBuilder(ws, podName, containerName)
+}
+
+func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error {
+	caller, err := authz.RequireTenantCaller(c)
+	if err != nil {
+		return err
+	}
+	ticket := c.Query(authz.QueryTicket)
+	pod, err := loadDebugPod(podName)
+	if err != nil || pod == nil {
+		return authz.ErrObjectUnowned
+	}
+	return authz.AuthorizeDebugSession(caller, ticket, podName, containerName, pod, nowFunc())
+}
+
+func builderOwnerFromRequest(c *gin.Context, env map[string]string) authz.Owner {
+	return authz.CallerFromRequest(c).Owner().Fill(authz.OwnerFromEnvMap(env))
 }
 
 func checkBuilderName(c *gin.Context, builderName string) bool {

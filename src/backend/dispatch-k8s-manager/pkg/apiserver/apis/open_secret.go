@@ -1,12 +1,19 @@
 package apis
 
 import (
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/kubeclient"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	"net/http"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var getNativeSecret = kubeclient.GetNativeSecret
+var createNativeSecret = kubeclient.CreateNativeSecret
+var deleteNativeSecret = kubeclient.DeleteNativeSecret
 
 const (
 	secretPrefix = "/namespace/:namespace/secrets"
@@ -33,17 +40,27 @@ func getSecret(c *gin.Context) {
 	namespace := c.Param("namespace")
 	secretName := c.Param("secretName")
 
+	if denySystemNamespace(c, namespace) {
+		return
+	}
 	if !checkSecretName(c, secretName) {
 		return
 	}
 
-	secret, err := kubeclient.GetNativeSecret(namespace, secretName)
+	secret, err := getNativeSecret(namespace, secretName)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
 		return
 	}
+	meta := metav1.ObjectMeta{}
+	if secret != nil {
+		meta = secret.ObjectMeta
+	}
+	if !authorizeNamespaceRead(c, namespace, meta) {
+		return
+	}
 
-	ok(c, secret)
+	ok(c, authz.SanitizeSecret(secret))
 }
 
 // @Tags  secret
@@ -56,6 +73,9 @@ func getSecret(c *gin.Context) {
 // @Router /secret [post]
 func createSecret(c *gin.Context) {
 	namespace := c.Param("namespace")
+	if denySystemNamespace(c, namespace) {
+		return
+	}
 	secret := &corev1.Secret{}
 
 	if err := c.BindJSON(secret); err != nil {
@@ -63,7 +83,13 @@ func createSecret(c *gin.Context) {
 		return
 	}
 
-	err := kubeclient.CreateNativeSecret(namespace, secret)
+	caller, allowed := authorizeNamespaceWrite(c, namespace, secret.ObjectMeta)
+	if !allowed {
+		return
+	}
+	stampObjectOwner(&secret.ObjectMeta, caller.Owner())
+
+	err := createNativeSecret(namespace, secret)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -84,11 +110,23 @@ func deleteSecret(c *gin.Context) {
 	namespace := c.Param("namespace")
 	secretName := c.Param("secretName")
 
+	if denySystemNamespace(c, namespace) {
+		return
+	}
 	if !checkSecretName(c, secretName) {
 		return
 	}
 
-	err := kubeclient.DeleteNativeSecret(namespace, secretName)
+	existing, _ := getNativeSecret(namespace, secretName)
+	meta := metav1.ObjectMeta{}
+	if existing != nil {
+		meta = existing.ObjectMeta
+	}
+	if !authorizeNamespaceRead(c, namespace, meta) {
+		return
+	}
+
+	err := deleteNativeSecret(namespace, secretName)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
