@@ -19,6 +19,15 @@ func TestAuthorizeObject(t *testing.T) {
 	assert.NoError(t, AuthorizeObject(Caller{UserID: "other", TenantID: "t-a"}, owner))
 }
 
+func TestAuthorizeObjectIfOwned(t *testing.T) {
+	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
+	// 灰度豁免：无属主、无自称都不拦截。
+	assert.NoError(t, AuthorizeObjectIfOwned(Caller{UserID: "alice", ProjectID: "proj-a"}, Owner{}))
+	assert.NoError(t, AuthorizeObjectIfOwned(Caller{}, owner))
+	assert.NoError(t, AuthorizeObjectIfOwned(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
+	assert.ErrorIs(t, AuthorizeObjectIfOwned(Caller{UserID: "bob", ProjectID: "proj-b"}, owner), ErrForbidden)
+}
+
 func TestOwnerFromPod(t *testing.T) {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

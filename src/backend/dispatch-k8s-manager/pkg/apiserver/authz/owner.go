@@ -11,6 +11,7 @@ import (
 var invalidLabelChar = regexp.MustCompile(`[^A-Za-z0-9._-]`)
 
 // AuthorizeObject 校验调用方是否对目标对象具备属主/租户权限。默认拒绝无属主对象。
+// 仅用于 debug/terminal 与 namespace 资源（deployment/secret）硬拒绝面。
 func AuthorizeObject(caller Caller, owner Owner) error {
 	if caller.IsEmpty() {
 		return ErrMissingIdentity
@@ -31,6 +32,16 @@ func AuthorizeObject(caller Caller, owner Owner) error {
 		return ErrForbidden
 	}
 	return nil
+}
+
+// AuthorizeObjectIfOwned 分级策略：无属主或调用方未带身份则放行。
+// 用于 getBuilderStatus/stop/delete，避免灰度期无属主的在跑构建被 default-deny 打挂。
+// 新创建的 builder 已打属主 label，有自称身份时仍做匹配。
+func AuthorizeObjectIfOwned(caller Caller, owner Owner) error {
+	if owner.IsEmpty() || caller.IsEmpty() {
+		return nil
+	}
+	return AuthorizeObject(caller, owner)
 }
 
 func OwnerFromMetadata(meta metav1.ObjectMeta) Owner {

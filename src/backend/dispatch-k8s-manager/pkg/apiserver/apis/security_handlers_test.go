@@ -3,8 +3,10 @@ package apis
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -12,9 +14,11 @@ import (
 	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/service"
 	"disaptch-k8s-manager/pkg/kubeclient"
+	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -23,6 +27,13 @@ import (
 
 func init() {
 	gin.SetMode(gin.TestMode)
+}
+
+func TestMain(m *testing.M) {
+	logger := logrus.New()
+	logger.Out = io.Discard
+	logs.Logs = logger
+	os.Exit(m.Run())
 }
 
 func newTestContext(method, path string, headers map[string]string) (*gin.Context, *httptest.ResponseRecorder) {
@@ -85,6 +96,40 @@ func TestAuthorizeDebugBuilder_BlocksCrossTenant(t *testing.T) {
 		{Key: "ticket", Value: ticket},
 	}
 	assert.NoError(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"))
+}
+
+func TestAuthorizeBuilderLifecycle_ExemptsUnowned(t *testing.T) {
+	listBuilderDeployment = func(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
+		return []*appsv1.Deployment{{
+			ObjectMeta: metav1.ObjectMeta{Name: workloadCoreLabel},
+		}}, nil
+	}
+	defer func() { listBuilderDeployment = kubeclient.ListDeployment }()
+
+	c, w := newTestContext(http.MethodGet, "/api/builders/build123-abcd1234/status", nil)
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
+	assert.NotEqual(t, http.StatusForbidden, w.Code)
+
+	listBuilderDeployment = func(workloadCoreLabel string) ([]*appsv1.Deployment, error) {
+		return []*appsv1.Deployment{{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   workloadCoreLabel,
+				Labels: map[string]string{authz.LabelProjectID: "proj-a", authz.LabelUserID: "alice"},
+			},
+		}}, nil
+	}
+	c, w = newTestContext(http.MethodPut, "/api/builders/build123-abcd1234/stop", map[string]string{
+		authz.HeaderUserID:    "bob",
+		authz.HeaderProjectID: "proj-b",
+	})
+	assert.False(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
+	assert.Equal(t, http.StatusForbidden, w.Code)
+
+	c, w = newTestContext(http.MethodDelete, "/api/builders/build123-abcd1234", map[string]string{
+		authz.HeaderUserID:    "alice",
+		authz.HeaderProjectID: "proj-a",
+	})
+	assert.True(t, authorizeBuilderLifecycle(c, "build123-abcd1234"))
 }
 
 func sampleClaimTask() *types.BuildLessTask {

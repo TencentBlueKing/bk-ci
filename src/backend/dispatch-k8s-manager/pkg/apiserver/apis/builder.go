@@ -13,6 +13,7 @@ import (
 )
 
 var loadDebugPod = kubeclient.GetPod
+var listBuilderDeployment = kubeclient.ListDeployment
 var nowFunc = time.Now
 
 const (
@@ -47,6 +48,9 @@ func getBuilderStatus(c *gin.Context) {
 	builderName := c.Param("builderName")
 
 	if !checkBuilderName(c, builderName) {
+		return
+	}
+	if !authorizeBuilderLifecycle(c, builderName) {
 		return
 	}
 
@@ -132,6 +136,9 @@ func stopBuilder(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
+	if !authorizeBuilderLifecycle(c, builderName) {
+		return
+	}
 
 	taskId, err := service.StopBuilder(builderName)
 	if err != nil {
@@ -154,6 +161,9 @@ func deleteBuilder(c *gin.Context) {
 	builderName := c.Param("builderName")
 
 	if !checkBuilderName(c, builderName) {
+		return
+	}
+	if !authorizeBuilderLifecycle(c, builderName) {
 		return
 	}
 
@@ -230,6 +240,20 @@ func debugBuilder(c *gin.Context) {
 	defer ws.Close()
 
 	service.DebugBuilder(ws, podName, containerName)
+}
+
+// authorizeBuilderLifecycle 分级授权：无属主或未带身份放行，避免打挂灰度期在跑构建。
+func authorizeBuilderLifecycle(c *gin.Context, builderName string) bool {
+	deps, err := listBuilderDeployment(builderName)
+	if err != nil || len(deps) == 0 {
+		return true
+	}
+	owner := authz.OwnerFromMetadata(deps[0].ObjectMeta)
+	if err := authz.AuthorizeObjectIfOwned(authz.CallerFromRequest(c), owner); err != nil {
+		fail(c, http.StatusForbidden, err)
+		return false
+	}
+	return true
 }
 
 func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error {
