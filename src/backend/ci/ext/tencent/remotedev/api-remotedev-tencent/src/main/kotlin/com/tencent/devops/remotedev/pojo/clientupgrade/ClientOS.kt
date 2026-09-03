@@ -30,13 +30,23 @@ package com.tencent.devops.remotedev.pojo.clientupgrade
 enum class ClientOS {
     MACOS,
     WINDOWS,
-    ANDR;
+    // BKW 客户端在盒子的版本
+    ANDR,
+    // iOS
+    IOS,
+    // 手机安卓
+    ANDROID,
+    // 鸿蒙 HarmonyOS
+    OHOS;
 
     companion object {
         fun parse(os: String?): ClientOS? = when (os) {
             MACOS.name -> MACOS
             WINDOWS.name -> WINDOWS
             ANDR.name -> ANDR
+            IOS.name -> IOS
+            ANDROID.name -> ANDROID
+            OHOS.name -> OHOS
             else -> null
         }
     }
