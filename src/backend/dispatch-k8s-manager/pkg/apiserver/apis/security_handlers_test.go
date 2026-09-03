@@ -75,45 +75,105 @@ func TestAuthorizeDebugBuilder_BlocksCrossTenant(t *testing.T) {
 	assert.NoError(t, authorizeDebugBuilder(c, "pod-1", "ctr-1"))
 }
 
-func TestClaimBuildless_RedactsSecretKey(t *testing.T) {
-	authz.DefaultNamespaceOwners.Reset()
-	claimBuildLessTask = func(podId string) (*types.BuildLessTask, error) {
-		return &types.BuildLessTask{
-			ProjectId:      "proj-a",
-			AgentId:        "agent-1",
-			PipelineId:     "pipe-1",
-			BuildId:        "build-1",
-			VmSeqId:        1,
-			SecretKey:      "should-not-leak",
-			ExecutionCount: 1,
-		}, nil
+func sampleClaimTask() *types.BuildLessTask {
+	return &types.BuildLessTask{
+		ProjectId:      "proj-a",
+		AgentId:        "agent-1",
+		PipelineId:     "pipe-1",
+		BuildId:        "build-1",
+		VmSeqId:        1,
+		SecretKey:      "should-not-leak",
+		ExecutionCount: 1,
 	}
-	defer func() { claimBuildLessTask = service.ClaimBuildLessTask }()
+}
+
+func sampleBoundPoolPod() *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "buildless-pool-abc",
+			Labels: map[string]string{authz.BuildLessPoolLabelKey: authz.BuildLessPoolLabelVal},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{{
+				Env: []corev1.EnvVar{
+					{Name: authz.EnvJobPool, Value: authz.BuildLessJobPoolValue},
+					{Name: authz.EnvRandomStr, Value: "0123456789abcdef"},
+					{Name: authz.EnvPodName, Value: "buildless-pool-abc"},
+				},
+			}},
+		},
+	}
+}
+
+func TestClaimBuildless_ForgedPodGetsNoCredentials(t *testing.T) {
+	claimed := false
+	claimBuildLessTask = func(podId string) (*types.BuildLessTask, error) {
+		claimed = true
+		return sampleClaimTask(), nil
+	}
+	loadBuildLessPod = func(podName string) (*corev1.Pod, error) {
+		return nil, errors.New("not found")
+	}
+	defer func() {
+		claimBuildLessTask = service.ClaimBuildLessTask
+		loadBuildLessPod = kubeclient.GetPod
+	}()
 
 	c, w := newTestContext(http.MethodGet, "/api/buildless/build/claim?podId=pod-1", nil)
 	claimBuildless(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.False(t, claimed, "伪造 pod 不得进入认领")
 	body := w.Body.String()
 	assert.NotContains(t, body, "should-not-leak")
-	assert.NotContains(t, strings.ToLower(body), "secretkey")
 	assert.NotContains(t, body, "agent-1")
+}
+
+func TestClaimBuildless_LegitimatePodGetsCredentials(t *testing.T) {
+	claimBuildLessTask = func(podId string) (*types.BuildLessTask, error) {
+		return sampleClaimTask(), nil
+	}
+	loadBuildLessPod = func(podName string) (*corev1.Pod, error) {
+		assert.Equal(t, "buildless-pool-abc", podName)
+		return sampleBoundPoolPod(), nil
+	}
+	defer func() {
+		claimBuildLessTask = service.ClaimBuildLessTask
+		loadBuildLessPod = kubeclient.GetPod
+	}()
+
+	c, w := newTestContext(http.MethodGet, "/api/buildless/build/claim?podId=buildless-pool-abc-0123456789abcdef", nil)
+	claimBuildless(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	body := w.Body.String()
+	assert.Contains(t, body, "should-not-leak")
+	assert.Contains(t, body, "agent-1")
 	assert.Contains(t, body, "build-1")
 }
 
-func TestClaimBuildless_CrossProjectDenied(t *testing.T) {
+func TestClaimBuildless_CrossProjectRedactsCredentials(t *testing.T) {
 	claimBuildLessTask = func(podId string) (*types.BuildLessTask, error) {
-		return &types.BuildLessTask{ProjectId: "proj-a", SecretKey: "should-not-leak", BuildId: "build-1"}, nil
+		return sampleClaimTask(), nil
 	}
-	defer func() { claimBuildLessTask = service.ClaimBuildLessTask }()
+	loadBuildLessPod = func(podName string) (*corev1.Pod, error) {
+		return sampleBoundPoolPod(), nil
+	}
+	defer func() {
+		claimBuildLessTask = service.ClaimBuildLessTask
+		loadBuildLessPod = kubeclient.GetPod
+	}()
 
-	c, w := newTestContext(http.MethodGet, "/api/buildless/build/claim?podId=pod-1", map[string]string{
+	c, w := newTestContext(http.MethodGet, "/api/buildless/build/claim?podId=buildless-pool-abc-0123456789abcdef", map[string]string{
 		authz.HeaderUserID:    "bob",
 		authz.HeaderProjectID: "proj-b",
 	})
 	claimBuildless(c)
-	assert.Equal(t, http.StatusForbidden, w.Code)
-	assert.NotContains(t, w.Body.String(), "should-not-leak")
+	assert.Equal(t, http.StatusOK, w.Code)
+	body := w.Body.String()
+	assert.NotContains(t, body, "should-not-leak")
+	assert.NotContains(t, body, "agent-1")
+	assert.Contains(t, body, "build-1")
 }
 
 func TestGetDeployment_CrossNamespaceDenied(t *testing.T) {

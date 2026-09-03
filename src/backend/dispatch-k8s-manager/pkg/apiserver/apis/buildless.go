@@ -3,15 +3,18 @@ package apis
 import (
 	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/service"
+	"disaptch-k8s-manager/pkg/kubeclient"
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var claimBuildLessTask = service.ClaimBuildLessTask
+var loadBuildLessPod = kubeclient.GetPod
 
 const (
 	buildlessPrefix = "/buildless"
@@ -84,6 +87,13 @@ func claimBuildless(c *gin.Context) {
 	podId := c.Query("podId")
 	logs.Info(fmt.Sprintf("podId: %s start claim buildLessTask", podId))
 
+	pod := loadBoundBuildLessPod(podId)
+	if !authz.VerifyBuildLessPodBinding(podId, pod) {
+		logs.Warn(fmt.Sprintf("podId: %s failed buildless binding, skip claim and redact credentials", podId))
+		ok(c, nil)
+		return
+	}
+
 	buildLessTask, err := claimBuildLessTask(podId)
 	if err != nil {
 		okFail(c, http.StatusInternalServerError, err)
@@ -91,11 +101,18 @@ func claimBuildless(c *gin.Context) {
 	}
 
 	caller := authz.CallerFromRequest(c)
-	if err := authz.AuthorizeBuildLessClaim(caller, buildLessTask); err != nil {
-		fail(c, http.StatusForbidden, err)
-		return
-	}
+	reveal := authz.ShouldRevealBuildLessCredentials(caller, buildLessTask, podId, pod)
+	ok(c, authz.BuildLessClaimPayload(buildLessTask, reveal))
+}
 
-	// 只返回脱敏视图，禁止 secretKey / agentId 等凭据出站
-	ok(c, authz.SanitizeBuildLessTask(buildLessTask))
+func loadBoundBuildLessPod(podId string) *corev1.Pod {
+	podName, _, ok := authz.ParseBuildLessPodID(podId)
+	if !ok {
+		return nil
+	}
+	pod, err := loadBuildLessPod(podName)
+	if err != nil {
+		return nil
+	}
+	return pod
 }
