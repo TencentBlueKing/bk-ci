@@ -1327,14 +1327,14 @@ class BkRepoClient constructor(
         userId: String,
         projectId: String,
         createRequest: BkRepoWebhookCreateRequest
-    ): BkRepoWebhook? {
+    ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/webhook/api/webhook/create"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(objectMapper.writeValueAsString(createRequest).toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<BkRepoWebhook>>()?.data
+        doRequest(request).resolveResponse<Response<Void>>()
     }
 
     /**

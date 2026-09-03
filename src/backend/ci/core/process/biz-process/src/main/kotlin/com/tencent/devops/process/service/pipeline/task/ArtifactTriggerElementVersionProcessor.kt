@@ -130,6 +130,7 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
                     associationId = associationId,
                     triggers = triggers
                 )
+                null
             }
         }
         val subscription = PipelineEventSubscription(
@@ -237,7 +238,7 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
     }
 
     /**
-     * 保证 bkrepo webhook 已指向本平台回调地址，返回外部 webhook ID。
+     * 保证 bkrepo webhook 已指向本平台回调地址。制品库不回写 EXTERNAL_ID。
      */
     private fun createBkRepoWebhook(
         userId: String,
@@ -245,7 +246,7 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         associationType: BkRepoAssociationType,
         associationId: String,
         triggers: List<BkRepoEventType>
-    ): String? {
+    ) {
         val existedWebhooks = invokeBkRepoApi("listWebhooks") {
             bkRepoClient.listWebhooks(
                 userId = userId,
@@ -257,9 +258,9 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         val existedTriggers = existedWebhooks.flatMap { it.triggers }.toSet()
         val toAddTriggers = triggers.filter { it !in existedTriggers }
         if (toAddTriggers.isEmpty()) {
-            return existedWebhooks.firstOrNull()?.id
+            return
         }
-        val webhook = invokeBkRepoApi("createWebhook") {
+        invokeBkRepoApi("createWebhook") {
             bkRepoClient.createWebhook(
                 userId = userId,
                 projectId = projectId,
@@ -273,7 +274,6 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             )
         }
         logger.info("register bkrepo artifact webhook success|$projectId|$associationId|triggers=$toAddTriggers")
-        return webhook?.id
     }
 
     private fun <T> invokeBkRepoApi(method: String, action: () -> T): T {

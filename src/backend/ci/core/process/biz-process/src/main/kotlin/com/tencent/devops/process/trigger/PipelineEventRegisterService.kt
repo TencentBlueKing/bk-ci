@@ -50,7 +50,7 @@ class PipelineEventRegisterService(
     /**
      * 本地无记录时对接外部系统并落库；已有记录则直接返回。
      *
-     * @param onMiss 本地无记录时由调用方对接外部系统，返回外部 webhook ID
+     * @param onMiss 本地无记录时由调用方对接外部系统，返回外部 webhook ID（无可填 null）
      */
     fun saveIfAbsent(
         userId: String,
