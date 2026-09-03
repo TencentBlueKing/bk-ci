@@ -292,6 +292,7 @@ class DispatchBuildService @Autowired constructor(
                         buildId = buildId,
                         vmSeqId = vmSeqId,
                         userId = userId,
+                        projectId = projectId,
                         builderName = builderInfo.containerName
                     )
 
@@ -534,6 +535,7 @@ class DispatchBuildService @Autowired constructor(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     userId = userId,
+                    projectId = projectId,
                     builderName = builderName,
                     param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
                 )
@@ -673,6 +675,7 @@ class DispatchBuildService @Autowired constructor(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
                     userId = userId,
+                    projectId = event.projectId,
                     builderName = builderName!!,
                     param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.STOP, null)
                 )

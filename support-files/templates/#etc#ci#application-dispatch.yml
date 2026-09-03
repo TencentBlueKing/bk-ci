@@ -33,6 +33,10 @@ kubernetes:
   enable: __BK_CI_KUBERNETES_ENABLE__
   apiUrl: __BK_CI_KUBERNETES_HOST__
   token: __BK_CI_KUBERNETES_TOKEN__
+  # 身份头 HMAC。Helm 同 namespace 下由 env KUBERNETES_IDENTITY_SIGNING_KEY 注入同一 Secret。
+  # 部署前置：必须与 manager 同时覆盖 kubernetes-manager-auth；只配一边则自称头全丢、已属主构建机停/删失败。
+  # 留空不回退仓库公开串；未配置则不发 SIG。payload = uid|pid|tid|ts|METHOD|path，窗口 60s。
+  identitySigningKey: ""
   entrypoint: /data/devops/config/init.sh
   sleepEntrypoint: /data/devops/config/sleep.sh
   resources:

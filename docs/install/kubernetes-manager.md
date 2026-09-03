@@ -42,7 +42,31 @@ config:
     bkCiPrivateUrl: {{ 蓝盾可访问域名 }} // 如: devops.example.com
     bkCiKubernetesHost: {{ kubernetes-manager可访问域名 }}
 ```
+3. **必须同步身份签名密钥。** 跨集群时 dispatch 读不到 manager 的 Secret（`optional: true` 会静默留空）。把同一份 `identitySigningKey` 写到 manager 与 dispatch，否则已属主构建机无法回收。详见下方「安全配置项」。
 
+
+### 安全配置项（#13571 新增，部署必读）
+
+Helm 同 namespace 默认安装会创建 Secret `kubernetes-manager-auth`，首装 `randAlphaNum 32`，升级 `lookup` 保值。**不要**把仓库里曾经出现过的公开串写进 values：
+
+- `bkci-k8s-manager-debug-ticket-change-in-prod`
+- `bkci-k8s-manager-identity-sig-change-in-prod`
+
+写入也会被当成未配置并重新生成或直接拒绝。
+
+| 配置项 | 注入位置 | 留空 / 填公开串会发生什么 |
+|--------|----------|---------------------------|
+| `apiserver.auth.debugTicketSecret` | manager env `K8S_MANAGER_DEBUG_TICKET_SECRET` | `/terminal`、`/debug` 直接 503，远程登录不可用。不是越权面，但是功能关闭。 |
+| `apiserver.auth.identitySigningKey` | manager env `K8S_MANAGER_IDENTITY_SIGNING_KEY` | 自称身份头全部丢弃。已打属主的构建机 stop/delete/start 会 403，池位无法回收。 |
+| `kubernetes.identitySigningKey` | dispatch env `KUBERNETES_IDENTITY_SIGNING_KEY` | dispatch 不发 SIG，效果同上。Spring 从该 env 绑到 `kubernetes.identitySigningKey`。 |
+
+**同 namespace（默认）：** dispatch Deployment 已 `secretKeyRef` 共读同一 Secret，无需人工复制。
+
+**跨 namespace / 跨集群：** `optional: true`，Secret 不在本 ns 时 env 为空，属于静默降级。必须把同一 `identitySigningKey` 显式配到 dispatch（env 或 `application-dispatch.yml`），并保证 manager 侧一致。GitOps 反复 apply 时建议把两个 key **显式固定**，不要依赖每次 `randAlphaNum`。
+
+身份签名 payload 为 `uid|pid|tid|ts|METHOD|path`，窗口 60 秒，两侧需 NTP。manager 启动时若身份密钥未配置会打 Warn。
+
+禁止把上述密钥注入构建容器。共享 `Devops-Token`（默认 `landun`）只能证明内部调用，不能替代身份签名。
 
 ### 以二进制的方式启动
 

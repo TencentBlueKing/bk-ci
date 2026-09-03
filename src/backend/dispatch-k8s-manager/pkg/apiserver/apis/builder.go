@@ -1,17 +1,27 @@
 package apis
 
 import (
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/service"
+	"disaptch-k8s-manager/pkg/kubeclient"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"net/http"
-	"time"
 )
 
+var loadDebugPod = kubeclient.GetPod
+var listBuilderDeployment = kubeclient.ListDeployment
+var nowFunc = time.Now
+
 const (
-	builderPrefix   = "/builders"
+	builderPrefix = "/builders"
 	builderDebugUrl = "/debug/:podName/:containerName"
+	// builderDebugTicketUrl 比旧路由多一段。BK-CI gateway 对 /api/ 用 (.*) 贪婪捕获，
+	// kubernetes-manager chart 只有 L4 Service、无按深度精确匹配的 Ingress，多一级 path 不会 404。
+	builderDebugTicketUrl = "/debug/:podName/:containerName/:ticket"
 )
 
 func initBuilderApis(r *gin.RouterGroup) {
@@ -23,6 +33,7 @@ func initBuilderApis(r *gin.RouterGroup) {
 		builders.PUT("/:builderName/start", startBuilder)
 		builders.DELETE("/:builderName", deleteBuilder)
 		builders.GET("/:builderName/terminal", debugBuilderUrl)
+		builders.GET(builderDebugTicketUrl, debugBuilder)
 		builders.GET(builderDebugUrl, debugBuilder)
 	}
 }
@@ -39,6 +50,9 @@ func getBuilderStatus(c *gin.Context) {
 	builderName := c.Param("builderName")
 
 	if !checkBuilderName(c, builderName) {
+		return
+	}
+	if !authorizeBuilderLifecycle(c, builderName, false) {
 		return
 	}
 
@@ -67,7 +81,8 @@ func createBuilder(c *gin.Context) {
 		return
 	}
 
-	taskId, err := service.CreateBuilder(builder)
+	owner := builderOwnerFromRequest(c, builder.Env)
+	taskId, err := service.CreateBuilder(builder, owner)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -91,6 +106,9 @@ func startBuilder(c *gin.Context) {
 	if !checkBuilderName(c, builderName) {
 		return
 	}
+	if !authorizeBuilderLifecycle(c, builderName, true) {
+		return
+	}
 
 	start := &service.BuilderStart{}
 
@@ -99,7 +117,8 @@ func startBuilder(c *gin.Context) {
 		return
 	}
 
-	taskId, err := service.StartBuilder(builderName, start)
+	owner := builderOwnerFromRequest(c, start.Env)
+	taskId, err := service.StartBuilder(builderName, start, owner)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, err)
 		return
@@ -120,6 +139,9 @@ func stopBuilder(c *gin.Context) {
 	builderName := c.Param("builderName")
 
 	if !checkBuilderName(c, builderName) {
+		return
+	}
+	if !authorizeBuilderLifecycle(c, builderName, true) {
 		return
 	}
 
@@ -144,6 +166,9 @@ func deleteBuilder(c *gin.Context) {
 	builderName := c.Param("builderName")
 
 	if !checkBuilderName(c, builderName) {
+		return
+	}
+	if !authorizeBuilderLifecycle(c, builderName, true) {
 		return
 	}
 
@@ -171,13 +196,25 @@ func debugBuilderUrl(c *gin.Context) {
 		return
 	}
 
-	url, err := service.DebugBuilderUrl("/api/builders/debug", builderName)
-	if err != nil {
-		fail(c, http.StatusInternalServerError, errors.Wrap(err, "登录调试错误"))
+	caller, okCaller := requireTenantCaller(c)
+	if !okCaller {
 		return
 	}
 
-	ok(c, url)
+	debugUrl, err := service.DebugBuilderUrl("/api/builders/debug", builderName, caller)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, authz.ErrDebugDisabled) {
+			status = http.StatusServiceUnavailable
+		} else if errors.Is(err, authz.ErrForbidden) || errors.Is(err, authz.ErrObjectUnowned) ||
+			errors.Is(err, authz.ErrMissingIdentity) || errors.Is(err, authz.ErrInvalidTicket) {
+			status = http.StatusForbidden
+		}
+		fail(c, status, errors.Wrap(err, "登录调试错误"))
+		return
+	}
+
+	ok(c, debugUrl)
 }
 
 var wsUpGrader = websocket.Upgrader{
@@ -193,16 +230,68 @@ func debugBuilder(c *gin.Context) {
 
 	if podName == "" || containerName == "" {
 		fail(c, http.StatusBadRequest, errors.New("podName或containerName名称不能为空"))
+		return
+	}
+
+	if err := authorizeDebugBuilder(c, podName, containerName); err != nil {
+		status := http.StatusForbidden
+		if errors.Is(err, authz.ErrDebugDisabled) {
+			status = http.StatusServiceUnavailable
+		}
+		fail(c, status, err)
+		return
 	}
 
 	//升级原get请求为webSocket协议
 	ws, err := wsUpGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		fail(c, http.StatusInternalServerError, errors.Wrap(err, "登录调试建立与manager的websocket链接错误"))
+		return
 	}
 	defer ws.Close()
 
 	service.DebugBuilder(ws, podName, containerName)
+}
+
+// authorizeBuilderLifecycle 分级授权：判定轴是对象有无属主。
+// mutate=false 为 status（已属主无身份可探活）；mutate=true 为 start/stop/delete（已属主无身份拒绝）。
+func authorizeBuilderLifecycle(c *gin.Context, builderName string, mutate bool) bool {
+	deps, err := listBuilderDeployment(builderName)
+	if err != nil || len(deps) == 0 {
+		return true
+	}
+	owner := authz.OwnerFromMetadata(deps[0].ObjectMeta)
+	caller := authz.CallerFromRequest(c)
+	if mutate {
+		err = authz.AuthorizeBuilderMutate(caller, owner)
+	} else {
+		err = authz.AuthorizeBuilderObserve(caller, owner)
+	}
+	if err != nil {
+		fail(c, http.StatusForbidden, err)
+		return false
+	}
+	return true
+}
+
+func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error {
+	if !authz.DebugTicketConfigured() {
+		return authz.ErrDebugDisabled
+	}
+	if authz.HasQueryIdentity(c) {
+		return authz.ErrUntrustedIdentity
+	}
+	caller := authz.CallerFromRequest(c)
+	ticket := authz.DebugTicketFromRequest(c.Param("ticket"), c.Query(authz.QueryTicket))
+	pod, err := loadDebugPod(podName)
+	if err != nil || pod == nil {
+		return authz.ErrObjectUnowned
+	}
+	return authz.AuthorizeDebugSession(caller, ticket, podName, containerName, pod, nowFunc())
+}
+
+func builderOwnerFromRequest(c *gin.Context, env map[string]string) authz.Owner {
+	return authz.CallerFromRequest(c).Owner().Fill(authz.OwnerFromEnvMap(env))
 }
 
 func checkBuilderName(c *gin.Context, builderName string) bool {

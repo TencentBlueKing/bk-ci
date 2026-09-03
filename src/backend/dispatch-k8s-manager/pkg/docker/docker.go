@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -78,7 +79,7 @@ func generateDockerAuth(user, password string) string {
 		return ""
 	}
 
-	authConfig := types.AuthConfig{
+	authConfig := registry.AuthConfig{
 		Username: user,
 		Password: password,
 	}

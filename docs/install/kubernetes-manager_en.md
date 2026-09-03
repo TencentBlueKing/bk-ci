@@ -49,6 +49,26 @@ config:
   bkCiPrivateUrl: {{ your-domain }}
   bkCiKubernetesHost: {{ manager-domain }}
 ```
+3. **Sync the identity signing key.** Dispatch cannot read manager's Secret across clusters (`optional: true` leaves the env empty). Set the same `identitySigningKey` on both sides or owned builders cannot be reclaimed. See Security settings below.
+
+### Security settings (required after #13571)
+
+Same-namespace Helm creates Secret `kubernetes-manager-auth` (`randAlphaNum 32` on first install, `lookup` on upgrade). Never put these published strings in values — they are reject-listed and treated as unset:
+
+- `bkci-k8s-manager-debug-ticket-change-in-prod`
+- `bkci-k8s-manager-identity-sig-change-in-prod`
+
+| Key | Injected as | If empty or published default |
+|-----|-------------|-------------------------------|
+| `apiserver.auth.debugTicketSecret` | manager `K8S_MANAGER_DEBUG_TICKET_SECRET` | `/terminal` and `/debug` return 503. Login debug is off; this is availability, not a privilege bypass. |
+| `apiserver.auth.identitySigningKey` | manager `K8S_MANAGER_IDENTITY_SIGNING_KEY` | Identity headers are dropped. stop/delete/start on owned builders return 403; pool slots leak. |
+| `kubernetes.identitySigningKey` | dispatch `KUBERNETES_IDENTITY_SIGNING_KEY` | Dispatch sends no SIG. Same 403 / pool-leak outcome. |
+
+**Same namespace:** dispatch already mounts the same Secret via `secretKeyRef`. Do not copy by hand.
+
+**Cross-namespace / cross-cluster:** `optional: true` leaves the env empty if the Secret is missing. You must set the same `identitySigningKey` on dispatch and manager. For GitOps, pin both keys explicitly.
+
+Identity HMAC payload is `uid|pid|tid|ts|METHOD|path` with a 60s window (NTP required). Manager logs a Warn if the identity key is unset. Never inject these keys into builder pods. Shared `Devops-Token` is not a substitute for identity signatures.
 
 ### Binary Deployment
 1. Build binaries:

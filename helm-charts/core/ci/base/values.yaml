@@ -371,6 +371,11 @@ kubernetes-manager:
         apiToken:
           key: Devops-Token
           value: landun
+        # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
+        debugTicketSecret: ""
+        # 部署前置：dispatch 必须同 namespace 挂 kubernetes-manager-auth/identitySigningKey。
+        # 只配一边则自称头全丢。不要填仓库公开串。
+        identitySigningKey: ""
         rsaPrivateKey: ""
     volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点

@@ -162,6 +162,12 @@ kubernetesManager:
       apiToken:
         key: Devops-Token
         value: landun
+      # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
+      # 空或公开串：/terminal 与 /debug 503。详见 docs/install/kubernetes-manager.md。
+      debugTicketSecret: ""
+      # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。dispatch 必须同 namespace 挂本 Secret。
+      # 空、公开串或只配一边：自称头全丢，已属主构建机停/删 403。详见 docs/install/kubernetes-manager.md。
+      identitySigningKey: ""
       rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点

@@ -11,6 +11,7 @@ description: 处理 BK-CI 构建调度时使用，例如构建机选择、队列
 - 处理队列、配额、资源分配和构建机选择
 - 排查任务排队、派发失败或调度不均衡
 - 扩展新的调度类型或构建资源类型
+- 改 kubernetes-manager 身份签名、debug 票据、构建机启停删或 Helm 密钥装配
 
 ## 不适用场景
 
@@ -27,6 +28,7 @@ description: 处理 BK-CI 构建调度时使用，例如构建机选择、队列
    - 模块结构与核心对象：`reference/1-dispatch-foundation.md`
    - 队列、配额与调度策略：`reference/2-queue-quota-scheduling.md`
    - 资源类型扩展与排查：`reference/3-resource-extension-debug.md`
+   - kubernetes-manager 对接与密钥：`reference/4-k8s-manager.md`
 4. 如果问题已经到达构建机并开始执行，切到 `agent-module-architecture` 或 `worker-module-architecture`。
 5. 如果问题是插件本身不兼容运行环境，切到 `pipeline-plugin-development`。
 
@@ -43,11 +45,14 @@ description: 处理 BK-CI 构建调度时使用，例如构建机选择、队列
 - 只看单个服务方法，不看监听、队列和配额的完整推进链
 - 新增调度类型时只补入口，不补限流、状态流转和清理逻辑
 - 调度问题排查只盯代码，不先确认资源池和配额状态
+- 把共享 Devops-Token 当成对象级授权，或把 identitySigningKey / debugTicketSecret 留空、写成仓库公开串
+- 跨集群部署却以为 dispatch 会自动读到 manager 的 Secret
 
 ## 延伸阅读
 
 - 模块结构与核心对象：`reference/1-dispatch-foundation.md`
 - 队列、配额与调度策略：`reference/2-queue-quota-scheduling.md`
 - 资源类型扩展与排查：`reference/3-resource-extension-debug.md`
+- kubernetes-manager 对接与密钥：`reference/4-k8s-manager.md`
 - 如果你在改构建机宿主行为：再看 `agent-module-architecture`
 - 如果你在改任务执行：再看 `worker-module-architecture`

@@ -57,7 +57,7 @@ class ServiceClient @Autowired constructor(
         val url = "/api/namespace/$namespace/services"
         val body = JsonUtil.toJson(service)
         logger.info("$userId Create service request url: $url, body: $body")
-        val request = clientCommon.microBaseRequest(url).post(
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "POST").post(
             RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
@@ -74,7 +74,7 @@ class ServiceClient @Autowired constructor(
         serviceName: String
     ): KubernetesResult<Service> {
         val url = "/api/namespace/$namespace/services/$serviceName"
-        val request = clientCommon.microBaseRequest(url).get().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "GET").get().build()
         logger.info("Get service: $serviceName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -97,7 +97,9 @@ class ServiceClient @Autowired constructor(
         serviceName: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/services/$serviceName"
-        val request = clientCommon.microBaseRequest(url).delete().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = "", method = "DELETE"
+        ).delete().build()
         logger.info("Delete service: $serviceName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
