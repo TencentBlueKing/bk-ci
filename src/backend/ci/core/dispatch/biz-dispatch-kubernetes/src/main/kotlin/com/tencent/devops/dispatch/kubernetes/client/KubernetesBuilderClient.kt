@@ -74,7 +74,7 @@ class KubernetesBuilderClient @Autowired constructor(
     ): KubernetesResult<KubernetesBuilderStatus> {
         val url = "/api/builders/$name/status"
         logger.info("[$buildId]|[$vmSeqId] Get detail builderName: $name request url: $url")
-        val request = clientCommon.baseRequest(userId, url, projectId = projectId).get().build()
+        val request = clientCommon.baseRequest(userId, url, projectId = projectId, method = "GET").get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
@@ -127,21 +127,21 @@ class KubernetesBuilderClient @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(param)
         val (request, action) = when (param) {
             is DeleteBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, url, projectId = projectId)
+                clientCommon.baseRequest(userId, url, projectId = projectId, method = "DELETE")
                     .delete(RequestBody.create(null, ""))
                     .build(),
                 ""
             )
 
             is StopBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, "$url/stop", projectId = projectId)
+                clientCommon.baseRequest(userId, "$url/stop", projectId = projectId, method = "PUT")
                     .put(RequestBody.create(null, ""))
                     .build(),
                 "stop"
             )
 
             is StartBuilderParams -> Pair(
-                clientCommon.baseRequest(userId, "$url/start", projectId = projectId)
+                clientCommon.baseRequest(userId, "$url/start", projectId = projectId, method = "PUT")
                     .put(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "start"
@@ -198,7 +198,7 @@ class KubernetesBuilderClient @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(builder)
         logger.info("[$buildId]|[$vmSeqId] create builder request url: $url")
         logger.info("[$buildId]|[$vmSeqId] create builder request body: $body")
-        val request = clientCommon.baseRequest(userId, url, projectId = projectId)
+        val request = clientCommon.baseRequest(userId, url, projectId = projectId, method = "POST")
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
@@ -295,7 +295,8 @@ class KubernetesBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(
             staffName,
             url,
-            projectId = projectId
+            projectId = projectId,
+            method = "GET"
         )
             .get()
             .build()
@@ -347,7 +348,7 @@ class KubernetesBuilderClient @Autowired constructor(
             )
         )
 
-        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "")
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "POST")
             .post(JsonUtil.toJson(body).toRequestBody()).build()
         logger.info("$userId inspectImage: $imageName request url: $url, body: $body")
         try {

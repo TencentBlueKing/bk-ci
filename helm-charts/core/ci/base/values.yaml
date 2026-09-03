@@ -373,7 +373,8 @@ kubernetes-manager:
           value: landun
         # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
         debugTicketSecret: ""
-        # dispatch 同 namespace 挂 kubernetes-manager-auth/identitySigningKey，不必再复制。
+        # 部署前置：dispatch 必须同 namespace 挂 kubernetes-manager-auth/identitySigningKey。
+        # 只配一边则自称头全丢。不要填仓库公开串。
         identitySigningKey: ""
         rsaPrivateKey: ""
     volumeMount:

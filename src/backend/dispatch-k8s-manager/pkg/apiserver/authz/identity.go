@@ -93,7 +93,7 @@ func CallerFromRequest(c *gin.Context) Caller {
 		return Caller{}
 	}
 	// 身份只信 Header。Query 可被攻击者写进 URL，不得参与授权。
-	return CallerFromHeader(c.Request.Header)
+	return CallerFromHeader(c.Request.Header, c.Request.Method, c.Request.URL.Path)
 }
 
 // HasQueryIdentity 检测攻击者把身份塞进 URL 的绕过面。
@@ -105,7 +105,7 @@ func HasQueryIdentity(c *gin.Context) bool {
 	return firstQuery(q, QueryUserID) != "" || firstQuery(q, QueryProjectID) != "" || firstQuery(q, QueryTenantID) != ""
 }
 
-func CallerFromHeader(h http.Header) Caller {
+func CallerFromHeader(h http.Header, method, path string) Caller {
 	if h == nil {
 		return Caller{}
 	}
@@ -118,7 +118,7 @@ func CallerFromHeader(h http.Header) Caller {
 		return caller
 	}
 	// 持有共享 Devops-Token 的构建容器不能伪造自称身份；无有效 HMAC 则丢弃自称头。
-	if VerifyIdentitySignature(h, caller, time.Now()) != nil {
+	if VerifyIdentitySignature(h, caller, time.Now(), method, path) != nil {
 		return Caller{}
 	}
 	return caller

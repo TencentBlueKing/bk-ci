@@ -68,10 +68,11 @@ class KubernetesClientCommon @Autowired constructor(
         userId: String,
         url: String,
         headers: Map<String, String>? = null,
-        projectId: String
+        projectId: String,
+        method: String
     ): Request.Builder {
         return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(
-            headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
+            headers(identityHeaders(userId, projectId, method = method, path = url) + (headers ?: emptyMap()))
         )
     }
 
@@ -79,14 +80,21 @@ class KubernetesClientCommon @Autowired constructor(
         url: String,
         headers: Map<String, String>? = null,
         userId: String = "",
-        projectId: String
+        projectId: String,
+        method: String
     ): Request.Builder {
         return Request.Builder().url(kubernetesApiUrl + url).headers(
-            headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
+            headers(identityHeaders(userId, projectId, method = method, path = url) + (headers ?: emptyMap()))
         )
     }
 
-    fun identityHeaders(userId: String, projectId: String, tenantId: String = ""): Map<String, String> {
+    fun identityHeaders(
+        userId: String,
+        projectId: String,
+        tenantId: String = "",
+        method: String,
+        path: String
+    ): Map<String, String> {
         val result = mutableMapOf<String, String>()
         if (userId.isNotBlank()) {
             result[USER_ID_KEY] = userId
@@ -106,6 +114,8 @@ class KubernetesClientCommon @Autowired constructor(
                 projectId = result[PROJECT_ID_KEY] ?: "",
                 tenantId = result[TENANT_ID_KEY] ?: "",
                 ts = ts,
+                method = method,
+                path = path,
                 key = key
             )
         }
@@ -120,10 +130,20 @@ class KubernetesClientCommon @Autowired constructor(
         return key
     }
 
-    private fun signIdentity(userId: String, projectId: String, tenantId: String, ts: String, key: String): String {
+    private fun signIdentity(
+        userId: String,
+        projectId: String,
+        tenantId: String,
+        ts: String,
+        method: String,
+        path: String,
+        key: String
+    ): String {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
-        val payload = "$userId|$projectId|$tenantId|$ts"
+        val normPath = path.substringBefore("?").let { if (it.startsWith("/")) it else "/$it" }
+            .trimEnd('/').ifEmpty { "/" }
+        val payload = "$userId|$projectId|$tenantId|$ts|${method.uppercase()}|$normPath"
         return Base64.getUrlEncoder().withoutPadding()
             .encodeToString(mac.doFinal(payload.toByteArray(Charsets.UTF_8)))
     }

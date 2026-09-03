@@ -106,7 +106,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
-            # 与 manager 共读同一 Secret：首装 rand、升级 lookup 保值。跨命名空间时 optional 为空，不发 SIG。
+            # 部署前置：与 manager 共读同一 Secret。只配一边则自称头全丢、已属主构建机停/删失败。
+            # 跨命名空间时 optional 为空，不发 SIG。
             - name: KUBERNETES_IDENTITY_SIGNING_KEY
               valueFrom:
                 secretKeyRef:

@@ -144,7 +144,7 @@ func TestPoC_R3_CannotSeizeIstioSystem(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
-	authz.AttachIdentitySignature(req.Header, time.Now())
+	authz.AttachIdentitySignatureOnRequest(req, time.Now())
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
