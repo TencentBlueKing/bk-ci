@@ -300,7 +300,8 @@ class KubernetesBuilderClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("$projectId|$staffName|$builderName Get websocketUrl response: $responseContent")
+                // 响应含 debug 票据，票据即凭据；禁止把完整 URL 打进 INFO。
+                logger.info("$projectId|$staffName|$builderName Get websocketUrl http=${response.code}")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
                     throw BuildFailureException(

@@ -88,6 +88,26 @@ func TestKnownSharedTokenSignedTicketRejected(t *testing.T) {
 	assert.NoError(t, VerifyDebugTicket(legit, victim, "pod-1", "ctr-1", now))
 }
 
+func TestDebugTicketSecretConsistentWhenUnconfigured(t *testing.T) {
+	SetDebugTicketSecretForTest(nil)
+	// 模拟副本 A/B：空配置必须读到同一确定密钥，而不能是进程内随机。
+	replicaA := append([]byte(nil), debugTicketSecret()...)
+	replicaB := append([]byte(nil), debugTicketSecret()...)
+	assert.Equal(t, DefaultDebugTicketSecret, string(replicaA))
+	assert.Equal(t, replicaA, replicaB)
+
+	now := time.Now()
+	caller := Caller{UserID: "alice", ProjectID: "proj-a"}
+	ticket, err := IssueDebugTicket(caller, "pod-1", "ctr-1", now)
+	assert.NoError(t, err)
+	assert.NoError(t, VerifyDebugTicket(ticket, caller, "pod-1", "ctr-1", now))
+
+	// 知道公开默认值即可自签：这是多副本可用性的取舍，生产必须覆盖 Helm/config。
+	forged, err := SignDebugTicketWithSecret(caller, "pod-1", "ctr-1", now, []byte(DefaultDebugTicketSecret))
+	assert.NoError(t, err)
+	assert.NoError(t, VerifyDebugTicket(forged, caller, "pod-1", "ctr-1", now))
+}
+
 func TestDebugTicketSurvivesWebConsoleProxyRewrite(t *testing.T) {
 	now := time.Now()
 	caller := Caller{UserID: "alice", ProjectID: "proj-a"}
@@ -109,4 +129,14 @@ func TestDebugTicketSurvivesWebConsoleProxyRewrite(t *testing.T) {
 	fixedLegacy := RewriteWebConsoleProxy(legacy, "wss://web-console.example/proxy")
 	assert.Equal(t, 1, strings.Count(fixedLegacy, "?"))
 	assert.Contains(t, fixedLegacy, "&targetHost=127.0.0.1:8081")
+}
+
+func TestRedactDebugTicketURL(t *testing.T) {
+	ticket := "e30.signedticketvalue"
+	path := "/api/builders/debug/pod-1/ctr-1/" + ticket
+	assert.Equal(t, "/api/builders/debug/pod-1/ctr-1/<redacted>", RedactDebugTicketURL(path))
+	assert.NotContains(t, RedactDebugTicketURL("ws://h"+path+"?targetHost=x"), ticket)
+	assert.Equal(t, "/api/builders/debug/pod-1/ctr-1?ticket=<redacted>",
+		RedactDebugTicketURL("/api/builders/debug/pod-1/ctr-1?ticket="+ticket))
+	assert.Equal(t, "/api/builders/foo/status", RedactDebugTicketURL("/api/builders/foo/status"))
 }

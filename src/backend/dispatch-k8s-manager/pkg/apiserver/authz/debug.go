@@ -2,12 +2,10 @@ package authz
 
 import (
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"strings"
-	"sync"
 	"time"
 
 	"disaptch-k8s-manager/pkg/config"
@@ -17,6 +15,9 @@ import (
 
 const (
 	debugTicketTTL = 10 * time.Minute
+	// DefaultDebugTicketSecret 未配置时的确定回退，保证多副本签发/验签一致。
+	// 该值随仓库公开，生产必须在 Helm/config.yaml 覆盖为高熵随机串。绝不回退共享 ApiToken。
+	DefaultDebugTicketSecret = "bkci-k8s-manager-debug-ticket-change-in-prod"
 )
 
 type debugTicket struct {
@@ -167,13 +168,9 @@ func requireDebugCaller(caller Caller) (Caller, error) {
 	return caller, nil
 }
 
-var (
-	ticketSecretOnce    sync.Once
-	processTicketSecret []byte
-	testTicketSecret    []byte
-)
+var testTicketSecret []byte
 
-// SetDebugTicketSecretForTest 注入独立测试密钥；传 nil 恢复进程密钥。
+// SetDebugTicketSecretForTest 注入独立测试密钥；传 nil 恢复配置/默认密钥。
 func SetDebugTicketSecretForTest(secret []byte) {
 	if secret == nil {
 		testTicketSecret = nil
@@ -186,22 +183,44 @@ func debugTicketSecret() []byte {
 	if len(testTicketSecret) > 0 {
 		return testTicketSecret
 	}
-	// 独立高熵密钥：配置项优先，绝不回退到共享 Devops-Token 或硬编码。
+	// 独立密钥：配置优先，空配置回退确定默认值。绝不回退共享 Devops-Token，也不用进程内随机。
 	if config.Config != nil && strings.TrimSpace(config.Config.ApiServer.Auth.DebugTicketSecret) != "" {
 		return []byte(config.Config.ApiServer.Auth.DebugTicketSecret)
 	}
-	ticketSecretOnce.Do(func() {
-		processTicketSecret = make([]byte, 32)
-		if _, err := rand.Read(processTicketSecret); err != nil {
-			panic("debug ticket secret: crypto/rand failed")
-		}
-	})
-	return processTicketSecret
+	return []byte(DefaultDebugTicketSecret)
 }
 
 // FormatDebugBuilderURL 把票据放在 path 最后一段，避免 WebConsole 追加 ?targetHost= 时出现第二个 '?'。
 func FormatDebugBuilderURL(gateway, prefix, podName, containerName, ticket string) string {
 	return "ws://" + gateway + prefix + "/" + podName + "/" + containerName + "/" + ticket
+}
+
+// RedactDebugTicketURL 去掉 path 末段票据和 query ticket=，供日志使用。
+func RedactDebugTicketURL(raw string) string {
+	if raw == "" {
+		return raw
+	}
+	path, query := raw, ""
+	if i := strings.Index(raw, "?"); i >= 0 {
+		path, query = raw[:i], raw[i:]
+	}
+	if i := strings.Index(path, "/debug/"); i >= 0 {
+		rest := path[i+len("/debug/"):]
+		parts := strings.Split(rest, "/")
+		if len(parts) >= 3 && parts[2] != "" {
+			parts[2] = "<redacted>"
+			path = path[:i+len("/debug/")] + strings.Join(parts, "/")
+		}
+	}
+	if i := strings.Index(query, "ticket="); i >= 0 {
+		start := i + len("ticket=")
+		if end := strings.IndexAny(query[start:], "&"); end >= 0 {
+			query = query[:start] + "<redacted>" + query[start+end:]
+		} else {
+			query = query[:start] + "<redacted>"
+		}
+	}
+	return path + query
 }
 
 // DebugTicketFromRequest 优先读 path，其次 query，兼容旧客户端。

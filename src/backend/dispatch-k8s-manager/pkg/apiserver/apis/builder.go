@@ -17,8 +17,10 @@ var listBuilderDeployment = kubeclient.ListDeployment
 var nowFunc = time.Now
 
 const (
-	builderPrefix         = "/builders"
-	builderDebugUrl       = "/debug/:podName/:containerName"
+	builderPrefix = "/builders"
+	builderDebugUrl = "/debug/:podName/:containerName"
+	// builderDebugTicketUrl 比旧路由多一段。BK-CI gateway 对 /api/ 用 (.*) 贪婪捕获，
+	// kubernetes-manager chart 只有 L4 Service、无按深度精确匹配的 Ingress，多一级 path 不会 404。
 	builderDebugTicketUrl = "/debug/:podName/:containerName/:ticket"
 )
 

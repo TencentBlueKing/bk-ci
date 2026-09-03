@@ -53,7 +53,7 @@ class DeploymentClient @Autowired constructor(
         userId: String,
         namespace: String,
         deployment: Deployment,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/deployments"
         val body = JsonUtil.toJson(deployment)
@@ -73,7 +73,7 @@ class DeploymentClient @Autowired constructor(
         userId: String,
         namespace: String,
         deploymentName: String,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<Deployment> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
         val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).get().build()
@@ -97,7 +97,7 @@ class DeploymentClient @Autowired constructor(
         userId: String,
         namespace: String,
         deploymentName: String,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
         val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).delete().build()

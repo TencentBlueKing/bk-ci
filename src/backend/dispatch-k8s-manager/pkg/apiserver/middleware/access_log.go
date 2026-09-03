@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"bytes"
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"time"
 )
 
 func InitAccessLog(filepath string) gin.HandlerFunc {
@@ -36,7 +38,7 @@ func InitAccessLog(filepath string) gin.HandlerFunc {
 		reqMethod := c.Request.Method
 
 		// 请求路由
-		reqUri := c.Request.RequestURI
+		reqUri := authz.RedactDebugTicketURL(c.Request.RequestURI)
 
 		// 状态码
 		statusCode := c.Writer.Status()

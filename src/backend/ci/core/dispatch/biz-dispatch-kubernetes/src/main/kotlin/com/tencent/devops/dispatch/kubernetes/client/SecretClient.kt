@@ -56,7 +56,7 @@ class SecretClient @Autowired constructor(
         userId: String,
         namespace: String,
         secret: Secret,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/secrets"
         val body = JsonUtil.toJson(secret)
@@ -76,7 +76,7 @@ class SecretClient @Autowired constructor(
         userId: String,
         namespace: String,
         secretName: String,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<Secret> {
         val url = "/api/namespace/$namespace/secrets/$secretName"
         val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).get().build()
@@ -100,7 +100,7 @@ class SecretClient @Autowired constructor(
         userId: String,
         namespace: String,
         secretName: String,
-        projectId: String = ""
+        projectId: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/secrets/$secretName"
         val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).delete().build()
@@ -131,7 +131,7 @@ class SecretClient @Autowired constructor(
         secretName: String,
         namespaceName: String,
         kubernetesRepoInfo: KubernetesRepo,
-        projectId: String = ""
+        projectId: String
     ) {
         var secret = getSecretByName(userId, namespaceName, secretName, projectId).data
         logger.info("the secret is: $secret")

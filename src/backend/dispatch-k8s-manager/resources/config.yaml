@@ -108,6 +108,9 @@ apiserver:
     apiToken:
       key: Devops-Token
       value: landun
+    # debug 远程登录 HMAC 票据密钥。多副本必须一致；生产务必换成高熵随机值。
+    # 空值会回退仓库内确定默认，禁止再用进程内随机（HPA maxReplicas=3 时会跨副本验签失败）。
+    debugTicketSecret: bkci-k8s-manager-debug-ticket-change-in-prod
     # 在这里保存私钥用来解密apitoken
     # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得  
     rsaPrivateKey: ""

@@ -132,6 +132,8 @@ data:
         apiToken:
           key: {{ .Values.kubernetesManager.apiserver.auth.apiToken.key }}
           value: {{ .Values.kubernetesManager.apiserver.auth.apiToken.value }}
+        # 多副本必须读同一份；生产覆盖 .Values.kubernetesManager.apiserver.auth.debugTicketSecret
+        debugTicketSecret: {{ .Values.kubernetesManager.apiserver.auth.debugTicketSecret }}
         rsaPrivateKey: |
           {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
 
