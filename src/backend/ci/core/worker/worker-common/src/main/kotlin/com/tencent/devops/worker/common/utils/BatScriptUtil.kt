@@ -77,7 +77,8 @@ object BatScriptUtil {
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
         "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
-        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine, \$enc)}catch{exit 1}\"\r\n" +
+        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine," +
+        " \$enc)}catch{exit 1}\"\r\n" +
         "    if errorlevel 1 exit 1\r\n" +
         "    goto:eof\r\n"
 
