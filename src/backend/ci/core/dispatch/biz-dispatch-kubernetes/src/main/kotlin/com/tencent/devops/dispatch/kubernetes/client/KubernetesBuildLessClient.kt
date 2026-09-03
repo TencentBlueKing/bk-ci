@@ -58,7 +58,7 @@ class KubernetesBuildLessClient @Autowired constructor(
         val url = "/api/buildless/build/start"
         with(buildLessStartInfo) {
             logger.info("[$buildId]|[$vmSeqId] Start buildLess request url: $url, body: $buildLessStartInfo")
-            val request = clientCommon.baseRequest("", url)
+            val request = clientCommon.baseRequest("", url, projectId = "")
                 .post(
                     JsonUtil.toJson(buildLessStartInfo)
                         .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -95,7 +95,7 @@ class KubernetesBuildLessClient @Autowired constructor(
         val url = "/api/buildless/build/end"
         with(buildLessEndInfo) {
             val body = JsonUtil.toJson(buildLessEndInfo)
-            val request = clientCommon.baseRequest("", url)
+            val request = clientCommon.baseRequest("", url, projectId = "")
                 .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
                 .build()
             logger.info("[$buildId]|[$vmSeqId] end buildLess, url: $url, body: $body")

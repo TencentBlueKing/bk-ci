@@ -45,7 +45,7 @@ func TestAuthorizeDebugSession(t *testing.T) {
 			Labels: map[string]string{LabelProjectID: "proj-b"},
 		},
 	}
-	assert.ErrorIs(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", otherPod, now), ErrObjectUnowned)
+	assert.ErrorIs(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", otherPod, now), ErrForbidden)
 }
 
 func TestIssueDebugTicketForPod_UsesOwnerNotClaimedCaller(t *testing.T) {
@@ -56,11 +56,11 @@ func TestIssueDebugTicketForPod_UsesOwnerNotClaimedCaller(t *testing.T) {
 			Labels: map[string]string{LabelProjectID: "proj-a", LabelUserID: "alice"},
 		},
 	}
-	claimed := Caller{UserID: "mallory", ProjectID: "proj-a"}
+	claimed := Caller{UserID: "mallory", ProjectID: "proj-b"}
 	_, err := IssueDebugTicketForPod(claimed, pod, "ctr-1", now)
 	assert.ErrorIs(t, err, ErrForbidden)
 
-	ticket, err := IssueDebugTicketForPod(Caller{UserID: "alice", ProjectID: "proj-a"}, pod, "ctr-1", now)
+	ticket, err := IssueDebugTicketForPod(Caller{UserID: "carol", ProjectID: "proj-a"}, pod, "ctr-1", now)
 	assert.NoError(t, err)
 	subject, err := DebugTicketSubject(ticket)
 	assert.NoError(t, err)

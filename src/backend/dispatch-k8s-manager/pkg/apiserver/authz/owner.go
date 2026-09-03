@@ -34,22 +34,17 @@ func AuthorizeObject(caller Caller, owner Owner) error {
 	return nil
 }
 
-// AuthorizeDebugIssue 签发校验：自称头只与服务端属主比对，且必须 user+project 同时相等（AND）。
-// 不得用 AuthorizeObject 的 OR 匹配，否则只带公开 projectId 就能过签发。
+// AuthorizeDebugIssue 签发校验：自称必须同时带 user+project（dispatch N4 必填）。
+// 匹配走 AuthorizeObject（同项目即可），以支持非创建者发起登录调试。
+// 伪造头由 HMAC 身份签名在 CallerFromHeader 丢弃，不再靠 user AND 挡 PoC6。
 func AuthorizeDebugIssue(claimed Caller, owner Owner) error {
 	if claimed.UserID == "" || claimed.ProjectID == "" {
 		return ErrMissingIdentity
 	}
-	if owner.IsEmpty() || owner.UserID == "" || owner.ProjectID == "" {
+	if owner.IsEmpty() {
 		return ErrObjectUnowned
 	}
-	if claimed.UserID != owner.UserID || claimed.ProjectID != owner.ProjectID {
-		return ErrForbidden
-	}
-	if owner.TenantID != "" && claimed.TenantID != "" && claimed.TenantID != owner.TenantID {
-		return ErrForbidden
-	}
-	return nil
+	return AuthorizeObject(claimed, owner)
 }
 
 // AuthorizeBuilderObserve 用于 status：判定轴是对象有无属主。

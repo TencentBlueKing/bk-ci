@@ -33,6 +33,9 @@ kubernetes:
   enable: __BK_CI_KUBERNETES_ENABLE__
   apiUrl: __BK_CI_KUBERNETES_HOST__
   token: __BK_CI_KUBERNETES_TOKEN__
+  # 身份头 HMAC。仅 dispatch 持有，禁止写入构建容器 env。须与 manager identitySigningKey 一致。
+  # 默认与 manager 仓库默认相同；生产必须两边同时换成高熵随机。
+  identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
   entrypoint: /data/devops/config/init.sh
   sleepEntrypoint: /data/devops/config/sleep.sh
   resources:

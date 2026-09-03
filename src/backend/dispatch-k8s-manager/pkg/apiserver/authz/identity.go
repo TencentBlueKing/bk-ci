@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -107,11 +108,19 @@ func CallerFromHeader(h http.Header) Caller {
 	if h == nil {
 		return Caller{}
 	}
-	return Caller{
+	caller := Caller{
 		UserID:    firstNonEmpty(h.Get(HeaderUserID), h.Get(http.CanonicalHeaderKey(HeaderUserID))),
 		ProjectID: firstNonEmpty(h.Get(HeaderProjectID), h.Get(http.CanonicalHeaderKey(HeaderProjectID))),
 		TenantID:  firstNonEmpty(h.Get(HeaderTenantID), h.Get(http.CanonicalHeaderKey(HeaderTenantID))),
 	}
+	if caller.IsEmpty() {
+		return caller
+	}
+	// 持有共享 Devops-Token 的构建容器不能伪造自称身份；无有效 HMAC 则丢弃自称头。
+	if VerifyIdentitySignature(h, caller, time.Now()) != nil {
+		return Caller{}
+	}
+	return caller
 }
 
 func (c Caller) FillFromQuery(q map[string][]string) Caller {

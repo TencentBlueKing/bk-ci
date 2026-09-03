@@ -31,10 +31,10 @@ func TestDebugBuilderUrl_TicketSubjectIsPodOwner(t *testing.T) {
 		getPodForDebug = kubeclient.GetPod
 	}()
 
-	_, err := DebugBuilderUrl("/api/builders/debug", "b1", authz.Caller{UserID: "mallory", ProjectID: "proj-a"})
+	_, err := DebugBuilderUrl("/api/builders/debug", "b1", authz.Caller{UserID: "mallory", ProjectID: "proj-b"})
 	assert.ErrorIs(t, err, authz.ErrForbidden)
 
-	url, err := DebugBuilderUrl("/api/builders/debug", "b1", authz.Caller{UserID: "alice", ProjectID: "proj-a"})
+	url, err := DebugBuilderUrl("/api/builders/debug", "b1", authz.Caller{UserID: "carol", ProjectID: "proj-a"})
 	assert.NoError(t, err)
 	ticket := authz.TicketFromRewrittenDebugURL(url)
 	subject, err := authz.DebugTicketSubject(ticket)

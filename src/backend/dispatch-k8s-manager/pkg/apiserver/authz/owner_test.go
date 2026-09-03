@@ -22,10 +22,11 @@ func TestAuthorizeObject(t *testing.T) {
 
 func TestAuthorizeDebugIssue_RequiresUserAndProject(t *testing.T) {
 	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
-	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "mallory", ProjectID: "proj-a"}, owner), ErrForbidden)
 	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "alice"}, owner), ErrMissingIdentity)
-	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "alice", ProjectID: "proj-a"}, Owner{ProjectID: "proj-a"}), ErrObjectUnowned)
+	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "mallory", ProjectID: "proj-b"}, owner), ErrForbidden)
+	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "alice", ProjectID: "proj-a"}, Owner{}), ErrObjectUnowned)
 	assert.NoError(t, AuthorizeDebugIssue(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
+	assert.NoError(t, AuthorizeDebugIssue(Caller{UserID: "carol", ProjectID: "proj-a"}, owner), "同项目非创建者可签发登录调试票")
 }
 
 func TestAuthorizeBuilderObserveAndMutate(t *testing.T) {

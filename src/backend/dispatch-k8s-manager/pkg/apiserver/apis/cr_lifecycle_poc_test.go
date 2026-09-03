@@ -3,12 +3,14 @@ package apis
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/kubeclient"
 
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -94,4 +96,27 @@ func TestN4_NonCreatorSameProjectCanStopDeleteDebugBuilder(t *testing.T) {
 		authz.HeaderProjectID: "proj-a",
 	})
 	assert.True(t, authorizeBuilderLifecycle(c, "build888-debugaa", false), "同项目非创建者应能探活")
+}
+
+func TestN4_NonCreatorSameProjectCanIssueLoginDebug(t *testing.T) {
+	now := time.Now()
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "debug-pod",
+			Labels: map[string]string{authz.LabelProjectID: "proj-a", authz.LabelUserID: "alice"},
+		},
+	}
+	c, _ := newTestContext(http.MethodGet, "/api/builders/build888-debugaa/terminal", map[string]string{
+		authz.HeaderUserID:    "carol",
+		authz.HeaderProjectID: "proj-a",
+	})
+	caller := authz.CallerFromRequest(c)
+	assert.Equal(t, "carol", caller.UserID)
+	assert.Equal(t, "proj-a", caller.ProjectID)
+	ticket, err := authz.IssueDebugTicketForPod(caller, pod, "ctr-1", now)
+	assert.NoError(t, err, "已签名的同项目非创建者应能发起登录调试")
+	subject, err := authz.DebugTicketSubject(ticket)
+	assert.NoError(t, err)
+	assert.Equal(t, "alice", subject.UserID, "票主体仍是 Pod 属主，不是调试发起人")
+	assert.NoError(t, authz.AuthorizeDebugSession(authz.Caller{}, ticket, "debug-pod", "ctr-1", pod, now))
 }

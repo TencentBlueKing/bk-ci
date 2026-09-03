@@ -110,6 +110,7 @@ func TestPoC_R3_CannotSeizeIstioSystem(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
@@ -126,9 +127,15 @@ func TestPoC6_ForgedProjectOnlyHeaderCannotIssueTicket(t *testing.T) {
 			Labels: map[string]string{authz.LabelProjectID: "proj-a", authz.LabelUserID: "alice"},
 		},
 	}
-	// 旧 AuthorizeObject 的 OR 匹配会放行；签发必须 AND。
-	_, err := authz.IssueDebugTicketForPod(authz.Caller{UserID: "mallory", ProjectID: "proj-a"}, pod, "ctr-1", now)
-	assert.ErrorIs(t, err, authz.ErrForbidden)
+	// 构建容器只有共享 token、无签名密钥：伪造头在 CallerFromHeader 被丢弃，签不出票。
+	c, _ := newTestContextUnsigned(http.MethodGet, "/api/builders/victim/terminal", map[string]string{
+		authz.HeaderUserID:    "mallory",
+		authz.HeaderProjectID: "proj-a",
+	})
+	caller := authz.CallerFromRequest(c)
+	assert.True(t, caller.IsEmpty())
+	_, err := authz.IssueDebugTicketForPod(caller, pod, "ctr-1", now)
+	assert.ErrorIs(t, err, authz.ErrMissingIdentity)
 
 	ticket, err := authz.IssueDebugTicketForPod(authz.Caller{UserID: "alice", ProjectID: "proj-a"}, pod, "ctr-1", now)
 	assert.NoError(t, err)
@@ -137,4 +144,15 @@ func TestPoC6_ForgedProjectOnlyHeaderCannotIssueTicket(t *testing.T) {
 	assert.Equal(t, "alice", subject.UserID)
 	assert.Equal(t, "proj-a", subject.ProjectID)
 	assert.NoError(t, authz.AuthorizeDebugSession(authz.Caller{}, ticket, "victim-pod", "ctr-1", pod, now))
+}
+
+func TestPoC6_UnsignedForgedHeadersAreDropped(t *testing.T) {
+	c, _ := newTestContextUnsigned(http.MethodGet, "/api/builders/victim/terminal", map[string]string{
+		authz.HeaderUserID:    "alice",
+		authz.HeaderProjectID: "proj-a",
+	})
+	caller := authz.CallerFromRequest(c)
+	assert.True(t, caller.IsEmpty(), "无 HMAC 的自称头必须丢弃，关闭仅凭共享 token 伪造身份")
+	_, err := authz.RequireTenantCaller(c)
+	assert.ErrorIs(t, err, authz.ErrMissingIdentity)
 }

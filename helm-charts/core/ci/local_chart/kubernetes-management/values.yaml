@@ -164,6 +164,8 @@ kubernetesManager:
         value: landun
       # debug HMAC 票据密钥。chart HPA maxReplicas=3，多副本必须一致。生产务必覆盖。
       debugTicketSecret: bkci-k8s-manager-debug-ticket-change-in-prod
+      # 身份头 HMAC。禁止写入构建 Pod env。生产与 dispatch.kubernetes.identitySigningKey 同时覆盖。
+      identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
       rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点

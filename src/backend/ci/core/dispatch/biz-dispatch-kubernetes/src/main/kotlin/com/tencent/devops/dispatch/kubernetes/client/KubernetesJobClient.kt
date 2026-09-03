@@ -61,7 +61,7 @@ class KubernetesJobClient @Autowired constructor(
         val url = "/api/jobs"
         val body = JsonUtil.toJson(job)
         logger.info("Create job request url: $url, body: $body")
-        val request = clientCommon.baseRequest(userId, url).post(
+        val request = clientCommon.baseRequest(userId, url, projectId = "").post(
             RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
@@ -74,7 +74,7 @@ class KubernetesJobClient @Autowired constructor(
 
     fun getJobStatus(userId: String, jobName: String): KubernetesResult<JobStatus> {
         val url = "/api/jobs/$jobName/status"
-        val request = clientCommon.baseRequest(userId, url).get().build()
+        val request = clientCommon.baseRequest(userId, url, projectId = "").get().build()
         logger.info("Get job: $jobName status request url: $url, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -97,7 +97,7 @@ class KubernetesJobClient @Autowired constructor(
                 it.plus("?sinceTime=$sinceTime")
             }
         }
-        val request = clientCommon.baseRequest(userId, url).get().build()
+        val request = clientCommon.baseRequest(userId, url, projectId = "").get().build()
         logger.info("Get job: $jobName logs request url: $url, jobName: $jobName, " +
                         "sinceTime: $sinceTime, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
@@ -122,7 +122,7 @@ class KubernetesJobClient @Autowired constructor(
         val url = "/api/jobs/buildAndPushImage"
         logger.info("Build and push image, request url: $url, staffName: $userId")
 
-        val request = clientCommon.baseRequest(userId, url)
+        val request = clientCommon.baseRequest(userId, url, projectId = "")
             .post(
                 RequestBody.create(
                     "application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(buildImageInfo)

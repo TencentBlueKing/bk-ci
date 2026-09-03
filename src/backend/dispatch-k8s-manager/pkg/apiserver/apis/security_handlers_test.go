@@ -40,6 +40,17 @@ func newTestContext(method, path string, headers map[string]string) (*gin.Contex
 	for k, v := range headers {
 		c.Request.Header.Set(k, v)
 	}
+	authz.AttachIdentitySignature(c.Request.Header, time.Now())
+	return c, w
+}
+
+func newTestContextUnsigned(method, path string, headers map[string]string) (*gin.Context, *httptest.ResponseRecorder) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(method, path, nil)
+	for k, v := range headers {
+		c.Request.Header.Set(k, v)
+	}
 	return c, w
 }
 
@@ -266,6 +277,7 @@ func TestGetDeployment_CrossNamespaceDenied(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/namespace/kube-system/deployments/core-dns", nil)
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
@@ -273,6 +285,7 @@ func TestGetDeployment_CrossNamespaceDenied(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/namespace/proj-a-ns/deployments/web", nil)
 	req.Header.Set(authz.HeaderUserID, "bob")
 	req.Header.Set(authz.HeaderProjectID, "proj-b")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
@@ -285,6 +298,7 @@ func TestGetDeployment_CrossNamespaceDenied(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/namespace/proj-a-ns/deployments/web", nil)
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -317,6 +331,7 @@ func TestGetSecret_RedactsAndAuthorizes(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/namespace/other-ns/secrets/regcred", nil)
 	req.Header.Set(authz.HeaderUserID, "bob")
 	req.Header.Set(authz.HeaderProjectID, "proj-b")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
@@ -326,6 +341,7 @@ func TestGetSecret_RedactsAndAuthorizes(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/namespace/proj-a-ns/secrets/regcred", nil)
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -364,6 +380,7 @@ func TestCreateDeployment_BindsNamespaceOwner(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(authz.HeaderUserID, "alice")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -373,6 +390,7 @@ func TestCreateDeployment_BindsNamespaceOwner(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(authz.HeaderUserID, "bob")
 	req.Header.Set(authz.HeaderProjectID, "proj-b")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
@@ -381,6 +399,7 @@ func TestCreateDeployment_BindsNamespaceOwner(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(authz.HeaderUserID, "carol")
 	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	authz.AttachIdentitySignature(req.Header, time.Now())
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)

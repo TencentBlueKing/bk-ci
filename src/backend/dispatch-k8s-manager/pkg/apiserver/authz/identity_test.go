@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,7 @@ func TestCallerFromHeaderAndQuery(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/debug/pod/ctr?projectId=p-query&ticket=t", nil)
 	req.Header.Set(HeaderUserID, "alice")
 	req.Header.Set(HeaderTenantID, "tenant-a")
+	AttachIdentitySignature(req.Header, time.Now())
 	c.Request = req
 
 	caller := CallerFromRequest(c)
@@ -31,11 +33,13 @@ func TestRequireTenantCaller(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
 	c.Request.Header.Set(HeaderUserID, "alice")
+	AttachIdentitySignature(c.Request.Header, time.Now())
 
 	_, err := RequireTenantCaller(c)
 	assert.ErrorIs(t, err, ErrMissingIdentity)
 
 	c.Request.Header.Set(HeaderProjectID, "proj-1")
+	AttachIdentitySignature(c.Request.Header, time.Now())
 	caller, err := RequireTenantCaller(c)
 	assert.NoError(t, err)
 	assert.Equal(t, "proj-1", caller.ProjectID)

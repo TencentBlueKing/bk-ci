@@ -33,6 +33,10 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.time.Instant
+import java.util.Base64
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 class KubernetesClientCommon @Autowired constructor(
     private val commonService: CommonService
@@ -43,6 +47,9 @@ class KubernetesClientCommon @Autowired constructor(
         private const val USER_ID_KEY = "X-DEVOPS-UID"
         private const val PROJECT_ID_KEY = "X-DEVOPS-PROJECT-ID"
         private const val TENANT_ID_KEY = "X-DEVOPS-TENANT-ID"
+        private const val IDENTITY_SIG_KEY = "X-DEVOPS-IDENTITY-SIG"
+        private const val IDENTITY_TS_KEY = "X-DEVOPS-IDENTITY-TS"
+        private const val DEFAULT_IDENTITY_SIGNING_KEY = "bkci-k8s-manager-identity-sig-change-in-prod"
     }
 
     @Value("\${kubernetes.token}")
@@ -51,11 +58,15 @@ class KubernetesClientCommon @Autowired constructor(
     @Value("\${kubernetes.apiUrl}")
     val kubernetesApiUrl: String = ""
 
+    // 仅 dispatch 持有，禁止注入构建容器。空配置回退仓库默认，须与 manager 同时覆盖。
+    @Value("\${kubernetes.identitySigningKey:bkci-k8s-manager-identity-sig-change-in-prod}")
+    val identitySigningKey: String = DEFAULT_IDENTITY_SIGNING_KEY
+
     fun baseRequest(
         userId: String,
         url: String,
         headers: Map<String, String>? = null,
-        projectId: String = ""
+        projectId: String
     ): Request.Builder {
         return Request.Builder().url(commonService.getProxyUrl(kubernetesApiUrl + url)).headers(
             headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
@@ -66,14 +77,14 @@ class KubernetesClientCommon @Autowired constructor(
         url: String,
         headers: Map<String, String>? = null,
         userId: String = "",
-        projectId: String = ""
+        projectId: String
     ): Request.Builder {
         return Request.Builder().url(kubernetesApiUrl + url).headers(
             headers(identityHeaders(userId, projectId) + (headers ?: emptyMap()))
         )
     }
 
-    fun identityHeaders(userId: String, projectId: String = "", tenantId: String = ""): Map<String, String> {
+    fun identityHeaders(userId: String, projectId: String, tenantId: String = ""): Map<String, String> {
         val result = mutableMapOf<String, String>()
         if (userId.isNotBlank()) {
             result[USER_ID_KEY] = userId
@@ -84,7 +95,26 @@ class KubernetesClientCommon @Autowired constructor(
         if (tenantId.isNotBlank()) {
             result[TENANT_ID_KEY] = tenantId
         }
+        if (result.isNotEmpty()) {
+            val ts = Instant.now().epochSecond.toString()
+            result[IDENTITY_TS_KEY] = ts
+            result[IDENTITY_SIG_KEY] = signIdentity(
+                userId = result[USER_ID_KEY] ?: "",
+                projectId = result[PROJECT_ID_KEY] ?: "",
+                tenantId = result[TENANT_ID_KEY] ?: "",
+                ts = ts
+            )
+        }
         return result
+    }
+
+    private fun signIdentity(userId: String, projectId: String, tenantId: String, ts: String): String {
+        val key = identitySigningKey.ifBlank { DEFAULT_IDENTITY_SIGNING_KEY }
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        val payload = "$userId|$projectId|$tenantId|$ts"
+        return Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(mac.doFinal(payload.toByteArray(Charsets.UTF_8)))
     }
 
     fun headers(otherHeaders: Map<String, String>? = null): Headers {
