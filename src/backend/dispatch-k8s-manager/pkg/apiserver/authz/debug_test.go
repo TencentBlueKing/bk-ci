@@ -36,7 +36,8 @@ func TestAuthorizeDebugSession(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NoError(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", pod, now))
-	assert.ErrorIs(t, AuthorizeDebugSession(Caller{UserID: "alice"}, ticket, "pod-1", "ctr-1", pod, now), ErrMissingIdentity)
+	assert.NoError(t, AuthorizeDebugSession(Caller{}, ticket, "pod-1", "ctr-1", pod, now))
+	assert.ErrorIs(t, AuthorizeDebugSession(Caller{UserID: "bob", ProjectID: "proj-b"}, ticket, "pod-1", "ctr-1", pod, now), ErrInvalidTicket)
 	assert.ErrorIs(t, AuthorizeDebugSession(caller, "", "pod-1", "ctr-1", pod, now), ErrInvalidTicket)
 
 	otherPod := &corev1.Pod{
@@ -45,6 +46,25 @@ func TestAuthorizeDebugSession(t *testing.T) {
 		},
 	}
 	assert.ErrorIs(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", otherPod, now), ErrForbidden)
+}
+
+func TestKnownSharedTokenSignedTicketRejected(t *testing.T) {
+	now := time.Now()
+	SetDebugTicketSecretForTest([]byte("server-high-entropy-secret"))
+	defer SetDebugTicketSecretForTest(nil)
+
+	victim := Caller{UserID: "alice", ProjectID: "proj-a"}
+	forgedToken, err := SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte("shared-devops-token"))
+	assert.NoError(t, err)
+	assert.ErrorIs(t, VerifyDebugTicket(forgedToken, victim, "pod-1", "ctr-1", now), ErrInvalidTicket)
+
+	forgedHardcoded, err := SignDebugTicketWithSecret(victim, "pod-1", "ctr-1", now, []byte("dispatch-k8s-manager-debug-ticket"))
+	assert.NoError(t, err)
+	assert.ErrorIs(t, VerifyDebugTicket(forgedHardcoded, victim, "pod-1", "ctr-1", now), ErrInvalidTicket)
+
+	legit, err := IssueDebugTicket(victim, "pod-1", "ctr-1", now)
+	assert.NoError(t, err)
+	assert.NoError(t, VerifyDebugTicket(legit, victim, "pod-1", "ctr-1", now))
 }
 
 func TestDebugTicketSurvivesWebConsoleProxyRewrite(t *testing.T) {

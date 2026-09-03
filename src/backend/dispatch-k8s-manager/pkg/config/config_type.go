@@ -129,8 +129,9 @@ type ApiServer struct {
 }
 
 type Auth struct {
-	ApiToken      ApiToken `json:"apiToken"`
-	RsaPrivateKey string   `json:"rsaPrivateKey"`
+	ApiToken          ApiToken `json:"apiToken"`
+	DebugTicketSecret string   `json:"debugTicketSecret"`
+	RsaPrivateKey     string   `json:"rsaPrivateKey"`
 }
 
 type ApiToken struct {

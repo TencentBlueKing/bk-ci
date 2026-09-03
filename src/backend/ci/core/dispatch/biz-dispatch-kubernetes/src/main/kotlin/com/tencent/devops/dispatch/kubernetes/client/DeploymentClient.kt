@@ -52,12 +52,13 @@ class DeploymentClient @Autowired constructor(
     fun createDeployment(
         userId: String,
         namespace: String,
-        deployment: Deployment
+        deployment: Deployment,
+        projectId: String = ""
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/deployments"
         val body = JsonUtil.toJson(deployment)
         logger.info("Create deployment request url: $url, body: $body")
-        val request = clientCommon.microBaseRequest(url, userId = userId).post(
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).post(
             RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
@@ -71,10 +72,11 @@ class DeploymentClient @Autowired constructor(
     fun getDeploymentByName(
         userId: String,
         namespace: String,
-        deploymentName: String
+        deploymentName: String,
+        projectId: String = ""
     ): KubernetesResult<Deployment> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
-        val request = clientCommon.microBaseRequest(url, userId = userId).get().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).get().build()
         logger.info("Get deployment: $deploymentName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -94,10 +96,11 @@ class DeploymentClient @Autowired constructor(
     fun deleteDeploymentByName(
         userId: String,
         namespace: String,
-        deploymentName: String
+        deploymentName: String,
+        projectId: String = ""
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/deployments/$deploymentName"
-        val request = clientCommon.microBaseRequest(url, userId = userId).delete().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).delete().build()
         logger.info("Delete deployment: $deploymentName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()

@@ -55,12 +55,13 @@ class SecretClient @Autowired constructor(
     fun createSecret(
         userId: String,
         namespace: String,
-        secret: Secret
+        secret: Secret,
+        projectId: String = ""
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/secrets"
         val body = JsonUtil.toJson(secret)
         logger.info("Create secret request url: $url, body: $body")
-        val request = clientCommon.microBaseRequest(url, userId = userId).post(
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).post(
             RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
@@ -74,10 +75,11 @@ class SecretClient @Autowired constructor(
     fun getSecretByName(
         userId: String,
         namespace: String,
-        secretName: String
+        secretName: String,
+        projectId: String = ""
     ): KubernetesResult<Secret> {
         val url = "/api/namespace/$namespace/secrets/$secretName"
-        val request = clientCommon.microBaseRequest(url, userId = userId).get().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).get().build()
         logger.info("Get secret: $secretName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -97,10 +99,11 @@ class SecretClient @Autowired constructor(
     fun deleteSecretByName(
         userId: String,
         namespace: String,
-        secretName: String
+        secretName: String,
+        projectId: String = ""
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/secrets/$secretName"
-        val request = clientCommon.microBaseRequest(url, userId = userId).delete().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = projectId).delete().build()
         logger.info("Delete secret: $secretName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -127,9 +130,10 @@ class SecretClient @Autowired constructor(
         userId: String,
         secretName: String,
         namespaceName: String,
-        kubernetesRepoInfo: KubernetesRepo
+        kubernetesRepoInfo: KubernetesRepo,
+        projectId: String = ""
     ) {
-        var secret = getSecretByName(userId, namespaceName, secretName).data
+        var secret = getSecretByName(userId, namespaceName, secretName, projectId).data
         logger.info("the secret is: $secret")
         if (secret == null) {
             val secretData: HashMap<String, String> = HashMap(1)
@@ -163,7 +167,7 @@ class SecretClient @Autowired constructor(
                 .addToData(secretData)
                 .withType("kubernetes.io/dockerconfigjson")
                 .build()
-            createSecret(userId, namespaceName, secret)
+            createSecret(userId, namespaceName, secret, projectId)
             logger.info("create new secret: $secret")
         }
     }

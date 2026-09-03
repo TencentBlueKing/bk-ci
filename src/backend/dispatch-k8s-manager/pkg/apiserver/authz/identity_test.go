@@ -20,8 +20,9 @@ func TestCallerFromHeaderAndQuery(t *testing.T) {
 
 	caller := CallerFromRequest(c)
 	assert.Equal(t, "alice", caller.UserID)
-	assert.Equal(t, "p-query", caller.ProjectID)
+	assert.Equal(t, "", caller.ProjectID, "query 不得补身份")
 	assert.Equal(t, "tenant-a", caller.TenantID)
+	assert.True(t, HasQueryIdentity(c))
 }
 
 func TestRequireTenantCaller(t *testing.T) {
@@ -38,4 +39,8 @@ func TestRequireTenantCaller(t *testing.T) {
 	caller, err := RequireTenantCaller(c)
 	assert.NoError(t, err)
 	assert.Equal(t, "proj-1", caller.ProjectID)
+
+	c.Request = httptest.NewRequest(http.MethodGet, "/builders/x/terminal?userId=alice&projectId=proj-a", nil)
+	_, err = RequireTenantCaller(c)
+	assert.ErrorIs(t, err, ErrUntrustedIdentity)
 }

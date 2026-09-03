@@ -2,10 +2,12 @@ package authz
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"strings"
+	"sync"
 	"time"
 
 	"disaptch-k8s-manager/pkg/config"
@@ -42,9 +44,29 @@ func IssueDebugTicket(caller Caller, podName, containerName string, now time.Tim
 	if err != nil {
 		return "", err
 	}
-	mac := hmac.New(sha256.New, debugTicketSecret())
+	return signDebugPayload(payload, debugTicketSecret()), nil
+}
+
+func signDebugPayload(payload, secret []byte) string {
+	mac := hmac.New(sha256.New, secret)
 	_, _ = mac.Write(payload)
-	return base64.RawURLEncoding.EncodeToString(payload) + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil)), nil
+	return base64.RawURLEncoding.EncodeToString(payload) + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+// SignDebugTicketWithSecret 仅测试：用指定密钥签名，模拟攻击者持有共享 token / 硬编码密钥。
+func SignDebugTicketWithSecret(caller Caller, podName, containerName string, now time.Time, secret []byte) (string, error) {
+	payload, err := json.Marshal(debugTicket{
+		PodName:       podName,
+		ContainerName: containerName,
+		UserID:        caller.UserID,
+		ProjectID:     caller.ProjectID,
+		TenantID:      caller.TenantID,
+		Exp:           now.Add(debugTicketTTL).Unix(),
+	})
+	if err != nil {
+		return "", err
+	}
+	return signDebugPayload(payload, secret), nil
 }
 
 func VerifyDebugTicket(token string, caller Caller, podName, containerName string, now time.Time) error {
@@ -79,21 +101,43 @@ func VerifyDebugTicket(token string, caller Caller, podName, containerName strin
 		return ErrInvalidTicket
 	}
 	ticketCaller := Caller{UserID: ticket.UserID, ProjectID: ticket.ProjectID, TenantID: ticket.TenantID}
-	if AuthorizeObject(caller, ticketCaller.Owner()) != nil {
+	if !caller.IsEmpty() && AuthorizeObject(caller, ticketCaller.Owner()) != nil {
 		return ErrInvalidTicket
 	}
 	return nil
 }
 
-// AuthorizeDebugSession 必须在 WebSocket Upgrade 之前调用：身份 + 票据 + 对象属主。
+// AuthorizeDebugSession 必须在 WebSocket Upgrade 之前调用。
+// 身份以票据内绑定的 caller 为准（服务端密钥签发）；请求头若存在则须与票据一致。
 func AuthorizeDebugSession(caller Caller, ticket string, podName, containerName string, pod *corev1.Pod, now time.Time) error {
-	if _, err := requireDebugCaller(caller); err != nil {
-		return err
-	}
 	if err := VerifyDebugTicket(ticket, caller, podName, containerName, now); err != nil {
 		return err
 	}
-	return AuthorizeObject(caller, OwnerFromPod(pod))
+	claims, err := parseDebugTicket(ticket)
+	if err != nil {
+		return ErrInvalidTicket
+	}
+	ticketCaller := Caller{UserID: claims.UserID, ProjectID: claims.ProjectID, TenantID: claims.TenantID}
+	if _, err := requireDebugCaller(ticketCaller); err != nil {
+		return err
+	}
+	return AuthorizeObject(ticketCaller, OwnerFromPod(pod))
+}
+
+func parseDebugTicket(token string) (debugTicket, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		return debugTicket{}, ErrInvalidTicket
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return debugTicket{}, ErrInvalidTicket
+	}
+	var ticket debugTicket
+	if err := json.Unmarshal(payload, &ticket); err != nil {
+		return debugTicket{}, ErrInvalidTicket
+	}
+	return ticket, nil
 }
 
 func requireDebugCaller(caller Caller) (Caller, error) {
@@ -103,11 +147,36 @@ func requireDebugCaller(caller Caller) (Caller, error) {
 	return caller, nil
 }
 
-func debugTicketSecret() []byte {
-	if config.Config != nil && config.Config.ApiServer.Auth.ApiToken.Value != "" {
-		return []byte(config.Config.ApiServer.Auth.ApiToken.Value)
+var (
+	ticketSecretOnce    sync.Once
+	processTicketSecret []byte
+	testTicketSecret    []byte
+)
+
+// SetDebugTicketSecretForTest 注入独立测试密钥；传 nil 恢复进程密钥。
+func SetDebugTicketSecretForTest(secret []byte) {
+	if secret == nil {
+		testTicketSecret = nil
+		return
 	}
-	return []byte("dispatch-k8s-manager-debug-ticket")
+	testTicketSecret = append([]byte(nil), secret...)
+}
+
+func debugTicketSecret() []byte {
+	if len(testTicketSecret) > 0 {
+		return testTicketSecret
+	}
+	// 独立高熵密钥：配置项优先，绝不回退到共享 Devops-Token 或硬编码。
+	if config.Config != nil && strings.TrimSpace(config.Config.ApiServer.Auth.DebugTicketSecret) != "" {
+		return []byte(config.Config.ApiServer.Auth.DebugTicketSecret)
+	}
+	ticketSecretOnce.Do(func() {
+		processTicketSecret = make([]byte, 32)
+		if _, err := rand.Read(processTicketSecret); err != nil {
+			panic("debug ticket secret: crypto/rand failed")
+		}
+	})
+	return processTicketSecret
 }
 
 // FormatDebugBuilderURL 把票据放在 path 最后一段，避免 WebConsole 追加 ?targetHost= 时出现第二个 '?'。

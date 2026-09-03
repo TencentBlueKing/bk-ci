@@ -257,10 +257,10 @@ func authorizeBuilderLifecycle(c *gin.Context, builderName string) bool {
 }
 
 func authorizeDebugBuilder(c *gin.Context, podName, containerName string) error {
-	caller, err := authz.RequireTenantCaller(c)
-	if err != nil {
-		return err
+	if authz.HasQueryIdentity(c) {
+		return authz.ErrUntrustedIdentity
 	}
+	caller := authz.CallerFromRequest(c)
 	ticket := authz.DebugTicketFromRequest(c.Param("ticket"), c.Query(authz.QueryTicket))
 	pod, err := loadDebugPod(podName)
 	if err != nil || pod == nil {

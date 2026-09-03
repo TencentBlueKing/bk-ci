@@ -29,11 +29,12 @@ const (
 )
 
 var (
-	ErrMissingIdentity = errors.New("missing caller identity: require X-DEVOPS-UID and X-DEVOPS-PROJECT-ID or X-DEVOPS-TENANT-ID")
-	ErrForbidden       = errors.New("forbidden: object owner or tenant mismatch")
-	ErrObjectUnowned   = errors.New("forbidden: target object has no owner, deny by default")
-	ErrInvalidTicket   = errors.New("forbidden: debug ticket invalid or expired")
-	ErrNamespaceDenied = errors.New("forbidden: namespace is not owned by caller or is a system namespace")
+	ErrMissingIdentity   = errors.New("missing caller identity: require X-DEVOPS-UID and X-DEVOPS-PROJECT-ID or X-DEVOPS-TENANT-ID")
+	ErrForbidden         = errors.New("forbidden: object owner or tenant mismatch")
+	ErrObjectUnowned     = errors.New("forbidden: target object has no owner, deny by default")
+	ErrInvalidTicket     = errors.New("forbidden: debug ticket invalid or expired")
+	ErrNamespaceDenied   = errors.New("forbidden: namespace is not owned by caller or is a system namespace")
+	ErrUntrustedIdentity = errors.New("forbidden: identity must come from trusted headers, not query")
 )
 
 // Caller 是请求侧“自称身份”，不能单独作为授权依据。
@@ -85,7 +86,17 @@ func CallerFromRequest(c *gin.Context) Caller {
 	if c == nil || c.Request == nil {
 		return Caller{}
 	}
-	return CallerFromHeader(c.Request.Header).FillFromQuery(c.Request.URL.Query())
+	// 身份只信 Header。Query 可被攻击者写进 URL，不得参与授权。
+	return CallerFromHeader(c.Request.Header)
+}
+
+// HasQueryIdentity 检测攻击者把身份塞进 URL 的绕过面。
+func HasQueryIdentity(c *gin.Context) bool {
+	if c == nil || c.Request == nil || c.Request.URL == nil {
+		return false
+	}
+	q := c.Request.URL.Query()
+	return firstQuery(q, QueryUserID) != "" || firstQuery(q, QueryProjectID) != "" || firstQuery(q, QueryTenantID) != ""
 }
 
 func CallerFromHeader(h http.Header) Caller {
@@ -114,6 +125,9 @@ func (c Caller) FillFromQuery(q map[string][]string) Caller {
 
 // RequireTenantCaller 要求具备用户身份，以及项目或租户之一，避免共享 token 匿名越权。
 func RequireTenantCaller(c *gin.Context) (Caller, error) {
+	if HasQueryIdentity(c) {
+		return Caller{}, ErrUntrustedIdentity
+	}
 	caller := CallerFromRequest(c)
 	if caller.UserID == "" || !caller.HasTenantScope() {
 		return Caller{}, ErrMissingIdentity

@@ -21,8 +21,12 @@ func requireTenantCaller(c *gin.Context) (authz.Caller, bool) {
 }
 
 func requireNamespaceCaller(c *gin.Context) (authz.Caller, bool) {
+	if authz.HasQueryIdentity(c) {
+		fail(c, http.StatusForbidden, authz.ErrUntrustedIdentity)
+		return authz.Caller{}, false
+	}
 	caller := authz.CallerFromRequest(c)
-	if caller.UserID == "" {
+	if caller.UserID == "" || !caller.HasTenantScope() {
 		fail(c, http.StatusForbidden, authz.ErrMissingIdentity)
 		return authz.Caller{}, false
 	}

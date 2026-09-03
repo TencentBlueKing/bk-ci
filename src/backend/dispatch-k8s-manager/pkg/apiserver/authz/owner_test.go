@@ -17,6 +17,7 @@ func TestAuthorizeObject(t *testing.T) {
 	assert.ErrorIs(t, AuthorizeObject(Caller{UserID: "alice", ProjectID: "proj-b"}, owner), ErrForbidden)
 	assert.NoError(t, AuthorizeObject(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
 	assert.NoError(t, AuthorizeObject(Caller{UserID: "other", TenantID: "t-a"}, owner))
+	assert.NoError(t, AuthorizeObject(Caller{UserID: "carol", ProjectID: "proj-a"}, owner))
 }
 
 func TestAuthorizeObjectIfOwned(t *testing.T) {

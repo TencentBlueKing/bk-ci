@@ -3,10 +3,10 @@ package apis
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +18,6 @@ import (
 	"disaptch-k8s-manager/pkg/types"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,9 +29,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	logger := logrus.New()
-	logger.Out = io.Discard
-	logs.Logs = logger
+	logs.Init(filepath.Join(os.TempDir(), "dispatch-k8s-manager-security-test.log"))
 	os.Exit(m.Run())
 }
 
@@ -336,7 +333,6 @@ func TestCreateDeployment_BindsNamespaceOwner(t *testing.T) {
 	}
 	createNativeDeployment = func(namespace string, deployment *appsv1.Deployment) error {
 		created = true
-		assert.Equal(t, "alice", deployment.Labels[authz.LabelUserID])
 		assert.Equal(t, "proj-a", deployment.Labels[authz.LabelProjectID])
 		return nil
 	}
@@ -369,4 +365,12 @@ func TestCreateDeployment_BindsNamespaceOwner(t *testing.T) {
 	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
+
+	req = httptest.NewRequest(http.MethodPost, "/namespace/proj-a-ns/deployments", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(authz.HeaderUserID, "carol")
+	req.Header.Set(authz.HeaderProjectID, "proj-a")
+	w = httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 }

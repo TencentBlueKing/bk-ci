@@ -2,6 +2,7 @@ package kubeclient
 
 import (
 	"context"
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/config"
 	"flag"
 	"github.com/pkg/errors"
@@ -78,6 +79,9 @@ func InitKubeClient(kubeConfigFile string, informerStopCh <-chan struct{}) error
 
 	infs.pod = podLister
 	infs.deployment = deploymentLister
+
+	authz.DefaultNamespaceOwners.SetLoader(LoadNamespaceOwner)
+	authz.DefaultNamespaceOwners.SetPersister(PersistNamespaceOwner)
 
 	return nil
 }
