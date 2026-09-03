@@ -46,6 +46,8 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,8 +107,7 @@ class QueueInterceptor @Autowired constructor(
                 checkRunLockWithGroupType(
                     task = task,
                     latestBuildId = buildSummaryRecord.latestBuildId,
-                    latestStartUser = buildSummaryRecord.latestStartUser,
-                    runningCount = buildSummaryRecord.runningCount
+                    latestStartUser = buildSummaryRecord.latestStartUser
                 )
 
             (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
@@ -277,8 +278,7 @@ class QueueInterceptor @Autowired constructor(
     private fun checkRunLockWithGroupType(
         task: InterceptData,
         latestBuildId: String?,
-        latestStartUser: String?,
-        runningCount: Int
+        latestStartUser: String?
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
@@ -294,11 +294,13 @@ class QueueInterceptor @Autowired constructor(
                 )
                 // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
                 // status 取所有没有完成的状态
-                val status = BuildStatus.values().filterNot { it.isFinish() }
+                val status = BuildStatus.entries.filterNot { it.isFinish() }
+                // #13450 重试复用当前 buildId，查询时排除自己，避免把当前构建误取消
                 val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = concurrencyGroup,
-                    status = status
+                    status = status,
+                    excludeBuildId = task.buildId
                 ).toMutableList()
                 // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
                 if (concurrencyGroup == task.pipelineInfo.pipelineId) {
@@ -307,15 +309,24 @@ class QueueInterceptor @Autowired constructor(
                         pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                             projectId = projectId,
                             pipelineId = task.pipelineInfo.pipelineId,
-                            status = status
+                            status = status,
+                            excludeBuildId = task.buildId
                         )
                     )
                 }
-                builds.forEach { (pipelineId, buildId) ->
+                val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
+                    candidateBuilds = builds,
+                    currentContext = ConcurrencyCancelContext.of(
+                        pipelineId = task.pipelineInfo.pipelineId,
+                        buildId = task.buildId,
+                        isRetry = task.retry == true
+                    ) { pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum }
+                )
+                cancelTargets.forEach { target ->
                     pipelineRuntimeService.concurrencyCancelBuildPipeline(
                         projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
+                        pipelineId = target.pipelineId,
+                        buildId = target.buildId,
                         userId = latestStartUser ?: task.pipelineInfo.creator,
                         groupName = concurrencyGroup,
                         detailUrl = detailUrl
@@ -334,13 +345,13 @@ class QueueInterceptor @Autowired constructor(
                         projectId = projectId,
                         concurrencyGroup = concurrencyGroup,
                         status = listOf(BuildStatus.RUNNING)
-                    ).count { it.first == task.pipelineInfo.pipelineId },
+                    ).count { it.pipelineId == task.pipelineInfo.pipelineId },
                     // #7681 在history表中取出当前流水线下相同并发组排队的数量。
                     queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                         projectId = projectId,
                         concurrencyGroup = concurrencyGroup,
                         status = listOf(BuildStatus.QUEUE)
-                    ).count { it.first == task.pipelineInfo.pipelineId },
+                    ).count { it.pipelineId == task.pipelineInfo.pipelineId },
                     groupName = concurrencyGroup
                 )
             }
