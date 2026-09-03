@@ -58,6 +58,10 @@ func (c Caller) Owner() Owner {
 	return Owner{UserID: c.UserID, ProjectID: c.ProjectID, TenantID: c.TenantID}
 }
 
+func (o Owner) Caller() Caller {
+	return Caller{UserID: o.UserID, ProjectID: o.ProjectID, TenantID: o.TenantID}
+}
+
 // Owner 是资源属主（label / annotation / env）。
 type Owner struct {
 	UserID    string

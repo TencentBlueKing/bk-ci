@@ -20,6 +20,14 @@ func TestAuthorizeObject(t *testing.T) {
 	assert.NoError(t, AuthorizeObject(Caller{UserID: "carol", ProjectID: "proj-a"}, owner))
 }
 
+func TestAuthorizeDebugIssue_RequiresUserAndProject(t *testing.T) {
+	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
+	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "mallory", ProjectID: "proj-a"}, owner), ErrForbidden)
+	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "alice"}, owner), ErrMissingIdentity)
+	assert.ErrorIs(t, AuthorizeDebugIssue(Caller{UserID: "alice", ProjectID: "proj-a"}, Owner{ProjectID: "proj-a"}), ErrObjectUnowned)
+	assert.NoError(t, AuthorizeDebugIssue(Caller{UserID: "alice", ProjectID: "proj-a"}, owner))
+}
+
 func TestAuthorizeBuilderObserveAndMutate(t *testing.T) {
 	owner := Owner{UserID: "alice", ProjectID: "proj-a"}
 	assert.NoError(t, AuthorizeBuilderObserve(Caller{}, Owner{}))

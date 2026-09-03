@@ -101,10 +101,22 @@ func VerifyDebugTicket(token string, caller Caller, podName, containerName strin
 		return ErrInvalidTicket
 	}
 	ticketCaller := Caller{UserID: ticket.UserID, ProjectID: ticket.ProjectID, TenantID: ticket.TenantID}
-	if !caller.IsEmpty() && AuthorizeObject(caller, ticketCaller.Owner()) != nil {
+	if !caller.IsEmpty() && AuthorizeDebugIssue(caller, ticketCaller.Owner()) != nil {
 		return ErrInvalidTicket
 	}
 	return nil
+}
+
+// IssueDebugTicketForPod 签票主体来自 Pod 属主，自称 caller 只做校验。
+func IssueDebugTicketForPod(claimed Caller, pod *corev1.Pod, containerName string, now time.Time) (string, error) {
+	if pod == nil {
+		return "", ErrObjectUnowned
+	}
+	owner := OwnerFromPod(pod)
+	if err := AuthorizeDebugIssue(claimed, owner); err != nil {
+		return "", err
+	}
+	return IssueDebugTicket(owner.Caller(), pod.Name, containerName, now)
 }
 
 // AuthorizeDebugSession 必须在 WebSocket Upgrade 之前调用。
@@ -121,7 +133,15 @@ func AuthorizeDebugSession(caller Caller, ticket string, podName, containerName 
 	if _, err := requireDebugCaller(ticketCaller); err != nil {
 		return err
 	}
-	return AuthorizeObject(ticketCaller, OwnerFromPod(pod))
+	return AuthorizeDebugIssue(ticketCaller, OwnerFromPod(pod))
+}
+
+func DebugTicketSubject(token string) (Caller, error) {
+	ticket, err := parseDebugTicket(token)
+	if err != nil {
+		return Caller{}, err
+	}
+	return Caller{UserID: ticket.UserID, ProjectID: ticket.ProjectID, TenantID: ticket.TenantID}, nil
 }
 
 func parseDebugTicket(token string) (debugTicket, error) {

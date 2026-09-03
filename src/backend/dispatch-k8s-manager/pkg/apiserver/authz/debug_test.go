@@ -45,7 +45,28 @@ func TestAuthorizeDebugSession(t *testing.T) {
 			Labels: map[string]string{LabelProjectID: "proj-b"},
 		},
 	}
-	assert.ErrorIs(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", otherPod, now), ErrForbidden)
+	assert.ErrorIs(t, AuthorizeDebugSession(caller, ticket, "pod-1", "ctr-1", otherPod, now), ErrObjectUnowned)
+}
+
+func TestIssueDebugTicketForPod_UsesOwnerNotClaimedCaller(t *testing.T) {
+	now := time.Now()
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "pod-1",
+			Labels: map[string]string{LabelProjectID: "proj-a", LabelUserID: "alice"},
+		},
+	}
+	claimed := Caller{UserID: "mallory", ProjectID: "proj-a"}
+	_, err := IssueDebugTicketForPod(claimed, pod, "ctr-1", now)
+	assert.ErrorIs(t, err, ErrForbidden)
+
+	ticket, err := IssueDebugTicketForPod(Caller{UserID: "alice", ProjectID: "proj-a"}, pod, "ctr-1", now)
+	assert.NoError(t, err)
+	subject, err := DebugTicketSubject(ticket)
+	assert.NoError(t, err)
+	assert.Equal(t, "alice", subject.UserID)
+	assert.Equal(t, "proj-a", subject.ProjectID)
+	assert.NoError(t, AuthorizeDebugSession(Caller{}, ticket, "pod-1", "ctr-1", pod, now))
 }
 
 func TestKnownSharedTokenSignedTicketRejected(t *testing.T) {

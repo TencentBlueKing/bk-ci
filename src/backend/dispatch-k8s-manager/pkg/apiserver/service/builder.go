@@ -20,6 +20,7 @@ import (
 )
 
 var getPodForDebug = kubeclient.GetPod
+var resolvePodAndContainer = getPodAndContainerName
 
 func GetBuilderStatus(workloadName string) (*BuilderStatus, error) {
 	// 先查询deployment有可能deployment存在但是pod为空证明是停止等待启动
@@ -158,7 +159,7 @@ func DeleteBuilder(builderName string) (taskId string, err error) {
 }
 
 func DebugBuilderUrl(urlPerfix string, builderName string, caller authz.Caller) (string, error) {
-	podName, containerName, err := getPodAndContainerName(builderName)
+	podName, containerName, err := resolvePodAndContainer(builderName)
 	if err != nil {
 		return "", err
 	}
@@ -170,11 +171,7 @@ func DebugBuilderUrl(urlPerfix string, builderName string, caller authz.Caller) 
 	if err != nil {
 		return "", err
 	}
-	if err = authz.AuthorizeObject(caller, authz.OwnerFromPod(pod)); err != nil {
-		return "", err
-	}
-
-	ticket, err := authz.IssueDebugTicket(caller, podName, containerName, time.Now())
+	ticket, err := authz.IssueDebugTicketForPod(caller, pod, containerName, time.Now())
 	if err != nil {
 		return "", err
 	}

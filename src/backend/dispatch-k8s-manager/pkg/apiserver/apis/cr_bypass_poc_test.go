@@ -117,3 +117,24 @@ func TestPoC_R3_CannotSeizeIstioSystem(t *testing.T) {
 	_, seized := authz.DefaultNamespaceOwners.Get("istio-system")
 	assert.False(t, seized)
 }
+
+func TestPoC6_ForgedProjectOnlyHeaderCannotIssueTicket(t *testing.T) {
+	now := time.Now()
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "victim-pod",
+			Labels: map[string]string{authz.LabelProjectID: "proj-a", authz.LabelUserID: "alice"},
+		},
+	}
+	// 旧 AuthorizeObject 的 OR 匹配会放行；签发必须 AND。
+	_, err := authz.IssueDebugTicketForPod(authz.Caller{UserID: "mallory", ProjectID: "proj-a"}, pod, "ctr-1", now)
+	assert.ErrorIs(t, err, authz.ErrForbidden)
+
+	ticket, err := authz.IssueDebugTicketForPod(authz.Caller{UserID: "alice", ProjectID: "proj-a"}, pod, "ctr-1", now)
+	assert.NoError(t, err)
+	subject, err := authz.DebugTicketSubject(ticket)
+	assert.NoError(t, err)
+	assert.Equal(t, "alice", subject.UserID)
+	assert.Equal(t, "proj-a", subject.ProjectID)
+	assert.NoError(t, authz.AuthorizeDebugSession(authz.Caller{}, ticket, "victim-pod", "ctr-1", pod, now))
+}
