@@ -28,5 +28,8 @@ enum class ClientUpgradeComp(val value: String) {
     CLIENT("client"),
 
     // start 客户端
-    START("start")
+    START("start"),
+
+    // BKW 手机端应用
+    APP("app")
 }
