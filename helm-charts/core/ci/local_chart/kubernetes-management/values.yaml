@@ -164,8 +164,8 @@ kubernetesManager:
         value: landun
       # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
       debugTicketSecret: ""
-      # 身份头 HMAC。禁止写入构建 Pod env。生产与 dispatch.kubernetes.identitySigningKey 同时覆盖。
-      identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
+      # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。须复制到 dispatch.kubernetes.identitySigningKey。
+      identitySigningKey: ""
       rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点

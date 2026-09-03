@@ -134,8 +134,8 @@ data:
           value: {{ .Values.kubernetesManager.apiserver.auth.apiToken.value }}
         # 票据密钥改由 Secret kubernetes-manager-auth 注入环境变量，不进 ConfigMap。
         debugTicketSecret: ""
-        # 仅 manager+dispatch 持有，禁止注入构建容器
-        identitySigningKey: {{ .Values.kubernetesManager.apiserver.auth.identitySigningKey }}
+        # 身份签名密钥改由 Secret kubernetes-manager-auth 注入，不进 ConfigMap。
+        identitySigningKey: ""
         rsaPrivateKey: |
           {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
 

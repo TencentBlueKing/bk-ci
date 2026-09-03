@@ -90,6 +90,12 @@ spec:
                   name: kubernetes-manager-auth
                   key: debugTicketSecret
                   optional: true
+            - name: K8S_MANAGER_IDENTITY_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubernetes-manager-auth
+                  key: identitySigningKey
+                  optional: true
           workingDir: /data/workspace/kubernetes-manager
           livenessProbe:
             tcpSocket:

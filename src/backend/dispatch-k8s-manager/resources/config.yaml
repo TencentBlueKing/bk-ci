@@ -112,9 +112,9 @@ apiserver:
     # Helm 用 Secret lookup+首装随机下发到环境变量 K8S_MANAGER_DEBUG_TICKET_SECRET。
     # 禁止再写仓库公开串 bkci-k8s-manager-debug-ticket-change-in-prod，写入也会被拒绝。
     debugTicketSecret: ""
-    # 身份头 HMAC 密钥。仅 dispatch 与 manager 持有，禁止注入构建容器。
-    # 空值回退仓库默认；生产必须与 dispatch.kubernetes.identitySigningKey 同时覆盖。
-    identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
+    # 身份头 HMAC。空配置不回退公开串。Helm 注入 K8S_MANAGER_IDENTITY_SIGNING_KEY。
+    # 必须与 dispatch.kubernetes.identitySigningKey 为同一高熵值。
+    identitySigningKey: ""
     # 在这里保存私钥用来解密apitoken
     # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得  
     rsaPrivateKey: ""

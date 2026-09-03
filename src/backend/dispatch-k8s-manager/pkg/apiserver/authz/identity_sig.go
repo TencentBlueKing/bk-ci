@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,9 +18,12 @@ const (
 	HeaderIdentityTS  = "X-DEVOPS-IDENTITY-TS"
 
 	identitySigTTL = 5 * time.Minute
-	// DefaultIdentitySigningKey 仅 dispatch 与 manager 持有，禁止注入构建容器。
-	// 仓库默认公开，生产必须覆盖。空配置也用它，避免无签名自称头被接受。
+	// EnvIdentitySigningKey Helm Secret 注入。优先于 config.yaml。
+	EnvIdentitySigningKey = "K8S_MANAGER_IDENTITY_SIGNING_KEY"
+	// DefaultIdentitySigningKey 是曾经写进仓库的公开串，仅作拒绝名单。绝不能再当兜底。
 	DefaultIdentitySigningKey = "bkci-k8s-manager-identity-sig-change-in-prod"
+	// UnitTestIdentitySigningKey 单测专用。
+	UnitTestIdentitySigningKey = "unit-test-identity-signing-key"
 )
 
 var testIdentitySigningKey []byte
@@ -36,10 +40,18 @@ func identitySigningKey() []byte {
 	if len(testIdentitySigningKey) > 0 {
 		return testIdentitySigningKey
 	}
-	if config.Config != nil && strings.TrimSpace(config.Config.ApiServer.Auth.IdentitySigningKey) != "" {
-		return []byte(config.Config.ApiServer.Auth.IdentitySigningKey)
+	candidates := []string{os.Getenv(EnvIdentitySigningKey)}
+	if config.Config != nil {
+		candidates = append(candidates, config.Config.ApiServer.Auth.IdentitySigningKey)
 	}
-	return []byte(DefaultIdentitySigningKey)
+	for _, raw := range candidates {
+		raw = strings.TrimSpace(raw)
+		if raw == "" || raw == DefaultIdentitySigningKey {
+			continue
+		}
+		return []byte(raw)
+	}
+	return nil
 }
 
 func identitySigPayload(caller Caller, ts string) string {
@@ -47,8 +59,12 @@ func identitySigPayload(caller Caller, ts string) string {
 }
 
 func SignIdentity(caller Caller, now time.Time) (ts, sig string) {
+	key := identitySigningKey()
+	if len(key) == 0 {
+		return "", ""
+	}
 	ts = strconv.FormatInt(now.Unix(), 10)
-	mac := hmac.New(sha256.New, identitySigningKey())
+	mac := hmac.New(sha256.New, key)
 	_, _ = mac.Write([]byte(identitySigPayload(caller, ts)))
 	sig = base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 	return ts, sig
@@ -68,6 +84,9 @@ func AttachIdentitySignature(h http.Header, now time.Time) {
 		return
 	}
 	ts, sig := SignIdentity(caller, now)
+	if ts == "" || sig == "" {
+		return
+	}
 	h.Set(HeaderIdentityTS, ts)
 	h.Set(HeaderIdentitySig, sig)
 }
@@ -81,7 +100,8 @@ func VerifyIdentitySignature(h http.Header, caller Caller, now time.Time) error 
 	}
 	ts := strings.TrimSpace(h.Get(HeaderIdentityTS))
 	sig := strings.TrimSpace(h.Get(HeaderIdentitySig))
-	if ts == "" || sig == "" {
+	key := identitySigningKey()
+	if len(key) == 0 || ts == "" || sig == "" {
 		return ErrUntrustedIdentity
 	}
 	unix, err := strconv.ParseInt(ts, 10, 64)
@@ -95,7 +115,7 @@ func VerifyIdentitySignature(h http.Header, caller Caller, now time.Time) error 
 	if skew > identitySigTTL {
 		return ErrUntrustedIdentity
 	}
-	mac := hmac.New(sha256.New, identitySigningKey())
+	mac := hmac.New(sha256.New, key)
 	_, _ = mac.Write([]byte(identitySigPayload(caller, ts)))
 	want := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 	if !hmac.Equal([]byte(sig), []byte(want)) {

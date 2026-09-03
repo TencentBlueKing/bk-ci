@@ -373,7 +373,7 @@ kubernetes-manager:
           value: landun
         # 留空：模板 lookup 已有 Secret，否则 randAlphaNum 32。不要填仓库公开串。
         debugTicketSecret: ""
-        identitySigningKey: bkci-k8s-manager-identity-sig-change-in-prod
+        identitySigningKey: ""
         rsaPrivateKey: ""
     volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点

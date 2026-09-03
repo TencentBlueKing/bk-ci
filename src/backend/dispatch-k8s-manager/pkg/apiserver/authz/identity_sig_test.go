@@ -43,3 +43,15 @@ func TestAttachIdentitySignatureSkipsEmptyCaller(t *testing.T) {
 	AttachIdentitySignature(h, time.Now())
 	assert.Empty(t, h.Get(HeaderIdentitySig))
 }
+
+func TestPublishedDefaultIdentityKeyRejected(t *testing.T) {
+	defer SetIdentitySigningKeyForTest([]byte(UnitTestIdentitySigningKey))
+	now := time.Now()
+	h := http.Header{}
+	h.Set(HeaderUserID, "alice")
+	h.Set(HeaderProjectID, "proj-a")
+	SetIdentitySigningKeyForTest([]byte(DefaultIdentitySigningKey))
+	AttachIdentitySignature(h, now)
+	SetIdentitySigningKeyForTest([]byte("server-high-entropy-identity"))
+	assert.True(t, CallerFromHeader(h).IsEmpty(), "公开常量 identitySigningKey 自签必须被拒")
+}

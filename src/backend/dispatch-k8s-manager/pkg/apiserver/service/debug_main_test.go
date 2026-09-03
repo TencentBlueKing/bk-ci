@@ -9,5 +9,6 @@ import (
 
 func TestMain(m *testing.M) {
 	authz.SetDebugTicketSecretForTest([]byte(authz.UnitTestDebugTicketSecret))
+	authz.SetIdentitySigningKeyForTest([]byte(authz.UnitTestIdentitySigningKey))
 	os.Exit(m.Run())
 }

@@ -49,7 +49,6 @@ class KubernetesClientCommon @Autowired constructor(
         private const val TENANT_ID_KEY = "X-DEVOPS-TENANT-ID"
         private const val IDENTITY_SIG_KEY = "X-DEVOPS-IDENTITY-SIG"
         private const val IDENTITY_TS_KEY = "X-DEVOPS-IDENTITY-TS"
-        private const val DEFAULT_IDENTITY_SIGNING_KEY = "bkci-k8s-manager-identity-sig-change-in-prod"
     }
 
     @Value("\${kubernetes.token}")
@@ -58,9 +57,10 @@ class KubernetesClientCommon @Autowired constructor(
     @Value("\${kubernetes.apiUrl}")
     val kubernetesApiUrl: String = ""
 
-    // 仅 dispatch 持有，禁止注入构建容器。空配置回退仓库默认，须与 manager 同时覆盖。
-    @Value("\${kubernetes.identitySigningKey:bkci-k8s-manager-identity-sig-change-in-prod}")
-    val identitySigningKey: String = DEFAULT_IDENTITY_SIGNING_KEY
+    // 仅 dispatch 持有，禁止注入构建容器。须与 manager Secret identitySigningKey 一致。
+    // 空配置不回退仓库公开串，不发 SIG，manager 会丢弃自称头。
+    @Value("\${kubernetes.identitySigningKey:}")
+    val identitySigningKey: String = ""
 
     fun baseRequest(
         userId: String,
@@ -95,7 +95,7 @@ class KubernetesClientCommon @Autowired constructor(
         if (tenantId.isNotBlank()) {
             result[TENANT_ID_KEY] = tenantId
         }
-        if (result.isNotEmpty()) {
+        if (result.isNotEmpty() && identitySigningKey.isNotBlank()) {
             val ts = Instant.now().epochSecond.toString()
             result[IDENTITY_TS_KEY] = ts
             result[IDENTITY_SIG_KEY] = signIdentity(
@@ -109,7 +109,7 @@ class KubernetesClientCommon @Autowired constructor(
     }
 
     private fun signIdentity(userId: String, projectId: String, tenantId: String, ts: String): String {
-        val key = identitySigningKey.ifBlank { DEFAULT_IDENTITY_SIGNING_KEY }
+        val key = identitySigningKey
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
         val payload = "$userId|$projectId|$tenantId|$ts"
