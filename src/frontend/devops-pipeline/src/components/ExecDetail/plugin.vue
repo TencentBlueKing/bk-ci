@@ -79,19 +79,18 @@
             class="step-plugin-config-slider"
         >
             <header
-                class="plugin-config-hd"
+                class="property-panel-header"
                 slot="header"
             >
-                <i class="devops-icon icon-edit plugin-config-icon"></i>
-                <span
-                    v-if="configIsAi"
-                    class="plugin-config-ai"
-                    title="AI"
-                >AI</span>
-                <span
-                    class="plugin-config-name"
-                    :title="currentElement.name"
-                >{{ currentElement.name }}</span>
+                <div class="atom-name-edit">
+                    <span
+                        v-if="configIsAi"
+                        class="plugin-config-ai"
+                        title="AI"
+                    >AI</span>
+                    <p :title="currentElement.name">{{ currentElement.name }}</p>
+                    <i class="devops-icon icon-edit"></i>
+                </div>
                 <span
                     class="plugin-config-ro"
                     :title="$t('logPanel.readonly')"
@@ -398,31 +397,41 @@
             margin-right: 10px;
         }
     }
-    .plugin-config-hd {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        width: 100%;
-        padding-right: 12px;
-        box-sizing: border-box;
-        font-size: 16px;
+    .property-panel-header {
+        font-size: 14px;
         font-weight: normal;
-        color: #313238;
-    }
-    .plugin-config-icon {
-        flex-shrink: 0;
-        color: #63656e;
-        font-size: 16px;
-        line-height: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 60px;
+        width: calc(100% - 30px);
+        .atom-name-edit {
+            display: flex;
+            height: 36px;
+            line-height: 36px;
+            min-width: 0;
+            > p {
+                max-width: 450px;
+                margin: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .icon-edit {
+                margin-left: 12px;
+                line-height: 36px;
+            }
+        }
     }
     .plugin-config-ai {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        align-self: center;
         width: 20px;
         height: 16px;
+        margin-right: 8px;
         border-radius: 8px;
         background: #7b5aff;
         color: #fff;
@@ -430,31 +439,19 @@
         font-weight: 600;
         line-height: 1;
     }
-    .plugin-config-name {
-        flex: 1;
-        min-width: 0;
-        margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 16px;
-        font-weight: normal;
-        line-height: 22px;
-        color: #313238;
-    }
     .plugin-config-ro {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        margin-left: 8px;
         padding: 0 8px;
         height: 22px;
         border-radius: 2px;
         background: #f0f1f5;
         font-size: 12px;
-        line-height: 22px;
         color: #63656e;
+        .devops-icon {
+            margin-right: 4px;
+        }
     }
     .lp-output-tab,
     ::v-deep .detail-artifactory-home,
