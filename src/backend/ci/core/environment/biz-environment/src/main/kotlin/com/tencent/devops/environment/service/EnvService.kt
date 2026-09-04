@@ -627,7 +627,6 @@ class EnvService @Autowired constructor(
         return tagNodeCount
     }
 
-
     override fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission> {
         val envRecordList = envDao.listServerEnv(dslContext, projectId)
         if (envRecordList.isEmpty()) {
