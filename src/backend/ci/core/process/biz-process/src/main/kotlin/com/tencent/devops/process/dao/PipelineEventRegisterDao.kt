@@ -15,7 +15,7 @@ class PipelineEventRegisterDao {
         eventCode: String,
         eventSource: String,
         eventType: String,
-        eventScope: String?,
+        eventScopes: List<String>? = null,
         callbackUrl: String
     ): Int {
         with(TPipelineEventRegister.T_PIPELINE_EVENT_REGISTER) {
@@ -26,7 +26,9 @@ class PipelineEventRegisterDao {
                 .and(EVENT_SOURCE.eq(eventSource))
                 .and(EVENT_TYPE.eq(eventType))
                 .and(CALLBACK_URL.eq(callbackUrl))
-            step.and(EVENT_SCOPE.eq(eventScope.orEmpty()))
+            if (!eventScopes.isNullOrEmpty()) {
+                step.and(EVENT_SCOPE.`in`(eventScopes))
+            }
             return step.fetchOne(0, Int::class.java) ?: 0
         }
     }

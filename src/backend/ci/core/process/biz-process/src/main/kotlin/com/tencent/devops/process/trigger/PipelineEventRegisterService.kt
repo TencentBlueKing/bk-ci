@@ -23,15 +23,21 @@ class PipelineEventRegisterService(
     private val client: Client
 ) {
 
-    fun exists(register: PipelineEventRegister): Boolean {
-        val callbackUrl = register.callbackUrl ?: return false
+    fun exists(
+        projectId: String,
+        eventCode: String,
+        eventSource: String,
+        eventType: String,
+        eventScopes: List<String>? = null,
+        callbackUrl: String
+    ): Boolean {
         return pipelineEventRegisterDao.count(
             dslContext = dslContext,
-            projectId = register.projectId,
-            eventCode = register.eventCode,
-            eventSource = register.eventSource,
-            eventType = register.eventType,
-            eventScope = register.eventScope,
+            projectId = projectId,
+            eventCode = eventCode,
+            eventSource = eventSource,
+            eventType = eventType,
+            eventScopes = eventScopes,
             callbackUrl = callbackUrl
         ) > 0
     }
@@ -57,7 +63,17 @@ class PipelineEventRegisterService(
         register: PipelineEventRegister,
         onMiss: () -> String?
     ) {
-        if (exists(register)) {
+        val callbackUrl = register.callbackUrl ?: return
+        val eventScopes = listOf(register.eventScope.orEmpty())
+        if (exists(
+                projectId = register.projectId,
+                eventCode = register.eventCode,
+                eventSource = register.eventSource,
+                eventType = register.eventType,
+                eventScopes = eventScopes,
+                callbackUrl = callbackUrl
+            )
+        ) {
             return
         }
         PipelineEventRegisterLock(
@@ -68,7 +84,15 @@ class PipelineEventRegisterService(
             eventType = register.eventType
         ).use { lock ->
             lock.lock()
-            if (exists(register)) {
+            if (exists(
+                    projectId = register.projectId,
+                    eventCode = register.eventCode,
+                    eventSource = register.eventSource,
+                    eventType = register.eventType,
+                    eventScopes = eventScopes,
+                    callbackUrl = callbackUrl
+                )
+            ) {
                 return
             }
             val externalId = onMiss()

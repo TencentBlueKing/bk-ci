@@ -13,6 +13,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerEl
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactRepositoryType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
@@ -26,6 +27,7 @@ import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.trigger.PipelineEventRegisterService
 import com.tencent.devops.process.trigger.artifact.ArtifactWebhookUtils
+import com.tencent.devops.process.trigger.pojo.PipelineEventRegisterLock
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum
 import org.jooq.DSLContext
@@ -46,7 +48,8 @@ import org.springframework.stereotype.Service
 class ArtifactTriggerElementVersionProcessor @Autowired constructor(
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val pipelineEventRegisterService: PipelineEventRegisterService,
-    private val bkRepoClient: BkRepoClient
+    private val bkRepoClient: BkRepoClient,
+    private val redisOperation: RedisOperation
 ) : PipelineTaskVersionProcessor {
 
     @Value("\${external.webhook.artifact.callbackUrl:}")
@@ -111,28 +114,19 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             repository = repository,
             path = eventScope
         )
-        if (callbackUrl.isNotBlank()) {
-            pipelineEventRegisterService.saveIfAbsent(
-                userId = context.userId,
-                register = PipelineEventRegister(
-                    projectId = projectId,
-                    eventCode = ArtifactTriggerElement.classType,
-                    eventSource = eventSource,
-                    eventType = eventType,
-                    eventScope = eventScope,
-                    callbackUrl = callbackUrl
-                )
-            ) {
-                createBkRepoWebhook(
-                    userId = context.userId,
-                    projectId = projectId,
-                    associationType = associationType,
-                    associationId = associationId,
-                    triggers = triggers
-                )
-                null
-            }
+        if (callbackUrl.isBlank()) {
+            return
         }
+        registerBkRepoWebhookIfAbsent(
+            userId = context.userId,
+            projectId = projectId,
+            eventSource = eventSource,
+            eventType = eventType,
+            eventScope = eventScope,
+            associationType = associationType,
+            associationId = associationId,
+            triggers = triggers
+        )
         val subscription = PipelineEventSubscription(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -204,6 +198,18 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         }
     }
 
+    /**
+     * 注册反查 scopes：自身及全部祖先路径。已有更短 PATH 即视为已覆盖。
+     * 镜像无 PATH，只查空串。
+     */
+    private fun coveringEventScopes(eventScope: String?): List<String> {
+        val path = eventScope?.let { ArtifactWebhookUtils.normalizePath(it) }
+        if (path.isNullOrBlank()) {
+            return listOf("")
+        }
+        return ArtifactWebhookUtils.getCustomRepoScope(path)
+    }
+
     private fun validateWatchPath(
         elementName: String,
         fieldCode: String,
@@ -235,6 +241,69 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             )
         }
         return resolved
+    }
+
+    /**
+     * 已有更短祖先 PATH 则跳过，例如已有 /aaa/ 覆盖 /aaa/bbb/。
+     */
+    private fun registerBkRepoWebhookIfAbsent(
+        userId: String,
+        projectId: String,
+        eventSource: String,
+        eventType: String,
+        eventScope: String?,
+        associationType: BkRepoAssociationType,
+        associationId: String,
+        triggers: List<BkRepoEventType>
+    ) {
+        val register = PipelineEventRegister(
+            projectId = projectId,
+            eventCode = ArtifactTriggerElement.classType,
+            eventSource = eventSource,
+            eventType = eventType,
+            eventScope = eventScope,
+            callbackUrl = callbackUrl
+        )
+        val eventScopes = coveringEventScopes(eventScope)
+        if (pipelineEventRegisterService.exists(
+                projectId = projectId,
+                eventCode = ArtifactTriggerElement.classType,
+                eventSource = eventSource,
+                eventType = eventType,
+                eventScopes = eventScopes,
+                callbackUrl = callbackUrl
+            )
+        ) {
+            return
+        }
+        PipelineEventRegisterLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            eventCode = ArtifactTriggerElement.classType,
+            eventSource = eventSource,
+            eventType = eventType
+        ).use { lock ->
+            lock.lock()
+            if (pipelineEventRegisterService.exists(
+                    projectId = projectId,
+                    eventCode = ArtifactTriggerElement.classType,
+                    eventSource = eventSource,
+                    eventType = eventType,
+                    eventScopes = eventScopes,
+                    callbackUrl = callbackUrl
+                )
+            ) {
+                return
+            }
+            createBkRepoWebhook(
+                userId = userId,
+                projectId = projectId,
+                associationType = associationType,
+                associationId = associationId,
+                triggers = triggers
+            )
+            pipelineEventRegisterService.save(userId = userId, register = register)
+        }
     }
 
     /**
