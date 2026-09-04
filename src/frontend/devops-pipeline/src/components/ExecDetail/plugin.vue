@@ -82,10 +82,16 @@
                 class="plugin-config-hd"
                 slot="header"
             >
-                <p
+                <i class="devops-icon icon-edit plugin-config-icon"></i>
+                <span
+                    v-if="configIsAi"
+                    class="plugin-config-ai"
+                    title="AI"
+                >AI</span>
+                <span
                     class="plugin-config-name"
                     :title="currentElement.name"
-                >{{ currentElement.name }}</p>
+                >{{ currentElement.name }}</span>
                 <span
                     class="plugin-config-ro"
                     :title="$t('logPanel.readonly')"
@@ -93,12 +99,6 @@
                     <i class="devops-icon icon-eye"></i>
                     {{ $t('logPanel.readonly') }}
                 </span>
-                <reference-variable
-                    class="plugin-config-ref"
-                    :global-envs="globalEnvs"
-                    :stages="stages"
-                    :container="container"
-                />
             </header>
             <atom-content
                 v-if="configOpen"
@@ -122,7 +122,6 @@
 
 <script>
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
-    import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import { mapActions, mapState } from 'vuex'
     import CheckAtomDialog from '@/components/CheckAtomDialog'
@@ -138,7 +137,6 @@
     export default {
         components: {
             detailContainer,
-            ReferenceVariable,
             pluginLog,
             StepLogPanel,
             LogParamsView,
@@ -182,8 +180,8 @@
 
         computed: {
             ...mapState('atom', [
-                'globalEnvs',
-                'isGetPluginHeadTab'
+                'isGetPluginHeadTab',
+                'atomMap'
             ]),
 
             stages () {
@@ -214,6 +212,12 @@
                     editingElementPos: { elementIndex }
                 } = this
                 return this.container.elements?.[elementIndex] ?? {}
+            },
+            configIsAi () {
+                const el = this.currentElement || {}
+                if (el.isAiPlugin) return true
+                const atom = (this.atomMap || {})[el.atomCode]
+                return !!(atom && (atom.isAiPlugin || atom.category === 'AI'))
             },
             paramsModel () {
                 return buildParamsModel(this.currentElement)
@@ -394,44 +398,63 @@
             margin-right: 10px;
         }
     }
-    ::v-deep .reference-var {
-        padding: 0;
-        font-size: 14px;
-        line-height: 36px;
-    }
     .plugin-config-hd {
-        font-size: 14px;
-        font-weight: normal;
         display: flex;
         align-items: center;
-        height: 60px;
-        width: calc(100% - 30px);
+        gap: 8px;
         min-width: 0;
+        width: 100%;
+        padding-right: 12px;
+        box-sizing: border-box;
+        font-size: 16px;
+        font-weight: normal;
+        color: #313238;
+    }
+    .plugin-config-icon {
+        flex-shrink: 0;
+        color: #63656e;
+        font-size: 16px;
+        line-height: 18px;
+    }
+    .plugin-config-ai {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 16px;
+        border-radius: 8px;
+        background: #7b5aff;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
     }
     .plugin-config-name {
         flex: 1;
         min-width: 0;
-        max-width: 450px;
         margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: normal;
-        line-height: 36px;
+        line-height: 22px;
+        color: #313238;
     }
     .plugin-config-ro {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        margin-left: 12px;
-        font-size: 14px;
-        line-height: 36px;
+        margin-left: 8px;
+        padding: 0 8px;
+        height: 22px;
+        border-radius: 2px;
+        background: #f0f1f5;
+        font-size: 12px;
+        line-height: 22px;
         color: #63656e;
-    }
-    .plugin-config-ref {
-        margin-left: auto;
     }
     .lp-output-tab,
     ::v-deep .detail-artifactory-home,

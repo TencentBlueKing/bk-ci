@@ -145,19 +145,22 @@
             .log-head {
                 background-color: #242a36;
                 height: 60px;
-                line-height: 60px;
+                line-height: normal;
                 padding: 0 16px;
                 border-bottom: none;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                flex-wrap: nowrap;
                 color: #f0f1f5;
                 position: relative;
                 flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
                     position: absolute;
                     left: 50%;
+                    top: 17px;
                     transform: translateX(-50%);
+                    line-height: 20px;
                 }
                 .log-title {
                     display: flex;
@@ -184,6 +187,19 @@
                     font-size: 12px;
                     line-height: 20px;
                     color: #fff;
+                }
+                .lp-toolbar {
+                    align-self: center;
+                    height: 26px;
+                    line-height: 1;
+                }
+                .lp-search-input {
+                    height: 26px !important;
+                    min-height: 26px;
+                    max-height: 26px;
+                    margin: 0;
+                    line-height: 26px;
+                    box-sizing: border-box;
                 }
             }
             &.black-theme {

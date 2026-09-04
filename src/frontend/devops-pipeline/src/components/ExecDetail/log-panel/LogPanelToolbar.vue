@@ -224,7 +224,9 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
+    height: 26px;
     margin-left: auto;
+    line-height: 1;
 }
 .lp-select-wrap {
     position: relative;
@@ -309,26 +311,37 @@
     position: relative;
     width: 148px;
     height: 26px;
+    flex-shrink: 0;
+    line-height: 1;
 }
 .lp-search-input {
+    display: block;
     width: 100%;
-    height: 26px;
+    height: 26px !important;
+    min-height: 26px;
+    max-height: 26px;
+    margin: 0;
     padding: 0 28px 0 8px;
     background: #464953;
     border: none;
     border-radius: 4px;
     color: #f0f1f5;
     font-size: 12px;
+    line-height: 26px;
     outline: none;
+    box-sizing: border-box;
+    vertical-align: top;
     &::placeholder { color: #979ba5; }
 }
 .lp-search-icon {
     position: absolute;
     right: 8px;
-    top: 5px;
+    top: 50%;
+    transform: translateY(-50%);
     color: #979ba5;
     pointer-events: none;
     font-size: 14px;
+    line-height: 1;
 }
 .lp-pager {
     display: flex;
