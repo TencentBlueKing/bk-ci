@@ -224,7 +224,10 @@ interface UserMarketAtomResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        @Parameter(description = "版本类型筛选：ALL-全部 FORMAL-正式版本 TEST-测试版本，默认正式版本", required = false)
+        @QueryParam("versionType")
+        versionType: String? = null
     ): Result<Page<AtomVersionListItem>>
 
     @Operation(summary = "安装插件到项目")

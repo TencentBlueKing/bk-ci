@@ -97,6 +97,15 @@ interface MarketAtomService {
     ): Result<AtomVersion?>
 
     /**
+     * 根据标识获取最新版本信息，并校验用户是否为该插件的成员
+     */
+    fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?>
+
+    /**
      * 安装插件到项目
      */
     fun installAtom(
@@ -123,7 +132,8 @@ interface MarketAtomService {
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String? = null
     ): Result<Page<AtomVersionListItem>>
 
     /**

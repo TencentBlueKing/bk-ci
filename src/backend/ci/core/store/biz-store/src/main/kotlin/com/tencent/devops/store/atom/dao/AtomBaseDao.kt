@@ -120,10 +120,39 @@ abstract class AtomBaseDao {
         return conditions
     }
 
+    /**
+     * 正式版本查询条件（排除分支测试版本），单个插件标识的查询统一走这里，避免遗漏过滤
+     */
+    protected fun formalVersionConditions(atomCode: String): MutableList<Condition> {
+        return mutableListOf(
+            TAtom.T_ATOM.ATOM_CODE.eq(atomCode),
+            formalVersionFlagCondition()
+        )
+    }
+
+    /**
+     * 正式版本查询条件（排除分支测试版本），批量插件标识的查询统一走这里
+     */
+    protected fun formalVersionConditions(atomCodes: List<String>): MutableList<Condition> {
+        return mutableListOf(
+            TAtom.T_ATOM.ATOM_CODE.`in`(atomCodes),
+            formalVersionFlagCondition()
+        )
+    }
+
+    /**
+     * 分支测试版本标识条件：BRANCH_TEST_FLAG 为 NULL 表示未标记过，按正式版本处理
+     * （与列默认值 b'0' 及 MarketAtomServiceImpl 中的 ?: false 兜底保持同一语义）
+     */
+    private fun formalVersionFlagCondition(): Condition {
+        return TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(false)
+            .or(TAtom.T_ATOM.BRANCH_TEST_FLAG.isNull())
+    }
+
     fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
         }
@@ -132,16 +161,22 @@ abstract class AtomBaseDao {
     fun getLatestAtomListByCodes(dslContext: DSLContext, atomCodes: List<String>): Result<TAtomRecord?> {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.`in`(atomCodes))
+                .where(formalVersionConditions(atomCodes))
                 .and(LATEST_FLAG.eq(true))
                 .fetch()
         }
     }
 
     fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean = false): TAtomRecord? {
+        // 查正式版本时与 formalVersionConditions 保持同一口径：未标记过的记录（NULL）按正式版本处理
+        val flagCondition = if (branchTestFlag) {
+            TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(true)
+        } else {
+            formalVersionFlagCondition()
+        }
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(BRANCH_TEST_FLAG.eq(branchTestFlag)))
+                .where(ATOM_CODE.eq(atomCode).and(flagCondition))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -154,8 +189,7 @@ abstract class AtomBaseDao {
         atomStatus: AtomStatusEnum? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(ATOM_CODE.eq(atomCode))
+            val conditions = formalVersionConditions(atomCode)
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
             }
