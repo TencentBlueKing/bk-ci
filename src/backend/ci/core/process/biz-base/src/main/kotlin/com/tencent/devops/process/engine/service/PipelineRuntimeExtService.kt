@@ -126,6 +126,26 @@ class PipelineRuntimeExtService @Autowired constructor(
         return null
     }
 
+    /**
+     * 按排队时间正序取出并发组内指定流水线处于[statusSet]的构建，最多[limit]个，用于排队数量超限时的收敛淘汰
+     */
+    fun listConcurrencyQueueBuilds(
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>,
+        limit: Int
+    ): List<BuildInfo> {
+        return pipelineBuildDao.listConcurrencyQueueBuilds(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            pipelineId = pipelineId,
+            statusSet = statusSet,
+            limit = limit
+        )
+    }
+
     fun changeBuildStatus(
         projectId: String,
         pipelineId: String,

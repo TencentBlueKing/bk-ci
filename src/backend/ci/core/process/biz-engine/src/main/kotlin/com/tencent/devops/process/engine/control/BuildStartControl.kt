@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.service.PipelineConcurrencyQueueTrimService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -112,6 +113,7 @@ class BuildStartControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineConcurrencyQueueTrimService: PipelineConcurrencyQueueTrimService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
@@ -332,6 +334,21 @@ class BuildStartControl @Autowired constructor(
             if (!groupLock.tryLock()) {
                 LOG.info("ENGINE｜$source|$buildId|$projectId|$pipelineId|$concurrencyGroup try lock fail")
                 return false // 拿不到锁返回，下一次再重试
+            }
+            // #13499 排队数量收敛：启动请求路径上的满员判定与入队非原子，突发触发会把排队数量冲高到远超
+            // maxQueueSize。这里借已持有的并发组锁做对账，此时记录都已入库、读到的是真实数量，
+            // 因此并发多大都能收敛。对账属于尽力而为，任何异常都不能阻塞构建启动。
+            runCatching {
+                pipelineConcurrencyQueueTrimService.trimGroupQueue(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    concurrencyGroup = concurrencyGroup,
+                    maxQueueSize = setting.maxQueueSize,
+                    protectBuildId = buildId,
+                    userId = buildInfo.startUser
+                )
+            }.onFailure {
+                LOG.warn("ENGINE|$buildId|$source|$pipelineId|$concurrencyGroup|QUEUE_TRIM_FAIL", it)
             }
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                 // 只有最新进来排队的构建才能QUEUE -> QUEUE_CACHE

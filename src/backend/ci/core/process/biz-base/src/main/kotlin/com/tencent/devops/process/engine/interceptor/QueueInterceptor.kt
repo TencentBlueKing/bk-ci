@@ -82,7 +82,7 @@ class QueueInterceptor @Autowired constructor(
          * 排队中的构建状态：QUEUE 为等待被领取，QUEUE_CACHE 为已被领取、等待启动的中间态，
          * 两者都还未开始执行，都应计入排队数量。与 PipelineBuildDao.getOneConcurrencyQueueBuild 的查询口径保持一致。
          */
-        private val QUEUE_STATUS_SET = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
+        private val QUEUE_STATUS_LIST = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
     }
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
@@ -383,10 +383,12 @@ class QueueInterceptor @Autowired constructor(
                         status = listOf(BuildStatus.RUNNING)
                     ),
                     // #7681 在history表中取出当前流水线下相同并发组排队的数量。
+                    // #13499 排队数量必须同时统计 QUEUE 与 QUEUE_CACHE，否则头部构建在"领取-回退"
+                    // 循环中处于 QUEUE_CACHE 时会被漏统计，导致满员判定偏小、淘汰时机被推迟。
                     queueCount = countGroupBuild(
                         task = task,
                         concurrencyGroup = concurrencyGroup,
-                        status = QUEUE_STATUS_SET
+                        status = QUEUE_STATUS_LIST
                     ),
                     groupName = concurrencyGroup
                 )
@@ -400,27 +402,21 @@ class QueueInterceptor @Autowired constructor(
      * 统计当前流水线下处于[status]的、属于并发组[concurrencyGroup]的构建数量。
      *
      * 排队队列是流水线级别的，所以项目级并发组的查询结果需要再按当前流水线过滤。
+     *
+     * 注意：这里不能像其他分支那样叠加 #8143 的空并发组兼容统计。
+     * 满员淘汰依赖 getOneConcurrencyQueueBuild，其条件为 CONCURRENCY_GROUP = 并发组，取不到并发组为空的旧构建。
+     * 若把这类构建计入排队数量，会出现"判定为满员但一个都淘汰不掉"从而只进不出，
+     * 因此统计口径必须与淘汰口径保持一致。
      */
     private fun countGroupBuild(
         task: InterceptData,
         concurrencyGroup: String,
         status: List<BuildStatus>
     ): Int {
-        val projectId = task.pipelineInfo.projectId
-        val pipelineId = task.pipelineInfo.pipelineId
-        var count = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-            projectId = projectId,
+        return pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = task.pipelineInfo.projectId,
             concurrencyGroup = concurrencyGroup,
             status = status
-        ).count { it.first == pipelineId }
-        // #8143 兼容并发组字段为空的旧构建记录，与RunLockInterceptor、BuildStartControl的统计口径保持一致
-        if (concurrencyGroup == pipelineId) {
-            count += pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                status = status
-            ).size
-        }
-        return count
+        ).count { it.first == task.pipelineInfo.pipelineId }
     }
 }
