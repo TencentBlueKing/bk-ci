@@ -151,7 +151,11 @@
 
 <style scoped>
 .lp-minimap {
-    position: relative;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
     width: 206px;
     flex-shrink: 0;
     height: 100%;

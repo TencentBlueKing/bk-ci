@@ -18,7 +18,7 @@
                 ]"
             >
                 <span class="lp-lineno">{{ line.displayLineNo }}</span>
-                <span v-if="showTime" class="lp-time">{{ formatClock(line.timestamp) }}</span>
+                <span v-if="showTime" class="lp-time">{{ formatLogTime(line.timestamp) }}</span>
                 <span class="lp-text" v-html="highlight(line.message)"></span>
             </div>
             <div v-if="useVirtual" class="lp-virtual-pad" :style="{ height: padBottom + 'px' }"></div>
@@ -34,7 +34,7 @@
 </template>
 
 <script>
-    import { formatClock } from './logPanelAdapter'
+    import { formatLogTime, renderLogHtml } from './logPanelAdapter'
     import LogErrorMinimap from './LogErrorMinimap'
 
     export default {
@@ -116,15 +116,9 @@
             this.unbindObserver()
         },
         methods: {
-            formatClock,
+            formatLogTime,
             highlight (text) {
-                const raw = String(text || '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                if (!this.keyword) return raw
-                const kw = this.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                return raw.replace(new RegExp(kw, 'ig'), m => `<mark class="lp-hl">${m}</mark>`)
+                return renderLogHtml(text, this.keyword)
             },
             onScroll () {
                 const el = this.$refs.box
@@ -221,9 +215,12 @@
 
 <style lang="scss" scoped>
 .lp-lines-wrap {
+    position: relative;
     display: flex;
     flex: 1;
+    min-width: 0;
     min-height: 0;
+    overflow: hidden;
     background: #2c2d34;
 }
 .lp-lines {
@@ -236,6 +233,9 @@
     font-size: 12px;
     line-height: 20px;
     color: #f0f1f5;
+}
+.lp-lines-wrap.has-minimap .lp-lines.is-wrap {
+    padding-right: 230px;
 }
 .lp-empty {
     padding: 8px 0 0;
@@ -259,12 +259,14 @@
 .lp-virtual-pad { flex-shrink: 0; }
 .lp-time {
     flex-shrink: 0;
-    min-width: 7ch;
+    min-width: 23ch;
     color: #83828c;
     font-variant-numeric: tabular-nums;
 }
 .lp-text { flex: 1; min-width: 0; white-space: pre; }
 .lp-lines.is-wrap .lp-text { white-space: pre-wrap; word-break: break-all; }
+.lp-lines:not(.is-wrap) .lp-line { width: max-content; min-width: 100%; }
+.lp-lines:not(.is-wrap) .lp-text { flex: 0 0 auto; }
 .lp-line.is-warn .lp-text { color: #e18732; }
 .lp-line.is-error .lp-text { color: #d25050; }
 .lp-line.is-debug .lp-text { color: #83828c; }

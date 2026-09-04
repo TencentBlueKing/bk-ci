@@ -125,6 +125,98 @@ export function formatClock (ts) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
+export function formatLogTime (ts) {
+    if (ts == null || ts === '') return ''
+    const d = new Date(ts)
+    if (Number.isNaN(d.getTime())) return ''
+    const pad = (n, w = 2) => String(n).padStart(w, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}:${pad(d.getMilliseconds(), 3)}`
+}
+
+const ANSI_FG = {
+    30: '#000000',
+    31: '#f06e6e',
+    32: '#45e35f',
+    33: '#f0aa50',
+    34: '#699df4',
+    35: '#d898ff',
+    36: '#3dcea8',
+    37: '#f0f1f5',
+    90: '#83828c',
+    91: '#ff8a8a',
+    92: '#6ee68a',
+    93: '#ffd666',
+    94: '#8fb4ff',
+    95: '#e4b3ff',
+    96: '#6ee0c8',
+    97: '#ffffff'
+}
+
+function escapeLogHtml (text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+}
+
+function ansiCss (state) {
+    const parts = []
+    if (state.fg) parts.push(`color:${state.fg}`)
+    if (state.bold) parts.push('font-weight:700')
+    return parts.join(';')
+}
+
+function applyAnsiCodes (state, codes) {
+    if (!codes) {
+        state.fg = ''
+        state.bold = false
+        return
+    }
+    codes.split(';').forEach(part => {
+        const n = Number(part)
+        if (!part || n === 0) {
+            state.fg = ''
+            state.bold = false
+        } else if (n === 1) {
+            state.bold = true
+        } else if (n === 22) {
+            state.bold = false
+        } else if (n === 39) {
+            state.fg = ''
+        } else if (ANSI_FG[n]) {
+            state.fg = ANSI_FG[n]
+        }
+    })
+}
+
+export function renderLogHtml (text, keyword) {
+    const raw = String(text == null ? '' : text)
+    const re = /\u001b\[([0-9;]*)([A-Za-z])|\[([0-9;]{0,16})m/g
+    const tokens = []
+    const state = { fg: '', bold: false }
+    let last = 0
+    let match
+    while ((match = re.exec(raw))) {
+        if (match.index > last) {
+            tokens.push({ text: raw.slice(last, match.index), css: ansiCss(state) })
+        }
+        if (match[2]) {
+            if (match[2] === 'm') applyAnsiCodes(state, match[1])
+        } else {
+            applyAnsiCodes(state, match[3])
+        }
+        last = match.index + match[0].length
+    }
+    if (last < raw.length) tokens.push({ text: raw.slice(last), css: ansiCss(state) })
+    if (!tokens.length) tokens.push({ text: raw, css: '' })
+    const kw = keyword ? String(keyword).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : ''
+    return tokens.filter(token => token.text).map(token => {
+        let html = escapeLogHtml(token.text)
+        if (kw) html = html.replace(new RegExp(kw, 'ig'), m => `<mark class="lp-hl">${m}</mark>`)
+        return token.css ? `<span class="lp-ansi" style="${token.css}">${html}</span>` : html
+    }).join('')
+}
+
 const NOT_EXECUTED = ['QUEUE', 'PAUSE', 'UNEXEC', 'SKIP', 'DEPENDENT_WAITING', 'WAITING', 'PREPARE_ENV']
 const LIVE_FOR_OUTPUT = ['RUNNING', 'QUEUE', 'WAITING', 'PREPARE_ENV', 'LOOP_WAITING', 'CALL_WAITING']
 const OUTPUT_TYPE_NAMES = [

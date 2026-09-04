@@ -188,5 +188,5 @@
     .cost { color: #979ba5; font-size: 12px; }
     &.active .cost { color: rgba(255, 255, 255, 0.8); }
 }
-.job-log-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.job-log-body { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 </style>

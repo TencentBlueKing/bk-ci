@@ -296,7 +296,7 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
-    align-self: center;
+    align-self: flex-start;
     min-height: 20px;
 }
 .lp-status-label { font-weight: 700; white-space: nowrap; }
