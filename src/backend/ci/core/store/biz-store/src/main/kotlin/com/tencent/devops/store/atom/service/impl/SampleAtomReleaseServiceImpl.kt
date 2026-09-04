@@ -168,10 +168,13 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             AtomStatusEnum.TESTING.status -> {
                 // 测试进行中：先标记前序步骤完成，再手动将测试步骤置为进行中（避免末步被置为完成）
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, SUCCESS)
-                processInfo.first { it.step == NUM_THREE }.status = DOING
+                processInfo.firstOrNull { it.step == NUM_THREE }?.status = DOING
             }
             AtomStatusEnum.TESTED.status, AtomStatusEnum.GROUNDING_SUSPENSION.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_THREE, SUCCESS)
+            }
+            else -> {
+                // 其余状态（如已发布、下架等）不改动默认进度，保持提交/测试环节未开始
             }
         }
         return processInfo

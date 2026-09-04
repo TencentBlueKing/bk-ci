@@ -146,14 +146,19 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     ): Result<Boolean> {
         logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
         val atomCount = atomDao.countByCode(dslContext, atomCode)
-        if (atomCount < 0) {
+        if (atomCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         if (atomRecord.classType != atomCode) {
             // 校验用户是否是该插件的开发成员
             val flag = storeMemberDao.isStoreMember(
@@ -176,7 +181,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     atomRecord
                 } else {
-                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
+                        ?: return I18nUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(atomCode),
+                            language = I18nUtil.getLanguage(userId)
+                        )
                 },
                 releaseType = releaseType,
                 osList = osList,

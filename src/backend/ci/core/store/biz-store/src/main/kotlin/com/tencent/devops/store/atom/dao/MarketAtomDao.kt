@@ -251,8 +251,7 @@ class MarketAtomDao : AtomBaseDao() {
     fun countPublishingAtomByCode(dslContext: DSLContext, atomCode: String): Int {
         with(TAtom.T_ATOM) {
             return dslContext.selectCount().from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(BRANCH_TEST_FLAG.eq(false))
+                .where(formalVersionConditions(atomCode))
                 .and(ATOM_STATUS.`in`(AtomStatusEnum.getProcessingStatusList()))
                 .fetchOne(0, Int::class.java)!!
         }

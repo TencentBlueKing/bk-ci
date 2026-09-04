@@ -110,6 +110,12 @@ class BuildBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<BuildHistory> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }

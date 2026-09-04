@@ -56,6 +56,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -886,6 +887,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("getPipelineAtomById $id,$serviceScope")
         // 按主键精确查询，禁止再走 code+version 模糊查询，避免命中其它版本
         val record = atomDao.getPipelineAtom(dslContext, id) ?: return Result(null)
+        return buildPipelineAtom(record = record, serviceScope = serviceScope)
+    }
+
+    private fun buildPipelineAtom(
+        record: TAtomRecord,
+        serviceScope: ServiceScopeEnum?
+    ): Result<PipelineAtom?> {
         val classifyIdMapJson = record.classifyIdMap
         val classifyId = if (serviceScope == null || serviceScope == ServiceScopeEnum.PIPELINE) {
             record.classifyId
@@ -1005,7 +1013,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 params = arrayOf(record.atomCode)
             )
         }
-        return getPipelineAtomById(id = id, serviceScope = serviceScope)
+        return buildPipelineAtom(record = record, serviceScope = serviceScope)
     }
 
     /**

@@ -183,4 +183,5 @@ object StoreMessageCode {
     const val STORE_ATOM_INIT_PROJECT_NOT_FOUND = "2120945" // 研发商店：插件未初始化项目
     const val STORE_ATOM_NOT_BRANCH_TEST_VERSION = "2120946" // 研发商店：仅分支测试版本可结束测试
     const val STORE_BRANCH_TEST_END_STATUS_INVALID = "2120947" // 研发商店：仅测试中的分支测试版本可结束测试
+    const val STORE_ATOM_OPERATE_CONCURRENT = "2120948" // 研发商店：该组件正在被其他操作处理，请稍后重试
 }

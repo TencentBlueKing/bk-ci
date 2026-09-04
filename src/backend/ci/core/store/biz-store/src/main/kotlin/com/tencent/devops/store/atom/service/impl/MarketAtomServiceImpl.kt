@@ -861,6 +861,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        // 校验用户是否为该插件的成员，防止任意 atomCode 越权获取插件信息
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode)
+            )
+        }
+        return getNewestAtomByCode(userId = userId, atomCode = atomCode, serviceScope = serviceScope)
+    }
+
     /**
      * 安装插件到项目
      */
@@ -980,7 +1001,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         name = it.name,
                         category = AtomCategoryEnum.getAtomCategory((it.categroy as Byte).toInt()),
                         version = it.version,
-                        versionContent = versionMap[it.id].toString(),
+                        versionContent = versionMap[it.id] ?: "",
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
                         branchTestFlag = it.branchTestFlag,
                         creator = it.creator,

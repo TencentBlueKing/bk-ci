@@ -68,11 +68,16 @@ class BuildAtomResourceImpl @Autowired constructor(
         return atomReleaseService.getProcessInfo(userId, atomId)
     }
 
+    @SensitiveApiPermission("branch_test_version_management")
     override fun getAtomVersionInfoById(userId: String, atomId: String): Result<PipelineAtom?> {
         return atomService.getPipelineAtomByIdWithPermissionCheck(userId = userId, id = atomId)
     }
 
+    @SensitiveApiPermission("branch_test_version_management")
     override fun getAtomVersionInfoByCode(username: String, atomCode: String): Result<AtomVersion?> {
-        return marketAtomService.getNewestAtomByCode(username, atomCode)
+        return marketAtomService.getNewestAtomByCodeWithPermissionCheck(
+            userId = username,
+            atomCode = atomCode
+        )
     }
 }
