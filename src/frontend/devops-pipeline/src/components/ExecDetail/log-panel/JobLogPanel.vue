@@ -61,7 +61,7 @@
                     id: setupId,
                     name: 'Set up job',
                     status: this.job.startVMStatus,
-                    elapsed: formatElapsed(this.job.startTime, this.job.endTime),
+                    elapsed: formatElapsed(this.job.startTime, this.job.endTime, this.job.status),
                     setup: true
                 }
                 const items = [setup]
@@ -71,7 +71,7 @@
                         id: el.id,
                         name: el.name,
                         status: el.status,
-                        elapsed: formatElapsed(el.startTime || el.elapsed, el.endTime),
+                        elapsed: formatElapsed(el.startTime || el.elapsed, el.endTime, el.status),
                         element: el
                     }
                     if (el.additionalOptions && el.additionalOptions.elementPostInfo) {

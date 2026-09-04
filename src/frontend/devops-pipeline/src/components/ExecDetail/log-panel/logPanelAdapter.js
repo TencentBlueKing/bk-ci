@@ -26,13 +26,22 @@ export function positionCode (pos, depth = 3) {
     return parts.length ? parts.join('-') : ''
 }
 
-export function formatElapsed (start, end) {
+const LIVE_STATUS = ['RUNNING', 'PREPARE_ENV', 'QUEUE', 'WAITING']
+
+export function formatElapsed (start, end, status) {
     if (start == null || start === '') return ''
     // 插件 elapsed 是耗时毫秒（远小于时间戳 1e12）；startTime/endTime 才是时间戳
     const TIMESTAMP_MS = 1e12
-    const ms = typeof start === 'number' && start < TIMESTAMP_MS
-        ? start
-        : ((typeof end === 'number' && end >= TIMESTAMP_MS ? end : Date.now()) - start)
+    let ms
+    if (typeof start === 'number' && start < TIMESTAMP_MS) {
+        ms = start
+    } else if (typeof end === 'number' && end >= TIMESTAMP_MS) {
+        ms = end - start
+    } else if (LIVE_STATUS.includes(status)) {
+        ms = Date.now() - start
+    } else {
+        return ''
+    }
     if (ms < 0) return ''
     const s = Math.round(ms / 1000)
     if (s < 60) return `${s}s`
@@ -84,7 +93,7 @@ export function buildConclusion (el, job, ctx = {}) {
         status,
         tone: toneOf(status),
         label: STATUS_LABEL[status] || status || '--',
-        elapsed: formatElapsed(el.elapsed || el.startTime || el.startEpoch, el.endTime),
+        elapsed: formatElapsed(el.elapsed || el.startTime || el.startEpoch, el.endTime, status),
         node: showNode ? nodeDisplay(jobRef) : '',
         nodeIp: showNode ? nodeIp(jobRef) : '',
         nodeLink: showNode ? nodeLink(jobRef, ctx.projectId) : '',
