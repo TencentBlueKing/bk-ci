@@ -173,14 +173,6 @@
     min-height: 0;
     background: #2c2d34;
 }
-.lp-lines-wrap.has-minimap .lp-lines {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.lp-lines-wrap.has-minimap .lp-lines::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-}
 .lp-lines {
     flex: 1;
     min-width: 0;
@@ -192,23 +184,6 @@
     line-height: 20px;
     color: #f0f1f5;
 }
-@supports not selector(::-webkit-scrollbar) {
-    .lp-lines {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(240, 241, 245, 0.22) transparent;
-    }
-}
-.lp-lines::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-.lp-lines::-webkit-scrollbar-track,
-.lp-lines::-webkit-scrollbar-corner { background: transparent; }
-.lp-lines::-webkit-scrollbar-thumb {
-    background: rgba(240, 241, 245, 0.22);
-    border-radius: 3px;
-}
-.lp-lines::-webkit-scrollbar-thumb:hover { background: rgba(240, 241, 245, 0.36); }
 .lp-empty {
     padding: 8px 0 0;
     color: #83828c;
@@ -247,5 +222,38 @@
     background: #3a84ff;
     color: #fff;
     border-radius: 1px;
+}
+</style>
+
+<style lang="scss">
+/* 非 scoped：Vue scoped 对 ::-webkit-scrollbar 常失效，默认浅色轨道会变成白柱 */
+.lp-lines-wrap.has-minimap .lp-lines,
+.lp-lines-wrap:has(.lp-minimap) .lp-lines {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+.lp-lines-wrap.has-minimap .lp-lines::-webkit-scrollbar,
+.lp-lines-wrap:has(.lp-minimap) .lp-lines::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+.lp-lines-wrap:not(.has-minimap):not(:has(.lp-minimap)) .lp-lines {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(240, 241, 245, 0.22) #2c2d34;
+}
+.lp-lines-wrap:not(.has-minimap):not(:has(.lp-minimap)) .lp-lines::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: #2c2d34;
+}
+.lp-lines-wrap:not(.has-minimap):not(:has(.lp-minimap)) .lp-lines::-webkit-scrollbar-track,
+.lp-lines-wrap:not(.has-minimap):not(:has(.lp-minimap)) .lp-lines::-webkit-scrollbar-corner {
+    background: #2c2d34;
+}
+.lp-lines-wrap:not(.has-minimap):not(:has(.lp-minimap)) .lp-lines::-webkit-scrollbar-thumb {
+    background: rgba(240, 241, 245, 0.22);
+    border-radius: 3px;
 }
 </style>
