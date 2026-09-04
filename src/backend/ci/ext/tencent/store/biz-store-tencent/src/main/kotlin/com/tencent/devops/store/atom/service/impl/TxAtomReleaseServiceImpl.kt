@@ -100,6 +100,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_INIT_PROJECT_NOT_FOUND
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_BRANCH_TEST_VERSION
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_NO_NEW_COMMIT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_CREATE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_STATUS_INVALID
@@ -1059,7 +1060,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch",
             60L
         ).use { redisLock ->
-            redisLock.lock()
+            if (!redisLock.tryLock()) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
             createBranchTestVersionUnderLock(userId, marketAtomUpdateRequest, atomCode, branch)
         }
     }
@@ -1176,60 +1179,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch",
             60L
         ).use { redisLock ->
-            redisLock.lock()
+            if (!redisLock.tryLock()) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
             val record = marketAtomDao.getLatestBranchTestVersion(
-            dslContext = dslContext,
-            atomCode = atomCode,
-            branch = branch,
-            atomStatus = AtomStatusEnum.TESTING.status.toByte()
-        )
-        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
-        if (record != null &&
-            !(storeMemberDao.isStoreAdmin(
-                    dslContext = dslContext,
-                    userId = userId,
-                    storeCode = atomCode,
-                    storeType = StoreTypeEnum.ATOM.type.toByte()
-                ) || record.creator == userId)
-        ) {
-            throw ErrorCodeException(
-                errorCode = NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION,
-                params = arrayOf(atomCode)
+                dslContext = dslContext,
+                atomCode = atomCode,
+                branch = branch,
+                atomStatus = AtomStatusEnum.TESTING.status.toByte()
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$atomCode:$branch")
             )
-        }
-        record?.let {
-            finishBranchVersionTest(userId, atomCode, it)
-        }
-
-        Result(true)
-        }
-    }
-
-    /**
-     * 根据插件版本ID结束分支版本测试
-     */
-    override fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean> {
-        logger.info("endBranchVersionTestById,userId:$userId | atomId:$atomId")
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-            params = arrayOf(atomId)
-        )
-        val atomCode = record.atomCode
-        // 校验是否为分支测试版本
-        if (!record.branchTestFlag) {
-            throw ErrorCodeException(errorCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION)
-        }
-        // 校验测试状态：仅测试中的版本可结束测试
-        if (record.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
-            throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
-        }
-        // 并发控制：同一插件同一分支的结束测试操作串行化
-        return RedisLock(
-            redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${record.branch}",
-            60L
-        ).use { redisLock ->
-            redisLock.lock()
             // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
             if (!(storeMemberDao.isStoreAdmin(
                     dslContext = dslContext,
@@ -1246,6 +1207,59 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             finishBranchVersionTest(userId, atomCode, record)
             Result(true)
         }
+    }
+
+    /**
+     * 根据插件版本ID结束分支版本测试
+     */
+    override fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean> {
+        logger.info("endBranchVersionTestById,userId:$userId | atomId:$atomId")
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomId)
+        )
+        val atomCode = record.atomCode
+        // 并发控制：同一插件同一分支的结束测试操作串行化
+        val result = RedisLock(
+            redisOperation,
+            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${record.branch}",
+            60L
+        ).use { redisLock ->
+            if (!redisLock.tryLock()) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
+            // 锁内重读版本记录
+            val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
+            )
+            // 校验是否为分支测试版本
+            if (!latestRecord.branchTestFlag) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION)
+            }
+            // 校验测试状态：仅测试中的版本可结束测试
+            if (latestRecord.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
+            }
+            // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+            if (!(storeMemberDao.isStoreAdmin(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM.type.toByte()
+                ) || latestRecord.creator == userId)
+            ) {
+                throw ErrorCodeException(
+                    errorCode = NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION,
+                    params = arrayOf(atomCode)
+                )
+            }
+            finishBranchVersionTest(userId, atomCode, latestRecord)
+            Result(true)
+        }
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        return result
     }
 
     /**
