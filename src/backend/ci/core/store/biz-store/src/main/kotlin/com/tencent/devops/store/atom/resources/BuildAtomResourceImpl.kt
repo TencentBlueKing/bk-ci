@@ -74,9 +74,9 @@ class BuildAtomResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("branch_test_version_management")
-    override fun getAtomVersionInfoByCode(username: String, atomCode: String): Result<AtomVersion?> {
+    override fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getNewestAtomByCodeWithPermissionCheck(
-            userId = username,
+            userId = userId,
             atomCode = atomCode
         )
     }

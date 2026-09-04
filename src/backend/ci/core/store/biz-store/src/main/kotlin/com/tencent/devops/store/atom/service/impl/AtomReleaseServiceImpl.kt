@@ -1176,6 +1176,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 language = I18nUtil.getLanguage(userId)
             )
         val atomCode = atomRecord.atomCode
+        // 分支测试版本不走发布流程，转测试结束
+        if (atomRecord.branchTestFlag) {
+            return endBranchVersionTestById(userId, atomId)
+        }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
