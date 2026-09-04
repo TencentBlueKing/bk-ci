@@ -230,6 +230,11 @@ class LogPanelQueryService(
             )
         }
         val more = result.hasMore == true
+        val matchedTotal = if (direction == LogPanelEsDao.Direction.LATEST && !more) {
+            lines.size.toLong()
+        } else {
+            0L
+        }
         return QueryLogPanel(
             buildId = buildId,
             finished = result.finished,
@@ -240,6 +245,7 @@ class LogPanelQueryService(
             logs = lines,
             startLineNo = lines.firstOrNull()?.lineNo,
             endLineNo = lines.lastOrNull()?.lineNo,
+            matchedTotal = matchedTotal,
             hasBefore = direction != LogPanelEsDao.Direction.AFTER && more,
             hasAfter = direction != LogPanelEsDao.Direction.BEFORE && (more || !result.finished),
             levels = levels.map { it.name }

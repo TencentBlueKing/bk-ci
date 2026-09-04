@@ -1,3 +1,6 @@
+export const LOG_PANEL_PAGE_SIZE = 1000
+export const LOG_PANEL_BACKFILL_MAX = 3000
+
 const STATUS_LABEL = {
     SUCCEED: '执行成功',
     FAILED: '执行失败',

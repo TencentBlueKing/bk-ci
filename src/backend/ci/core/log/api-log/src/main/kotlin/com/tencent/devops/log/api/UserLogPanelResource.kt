@@ -48,7 +48,7 @@ interface UserLogPanelResource {
         @Parameter(description = "容器 hash，现网 User API 的 jobId") @QueryParam("jobId") jobId: String?,
         @Parameter(description = "执行次数") @QueryParam("executeCount") executeCount: Int?,
         @Parameter(description = "级别，逗号分隔，默认 INFO,WARN,ERROR") @QueryParam("levels") levels: String?,
-        @Parameter(description = "每页行数，默认 200，最大 500") @QueryParam("pageSize") pageSize: Int?,
+        @Parameter(description = "每页行数，默认 1000，最大 1000") @QueryParam("pageSize") pageSize: Int?,
         @Parameter(description = "是否查询归档数据") @QueryParam("archiveFlag") archiveFlag: Boolean? = false
     ): Result<QueryLogPanel>
 

@@ -32,9 +32,10 @@ class LogPanelQueryBuilderTest {
 
     @Test
     fun pageSizeClamped() {
-        assertEquals(200, LogPanelQueryBuilder.normalizePageSize(null))
+        assertEquals(1000, LogPanelQueryBuilder.normalizePageSize(null))
         assertEquals(1, LogPanelQueryBuilder.normalizePageSize(0))
-        assertEquals(500, LogPanelQueryBuilder.normalizePageSize(9999))
+        assertEquals(1000, LogPanelQueryBuilder.normalizePageSize(9999))
+        assertEquals(3000, LogPanelQueryBuilder.BACKFILL_MAX)
     }
 
     @Test

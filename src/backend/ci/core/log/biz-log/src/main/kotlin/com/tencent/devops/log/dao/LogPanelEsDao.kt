@@ -187,6 +187,8 @@ class LogPanelEsDao(
             Direction.LATEST -> !finished
         }
         val empty = lines.isEmpty() && direction == Direction.LATEST
+        // latest 无 lineNo 范围，totalHits 即过滤后全集；before/after 带范围，交由前端累加
+        val matchedTotal = if (direction == Direction.LATEST) total else 0L
         return QueryLogPanel(
             buildId = buildId,
             finished = finished,
@@ -196,6 +198,7 @@ class LogPanelEsDao(
             logs = lines,
             startLineNo = startLineNo,
             endLineNo = endLineNo,
+            matchedTotal = matchedTotal,
             hasBefore = hasBefore && startLineNo != null,
             hasAfter = hasAfter,
             levels = levels.map { it.name }

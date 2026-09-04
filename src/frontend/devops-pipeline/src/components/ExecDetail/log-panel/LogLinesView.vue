@@ -7,19 +7,21 @@
             @scroll="onScroll"
         >
             <div v-if="emptyText && !lines.length" class="lp-empty">{{ emptyText }}</div>
+            <div v-if="useVirtual" class="lp-virtual-pad" :style="{ height: padTop + 'px' }"></div>
             <div
-                v-for="(line, idx) in lines"
-                :key="line.lineNo + '-' + idx"
+                v-for="(line, idx) in visibleLines"
+                :key="(line.lineNo || idx) + '-' + (windowStart + idx)"
                 class="lp-line"
                 :class="[
                     'is-' + (line.level || 'INFO').toLowerCase(),
-                    { 'is-hit': idx === activeIndex, 'is-locate': idx === locateIndex }
+                    { 'is-hit': windowStart + idx === activeIndex, 'is-locate': windowStart + idx === locateIndex }
                 ]"
             >
-                <span class="lp-lineno">{{ line.lineNo }}</span>
+                <span class="lp-lineno">{{ line.displayLineNo }}</span>
                 <span v-if="showTime" class="lp-time">{{ formatClock(line.timestamp) }}</span>
                 <span class="lp-text" v-html="highlight(line.message)"></span>
             </div>
+            <div v-if="useVirtual" class="lp-virtual-pad" :style="{ height: padBottom + 'px' }"></div>
         </div>
         <log-error-minimap
             v-if="showMinimap && lines.length"
@@ -49,7 +51,35 @@
         },
         data () {
             return {
-                viewport: { top: 0, height: 100 }
+                viewport: { top: 0, height: 100 },
+                scrollTop: 0,
+                clientHeight: 0
+            }
+        },
+        computed: {
+            useVirtual () {
+                return !this.wrap && this.lines.length > 800
+            },
+            windowStart () {
+                if (!this.useVirtual) return 0
+                const h = 20
+                return Math.max(0, Math.floor(this.scrollTop / h) - 30)
+            },
+            windowEnd () {
+                if (!this.useVirtual) return this.lines.length
+                const h = 20
+                const visible = Math.ceil((this.clientHeight || 400) / h) + 60
+                return Math.min(this.lines.length, this.windowStart + visible)
+            },
+            visibleLines () {
+                if (!this.useVirtual) return this.lines
+                return this.lines.slice(this.windowStart, this.windowEnd)
+            },
+            padTop () {
+                return this.useVirtual ? this.windowStart * 20 : 0
+            },
+            padBottom () {
+                return this.useVirtual ? (this.lines.length - this.windowEnd) * 20 : 0
             }
         },
         watch: {
@@ -73,6 +103,11 @@
         },
         mounted () {
             this.$nextTick(() => {
+                const el = this.$refs.box
+                if (el) {
+                    this.scrollTop = el.scrollTop
+                    this.clientHeight = el.clientHeight
+                }
                 this.updateViewport()
                 this.bindObserver()
             })
@@ -94,6 +129,8 @@
             onScroll () {
                 const el = this.$refs.box
                 if (!el) return
+                this.scrollTop = el.scrollTop
+                this.clientHeight = el.clientHeight
                 if (el.scrollTop < 40) this.$emit('reach-top')
                 const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24
                 this.$emit('stick-change', atBottom)
@@ -104,6 +141,12 @@
                 const rows = el ? el.querySelectorAll('.lp-line') : []
                 const total = this.lines.length
                 if (!el || !rows.length || !total) return { first: 0, last: 0 }
+                if (this.useVirtual) {
+                    const h = 20
+                    const first = Math.min(total - 1, Math.max(0, Math.floor(el.scrollTop / h)))
+                    const last = Math.min(total - 1, first + Math.max(Math.ceil(el.clientHeight / h) - 1, 0))
+                    return { first, last }
+                }
                 const top = el.getBoundingClientRect().top
                 const bottom = top + el.clientHeight
                 let first = -1
@@ -146,7 +189,10 @@
                 const el = this.$refs.box
                 if (!el || typeof ResizeObserver === 'undefined') return
                 this.unbindObserver()
-                this._ro = new ResizeObserver(() => this.updateViewport())
+                this._ro = new ResizeObserver(() => {
+                    this.clientHeight = el.clientHeight
+                    this.updateViewport()
+                })
                 this._ro.observe(el)
             },
             unbindObserver () {
@@ -159,7 +205,14 @@
             },
             scrollToIndex (idx) {
                 const el = this.$refs.box
-                const row = el && el.querySelectorAll('.lp-line')[idx]
+                if (!el) return
+                if (this.useVirtual) {
+                    el.scrollTop = Math.max(0, idx * 20 - el.clientHeight / 3)
+                    this.scrollTop = el.scrollTop
+                    this.updateViewport()
+                    return
+                }
+                const row = el.querySelectorAll('.lp-line')[idx]
                 if (row && row.scrollIntoView) row.scrollIntoView({ block: 'center' })
             }
         }
@@ -198,10 +251,12 @@
 .lp-line.is-locate { background: rgba(58, 132, 255, 0.16); }
 .lp-lineno {
     flex-shrink: 0;
-    min-width: 28px;
+    min-width: 4ch;
     text-align: right;
     color: #979ba5;
+    font-variant-numeric: tabular-nums;
 }
+.lp-virtual-pad { flex-shrink: 0; }
 .lp-time {
     flex-shrink: 0;
     min-width: 7ch;

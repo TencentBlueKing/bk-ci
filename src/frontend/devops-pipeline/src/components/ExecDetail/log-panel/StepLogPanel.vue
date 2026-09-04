@@ -65,7 +65,7 @@
     import LogConclusionBar from './LogConclusionBar'
     import LogLinesView from './LogLinesView'
     import LogGroupBar from './LogGroupBar'
-    import { buildConclusion, hasCustomRunCondition, formatClock } from './logPanelAdapter'
+    import { buildConclusion, hasCustomRunCondition, formatClock, LOG_PANEL_PAGE_SIZE, LOG_PANEL_BACKFILL_MAX } from './logPanelAdapter'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
 
     export default {
@@ -92,6 +92,8 @@
                 logs: [],
                 startLineNo: null,
                 endLineNo: null,
+                matchedTotal: 0,
+                displayBase: 1,
                 hasBefore: false,
                 hasAfter: false,
                 finished: false,
@@ -117,7 +119,10 @@
                 })
             },
             displayLines () {
-                return this.logs
+                const base = this.displayBase || 1
+                return this.logs.map((line, i) => Object.assign({}, line, {
+                    displayLineNo: base + i
+                }))
             },
             hitIndexes () {
                 const kw = (this.keyword || '').trim().toLowerCase()
@@ -151,7 +156,8 @@
                     jobId: this.jobId || undefined,
                     subTag: this.subTag || undefined,
                     executeCount: this.currentExecute,
-                    levels: this.queryLevels
+                    levels: this.queryLevels,
+                    pageSize: LOG_PANEL_PAGE_SIZE
                 }
             }
         },
@@ -163,6 +169,7 @@
         },
         beforeDestroy () {
             this.stopPoll()
+            this._backfillToken = (this._backfillToken || 0) + 1
         },
         methods: {
             ...mapActions('atom', [
@@ -199,9 +206,12 @@
             },
             async reload () {
                 this.stopPoll()
+                this._backfillToken = (this._backfillToken || 0) + 1
                 this.logs = []
                 this.startLineNo = null
                 this.endLineNo = null
+                this.matchedTotal = 0
+                this.displayBase = 1
                 await this.loadLatest()
                 this.fetchProgress()
             },
@@ -218,12 +228,15 @@
                 } finally {
                     this.loading = false
                 }
+                this.maybeBackfill()
             },
-            async loadBefore () {
+            async loadBefore (opts) {
+                const fromBackfill = !!(opts && opts.fromBackfill)
                 if (!this.hasBefore || this.loading || !this.startLineNo) return
                 this.loading = true
                 const box = this.$refs.lines && this.$refs.lines.$refs.box
                 const prevHeight = box ? box.scrollHeight : 0
+                const keepBottom = this.stickBottom && fromBackfill
                 try {
                     const res = await this.getLogPanelBefore({
                         ...this.queryBase,
@@ -232,10 +245,13 @@
                     const data = res.data || {}
                     const incoming = data.logs || []
                     this.logs = incoming.concat(this.logs)
+                    this.displayBase = Math.max(1, this.displayBase - incoming.length)
                     this.startLineNo = data.startLineNo != null ? data.startLineNo : this.startLineNo
                     this.hasBefore = !!data.hasBefore
                     this.$nextTick(() => {
-                        if (box) box.scrollTop = box.scrollHeight - prevHeight
+                        if (!box) return
+                        if (keepBottom) box.scrollTop = box.scrollHeight
+                        else box.scrollTop = box.scrollHeight - prevHeight
                     })
                 } catch (_) {}
                 this.loading = false
@@ -261,14 +277,39 @@
                 this.finished = !!data.finished
                 this.cleaned = !!data.cleaned
                 const incoming = data.logs || []
-                this.logs = replace ? incoming : this.logs.concat(incoming)
+                if (replace) {
+                    const total = Number(data.matchedTotal) || incoming.length
+                    this.logs = incoming
+                    this.matchedTotal = total
+                    this.displayBase = Math.max(1, total - incoming.length + 1)
+                    this.hasBefore = !!data.hasBefore
+                } else {
+                    this.logs = this.logs.concat(incoming)
+                    this.matchedTotal += incoming.length
+                    this.hasAfter = !!data.hasAfter
+                }
                 if (data.startLineNo != null && (replace || this.startLineNo == null)) {
                     this.startLineNo = data.startLineNo
                 }
                 if (data.endLineNo != null) this.endLineNo = data.endLineNo
-                this.hasBefore = !!data.hasBefore
-                this.hasAfter = !!data.hasAfter
+                if (replace) this.hasAfter = !!data.hasAfter
                 this.subTags = (data.subTags || []).map(t => ({ label: t, value: t }))
+            },
+            maybeBackfill () {
+                if (!this.finished || this.hasAfter || !this.hasBefore) return
+                if (this.matchedTotal > LOG_PANEL_BACKFILL_MAX) return
+                this.backfillBefore()
+            },
+            async backfillBefore () {
+                const token = this._backfillToken
+                while (
+                    token === this._backfillToken &&
+                    this.hasBefore &&
+                    this.logs.length < LOG_PANEL_BACKFILL_MAX &&
+                    this.startLineNo
+                ) {
+                    await this.loadBefore({ fromBackfill: true })
+                }
             },
             onStick (atBottom) {
                 this.stickBottom = atBottom

@@ -16,7 +16,7 @@
                     type="button"
                     class="lp-minimap-line"
                     :class="lineClass(row.line)"
-                    :title="'定位到第 ' + (row.index + 1) + ' 行'"
+                    :title="'定位到第 ' + (row.line.displayLineNo || row.index + 1) + ' 行'"
                     @click.stop="$emit('jump', row.index)"
                 >
                     <span class="lp-minimap-text">{{ row.line.message || row.line.text }}</span>

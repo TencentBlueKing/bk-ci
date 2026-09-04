@@ -13,8 +13,9 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 
 object LogPanelQueryBuilder {
 
-    const val DEFAULT_PAGE_SIZE = 200
-    const val MAX_PAGE_SIZE = 500
+    const val DEFAULT_PAGE_SIZE = 1000
+    const val MAX_PAGE_SIZE = 1000
+    const val BACKFILL_MAX = 3000
 
     fun normalizePageSize(pageSize: Int?): Int {
         val size = pageSize ?: DEFAULT_PAGE_SIZE

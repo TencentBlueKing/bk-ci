@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "日志面板行")
 data class LogPanelLine(
-    @get:Schema(title = "行号", required = true)
+    @get:Schema(title = "存储行号，仅作 before/after 游标，不直接展示", required = true)
     val lineNo: Long,
     @get:Schema(title = "时间戳毫秒", required = true)
     val timestamp: Long,

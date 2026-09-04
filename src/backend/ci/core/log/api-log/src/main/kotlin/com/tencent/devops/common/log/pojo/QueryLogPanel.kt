@@ -27,10 +27,12 @@ data class QueryLogPanel(
     val subTags: List<String>? = null,
     @get:Schema(title = "本页日志，时间升序", required = true)
     val logs: List<LogPanelLine> = emptyList(),
-    @get:Schema(title = "本页首行号", required = false)
+    @get:Schema(title = "本页首行号（存储行号，仅作游标）", required = false)
     val startLineNo: Long? = null,
-    @get:Schema(title = "本页末行号", required = false)
+    @get:Schema(title = "本页末行号（存储行号，仅作游标）", required = false)
     val endLineNo: Long? = null,
+    @get:Schema(title = "当前过滤条件下的命中总数，latest 精确；before/after 可为 0 由前端累加", required = true)
+    val matchedTotal: Long = 0,
     @get:Schema(title = "是否还有更早的日志（向上翻）", required = true)
     val hasBefore: Boolean = false,
     @get:Schema(title = "是否还有更新的日志（向下跟随）", required = true)
