@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_OUTPUT_KEY_INVALID
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_USER_SET_ERROR_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_VARIABLE_PARAM_MAX_LENGTH
@@ -178,10 +179,27 @@ open class ScriptTask : ITask() {
             // 成功失败都写入全局变量
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
+            // 读取多行输出（format_multiple_lines），合并到 context
+            val multiLineContext = decodeMultipleLines(
+                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                jobId = buildVariables.jobId,
+                stepId = buildTask.stepId,
+                onInvalidKey = { key ->
+                    LoggerService.addWarnLine(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_MULTILINE_OUTPUT_KEY_INVALID,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf(key)
+                        )
+                    )
+                }
+            )
             failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, context)
+                failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
             addEnv(envs)
             addEnv(context)
+            addEnv(multiLineContext)
 
             // 增加操作系统类型的输出
             buildVariables.jobId?.let { addEnv(mapOf("jobs.$it.os" to AgentEnv.getOS().name)) }
@@ -290,5 +308,44 @@ open class ScriptTask : ITask() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
+        private val outputKeyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\$")
+
+        /**
+         * 解码 format_multiple_lines 写入的多行输出内容
+         * 格式: ::set-output name=KEY::VALUE (VALUE 中换行/回车/百分号经 URL 编码)
+         * 变量名不合法或缺少 :: 分隔符的行被忽略，并通过 onInvalidKey 回调（截断至 100 字符）
+         */
+        fun decodeMultipleLines(
+            lines: List<String>,
+            jobId: String?,
+            stepId: String?,
+            onInvalidKey: ((String) -> Unit)? = null
+        ): Map<String, String> {
+            if (lines.isEmpty() || jobId.isNullOrBlank() || stepId.isNullOrBlank()) return emptyMap()
+            val prefixOutput = "::set-output name="
+            val result = mutableMapOf<String, String>()
+            for (line in lines) {
+                if (!line.startsWith(prefixOutput)) continue
+                val value = line.removePrefix(prefixOutput)
+                val firstColonIndex = value.indexOf("::")
+                val key = if (firstColonIndex >= 0) value.substring(0, firstColonIndex) else value
+                if (firstColonIndex < 0 || key.isBlank() || !key.matches(outputKeyRegex)) {
+                    onInvalidKey?.invoke(key.take(100))
+                    continue
+                }
+                /*
+                 * 解码顺序必须与编码逆序：
+                 * 编码: % → %25(先)  \n → %0A  \r → %0D(后)
+                 * 解码: %0D → \r(先)  %0A → \n  %25 → %(后)
+                 * %25 必须最后还原，否则 %25 后面的 "0A" 会拼出假的 %0A 导致数据损坏
+                 */
+                val outputValue = value.substring(firstColonIndex + 2)
+                    .replace("%0D", "\r")
+                    .replace("%0A", "\n")
+                    .replace("%25", "%")
+                result["jobs.$jobId.steps.$stepId.outputs.$key"] = outputValue
+            }
+            return result
+        }
     }
 }
