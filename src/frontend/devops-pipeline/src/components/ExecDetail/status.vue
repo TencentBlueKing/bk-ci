@@ -1,5 +1,5 @@
 <template>
-    <span class="log-status readonly">
+    <span :class="['log-status', 'readonly', { 'is-sm': small }]">
         <i
             v-if="isRunning"
             class="devops-icon icon-circle-2-1 executing"
@@ -23,7 +23,8 @@
                 type: String,
                 default: 'CANCELED'
             },
-            isHook: Boolean
+            isHook: Boolean,
+            small: Boolean
         },
         computed: {
             isRunning () {
@@ -142,6 +143,16 @@
             }
         }
 
+        &.is-sm {
+            width: 16px;
+            height: 16px;
+            padding: 0;
+            line-height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
         &.readonly {
             font-size: 12px;
             font-weight: normal;

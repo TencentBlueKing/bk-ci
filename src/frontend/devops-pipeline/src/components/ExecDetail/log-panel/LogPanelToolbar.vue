@@ -241,7 +241,7 @@
     background: #464953;
     border: none;
     border-radius: 4px;
-    color: #f0f1f5;
+    color: #979ba5;
     font-size: 12px;
     line-height: 26px;
     outline: none;
@@ -255,6 +255,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #f0f1f5;
 }
 .lp-select-arrow {
     position: absolute;

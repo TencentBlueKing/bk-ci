@@ -1,5 +1,10 @@
 <template>
     <section class="job-log-panel">
+        <log-conclusion-bar
+            :conclusion="jobConclusion"
+            :execute-count="job.executeCount || 1"
+            :current-execute="job.executeCount || 1"
+        />
         <div class="job-log-main">
             <aside class="job-dir">
                 <button
@@ -10,13 +15,17 @@
                     :class="[item.status, { active: selectedId === item.id, sep: item.sep }]"
                     @click="select(item)"
                 >
-                    <i class="status-dot"></i>
+                    <status-icon
+                        v-if="!item.sep"
+                        :status="item.status"
+                        :is-hook="item.hook"
+                        small
+                    />
                     <span class="name">{{ item.name }}</span>
                     <span v-if="item.elapsed" class="cost">{{ item.elapsed }}</span>
                 </button>
             </aside>
             <div class="job-log-body">
-                <log-conclusion-bar :conclusion="jobConclusion" />
                 <step-log-panel
                     :id="logQueryId"
                     :job-id="isSetup ? job.containerHashId : undefined"
@@ -39,10 +48,11 @@
 <script>
     import StepLogPanel from './StepLogPanel'
     import LogConclusionBar from './LogConclusionBar'
-    import { formatElapsed, buildConclusion } from './logPanelAdapter'
+    import statusIcon from '../status'
+    import { formatElapsed, buildConclusion, queueWaited } from './logPanelAdapter'
 
     export default {
-        components: { StepLogPanel, LogConclusionBar },
+        components: { StepLogPanel, LogConclusionBar, statusIcon },
         props: {
             buildId: String,
             execDetail: { type: Object, required: true },
@@ -74,7 +84,8 @@
                         elapsed: formatElapsed(el.startTime || el.elapsed, el.endTime, el.status),
                         element: el
                     }
-                    if (el.additionalOptions && el.additionalOptions.elementPostInfo) {
+                    row.hook = !!(el.additionalOptions && el.additionalOptions.elementPostInfo)
+                    if (row.hook) {
                         posts.push(row)
                     } else {
                         items.push(row)
@@ -114,7 +125,10 @@
                 )
                 return buildConclusion(this.job, this.job, {
                     projectId: this.$route.params.projectId,
-                    askAssistant: !failedPlugin && ['FAILED', 'HEARTBEAT_TIMEOUT'].includes(this.job.status)
+                    askAssistant: !failedPlugin && ['FAILED', 'HEARTBEAT_TIMEOUT'].includes(this.job.status),
+                    canRetry: false,
+                    canSkip: false,
+                    waited: this.job.status === 'QUEUE' ? queueWaited(this.job) : ''
                 })
             }
         },
@@ -136,7 +150,13 @@
 </script>
 
 <style lang="scss" scoped>
-.job-log-panel, .job-log-main {
+.job-log-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.job-log-main {
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
@@ -167,16 +187,6 @@
     .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cost { color: #979ba5; font-size: 12px; }
     &.active .cost { color: rgba(255, 255, 255, 0.8); }
-    .status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #979ba5;
-        flex: none;
-    }
-    &.SUCCEED .status-dot { background: #2dcb56; }
-    &.FAILED, &.EXEC_TIMEOUT, &.HEARTBEAT_TIMEOUT { .status-dot { background: #ea3636; } }
-    &.RUNNING .status-dot { background: #3a84ff; }
 }
 .job-log-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 </style>

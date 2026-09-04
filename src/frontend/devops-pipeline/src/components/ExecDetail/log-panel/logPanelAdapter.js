@@ -102,9 +102,13 @@ export function buildConclusion (el, job, ctx = {}) {
         errorCode: el.errorCode || '',
         locateLog: FAIL.includes(status),
         askAssistant: FAIL.includes(status) && ctx.askAssistant,
-        canRetry: FAIL.includes(status) && ctx.canRetry !== false,
-        canSkip: FAIL.includes(status) && !!ctx.canSkip,
+        canRetry: FAIL.includes(status) && (ctx.canRetry !== undefined ? !!ctx.canRetry : !!el.canRetry),
+        canSkip: FAIL.includes(status) && (ctx.canSkip !== undefined ? !!ctx.canSkip : !!el.canSkip),
         handleAction: status === 'PAUSE' ? '继续执行' : (status === 'REVIEWING' ? '去处理' : ''),
+        parentLink: !!ctx.parentLink,
+        conditionLink: !!ctx.conditionLink,
+        queueRank: ctx.queueRank || '',
+        waited: ctx.waited || '',
         emptyText: status === 'UNEXEC' || status === 'SKIP'
             ? '尚未执行，无日志。'
             : (status === 'PAUSE' ? '已在执行前暂停，无日志。' : '')
@@ -196,6 +200,24 @@ export function buildParamsModel (element = {}) {
             open: { input: true, output: !running, env: true }
         }
     }
+}
+
+const DEFAULT_RUN_COND = ['PRE_TASK_SUCCESS', 'STAGE_RUNNING', '']
+
+export function hasCustomRunCondition (el) {
+    const cond = el && el.additionalOptions && el.additionalOptions.runCondition
+    return !!(cond && !DEFAULT_RUN_COND.includes(cond))
+}
+
+export function queueWaited (job = {}) {
+    const cost = job.timeCost && job.timeCost.queueCost
+    if (typeof cost === 'number' && cost >= 0) {
+        return formatElapsed(cost, null, job.status)
+    }
+    if (job.status === 'QUEUE' && job.startTime) {
+        return formatElapsed(job.startTime, Date.now(), 'RUNNING')
+    }
+    return ''
 }
 
 export function buildJobConfigRows (job = {}) {

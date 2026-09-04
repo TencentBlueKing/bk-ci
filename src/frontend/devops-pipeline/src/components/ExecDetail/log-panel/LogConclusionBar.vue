@@ -66,6 +66,18 @@
                 <template v-if="conclusion.message && !conclusion.errorCode && !conclusion.locateLog">
                     <span class="lp-vdiv"></span>
                     <span class="lp-msg">{{ conclusion.message }}</span>
+                    <button
+                        v-if="conclusion.askAssistant"
+                        type="button"
+                        class="lp-ai"
+                        title="问助手：排查本步骤失败原因"
+                        @click.stop="$emit('ask-assistant')"
+                    >
+                        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                            <path d="M8 1.6l1.1 3.2L12.4 6 9.1 7.2 8 10.4 6.9 7.2 3.6 6l3.3-1.2L8 1.6z" fill="currentColor" />
+                            <path d="M12.6 9.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6.6-1.6z" fill="currentColor" />
+                        </svg>
+                    </button>
                 </template>
                 <span v-if="conclusion.errorCode || conclusion.locateLog" class="lp-error-detail">
                     <span v-if="conclusion.errorCode" class="lp-code">{{ conclusion.errorCode }}</span>
@@ -79,16 +91,47 @@
                     <button
                         v-if="conclusion.askAssistant"
                         type="button"
-                        class="lp-link"
-                        @click="$emit('ask-assistant')"
-                    >问助手</button>
+                        class="lp-ai"
+                        title="问助手：排查本步骤失败原因"
+                        @click.stop="$emit('ask-assistant')"
+                    >
+                        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                            <path d="M8 1.6l1.1 3.2L12.4 6 9.1 7.2 8 10.4 6.9 7.2 3.6 6l3.3-1.2L8 1.6z" fill="currentColor" />
+                            <path d="M12.6 9.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6.6-1.6z" fill="currentColor" />
+                        </svg>
+                    </button>
                 </span>
                 <button
                     v-else-if="conclusion.askAssistant"
                     type="button"
+                    class="lp-ai"
+                    title="问助手：排查本步骤失败原因"
+                    @click.stop="$emit('ask-assistant')"
+                >
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                        <path d="M8 1.6l1.1 3.2L12.4 6 9.1 7.2 8 10.4 6.9 7.2 3.6 6l3.3-1.2L8 1.6z" fill="currentColor" />
+                        <path d="M12.6 9.2l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6.6-1.6z" fill="currentColor" />
+                    </svg>
+                </button>
+                <button
+                    v-if="conclusion.parentLink"
+                    type="button"
                     class="lp-link"
-                    @click="$emit('ask-assistant')"
-                >问助手</button>
+                    @click.stop="$emit('go-parent')"
+                >查看父构建</button>
+                <button
+                    v-if="conclusion.conditionLink"
+                    type="button"
+                    class="lp-link"
+                    @click.stop="$emit('go-condition')"
+                >查看运行条件</button>
+                <template v-if="conclusion.queueRank || conclusion.waited">
+                    <span class="lp-vdiv"></span>
+                    <span v-if="conclusion.queueRank" class="lp-meta">
+                        排队位置 <em class="lp-rank">{{ conclusion.queueRank }}</em>
+                    </span>
+                    <span v-if="conclusion.waited" class="lp-meta">已等待 {{ conclusion.waited }}</span>
+                </template>
                 <bk-button
                     v-if="conclusion.handleAction"
                     size="small"
@@ -98,6 +141,7 @@
                 >{{ conclusion.handleAction }}</bk-button>
             </div>
             <div class="lp-status-actions">
+                <span v-if="summaryText" class="lp-summary">{{ summaryText }}</span>
                 <span v-if="conclusion.canRetry || conclusion.canSkip" class="lp-ops">
                     <bk-button
                         v-if="conclusion.canRetry"
@@ -119,10 +163,20 @@
         <div v-if="progressExpanded && displaySubtasks.length" class="lp-subtasks">
             <div v-for="(row, i) in displaySubtasks" :key="i" class="lp-subtask">
                 <span class="lp-subtask-main">
+                    <status-icon
+                        v-if="row.status"
+                        :status="row.status"
+                        small
+                    />
                     <span>{{ row.name }}</span>
+                    <span v-if="row.progress" class="lp-subtask-pct">{{ row.progress }}</span>
                 </span>
                 <span class="lp-subtask-aside">
-                    <span class="lp-subtask-elapsed">{{ row.timeText }}</span>
+                    <span
+                        class="lp-subtask-elapsed"
+                        :class="{ 'is-live': row.live, 'is-idle': row.idle }"
+                    >{{ row.timeText || row.elapsed }}</span>
+                    <span v-if="row.range" class="lp-subtask-range">{{ row.range }}</span>
                 </span>
             </div>
         </div>
@@ -131,7 +185,10 @@
 </template>
 
 <script>
+    import statusIcon from '../status'
+
     export default {
+        components: { statusIcon },
         props: {
             conclusion: { type: Object, required: true },
             executeCount: { type: Number, default: 1 },
@@ -148,8 +205,27 @@
             canToggleExpand () {
                 return this.hasSubtasks
             },
+            summaryText () {
+                const list = this.subtasks || []
+                if (!list.length) return ''
+                const done = list.filter(t => t.status === 'SUCCEED' || t.status === 'done').length
+                return `已完成 ${done}/${list.length} 子任务`
+            },
             displaySubtasks () {
-                return this.subtasks || []
+                return (this.subtasks || []).map(task => {
+                    const started = task.startedAt || ''
+                    const ended = task.endedAt || ''
+                    return {
+                        name: task.name,
+                        status: task.status || '',
+                        progress: task.progress || '',
+                        timeText: task.timeText || task.elapsed || '',
+                        elapsed: task.elapsed || task.timeText || '',
+                        range: started && ended ? `${started} ~ ${ended}` : started,
+                        live: task.status === 'RUNNING' || task.status === 'running',
+                        idle: ['UNEXEC', 'SKIP', 'pending'].includes(task.status)
+                    }
+                })
             }
         },
         mounted () {
@@ -299,6 +375,26 @@
     padding: 0;
     white-space: nowrap;
 }
+.lp-ai {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #c4c6cc;
+    cursor: pointer;
+    flex-shrink: 0;
+    &:hover { color: #fff; }
+}
+.lp-rank { font-style: normal; color: #e18732; margin-left: 4px; }
+.lp-summary {
+    color: #83828c;
+    white-space: nowrap;
+    text-align: right;
+}
 .lp-ops { display: inline-flex; gap: 8px; }
 .lp-ops ::v-deep button.lp-ops-btn.is-outline {
     height: 24px;
@@ -402,9 +498,18 @@
     gap: 8px;
     color: #f0f1f5;
 }
-.lp-subtask-aside { flex-shrink: 0; }
+.lp-subtask-aside {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.lp-subtask-pct { color: #83828c; }
 .lp-subtask-elapsed {
     color: #c4c6cc;
     font-variant-numeric: tabular-nums;
 }
+.lp-subtask-elapsed.is-live { color: #699df4; }
+.lp-subtask-elapsed.is-idle { color: #63656e; }
+.lp-subtask-range { color: #63656e; }
 </style>

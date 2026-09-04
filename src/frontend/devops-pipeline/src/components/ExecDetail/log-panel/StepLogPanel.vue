@@ -32,6 +32,8 @@
             @handle="$emit('handle')"
             @retry="$emit('retry')"
             @skip="$emit('skip')"
+            @go-parent="$emit('go-parent')"
+            @go-condition="$emit('go-condition')"
         />
         <log-group-bar
             v-if="subTags.length"
@@ -63,7 +65,7 @@
     import LogConclusionBar from './LogConclusionBar'
     import LogLinesView from './LogLinesView'
     import LogGroupBar from './LogGroupBar'
-    import { buildConclusion } from './logPanelAdapter'
+    import { buildConclusion, hasCustomRunCondition, formatClock } from './logPanelAdapter'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
 
     export default {
@@ -108,7 +110,10 @@
             conclusion () {
                 return buildConclusion(this.element, this.job, {
                     projectId: this.$route.params.projectId,
-                    askAssistant: ['FAILED', 'EXEC_TIMEOUT', 'HEARTBEAT_TIMEOUT'].includes(this.element.status)
+                    askAssistant: ['FAILED', 'EXEC_TIMEOUT', 'HEARTBEAT_TIMEOUT'].includes(this.element.status),
+                    canRetry: !!this.element.canRetry,
+                    canSkip: !!this.element.canSkip,
+                    conditionLink: hasCustomRunCondition(this.element)
                 })
             },
             displayLines () {
@@ -305,7 +310,12 @@
                     const items = (data && data.subtasks && data.subtasks.items) || data.subTasks || []
                     this.subtasks = items.map(it => ({
                         name: it.name,
-                        timeText: it.costTime || it.elapsed || it.timeText || ''
+                        status: it.status || '',
+                        progress: it.progress || it.percent || '',
+                        timeText: it.costTime || it.elapsed || it.timeText || '',
+                        elapsed: it.elapsed || it.costTime || '',
+                        startedAt: formatClock(it.startTime || it.startedAt),
+                        endedAt: formatClock(it.endTime || it.endedAt)
                     }))
                     if (this.element.status === 'RUNNING' && this.subtasks.length) {
                         this.progressExpanded = true

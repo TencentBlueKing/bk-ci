@@ -39,6 +39,10 @@
                     :job="container"
                     ref="log"
                     @fallback="useLegacyLog = true"
+                    @retry="onRetry(false)"
+                    @skip="onRetry(true)"
+                    @handle="onHandle"
+                    @go-condition="configOpen = true"
                 />
                 <plugin-log
                     :id="currentElement.id"
@@ -78,6 +82,12 @@
                 class="plugin-config-hd"
                 slot="header"
             >
+                <img
+                    v-if="currentElement.logoUrl"
+                    class="plugin-config-logo"
+                    :src="currentElement.logoUrl"
+                    alt=""
+                >
                 <span
                     class="plugin-config-name"
                     :title="currentElement.name"
@@ -108,6 +118,11 @@
                 :is-instance-template="false"
             />
         </bk-sideslider>
+        <check-atom-dialog
+            :is-show-check-dialog="isShowCheckDialog"
+            :toggle-check="toggleCheckDialog"
+            :element="currentElement"
+        />
     </div>
 </template>
 
@@ -115,7 +130,8 @@
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
-    import { mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
+    import CheckAtomDialog from '@/components/CheckAtomDialog'
     import Artifactory from './Artifactory'
     import Report from './Report'
     import detailContainer from './detailContainer'
@@ -136,7 +152,8 @@
             AtomContent,
             ProgressDetailPanel,
             Artifactory,
-            Report
+            Report,
+            CheckAtomDialog
         },
         props: {
             execDetail: {
@@ -158,6 +175,7 @@
                 userSelectedTab: false,
                 useLegacyLog: false,
                 configOpen: false,
+                isShowCheckDialog: false,
                 tabList: [
                     { name: 'progress', show: false },
                     { name: 'log', show: true },
@@ -302,6 +320,50 @@
         },
 
         methods: {
+            ...mapActions('pipelines', ['requestRetryPipeline']),
+            ...mapActions('atom', ['requestPipelineExecDetail', 'togglePropertyPanel']),
+            async onRetry (skip) {
+                try {
+                    const res = await this.requestRetryPipeline({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.execDetail.id,
+                        taskId: this.currentElement.id,
+                        skip
+                    })
+                    if (res && res.id) {
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t(skip ? 'skipSuc' : 'subpage.retrySuc')
+                        })
+                        await this.requestPipelineExecDetail(this.$route.params)
+                    } else {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: (res && res.message) || this.$t(skip ? 'skipFail' : 'subpage.retryFail')
+                        })
+                    }
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }
+            },
+            onHandle () {
+                const status = this.currentElement.status
+                if (status === 'PAUSE') {
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        showPanelType: 'PAUSE',
+                        editingElementPos: this.editingElementPos
+                    })
+                    return
+                }
+                if (status === 'REVIEWING') {
+                    this.isShowCheckDialog = true
+                }
+            },
+            toggleCheckDialog (isShow = false) {
+                this.isShowCheckDialog = !!isShow
+            },
             selectTab (name) {
                 this.userSelectedTab = true
                 this.currentTab = name
@@ -347,6 +409,13 @@
         gap: 8px;
         width: calc(100% - 30px);
         min-width: 0;
+    }
+    .plugin-config-logo {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        border-radius: 2px;
+        object-fit: contain;
     }
     .plugin-config-name {
         flex: 1;

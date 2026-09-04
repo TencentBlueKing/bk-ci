@@ -12,6 +12,7 @@
                     <status-icon
                         :status="status"
                         :is-hook="isHook"
+                        small
                     ></status-icon>
                     <span
                         v-if="position"
@@ -131,7 +132,7 @@
             display: flex;
             flex-direction: column;
             margin: 16px;
-            border-radius: 6px;
+            border-radius: 0 4px 4px 4px;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
             &.over-hidden {
@@ -203,7 +204,7 @@
                     background: #f5f7fa;
                 }
                 &.log-main .log-head {
-                    border-top-right-radius: 6px;
+                    border-top-right-radius: 4px;
                 }
             }
         }
