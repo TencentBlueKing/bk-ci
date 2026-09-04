@@ -5,7 +5,6 @@
             placement="bottom-start"
             theme="light"
             :width="560"
-            always
             ext-cls="pending-manual-items-popover"
             :tippy-options="tippyOptions"
         >
@@ -65,7 +64,7 @@
                                 class="pmi-item-action"
                                 @click.stop="handleAction(row.item, row.config.action)"
                             >
-                                {{ $t(row.config.actionLabelKey) }}66
+                                {{ $t(row.config.actionLabelKey) }}
                             </bk-button>
                         </div>
                     </li>
