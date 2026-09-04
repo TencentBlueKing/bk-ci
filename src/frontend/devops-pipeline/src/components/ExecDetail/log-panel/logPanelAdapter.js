@@ -27,8 +27,12 @@ export function positionCode (pos, depth = 3) {
 }
 
 export function formatElapsed (start, end) {
-    if (!start) return ''
-    const ms = (end || Date.now()) - start
+    if (start == null || start === '') return ''
+    // 插件 elapsed 是耗时毫秒（远小于时间戳 1e12）；startTime/endTime 才是时间戳
+    const TIMESTAMP_MS = 1e12
+    const ms = typeof start === 'number' && start < TIMESTAMP_MS
+        ? start
+        : ((typeof end === 'number' && end >= TIMESTAMP_MS ? end : Date.now()) - start)
     if (ms < 0) return ''
     const s = Math.round(ms / 1000)
     if (s < 60) return `${s}s`
