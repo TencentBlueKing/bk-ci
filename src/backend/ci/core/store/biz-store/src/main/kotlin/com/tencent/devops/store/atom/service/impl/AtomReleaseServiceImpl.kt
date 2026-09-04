@@ -1124,7 +1124,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
-        // 与结束分支测试共用同一把锁，避免并发下已取消的版本被覆写为测试结束
+        // 加分布式锁防止并发操作同一插件版本
         RedisLock(
             redisOperation,
             "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode",
@@ -1722,10 +1722,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf(atomCode)
             )
         }
-        // 加分布式锁防止并发操作同一插件版本
+        // 并发控制：同一插件同一分支的结束测试操作串行化
         RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode",
+            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${atomRecord.branch}",
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1747,7 +1747,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     language = I18nUtil.getLanguage(userId)
                 )
             }
-            // 仅测试中的分支测试版本可结束测试（锁内二次校验，避免与取消发布并发时写错状态）
+            // 仅测试中的分支测试版本可结束测试（锁内二次校验，避免并发下写错状态）
             if (latestRecord.atomStatus.toInt() != AtomStatusEnum.TESTING.status) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = STORE_BRANCH_TEST_END_STATUS_INVALID,
