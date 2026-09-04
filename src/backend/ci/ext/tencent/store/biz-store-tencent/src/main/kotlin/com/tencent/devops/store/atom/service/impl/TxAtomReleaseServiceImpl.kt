@@ -104,6 +104,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CON
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_NO_NEW_COMMIT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_CREATE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_STATUS_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBER
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.common.STORE_BRANCH_TEST_LOCK_KEY_PREFIX
@@ -1021,18 +1022,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             errorCode = PARAMETER_IS_NULL,
             params = arrayOf("branch")
         )
-        // 判断用户是否有权限(插件管理员或正式版本创建者可以操作)
-        val formalAtomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
-        if (!(storeMemberDao.isStoreAdmin(
+        // 判断用户是否有权限(插件成员可以操作)
+        if (!(storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = atomCode,
                 storeType = StoreTypeEnum.ATOM.type.toByte()
-            ) || formalAtomRecord?.creator == userId)
+            ))
         ) {
             throw ErrorCodeException(
-                errorCode = NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION,
-                params = arrayOf(atomCode)
+                errorCode = USER_NOT_IS_STORE_MEMBER,
+                params = arrayOf(userId)
             )
         }
         // 并发控制：同一插件同一分支的创建操作串行化，避免并发重复创建/版本号冲突
@@ -1185,12 +1185,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val record = marketAtomDao.getLatestBranchTestVersion(
                 dslContext = dslContext,
                 atomCode = atomCode,
-                branch = branch,
-                atomStatus = AtomStatusEnum.TESTING.status.toByte()
+                branch = branch
             ) ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$atomCode:$branch")
             )
+            // 仅测试中的分支测试版本可结束测试
+            if (record.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
+            }
             // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
             if (!(storeMemberDao.isStoreAdmin(
                     dslContext = dslContext,
