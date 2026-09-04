@@ -96,6 +96,7 @@
                         <div class="extension-wrapper">
                             <span
                                 class="bk-selector-create-item"
+                                :title="$t('newProject')"
                                 @click.stop.prevent="popProjectDialog"
                             >
                                 <i class="devops-icon icon-plus-circle mr5" />
@@ -104,6 +105,7 @@
                             <span class="extension-line" />
                             <span
                                 class="bk-selector-create-item"
+                                :title="$t('joinProject')"
                                 @click.stop.prevent="handleApplyProject"
                             >
                                 <icon
@@ -116,6 +118,7 @@
                             <span class="extension-line" />
                             <span
                                 class="bk-selector-create-item"
+                                :title="$t('projectManage')"
                                 @click.stop.prevent="goToPm"
                             >
                                 <icon
