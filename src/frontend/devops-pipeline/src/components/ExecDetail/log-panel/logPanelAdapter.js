@@ -115,3 +115,102 @@ export function formatClock (ts) {
     const pad = n => String(n).padStart(2, '0')
     return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
+
+const NOT_EXECUTED = ['QUEUE', 'PAUSE', 'UNEXEC', 'SKIP', 'DEPENDENT_WAITING', 'WAITING', 'PREPARE_ENV']
+const LIVE_FOR_OUTPUT = ['RUNNING', 'QUEUE', 'WAITING', 'PREPARE_ENV', 'LOOP_WAITING', 'CALL_WAITING']
+const OUTPUT_TYPE_NAMES = [
+    'string', 'textarea', 'artifact', 'report', 'quality', 'certificate',
+    'password', 'enum', 'boolean', 'int', 'long', 'float', 'double'
+]
+
+function looksExpr (val) {
+    const s = String(val == null ? '' : val)
+    return /\$\{\{[\s\S]+?\}\}/.test(s) || /\$\{[^{][^}]*\}/.test(s)
+}
+
+function isSecretKey (key) {
+    return /password|token|secret|credential|oauth|passwd|pwd/i.test(String(key || ''))
+        || String(key || '').startsWith('_')
+}
+
+function stringifyVal (val) {
+    if (val == null) return ''
+    if (typeof val === 'object') {
+        try {
+            return JSON.stringify(val)
+        } catch (e) {
+            return String(val)
+        }
+    }
+    return String(val)
+}
+
+function toParamRows (objOrArr) {
+    if (Array.isArray(objOrArr)) {
+        return objOrArr.filter(r => r && (r.key || r.name)).map(r => ({
+            key: r.key || r.name,
+            value: r.value,
+            expr: r.expr,
+            secret: !!(r.secret || r.hidden || isSecretKey(r.key || r.name))
+        }))
+    }
+    if (!objOrArr || typeof objOrArr !== 'object') return []
+    return Object.keys(objOrArr).map(key => {
+        const raw = objOrArr[key]
+        let value = raw
+        let expr
+        if (raw && typeof raw === 'object' && !Array.isArray(raw) && ('value' in raw || 'default' in raw)) {
+            value = raw.value != null ? raw.value : raw.default
+            expr = raw.expr
+        }
+        value = stringifyVal(value)
+        const secret = isSecretKey(key) || value === '******'
+        if (!expr && looksExpr(value)) expr = value
+        return { key, value, expr, secret }
+    })
+}
+
+export function buildParamsModel (element = {}) {
+    const status = element.status || ''
+    const data = element.data || {}
+    const input = toParamRows(data.input)
+    const outputRaw = toParamRows(data.output)
+    const output = outputRaw.map(r => {
+        const v = String(r.value || '').toLowerCase()
+        if (OUTPUT_TYPE_NAMES.includes(v)) return { ...r, value: '' }
+        return r
+    })
+    const hasOutputValue = output.some(r => r.value)
+    const running = LIVE_FOR_OUTPUT.includes(status)
+    return {
+        id: element.id,
+        status,
+        notExecuted: NOT_EXECUTED.includes(status),
+        params: {
+            input,
+            output: hasOutputValue ? output : (running ? [] : output),
+            env: toParamRows(element.customEnv),
+            outputPending: running && !hasOutputValue,
+            open: { input: true, output: !running, env: true }
+        }
+    }
+}
+
+export function buildJobConfigRows (job = {}) {
+    const rows = []
+    const dt = job.dispatchType || {}
+    if (dt.buildType) rows.push({ key: 'dispatchType', value: dt.buildType })
+    const image = dt.imageName || dt.value || job.dockerContainerName
+    if (image) rows.push({ key: 'image', value: image })
+    if (dt.imageVersion) rows.push({ key: 'imageVersion', value: dt.imageVersion })
+    const opt = job.jobControlOption || {}
+    if (opt.timeoutVar || opt.timeout) {
+        rows.push({ key: 'timeout', value: String(opt.timeoutVar || opt.timeout) })
+    }
+    const mutex = job.mutexGroup || {}
+    if (mutex.enable && mutex.mutexGroupName) {
+        rows.push({ key: 'mutexGroup', value: mutex.mutexGroupName })
+    }
+    if (job.jobId) rows.push({ key: 'jobId', value: job.jobId })
+    return rows
+}

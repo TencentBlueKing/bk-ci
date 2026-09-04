@@ -142,24 +142,26 @@
     min-height: 0;
 }
 .job-dir {
-    width: 220px;
+    width: 280px;
     flex: none;
     overflow: auto;
-    background: #242a36;
-    border-right: 1px solid #3a3c45;
+    background: #26272e;
+    border-right: 1px solid #1f2127;
 }
 .job-dir-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     width: 100%;
-    padding: 8px 10px;
+    height: 36px;
+    padding: 0 12px;
     border: 0;
     background: transparent;
     color: #c4c6cc;
+    font-size: 12px;
     text-align: left;
     cursor: pointer;
-    &.active { background: #1a6df3; color: #fff; }
+    &.active { background: #3a84ff; color: #fff; }
     &.sep { cursor: default; color: #63656e; font-size: 12px; }
     .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cost { color: #979ba5; font-size: 12px; }

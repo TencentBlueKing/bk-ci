@@ -1,72 +1,114 @@
 <template>
-    <detail-container
-        @close="$emit('close')"
-        :title="panelTitle"
-        :status="currentElement.status"
-        :current-tab="currentTab"
-        :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
-    >
-        <span
-            class="head-tab"
-            slot="tab"
-            v-if="isGetPluginHeadTab"
+    <div>
+        <detail-container
+            @close="$emit('close')"
+            :title="currentElement.name || ''"
+            :position="panelPosition"
+            :status="currentElement.status"
+            :current-tab="currentTab"
+            :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
+            :ignore-close="configOpen"
         >
-            <template v-for="tab in sortedTabList">
-                <span
-                    v-if="tab.show"
-                    :key="tab.name"
-                    :class="{ active: currentTab === tab.name }"
-                    @click="selectTab(tab.name)"
-                >{{ $t(`execDetail.${tab.name}`) }}</span>
+            <span
+                class="head-tab"
+                slot="tab"
+                v-if="isGetPluginHeadTab"
+            >
+                <template v-for="tab in sortedTabList">
+                    <span
+                        v-if="tab.show"
+                        :key="tab.name"
+                        :class="{ active: currentTab === tab.name }"
+                        @click="selectTab(tab.name)"
+                    >{{ $t(`execDetail.${tab.name}`) }}</span>
+                </template>
+            </span>
+            <template v-slot:content>
+                <error-summary
+                    v-if="activeErorr && currentTab === 'log' && useLegacyLog"
+                    :error="activeErorr"
+                ></error-summary>
+                <step-log-panel
+                    v-if="currentTab === 'log' && !useLegacyLog"
+                    :id="currentElement.id"
+                    :key="'v2-' + currentElement.id"
+                    :build-id="execDetail.id"
+                    :execute-count="currentElement.executeCount"
+                    :exec-detail="execDetail"
+                    :element="currentElement"
+                    :job="container"
+                    ref="log"
+                    @fallback="useLegacyLog = true"
+                />
+                <plugin-log
+                    :id="currentElement.id"
+                    :key="currentElement.id"
+                    :build-id="execDetail.id"
+                    :current-tab="currentTab"
+                    :exec-detail="execDetail"
+                    :execute-count="currentElement.executeCount"
+                    ref="log"
+                    v-else-if="currentTab === 'log'"
+                />
+                <log-params-view
+                    v-if="currentTab === 'property'"
+                    :model="paramsModel"
+                    @view-config="configOpen = true"
+                />
+                <component
+                    v-show="currentTab === key"
+                    :is="value.component"
+                    v-bind="value.bindData"
+                    v-for="(value, key) in componentList"
+                    :key="key"
+                    :ref="key"
+                    @toggle="(show) => toggleTab(key, show)"
+                    @complete="completeLoading(key)"
+                ></component>
             </template>
-        </span>
-        <reference-variable
-            slot="tool"
-            class="head-tool"
-            :global-envs="globalEnvs"
-            :stages="stages"
-            :container="container"
-            v-if="currentTab === 'setting'"
-        />
-        <template v-slot:content>
-            <error-summary
-                v-if="activeErorr && currentTab === 'log' && useLegacyLog"
-                :error="activeErorr"
-            ></error-summary>
-            <step-log-panel
-                v-if="currentTab === 'log' && !useLegacyLog"
-                :id="currentElement.id"
-                :key="'v2-' + currentElement.id"
-                :build-id="execDetail.id"
-                :execute-count="currentElement.executeCount"
-                :exec-detail="execDetail"
-                :element="currentElement"
-                :job="container"
-                ref="log"
-                @fallback="useLegacyLog = true"
+        </detail-container>
+        <bk-sideslider
+            :is-show.sync="configOpen"
+            :width="640"
+            :quick-close="true"
+            :z-index="2100"
+            class="step-plugin-config-slider"
+        >
+            <header
+                class="plugin-config-hd"
+                slot="header"
+            >
+                <span
+                    class="plugin-config-name"
+                    :title="currentElement.name"
+                >{{ currentElement.name }}</span>
+                <span
+                    class="plugin-config-ro"
+                    :title="$t('logPanel.readonly')"
+                >
+                    <i class="devops-icon icon-eye"></i>
+                    {{ $t('logPanel.readonly') }}
+                </span>
+                <reference-variable
+                    class="plugin-config-ref"
+                    :global-envs="globalEnvs"
+                    :stages="stages"
+                    :container="container"
+                />
+            </header>
+            <atom-content
+                v-if="configOpen"
+                slot="content"
+                :element-index="editingElementPos.elementIndex"
+                :container-index="editingElementPos.containerIndex"
+                :container-group-index="editingElementPos.containerGroupIndex"
+                :stage-index="editingElementPos.stageIndex"
+                :stages="stages"
+                :editable="false"
+                :is-instance-template="false"
             />
-            <plugin-log
-                :id="currentElement.id"
-                :key="currentElement.id"
-                :build-id="execDetail.id"
-                :current-tab="currentTab"
-                :exec-detail="execDetail"
-                :execute-count="currentElement.executeCount"
-                ref="log"
-                v-else-if="currentTab === 'log'"
-            />
-            <component
-                v-show="currentTab === key"
-                :is="value.component"
-                v-bind="value.bindData"
-                v-for="(value, key) in componentList"
-                :key="key"
-                :ref="key"
-                @toggle="(show) => toggleTab(key, show)"
-                @complete="completeLoading(key)"
-            ></component>
-        </template>
-    </detail-container>
+        </bk-sideslider>
+    </div>
 </template>
 
 <script>
@@ -79,7 +121,8 @@
     import detailContainer from './detailContainer'
     import pluginLog from './log/pluginLog'
     import StepLogPanel from './log-panel/StepLogPanel'
-    import { positionCode } from './log-panel/logPanelAdapter'
+    import LogParamsView from './log-panel/LogParamsView'
+    import { positionCode, buildParamsModel } from './log-panel/logPanelAdapter'
     import ProgressDetailPanel from '@/components/ProgressDetailPanel'
 
     export default {
@@ -88,9 +131,12 @@
             ReferenceVariable,
             pluginLog,
             StepLogPanel,
+            LogParamsView,
             ErrorSummary,
             AtomContent,
-            ProgressDetailPanel
+            ProgressDetailPanel,
+            Artifactory,
+            Report
         },
         props: {
             execDetail: {
@@ -111,11 +157,12 @@
                 currentTab: null,
                 userSelectedTab: false,
                 useLegacyLog: false,
+                configOpen: false,
                 tabList: [
                     { name: 'progress', show: false },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: false, completeLoading: false },
-                    { name: 'setting', show: true },
+                    { name: 'property', show: true },
                     { name: 'report', show: false, completeLoading: false }
                 ]
             }
@@ -147,16 +194,17 @@
                 }
             },
 
-            panelTitle () {
-                const pos = positionCode(this.editingElementPos, 3)
-                const name = this.currentElement.name || ''
-                return pos ? `${pos} ${name}` : name
+            panelPosition () {
+                return positionCode(this.editingElementPos, 3)
             },
             currentElement () {
                 const {
                     editingElementPos: { elementIndex }
                 } = this
                 return this.container.elements?.[elementIndex] ?? {}
+            },
+            paramsModel () {
+                return buildParamsModel(this.currentElement)
             },
 
             componentList () {
@@ -184,29 +232,12 @@
                         bindData: {
                             taskId: this.currentElement.id
                         }
-                    },
-                    setting: {
-                        component: AtomContent,
-                        bindData: {
-                            elementIndex: this.editingElementPos.elementIndex,
-                            containerIndex: this.editingElementPos.containerIndex,
-                            containerGroupIndex: this.editingElementPos.containerGroupIndex,
-                            stageIndex: this.editingElementPos.stageIndex,
-                            stages: this.stages,
-                            editable: false,
-                            isInstanceTemplate: false
-                        }
                     }
                 }
             },
 
             activeErorr () {
                 return null
-                // try {
-                //     return this.execDetail.errorInfoList.find(error => error.taskId === this.currentElement.id)
-                // } catch (error) {
-                //     return null
-                // }
             },
             progressHeaderMeta () {
                 const buildNum = this.execDetail.buildNum ? `#${this.execDetail.buildNum}` : ''
@@ -231,27 +262,9 @@
                 return (this.isRunningStatus && this.hasProgressTab) ? 'progress' : 'log'
             },
             sortedTabList () {
-                const mapping = {
-                    PROGRESS: 'progress',
-                    LOG: 'log',
-                    ARTIFACT: 'artifactory',
-                    CONFIG: 'setting'
-                }
-
-                const orderedTabs = [
-                    this.tabList.find(tab => tab.name === 'progress'),
-                    ...this.properties.map(prop => {
-                        const tabName = mapping[prop]
-                        return this.tabList.find(tab => tab.name === tabName)
-                    })
-                ].filter(Boolean)
-
-                const reportTab = this.tabList.find(tab => tab.name === 'report')
-                if (reportTab) {
-                    orderedTabs.push(reportTab)
-                }
-
-                return orderedTabs
+                // 对齐原型：日志 → 进度 → 制品 → 报告 → 参数（进度仅沿用现网组件，不做完整重做）
+                const order = ['log', 'progress', 'artifactory', 'report', 'property']
+                return order.map(name => this.tabList.find(tab => tab.name === name)).filter(Boolean)
             },
             visibleTabList () {
                 return this.sortedTabList.filter(tab => tab.show)
@@ -276,11 +289,12 @@
             },
             'currentElement.id': function () {
                 this.userSelectedTab = false
+                this.configOpen = false
                 this.tabList = [
                     { name: 'progress', show: false },
                     { name: 'log', show: true },
                     { name: 'artifactory', show: true, completeLoading: false },
-                    { name: 'setting', show: true },
+                    { name: 'property', show: true },
                     { name: 'report', show: false, completeLoading: false }
                 ]
                 this.currentTab = this.defaultTab
@@ -311,7 +325,7 @@
 
             completeLoading (key) {
                 const tab = this.sortedTabList.find(tab => tab.name === key)
-                tab.completeLoading = true
+                if (tab) tab.completeLoading = true
             }
         }
     }
@@ -319,12 +333,51 @@
 
 <style lang="scss" scoped>
     ::v-deep .atom-property-panel {
-        padding: 10px 50px;
+        padding: 10px 24px 24px;
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
             margin-right: 10px;
         }
     }
     ::v-deep .reference-var {
         padding: 0;
+    }
+    .plugin-config-hd {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: calc(100% - 30px);
+        min-width: 0;
+    }
+    .plugin-config-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        color: #313238;
+    }
+    .plugin-config-ro {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 2px;
+        background: #f0f1f5;
+        color: #63656e;
+        font-size: 12px;
+        line-height: 20px;
+    }
+    .plugin-config-ref {
+        margin-left: auto;
+    }
+</style>
+<style lang="scss">
+    .step-plugin-config-slider {
+        .bk-sideslider-content {
+            overflow: auto;
+            background: #fff;
+        }
     }
 </style>
