@@ -151,6 +151,13 @@
   "empty": "暂无数据",
   "link": "链接",
   "downloadLog": "下载日志",
+  "logPanel": {
+    "search": "搜索日志",
+    "showTime": "展示时间",
+    "hideTime": "隐藏时间",
+    "wrap": "换行",
+    "unwrap": "不换行"
+  },
   "hideDebugLog": "隐藏调试日志",
   "showDebugLog": "展示调试日志",
   "successPraise": "已赞",

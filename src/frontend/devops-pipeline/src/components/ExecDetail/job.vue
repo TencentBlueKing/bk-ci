@@ -1,7 +1,7 @@
 <template>
     <detail-container
         @close="$emit('close')"
-        :title="currentJob.name"
+        :title="panelTitle"
         :status="currentJob.status"
         :current-tab="currentTab"
     >
@@ -41,6 +41,16 @@
                     ref="jobLog"
                     v-if="currentJob.matrixGroupFlag"
                 />
+                <job-log-panel
+                    v-else-if="!useLegacyLog"
+                    :key="'v2-' + currentJob.id"
+                    :build-id="execDetail.id"
+                    :exec-detail="execDetail"
+                    :job="currentJob"
+                    :plugins="pluginList"
+                    ref="jobLog"
+                    @fallback="useLegacyLog = true"
+                />
                 <job-log
                     v-else
                     :key="currentJob.id"
@@ -69,6 +79,8 @@
     import { mapGetters } from 'vuex'
     import jobLog from './log/jobLog'
     import pluginLog from './log/pluginLog'
+    import JobLogPanel from './log-panel/JobLogPanel'
+    import { positionCode } from './log-panel/logPanelAdapter'
     import detailContainer from './detailContainer'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
@@ -78,6 +90,7 @@
             detailContainer,
             jobLog,
             pluginLog,
+            JobLogPanel,
             ContainerContent,
             ErrorSummary
         },
@@ -98,7 +111,8 @@
             return {
                 showTime: false,
                 searchStr: '',
-                currentTab: 'log'
+                currentTab: 'log',
+                useLegacyLog: false
             }
         },
 
@@ -106,6 +120,11 @@
             ...mapGetters('atom', [
                 'checkShowDebugDockerBtn'
             ]),
+            panelTitle () {
+                const pos = positionCode(this.editingElementPos, 2)
+                const name = this.currentJob.name || ''
+                return pos ? `${pos} ${name}` : name
+            },
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))

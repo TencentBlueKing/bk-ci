@@ -1,8 +1,8 @@
 <template>
     <article class="log-home">
-        <!-- <span @click="closeLog" class="log-home-close-bar">
+        <span @click="closeLog" class="log-home-close-bar" title="收起日志">
             <i class="devops-icon icon-angle-right"></i>
-        </span> -->
+        </span>
         <section
             v-bk-clickoutside="closeLog"
             :class="[currentTab && currentTab !== 'log' ? 'white-theme' : 'black-theme over-hidden', 'log-main']"

@@ -151,6 +151,13 @@
   "empty": "データがありません",
   "link": "リンク",
   "downloadLog": "ログをダウンロード",
+  "logPanel": {
+    "search": "ログを検索",
+    "showTime": "時刻を表示",
+    "hideTime": "時刻を隠す",
+    "wrap": "折り返し",
+    "unwrap": "折り返さない"
+  },
   "hideDebugLog": "デバッグログを非表示",
   "showDebugLog": "デバッグログを表示",
   "successPraise": "いいね済み",

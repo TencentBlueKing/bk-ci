@@ -654,6 +654,23 @@ class BuildLogQueryService @Autowired constructor(
         }
     }
 
+    fun checkViewPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        archiveFlag: Boolean? = null
+    ) {
+        validateAuth(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            permission = AuthPermission.VIEW,
+            archiveFlag = archiveFlag
+        )
+    }
+
     @Suppress("ThrowsCount")
     private fun validateAuth(
         userId: String,

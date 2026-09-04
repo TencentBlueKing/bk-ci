@@ -1,7 +1,7 @@
 <template>
     <detail-container
         @close="$emit('close')"
-        :title="currentElement.name"
+        :title="panelTitle"
         :status="currentElement.status"
         :current-tab="currentTab"
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
@@ -33,6 +33,18 @@
                 v-if="activeErorr && currentTab === 'log'"
                 :error="activeErorr"
             ></error-summary>
+            <step-log-panel
+                v-if="currentTab === 'log' && !useLegacyLog"
+                :id="currentElement.id"
+                :key="'v2-' + currentElement.id"
+                :build-id="execDetail.id"
+                :execute-count="currentElement.executeCount"
+                :exec-detail="execDetail"
+                :element="currentElement"
+                :job="container"
+                ref="log"
+                @fallback="useLegacyLog = true"
+            />
             <plugin-log
                 :id="currentElement.id"
                 :key="currentElement.id"
@@ -41,7 +53,7 @@
                 :exec-detail="execDetail"
                 :execute-count="currentElement.executeCount"
                 ref="log"
-                v-if="currentTab === 'log'"
+                v-else-if="currentTab === 'log'"
             />
             <component
                 v-show="currentTab === key"
@@ -66,6 +78,8 @@
     import Report from './Report'
     import detailContainer from './detailContainer'
     import pluginLog from './log/pluginLog'
+    import StepLogPanel from './log-panel/StepLogPanel'
+    import { positionCode } from './log-panel/logPanelAdapter'
     import ProgressDetailPanel from '@/components/ProgressDetailPanel'
 
     export default {
@@ -73,6 +87,7 @@
             detailContainer,
             ReferenceVariable,
             pluginLog,
+            StepLogPanel,
             ErrorSummary,
             AtomContent,
             ProgressDetailPanel
@@ -95,6 +110,7 @@
             return {
                 currentTab: null,
                 userSelectedTab: false,
+                useLegacyLog: false,
                 tabList: [
                     { name: 'progress', show: false },
                     { name: 'log', show: true },
@@ -131,6 +147,11 @@
                 }
             },
 
+            panelTitle () {
+                const pos = positionCode(this.editingElementPos, 3)
+                const name = this.currentElement.name || ''
+                return pos ? `${pos} ${name}` : name
+            },
             currentElement () {
                 const {
                     editingElementPos: { elementIndex }

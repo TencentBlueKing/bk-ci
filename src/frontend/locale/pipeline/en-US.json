@@ -151,6 +151,13 @@
   "empty": "No Data",
   "link": "link",
   "downloadLog": "Download Log",
+  "logPanel": {
+    "search": "Search logs",
+    "showTime": "Show time",
+    "hideTime": "Hide time",
+    "wrap": "Wrap",
+    "unwrap": "No wrap"
+  },
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",
   "successPraise": "Like Success",

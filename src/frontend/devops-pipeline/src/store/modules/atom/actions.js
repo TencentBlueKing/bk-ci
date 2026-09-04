@@ -972,6 +972,27 @@ export default {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
+    getLogPanelLatest ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/latest`, {
+            params: query
+        })
+    },
+
+    getLogPanelBefore ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/before`, {
+            params: query
+        })
+    },
+
+    getLogPanelAfter ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: query
+        })
+    },
+
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
         return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
