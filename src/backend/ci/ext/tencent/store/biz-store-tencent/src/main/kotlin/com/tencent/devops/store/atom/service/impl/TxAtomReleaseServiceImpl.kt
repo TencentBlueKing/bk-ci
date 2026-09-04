@@ -1223,10 +1223,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         if (record.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
             throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
         }
-        // 并发控制：同一版本结束操作串行化
+        // 并发控制：同一插件同一分支的结束测试操作串行化
         return RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomId",
+            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${record.branch}",
             60L
         ).use { redisLock ->
             redisLock.lock()
