@@ -58,6 +58,29 @@
                             </span>
                         </bk-tag>
                     </build-end-info-popover>
+                    <build-running-info-popover
+                        v-else-if="showBuildRunningInfoPopover"
+                        :build-running-info="execDetail.buildRunningInfo"
+                        :current-timestamp="execDetail.currentTimestamp"
+                        @highlight="handleBuildEndPositionHighlight"
+                    >
+                        <bk-tag
+                            class="exec-status-tag"
+                            type="stroke"
+                            :theme="statusTagTheme"
+                        >
+                            <span class="exec-status-label">
+                                <i
+                                    :class="['devops-icon', {
+                                        'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
+                                        'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                                    }]"
+                                />
+                                {{ statusLabel }}
+                                <span class="devops-icon icon-info-circle"></span>
+                            </span>
+                        </bk-tag>
+                    </build-running-info-popover>
                     <bk-tag
                         v-else
                         class="exec-status-tag"
@@ -103,6 +126,14 @@
                     </span>
                 </aside>
             </div>
+            <pending-manual-items-alert
+                v-if="showPendingManualAlert"
+                :pending-items="execDetail.buildRunningInfo.pendingItems"
+                :pending-item-count="execDetail.buildRunningInfo.pendingItemCount"
+                @highlight="handleBuildEndPositionHighlight"
+                @locateLog="handleBuildEndPositionLocate"
+            />
+            <!-- 这里添加待人工处理项的Alert 警告 -->
             <p
                 class="summary-header-shadow"
                 v-show="show"
@@ -199,7 +230,10 @@
     import codeRecord from '@/components/codeRecord'
     import emptyTips from '@/components/devops/emptyTips'
     import BuildEndInfoPopover from '@/components/ExecDetail/BuildEndInfoPopover'
+    import BuildRunningInfoPopover from '@/components/ExecDetail/BuildRunningInfoPopover'
+    import PendingManualItemsAlert from '@/components/ExecDetail/PendingManualItemsAlert'
     import { getBuildEndInfoConfig } from '@/components/ExecDetail/buildEndInfoConfig'
+    import { getBuildRunningInfoConfig } from '@/components/ExecDetail/buildRunningInfoConfig'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
@@ -243,7 +277,9 @@
             Logo,
             AtomPropertyPanel,
             Summary,
-            BuildEndInfoPopover
+            BuildEndInfoPopover,
+            BuildRunningInfoPopover,
+            PendingManualItemsAlert
         },
         mixins: [pipelineOperateMixin],
 
@@ -470,6 +506,14 @@
             showBuildEndInfoPopover () {
                 return !!getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)
                     && !!this.execDetail?.buildEndInfo
+            },
+            showBuildRunningInfoPopover () {
+                return this.isRunning
+                    && !!getBuildRunningInfoConfig(this.execDetail?.buildRunningInfo?.runningCategory)
+                    && !!this.execDetail?.buildRunningInfo
+            },
+            showPendingManualAlert () {
+                return Number(this.execDetail?.buildRunningInfo?.pendingItemCount) > 0
             }
         },
 
@@ -627,7 +671,9 @@
                 }
             },
             getBuildEndLocateFailedKey () {
-                return getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
+                const endKey = getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
+                if (endKey) return endKey
+                return getBuildRunningInfoConfig(this.execDetail?.buildRunningInfo?.runningCategory)?.locateFailedKey
             },
             runBuildEndPositionAction (position, { openLog = false } = {}) {
                 console.log(position,'???????')
@@ -764,7 +810,8 @@
         margin: 0;
       }
 
-      .build-end-info-popover-trigger {
+      .build-end-info-popover-trigger,
+      .build-running-info-popover-trigger {
         display: inline-flex;
         align-items: center;
       }
