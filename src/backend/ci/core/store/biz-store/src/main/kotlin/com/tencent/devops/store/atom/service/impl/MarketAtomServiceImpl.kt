@@ -969,9 +969,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         }
         // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，FORMAL-正式版本，非法值直接报错
+        // 未传时按 ALL 处理
         val branchTestFlag = when (versionType?.uppercase()) {
-            null, "FORMAL" -> false
-            "ALL" -> null
+            null, "", "ALL" -> null
+            "FORMAL" -> false
             "TEST" -> true
             else -> throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
