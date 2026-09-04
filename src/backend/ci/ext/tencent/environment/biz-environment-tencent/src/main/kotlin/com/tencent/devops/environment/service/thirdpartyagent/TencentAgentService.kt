@@ -65,11 +65,13 @@ class TencentAgentService @Autowired constructor(
         val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, projectId) ?: return true
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.batchDeleteNode(context, record.projectId, listOf(record.nodeId))
-            envNodeDao.deleteByNodeIds(context, record.projectId, listOf(record.nodeId))
-            environmentPermissionService.deleteNode(record.projectId, record.nodeId)
-            // 删除节点相关标签
-            nodeTagDao.deleteByNodes(dslContext, listOf(record.nodeId))
+            if (record.nodeId != null) {
+                nodeDao.batchDeleteNode(context, record.projectId, listOf(record.nodeId))
+                envNodeDao.deleteByNodeIds(context, record.projectId, listOf(record.nodeId))
+                environmentPermissionService.deleteNode(record.projectId, record.nodeId)
+                // 删除节点相关标签
+                nodeTagDao.deleteByNodes(context, listOf(record.nodeId))
+            }
             agentDao.deleteAgentByWorkspaceIdGlobal(dslContext, workspaceName)
         }
         return true
