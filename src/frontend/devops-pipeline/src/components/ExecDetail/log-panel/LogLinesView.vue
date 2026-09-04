@@ -1,5 +1,5 @@
 <template>
-    <div class="lp-lines-wrap" :class="{ 'is-empty': !lines.length }">
+    <div class="lp-lines-wrap" :class="{ 'is-empty': !lines.length, 'has-minimap': showMinimap && lines.length }">
         <div
             ref="box"
             class="lp-lines"
@@ -26,6 +26,7 @@
             :lines="lines"
             :viewport="viewport"
             @jump="$emit('jump', $event)"
+            @pan="onPan"
         />
     </div>
 </template>
@@ -48,16 +49,36 @@
         },
         data () {
             return {
-                viewport: { top: 0, height: 20 }
+                viewport: { top: 0, height: 100 }
             }
         },
         watch: {
+            lines: {
+                handler () {
+                    this.$nextTick(this.updateViewport)
+                }
+            },
+            wrap () {
+                this.$nextTick(this.updateViewport)
+            },
+            showTime () {
+                this.$nextTick(this.updateViewport)
+            },
             activeIndex (val) {
                 if (val >= 0) this.scrollToIndex(val)
             },
             locateIndex (val) {
                 if (val >= 0) this.scrollToIndex(val)
             }
+        },
+        mounted () {
+            this.$nextTick(() => {
+                this.updateViewport()
+                this.bindObserver()
+            })
+        },
+        beforeDestroy () {
+            this.unbindObserver()
         },
         methods: {
             formatClock,
@@ -78,16 +99,59 @@
                 this.$emit('stick-change', atBottom)
                 this.updateViewport()
             },
+            visibleLineRange () {
+                const el = this.$refs.box
+                const rows = el ? el.querySelectorAll('.lp-line') : []
+                const total = this.lines.length
+                if (!el || !rows.length || !total) return { first: 0, last: 0 }
+                const top = el.getBoundingClientRect().top
+                const bottom = top + el.clientHeight
+                let first = -1
+                let last = -1
+                for (let i = 0; i < rows.length; i++) {
+                    const rect = rows[i].getBoundingClientRect()
+                    if (rect.bottom > top && rect.top < bottom) {
+                        if (first < 0) first = i
+                        last = i
+                    } else if (first >= 0 && rect.top >= bottom) {
+                        break
+                    }
+                }
+                if (first < 0) return { first: 0, last: 0 }
+                return { first, last }
+            },
             updateViewport () {
                 const el = this.$refs.box
                 const total = Math.max(this.lines.length, 1)
                 if (!el) return
-                const ratio = el.scrollHeight ? el.scrollTop / el.scrollHeight : 0
-                const vis = el.scrollHeight ? el.clientHeight / el.scrollHeight : 1
-                this.viewport = {
-                    top: ratio * 100,
-                    height: Math.max(vis * 100, 100 / total)
+                if (el.scrollHeight <= el.clientHeight + 1) {
+                    this.viewport = { top: 0, height: 100 }
+                    return
                 }
+                const { first, last } = this.visibleLineRange()
+                const span = Math.max(last - first + 1, 1)
+                this.viewport = {
+                    top: (first / total) * 100,
+                    height: Math.max((span / total) * 100, 100 / total)
+                }
+            },
+            onPan (ratio) {
+                const el = this.$refs.box
+                if (!el) return
+                const max = Math.max(el.scrollHeight - el.clientHeight, 0)
+                el.scrollTop = ratio * max
+                this.updateViewport()
+            },
+            bindObserver () {
+                const el = this.$refs.box
+                if (!el || typeof ResizeObserver === 'undefined') return
+                this.unbindObserver()
+                this._ro = new ResizeObserver(() => this.updateViewport())
+                this._ro.observe(el)
+            },
+            unbindObserver () {
+                if (this._ro) this._ro.disconnect()
+                this._ro = null
             },
             scrollToBottom () {
                 const el = this.$refs.box
@@ -108,6 +172,14 @@
     flex: 1;
     min-height: 0;
     background: #2c2d34;
+}
+.lp-lines-wrap.has-minimap .lp-lines {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.lp-lines-wrap.has-minimap .lp-lines::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 .lp-lines {
     flex: 1;
