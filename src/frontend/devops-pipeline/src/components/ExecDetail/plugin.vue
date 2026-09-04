@@ -82,16 +82,10 @@
                 class="plugin-config-hd"
                 slot="header"
             >
-                <img
-                    v-if="currentElement.logoUrl"
-                    class="plugin-config-logo"
-                    :src="currentElement.logoUrl"
-                    alt=""
-                >
-                <span
+                <p
                     class="plugin-config-name"
                     :title="currentElement.name"
-                >{{ currentElement.name }}</span>
+                >{{ currentElement.name }}</p>
                 <span
                     class="plugin-config-ro"
                     :title="$t('logPanel.readonly')"
@@ -402,42 +396,39 @@
     }
     ::v-deep .reference-var {
         padding: 0;
+        font-size: 14px;
+        line-height: 36px;
     }
     .plugin-config-hd {
+        font-size: 14px;
+        font-weight: normal;
         display: flex;
         align-items: center;
-        gap: 8px;
+        height: 60px;
         width: calc(100% - 30px);
         min-width: 0;
-    }
-    .plugin-config-logo {
-        flex-shrink: 0;
-        width: 18px;
-        height: 18px;
-        border-radius: 2px;
-        object-fit: contain;
     }
     .plugin-config-name {
         flex: 1;
         min-width: 0;
+        max-width: 450px;
+        margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 16px;
-        color: #313238;
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 36px;
     }
     .plugin-config-ro {
         flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        height: 20px;
-        padding: 0 6px;
-        border-radius: 2px;
-        background: #f0f1f5;
+        margin-left: 12px;
+        font-size: 14px;
+        line-height: 36px;
         color: #63656e;
-        font-size: 12px;
-        line-height: 20px;
     }
     .plugin-config-ref {
         margin-left: auto;
