@@ -5,7 +5,7 @@
         </span> -->
         <section
             v-bk-clickoutside="closeLog"
-            :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']"
+            :class="[currentTab && currentTab !== 'log' ? 'white-theme' : 'black-theme over-hidden', 'log-main']"
         >
             <header class="log-head">
                 <span class="log-title"><status-icon

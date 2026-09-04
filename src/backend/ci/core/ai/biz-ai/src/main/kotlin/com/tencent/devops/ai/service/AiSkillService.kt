@@ -84,6 +84,63 @@ class AiSkillService @Autowired constructor(
         return toInfo(record)
     }
 
+    fun listAllForOp(): List<AiSkillInfo> {
+        return dao.listAll(dslContext).map { toInfo(it) }
+    }
+
+    fun createSystem(request: AiSkillCreate): AiSkillInfo {
+        val id = UUIDUtil.generate()
+        dao.create(
+            dslContext = dslContext,
+            id = id,
+            scope = SCOPE_SYSTEM,
+            userId = null,
+            skillName = request.skillName,
+            description = request.description,
+            skillContent = request.skillContent,
+            resources = request.resources,
+            bindAgent = request.bindAgent,
+            enabled = request.enabled
+        )
+        val record = dao.getById(dslContext, id)
+            ?: throw ErrorCodeException(
+                errorCode = AiMessageCode.CREATE_SKILL_FAILED,
+                defaultMessage = "Failed to create skill"
+            )
+        return toInfo(record)
+    }
+
+    fun updateForOp(skillId: String, request: AiSkillUpdate): Boolean {
+        dao.getById(dslContext, skillId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.SKILL_NOT_FOUND,
+                defaultMessage = "Skill not found",
+                params = arrayOf(skillId)
+            )
+        return dao.update(
+            dslContext = dslContext,
+            id = skillId,
+            skillName = request.skillName,
+            description = request.description,
+            skillContent = request.skillContent,
+            resources = request.resources,
+            bindAgent = request.bindAgent,
+            enabled = request.enabled
+        ) > 0
+    }
+
+    fun deleteForOp(skillId: String): Boolean {
+        dao.getById(dslContext, skillId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.SKILL_NOT_FOUND,
+                defaultMessage = "Skill not found",
+                params = arrayOf(skillId)
+            )
+        return dao.delete(dslContext, skillId) > 0
+    }
+
     fun listForUser(userId: String): List<AiSkillInfo> {
         val merged = getMergedSkills(userId)
         logger.info(

@@ -515,6 +515,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun diff(userId: String, englishName: String): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val approvalStatus = ProjectApproveStatus.parse(record.approvalStatus)
+        if (approvalStatus.isCreatePending() && record.creator != userId) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_PROJECT,
+                params = arrayOf(englishName),
+                defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+            )
+        }
+        if (approvalStatus.isSuccess()) {
+            val verify = validatePermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.VIEW
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.VIEW} validatePermission fail")
+                throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            }
+        }
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
         val beforeProductName = if (record.productId != null) {

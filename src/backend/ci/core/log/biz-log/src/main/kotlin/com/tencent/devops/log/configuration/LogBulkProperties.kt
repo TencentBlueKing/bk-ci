@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * 日志 ES bulk 聚合写配置（#13327）。
+ * 日志 ES bulk 聚合写配置。
  *
  * 影响范围：[com.tencent.devops.log.service.LogBulkAggregator]、
  * [com.tencent.devops.log.service.impl.LogServiceESImpl] 的 origin 直写路径。
@@ -88,4 +88,16 @@ class LogBulkProperties {
      */
     @Value("\${log.bulk.maxPendingBatches:2000}")
     var maxPendingBatches: Int = 2000
+
+    /**
+     * 执行 ES bulk 的 flush 线程池大小。
+     *
+     * 单 Pod flush 能力 = flushPoolSize / 单次 bulk 耗时；
+     * flush 触发频率 ≈ ES 集群数 × 1000 / [maxWaitMs]。
+     * 两者接近时 flush 队列开始堆积，表现为 offer 等待 [writeTimeoutMs] 超时后降级，
+     * 而 ES 自身耗时仍然正常——即熔断的 slowMs 不会触发。
+     * 用 log_bulk_flush_queue_size 与 log_es_bulk P99 判断是否需要调大。
+     */
+    @Value("\${log.bulk.flushPoolSize:4}")
+    var flushPoolSize: Int = 4
 }

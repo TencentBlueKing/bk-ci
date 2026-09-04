@@ -83,19 +83,26 @@ class UserAuthHandoverResourceImpl(
     }
 
     override fun handleHanoverApplication(userId: String, request: HandoverOverviewUpdateReq): Result<Boolean> {
+        val requestWithOperator = request.copy(operator = userId)
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
-            projectCode = request.projectCode,
+            projectCode = requestWithOperator.projectCode,
             operateChannel = OperateChannel.PERSONAL,
-            targetMemberId = request.operator
+            targetMemberId = requestWithOperator.operator
         )
-        return Result(permissionManageFacadeService.handleHanoverApplication(request = request))
+        return Result(
+            permissionManageFacadeService.handleHanoverApplication(request = requestWithOperator)
+        )
     }
 
     override fun batchHandleHanoverApplications(
         userId: String,
         request: HandoverOverviewBatchUpdateReq
     ): Result<Boolean> {
-        return Result(permissionManageFacadeService.batchHandleHanoverApplications(request = request))
+        return Result(
+            permissionManageFacadeService.batchHandleHanoverApplications(
+                request = request.copy(operator = userId)
+            )
+        )
     }
 }
