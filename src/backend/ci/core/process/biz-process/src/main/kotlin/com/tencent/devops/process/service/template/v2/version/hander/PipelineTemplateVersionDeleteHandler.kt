@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
@@ -50,7 +49,6 @@ import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVe
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -68,12 +66,10 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val versionDeletePostProcessor: PTemplateVersionDeletePostProcessor,
     private val templatePipelineDao: TemplatePipelineDao,
     private val dslContext: DSLContext,
-    private val client: Client,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val publicVarGroupReferManageService: PublicVarGroupReferManageService
-
 ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
@@ -121,9 +117,13 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
         if (latestReleasedResource.version == version) {
             throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_CAN_NOT_DELETE)
         }
-        val marketTemplateStatus = client.get(ServiceTemplateResource::class).getMarketTemplateStatus(templateId).data!!
-        // 上架研发商店不允许删除
-        if (marketTemplateStatus == TemplateStatusEnum.RELEASED) {
+        val versionResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        // 仅该版本已上架研发商店时不允许删除，模板整体上架不拦截未上架版本
+        if (versionResource.storeStatus == TemplateStatusEnum.RELEASED) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
             )
