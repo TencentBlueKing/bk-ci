@@ -152,4 +152,18 @@ class ScriptTaskTest {
         val result = decode(listOf("::set-output name=::value"))
         Assertions.assertEquals(emptyMap<String, String>(), result)
     }
+
+    @Test
+    fun decodeMultipleLinesSkipInvalidKeyTest() {
+        /*含 - 的非法 key 被忽略，且回调收到该 key*/
+        val invalidKeys = mutableListOf<String>()
+        val result = ScriptTask.decodeMultipleLines(
+            lines = listOf("::set-output name=my-key::value"),
+            jobId = jobId,
+            stepId = stepId,
+            onInvalidKey = { invalidKeys.add(it) }
+        )
+        Assertions.assertEquals(emptyMap<String, String>(), result)
+        Assertions.assertEquals(listOf("my-key"), invalidKeys)
+    }
 }

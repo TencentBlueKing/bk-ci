@@ -174,6 +174,8 @@ object WorkerMessageCode {
     const val BK_VARIABLE_PARAM_MAX_LENGTH = "bkVariableParamMaxLength"
     // 内联多行块未闭合：变量 [{0}] 的块起始于第 {1} 行
     const val BK_MULTILINE_BLOCK_UNTERMINATED = "bkMultilineBlockUnterminated"
+    // [format_multiple_lines] 输出变量 [{0}] 不合法或缺少 :: 分隔符，该条输出将被忽略
+    const val BK_MULTILINE_OUTPUT_KEY_INVALID = "bkMultilineOutputKeyInvalid"
     // [set-error error_code={0}]格式错误，将被忽略。要求：错误码以 8 开头、6位数字。
     const val BK_USER_SET_ERROR_FAILED = "bkUserSetErrorFailed"
     const val BK_PROGRESS_RATE_EMPTY_PAYLOAD = "bkProgressRateEmptyPayload"

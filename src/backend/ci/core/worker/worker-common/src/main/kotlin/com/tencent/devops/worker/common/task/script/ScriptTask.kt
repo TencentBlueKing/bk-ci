@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_OUTPUT_KEY_INVALID
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_USER_SET_ERROR_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_VARIABLE_PARAM_MAX_LENGTH
@@ -182,13 +183,20 @@ open class ScriptTask : ITask() {
             val multiLineContext = decodeMultipleLines(
                 lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
                 jobId = buildVariables.jobId,
-                stepId = buildTask.stepId
+                stepId = buildTask.stepId,
+                onInvalidKey = { key ->
+                    LoggerService.addWarnLine(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_MULTILINE_OUTPUT_KEY_INVALID,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf(key)
+                        )
+                    )
+                }
             )
-            // 避免 && 短路导致后面 map 的超长告警不被打印
-            val envsCheck = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
-            val contextCheck = failIfVariableInvalidCheck(failIfVariableInvalid, context)
-            val multiLineCheck = failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
-            failIfVariableInvalidCheckFlag = envsCheck && contextCheck && multiLineCheck
+            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
             addEnv(envs)
             addEnv(context)
             addEnv(multiLineContext)
@@ -305,11 +313,13 @@ open class ScriptTask : ITask() {
         /**
          * 解码 format_multiple_lines 写入的多行输出内容
          * 格式: ::set-output name=KEY::VALUE (VALUE 中换行/回车/百分号经 URL 编码)
+         * 变量名不合法或缺少 :: 分隔符的行被忽略，并通过 onInvalidKey 回调（截断至 100 字符）
          */
         fun decodeMultipleLines(
             lines: List<String>,
             jobId: String?,
-            stepId: String?
+            stepId: String?,
+            onInvalidKey: ((String) -> Unit)? = null
         ): Map<String, String> {
             if (lines.isEmpty() || jobId.isNullOrBlank() || stepId.isNullOrBlank()) return emptyMap()
             val prefixOutput = "::set-output name="
@@ -318,9 +328,11 @@ open class ScriptTask : ITask() {
                 if (!line.startsWith(prefixOutput)) continue
                 val value = line.removePrefix(prefixOutput)
                 val firstColonIndex = value.indexOf("::")
-                if (firstColonIndex < 0) continue
-                val key = value.substring(0, firstColonIndex)
-                if (key.isBlank() || !key.matches(outputKeyRegex)) continue
+                val key = if (firstColonIndex >= 0) value.substring(0, firstColonIndex) else value
+                if (firstColonIndex < 0 || key.isBlank() || !key.matches(outputKeyRegex)) {
+                    onInvalidKey?.invoke(key.take(100))
+                    continue
+                }
                 /*
                  * 解码顺序必须与编码逆序：
                  * 编码: % → %25(先)  \n → %0A  \r → %0D(后)
