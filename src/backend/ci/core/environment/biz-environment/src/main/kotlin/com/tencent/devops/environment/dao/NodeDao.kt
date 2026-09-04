@@ -388,6 +388,23 @@ class NodeDao {
         }
     }
 
+    /**
+     * 查询节点的类型，返回 nodeId -> nodeType
+     */
+    fun fetchNodeWithType(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, String> {
+        if (nodeIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetch()
+                .associate { it[NODE_ID] to it[NODE_TYPE] }
+        }
+    }
+
     fun listNodesByIdListWithPageLimit(
         dslContext: DSLContext,
         projectId: String,
