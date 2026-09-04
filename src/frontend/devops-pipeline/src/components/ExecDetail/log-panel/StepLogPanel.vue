@@ -4,10 +4,14 @@
             :visible="true"
             :selected-levels="selectedLevels"
             :keyword="keyword"
+            :hit-index="hitIndex"
+            :hit-count="hitCount"
             :show-time="showTime"
             :wrap="wrap"
             @update:selectedLevels="onLevels"
-            @update:keyword="keyword = $event"
+            @update:keyword="onKeyword"
+            @prev="prevHit"
+            @next="nextHit"
             @toggle-time="showTime = !showTime"
             @toggle-wrap="wrap = !wrap"
             @download="downloadLog"
@@ -50,6 +54,7 @@
             :wrap="wrap"
             :empty-text="emptyText"
             :locate-index="locateIndex"
+            :active-index="activeIndex"
             @reach-top="loadBefore"
             @stick-change="onStick"
         />
@@ -94,6 +99,7 @@
                 cleaned: false,
                 loading: false,
                 stickBottom: true,
+                hitIndex: 0,
                 pollId: null,
                 progressExpanded: false,
                 progressPercent: null,
@@ -109,9 +115,25 @@
                 })
             },
             displayLines () {
-                if (!this.keyword) return this.logs
-                const kw = this.keyword.toLowerCase()
-                return this.logs.filter(l => (l.message || '').toLowerCase().includes(kw))
+                return this.logs
+            },
+            hitIndexes () {
+                const kw = (this.keyword || '').trim().toLowerCase()
+                if (!kw) return []
+                return this.logs
+                    .map((l, i) => ((l.message || '').toLowerCase().includes(kw) ? i : -1))
+                    .filter(i => i >= 0)
+            },
+            hitCount () {
+                return this.hitIndexes.length
+            },
+            activeIndex () {
+                return this.hitCount ? this.hitIndexes[this.hitIndex] : -1
+            },
+            queryLevels () {
+                const sel = this.selectedLevels || []
+                if (sel.length === 1 && sel[0] === 'ALL') return 'INFO,WARN,ERROR,DEBUG'
+                return sel.join(',')
             },
             emptyText () {
                 if (this.cleaned) return '构建日志已超过保留期，已被清理，无法查看。'
@@ -127,7 +149,7 @@
                     jobId: this.jobId || undefined,
                     subTag: this.subTag || undefined,
                     executeCount: this.currentExecute,
-                    levels: this.selectedLevels.join(',')
+                    levels: this.queryLevels
                 }
             }
         },
@@ -150,7 +172,20 @@
             ]),
             onLevels (levels) {
                 this.selectedLevels = levels
+                this.hitIndex = 0
                 this.reload()
+            },
+            onKeyword (val) {
+                this.keyword = val
+                this.hitIndex = 0
+            },
+            prevHit () {
+                if (!this.hitCount) return
+                this.hitIndex = (this.hitIndex - 1 + this.hitCount) % this.hitCount
+            },
+            nextHit () {
+                if (!this.hitCount) return
+                this.hitIndex = (this.hitIndex + 1) % this.hitCount
             },
             onExecute (n) {
                 this.currentExecute = n
@@ -313,7 +348,7 @@
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-    background: #1e1e1e;
+    background: #2c2d34;
 }
 .lp-subtags {
     display: flex;

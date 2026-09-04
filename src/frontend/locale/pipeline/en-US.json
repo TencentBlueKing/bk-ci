@@ -153,10 +153,13 @@
   "downloadLog": "Download Log",
   "logPanel": {
     "search": "Search logs",
+    "searchShort": "Search",
     "showTime": "Show time",
     "hideTime": "Hide time",
+    "showTimeTip": "Show time",
     "wrap": "Wrap",
-    "unwrap": "No wrap"
+    "unwrap": "No wrap",
+    "wrapTip": "Wrap lines"
   },
   "hideDebugLog": "Hide Debug Log",
   "showDebugLog": "Show Debug Log",

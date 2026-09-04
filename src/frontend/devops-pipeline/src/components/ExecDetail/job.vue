@@ -26,7 +26,7 @@
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
             <error-summary
-                v-if="activeErorr && currentTab === 'log'"
+                v-if="activeErorr && currentTab === 'log' && useLegacyLog"
                 :error="activeErorr"
             ></error-summary>
             <template v-if="currentTab === 'log'">

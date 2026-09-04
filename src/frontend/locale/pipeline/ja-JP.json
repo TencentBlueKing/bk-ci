@@ -153,10 +153,13 @@
   "downloadLog": "ログをダウンロード",
   "logPanel": {
     "search": "ログを検索",
+    "searchShort": "検索",
     "showTime": "時刻を表示",
     "hideTime": "時刻を隠す",
+    "showTimeTip": "時刻を表示",
     "wrap": "折り返し",
-    "unwrap": "折り返さない"
+    "unwrap": "折り返さない",
+    "wrapTip": "自動折り返し"
   },
   "hideDebugLog": "デバッグログを非表示",
   "showDebugLog": "デバッグログを表示",

@@ -145,7 +145,7 @@
     width: 220px;
     flex: none;
     overflow: auto;
-    background: #252833;
+    background: #242a36;
     border-right: 1px solid #3a3c45;
 }
 .job-dir-item {

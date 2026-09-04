@@ -153,10 +153,13 @@
   "downloadLog": "下载日志",
   "logPanel": {
     "search": "搜索日志",
+    "searchShort": "搜索",
     "showTime": "展示时间",
     "hideTime": "隐藏时间",
+    "showTimeTip": "显示时间",
     "wrap": "换行",
-    "unwrap": "不换行"
+    "unwrap": "不换行",
+    "wrapTip": "自动换行"
   },
   "hideDebugLog": "隐藏调试日志",
   "showDebugLog": "展示调试日志",

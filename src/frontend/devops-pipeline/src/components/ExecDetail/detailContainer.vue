@@ -66,7 +66,7 @@
             background: #2e3342;
             &.active {
                 color: #fff;
-                background: #1a6df3;
+                background: #3a84ff;
             }
             &:first-child {
                 border-radius: 3px 0 0 3px;
@@ -117,15 +117,15 @@
                 min-height: 0;
             }
             .log-head {
-                background-color: #2E2E2E;
-                line-height: 48px;
-                padding: 5px 20px;
-                border-bottom: 1px solid;
-                border-bottom-color: #2b2b2b;
+                background-color: #242a36;
+                height: 60px;
+                line-height: 60px;
+                padding: 0 16px;
+                border-bottom: none;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                color: #d4d4d4;
+                color: #f0f1f5;
                 position: relative;
                 flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
@@ -139,7 +139,7 @@
                 }
             }
             &.black-theme {
-                background: #1A1A1A;
+                background: #2c2d34;
                 .log-content {
                     display: flex;
                     overflow: hidden;
