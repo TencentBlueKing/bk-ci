@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -95,6 +96,7 @@ import org.json.JSONObject
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = TapdWebHookTriggerElement::class, name = TapdWebHookTriggerElement.classType),
+    JsonSubTypes.Type(value = ArtifactTriggerElement::class, name = ArtifactTriggerElement.classType),
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmGitWebHookTriggerElement::class, name = CodeScmGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmSvnWebHookTriggerElement::class, name = CodeScmSvnWebHookTriggerElement.classType),

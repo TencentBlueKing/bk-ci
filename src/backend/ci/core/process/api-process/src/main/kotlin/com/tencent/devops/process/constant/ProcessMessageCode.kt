@@ -548,6 +548,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
+    const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
+    const val ERROR_ARTIFACT_TRIGGER_PARAM_INVALID = "2101504" // 插件[{0}]的字段[{1}]不能为空或者无法解析
+    const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_PIPELINE = "bkArtifactTriggerFieldWatchPipeline" // 监听流水线
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_ROOT_PATH = "bkArtifactTriggerFieldWatchRootPath" // 监听根路径
+    const val BK_ARTIFACT_TRIGGER_FIELD_IMAGE = "bkArtifactTriggerFieldImage" // 镜像名
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -795,6 +801,7 @@ object ProcessMessageCode {
     const val BK_MANUALLY_SKIPPED = "bkManuallySkipped" // 被手动跳过 Manually skipped
     const val BK_EVENT = "bkEvent" // {0}事件
     const val BK_WAREHOUSE_EVENTS = "bkWarehouseEvents" // 仓库事件
+    const val BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS = "BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS" // webhook事件
     const val BK_VM_START_ALREADY = "bkVmStartAlready" // 重复启动构建机/VM Start already:
     const val BK_CONTINUE_WHEN_ERROR = "bkContinueWhenError" // 失败自动跳过/continue when error
     const val BK_MUTEX_WAITING = "bkMutexWaiting" // 互斥中(Mutex waiting)

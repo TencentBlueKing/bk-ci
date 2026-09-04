@@ -1,0 +1,41 @@
+version: v3.0
+name: combo-multi-trigger-test
+on:
+  - manual: enabled
+    remote: enabled
+  - repo-name: aliasName/xxx
+    type: git
+    push:
+      branches:
+        - master
+  - type: tapd
+    workspace-id: "12345"
+    story:
+      id: trigger_story
+      action:
+        - create
+  - type: artifact
+    arrived:
+      name: MSI 归档触发
+      repository: pipeline
+      artifacts-name:
+        - "*.msi"
+  - type: artifact
+    arrived:
+      name: 镜像到达触发
+      repository: image
+      image: bk-ci/backend
+      tags:
+        - "v*"
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"
