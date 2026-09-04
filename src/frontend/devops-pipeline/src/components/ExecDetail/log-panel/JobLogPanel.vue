@@ -161,10 +161,12 @@
     font-size: 12px;
     text-align: left;
     cursor: pointer;
+    &:hover { background: #2f3138; }
     &.active { background: #3a84ff; color: #fff; }
     &.sep { cursor: default; color: #63656e; font-size: 12px; }
     .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cost { color: #979ba5; font-size: 12px; }
+    &.active .cost { color: rgba(255, 255, 255, 0.8); }
     .status-dot {
         width: 6px;
         height: 6px;

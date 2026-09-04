@@ -349,11 +349,12 @@
         min-width: 0;
     }
     .plugin-config-name {
+        flex: 1;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 14px;
+        font-size: 16px;
         color: #313238;
     }
     .plugin-config-ro {
@@ -371,6 +372,14 @@
     }
     .plugin-config-ref {
         margin-left: auto;
+    }
+    .lp-output-tab,
+    ::v-deep .detail-artifactory-home,
+    ::v-deep .detail-report-home {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        background: #fff;
     }
 </style>
 <style lang="scss">

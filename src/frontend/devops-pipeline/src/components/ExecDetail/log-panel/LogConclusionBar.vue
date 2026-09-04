@@ -1,68 +1,130 @@
 <template>
-    <div class="lp-status" :class="`is-${conclusion.tone}`">
-        <div class="lp-status-row">
-            <div v-if="executeCount > 1" class="lp-exec-wrap">
-                <button type="button" class="lp-exec-trigger" @click.stop="execOpen = !execOpen">
-                    <span>第 {{ currentExecute }} 次执行</span>
-                    <i class="devops-icon icon-angle-down"></i>
-                </button>
-                <ul v-if="execOpen" class="lp-exec-menu">
-                    <li
-                        v-for="n in executeCount"
-                        :key="n"
-                        :class="{ active: n === currentExecute }"
-                        @click.stop="pickExecute(n)"
-                    >第 {{ n }} 次执行</li>
-                </ul>
-            </div>
-            <strong class="lp-label">{{ conclusion.label }}</strong>
-            <span v-if="conclusion.elapsed" class="lp-meta">耗时 {{ conclusion.elapsed }}</span>
-            <template v-if="conclusion.node">
-                <span class="lp-vdiv"></span>
-                <span class="lp-meta">
-                    运行节点
-                    <a
-                        v-if="conclusion.nodeLink"
-                        class="lp-node-link"
-                        :href="conclusion.nodeLink"
-                        target="_blank"
-                        rel="noopener"
-                        @click.stop
-                    >{{ conclusion.node }}</a>
-                    <template v-else>{{ conclusion.node }}</template>
-                    <span v-if="conclusion.nodeIp" class="lp-node-ip">（{{ conclusion.nodeIp }}）</span>
-                </span>
-            </template>
-            <template v-if="progress != null">
-                <span class="lp-progress">
-                    <span class="lp-track"><i :style="{ width: progress + '%' }"></i></span>
-                    <em>{{ progress }}%</em>
+    <div class="lp-status" :class="[`is-${conclusion.tone}`, { 'is-exec-open': execOpen }]">
+        <div
+            class="lp-status-row"
+            :class="{ 'is-expandable': canToggleExpand }"
+            @click="onRowClick"
+        >
+            <div class="lp-status-body">
+                <div v-if="executeCount > 1" ref="execWrap" class="lp-exec-wrap">
                     <button
-                        v-if="hasSubtasks"
                         type="button"
-                        class="lp-expand"
-                        @click.stop="$emit('toggle-progress')"
-                    >{{ progressExpanded ? '收起' : '展开' }}</button>
+                        class="lp-exec-trigger"
+                        :aria-expanded="execOpen"
+                        @click.stop="execOpen = !execOpen"
+                    >
+                        <span>第 {{ currentExecute }} 次执行</span>
+                        <i class="devops-icon icon-angle-down lp-exec-arrow"></i>
+                    </button>
+                    <ul v-if="execOpen" class="lp-exec-menu">
+                        <li
+                            v-for="n in executeCount"
+                            :key="n"
+                            class="lp-exec-option"
+                            :class="{ active: n === currentExecute }"
+                            @click.stop="pickExecute(n)"
+                        >第 {{ n }} 次执行</li>
+                    </ul>
+                </div>
+                <strong class="lp-status-label">{{ conclusion.label }}</strong>
+                <span v-if="conclusion.elapsed" class="lp-meta">耗时 {{ conclusion.elapsed }}</span>
+                <template v-if="conclusion.node">
+                    <span class="lp-vdiv"></span>
+                    <span class="lp-meta">
+                        运行节点
+                        <a
+                            v-if="conclusion.nodeLink"
+                            class="lp-node-link"
+                            :href="conclusion.nodeLink"
+                            target="_blank"
+                            rel="noopener"
+                            @click.stop
+                        >{{ conclusion.node }}</a>
+                        <template v-else>{{ conclusion.node }}</template>
+                        <span v-if="conclusion.nodeIp" class="lp-node-ip">（{{ conclusion.nodeIp }}）</span>
+                    </span>
+                </template>
+                <template v-if="progress != null">
+                    <span class="lp-progress">
+                        <span class="lp-progress-track">
+                            <i class="lp-progress-fill" :style="{ width: progress + '%' }"></i>
+                        </span>
+                        <em>{{ progress }}%</em>
+                        <button
+                            v-if="hasSubtasks"
+                            type="button"
+                            class="lp-expand"
+                            @click.stop="$emit('toggle-progress')"
+                        >
+                            <i
+                                class="devops-icon icon-angle-right"
+                                :class="{ 'is-open': progressExpanded }"
+                            ></i>
+                        </button>
+                    </span>
+                </template>
+                <template v-if="conclusion.message && !conclusion.errorCode && !conclusion.locateLog">
+                    <span class="lp-vdiv"></span>
+                    <span class="lp-msg">{{ conclusion.message }}</span>
+                </template>
+                <span v-if="conclusion.errorCode || conclusion.locateLog" class="lp-error-detail">
+                    <span v-if="conclusion.errorCode" class="lp-code">{{ conclusion.errorCode }}</span>
+                    <span v-if="conclusion.message" class="lp-msg">{{ conclusion.message }}</span>
+                    <button
+                        v-if="conclusion.locateLog"
+                        type="button"
+                        class="lp-link"
+                        @click="$emit('locate-log')"
+                    >定位日志</button>
+                    <button
+                        v-if="conclusion.askAssistant"
+                        type="button"
+                        class="lp-link"
+                        @click="$emit('ask-assistant')"
+                    >问助手</button>
                 </span>
-            </template>
-            <span v-if="conclusion.message && !conclusion.locateLog" class="lp-msg">{{ conclusion.message }}</span>
-            <span v-if="conclusion.locateLog" class="lp-error-detail">
-                <span v-if="conclusion.errorCode" class="lp-code">{{ conclusion.errorCode }}</span>
-                <span v-if="conclusion.message" class="lp-msg">{{ conclusion.message }}</span>
-                <button type="button" class="lp-link-btn" @click="$emit('locate-log')">定位日志</button>
-            </span>
-            <button
-                v-if="conclusion.askAssistant"
-                type="button"
-                class="lp-link-btn"
-                @click="$emit('ask-assistant')"
-            >问助手</button>
-            <button
-                v-if="conclusion.handleAction"
-                type="button"
-                class="lp-link-btn"
-                @click="$emit('handle')"
-            >{{ conclusion.handleAction }}</button>
+                <button
+                    v-else-if="conclusion.askAssistant"
+                    type="button"
+                    class="lp-link"
+                    @click="$emit('ask-assistant')"
+                >问助手</button>
+                <bk-button
+                    v-if="conclusion.handleAction"
+                    size="small"
+                    :theme="conclusion.tone === 'pause' || conclusion.tone === 'waiting' ? 'warning' : 'primary'"
+                    class="lp-handle"
+                    @click="$emit('handle')"
+                >{{ conclusion.handleAction }}</bk-button>
+            </div>
+            <div class="lp-status-actions">
+                <span v-if="conclusion.canRetry || conclusion.canSkip" class="lp-ops">
+                    <bk-button
+                        v-if="conclusion.canRetry"
+                        size="small"
+                        outline
+                        class="lp-ops-btn"
+                        @click="$emit('retry')"
+                    >重试</bk-button>
+                    <bk-button
+                        v-if="conclusion.canSkip"
+                        size="small"
+                        outline
+                        class="lp-ops-btn"
+                        @click="$emit('skip')"
+                    >跳过</bk-button>
+                </span>
+            </div>
+        </div>
+        <div v-if="progressExpanded && displaySubtasks.length" class="lp-subtasks">
+            <div v-for="(row, i) in displaySubtasks" :key="i" class="lp-subtask">
+                <span class="lp-subtask-main">
+                    <span>{{ row.name }}</span>
+                </span>
+                <span class="lp-subtask-aside">
+                    <span class="lp-subtask-elapsed">{{ row.timeText }}</span>
+                </span>
+            </div>
         </div>
         <slot></slot>
     </div>
@@ -76,10 +138,19 @@
             currentExecute: { type: Number, default: 1 },
             progress: { type: Number, default: null },
             hasSubtasks: { type: Boolean, default: false },
-            progressExpanded: { type: Boolean, default: false }
+            progressExpanded: { type: Boolean, default: false },
+            subtasks: { type: Array, default: () => [] }
         },
         data () {
             return { execOpen: false }
+        },
+        computed: {
+            canToggleExpand () {
+                return this.hasSubtasks
+            },
+            displaySubtasks () {
+                return this.subtasks || []
+            }
         },
         mounted () {
             document.addEventListener('click', this.onDocClick, true)
@@ -92,9 +163,15 @@
                 this.execOpen = false
                 if (n !== this.currentExecute) this.$emit('change-execute', n)
             },
+            onRowClick (e) {
+                if (!this.canToggleExpand) return
+                if (e.target.closest && e.target.closest('button, a, .bk-button, .lp-exec-wrap')) return
+                this.$emit('toggle-progress')
+            },
             onDocClick (e) {
                 if (!this.execOpen) return
-                if (this.$el && !this.$el.contains(e.target)) this.execOpen = false
+                const wrap = this.$refs.execWrap
+                if (wrap && !wrap.contains(e.target)) this.execOpen = false
             }
         }
     }
@@ -112,27 +189,54 @@
 .lp-status.is-success { background: #2b3329; }
 .lp-status.is-failed { background: #3d2929; }
 .lp-status.is-canceled,
+.lp-status.is-queue,
 .lp-status.is-pause,
 .lp-status.is-waiting { background: #3b342b; }
+.lp-status.is-idle { background: #242a36; }
+.lp-status.is-exec-open {
+    position: relative;
+    z-index: 6;
+    overflow: visible;
+}
 .lp-status-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    box-sizing: border-box;
+    min-height: 35px;
+    padding: 7px 24px 7px 16px;
+}
+.lp-status-row.is-expandable { cursor: pointer; }
+.lp-status-body {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    min-height: 35px;
-    padding: 7px 24px 7px 16px;
-    box-sizing: border-box;
 }
-.lp-label { font-weight: 700; white-space: nowrap; }
-.is-running .lp-label { color: #699df4; }
-.is-success .lp-label { color: #45e35f; }
-.is-failed .lp-label,
+.lp-status-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    align-self: center;
+    min-height: 20px;
+}
+.lp-status-label { font-weight: 700; white-space: nowrap; }
+.is-running .lp-status-label { color: #699df4; }
+.is-success .lp-status-label { color: #45e35f; }
+.is-failed .lp-status-label,
 .is-failed .lp-msg { color: #f06e6e; }
-.is-canceled .lp-label,
-.is-pause .lp-label,
-.is-waiting .lp-label { color: #f0aa50; }
+.is-canceled .lp-status-label,
+.is-canceled .lp-msg,
+.is-queue .lp-status-label,
+.is-pause .lp-status-label,
+.is-pause .lp-msg,
+.is-waiting .lp-status-label,
+.is-waiting .lp-msg { color: #f0aa50; }
+.is-idle .lp-status-label { color: #83828c; }
 .lp-meta { color: #83828c; white-space: nowrap; }
-.lp-vdiv { width: 1px; height: 12px; background: #4d4f56; flex-shrink: 0; }
 .lp-node-link {
     color: #83828c;
     text-decoration: none;
@@ -140,14 +244,32 @@
     &:hover { color: #699df4; border-bottom-color: #699df4; }
 }
 .lp-node-ip { color: #63656e; }
-.lp-msg { min-width: 0; word-break: break-word; }
-.lp-error-detail {
+.lp-vdiv { width: 1px; height: 12px; background: #4d4f56; flex-shrink: 0; }
+.lp-progress { display: inline-flex; align-items: center; gap: 8px; }
+.lp-progress-track {
+    display: block;
+    width: 120px;
+    height: 4px;
+    background: #4d4f56;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.lp-progress-fill {
+    display: block;
+    height: 4px;
+    background: #3a84ff;
+    border-radius: 2px;
+}
+.lp-progress em { font-style: normal; color: #83828c; }
+.lp-expand {
     display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-width: min(100%, max-content);
-    max-width: 100%;
+    border: none;
+    background: transparent;
+    color: #83828c;
+    cursor: pointer;
+    padding: 0;
+    .devops-icon { display: inline-flex; transform-origin: center; }
+    .is-open { transform: rotate(90deg); }
 }
 .lp-code {
     height: 16px;
@@ -157,26 +279,54 @@
     color: #f06e6e;
     font-size: 10px;
     line-height: 16px;
+    flex-shrink: 0;
 }
-.lp-link-btn, .lp-expand {
-    border: 0;
-    background: none;
+.lp-error-detail {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: min(100%, max-content);
+    max-width: 100%;
+}
+.lp-msg { min-width: 0; white-space: normal; word-break: break-word; }
+.lp-link {
+    border: none;
+    background: transparent;
     color: #699df4;
+    font-size: 12px;
     cursor: pointer;
     padding: 0;
+    white-space: nowrap;
+}
+.lp-ops { display: inline-flex; gap: 8px; }
+.lp-ops ::v-deep button.lp-ops-btn.is-outline {
+    height: 24px;
+    min-height: 24px;
+    min-width: 48px;
+    padding: 0 12px;
     font-size: 12px;
+    line-height: 22px;
+    box-sizing: border-box;
+    background: rgba(107, 71, 71, 0.4);
+    border: 1px solid #979ba5;
+    box-shadow: none;
+    color: #c4c6cc;
 }
-.lp-progress { display: inline-flex; align-items: center; gap: 8px; }
-.lp-track {
-    width: 120px;
-    height: 4px;
-    background: #4d4f56;
-    border-radius: 2px;
-    overflow: hidden;
-    i { display: block; height: 100%; background: #3a84ff; }
+.lp-handle { margin-left: 4px; }
+.is-pause ::v-deep .lp-handle,
+.is-waiting ::v-deep .lp-handle {
+    background-color: #e18732;
+    border-color: #e18732;
+    color: #fff;
 }
-.lp-progress em { font-style: normal; color: #83828c; }
-.lp-exec-wrap { position: relative; width: 112px; height: 24px; flex-shrink: 0; }
+.lp-exec-wrap {
+    position: relative;
+    width: 112px;
+    height: 24px;
+    flex-shrink: 0;
+    z-index: 5;
+}
 .lp-exec-trigger {
     display: inline-flex;
     align-items: center;
@@ -188,14 +338,19 @@
     border-radius: 4px;
     color: #c4c6cc;
     font-size: 12px;
+    line-height: 20px;
+    outline: none;
     cursor: pointer;
     text-align: left;
-    i {
-        position: absolute;
-        right: 8px;
-        color: #979ba5;
-        font-size: 12px;
-    }
+}
+.lp-exec-arrow {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #979ba5;
+    font-size: 12px;
 }
 .lp-exec-menu {
     position: absolute;
@@ -209,14 +364,47 @@
     background: #2c2d34;
     border: 1px solid #4d4f56;
     border-radius: 2px;
-    li {
-        padding: 0 12px;
-        height: 28px;
-        line-height: 28px;
-        color: #c4c6cc;
-        cursor: pointer;
-        &:hover { background: #3a3f4b; color: #fff; }
-        &.active { color: #3a84ff; }
-    }
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.lp-exec-option {
+    padding: 0 12px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+    color: #c4c6cc;
+    cursor: pointer;
+    white-space: nowrap;
+    &:hover { background: #3a3f4b; color: #fff; }
+    &.active { color: #3a84ff; }
+}
+.lp-subtasks {
+    background: #21242c;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 64px;
+}
+.lp-status.is-waiting .lp-subtasks,
+.lp-status.is-pause .lp-subtasks,
+.lp-status.is-queue .lp-subtasks,
+.lp-status.is-canceled .lp-subtasks {
+    background: #2b2722;
+}
+.lp-subtask {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 20px;
+}
+.lp-subtask-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #f0f1f5;
+}
+.lp-subtask-aside { flex-shrink: 0; }
+.lp-subtask-elapsed {
+    color: #c4c6cc;
+    font-variant-numeric: tabular-nums;
 }
 </style>

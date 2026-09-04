@@ -15,16 +15,22 @@
                 class="lp-select-menu"
                 :style="levelMenuStyle"
             >
-                <li
-                    v-for="(opt, idx) in levelOptions"
-                    :key="opt.value"
-                    class="lp-select-option"
-                    :class="{ 'is-active': isLevelActive(opt), 'is-sep': idx === 1 }"
-                    @mousedown.prevent="toggleLevelValue(opt)"
-                >
-                    <span class="lp-select-check">{{ isLevelActive(opt) ? '✓' : '' }}</span>
-                    {{ opt.label }}
-                </li>
+                <template v-for="(opt, idx) in levelOptions">
+                    <li
+                        v-if="idx === 1"
+                        :key="'sep-' + opt.value"
+                        class="lp-select-sep"
+                    ></li>
+                    <li
+                        :key="opt.value"
+                        class="lp-select-option"
+                        :class="{ 'is-active': isLevelActive(opt) }"
+                        @mousedown.prevent="toggleLevelValue(opt)"
+                    >
+                        <span class="lp-select-check">{{ isLevelActive(opt) ? '✓' : '' }}</span>
+                        {{ opt.label }}
+                    </li>
+                </template>
             </ul>
         </div>
         <div class="lp-search">
@@ -118,7 +124,7 @@
             levelLabel () {
                 if (this.isAll) return 'ALL'
                 const sel = this.selectedLevels || []
-                if (!sel.length) return 'ALL'
+                if (!sel.length) return '无'
                 return ['INFO', 'WARN', 'ERROR', 'DEBUG'].filter(v => sel.includes(v)).join(',')
             }
         },
@@ -273,6 +279,14 @@
     font-size: 12px;
     line-height: 20px;
 }
+.lp-select-sep {
+    height: 1px;
+    margin: 4px 8px;
+    padding: 0;
+    background: #4d4f56;
+    list-style: none;
+    pointer-events: none;
+}
 .lp-select-option {
     display: flex;
     align-items: center;
@@ -280,11 +294,6 @@
     padding: 4px 12px 4px 8px;
     cursor: pointer;
     white-space: nowrap;
-    &.is-sep {
-        margin-top: 4px;
-        padding-top: 8px;
-        border-top: 1px solid #4d4f56;
-    }
     &:hover { background: #3a3f4b; }
     &.is-active { color: #3a84ff; }
 }

@@ -80,7 +80,8 @@ function toneOf (status) {
     if (FAIL.includes(status)) return 'failed'
     if (status === 'CANCELED') return 'canceled'
     if (status === 'PAUSE') return 'pause'
-    if (['REVIEWING', 'QUEUE', 'WAITING'].includes(status)) return 'waiting'
+    if (status === 'QUEUE') return 'queue'
+    if (['REVIEWING', 'WAITING', 'DEPENDENT_WAITING'].includes(status)) return 'waiting'
     if (status === 'RUNNING') return 'running'
     return 'idle'
 }
@@ -101,7 +102,8 @@ export function buildConclusion (el, job, ctx = {}) {
         errorCode: el.errorCode || '',
         locateLog: FAIL.includes(status),
         askAssistant: FAIL.includes(status) && ctx.askAssistant,
-        canRetry: FAIL.includes(status) && ctx.canRetry,
+        canRetry: FAIL.includes(status) && ctx.canRetry !== false,
+        canSkip: FAIL.includes(status) && !!ctx.canSkip,
         handleAction: status === 'PAUSE' ? '继续执行' : (status === 'REVIEWING' ? '去处理' : ''),
         emptyText: status === 'UNEXEC' || status === 'SKIP'
             ? '尚未执行，无日志。'

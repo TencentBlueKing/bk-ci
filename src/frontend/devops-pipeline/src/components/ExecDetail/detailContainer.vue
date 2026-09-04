@@ -210,17 +210,18 @@
     }
     .log-home-close-bar {
         cursor: pointer;
-        height: 59px;
-        width: 26px;
+        height: 60px;
+        width: 24px;
         position: absolute;
         right: calc(80vw + 42px);
         top: 16px;
         background: #464953;
-        color: white;
+        color: #c4c6cc;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-top-left-radius: 6px;
-        border-bottom-left-radius: 6px;
+        border-top-left-radius: 2px;
+        border-bottom-left-radius: 2px;
+        &:hover { color: #fff; }
     }
 </style>

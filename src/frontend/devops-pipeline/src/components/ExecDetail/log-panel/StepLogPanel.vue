@@ -24,40 +24,36 @@
             :progress="progressPercent"
             :has-subtasks="!!subtasks.length"
             :progress-expanded="progressExpanded"
+            :subtasks="subtasks"
             @change-execute="onExecute"
             @toggle-progress="progressExpanded = !progressExpanded"
             @locate-log="locateFirstIssue"
             @ask-assistant="$emit('ask-assistant')"
             @handle="$emit('handle')"
-        >
-            <ul v-if="progressExpanded && subtasks.length" class="lp-subtasks">
-                <li v-for="(t, i) in subtasks" :key="i">
-                    <span>{{ t.name }}</span>
-                    <span class="lp-sub-time">{{ t.timeText }}</span>
-                </li>
-            </ul>
-        </log-conclusion-bar>
-        <div v-if="subTags.length" class="lp-subtags">
-            <button
-                v-for="tag in [{ label: 'ALL', value: '' }, ...subTags]"
-                :key="tag.value"
-                type="button"
-                :class="{ active: subTag === tag.value }"
-                @click="onSubTag(tag.value)"
-            >{{ tag.label }}</button>
-        </div>
-        <log-lines-view
-            ref="lines"
-            :lines="displayLines"
-            :keyword="keyword"
-            :show-time="showTime"
-            :wrap="wrap"
-            :empty-text="emptyText"
-            :locate-index="locateIndex"
-            :active-index="activeIndex"
-            @reach-top="loadBefore"
-            @stick-change="onStick"
+            @retry="$emit('retry')"
+            @skip="$emit('skip')"
         />
+        <log-group-bar
+            v-if="subTags.length"
+            :value="subTag"
+            :tags="subTags"
+            @input="onSubTag"
+        />
+        <div class="lp-body">
+            <log-lines-view
+                ref="lines"
+                :lines="displayLines"
+                :keyword="keyword"
+                :show-time="showTime"
+                :wrap="wrap"
+                :empty-text="emptyText"
+                :locate-index="locateIndex"
+                :active-index="activeIndex"
+                @reach-top="loadBefore"
+                @stick-change="onStick"
+                @jump="jumpTo"
+            />
+        </div>
     </section>
 </template>
 
@@ -66,11 +62,12 @@
     import LogPanelToolbar from './LogPanelToolbar'
     import LogConclusionBar from './LogConclusionBar'
     import LogLinesView from './LogLinesView'
+    import LogGroupBar from './LogGroupBar'
     import { buildConclusion } from './logPanelAdapter'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
 
     export default {
-        components: { LogPanelToolbar, LogConclusionBar, LogLinesView },
+        components: { LogPanelToolbar, LogConclusionBar, LogLinesView, LogGroupBar },
         props: {
             id: String,
             jobId: String,
@@ -286,6 +283,9 @@
             },
             locateFirstIssue () {
                 const idx = this.logs.findIndex(l => l.level === 'ERROR' || l.level === 'WARN')
+                this.jumpTo(idx >= 0 ? idx : 0)
+            },
+            jumpTo (idx) {
                 this.locateIndex = idx
                 this.$nextTick(() => this.$refs.lines && this.$refs.lines.scrollToIndex(idx))
             },
@@ -350,24 +350,9 @@
     min-height: 0;
     background: #2c2d34;
 }
-.lp-subtags {
+.lp-body {
+    flex: 1;
+    min-height: 0;
     display: flex;
-    gap: 6px;
-    padding: 6px 16px;
-    button {
-        border: 1px solid #4b4d55;
-        background: transparent;
-        color: #c4c6cc;
-        cursor: pointer;
-        padding: 2px 8px;
-        &.active { background: #3a84ff; color: #fff; border-color: #3a84ff; }
-    }
-}
-.lp-subtasks {
-    margin: 8px 0 0;
-    padding: 0;
-    list-style: none;
-    li { display: flex; justify-content: space-between; padding: 2px 0; color: #c4c6cc; }
-    .lp-sub-time { font-variant-numeric: tabular-nums; color: #979ba5; }
 }
 </style>
