@@ -59,11 +59,7 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -96,8 +92,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.time.ZoneId
 
 @Service
 @Suppress("ALL")
@@ -475,6 +469,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
     fun listAgentBuilds(
         agentId: String,
         status: String?,
@@ -488,6 +483,7 @@ class ThirdPartyAgentService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
+        // 这个方法在有executeCount前就是按build维度的，需要聚合下
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
@@ -495,6 +491,7 @@ class ThirdPartyAgentService @Autowired constructor(
             pipelineId = pipelineId,
             jobId = null
         )
+        // 这个方法在有executeCount前就是按build维度的，需要聚合下
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
             dslContext = dslContext,
             agentId = agentId,
@@ -520,73 +517,6 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
-    }
-
-    fun fetchAgentBuildsByJob(
-        userId: String,
-        projectId: String,
-        agentId: String?,
-        envId: Long?,
-        pipelineId: String,
-        jobId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Page<AgentPipelineContainerBuild> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
-        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
-        val offset = sqlLimit.offset
-        val limit = sqlLimit.limit
-
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsProject(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            pipelineId = pipelineId,
-            jobId = jobId
-        )
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByProject(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            pipelineId = pipelineId,
-            jobId = jobId,
-            offset = offset,
-            limit = limit
-        )
-        val builds = client.get(ServiceBuildResource::class).batchGetBuildStatus(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildIdSet = agentBuilds.map { it.buildId }.toSet()
-        ).data?.associateBy { it.id }
-        val result = mutableListOf<AgentPipelineContainerBuild>()
-        agentBuilds.forEach {
-            val build = builds?.get(it.buildId) ?: return@forEach
-            result.add(
-                AgentPipelineContainerBuild(
-                    buildId = build.id,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    containerId = (it.vmSeqId ?: 0).toString(),
-                    executeCount = build.executeCount ?: 1,
-                    status = build.status,
-                    startTime = Instant.ofEpochMilli(build.startTime)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime(),
-                    endTime = build.endTime?.let { ed ->
-                        Instant.ofEpochMilli(ed)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime()
-                    },
-                    buildNum = build.buildNum ?: 0,
-                    creator = build.userId
-                )
-            )
-        }
-        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
@@ -1020,120 +950,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         return strategyResult.data!!
-    }
-
-    fun fetchBuildPipeline(
-        projectId: String,
-        agentId: String?,
-        envId: Long?,
-        page: Int?,
-        pageSize: Int?,
-        startTime: Long?,
-        endTime: Long?,
-        pipelineId: String?,
-        jobId: String?,
-        creator: String?,
-        status: PipelineTaskStatus?
-    ): TPAPipelineBuildCountResp {
-        if (agentId.isNullOrBlank() && envId == null) {
-            return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
-        }
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 10
-        val sqlLimit = if (pageSizeNotNull != -1) {
-            PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        } else {
-            null
-        }
-        val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 100
-        val (pipelineCount, jobCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            startTime = startTime,
-            endTime = endTime,
-            pipelineId = pipelineId,
-            jobId = jobId,
-            creator = creator,
-            status = status
-        )
-        return TPAPipelineBuildCountResp(
-            pipelineCount, jobCount, Page(
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                count = jobCount,
-                records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    agentId = agentId,
-                    envId = envId,
-                    limit = limit,
-                    offset = offset,
-                    startTime = startTime,
-                    endTime = endTime,
-                    pipelineId = pipelineId,
-                    jobId = jobId,
-                    creator = creator,
-                    status = status
-                )
-            )
-        )
-    }
-
-    fun fetchPipelineIdAndName(
-        projectId: String,
-        agentId: String?,
-        envId: Long?,
-        pipelineName: String?
-    ): List<PipelineIdAndName> {
-        if (agentId.isNullOrBlank() && envId == null) {
-            return emptyList()
-        }
-        return thirdPartyAgentBuildDao.fetchPipelineIdAndName(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            pipelineName = pipelineName
-        ).map { PipelineIdAndName(it.first, it.second) }
-    }
-
-    fun fetchJobIdAndName(
-        projectId: String,
-        agentId: String?,
-        envId: Long?,
-        jobName: String?
-    ): List<JobIdAndName> {
-        if (agentId.isNullOrBlank() && envId == null) {
-            return emptyList()
-        }
-        return thirdPartyAgentBuildDao.fetchJobIdAndName(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            jobName = jobName
-        ).map { JobIdAndName(it.first, it.second) }
-    }
-
-    fun fetchCreator(
-        projectId: String,
-        agentId: String?,
-        envId: Long?,
-        creator: String?
-    ): List<String> {
-        if (agentId.isNullOrBlank() && envId == null) {
-            return emptyList()
-        }
-        return thirdPartyAgentBuildDao.fetchCreator(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = agentId,
-            envId = envId,
-            creator = creator
-        )
     }
 
     companion object {
