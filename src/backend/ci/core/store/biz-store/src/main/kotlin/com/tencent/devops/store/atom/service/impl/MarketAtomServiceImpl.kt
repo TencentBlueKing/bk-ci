@@ -725,6 +725,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 version = record[tAtom.VERSION],
                 atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
                 releaseType = releaseType?.name,
+                branchTestFlag = record[tAtom.BRANCH_TEST_FLAG] ?: false,
                 versionContent = record[tAtomVersionLog.CONTENT],
                 language = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
                     ?.language?.let { I18nUtil.getCodeLanMessage(it) },
@@ -860,6 +861,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        // 校验用户是否为该插件的成员，防止任意 atomCode 越权获取插件信息
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode)
+            )
+        }
+        return getNewestAtomByCode(userId = userId, atomCode = atomCode, serviceScope = serviceScope)
+    }
+
     /**
      * 安装插件到项目
      */
@@ -930,7 +952,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String?
     ): Result<Page<AtomVersionListItem>> {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(
@@ -945,13 +968,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        val totalCount = atomDao.countByCode(dslContext, atomCode)
-        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
+        // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，FORMAL-正式版本，非法值直接报错
+        val branchTestFlag = when (versionType?.uppercase()) {
+            null, "FORMAL" -> false
+            "ALL" -> null
+            "TEST" -> true
+            else -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(versionType ?: "")
+            )
+        }
+        val totalCount = atomDao.countByCode(dslContext, atomCode, branchTestFlag)
+        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize, branchTestFlag)
         val atomVersions = mutableListOf<AtomVersionListItem>()
         if (records != null) {
             val atomIds = records.map { it.id }
-            // 批量获取版本内容
-            val versionRecords = marketAtomVersionLogDao.getAtomVersions(dslContext, atomIds)
+            // 批量获取版本内容（含分支测试版本的版本日志）
+            val versionRecords = marketAtomVersionLogDao.getAtomVersions(
+                dslContext = dslContext,
+                atomIds = atomIds,
+                getTestVersionFlag = true
+            )
             val versionMap = mutableMapOf<String, String>()
             versionRecords?.forEach { versionRecord ->
                 versionMap[versionRecord.atomId] = versionRecord.content
@@ -964,8 +1001,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         name = it.name,
                         category = AtomCategoryEnum.getAtomCategory((it.categroy as Byte).toInt()),
                         version = it.version,
-                        versionContent = versionMap[it.id].toString(),
+                        versionContent = versionMap[it.id] ?: "",
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
+                        branchTestFlag = it.branchTestFlag,
                         creator = it.creator,
                         createTime = DateTimeUtil.toDateTime(it.createTime)
                     )

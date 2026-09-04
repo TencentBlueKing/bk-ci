@@ -245,6 +245,18 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
+    /**
+     * 统计插件发布流程中的正式版本数量（非分支测试版本且在发布流程中）
+     */
+    fun countPublishingAtomByCode(dslContext: DSLContext, atomCode: String): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectCount().from(this)
+                .where(formalVersionConditions(atomCode))
+                .and(ATOM_STATUS.`in`(AtomStatusEnum.getProcessingStatusList()))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     private fun generateGetMyAtomConditions(
         tAtom: TAtom,
         userId: String,
@@ -590,7 +602,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRecord.weight,
                     userId,
                     userId,
-                    atomRequest.isBranchTestVersion
+                    atomRequest.branchTestFlag
                 )
                 .execute()
         }
@@ -622,13 +634,16 @@ class MarketAtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         atomCode: String,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        branchTestFlag: Boolean? = false
     ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
             val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .and(BRANCH_TEST_FLAG.eq(false))
-                .orderBy(CREATE_TIME.desc())
+            if (branchTestFlag != null) {
+                baseStep.and(BRANCH_TEST_FLAG.eq(branchTestFlag))
+            }
+            baseStep.orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             } else {
@@ -675,6 +690,32 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
+    /**
+     * 根据插件标识与分支获取最新的分支测试版本
+     * @param atomStatus 指定状态过滤，null 表示不限制状态
+     */
+    fun getLatestBranchTestVersion(
+        dslContext: DSLContext,
+        atomCode: String,
+        branch: String,
+        atomStatus: Byte? = null
+    ): TAtomRecord? {
+        with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(BRANCH.eq(branch))
+            conditions.add(BRANCH_TEST_FLAG.eq(true))
+            if (atomStatus != null) {
+                conditions.add(ATOM_STATUS.eq(atomStatus))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getAtomById(
         dslContext: DSLContext,
         atomId: String,
@@ -716,7 +757,8 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.PRIVATE_REASON,
             tAtom.SERVICE_SCOPE,
             tAtom.CLASSIFY_ID_MAP,
-            tAtom.JOB_TYPE_MAP
+            tAtom.JOB_TYPE_MAP,
+            tAtom.BRANCH_TEST_FLAG
         )
             .from(tAtom)
             .leftJoin(tAtomVersionLog)

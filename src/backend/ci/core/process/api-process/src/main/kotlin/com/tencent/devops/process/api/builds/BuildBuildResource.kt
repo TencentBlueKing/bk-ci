@@ -104,6 +104,21 @@ interface BuildBuildResource {
         buildId: String
     ): Result<ModelDetail>
 
+    @Operation(summary = "获取构建状态信息")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/status")
+    fun getBuildStatus(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<BuildHistory>
+
     @Operation(summary = "获取子流水线变量")
     @GET
     @Path("/taskIds/{taskId}/subVar")

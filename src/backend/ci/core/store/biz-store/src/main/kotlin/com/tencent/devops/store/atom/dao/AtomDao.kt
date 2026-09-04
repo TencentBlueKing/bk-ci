@@ -298,9 +298,14 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            if (branchTestFlag != null) {
+                conditions.add(BRANCH_TEST_FLAG.eq(branchTestFlag))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -1214,7 +1219,7 @@ class AtomDao : AtomBaseDao() {
     fun getRecentAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
                 .limit(1)
                 .fetchOne()
         }
