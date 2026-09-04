@@ -47,6 +47,7 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceAgentResource {
 
+    @Deprecated("最新的构建表包含了executeCount的情况，但是这个方法是按老逻辑单BuildId返回的，所以后续尽可能不使用，只维持")
     @Operation(summary = "获取agent构建信息")
     @GET
     @Path("/{agentId}/listBuilds")

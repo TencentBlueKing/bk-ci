@@ -366,6 +366,45 @@ class NodeDao {
         }
     }
 
+    /**
+     * 从候选节点中过滤出指定节点类型的节点，只返回 nodeId
+     */
+    fun listNodeIdsByType(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Set<Long>,
+        nodeTypes: Set<String>
+    ): Set<Long> {
+        if (nodeIds.isEmpty() || nodeTypes.isEmpty()) {
+            return emptySet()
+        }
+        return with(TNode.T_NODE) {
+            dslContext.select(NODE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .and(NODE_TYPE.`in`(nodeTypes))
+                .fetch()
+                .mapTo(mutableSetOf()) { it[NODE_ID] }
+        }
+    }
+
+    /**
+     * 查询节点的类型，返回 nodeId -> nodeType
+     */
+    fun fetchNodeWithType(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, String> {
+        if (nodeIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetch()
+                .associate { it[NODE_ID] to it[NODE_TYPE] }
+        }
+    }
+
     fun listNodesByIdListWithPageLimit(
         dslContext: DSLContext,
         projectId: String,
