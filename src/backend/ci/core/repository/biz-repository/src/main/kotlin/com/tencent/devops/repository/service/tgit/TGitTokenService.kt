@@ -100,7 +100,9 @@ class TGitTokenService @Autowired constructor(
     fun saveAccessToken(userId: String, oauthUserId: String, tGitToken: GitToken): Int {
         tGitToken.accessToken = AESUtil.encrypt(aesKey, tGitToken.accessToken)
         tGitToken.refreshToken = AESUtil.encrypt(aesKey, tGitToken.refreshToken)
-        return tGitTokenDao.saveAccessToken(dslContext, userId, oauthUserId, tGitToken)
+        // USER_ID 存 oauth 授权账号，OPERATOR 存蓝盾操作人
+        tGitToken.operator = userId
+        return tGitTokenDao.saveAccessToken(dslContext, oauthUserId, tGitToken)
     }
 
     fun deleteToken(userId: String): Int {
