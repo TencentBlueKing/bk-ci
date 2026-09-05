@@ -300,6 +300,16 @@ interface ProjectService {
 
     fun isHidden(englishName: String): Boolean
 
+    /**
+     * 收藏或取消收藏项目
+     */
+    fun favor(userId: String, projectId: String, favor: Boolean): Boolean
+
+    /**
+     * 回填已有个人项目的默认收藏，可重复执行
+     */
+    fun migratePersonalProjectFavor(): Int
+
     fun updateHiddenStatus(englishName: String, hidden: Boolean)
 
     fun updatePipelineLimit(userId: String, englishName: String, pipelineLimit: Int): Boolean
