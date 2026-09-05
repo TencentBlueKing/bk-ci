@@ -2375,6 +2375,7 @@
     "remove": "Remove",
     "hasRefNumTips": "The variable has been referenced and the variable group cannot be removed",
     "hasRefNumDeleteTips": "The variable has been referenced and the variable group cannot be deleted",
+    "hasRefVarDeleteTips": "The variable has been referenced and cannot be deleted",
     "noViewPermissionCopyTips": "No variable group permission, cannot copy",
     "noViewPermissionExportTips": "No variable group permission, cannot export",
     "viewGroup": "View variable group",

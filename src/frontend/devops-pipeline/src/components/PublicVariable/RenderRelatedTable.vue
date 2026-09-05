@@ -19,12 +19,28 @@
                     :data="data"
                     max-height="350"
                 >
-                    <bk-table-column
-                        v-for="column in columns"
-                        :key="column.prop"
-                        show-overflow-tooltip
-                        v-bind="column"
-                    />
+                    <template v-for="column in columns">
+                        <bk-table-column
+                            v-if="column.prop === 'referName'"
+                            :key="`link-${column.prop}`"
+                            v-bind="column"
+                        >
+                            <template slot-scope="{ row }">
+                                <span
+                                    class="refer-name-link"
+                                    @click="handleToPipeline(row)"
+                                >
+                                    {{ row.referName }}
+                                </span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            v-else
+                            :key="`text-${column.prop}`"
+                            show-overflow-tooltip
+                            v-bind="column"
+                        />
+                    </template>
                 </bk-table>
             </div>
         </details>
@@ -48,6 +64,12 @@
     function rowClassName ({ row }) {
         if (row.varName === props.newParamId) return 'is-new'
         return ''
+    }
+
+    // 跳转到对应的流水线/模板
+    function handleToPipeline (row) {
+        if (!row?.referUrl) return
+        window.open(row.referUrl, '_blank')
     }
 </script>
 
@@ -78,6 +100,10 @@
         transform: rotate(0deg);
     }
     .variable-list-table {
+        .refer-name-link {
+            color: #3a84ff;
+            cursor: pointer;
+        }
         .is-new {
             background-color: #f2fff4 !important;
         }
