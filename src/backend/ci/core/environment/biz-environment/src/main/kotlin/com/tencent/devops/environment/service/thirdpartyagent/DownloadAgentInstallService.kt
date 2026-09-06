@@ -89,12 +89,13 @@ class DownloadAgentInstallService @Autowired constructor(
         agentId: String,
         loginName: String?,
         loginPassword: String?,
-        installType: TPAInstallType?
+        installType: TPAInstallType?,
+        allowInstalledAgent: Boolean = false
     ): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
 
-        if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
+        if (!allowInstalledAgent && agentRecord.status == AgentStatus.IMPORT_OK.status) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
                 defaultMessage = "Agent already installed. Please obtain the install url again"

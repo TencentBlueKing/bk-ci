@@ -62,6 +62,15 @@ interface AgentUrlService {
     ): String
 
     /**
+     * 生成安装会话对应的构建机安装命令，具体配置由后台会话快照决定。
+     */
+    fun genAgentSessionInstallScript(
+        os: OS,
+        gateway: String?,
+        token: String
+    ): String
+
+    /**
      * 生成网关域名
      */
     fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String

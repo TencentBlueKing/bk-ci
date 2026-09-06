@@ -130,6 +130,21 @@ class BluekingAgentUrlServiceImpl constructor(
         return "$url\" | bash"
     }
 
+    override fun genAgentSessionInstallScript(os: OS, gateway: String?, token: String): String {
+        val gw = fixGateway(gateway)
+        val url = "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/sessionInstall"
+        return if (os == OS.WINDOWS) {
+            "\$ProgressPreference = 'SilentlyContinue';" +
+                "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+                "\$webClient = New-Object System.Net.WebClient;" +
+                "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};" +
+                "\$ps = \$webClient.DownloadString(\"$url\");" +
+                "Invoke-Expression -Command \$ps"
+        } else {
+            "curl -H \"$BATCH_TOKEN_HEADER: $token\" \"$url\" | bash"
+        }
+    }
+
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return fixGateway(agentRecord.gateway)
     }
