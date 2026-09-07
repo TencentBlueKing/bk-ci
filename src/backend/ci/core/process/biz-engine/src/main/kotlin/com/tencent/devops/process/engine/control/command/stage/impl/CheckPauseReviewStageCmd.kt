@@ -97,6 +97,12 @@ class CheckPauseReviewStageCmd(
             if (needPause(event, stage)) {
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
+                LOG.info(
+                    "reviewNotifyTrace|hop=engine.pause|" +
+                        "buildId=${event.buildId}|projectId=${event.projectId}|pipelineId=${event.pipelineId}|" +
+                        "stageId=${event.stageId}|userId=${event.userId}|notifyType=${stage.checkIn?.notifyType}|" +
+                        "reviewers=${stage.checkIn?.groupToReview()?.reviewers}"
+                )
 
                 val dialect = PipelineDialectUtil.getPipelineDialect(commandContext.variables[PIPELINE_DIALECT])
                 stage.checkIn?.parseReviewVariables(commandContext.variables, dialect = dialect)

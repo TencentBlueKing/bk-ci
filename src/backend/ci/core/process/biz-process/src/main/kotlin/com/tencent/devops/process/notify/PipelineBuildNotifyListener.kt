@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.notify
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
@@ -43,6 +45,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -53,6 +56,9 @@ class PipelineBuildNotifyListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineEventListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
+
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
 
     override fun run(event: PipelineBuildNotifyEvent) {
         try {
@@ -65,6 +71,15 @@ class PipelineBuildNotifyListener @Autowired constructor(
         } catch (ignore: Exception) {
             logger.warn("NOTIFY|CHECK_PIPE|SKIP_ERROR_CHECK", ignore)
         }
+        logger.info(
+            "reviewNotifyTrace|hop=process.listener|" +
+                "buildId=${event.buildId}|projectId=${event.projectId}|pipelineId=${event.pipelineId}|" +
+                "template=${event.notifyTemplateEnum}|notifyType=${event.notifyType}|" +
+                "receivers=${event.receivers}|stageId=${event.stageId}|taskId=${event.taskId}|" +
+                "hasCallback=${event.callbackData != null}|" +
+                "callbackKeys=${event.callbackData?.keys}|" +
+                "bodyKeys=${event.bodyParams.keys}"
+        )
         val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)
         when {
             notifyTemplateEnumType.isReviewNotifyTemplate() ->
@@ -142,6 +157,11 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams["reviewUrl"] = reviewUrl
             bodyParams["reviewAppUrl"] = reviewAppUrl
             bodyParams["projectName"] = projectName
+            logger.info(
+                "reviewNotifyTrace|hop=process.fillUrl|" +
+                    "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
+                    "template=$notifyTemplateEnum|reviewUrl=$reviewUrl|reviewAppUrl=$reviewAppUrl"
+            )
             sendNotifyRequest(buildNotifyRequest())
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
@@ -149,24 +169,69 @@ class PipelineBuildNotifyListener @Autowired constructor(
     }
 
     /**
-     * 从事件对象构建通知请求
+     * 从事件对象构建通知请求。事件上的 callbackData 可能在 MQ 反序列化后丢失，
+     * 用事件本体字段回填，保证 notify 侧能组装审核卡片。
      */
-    private fun PipelineBuildNotifyEvent.buildNotifyRequest() = SendNotifyMessageTemplateRequest(
-        templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
-        receivers = receivers.toMutableSet(),
-        cc = receivers.toMutableSet(),
-        titleParams = titleParams,
-        bodyParams = bodyParams,
-        notifyType = notifyType,
-        markdownContent = markdownContent,
-        mentionReceivers = mentionReceivers,
-        callbackData = callbackData
-    )
+    private fun PipelineBuildNotifyEvent.buildNotifyRequest(): SendNotifyMessageTemplateRequest {
+        val filledCallback = fillCallbackData()
+        return SendNotifyMessageTemplateRequest(
+            templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
+            receivers = receivers.toMutableSet(),
+            cc = receivers.toMutableSet(),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = notifyType,
+            markdownContent = markdownContent,
+            mentionReceivers = mentionReceivers,
+            callbackData = filledCallback
+        )
+    }
+
+    private fun PipelineBuildNotifyEvent.fillCallbackData(): Map<String, String> {
+        val cb = callbackData?.toMutableMap() ?: mutableMapOf()
+        val incomingEmpty = cb["projectId"].isNullOrBlank() || cb["buildId"].isNullOrBlank()
+        if (cb["projectId"].isNullOrBlank()) cb["projectId"] = projectId
+        if (cb["pipelineId"].isNullOrBlank()) cb["pipelineId"] = pipelineId
+        if (cb["buildId"].isNullOrBlank()) cb["buildId"] = buildId
+        if (cb["stageId"].isNullOrBlank() && !stageId.isNullOrBlank()) cb["stageId"] = stageId.orEmpty()
+        if (cb["elementId"].isNullOrBlank() && !taskId.isNullOrBlank()) cb["elementId"] = taskId.orEmpty()
+        if (cb["reviewUsers"].isNullOrBlank()) {
+            cb["reviewUsers"] = receivers.filter { it.isNotBlank() }.joinToString(",")
+        }
+        if (cb["hasRequiredParams"].isNullOrBlank()) {
+            cb["hasRequiredParams"] = bodyParams["hasRequiredParams"] ?: "false"
+        }
+        if (cb["reviewType"].isNullOrBlank()) {
+            cb["reviewType"] = if (notifyTemplateEnum.contains("STAGE")) "STAGE" else "ATOM"
+        }
+        if (cb["signature"].isNullOrBlank()) {
+            cb["signature"] = if (cb["reviewType"] == "STAGE") {
+                ShaUtils.sha256(projectId + buildId + (cb["stageId"] ?: "") + (cb["groupId"] ?: "") + (appSecret ?: ""))
+            } else {
+                ShaUtils.sha256(projectId + buildId + (cb["elementId"] ?: "") + (appSecret ?: ""))
+            }
+        }
+        logger.info(
+            "reviewNotifyTrace|hop=process.fillCallback|" +
+                "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
+                "template=$notifyTemplateEnum|incomingEmpty=$incomingEmpty|" +
+                "callback=${JsonUtil.toJson(cb, false)}"
+        )
+        return cb
+    }
 
     /**
      * 发送通知请求
      */
     private fun sendNotifyRequest(request: SendNotifyMessageTemplateRequest) {
+        logger.info(
+            "reviewNotifyTrace|hop=process.feign|" +
+                "template=${request.templateCode}|notifyType=${request.notifyType}|" +
+                "receivers=${request.receivers}|markdown=${request.markdownContent}|" +
+                "hasCallback=${request.callbackData != null}|" +
+                "callback=${JsonUtil.toJson(request.callbackData ?: emptyMap<String, String>(), false)}|" +
+                "bodyParams=${JsonUtil.toJson(request.bodyParams ?: emptyMap<String, String>(), false)}"
+        )
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
     }
 

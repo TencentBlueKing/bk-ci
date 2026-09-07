@@ -41,14 +41,29 @@ object WeworkReviewCardBuilder {
     ): Pair<WeworkTemplateCard, String>? {
         val body = request.bodyParams ?: emptyMap()
         val callback = request.callbackData?.toMutableMap() ?: mutableMapOf()
+        logger.info(
+            "reviewNotifyTrace|hop=notify.card.input|" +
+                "template=${request.templateCode}|receivers=${request.receivers}|" +
+                "notifyType=${request.notifyType}|markdown=${request.markdownContent}|" +
+                "callback=${JsonUtil.toJson(callback, false)}|" +
+                "reviewUrl=${body["reviewUrl"]}|reviewAppUrl=${body["reviewAppUrl"]}|" +
+                "reviewDesc=${body["reviewDesc"]}|reviewers=${body["reviewers"]}"
+        )
         if (callback["projectId"].isNullOrBlank() || callback["buildId"].isNullOrBlank()) {
-            logger.warn("review card skipped: missing callback projectId/buildId, template=${request.templateCode}")
+            logger.warn(
+                "reviewNotifyTrace|hop=notify.card.skip|reason=missingCallback|" +
+                    "template=${request.templateCode}|callbackKeys=${callback.keys}|" +
+                    "callback=${JsonUtil.toJson(callback, false)}"
+            )
             return null
         }
         val reviewUrl = body["reviewUrl"].orEmpty()
         val reviewAppUrl = body["reviewAppUrl"].orEmpty()
         if (reviewUrl.isBlank() && reviewAppUrl.isBlank()) {
-            logger.warn("review card skipped: missing review urls, template=${request.templateCode}")
+            logger.warn(
+                "reviewNotifyTrace|hop=notify.card.skip|reason=missingReviewUrl|" +
+                    "template=${request.templateCode}|buildId=${callback["buildId"]}"
+            )
             return null
         }
 
@@ -134,6 +149,12 @@ object WeworkReviewCardBuilder {
             horizontalContentList = contents,
             buttonList = buttons,
             taskId = taskId
+        )
+        logger.info(
+            "reviewNotifyTrace|hop=notify.card.built|" +
+                "template=${request.templateCode}|taskId=$taskId|" +
+                "buildId=${callback["buildId"]}|projectId=${callback["projectId"]}|" +
+                "reviewType=${callback["reviewType"]}|card=${JsonUtil.toJson(card, false)}"
         )
         val fallback = buildString {
             appendLine(mainTitle)

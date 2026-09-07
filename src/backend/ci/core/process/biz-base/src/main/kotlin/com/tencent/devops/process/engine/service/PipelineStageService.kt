@@ -765,6 +765,13 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         )
+        logger.info(
+            "reviewNotifyTrace|hop=engine.dispatch|" +
+                "buildId=${stage.buildId}|projectId=${stage.projectId}|pipelineId=${stage.pipelineId}|" +
+                "stageId=${stage.stageId}|groupId=${group.id}|notifyType=$notifyType|" +
+                "receivers=$reviewers|markdown=${checkIn.markdownContent}|" +
+                "hasRequiredParams=$hasRequiredParams|reviewDesc=${checkIn.reviewDesc}"
+        )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
         if (triggerUserId !in reviewers && !checkIn.notifyType.isNullOrEmpty()) {
             pipelineEventDispatcher.dispatch(

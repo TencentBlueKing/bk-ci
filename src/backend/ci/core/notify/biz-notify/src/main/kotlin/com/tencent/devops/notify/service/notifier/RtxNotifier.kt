@@ -65,6 +65,11 @@ class RtxNotifier @Autowired constructor(
         } else {
             "$finalTitle\n\n$finalBody"
         }
+        logger.info(
+            "reviewNotifyTrace|hop=notify.rtx|" +
+                "template=${request.templateCode}|hasCard=${reviewCard != null}|" +
+                "taskId=${reviewCard?.first?.taskId}|title=$finalTitle|sendBody=$body"
+        )
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,

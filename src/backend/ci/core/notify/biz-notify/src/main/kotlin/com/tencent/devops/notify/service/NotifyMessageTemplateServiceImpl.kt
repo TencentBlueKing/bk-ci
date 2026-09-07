@@ -621,6 +621,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     }
 
     override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
+        logger.info(
+            "reviewNotifyTrace|hop=notify.template|" +
+                "template=${request.templateCode}|notifyType=${request.notifyType}|" +
+                "receivers=${request.receivers}|markdown=${request.markdownContent}|" +
+                "hasCallback=${request.callbackData != null}|" +
+                "callback=${JsonUtil.toJson(request.callbackData ?: emptyMap<String, String>(), false)}|" +
+                "bodyParams=${JsonUtil.toJson(request.bodyParams ?: emptyMap<String, String>(), false)}"
+        )
         val templateCode = request.templateCode
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =

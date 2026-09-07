@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.consumer
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
@@ -101,17 +102,32 @@ class NotifyMessageConsumer @Autowired constructor(
     fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
         try {
             val templateCard = weworkNotifyMessageWithOperation.templateCard
+            logger.info(
+                "reviewNotifyTrace|hop=notify.consume|" +
+                    "id=${weworkNotifyMessageWithOperation.id}|" +
+                    "receivers=${JsonUtil.toJson(weworkNotifyMessageWithOperation.getReceivers())}|" +
+                    "markdown=${weworkNotifyMessageWithOperation.markdownContent}|" +
+                    "hasCard=${templateCard != null}|taskId=${templateCard?.taskId}|" +
+                    "body=${weworkNotifyMessageWithOperation.body}|" +
+                    "card=${templateCard?.let { JsonUtil.toJson(it, false) }}"
+            )
             if (templateCard != null) {
                 val ok = weworkService.sendTemplateCardMessage(
                     receivers = weworkNotifyMessageWithOperation.getReceivers(),
                     templateCard = templateCard
                 )
+                logger.info(
+                    "reviewNotifyTrace|hop=notify.send.card|ok=$ok|" +
+                        "taskId=${templateCard.taskId}|" +
+                        "receivers=${weworkNotifyMessageWithOperation.getReceivers()}"
+                )
                 if (ok) {
                     return
                 }
                 logger.warn(
-                    "send wework template card failed, fallback to text. receivers={}",
-                    weworkNotifyMessageWithOperation.getReceivers()
+                    "reviewNotifyTrace|hop=notify.send.fallback|reason=cardFailed|" +
+                        "taskId=${templateCard.taskId}|" +
+                        "receivers=${weworkNotifyMessageWithOperation.getReceivers()}"
                 )
             }
             val weworkNotifyTextMessage = WeworkNotifyTextMessage(
@@ -124,9 +140,13 @@ class NotifyMessageConsumer @Autowired constructor(
                 },
                 message = weworkNotifyMessageWithOperation.body
             )
-            weworkService.sendTextMessage(weworkNotifyTextMessage)
+            val sendResult = weworkService.sendTextMessage(weworkNotifyTextMessage)
+            logger.info(
+                "reviewNotifyTrace|hop=notify.send.text|ok=$sendResult|" +
+                    "message=${JsonUtil.toJson(weworkNotifyTextMessage)}"
+            )
         } catch (ignored: Exception) {
-            logger.warn("Failed process received Wework message", ignored)
+            logger.warn("reviewNotifyTrace|hop=notify.consume.error", ignored)
         }
     }
 }

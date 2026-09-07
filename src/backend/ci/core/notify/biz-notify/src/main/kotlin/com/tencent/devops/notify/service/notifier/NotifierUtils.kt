@@ -1,5 +1,6 @@
 package com.tencent.devops.notify.service.notifier
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
@@ -7,8 +8,11 @@ import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTempla
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.service.WeworkService
+import org.slf4j.LoggerFactory
 
 object NotifierUtils {
+    private val logger = LoggerFactory.getLogger(NotifierUtils::class.java)
+
     fun sendWeworkNotifyMessage(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
@@ -27,6 +31,14 @@ object NotifierUtils {
             ?: EnumNotifySource.BUSINESS_LOGIC
         wechatNotifyMessage.markdownContent = sendNotifyMessageTemplateRequest.markdownContent ?: false
         wechatNotifyMessage.templateCard = templateCard
+        logger.info(
+            "reviewNotifyTrace|hop=notify.mq|" +
+                "template=${sendNotifyMessageTemplateRequest.templateCode}|" +
+                "sender=$sender|receivers=${JsonUtil.toJson(wechatNotifyMessage.getReceivers())}|" +
+                "markdown=${wechatNotifyMessage.markdownContent}|hasCard=${templateCard != null}|" +
+                "taskId=${templateCard?.taskId}|body=$body|" +
+                "card=${templateCard?.let { JsonUtil.toJson(it, false) }}"
+        )
         weworkService.sendMqMsg(wechatNotifyMessage)
     }
 
