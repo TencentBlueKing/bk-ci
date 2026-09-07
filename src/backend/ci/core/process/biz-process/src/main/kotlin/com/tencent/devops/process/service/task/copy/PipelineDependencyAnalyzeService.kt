@@ -45,7 +45,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -901,10 +900,7 @@ class PipelineDependencyAnalyzeService @Autowired constructor(
     private fun getContextMap(model: Model): Map<String, String> {
         val triggerContainer = model.stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer
             ?: return emptyMap()
-        val variables = triggerContainer.params.associate { param ->
-            param.id to param.defaultValue.toString()
-        }
-        return PipelineVarUtil.fillVariableMap(variables)
+        return pipelineRepositoryService.getTriggerParams(triggerContainer)
     }
 
     private fun referenceType(repositoryType: RepositoryType): PipelineDependentResourceRefType {
