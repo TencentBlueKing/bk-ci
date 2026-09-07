@@ -524,7 +524,10 @@ class AgentInstallSessionService(
         val tags = sessionDao.listTags(dslContext, session.id).map { it.toSnapshot() }
         val environments = if (session.mode == AgentInstallSessionMode.FIRST_IMPORT) {
             val match = dynamicEnvMatcher.previewFirstImport(session.projectId, OS.valueOf(session.os), tagMap(tags))
-            AgentInstallEnvironmentPreview(willJoin = match.matchedEnvironments.toApi(), pending = match.pendingEnvironments.toApi())
+            AgentInstallEnvironmentPreview(
+                willJoin = match.matchedEnvironments.toApi(),
+                pending = match.pendingEnvironments.toApi()
+            )
         } else {
             val currentTags = session.targetNodeId?.let { nodeId ->
                 snapshots(nodeTagService.fetchNodeTags(session.projectId, setOf(nodeId))[nodeId].orEmpty())
@@ -648,7 +651,8 @@ class AgentInstallSessionService(
     private fun checkViewPermission(userId: String, projectId: String) = checkCreatePermission(userId, projectId)
 
     private fun getSession(projectId: String, sessionId: String): AgentInstallSession =
-        sessionDao.getById(dslContext, projectId, sessionId) ?: throw NotFoundException("Install session does not exist")
+        sessionDao.getById(dslContext, projectId, sessionId)
+            ?: throw NotFoundException("Install session does not exist")
 
     private fun decodeAgentId(agentId: String): Long = try {
         HashUtil.decodeIdToLong(agentId)
