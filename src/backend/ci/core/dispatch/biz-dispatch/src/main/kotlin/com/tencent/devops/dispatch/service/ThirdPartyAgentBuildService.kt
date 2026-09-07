@@ -419,7 +419,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             agentId = agentId,
             envId = envId,
             buildIdList = pipelineBuilds.toSet()
-        )
+        ).sortedByDescending { it.id }
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限
         val builds = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
             data = BatchFetchBuildRecordData(buildIds = agentBuilds.map { it.buildId }, executeCount = null)

@@ -1039,7 +1039,7 @@ class ThirdPartyAgentBuildDao {
             return 0
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val dsl = dslContext.select(countDistinct(BUILD_ID)).from(this)
+            val dsl = dslContext.select(countDistinct(BUILD_ID, EXECUTE_COUNT)).from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
