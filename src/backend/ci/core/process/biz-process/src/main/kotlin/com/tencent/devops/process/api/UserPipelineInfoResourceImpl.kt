@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineInfoResource
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineDetailInfo
@@ -112,6 +114,36 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 archiveFlag = archiveFlag
+            )
+        )
+    }
+
+    override fun listPipelineIdAndName(
+        userId: String,
+        projectId: String,
+        permission: Permission,
+        excludePipelineId: String?,
+        page: Int?,
+        pageSize: Int?,
+        channelCode: ChannelCode?
+    ): Result<Page<PipelineIdAndName>> {
+        checkParam(userId, projectId)
+        val result = ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
+            pipelineListFacadeService.listPipelineIdAndName(
+                userId = userId,
+                projectId = projectId,
+                permission = permission,
+                excludePipelineId = excludePipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        }
+        return Result(
+            data = Page(
+                page = page ?: 0,
+                pageSize = pageSize ?: -1,
+                count = result.count,
+                records = result.records
             )
         )
     }

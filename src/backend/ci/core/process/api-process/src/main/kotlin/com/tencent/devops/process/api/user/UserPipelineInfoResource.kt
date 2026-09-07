@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
@@ -147,4 +149,31 @@ interface UserPipelineInfoResource {
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<PipelineDetailInfo?>
+
+    @Operation(summary = "按权限查询流水线ID和名称")
+    @GET
+    @Path("/{projectId}/idAndNames")
+    fun listPipelineIdAndName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "对应权限", required = true, example = "")
+        @QueryParam("permission")
+        permission: Permission,
+        @Parameter(description = "排除流水线ID", required = false, example = "")
+        @QueryParam("excludePipelineId")
+        excludePipelineId: String?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "渠道代码", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<Page<PipelineIdAndName>>
 }
