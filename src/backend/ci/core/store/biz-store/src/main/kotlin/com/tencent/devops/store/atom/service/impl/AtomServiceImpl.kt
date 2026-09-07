@@ -880,16 +880,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         )
     }
 
-    /**
-     * 根据插件版本ID获取插件信息（任意状态均可查询，含分支测试版本）
-     */
-    override fun getPipelineAtomById(id: String, serviceScope: ServiceScopeEnum?): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomById $id,$serviceScope")
-        // 按主键精确查询，禁止再走 code+version 模糊查询，避免命中其它版本
-        val record = atomDao.getPipelineAtom(dslContext, id) ?: return Result(null)
-        return buildPipelineAtom(record = record, serviceScope = serviceScope)
-    }
-
     private fun buildPipelineAtom(
         record: TAtomRecord,
         serviceScope: ServiceScopeEnum?

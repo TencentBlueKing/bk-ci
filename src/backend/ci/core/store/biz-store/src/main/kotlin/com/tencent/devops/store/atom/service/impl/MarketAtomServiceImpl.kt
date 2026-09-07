@@ -1003,7 +1003,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         version = it.version,
                         versionContent = versionMap[it.id] ?: "",
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
-                        branchTestFlag = it.branchTestFlag,
+                        branchTestFlag = it.branchTestFlag ?: false,
                         creator = it.creator,
                         createTime = DateTimeUtil.toDateTime(it.createTime)
                     )

@@ -144,7 +144,7 @@ abstract class AtomBaseDao {
      * 分支测试版本标识条件：BRANCH_TEST_FLAG 为 NULL 表示未标记过，按正式版本处理
      * （与列默认值 b'0' 及 MarketAtomServiceImpl 中的 ?: false 兜底保持同一语义）
      */
-    private fun formalVersionFlagCondition(): Condition {
+    protected fun formalVersionFlagCondition(): Condition {
         return TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(false)
             .or(TAtom.T_ATOM.BRANCH_TEST_FLAG.isNull())
     }

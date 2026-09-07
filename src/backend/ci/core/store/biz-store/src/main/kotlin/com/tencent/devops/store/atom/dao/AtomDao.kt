@@ -302,8 +302,10 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
-            if (branchTestFlag != null) {
-                conditions.add(BRANCH_TEST_FLAG.eq(branchTestFlag))
+            when (branchTestFlag) {
+                null -> {}
+                false -> conditions.add(formalVersionFlagCondition())
+                true -> conditions.add(BRANCH_TEST_FLAG.eq(true))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -386,16 +388,6 @@ class AtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetchOne()
-        }
-    }
-
-    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
-                .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
