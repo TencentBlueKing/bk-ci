@@ -33,6 +33,7 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
@@ -57,6 +58,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
+@Suppress("MaxLineLength")
 class ESDetectionJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val logClient: MultiESLogClient
@@ -70,69 +72,96 @@ class ESDetectionJob @Autowired constructor(
 
     @Scheduled(initialDelay = 30000, fixedDelay = 30000)
     fun detect() {
-        logger.info("Start to detect es")
-        val redisLock = RedisLock(redisOperation, MULTI_LOG_CLIENT_DETECTION_LOCK_KEY, 30)
+        // #9602 同源：锁 key 增加 namespace，避免多环境共用 Redis 时探测任务互相饿死
+        val namespace = KubernetesUtils.getNamespace()
+        logger.info("[$namespace] Start to detect es")
+        val redisLock = RedisLock(redisOperation, getDetectionRedisKey(namespace), DETECTION_LOCK_EXPIRE_SECONDS)
         try {
-            if (redisLock.tryLock()) {
-                val buildId = UUIDUtil.generate()
-                val index = IndexNameUtils.getIndexName()
-                logClient.getActiveClients().forEach {
-                    try {
-                        val f = executor.submit(Detection(it, index, buildId))
-                        val documentIds = f.get(60, TimeUnit.SECONDS)
-                        if (documentIds.isEmpty()) {
-                            logger.warn("[${it.clusterName}] Fail to insert data")
-                            logClient.markESInactive(it.clusterName)
-                        } else {
-                            executor.submit(
-                                Deletion(it, index, buildId, documentIds)
-                            )
-                        }
-                    } catch (t: Throwable) {
-                        logger.warn("[${it.clusterName}] Fail to detect es status", t)
-                        logClient.markESInactive(it.clusterName)
-                    }
-                }
-                val inactiveClients = logClient.getInactiveClients()
-                logger.info("Start to check the inactive clients: ${inactiveClients.map { it.clusterName }}")
-                logClient.getInactiveClients().forEach {
-                    try {
-                        val f = executor.submit(Detection(it, index, buildId))
-                        val documentIds = f.get(60, TimeUnit.SECONDS)
-                        if (documentIds.isNotEmpty()) {
-                            logger.warn("[${it.clusterName}] Success to insert data")
-                            logClient.markESActive(it.clusterName)
-                            executor.submit(Deletion(it, index, buildId, documentIds))
-                        }
-                    } catch (t: Throwable) {
-                        logger.warn("[${it.clusterName}] Fail to detect the inactive es", t)
-                    }
-                }
-            } else {
-                logger.info("Other instance took the key, ignore")
+            if (!redisLock.tryLock()) {
+                logger.info("[$namespace] Other instance took the detection lock, ignore")
+                return
             }
+            detectClients()
         } finally {
             redisLock.unlock()
         }
     }
 
+    private fun detectClients() {
+        val buildId = UUIDUtil.generate()
+        val index = IndexNameUtils.getIndexName()
+        logClient.getActiveClients().forEach { probeActiveClient(it, index, buildId) }
+        val inactiveClients = logClient.getInactiveClients()
+        logger.info("Start to check the inactive clients: ${inactiveClients.map { it.clusterName }}")
+        inactiveClients.forEach { probeInactiveClient(it, index, buildId) }
+    }
+
+    private fun probeActiveClient(client: ESClient, index: String, buildId: String) {
+        val documentIds = runDetection(client, index, buildId, "Fail to detect es status")
+        if (documentIds == null) {
+            logClient.markESInactive(client.clusterName)
+            return
+        }
+        if (documentIds.isEmpty()) {
+            logger.warn("[${client.clusterName}] Fail to insert data")
+            logClient.markESInactive(client.clusterName)
+        } else {
+            executor.submit(Deletion(client, index, buildId, documentIds))
+        }
+    }
+
+    private fun probeInactiveClient(client: ESClient, index: String, buildId: String) {
+        val documentIds = runDetection(client, index, buildId, "Fail to detect the inactive es") ?: return
+        if (documentIds.isEmpty()) {
+            return
+        }
+        logger.warn("[${client.clusterName}] Success to insert data")
+        logClient.markESActive(client.clusterName)
+        executor.submit(Deletion(client, index, buildId, documentIds))
+    }
+
+    private fun runDetection(
+        client: ESClient,
+        index: String,
+        buildId: String,
+        failMessage: String
+    ): List<String>? {
+        return try {
+            executor.submit(Detection(client, index, buildId)).get(60, TimeUnit.SECONDS)
+        } catch (t: Throwable) {
+            logger.warn("[${client.clusterName}] $failMessage", t)
+            null
+        }
+    }
+
     /**
-     * 23 pm every day
+     * 每天 23:00 为各 ES 提前创建次日索引。
+     * 锁按 namespace + ES 逻辑名拆分，避免共用 Redis 时被其它环境抢走后本环境 ES 漏建。
+     * 覆盖本进程全部已配置客户端（含 inactive），防止熔断摘除期间漏预创建。
      */
     @Scheduled(cron = "0 0 23 * * ?")
     fun createNextIndex() {
-        logger.info("Start to create next index index")
-        val redisLock = RedisLock(redisOperation, ES_NEXT_INDEX_CREATE_JOB_KEY, 20)
-        try {
-            if (!redisLock.tryLock()) {
-                logger.info("The other process is processing clean job, ignore")
-                return
+        val namespace = KubernetesUtils.getNamespace()
+        val nextIndex = IndexNameUtils.getNextIndexName()
+        logger.info("[$namespace] Start to create next index: $nextIndex")
+        logClient.getAllClients().forEach { client ->
+            val redisLock = RedisLock(
+                redisOperation,
+                getNextIndexCreateRedisKey(namespace, client.clusterName, nextIndex),
+                NEXT_INDEX_LOCK_EXPIRE_SECONDS
+            )
+            try {
+                if (!redisLock.tryLock()) {
+                    logger.info(
+                        "[$namespace|${client.clusterName}|$nextIndex] " +
+                            "Other process is creating next index, ignore"
+                    )
+                    return@forEach
+                }
+                createIndex(client, nextIndex)
+            } finally {
+                redisLock.unlock()
             }
-            logClient.getActiveClients().forEach {
-                createIndex(it, IndexNameUtils.getNextIndexName())
-            }
-        } finally {
-            redisLock.unlock()
         }
     }
 
@@ -289,6 +318,16 @@ class ESDetectionJob @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ESDetectionJob::class.java)
         private const val MULTI_LOG_CLIENT_DETECTION_LOCK_KEY = "log:multi:log:client:detection:lock:key"
         private const val ES_NEXT_INDEX_CREATE_JOB_KEY = "log:es:next:index:create:job:lock:key"
+        private const val DETECTION_LOCK_EXPIRE_SECONDS = 30L
+        private const val NEXT_INDEX_LOCK_EXPIRE_SECONDS = 60L
         private const val MULTI_LOG_LINES = 10
+
+        private fun getDetectionRedisKey(namespace: String): String {
+            return "$MULTI_LOG_CLIENT_DETECTION_LOCK_KEY:$namespace"
+        }
+
+        private fun getNextIndexCreateRedisKey(namespace: String, clusterName: String, index: String): String {
+            return "$ES_NEXT_INDEX_CREATE_JOB_KEY:$namespace:$clusterName:$index"
+        }
     }
 }

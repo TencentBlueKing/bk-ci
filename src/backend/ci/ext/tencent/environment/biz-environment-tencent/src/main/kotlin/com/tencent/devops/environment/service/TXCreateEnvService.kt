@@ -1,5 +1,6 @@
 ﻿package com.tencent.devops.environment.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.AESUtil
@@ -7,14 +8,17 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.model.AgentPropsSource
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
+import com.tencent.devops.environment.pojo.op.CreateGateWayConfig
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import com.tencent.devops.remotedev.api.service.ServiceRemoteDevInternalResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.support.api.service.ServiceIMateResource
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -32,6 +36,7 @@ import java.util.Base64
 class TXCreateEnvService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val redisOperation: RedisOperation,
     private val agentDao: AgentDao,
     private val nodeDao: NodeDao,
     private val downloadAgentInstallService: DownloadAgentInstallService,
@@ -41,14 +46,17 @@ class TXCreateEnvService @Autowired constructor(
     @Value("\${environment.batch-install.aes-key}")
     private val batchInstallAesKey = ""
 
-    override fun fetchUserWorkspaceId(projectId: String, userId: String): List<String> {
-        return client.get(ServiceRemoteDevResource::class).getWorkspaceListNew(
-            userId = userId,
-            projectId = projectId,
-            page = null,
-            pageSize = null,
-            search = WorkspaceSearch()
-        ).data?.records?.map { it.workspaceName } ?: emptyList()
+    // 自运维虾OP用
+    override fun getWorkspaceZoneName(projectId: String, workspaceId: String): String? {
+        val detail = client.get(ServiceRemoteDevInternalResource::class).getWorkspaceDetail(
+            workspaceId
+        ).data ?: return null
+        val config = getCreateGatewayConfig() ?: return null
+        return when (detail.zoneConfig?.type) {
+            WindowsResourceZoneConfigType.DEVCLOUD -> config.devnetGateway
+            null -> null
+            else -> config.devxGateway
+        }
     }
 
     override fun getWorkspaceDisplayName(userId: String, projectId: String, workspaceId: String?): String? {
@@ -56,26 +64,23 @@ class TXCreateEnvService @Autowired constructor(
         // 优先根据来源判读，没有就兜底使用系统
         val record =
             agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceId, projectId) ?: return null
-        val source = if (record.agentProps == null) {
-            null
-        } else {
-            try {
-                JsonUtil.to<AgentProps>(record.agentProps).source
-            } catch (_: Exception) {
+        return when (AgentProps.getSourceFromRecord(record.agentProps, OS.parse(record.os))) {
+            AgentPropsSource.DEVCLOUD -> {
+                client.get(ServiceIMateResource::class)
+                    .queryUserRobots(userId).data?.filter { it.username == userId }
+                    ?.firstOrNull { it.clientUuid == workspaceId }?.botName
+            }
+
+            AgentPropsSource.REMOTEDEV -> {
+                client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
+                    userId, workspaceId, null
+                ).data?.displayName
+            }
+
+            AgentPropsSource.IEG_IMATE -> {
                 null
             }
         }
-        if (source == AgentPropsSource.DEVCLOUD || (source == null && record.os == OS.LINUX.name)) {
-            return client.get(ServiceIMateResource::class)
-                .queryUserRobots(userId).data?.filter { it.username == userId }
-                ?.firstOrNull { it.clientUuid == workspaceId }?.botName
-        }
-        if (source == AgentPropsSource.REMOTEDEV || (source == null && record.os == OS.WINDOWS.name)) {
-            return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
-                userId, workspaceId, null
-            ).data?.displayName
-        }
-        return null
     }
 
     override fun genCreateNodeInstallScript(
@@ -148,13 +153,29 @@ class TXCreateEnvService @Autowired constructor(
                         displayName
                     )
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 logger.error("refreshCreateDisplayName error", e)
             }
         }
     }
 
+    fun getCreateGatewayConfig(): CreateGateWayConfig? {
+        return redisOperation.get(CREATE_INSTALL_KEY, true)?.let {
+            JsonUtil.to(it, object : TypeReference<CreateGateWayConfig>() {})
+        }
+    }
+
+    fun setCreateGatewayConfig(config: CreateGateWayConfig) {
+        redisOperation.set(
+            CREATE_INSTALL_KEY,
+            JsonUtil.toJson(config, true),
+            expired = false,
+            isDistinguishCluster = true
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TXCreateEnvService::class.java)
+        private const val CREATE_INSTALL_KEY = "environment:create_install_config"
     }
 }

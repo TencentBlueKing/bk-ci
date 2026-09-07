@@ -1,7 +1,10 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
@@ -14,8 +17,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import java.net.SocketTimeoutException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -85,7 +91,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     USER_ALREADY_EXISTED -> return true
                     else -> throw WorkspaceDispatchException(
                         " 创建user接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -127,7 +133,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     OK -> return environmentRsp.data.resourceId
                     else -> throw WorkspaceDispatchException(
                         " 分享云桌面接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -168,7 +174,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     OK -> return true
                     else -> throw WorkspaceDispatchException(
                         " 取消分享云桌面接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
+                                "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -280,15 +286,125 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun listCoffeeDigitalAvatars(userId: String): List<ImateAvatar> {
+        val url = "$apiUrlAI/openapi/coffee/digital_avatars"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId list digital avatars response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "列出数字分身接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<List<ImateAvatar>>>() {}
+                )
+                if (result.isNotOk()) {
+                    throw WorkspaceDispatchException(
+                        "列出数字分身接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data ?: emptyList()
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId list digital avatars get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "列出数字分身接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getCoffeeDigitalAvatar(userId: String, digitalAvatarId: String): ImateAvatar {
+        val encodedId = URLEncoder.encode(digitalAvatarId, StandardCharsets.UTF_8.name())
+        val url = "$apiUrlAI/openapi/coffee/digital_avatars/$encodedId"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId get digital avatar response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "解析数字分身接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<ImateAvatar>>() {}
+                )
+                if (result.isNotOk() || result.data == null) {
+                    throw WorkspaceDispatchException(
+                        "解析数字分身接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data!!
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId get digital avatar get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "解析数字分身接口超时, url: $url"
+            )
+        }
+    }
+
+    fun checkTeamAccessible(userId: String, workspaceName: String): Boolean {
+        val url = "$apiUrlAI/openapi/team/check_team_accessible?workspaceName=$workspaceName"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId checkTeamAccessible response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "校验用户是否有该环境所属分身的开黑访问权限 接口异常: ${response.code}"
+                    )
+                }
+                return JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<Boolean>>() {}
+                ).data ?: false
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId checkTeamAccessible get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "校验用户是否有该环境所属分身的开黑访问权限 接口超时, url: $url"
+            )
+        }
+    }
+
     fun makeHeaders(
-        body: String
+        body: String,
+        userId: String? = null
     ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
         headerBuilder["x-start-appid"] = appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
         headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
-
+        if (userId != null) {
+            headerBuilder[AUTH_HEADER_USER_ID] = userId
+        }
         return headerBuilder
     }
 }

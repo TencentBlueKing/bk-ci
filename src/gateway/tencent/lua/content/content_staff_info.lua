@@ -26,13 +26,8 @@ if nil == x_credentialKey then
     x_credentialKey = urlUtil:parseUrl(ngx.var.request_uri)["credentialKey"]
 end
 
-local x_otoken = ngx.var.http_x_otoken -- 外部用户
-if nil == x_otoken then
-    x_otoken = ngx.var.arg_oToken
-end
-
-if x_ckey == nil and x_credentialKey == nil and x_otoken == nil then
-    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken or header=x-credentialKey")
+if x_ckey == nil and x_credentialKey == nil then
+    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-credentialKey")
     ngx.exit(401)
     return
 end
@@ -73,20 +68,6 @@ elseif x_credentialKey ~= nil then
             staffId = staff_info_new.StaffId,
             departmentName = departmentName,
             email = email
-        }
-    }
-else
-    local outer_profile = outerloginUtil:getProfile(x_otoken)
-    result = {
-        status = 0,
-        data = {
-            englishName = outer_profile.data.username,
-            chineseName = outer_profile.data.username,
-            avatars = outer_profile.data.logo,
-            departmentId = 0,
-            staffId = 0,
-            departmentName = "outer",
-            email = outer_profile.data.email
         }
     }
 end

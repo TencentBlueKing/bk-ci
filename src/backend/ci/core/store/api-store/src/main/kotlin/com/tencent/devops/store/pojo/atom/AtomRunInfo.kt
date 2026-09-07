@@ -54,5 +54,7 @@ data class AtomRunInfo(
     @get:Schema(title = "插件是否允许执行前暂停", required = false)
     var canPauseBeforeRun: Boolean? = null,
     @get:Schema(title = "服务范围", required = false)
-    var serviceScope: List<String>? = null
+    var serviceScope: List<String>? = null,
+    @get:Schema(title = "各Job类型对应支持的操作系统映射（jobType -> OS列表）", required = false)
+    var osMap: Map<String, List<String>>? = null
 )

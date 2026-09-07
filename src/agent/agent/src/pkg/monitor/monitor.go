@@ -5,6 +5,7 @@ package monitor
 
 import (
 	"context"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -41,7 +42,39 @@ const (
 	// 超过该值时跳过当轮，只记日志。防止某个 input 长期卡死导致
 	// goroutine 持续累积。典型值：input 数 × 并发轮数裕度。
 	inflightHardCap = 64
+	// stackDumpInterval 触发 inflightHardCap 保护时，dump 一次全量
+	// goroutine stack 的最小间隔。用于定位到底卡在哪个 input，但避免
+	// 每轮（1min）都打一大坨 stack 刷爆日志，故做节流。
+	stackDumpInterval = 10 * time.Minute
 )
+
+// lastStackDumpUnixNano 上次 dump goroutine stack 的时间戳（UnixNano）。
+// 与 stackDumpInterval 配合做节流，用 atomic 避免多轮之间竞争。
+var lastStackDumpUnixNano atomic.Int64
+
+// dumpGoroutineStacks 在超出 inflightHardCap 时抓取全量 goroutine stack
+// 打到日志，便于定位到底是哪个 input 的 Gather 卡在哪一行（典型是底层
+// syscall / cgo 调用无法被 context 打断）。
+//
+// 做了两重节流：
+//   - 距上次 dump 不足 stackDumpInterval 则跳过，避免每分钟刷一大坨；
+//   - stack 缓冲上限 1MB，超大进程也不会无节制占内存。
+func dumpGoroutineStacks() {
+	now := time.Now().UnixNano()
+	last := lastStackDumpUnixNano.Load()
+	if last != 0 && now-last < int64(stackDumpInterval) {
+		return
+	}
+	// CAS 抢占 dump 权，防止多轮并发时重复 dump。
+	if !lastStackDumpUnixNano.CompareAndSwap(last, now) {
+		return
+	}
+
+	buf := make([]byte, 1<<20) // 1MB
+	n := runtime.Stack(buf, true /* all goroutines */)
+	logs.Warnf("monitor|inflight cap hit, dumping goroutine stacks (total=%d):\n%s",
+		runtime.NumGoroutine(), buf[:n])
+}
 
 // inflightInputs 跨轮累计的"未完成 input goroutine"计数。每个 input goroutine
 // 起时 +1、返回时 -1。若 input 因底层 syscall 卡死而永不返回，该计数
@@ -155,6 +188,9 @@ func runGatherLoop(ctx context.Context, ins []Input, reporter *Reporter, dumper 
 func doOneGather(ctx context.Context, ins []Input, reporter *Reporter, dumper *Dumper) {
 	if n := inflightInputs.Load(); n >= inflightHardCap {
 		logs.Warnf("monitor|skip round: inflight input goroutines=%d >= cap=%d (some inputs may be stuck)", n, inflightHardCap)
+		// 超阈值大概率有 input 卡在 syscall/cgo，dump 一次 goroutine
+		// stack（内部节流，不会每轮都打）以便定位卡点。
+		dumpGoroutineStacks()
 		return
 	}
 

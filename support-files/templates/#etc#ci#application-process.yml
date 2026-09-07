@@ -81,7 +81,8 @@ pipeline:
   version:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
-    spec_channel_max_keep_num: 2    
+    spec_channel_max_keep_num: 2
+
 scm:
   external:
     tGit:
@@ -91,11 +92,14 @@ scm:
     enabled: true # enable auto pull svn repo commit webhook
     interval: 60  # auto pull interval seconds
 
-# TAPD webhook 配置
-tapd:
+# 外部系统集成配置
+external:
   webhook:
-    # 与 TAPD webhook 配置中一致的密钥；留空时不做合法性校验
-    secret: __BK_CI_TAPD_WEBHOOK_SECRET__
+    tapd:
+      # 与 TAPD webhook 配置中一致的密钥；留空时不做合法性校验
+      secret: __BK_CI_TAPD_WEBHOOK_SECRET__
+      # TAPD 站点访问地址（scheme://host[:port]），用于组装工单详情页链接（ci.event_url）
+      webUrl: __BK_CI_TAPD_WEBHOOK_WEB_URL__
 
 sharding:
   databaseShardingStrategy:
@@ -128,3 +132,10 @@ project:
     #   * 元数据 host：metadata.google.internal、kubernetes.default、metadata.tencentyun.com 等
     #   * 任意本地 0.0.0.0、组播
     allow-internal-url: false
+
+
+publicVarGroup:
+  urlTemplates:
+    base: "/console/pipeline"  # 基础路径
+    pipeline: "/history/pipeline/%s"   # 用于流水线
+    template: "/template/%s/%s/pipeline" # 用于模板

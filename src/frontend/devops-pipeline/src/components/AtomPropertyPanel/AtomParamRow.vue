@@ -106,8 +106,10 @@
                     ...this.param,
                     ...Object.keys(this.param).reduce((acc, key) => {
                         const item = this.param[key]
+                        // 仅当整段值为 {xxx} 时才替换为依赖字段值
+                        // 避免把 Tips 的 url（如 /path/${turboPlanId}）整段覆盖成选中值
                         if (typeof item === 'string') {
-                            const res = item.match(/\{(\S+)\}/)
+                            const res = item.match(/^\{([^{}]+)\}$/)
                             if (res !== null && this.fullAtomValue[res[1]]) {
                                 acc[key] = this.fullAtomValue[res[1]]
                             }

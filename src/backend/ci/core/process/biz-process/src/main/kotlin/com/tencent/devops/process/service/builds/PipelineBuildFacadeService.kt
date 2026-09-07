@@ -155,6 +155,7 @@ import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -219,7 +220,8 @@ class PipelineBuildFacadeService(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
-    private val createStreamService: CreateStreamTriggerSupportService
+    private val createStreamService: CreateStreamTriggerSupportService,
+    private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -512,9 +514,9 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-            } else if (startType == StartType.SERVICE &&
+            } else if (branch.isNullOrBlank() && startType == StartType.SERVICE &&
                 readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-                // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
+                // 服务间的API触发允许执行分支版本，但草稿版本无正式版本，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // PAC流水线相关参数
@@ -846,7 +848,13 @@ class PipelineBuildFacadeService(
             if (!hasPermissionToCancelBuild(userId, projectId, pipelineId, buildId)) {
                 logger.warn("[$buildId]|User $userId has no permission to cancel build.")
                 // 根据不同的策略抛出不同的错误信息
-                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+                val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineVersion = buildInfo?.version
+                )
                 val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
                 if (cancelPolicy == BuildCancelPolicy.RESTRICTED) {
@@ -1126,6 +1134,16 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
+        creativeStreamImateStageReviewService.assertLock(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = isCancel,
+            buildStage = buildStage,
+            channelCode = buildInfo.channelCode
+        )
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
         if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
             reviewParamsCheck(
@@ -1136,7 +1154,12 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本/调试版本的并发配置生效
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo.version
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
@@ -1968,7 +1991,12 @@ class PipelineBuildFacadeService(
             retry = buildHistory.retry,
             errorInfoList = buildHistory.errorInfoList,
             buildNumAlias = buildHistory.buildNumAlias,
-            webhookInfo = buildHistory.webhookInfo
+            webhookInfo = buildHistory.webhookInfo,
+            imateStageReview = if (buildHistory.status == BuildStatus.STAGE_SUCCESS.name) {
+                creativeStreamImateStageReviewService.hint(projectId, pipelineId, buildId)
+            } else {
+                null
+            }
         )
     }
 
@@ -2711,14 +2739,19 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String
     ): Boolean {
-        // 获取流水线配置以检查取消策略
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo?.version
+        )
         val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
         return when (cancelPolicy) {
             BuildCancelPolicy.RESTRICTED -> {
                 // 受限策略：仅触发人或管理员可取消
-                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return false
+                if (buildInfo == null) return false
                 val isTriggerUser = userId == buildInfo.triggerUser
                 val hasManagePermission = pipelinePermissionService.checkPipelinePermission(
                     userId = userId,
@@ -3479,10 +3512,12 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数
+        // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.map {
-            startParameters.put(it.key, it.value.toString())
+        buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.forEach {
+            startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建

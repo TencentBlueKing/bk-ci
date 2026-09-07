@@ -205,6 +205,7 @@ export interface AuthoringEnvItem {
   desc: string
   envType: string
   envNodeType: string
+  os?: string
   nodeCount: number
   tags: [
     {
@@ -416,6 +417,7 @@ export interface PluginPropertyItem {
   os: string[]
   logoUrl: string
   buildLessRunFlag: boolean
+  versionOsMap?: Record<string, string[]>
 }
 
 export interface PluginProperty {

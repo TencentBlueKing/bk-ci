@@ -86,7 +86,7 @@
                     if (isSafe) res = `<a class="text-link" href="${value}" target="_Blank">${key}</a>`
                     else res = `<a class="text-bad-link text-link" title="$t('editPage.badLink')">${key}</a>`
                     return res
-                })
+                }).replace(/\n/g, '<br>')
 
                 this.tip = str.replace(/{([^\{\}]+)}/gim, (str, key) => {
                     const exisParamKey = typeof this.paramValues[key] !== 'undefined'

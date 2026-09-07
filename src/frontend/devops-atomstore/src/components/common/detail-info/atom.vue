@@ -67,14 +67,17 @@
                     <span> {{ $t('store.版本：') }} </span><span>{{ detail.version || '-' }}</span>
                 </h5>
                 <h5 class="detail-info">
-                    <span> {{ $t('store.适用Job类型：') }} </span>
-                    <span class="detail-job-type">
+                    <span> {{ $t('store.适用Job类型：') }}</span>
+                    <span
+                        class="detail-job-type"
+                        v-bk-tooltips="{ content: getJobTypeTooltip(currentScopeDetail.jobTypeConfigs) }"
+                    >
                         <span
                             v-for="(config, index) in currentScopeDetail.jobTypeConfigs"
                             :key="index"
                         >
-                            <span :title="config.jobType | atomJobType">{{ config.jobType | atomJobType }}</span>
-                            <span v-if="showOsList && config.osList && config.osList.length">
+                            <span>{{ config.jobType | atomJobType }}</span>
+                            <span v-if="config.osList && config.osList.length">
                                 (<i
                                     v-for="item in getJobList(config.osList)"
                                     :class="[item.icon, 'devops-icon']"
@@ -311,13 +314,6 @@
                 }
             },
 
-            // creative 类型不展示 osList
-            showOsList () {
-                const type = this.$route.params.type
-                if (type === 'creative') return false
-                return true
-            },
-
             starWidth () {
                 if (this.detail.score >= 5) {
                     return '16px'
@@ -446,6 +442,18 @@
                     }
                 })
                 return jobList
+            },
+
+            getJobTypeTooltip (jobTypeConfigs = []) {
+                if (!Array.isArray(jobTypeConfigs) || !jobTypeConfigs.length) return ''
+                return jobTypeConfigs.map((config) => {
+                    const jobTypeName = this.$options.filters.atomJobType(config.jobType) || config.jobType || ''
+                    const osNames = config.osList && config.osList.length
+                        ? this.getJobList(config.osList).map(item => item.name)
+                        : []
+                    const osText = osNames.length ? `(${osNames.join(',')})` : ''
+                    return `${jobTypeName}${osText}`
+                }).join('、')
             },
 
             goToCode () {

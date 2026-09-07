@@ -23,4 +23,12 @@ class TencentServiceNodeServiceImpl @Autowired constructor(
     override fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): Result<NodeAgentDetail?> {
         return Result(tencentNodeService.getNodeAgentDetail(userId, projectId, agentHashId))
     }
+
+    override fun getNodeAgentDetailByWorkspaceName(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<NodeAgentDetail?> {
+        return Result(tencentNodeService.getNodeAgentDetailByWorkspaceName(userId, projectId, workspaceName))
+    }
 }

@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.listener.event.CdsWebhookEvent
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
@@ -20,8 +21,10 @@ import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.TaskStatusResp
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
@@ -39,6 +42,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -59,6 +64,7 @@ import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -81,12 +87,14 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
+import com.tencent.devops.remotedev.service.TemplateWorkspaceAssignService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceHookService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -148,7 +156,9 @@ class ServiceRemoteDevResourceImpl(
     private val tGitBindService: TGitService,
     private val gitTransfer: RemoteDevGitTransfer,
     private val coffeeAIService: CoffeeAIService,
-    private val openClawService: OpenClawService
+    private val openClawService: OpenClawService,
+    private val templateWorkspaceAssignService: TemplateWorkspaceAssignService,
+    private val clientUpgradeService: ClientUpgradeService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -247,6 +257,14 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Boolean> {
         createControl.assignWorkspace(operator, data, owner)
         return Result(true)
+    }
+
+    override fun assignWorkspaceByTemplate(
+        templateId: String,
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp> {
+        logger.info("assignWorkspaceByTemplate|templateId=$templateId|applicant=$applicant")
+        return Result(templateWorkspaceAssignService.assignByTemplate(applicant, templateId))
     }
 
     override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
@@ -403,7 +421,7 @@ class ServiceRemoteDevResourceImpl(
             logger.warn("delete project workspace with invalid workspace type: $userId|$projectId|$workspaceName")
             return Result(false)
         }
-
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName)
         return Result(
             deleteControl.deleteWorkspace(
                 userId = userId,
@@ -451,6 +469,18 @@ class ServiceRemoteDevResourceImpl(
                 hasCurrentUser = true,
                 userId = userId
             ).firstOrNull()
+        )
+    }
+
+    override fun getProjectWorkspaceMembers(
+        projectId: String,
+        workspaceName: String
+    ): Result<WorkspaceMemberInfo?> {
+        return Result(
+            workspaceService.getWorkspaceMemberInfo(
+                projectId = projectId,
+                workspaceName = workspaceName
+            )
         )
     }
 
@@ -731,8 +761,8 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
-        return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    override fun fetchDiskList(userId: String, workspaceName: String, projectId: String?): Result<List<VmDiskInfo>> {
+        return Result(expertSupportService.fetchDiskList(userId, workspaceName, projectId))
     }
 
     override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
@@ -786,6 +816,13 @@ class ServiceRemoteDevResourceImpl(
     ): Result<Page<ProjectWorkspace>> {
         permissionService.checkUserManager(userId, projectId)
         return Result(workspaceService.getProjectWorkspaceList(userId, projectId, page, pageSize, search))
+    }
+
+    override fun getProjectWorkspaceList4Console(
+        userId: String,
+        data: ProjectWorkspaceFetchData
+    ): Result<Page<ProjectWorkspace>> {
+        return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
     }
 
 
@@ -1110,5 +1147,13 @@ class ServiceRemoteDevResourceImpl(
         taskId: String
     ): Result<TaskStatusResp> {
         return Result(openClawService.getTaskStatus(taskId))
+    }
+
+    override fun getClientLatestVersion(
+        type: ClientUpgradeComp,
+        os: ClientOS
+    ): Result<ClientLatestVersion> {
+        val version = clientUpgradeService.getLatestVersion(type, os).ifBlank { null }
+        return Result(ClientLatestVersion(version = version))
     }
 }

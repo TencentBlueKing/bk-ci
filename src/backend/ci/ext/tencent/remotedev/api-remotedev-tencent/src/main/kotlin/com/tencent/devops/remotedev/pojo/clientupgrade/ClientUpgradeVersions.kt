@@ -15,7 +15,13 @@ data class ClientUpgradeVersions(
     @get:Schema(title = "WINDOWS系统,START客户端升级的版本信息")
     val winStartVersion: UpgradeVersionsData,
     @get:Schema(title = "ANDR系统，客户端升级版本信息")
-    val andrClientVersion: UpgradeVersionsData
+    val andrClientVersion: UpgradeVersionsData,
+    @get:Schema(title = "IOS系统,BKW手机端应用升级的版本信息")
+    val iosAppVersion: UpgradeVersionsData,
+    @get:Schema(title = "ANDROID系统,BKW手机端应用升级的版本信息")
+    val androidAppVersion: UpgradeVersionsData,
+    @get:Schema(title = "OHOS系统,BKW手机端应用升级的版本信息")
+    val ohosAppVersion: UpgradeVersionsData
 )
 
 data class UpgradeVersionsData(

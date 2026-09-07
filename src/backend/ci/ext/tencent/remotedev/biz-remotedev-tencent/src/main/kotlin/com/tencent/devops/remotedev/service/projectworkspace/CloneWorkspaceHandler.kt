@@ -92,15 +92,16 @@ class CloneWorkspaceHandler @Autowired constructor(
         if (!permissionService.hasOwnerPermission(
                 userId = userId,
                 workspaceName = workspaceName,
-                projectId = projectId,
+                projectId = workspace.projectId,
                 ownerType = workspace.ownerType
-            ) && !permissionService.hasUserManager(userId, projectId)
+            ) && !permissionService.hasUserManager(userId, workspace.projectId)
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName, workspace.zoneId)
 
         RedisCallLimit(
             redisOperation = redisOperation,
@@ -228,6 +229,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to clone $workspaceName")
             )
         }
+        workspaceCommon.checkFunctionRestrictedZone(workspaceName, workspace.zoneId)
 
         RedisCallLimit(
             redisOperation = redisOperation,

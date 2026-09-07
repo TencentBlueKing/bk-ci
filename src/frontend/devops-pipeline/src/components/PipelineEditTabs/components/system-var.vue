@@ -56,7 +56,6 @@
             return {
                 isLoading: false,
                 searchStr: '',
-                triggerParamList: [],
                 sysParamList: []
             }
         },
@@ -83,6 +82,14 @@
             }
         },
 
+        watch: {
+            commonParams () {
+                this.initData()
+            },
+            triggerParams () {
+                this.initData()
+            }
+        },
         created () {
             this.initData()
         },

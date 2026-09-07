@@ -24,6 +24,10 @@ class ClientUpgradeService @Autowired constructor(
     private val clientDao: ClientDao,
     private val upgradeProps: UpgradeProps
 ) {
+    fun getLatestVersion(comp: ClientUpgradeComp, os: ClientOS): String {
+        return upgradeProps.getCurrentVersion(comp, os)
+    }
+
     fun checkUpgrade(userId: String, data: ClientUpgradeData): ClientUpgradeResp {
         val record = clientDao.fetchAny(dslContext, data.macAddress) ?: return ClientUpgradeResp.noUpgrade()
         if (data.forceUpdate != true && !upgradeProps.checkCanUpgrade(record.macAddress)) {
@@ -197,6 +201,7 @@ class ClientUpgradeService @Autowired constructor(
         val version = when (upgradeComp) {
             ClientUpgradeComp.START -> record.startVersion
             ClientUpgradeComp.CLIENT -> record.version
+            ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
         }.trim()
 
         // 根据用户升级版本
@@ -268,6 +273,8 @@ class ClientUpgradeService @Autowired constructor(
     }
 }
 
+private const val APP_NOT_SUPPORTED = "APP not supported in desktop upgrade flow"
+
 data class UpgradeDynamicProps(
     var clientCanUpgradeNumb: Int?,
     val clientUserVersion: Map<String, String>,
@@ -281,27 +288,32 @@ data class UpgradeDynamicProps(
     fun canUpgradeNumb(upgradeComp: ClientUpgradeComp) = when (upgradeComp) {
         ClientUpgradeComp.START -> startCanUpgradeNumb
         ClientUpgradeComp.CLIENT -> clientCanUpgradeNumb
+        ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
     }
 
     fun setCanUpgradeNumb(upgradeComp: ClientUpgradeComp, numb: Int) {
         when (upgradeComp) {
             ClientUpgradeComp.START -> startCanUpgradeNumb = numb
             ClientUpgradeComp.CLIENT -> clientCanUpgradeNumb = numb
+            ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
         }
     }
 
     fun userVersion(upgradeComp: ClientUpgradeComp) = when (upgradeComp) {
         ClientUpgradeComp.START -> startUserVersion
         ClientUpgradeComp.CLIENT -> clientUserVersion
+        ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
     }
 
     fun projectVersion(upgradeComp: ClientUpgradeComp) = when (upgradeComp) {
         ClientUpgradeComp.START -> startProjectVersion
         ClientUpgradeComp.CLIENT -> clientProjectVersion
+        ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
     }
 
     fun workspaceNames(upgradeComp: ClientUpgradeComp) = when (upgradeComp) {
         ClientUpgradeComp.START -> startWorkspaceNameVersion
         ClientUpgradeComp.CLIENT -> clientWorkspaceNameVersion
+        ClientUpgradeComp.APP -> error(APP_NOT_SUPPORTED)
     }
 }

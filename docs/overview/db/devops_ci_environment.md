@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.24
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -23,6 +23,7 @@
 | T_ENV_OPERATE_LOG | 环境操作记录表 |
 | T_ENV_SHARE_PROJECT |  |
 | T_ENV_TAG | 环境-标签映射表 |
+| T_ENV_TAG_NODE_ENABLE | 动态环境-节点开关映射表 |
 | T_NODE | 节点信息表 |
 | T_NODE_TAGS |  |
 | T_NODE_TAG_INTERNAL_KEY | 内部标签，ID 需要是负数和用户标签区分 |
@@ -112,6 +113,7 @@
 |  11   | ENV_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 环境哈希 ID  |
 |  12   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除  |
 |  13   | ENV_NODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   NODE    | 环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}  |
+|  14   | OS |   varchar   | 16 |   0    |    Y     |  N   |       | 环境节点系统类型  |
 
 **表名：** <a>T_ENVIRONMENT_AGENT_PIPELINE</a>
 
@@ -307,6 +309,19 @@
 |  2   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
 |  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
 |  4   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值 ID  |
+
+**表名：** <a>T_ENV_TAG_NODE_ENABLE</a>
+
+**说明：** 动态环境-节点开关映射表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  4   | ENABLE_NODE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用节点  |
 
 **表名：** <a>T_NODE</a>
 

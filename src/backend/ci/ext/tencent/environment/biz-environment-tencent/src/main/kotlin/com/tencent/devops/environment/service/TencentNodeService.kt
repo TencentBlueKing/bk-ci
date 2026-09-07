@@ -17,7 +17,6 @@ import com.tencent.devops.environment.dao.AgentDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
-import com.tencent.devops.environment.model.AgentPropsSource
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AsyncInstallImateData
 import com.tencent.devops.environment.pojo.NodeAgentDetail
@@ -26,6 +25,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.imate.ImateListItem
 import com.tencent.devops.environment.pojo.imate.ImateOriginEngine
 import com.tencent.devops.environment.pojo.imate.ImportImageNodeData
+import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -67,8 +67,8 @@ class TencentNodeService @Autowired constructor(
         displayName: String
     ): Boolean {
         val record =
-            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, projectId) ?: return false
-        nodeService.updateDisplayName(userId, projectId, HashUtil.encodeLongId(record.nodeId), displayName)
+            agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, null) ?: return false
+        nodeService.updateDisplayName(userId, record.projectId, HashUtil.encodeLongId(record.nodeId), displayName)
         return true
     }
 
@@ -199,13 +199,18 @@ class TencentNodeService @Autowired constructor(
     }
 
     fun getNodeAgentDetail(userId: String, projectId: String, agentHashId: String): NodeAgentDetail? {
-        val agent = thirdPartyAgentDao.getAgentByProject(dslContext, HashUtil.decodeIdToLong(agentHashId), projectId)
-            ?: return null
+        val agent = thirdPartyAgentDao.getAgentByProject(
+            dslContext = dslContext,
+            id = HashUtil.decodeIdToLong(agentHashId),
+            projectId = projectId
+        ) ?: return null
         val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
         return NodeAgentDetail(
+            agentHashId = agentHashId,
             displayName = node.displayName,
             ip = agent.ip,
-            workspaceName = agent.createWorkspaceName
+            workspaceName = agent.createWorkspaceName,
+            nodeId = agent.nodeId
         )
     }
 
@@ -311,6 +316,24 @@ class TencentNodeService @Autowired constructor(
                 )
             )
         }
+    }
+
+    fun getNodeAgentDetailByWorkspaceName(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): NodeAgentDetail? {
+        val agent =
+            thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, listOf(workspaceName)).firstOrNull()
+                ?: return null
+        val node = nodeDao.get(dslContext, projectId, agent.nodeId) ?: return null
+        return NodeAgentDetail(
+            agentHashId = HashUtil.encodeLongId(agent.id),
+            displayName = node.displayName,
+            ip = agent.ip,
+            workspaceName = agent.createWorkspaceName,
+            nodeId = agent.nodeId
+        )
     }
 
 

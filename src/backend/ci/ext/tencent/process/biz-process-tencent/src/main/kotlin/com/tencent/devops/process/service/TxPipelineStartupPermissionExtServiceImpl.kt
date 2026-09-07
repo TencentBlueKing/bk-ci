@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.environment.api.ServiceCreativeStreamNodeResource
 import com.tencent.devops.environment.api.TencentServiceNodeService
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineStartupPermissionExtService
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.support.api.service.ServiceIMateResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,8 +92,11 @@ class TxPipelineStartupPermissionExtServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
 
-        val authorized = client.get(ServiceIMateResource::class)
-            .checkAuthorization(username = userId, clientUuid = workspaceName).data?.authorized ?: false
+        val authorized = client.get(ServiceCreativeStreamNodeResource::class).checkUsePermission(
+            userId = userId,
+            projectId = projectId,
+            nodeId = nodeAgentDetail.nodeId
+        ).data ?: false
         if (!authorized) {
             val nodeDisplayInfo = "${nodeAgentDetail.displayName}（${nodeAgentDetail.ip}）"
             logger.warn(

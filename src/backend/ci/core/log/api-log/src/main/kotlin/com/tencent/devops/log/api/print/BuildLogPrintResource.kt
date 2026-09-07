@@ -28,6 +28,8 @@
 package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -68,7 +70,13 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage
+        logMessage: LogMessage,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入一条红色高亮日志")
@@ -79,7 +87,13 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage
+        logMessage: LogMessage,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入一条黄色高亮日志")
@@ -90,7 +104,13 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "一条日志", required = true)
-        logMessage: LogMessage
+        logMessage: LogMessage,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入多条日志")
@@ -101,7 +121,13 @@ interface BuildLogPrintResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @Parameter(description = "多条日志列表", required = true)
-        logMessages: List<LogMessage>
+        logMessages: List<LogMessage>,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "写入日志状态")
@@ -131,7 +157,13 @@ interface BuildLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?
+        stepId: String?,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")
@@ -164,7 +196,13 @@ interface BuildLogPrintResource {
         jobId: String?,
         @Parameter(description = "step id", required = false)
         @QueryParam("stepId")
-        stepId: String?
+        stepId: String?,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = null,
+        @Parameter(description = "流水线ID，旧客户端可不传", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "更新日志存储模式的流转状态")

@@ -80,6 +80,7 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.EnvTagDao
+import com.tencent.devops.environment.dao.EnvTagNodeEnableDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -141,6 +142,7 @@ class EnvService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
+    private val envTagNodeEnableDao: EnvTagNodeEnableDao,
     private val nodeService: NodeService,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
@@ -393,8 +395,7 @@ class EnvService @Autowired constructor(
                 envRecordList = envRecordList
             )
         }
-        val tagNodeCount = envTagDao.batchEnvTagNodeCount(
-            dslContext = dslContext,
+        val tagNodeCount = batchEnvTagNodeCount(
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
             projectId = projectId,
             nodeType = if (createMode == true) {
@@ -450,8 +451,7 @@ class EnvService @Autowired constructor(
             return listOf()
         }
 
-        val tagNodeCount = envTagDao.batchEnvTagNodeCount(
-            dslContext = dslContext,
+        val tagNodeCount = batchEnvTagNodeCount(
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
             projectId = projectId,
             nodeType = setOf(NodeType.CMDB.name)
@@ -1240,6 +1240,8 @@ class EnvService @Autowired constructor(
                 if (envRecord.envNodeType == EnvNodeType.TAG.name) {
                     envTagDao.deleteByEnvId(ctx, envId)
                     envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                    // 清空关联节点记录
+                    envTagNodeEnableDao.delete(ctx, projectId, envId)
                 }
                 envNodeDao.deleteByEnvId(ctx, envId)
             }
@@ -1326,9 +1328,14 @@ class EnvService @Autowired constructor(
             if (envRecord.envNodeType == EnvNodeType.TAG.name) {
                 envTagDao.deleteByEnvId(ctx, envId)
                 envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                // 清空关联节点记录
+                envTagNodeEnableDao.delete(ctx, projectId, envId)
             }
+            // 删除前拿一下启停数据
+            val existRecord = envNodeDao.list(ctx, projectId, listOf(envId)).associate { it.nodeId to it.enableNode }
+            val nodeEnableMap = existNodeIds.associateWith { (existRecord[it] ?: true) }
             envNodeDao.deleteByEnvId(ctx, envId)
-            envNodeDao.batchStoreEnvNode(ctx, existNodeIds.toList(), envId, projectId)
+            envNodeDao.batchStoreEnvNode(ctx, nodeEnableMap, envId, projectId)
         }
 
         envOperateLogService.addOperateLog(
@@ -1989,37 +1996,48 @@ class EnvService @Autowired constructor(
         } else {
             ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
-        return if (envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
-            val result = envNodeDao.disableOrEnableNode(
+        // 动态
+        val result = if (env.envNodeType == EnvNodeType.TAG.name) {
+            envTagNodeEnableDao.disableOrEnableNode(
                 dslContext = dslContext,
                 projectId = projectId,
                 envId = envId,
                 nodeId = nodeId,
                 enable = enableNode
             )
-            envOperateLogService.addOperateLog(
+        } else {
+            // 静态
+            if (!envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
+                return Result(
+                    data = false,
+                    status = 400,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_NODE_NOT_EXISTS,
+                        params = arrayOf(node.displayName)
+                    )
+                )
+            }
+            envNodeDao.disableOrEnableNode(
+                dslContext = dslContext,
                 projectId = projectId,
                 envId = envId,
-                operateOrigin = operateOrigin,
-                operateName = if (enableNode) {
-                    EnvOperateName.ENABLE_NODE
-                } else {
-                    EnvOperateName.DISABLE_NODE
-                },
-                operateContent = EnvOperateContent(content = data?.reason ?: "", resourceCount = 1),
-                operator = userId
-            )
-            Result(result)
-        } else {
-            Result(
-                data = false,
-                status = 400,
-                message = I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_NODE_NOT_EXISTS,
-                    params = arrayOf(node.displayName)
-                )
+                nodeId = nodeId,
+                enable = enableNode
             )
         }
+        envOperateLogService.addOperateLog(
+            projectId = projectId,
+            envId = envId,
+            operateOrigin = operateOrigin,
+            operateName = if (enableNode) {
+                EnvOperateName.ENABLE_NODE
+            } else {
+                EnvOperateName.DISABLE_NODE
+            },
+            operateContent = EnvOperateContent(content = data?.reason ?: "", resourceCount = 1),
+            operator = userId
+        )
+        return Result(result)
     }
 
     /**
@@ -2096,21 +2114,24 @@ class EnvService @Autowired constructor(
         val candidates = mutableListOf<EnvNodeCandidate>()
         // 动态
         val tagEnvIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
-        envTagDao.batchEnvTagNode(
-            dslContext = dslContext,
+        val enableTagNodes = envTagNodeEnableDao.listEnvNodeEnable(dslContext, projectId, tagEnvIds)
+            .groupBy { it.envId }.mapValues { (_, items) -> items.associate { it.nodeId to it.enableNode } }
+        batchEnvTagNode(
             projectId = projectId,
             envIds = tagEnvIds
         ).forEach { (envId, nodeIds) ->
             val nodeType = getEnvNodeType(envMap[envId]?.envType)
             nodeIds.forEach { nodeId ->
-                candidates.add(EnvNodeCandidate(
-                    envId = envId,
-                    nodeId = nodeId,
-                    enableNode = true,
-                    nodeType = nodeType,
-                    os = envMap[envId]?.os,
-                    envType = envMap[envId]?.envType
-                ))
+                candidates.add(
+                    EnvNodeCandidate(
+                        envId = envId,
+                        nodeId = nodeId,
+                        enableNode = enableTagNodes[envId]?.get(nodeId) ?: true,
+                        nodeType = nodeType,
+                        os = envMap[envId]?.os,
+                        envType = envMap[envId]?.envType
+                    )
+                )
             }
         }
         // 静态
@@ -2173,11 +2194,104 @@ class EnvService @Autowired constructor(
         }
     }
 
+    /**
+     * 批量查询 TAG 类型环境命中的节点。
+     * 标签匹配规则：同一 tagKey 内的多个值为 OR，不同 tagKey 之间为 AND，
+     * 即节点对环境选中的每一个 tagKey，都至少命中该 key 下的一个标签值。
+     * @return <envId, List<nodeId>>
+     */
+    private fun batchEnvTagNode(
+        projectId: String,
+        envIds: Set<Long>
+    ): Map<Long, MutableList<Long>> {
+        val resultMap = mutableMapOf<Long, MutableList<Long>>()
+        if (envIds.isEmpty()) {
+            return resultMap
+        }
+        // 1. 查询每个 env 拥有的标签（按 tagKey 分组）
+        val envTagKeyValues = envTagDao.fetchEnvTagKeyValues(dslContext, projectId, envIds)
+        if (envTagKeyValues.isEmpty()) {
+            return resultMap
+        }
+        // 2. 查询这些标签值下每个节点拥有的标签值集合
+        val allTagValueIds = envTagKeyValues.values
+            .flatMapTo(mutableSetOf()) { keyValues -> keyValues.values.flatten() }
+        val nodeTagValues = envTagDao.fetchNodeTagValues(dslContext, projectId, allTagValueIds)
+        if (nodeTagValues.isEmpty()) {
+            return resultMap
+        }
+        // 3. 内存匹配：同一 tagKey 内的值 OR，不同 tagKey 之间 AND
+        envTagKeyValues.forEach { (envId, keyValues) ->
+            nodeTagValues.forEach { (nodeId, nodeValues) ->
+                if (nodeMatchEnvTags(nodeValues, keyValues)) {
+                    resultMap.getOrPut(envId) { mutableListOf() }.add(nodeId)
+                }
+            }
+        }
+        return resultMap
+    }
+
+    /**
+     * 批量统计 TAG 类型环境命中的节点数量，匹配规则同 [batchEnvTagNode]，并按节点类型过滤。
+     * @return <envId, nodeCount>
+     */
+    private fun batchEnvTagNodeCount(
+        projectId: String,
+        envIds: Set<Long>,
+        nodeType: Set<String>
+    ): Map<Long, Int> {
+        val resultMap = mutableMapOf<Long, Int>()
+        if (envIds.isEmpty()) {
+            return resultMap
+        }
+        // 1. 查询每个 env 拥有的标签（按 tagKey 分组）
+        val envTagKeyValues = envTagDao.fetchEnvTagKeyValues(dslContext, projectId, envIds)
+        if (envTagKeyValues.isEmpty()) {
+            return resultMap
+        }
+        // 2. 查询这些标签值下每个节点拥有的标签值集合
+        val allTagValueIds = envTagKeyValues.values
+            .flatMapTo(mutableSetOf()) { keyValues -> keyValues.values.flatten() }
+        val nodeTagValues = envTagDao.fetchNodeTagValues(dslContext, projectId, allTagValueIds)
+        if (nodeTagValues.isEmpty()) {
+            return resultMap
+        }
+        // 3. 按节点类型过滤出有效节点
+        val validNodeIds = nodeDao.listNodeIdsByType(dslContext, projectId, nodeTagValues.keys, nodeType)
+        if (validNodeIds.isEmpty()) {
+            return resultMap
+        }
+        // 4. 内存匹配：同一 tagKey 内的值 OR，不同 tagKey 之间 AND
+        envTagKeyValues.forEach { (envId, keyValues) ->
+            var count = 0
+            validNodeIds.forEach { nodeId ->
+                if (nodeMatchEnvTags(nodeTagValues[nodeId], keyValues)) {
+                    count++
+                }
+            }
+            if (count > 0) {
+                resultMap[envId] = count
+            }
+        }
+        return resultMap
+    }
+
+    /**
+     * 判断节点是否匹配 env 的标签条件：同一 tagKey 内的值为 OR，不同 tagKey 之间为 AND。
+     */
+    private fun nodeMatchEnvTags(nodeValues: Set<Long>?, envKeyValues: Map<Long, Set<Long>>): Boolean {
+        if (nodeValues.isNullOrEmpty()) {
+            return false
+        }
+        return envKeyValues.values.all { valuesOfKey -> valuesOfKey.any { it in nodeValues } }
+    }
+
     private fun getEnvNodeType(envType: String?): NodeType? {
         return when (envType) {
             EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name -> NodeType.CMDB
             EnvType.BUILD.name -> NodeType.THIRDPARTY
             EnvType.CREATE.name -> NodeType.CREATE
+            EnvType.DEVX.name -> NodeType.DEVX
             else -> null
         }
     }

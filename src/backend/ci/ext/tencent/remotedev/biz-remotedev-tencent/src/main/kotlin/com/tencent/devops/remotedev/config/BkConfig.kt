@@ -75,8 +75,8 @@ class BkConfig @Autowired constructor(
     val bksopsTaskStatus: String = ""
 
 
-    @Value("\${remoteDev.desktopSdkToken:D1oXVCZnVQ9Vu65eXG5R}")
-    val desktopSdkToken: String = "D1oXVCZnVQ9Vu65eXG5R"
+    @Value("\${remoteDev.desktopSdkToken:}")
+    val desktopSdkToken: String = ""
 
     // 货币化配置
     @Value("\${bills.pushUrl:}")

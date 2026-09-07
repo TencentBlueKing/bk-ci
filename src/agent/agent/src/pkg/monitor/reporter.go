@@ -297,6 +297,12 @@ func buildGlobalTags() map[string]string {
 		if v := config.GAgentEnv.GetAgentIp(); v != "" {
 			tags[TagHostIP] = v
 		}
+		if v := config.GAgentEnv.CPUProductInfo; v != "" {
+			tags[TagCpuProductInfo] = v
+		}
+		if v := config.GAgentEnv.GPUProductInfo; v != "" {
+			tags[TagGpuProductInfo] = v
+		}
 	}
 	return tags
 }

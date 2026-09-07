@@ -75,6 +75,21 @@ class AiPromptService @Autowired constructor(
         return toPromptInfo(record)
     }
 
+    fun listAllForOp(): List<AiPromptInfo> {
+        return aiPromptDao.listAll(dslContext).map { toPromptInfo(it) }
+    }
+
+    fun deleteForOp(promptId: String): Boolean {
+        aiPromptDao.getById(dslContext, promptId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.PROMPT_NOT_FOUND,
+                defaultMessage = "Prompt not found",
+                params = arrayOf(promptId)
+            )
+        return aiPromptDao.delete(dslContext, promptId) > 0
+    }
+
     fun listPrompts(userId: String): List<AiPromptInfo> {
         val result = aiPromptDao.listByUserId(
             dslContext, userId

@@ -29,9 +29,9 @@ package com.tencent.devops.environment.dao.devx
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.environment.pojo.enums.TXEnvType
-import com.tencent.devops.environment.pojo.enums.TXNodeType
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
@@ -76,7 +76,7 @@ class DEVXDao {
                         name,
                         OS.WINDOWS.name,
                         NodeStatus.NORMAL.name,
-                        TXNodeType.DEVX.nodeType().name,
+                        NodeType.DEVX.name,
                         userId,
                         LocalDateTime.now(),
                         userId,
@@ -100,7 +100,7 @@ class DEVXDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.`in`(projectId))
                 .and(IS_DELETED.eq(false))
-                .and(ENV_TYPE.eq(TXEnvType.DEVX.name))
+                .and(ENV_TYPE.eq(EnvType.DEVX.name))
                 .orderBy(ENV_ID.desc())
                 .fetch()
         }

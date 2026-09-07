@@ -5,10 +5,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.UserOnePassword
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
@@ -18,10 +20,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceCloneReq
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
+import com.tencent.devops.remotedev.pojo.TemplateWorkspaceAssignResp
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -45,6 +50,7 @@ import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceMemberInfo
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -204,6 +210,18 @@ interface ServiceRemoteDevResource {
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
+    @Operation(summary = "按模版申请交付云桌面给用户")
+    @POST
+    @Path("/assignWorkspaceByTemplate")
+    fun assignWorkspaceByTemplate(
+        @Parameter(description = "模版ID，必填", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @Parameter(description = "申请人，必填", required = true)
+        @QueryParam("applicant")
+        applicant: String
+    ): Result<TemplateWorkspaceAssignResp>
+
     @Operation(summary = "用来通知蓝盾客户端消息")
     @POST
     @Path("/notify")
@@ -350,6 +368,18 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WeSecProjectWorkspace?>
+
+    @Operation(summary = "获取项目云桌面的拥有者和共享人")
+    @GET
+    @Path("/project_workspace_members")
+    fun getProjectWorkspaceMembers(
+        @Parameter(description = "项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WorkspaceMemberInfo?>
 
     @Deprecated("未来fetch_expert_sup_record_any使用会把这个接口废弃")
     @Operation(summary = "获取专家求助单据数据")
@@ -661,7 +691,10 @@ interface ServiceRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<List<VmDiskInfo>>
 
     @Operation(summary = "卸载并回收磁盘")
@@ -756,6 +789,17 @@ interface ServiceRemoteDevResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
+    ): Result<Page<ProjectWorkspace>>
+
+    @Operation(summary = "获取项目下实例列表(支持地域/状态过滤，供console巡检)")
+    @POST
+    @Path("/project/workspace/list4console")
+    fun getProjectWorkspaceList4Console(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "查询参数")
+        data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
     @Operation(summary = "获取指定工作空间详情时间线")
@@ -1161,4 +1205,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("taskId")
         taskId: String
     ): Result<TaskStatusResp>
+
+    @Operation(summary = "查询指定客户端组件在指定OS下的最新版本")
+    @GET
+    @Path("/client/latest_version")
+    fun getClientLatestVersion(
+        @Parameter(description = "升级组件", required = true)
+        @QueryParam("type")
+        type: ClientUpgradeComp,
+        @Parameter(description = "操作系统", required = true)
+        @QueryParam("os")
+        os: ClientOS
+    ): Result<ClientLatestVersion>
 }

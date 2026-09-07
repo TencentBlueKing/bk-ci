@@ -349,7 +349,7 @@ class WebIDEService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             ), "T-1-1-1"
         )
-        val params: List<BuildFormProperty> = emptyList()
+        val params: MutableList<BuildFormProperty> = mutableListOf()
         val triggerContainer = TriggerContainer(
             "0",
             MessageUtil.getMessageByLocale(

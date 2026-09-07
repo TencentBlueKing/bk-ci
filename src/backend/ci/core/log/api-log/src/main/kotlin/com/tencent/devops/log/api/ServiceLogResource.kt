@@ -103,7 +103,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "是否校验流水线权限", required = false)
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true,
@@ -155,6 +155,9 @@ interface ServiceLogResource {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -164,7 +167,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "是否校验流水线权限", required = false)
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
@@ -204,6 +207,9 @@ interface ServiceLogResource {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -213,7 +219,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "是否校验流水线权限", required = false)
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
@@ -265,7 +271,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "是否校验流水线权限", required = false)
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
@@ -320,7 +326,7 @@ interface ServiceLogResource {
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "是否校验流水线权限", required = false)
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
         @DefaultValue("true")
         @QueryParam("checkPermissionFlag")
         checkPermissionFlag: Boolean = true
@@ -352,6 +358,9 @@ interface ServiceLogResource {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,

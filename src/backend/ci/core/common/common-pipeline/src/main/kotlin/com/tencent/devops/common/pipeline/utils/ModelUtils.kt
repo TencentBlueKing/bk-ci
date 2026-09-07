@@ -123,7 +123,10 @@ object ModelUtils {
                 initContainerOldData(c)
                 val jobStatus = BuildStatus.parse(c.status)
                 c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
-                if (c.canRetry == true) {
+                if (c.matrixGroupFlag == true) {
+                    // 矩阵父容器：下钻到分裂后的子容器，按子容器与子插件状态计算 canRetry/canSkip
+                    refreshMatrixGroup(c)
+                } else if (c.canRetry == true) {
                     refreshContainer(c)
                 }
             }
@@ -133,6 +136,58 @@ object ModelUtils {
     private fun refreshContainer(container: Container) {
         container.elements.forEach { e ->
             refreshElement(element = e)
+        }
+    }
+
+    /**
+     * 刷新矩阵父容器下所有子容器及子插件的 canRetry/canSkip 状态，
+     * 使矩阵子Job支持与普通Job对齐的局部重试/跳过。
+     * 子插件为 [com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement]，
+     * 自身不含 additionalOptions，需按下标从父模板元素读取重试/跳过配置。
+     */
+    private fun refreshMatrixGroup(matrixContainer: Container) {
+        val groupContainers = matrixContainer.fetchGroupContainers() ?: return
+        val templateElements = matrixContainer.elements
+        groupContainers.forEach { child ->
+            val childStatus = BuildStatus.parse(child.status)
+            child.canRetry = childStatus.isFailure() || childStatus.isCancel()
+            child.elements.forEachIndexed { index, childElement ->
+                refreshMatrixElement(
+                    templateElement = templateElements.getOrNull(index),
+                    childElement = childElement
+                )
+            }
+        }
+    }
+
+    /**
+     * 计算单个矩阵子插件的 canRetry/canSkip，逻辑镜像 [refreshElement]：
+     * 因子插件 MatrixStatusElement 无 additionalOptions，重试/跳过配置从父模板元素 [templateElement] 读取，
+     * 再结合子插件 [childElement] 自身的运行状态判定。
+     */
+    private fun refreshMatrixElement(templateElement: Element?, childElement: Element) {
+        val additionalOptions = templateElement?.additionalOptions
+        if (additionalOptions == null || !additionalOptions.enable) {
+            childElement.canRetry = null
+            childElement.canSkip = null
+            return
+        }
+        val taskStatus = BuildStatus.parse(childElement.status)
+        if (!taskStatus.isFailure() && !taskStatus.isCancel()) {
+            childElement.canRetry = null
+            childElement.canSkip = null
+            return
+        }
+        childElement.canRetry = additionalOptions.manualRetry
+        if (additionalOptions.continueWhenFailed) { // 开启了自动跳过
+            if (additionalOptions.manualSkip == true) { // 开启了手动跳过 会覆盖自动跳过
+                childElement.canSkip = true
+            } else {
+                childElement.canRetry = null // 自动跳过的不能手动重试
+            }
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
+            childElement.canRetry = null
+            childElement.canSkip = null
         }
     }
 
@@ -158,14 +213,18 @@ object ModelUtils {
             } else {
                 element.canRetry = null // 自动跳过的不能手动重试
             }
-        } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-        ) {
+        } else if (isFailureAwareCondition(additionalOptions.runCondition)) {
             // “失败时才运行”的插件自身不放开重试/跳过；但不再影响前序失败插件的重试/跳过按钮
             element.canRetry = null
             element.canSkip = null
         }
+    }
+
+    private fun isFailureAwareCondition(runCondition: RunCondition?): Boolean {
+        return runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP ||
+            runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
     }
 
     /**

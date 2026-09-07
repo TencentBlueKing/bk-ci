@@ -34,6 +34,7 @@ dependencies {
 
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:environment:api-environment-tencent"))
 }
 
 plugins {

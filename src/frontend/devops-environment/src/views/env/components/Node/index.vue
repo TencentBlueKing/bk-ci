@@ -259,7 +259,7 @@
 </template>
 
 <script>
-    import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+    import { ref, computed, watch, onMounted, nextTick } from 'vue'
     import {
         ENV_RESOURCE_ACTION,
         ENV_RESOURCE_TYPE
@@ -309,6 +309,10 @@
             const isLoading = ref(false)
             const tableSize = ref('small')
             const tableMaxHeight = ref(565)
+            const ROW_HEIGHT = 42
+            const TABLE_HEADER_HEIGHT = 42
+            const PAGINATION_HEIGHT = 64
+            const TABLE_MARGIN_TOP = 20
             const selectedNodesList = ref([])
             const searchValue = ref([])
             const runningStatus = ref(['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'])
@@ -384,26 +388,28 @@
                 })
             })
 
-            // 动态计算表格最大高度
-            const calculateTableHeight = () => {
-                // 获取容器高度
+            // 动态计算表格高度及每页可展示条数（按 42px 行高）
+            const calculateTableLayout = () => {
                 const container = document.querySelector('.node-container')
-                if (container) {
-                    const containerHeight = container.clientHeight
-                    // 减去头部高度（按钮和搜索框区域）和表格上边距
-                    // 头部高度约 32px（按钮高度）+ 20px（margin-top）= 52px
-                    const headerHeight = 52
-                    const calculatedHeight = containerHeight - headerHeight
-                    // 确保计算出的高度大于最小值
-                    if (calculatedHeight > 200) {
-                        tableMaxHeight.value = calculatedHeight
-                    }
-                }
-            }
+                if (!container) return false
+                const containerHeight = container.clientHeight
+                const headerEl = container.querySelector('.node-list-main-header')
+                const headerHeight = headerEl?.offsetHeight || 32
+                const calculatedHeight = containerHeight - headerHeight - TABLE_MARGIN_TOP
+                if (calculatedHeight <= 200) return false
 
-            // 监听窗口大小变化
-            const handleResize = () => {
-                calculateTableHeight()
+                tableMaxHeight.value = calculatedHeight
+
+                const tableBodyHeight = calculatedHeight - TABLE_HEADER_HEIGHT - PAGINATION_HEIGHT
+                const rowCount = Math.max(1, Math.floor(tableBodyHeight / ROW_HEIGHT))
+                const prevLimit = pagination.value.limit
+                if (prevLimit !== rowCount) {
+                    pageLimitChange(rowCount)
+                    pagination.value.limitList = [rowCount, ...pagination.value.limitList.filter(item => item !== rowCount)]
+                        .sort((a, b) => a - b)
+                }
+
+                return prevLimit !== rowCount
             }
 
             const handleShowAddNodesDialog = () => {
@@ -582,16 +588,10 @@
 
             onMounted(() => {
                 nextTick(() => {
-                    calculateTableHeight()
+                    calculateTableLayout()
+                    // 获取节点列表
+                    fetchData()
                 })
-                window.addEventListener('resize', handleResize)
-
-                // 获取节点列表
-                fetchData()
-            })
-
-            onUnmounted(() => {
-                window.removeEventListener('resize', handleResize)
             })
             return {
                 // data

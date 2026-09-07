@@ -92,12 +92,14 @@ interface IEnvService {
         envHashIds: List<String>
     ): Map<String, List<NodeBaseInfo>>
 
+    @Deprecated("这个方法如果不传入 envId 那么得到的环境相关的结果不可控，后续修改尽量不使用这个方法")
     fun listAllEnvNodes(
         userId: String,
         projectId: String,
         envHashIds: List<String>
     ): List<NodeBaseInfo>
 
+    @Deprecated("这个方法如果不传入 envId 那么得到的环境相关的结果不可控，后续修改尽量不使用这个方法")
     fun listAllEnvNodesNew(
         userId: String,
         projectId: String,
