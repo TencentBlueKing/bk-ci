@@ -92,5 +92,7 @@ data class AtomEnv(
     @get:Schema(title = "插件是否需要鉴权（开源插件无需鉴权）", required = false)
     val authFlag: Boolean? = null,
     @get:Schema(title = "服务范围", required = false)
-    val serviceScope: List<String>? = null
+    val serviceScope: List<String>? = null,
+    @get:Schema(title = "各Job类型对应支持的操作系统映射（jobType -> OS列表）", required = false)
+    val osMap: Map<String, List<String>>? = null
 )

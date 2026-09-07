@@ -209,8 +209,7 @@ class PipelineBuildStageDao {
         projectId: String,
         buildId: String,
         statusSet: Set<BuildStatus>? = null,
-        num: Int? = null,
-        executeCount: Int? = null
+        num: Int? = null
     ): List<PipelineBuildStage> {
         return with(T_PIPELINE_BUILD_STAGE) {
             val conditions = mutableListOf<Condition>()
@@ -218,9 +217,6 @@ class PipelineBuildStageDao {
             conditions.add(PROJECT_ID.eq(projectId))
             if (!statusSet.isNullOrEmpty()) {
                 conditions.add(STATUS.`in`(statusSet.map { it.ordinal }))
-            }
-            executeCount?.let {
-                conditions.add(EXECUTE_COUNT.eq(executeCount))
             }
             val baseStep = dslContext.selectFrom(this).where(conditions).orderBy(SEQ.asc())
             if (num != null) {

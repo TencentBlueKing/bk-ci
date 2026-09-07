@@ -211,6 +211,7 @@
   import { InfoBox, Message } from 'bkui-vue';
   import { Success, Spinner  } from 'bkui-vue/lib/icon';
   import { cacheProjectCode } from '@/store/useCacheProjectCode'
+  import { resolveDefaultProjectCode } from '@/utils/resolveDefaultProjectCode'
   import ProjectUserSelector from '@/components/project-user-selector'
   import normalIcon from '@/css/svg/normal.svg'
 
@@ -235,7 +236,11 @@
   const isResetSuccess = ref(false);
   const isChecking = ref(false);
   const canLoading = ref(true);
-  const defaultProjectId = computed(() => route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || tools.getCookie('X-DEVOPS-PROJECT-ID') || '');
+  const defaultProjectId = computed(() => resolveDefaultProjectCode({
+    routeProjectCode: route?.params.projectCode || route?.query.projectCode || route?.query.project_code,
+    cookieProjectCode: tools.getCookie('X-DEVOPS-PROJECT-ID'),
+    cachedProjectCode: cacheProjectCode.get(),
+  }));
   const projectId = ref('');
   const userId = computed(() => window.top.userInfo.username);
   const resourceType = computed(() => route.name || 'repertory');

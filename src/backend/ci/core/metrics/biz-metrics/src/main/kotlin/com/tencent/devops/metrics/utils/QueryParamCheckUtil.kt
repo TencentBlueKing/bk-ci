@@ -48,10 +48,20 @@ object QueryParamCheckUtil {
     ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+    /**
+     * 获取开始日期时间字符串（当前时间减去1个月）
+     * @return 格式化后的日期字符串，格式为"yyyy-MM-dd"
+     */
     fun getStartDateTime(): String {
         val startDateTime = LocalDate.now().minusMonths(1)
         return startDateTime.format(DATE_FORMATTER)
     }
+
+    /**
+     * 获取结束日期时间字符串（当前时间）
+     * @return 格式化后的日期字符串，格式为"yyyy-MM-dd"
+     */
     fun getEndDateTime(): String {
         val endDateTime = LocalDate.now()
         return endDateTime.format(DATE_FORMATTER)

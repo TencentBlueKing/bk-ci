@@ -152,14 +152,13 @@ class StageControl @Autowired constructor(
         }
 
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val containers = pipelineContainerService.listContainers(
             projectId = projectId,
             buildId = buildId,
             stageId = stageId,
-            containsMatrix = false,
-            executeCount = executeCount
+            containsMatrix = false
         )
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
         // #10082 过滤Agent复用互斥的endJob信息
         val mutexJobs = containers.filter {
@@ -196,11 +195,8 @@ class StageControl @Autowired constructor(
     // 查找最后一个结束状态的Stage (排除Finally）
     private fun addPreviousStageStatus(stage: PipelineBuildStage): BuildStatus? {
         return if (stage.controlOption?.finally == true) {
-            val previousStage = pipelineStageService.listStages(
-                projectId = stage.projectId,
-                buildId = stage.buildId,
-                executeCount = stage.executeCount
-            ).lastOrNull {
+            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
+                .lastOrNull {
                     it.stageId != stage.stageId &&
                         (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
                 }

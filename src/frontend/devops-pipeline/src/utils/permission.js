@@ -90,8 +90,17 @@ export const TEMPLATE_RESOURCE_ACTION = {
     DELETE: 'pipeline_template_delete'
 }
 
+export const VARIABLE_RESOURCE_ACTION = {
+    CREATE: 'public_variable_create',
+    EDIT: 'public_variable_edit',
+    VIEW: 'public_variable_view',
+    DELETE: 'public_variable_delete',
+    USE: 'public_variable_use'
+}
+
 export const RESOURCE_TYPE = {
     PROJECT: 'project',
     PIPELINE: 'pipeline',
-    TEMPLATE: 'pipeline_template'
+    TEMPLATE: 'pipeline_template',
+    VARIABLE: 'public_variable'
 }

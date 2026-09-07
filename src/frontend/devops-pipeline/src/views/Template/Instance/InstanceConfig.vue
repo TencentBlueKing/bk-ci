@@ -722,6 +722,7 @@
                 const newItem = {
                     ...item,
                     isNew: true,
+                    readonlyCheck: false,
                     isRequiredParam: item.required && item.asInstanceInput,
                     required: item.required
                 }

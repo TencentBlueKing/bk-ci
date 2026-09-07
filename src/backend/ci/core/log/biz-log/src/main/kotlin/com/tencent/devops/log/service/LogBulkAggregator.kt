@@ -44,6 +44,8 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,8 +53,26 @@ import java.util.concurrent.atomic.AtomicInteger
 data class BulkOfferResult(
     val success: Boolean,
     val elapseMs: Long,
-    val message: String? = null
-)
+    val message: String? = null,
+    val reason: String = REASON_OK
+) {
+    companion object {
+        /** 写入成功 */
+        const val REASON_OK = "ok"
+
+        /** 聚合器待 flush 队列已满，直接背压拒绝 */
+        const val REASON_QUEUE_FULL = "queue_full"
+
+        /** 等待 bulk 结果超时：ES 慢或 flush 线程池排队 */
+        const val REASON_TIMEOUT = "timeout"
+
+        /** bulk 执行本身失败（ES 返回 failures 或抛异常） */
+        const val REASON_BULK_FAILED = "bulk_failed"
+
+        /** 等待过程中出现非超时异常 */
+        const val REASON_ERROR = "error"
+    }
+}
 
 /**
  * 跨 MQ 消息的 ES bulk 聚合器：按 ES 集群分桶，达到条数/字节/等待时间后统一 flush。
@@ -88,9 +108,23 @@ class LogBulkAggregator(
     private val scheduler = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "log-bulk-aggregator-schedule").apply { isDaemon = true }
     }
-    private val flushExecutor = Executors.newFixedThreadPool(FLUSH_POOL_SIZE) { r ->
-        Thread(r, "log-bulk-flush").apply { isDaemon = true }
+    private val flushQueue = LinkedBlockingQueue<Runnable>()
+    private val flushExecutor = bulkProperties.flushPoolSize.coerceAtLeast(1).let { poolSize ->
+        ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, flushQueue) { r ->
+            Thread(r, "log-bulk-flush").apply { isDaemon = true }
+        }
     }
+
+    /** 正在执行 ES bulk 的 flush 线程数，持续等于池大小说明 flush 已打满 */
+    fun flushActiveCount(): Int = flushExecutor.activeCount
+
+    /** 等待 flush 线程的批次数，非零即说明 bulk 执行速度已跟不上聚合速度 */
+    fun flushQueueSize(): Int = flushQueue.size
+
+    fun flushPoolSize(): Int = flushExecutor.maximumPoolSize
+
+    /** 仍在缓冲区内等待攒批的批次数，反映 offer 洪峰 */
+    fun pendingBatches(): Int = pendingBatchCount.get()
 
     @PostConstruct
     fun start() {
@@ -149,13 +183,16 @@ class LogBulkAggregator(
             return BulkOfferResult(success = true, elapseMs = 0)
         }
         if (pendingBatchCount.get() >= bulkProperties.maxPendingBatches) {
+            logStorageBean.bulkOffer(0, BulkOfferResult.REASON_QUEUE_FULL)
             return BulkOfferResult(
                 success = false,
                 elapseMs = 0,
-                message = "bulk pending queue is full"
+                message = "bulk pending queue is full",
+                reason = BulkOfferResult.REASON_QUEUE_FULL
             )
         }
 
+        val offerStart = System.currentTimeMillis()
         val future = CompletableFuture<BulkOfferResult>()
         val pending = PendingWrite(
             buildId = buildId,
@@ -175,17 +212,26 @@ class LogBulkAggregator(
             }
         }
 
-        return try {
+        val result = try {
             future.get(timeoutMs, TimeUnit.MILLISECONDS)
         } catch (ignore: TimeoutException) {
-            BulkOfferResult(success = false, elapseMs = timeoutMs, message = "bulk write timeout")
+            BulkOfferResult(
+                success = false,
+                elapseMs = timeoutMs,
+                message = "bulk write timeout",
+                reason = BulkOfferResult.REASON_TIMEOUT
+            )
         } catch (ignore: Exception) {
             BulkOfferResult(
                 success = false,
                 elapseMs = timeoutMs,
-                message = ignore.message ?: "bulk write failed"
+                message = ignore.message ?: "bulk write failed",
+                reason = BulkOfferResult.REASON_ERROR
             )
         }
+        // offer 总耗时包含攒批等待，与 log_es_bulk 的差值即聚合窗口与 flush 排队的开销
+        logStorageBean.bulkOffer(System.currentTimeMillis() - offerStart, result.reason)
+        return result
     }
 
     private fun needFlush(buffer: ClusterBuffer): Boolean {
@@ -231,6 +277,7 @@ class LogBulkAggregator(
 
     private fun doFlush(client: ESClient, batch: List<PendingWrite>) {
         val start = System.currentTimeMillis()
+        val docs = batch.sumOf { it.requests.size }
         var success = false
         var errorMessage: String? = null
         try {
@@ -254,13 +301,19 @@ class LogBulkAggregator(
                 "Flush log bulk failed, cluster={}, batches={}, docs={}",
                 client.clusterName,
                 batch.size,
-                batch.sumOf { it.requests.size },
+                docs,
                 ignore
             )
         } finally {
             val elapse = System.currentTimeMillis() - start
             logStorageBean.bulkRequest(elapse, success, client.clusterName)
-            val result = BulkOfferResult(success = success, elapseMs = elapse, message = errorMessage)
+            logStorageBean.bulkFlush(batch.size, docs, client.clusterName)
+            val result = BulkOfferResult(
+                success = success,
+                elapseMs = elapse,
+                message = errorMessage,
+                reason = if (success) BulkOfferResult.REASON_OK else BulkOfferResult.REASON_BULK_FAILED
+            )
             batch.forEach { pending ->
                 pending.future.complete(result)
             }
@@ -270,7 +323,7 @@ class LogBulkAggregator(
                     elapse,
                     client.clusterName,
                     batch.size,
-                    batch.sumOf { it.requests.size }
+                    docs
                 )
             }
         }
@@ -311,6 +364,5 @@ class LogBulkAggregator(
         private val logger = LoggerFactory.getLogger(LogBulkAggregator::class.java)
         private const val SEARCH_TIMEOUT_SECONDS = 60L
         private const val SLOW_FLUSH_WARN_MS = 1000L
-        private const val FLUSH_POOL_SIZE = 4
     }
 }

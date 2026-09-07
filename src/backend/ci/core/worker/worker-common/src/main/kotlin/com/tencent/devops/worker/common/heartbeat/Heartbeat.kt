@@ -30,12 +30,14 @@ package com.tencent.devops.worker.common.heartbeat
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
+import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.task.TaskExecutorCache
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
@@ -45,7 +47,8 @@ object Heartbeat {
     private val logger = LoggerFactory.getLogger(Heartbeat::class.java)
     private val executor = Executors.newScheduledThreadPool(2)
     private var running = false
-    private val task2ProgressRate = mutableMapOf<String, Double>()
+    private val task2ProgressRate = ConcurrentHashMap<String, Double>()
+    private val task2ProgressDetail = ConcurrentHashMap<String, BuildTaskProgressDetail>()
 
     @Synchronized
     fun start(jobTimeoutMills: Long = TimeUnit.MINUTES.toMillis(900), executeCount: Int = 1) {
@@ -60,8 +63,10 @@ object Heartbeat {
                     logger.info("Start to do the heartbeat")
                     val heartBeatInfo = EngineService.heartbeat(
                         executeCount = executeCount,
+                        // 序列化前拷贝快照，避免与任务线程并发写冲突
                         jobHeartbeatRequest = JobHeartbeatRequest(
-                            task2ProgressRate = task2ProgressRate
+                            task2ProgressRate = HashMap(task2ProgressRate),
+                            task2ProgressDetail = HashMap(task2ProgressDetail)
                         )
                     )
                     val cancelTaskIds = heartBeatInfo.cancelTaskIds
@@ -117,6 +122,24 @@ object Heartbeat {
         progressRate: Double
     ) {
         task2ProgressRate[taskId] = progressRate
+        // 回退到纯数字进度时，清掉此前的结构化明细，避免心跳把旧明细一并上报后服务端优先用旧明细覆盖新数字
+        task2ProgressDetail.remove(taskId)
+    }
+
+    fun recordTaskProgressDetail(
+        taskId: String,
+        progressDetail: BuildTaskProgressDetail
+    ) {
+        task2ProgressRate[taskId] = progressDetail.progress.value
+        task2ProgressDetail[taskId] = progressDetail
+    }
+
+    /**
+     * 任务结束后清理其进度缓存，避免已完成任务的进度被心跳反复上报，并防止 Map 无限增长
+     */
+    fun clearTaskProgress(taskId: String) {
+        task2ProgressRate.remove(taskId)
+        task2ProgressDetail.remove(taskId)
     }
 
     private class KillCancelTaskProcessRunnable(

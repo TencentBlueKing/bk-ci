@@ -76,6 +76,7 @@ import {
     SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
+    SET_TRIGGER_PARAMS,
     SET_TEMP_PARAM_SET,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
@@ -89,10 +90,11 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
     SAVE_PIPELINE_SNAPSHOT,
     CLEAR_PIPELINE_SNAPSHOT,
-    SET_EXEC_INFO,
-    UPDATE_WHOLE_ATOM_INPUT
+    SET_EXEC_INFO
 } from './constants'
 import { buildPipelineSnapshot } from '@/utils/pipelineSnapshotUtil'
 
@@ -454,7 +456,12 @@ export default {
     },
     requestTriggerParams: async ({ commit }, params) => {
         try {
-            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            let data = []
+            if (params?.length > 0) {
+                const res = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+                data = res.data
+            }
+            commit(SET_TRIGGER_PARAMS, data)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
@@ -479,6 +486,7 @@ export default {
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
     updatePipelineConstraintGroup: PipelineEditActionCreator(UPDATE_TEMPLATE_CONSTRAINT),
+    updatePipelinePublicVarGroups: PipelineEditActionCreator(UPDATE_PIPELINE_PUBLIC_VAR_GROUPS),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),

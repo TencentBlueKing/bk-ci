@@ -28,17 +28,57 @@
 package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.pojo.task.ExternalLinkReportRequest
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
+    private val pipelineTaskService: PipelineTaskService,
+    private val taskBuildRecordService: TaskBuildRecordService
 ) : BuildTaskResource {
 
     override fun getAllBuildTask(projectId: String, buildId: String): Result<List<PipelineBuildTaskInfo>> {
         return Result(pipelineTaskService.getAllBuildTaskInfo(projectId, buildId))
+    }
+
+    override fun reportExternalLink(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int?,
+        request: ExternalLinkReportRequest
+    ): Result<Boolean> {
+        val externalLink = request.link.trim()
+        if (!externalLink.startsWith("http://") && !externalLink.startsWith("https://")) {
+            LOG.warn("REPORT_EXTERNAL_LINK_INVALID|$buildId|$taskId|$externalLink")
+            return Result(false)
+        }
+        if (externalLink.length > MAX_EXTERNAL_LINK_LENGTH) {
+            LOG.warn("REPORT_EXTERNAL_LINK_TOO_LONG|$buildId|$taskId")
+            return Result(false)
+        }
+        taskBuildRecordService.updateTaskRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount ?: 1,
+            taskVar = mapOf(Element::externalLink.name to externalLink),
+            buildStatus = null,
+            operation = "reportExternalLink#$taskId"
+        )
+        return Result(true)
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(BuildTaskResourceImpl::class.java)
+        private const val MAX_EXTERNAL_LINK_LENGTH = 1024
     }
 }

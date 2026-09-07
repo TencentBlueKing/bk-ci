@@ -42,6 +42,7 @@ import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
+import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -115,6 +116,19 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 reInstallId = reInstallId,
                 agentType = agentType
             )
+        )
+    }
+
+    override fun generateReInstallLink(
+        userId: String,
+        projectId: String,
+        os: OS,
+        reInstallId: String
+    ): Result<ReInstallResp> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(
+            batchInstallAgentService.genReInstallLink(projectId, userId, os, reInstallId)
         )
     }
 

@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
@@ -69,6 +70,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         elementId: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         reverse: Boolean?,
@@ -88,6 +90,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = elementId,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             debug = debug,
             logType = logType,
             jobId = if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
@@ -105,6 +108,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -112,6 +116,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -126,6 +131,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             debug = debug,
+            logType = logType,
             num = num ?: 100,
             fromStart = fromStart,
             start = start,
@@ -133,6 +139,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             tag = tag,
             containerHashId = containerHashId,
             executeCount = executeCount,
+            subTag = subTag,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
             archiveFlag = archiveFlag
@@ -148,9 +155,11 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         buildId: String,
         start: Long,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -166,7 +175,49 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             buildId = buildId,
             start = start,
             debug = debug,
+            logType = logType,
             tag = tag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            subTag = subTag,
+            jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
+            stepId = stepId,
+            archiveFlag = archiveFlag
+        )
+    }
+
+    override fun getLatestLogs(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        debug: Boolean?,
+        logType: LogType?,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        archiveFlag: Boolean?
+    ): Result<QueryLogsText> {
+        logger.info(
+            "OPENAPI_LOG_V4|$userId|get latest logs|$projectId|$pipelineId|$buildId|$debug|$size|$tag|" +
+                "$jobId|$executeCount"
+        )
+        return client.get(ServiceLogResource::class).getLatestLogs(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            size = size ?: 100,
+            tag = tag,
+            subTag = subTag,
             containerHashId = containerHashId,
             executeCount = executeCount,
             jobId = if (tag.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
@@ -185,6 +236,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String?,
         containerHashId: String?,
         executeCount: Int?,
+        subTag: String?,
         jobId: String?,
         stepId: String?,
         archiveFlag: Boolean?
@@ -197,6 +249,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!containerHashId.isNullOrBlank()) path.append("&containerHashId=$containerHashId")
+        if (!subTag.isNullOrBlank()) path.append("&subTag=$subTag")
         if (!jobId.isNullOrBlank() && tag.isNullOrBlank() && stepId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (!stepId.isNullOrBlank()) path.append("&stepId=$stepId")
         if (archiveFlag != null) path.append("&archiveFlag=$archiveFlag")

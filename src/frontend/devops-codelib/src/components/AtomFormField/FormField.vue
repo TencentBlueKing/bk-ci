@@ -95,7 +95,6 @@
                         </bk-popover>
                     }
                     </label> }
-                    
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}

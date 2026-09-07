@@ -35,16 +35,19 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.LongAdder
 
 /**
- * 本地 buildId 窗口吞吐统计，用于热点构建队列分流。
+ * 本地窗口吞吐统计，用于热点项目（或 buildId 回退 key）队列分流。
+ *
+ * trafficKey 优先使用 projectId；若调用方未携带 projectId 则回退到 `b:{buildId}`
+ * （参见 [com.tencent.devops.log.util.LogTrafficKey]）。
  *
  * 不使用 Redis 行号键做吞吐：该键是构建全量累计值，且在消费写 ES 时才 INCR；
  * 入口决定队列投放时若再 GET/采样会额外增加 QPS，故按约定使用本地窗口。
  *
- * 说明：各 Pod 独立统计，跨 Pod 不完全一致；对「打到本实例的热点 build 分流」足够，
- * 且不增加 Redis 压力。开启 [routeHeavyEnabled] 后，窗口内超阈值的 build 投 heavy origin 队列。
+ * 说明：各 Pod 独立统计，跨 Pod 不完全一致；对「打到本实例的热点 key 分流」足够，
+ * 且不增加 Redis 压力。开启 [routeHeavyEnabled] 后，窗口内超阈值的 key 投 heavy origin 队列。
  *
  * 计数窗口（[windowMs]）与热点标记（[heavyStickyMs]）解耦：计数窗口到期会清零重算，
- * 但热点标记按独立 TTL 延续，避免窗口边界把热点 build 抖回普通队列。
+ * 但热点标记按独立 TTL 延续，避免窗口边界把热点 key 抖回普通队列。
  *
  * 内存：窗口计数与热点粘性均使用固定容量数组（非无界 ConcurrentHashMap），
  * 容量由 [maxTrackedBuilds] / [maxHeavyBuilds] 限制；冲突时丢弃冷流量统计，偏向保留热点。
@@ -54,47 +57,46 @@ class LogTrafficStatsService {
 
     /**
      * 是否启用本地窗口吞吐统计。
-     * false：不 record、不判定热点，所有 origin 走普通队列（即使 [routeHeavyEnabled]=true）。
+     * false：不 record、不判定热点，所有 origin 走普通队列（即使 routeHeavyEnabled=true）。
      */
     @Value("\${log.traffic.enabled:true}")
     private var enabled: Boolean = true
 
     /**
-     * 定时日志打印的 topN 热点 build 数量（仅观测，不影响分流决策）。
+     * 定时日志打印的 topN 热点 key 数量（仅观测，不影响分流决策）。
      */
     @Value("\${log.traffic.topN:10}")
     private var topN: Int = 10
 
     /**
-     * 本地行数累计窗口长度（毫秒）。窗口到期会清零重算；热点粘性由 [heavyStickyMs] 独立维持。
+     * 本地行数累计窗口长度（毫秒）。窗口到期会清零重算；热点粘性由 heavyStickyMs 独立维持。
      */
     @Value("\${log.traffic.windowMs:30000}")
     private var windowMs: Long = 30_000L
 
     /**
-     * 单个 buildId 在窗口内累计上报行数达到该阈值后视为热点，写入粘性表。
-     * 调低：更容易被标为热点并分流；调高：仅极端突发构建进入 heavy。
+     * 单个 trafficKey（projectId 或 b:buildId）在窗口内累计行数达到该阈值后视为热点，写入粘性表。
+     * 调低：更容易被标为热点并分流；调高：仅极端突发项目进入 heavy。
      */
     @Value("\${log.traffic.heavyThreshold:20000}")
     private var heavyThreshold: Long = 20_000L
 
     /**
      * 热点标记延续时间（毫秒）：判定为热点后，在该时长内持续可走 heavy 队列，跨计数窗口生效。
-     * 避免窗口边界把热点 build 抖回普通队列。
+     * 避免窗口边界把热点 key 抖回普通队列。
      */
     @Value("\${log.traffic.heavyStickyMs:60000}")
     private var heavyStickyMs: Long = 60_000L
 
     /**
-     * 是否将热点 build 投放到独立 heavy origin 队列。
+     * 是否将热点 key 投放到独立 heavy origin 队列。
      * 默认 false，兼容未创建 heavy topic 的环境；开启前需确保 MQ destination 已就绪。
-     * 影响：[com.tencent.devops.log.service.BuildLogPrintService] 的队列投放决策。
      */
     @Value("\${log.traffic.routeHeavyEnabled:false}")
     private var routeHeavyEnabled: Boolean = false
 
     /**
-     * 窗口内最多跟踪的 build 槽位数（固定数组容量）。
+     * 窗口内最多跟踪的 key 槽位数（固定数组容量）。key 为 projectId 或 b:buildId。
      * 生产常有上万并发构建，默认需远高于「仅 top 热点」规模，避免窗口内冷流量占满槽位后漏检真热点。
      * 内存开销很小（约数千槽位量级）；冲突时优先替换探测范围内累计更低的冷槽。
      */
@@ -102,8 +104,8 @@ class LogTrafficStatsService {
     private var maxTrackedBuilds: Int = 8192
 
     /**
-     * 同时处于热点粘性窗口的 build 上限（固定数组容量）。
-     * 仅容纳「已达 [heavyThreshold]」的热点，不是全量并发构建数；
+     * 同时处于热点粘性窗口的 key 上限（固定数组容量）。
+     * 仅容纳「已达 heavyThreshold」的热点，不是全量并发构建数；
      * 上万并发下同时成为热点的通常远少于此，但默认需留足突发余量。满时替换最早到期条目。
      */
     @Value("\${log.traffic.maxHeavyBuilds:512}")
@@ -121,27 +123,27 @@ class LogTrafficStatsService {
         heavyTable = HeavyStickyTable(heavyCapacity())
     }
 
-    fun record(buildId: String, lines: Int) {
-        if (!enabled || buildId.isBlank() || lines <= 0) {
+    fun record(trafficKey: String, lines: Int) {
+        if (!enabled || trafficKey.isBlank() || lines <= 0) {
             return
         }
-        val sum = currentWindow().slots.add(buildId, lines.toLong(), heavyThreshold)
+        val sum = currentWindow().slots.add(trafficKey, lines.toLong(), heavyThreshold)
         if (sum >= heavyThreshold) {
-            heavyTable.mark(buildId, System.currentTimeMillis() + heavyStickyMs)
+            heavyTable.mark(trafficKey, System.currentTimeMillis() + heavyStickyMs)
         }
     }
 
     /**
      * 是否应将后续 origin 日志投放到 heavy 队列。
      */
-    fun shouldRouteHeavy(buildId: String): Boolean {
-        if (!enabled || !routeHeavyEnabled || buildId.isBlank()) {
+    fun shouldRouteHeavy(trafficKey: String): Boolean {
+        if (!enabled || !routeHeavyEnabled || trafficKey.isBlank()) {
             return false
         }
-        return heavyTable.isActive(buildId, System.currentTimeMillis())
+        return heavyTable.isActive(trafficKey, System.currentTimeMillis())
     }
 
-    /** 当前仍处于热点粘性窗口内的 build 数量，供监控 Gauge 使用 */
+    /** 当前仍处于热点粘性窗口内的 key（项目或 build）数量，供监控 Gauge 使用 */
     fun heavySize(): Int = heavyTable.size(System.currentTimeMillis())
 
     @Scheduled(initialDelay = 30000, fixedDelay = 30000)
@@ -150,14 +152,14 @@ class LogTrafficStatsService {
             return
         }
         val now = System.currentTimeMillis()
-        val buildTop = window.slots.top(topN)
+        val topKeys = window.slots.top(topN)
         val heavySize = heavyTable.size(now)
-        if (buildTop.isEmpty() && heavySize == 0) {
+        if (topKeys.isEmpty() && heavySize == 0) {
             return
         }
         logger.info(
-            "Log traffic top{} builds in local window({}ms), heavyThreshold={}, " +
-                "routeHeavyEnabled={}, heavySize={}, maxTracked={}, maxHeavy={}, builds={}",
+            "Log traffic top{} projects in local window({}ms), heavyThreshold={}, " +
+                "routeHeavyEnabled={}, heavySize={}, maxTracked={}, maxHeavy={}, keys={}",
             topN,
             windowMs,
             heavyThreshold,
@@ -165,7 +167,7 @@ class LogTrafficStatsService {
             heavySize,
             trackedCapacity(),
             heavyCapacity(),
-            buildTop
+            topKeys
         )
     }
 

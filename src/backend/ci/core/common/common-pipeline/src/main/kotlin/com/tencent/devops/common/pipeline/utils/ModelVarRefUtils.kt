@@ -53,6 +53,8 @@ object ModelVarRefUtils {
     private const val RESOURCE_TYPE_PIPELINE = "PIPELINE"
     /** 支持的资源类型常量 - 模板资源 */
     private const val RESOURCE_TYPE_TEMPLATE = "TEMPLATE"
+    /** 解析耗时超过该阈值（ms）时升为 warn，便于捞慢路径 */
+    private const val SLOW_PARSE_WARN_MS = 1000L
 
     /**
      * 需要跳过的字段名称集合
@@ -84,18 +86,18 @@ object ModelVarRefUtils {
     fun parseModelVarReferences(
         model: Model,
         projectId: String,
+        resourceId: String,
+        resourceType: String,
         filterByTriggerParams: Boolean = true
     ): List<VarRefDetail> {
         val startTime = System.currentTimeMillis()
 
         try {
-            val (resourceType, resourceId) = determineResourceTypeAndId(model)
             val triggerContainer = model.getTriggerContainer()
             val paramVariables = extractParamVariables(triggerContainer.params)
 
             // 仅当“按 trigger 参数过滤”且参数为空时提前返回
             if (filterByTriggerParams && paramVariables.isEmpty()) {
-                logger.info("No param variables found in trigger container")
                 return emptyList()
             }
 
@@ -120,9 +122,16 @@ object ModelVarRefUtils {
                 visited = visited
             )
 
-            // 计算并记录方法执行耗时，用于性能监控
             val cost = System.currentTimeMillis() - startTime
-            logger.info("parseVarReferences completed in ${cost}ms, found ${references.size} references")
+            // 正常路径只打 debug；耗时异常时升为 warn，便于捞慢解析
+            if (cost >= SLOW_PARSE_WARN_MS) {
+                logger.warn(
+                    "parseModelVarReferences slow: ${cost}ms, found ${references.size} references, " +
+                        "resourceId=$resourceId, resourceType=$resourceType"
+                )
+            } else {
+                logger.debug("parseVarReferences completed in ${cost}ms, found ${references.size} references")
+            }
 
             return references
         } catch (ignored: Throwable) {
@@ -562,8 +571,8 @@ object ModelVarRefUtils {
                 optionType = "ElementAdditionalOptions"
             )
             else -> {
-                // 对于未知的控制选项类型，记录日志并使用通用解析方法
-                logger.info("Unknown control option type: ${option::class.simpleName}")
+                // 对于未知的控制选项类型，走通用解析；debug 即可，避免刷屏
+                logger.debug("Unknown control option type: ${option::class.simpleName}")
                 parseGenericObject(
                     obj = option,
                     context = context,
@@ -1007,7 +1016,7 @@ object ModelVarRefUtils {
      * @param model 模型对象
      * @return Pair<资源类型, 资源ID>
      */
-    private fun determineResourceTypeAndId(model: Model): Pair<String, String> {
+    internal fun determineResourceTypeAndId(model: Model): Pair<String, String> {
         return when {
             !model.pipelineId.isNullOrBlank() -> Pair(RESOURCE_TYPE_PIPELINE, model.pipelineId!!)
             !model.templateId.isNullOrBlank() -> Pair(RESOURCE_TYPE_TEMPLATE, model.templateId!!)

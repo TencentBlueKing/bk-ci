@@ -251,8 +251,7 @@ class PipelineBuildContainerDao {
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
-        statusSet: Set<BuildStatus>? = null,
-        executeCount: Int? = null
+        statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this)
@@ -269,9 +268,6 @@ class PipelineBuildContainerDao {
             }
             if (containsMatrix == false) {
                 conditionStep.and(MATRIX_GROUP_ID.isNull)
-            }
-            executeCount?.let {
-                conditionStep.and(EXECUTE_COUNT.eq(executeCount))
             }
             conditionStep.orderBy(SEQ.asc()).fetch(mapper)
         }
