@@ -1707,13 +1707,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     override fun endBranchVersionTestById(userId: String, atomId: String): Result<Boolean> {
         logger.info("endBranchVersionTestById, userId=$userId, atomId=$atomId")
-        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
-            )
+        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomId)
+        )
         val atomCode = atomRecord.atomCode
         // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
@@ -1729,7 +1726,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         // 并发控制：同一插件同一分支的结束测试操作串行化
-        RedisLock(
+        val result = RedisLock(
             redisOperation,
             branchTestLockKey(atomCode, atomRecord.branch),
             60L
@@ -1738,46 +1735,47 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
             // 锁内重读版本记录
-            val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-                ?: return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(atomId),
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
+            val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
+            )
             // 仅分支测试版本可结束测试
             if (latestRecord.branchTestFlag != true) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION,
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
+                throw ErrorCodeException(errorCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION)
             }
-            // 仅测试中的分支测试版本可结束测试（锁内二次校验，避免并发下写错状态）
-            if (latestRecord.atomStatus.toInt() != AtomStatusEnum.TESTING.status) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = STORE_BRANCH_TEST_END_STATUS_INVALID,
-                    data = false,
-                    language = I18nUtil.getLanguage(userId)
-                )
+            // 仅测试中的分支测试版本可结束测试
+            if (latestRecord.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
             }
-            // 清理该插件的最新测试版本标记
-            checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                marketAtomDao.setAtomStatusById(
-                    dslContext = context,
-                    atomId = atomId,
-                    atomStatus = AtomStatusEnum.TESTED.status.toByte(),
-                    userId = userId,
-                    msg = ""
-                )
-            }
+            finishBranchVersionTest(userId, atomCode, latestRecord)
+            Result(true)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         logger.info("endBranchVersionTestById success, userId=$userId, atomId=$atomId")
-        return Result(true)
+        return result
+    }
+
+    /**
+     * 结束分支版本测试公共逻辑：置测试结束状态、取消发布总线产物、删除质量红线数据
+     */
+    protected fun finishBranchVersionTest(userId: String, atomCode: String, record: TAtomRecord) {
+        checkUpdateAtomLatestTestFlag(userId, atomCode, record.id)
+        marketAtomDao.setAtomStatusById(
+            dslContext = dslContext,
+            atomId = record.id,
+            atomStatus = AtomStatusEnum.TESTED.status.toByte(),
+            userId = userId,
+            msg = AtomStatusEnum.TESTED.getI18n(I18nUtil.getLanguage(userId))
+        )
+        doCancelReleaseBus(userId, record.id)
+        // 删除质量红线相关数据
+        client.get(ServiceQualityIndicatorMarketResource::class)
+            .deleteTestIndicator(atomCode, "$IN_READY_TEST(${record.version})")
+        client.get(ServiceQualityMetadataMarketResource::class)
+            .deleteTestMetadata(atomCode, "$IN_READY_TEST(${record.version})")
+        client.get(ServiceQualityControlPointMarketResource::class)
+            .deleteTestControlPoint(atomCode, "$IN_READY_TEST(${record.version})")
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {
