@@ -1124,7 +1124,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = params
             )
         }
-        storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
         // 加分布式锁防止并发操作同一插件版本
         RedisLock(
             redisOperation,
@@ -1134,6 +1133,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (!redisLock.tryLock()) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
+            storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
             marketAtomDao.setAtomStatusById(
                 dslContext = dslContext,
                 atomId = atomId,
@@ -1641,7 +1641,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
                 validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
             )
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // 版本数据已提交，仅构建启动失败：记录错误并将版本置为构建失败，便于用户感知与重试
             logger.error(
                 "asyncHandleUpdateAtom failed after transaction commit" +
@@ -1737,7 +1737,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (!redisLock.tryLock()) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
-            // 锁内重读，避免使用加锁前的过期快照做状态校验与写入
+            // 锁内重读版本记录
             val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
                 ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
