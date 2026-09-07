@@ -30,7 +30,10 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "互斥组任务信息")
+@Schema(
+    title = "互斥组任务信息",
+    description = "返回空列表表示当前互斥组空闲；排队中的任务状态为 QUEUE 等就绪态，尚未进入 RUNNING",
+)
 data class MutexGroupTaskInfo(
     @get:Schema(title = "互斥组名称", required = true)
     val mutexGroupName: String,
@@ -42,8 +45,10 @@ data class MutexGroupTaskInfo(
     val pipelineName: String?,
     @get:Schema(title = "Job名称", required = false)
     val jobName: String?,
-    @get:Schema(title = "Job标识", required = false)
+    @get:Schema(title = "用户配置的Job标识", required = false)
     val jobId: String?,
+    @get:Schema(title = "引擎Job实例ID", required = false)
+    val containerId: String?,
     @get:Schema(title = "构建状态", required = true)
     val status: BuildStatus,
     @get:Schema(title = "是否当前锁持有者", required = true)

@@ -1137,12 +1137,15 @@ interface ServiceBuildResource {
         executeCount: Int?
     ): Result<List<PipelineFailTaskDetail>>
 
-    @Operation(summary = "查询互斥组当前任务列表")
+    @Operation(
+        summary = "查询互斥组当前任务列表",
+        description = "互斥组名称需传变量已替换后的运行时名称；返回空列表表示当前互斥组空闲",
+    )
     @GET
     @Path("/{projectId}/mutex_group_tasks")
     fun getMutexGroupTasks(
-        @Parameter(description = "用户ID", required = true)
-        @QueryParam("userId")
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")

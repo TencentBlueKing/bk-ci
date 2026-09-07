@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -37,6 +38,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -55,7 +59,6 @@ import com.tencent.devops.process.engine.service.MutexGroupQueryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -91,7 +94,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val mutexGroupQueryService: MutexGroupQueryService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
 ) : ServiceBuildResource {
 
     companion object {
@@ -1055,12 +1059,29 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         mutexGroupName: String
     ): Result<List<MutexGroupTaskInfo>> {
+        checkUserId(userId)
+        checkProjectVisit(userId = userId, projectId = projectId)
         return Result(
             data = mutexGroupQueryService.queryMutexGroupTasks(
                 projectId = projectId,
                 mutexGroupName = mutexGroupName
             )
         )
+    }
+
+    private fun checkProjectVisit(userId: String, projectId: String) {
+        if (!authProjectApi.validateUserProjectPermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId,
+                permission = AuthPermission.VISIT,
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                params = arrayOf(userId, projectId),
+            )
+        }
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

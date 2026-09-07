@@ -699,6 +699,7 @@ interface ApigwBuildResourceV4 {
 
     @Operation(
         summary = "查询互斥组当前任务列表",
+        description = "互斥组名称需传变量已替换后的运行时名称；返回空列表表示当前互斥组空闲",
         tags = ["v4_app_mutex_group_tasks", "v4_user_mutex_group_tasks"]
     )
     @GET
@@ -716,7 +717,7 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "互斥组名称", required = true)
+        @Parameter(description = "互斥组名称（变量已替换后的运行时名称）", required = true)
         @QueryParam("mutexGroupName")
         mutexGroupName: String
     ): Result<List<MutexGroupTaskInfo>>

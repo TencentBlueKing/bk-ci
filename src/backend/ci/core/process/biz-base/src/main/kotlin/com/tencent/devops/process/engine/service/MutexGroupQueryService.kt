@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import org.slf4j.LoggerFactory
@@ -38,12 +38,13 @@ import org.springframework.stereotype.Component
 @Component
 class MutexGroupQueryService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val engineConfigService: EngineConfigService,
 ) {
 
     fun queryMutexGroupTasks(projectId: String, mutexGroupName: String): List<MutexGroupTaskInfo> {
         if (mutexGroupName.isBlank()) {
-            return emptyList()
+            throw ParamBlankException("Invalid mutexGroupName")
         }
 
         // 构建临时 MutexGroup 实例（仅用于生成各 Redis Key）
@@ -52,7 +53,7 @@ class MutexGroupQueryService @Autowired constructor(
             mutexGroupName = mutexGroupName,
             queueEnable = true,
             timeout = 0,
-            queue = 0
+            queue = 0,
         ).also { it.runtimeMutexGroup = mutexGroupName }
 
         val lockKey = mutexGroup.genMutexLockKey(projectId)
@@ -70,11 +71,20 @@ class MutexGroupQueryService @Autowired constructor(
             buildTaskInfo(projectId, lockHolderId, mutexGroup, isLockHolder = true)?.let { result.add(it) }
         }
 
-        // 排队中的任务
-        for ((containerMutexId, _) in queueEntries) {
-            if (containerMutexId == lockHolderId) continue // 去重，避免锁持有者同时出现在排队队列中的并发残留
-            buildTaskInfo(projectId, containerMutexId, mutexGroup, isLockHolder = false)?.let { result.add(it) }
+        // 排队中的任务，按入队时间升序，与 MutexControl 抢锁时取最小入队时间的顺序一致
+        val maxQueue = engineConfigService.getMutexMaxQueue()
+        if (queueEntries.size > maxQueue) {
+            logger.warn(
+                "Mutex queue size exceeds limit|projectId=$projectId|group=$mutexGroupName|size=${queueEntries.size}",
+            )
         }
+        queueEntries.entries
+            .filter { it.key != lockHolderId } // 去重，避免锁持有者同时出现在排队队列中的并发残留
+            .sortedBy { it.value.toLongOrNull() ?: Long.MAX_VALUE }
+            .take(maxQueue)
+            .forEach { (containerMutexId, _) ->
+                buildTaskInfo(projectId, containerMutexId, mutexGroup, isLockHolder = false)?.let { result.add(it) }
+            }
 
         return result
     }
@@ -86,7 +96,7 @@ class MutexGroupQueryService @Autowired constructor(
         projectId: String,
         containerMutexId: String,
         mutexGroup: MutexGroup,
-        isLockHolder: Boolean
+        isLockHolder: Boolean,
     ): MutexGroupTaskInfo? {
         val parts = containerMutexId.split(DELIMITER)
         if (parts.size < 2) {
@@ -102,17 +112,20 @@ class MutexGroupQueryService @Autowired constructor(
                 projectId = projectId,
                 buildId = buildId,
                 stageId = null,
-                containerId = containerId
+                containerId = containerId,
             )
         } catch (e: Throwable) {
             logger.warn(
-                "Failed to query container: projectId=$projectId, buildId=$buildId, containerId=$containerId", e
+                "Failed to query container: projectId=$projectId, buildId=$buildId, containerId=$containerId",
+                e,
             )
             null
         }
 
-        val status = container?.status ?: BuildStatus.UNKNOWN
-        val pipelineIdFromDb = container?.pipelineId
+        // 与 MutexControl.cleanMutex 判定一致：container 不存在或已结束不再作为当前任务返回
+        if (container == null || container.status.isFinish()) {
+            return null
+        }
 
         // 查询 Redis LinkTip 获取可读信息
         val linkTipValue = try {
@@ -121,45 +134,37 @@ class MutexGroupQueryService @Autowired constructor(
             logger.warn("Failed to query linkTip: $containerMutexId", e)
             null
         }
-        val (linkPipelineId, pipelineName, jobName) = parseLinkTip(linkTipValue)
+        val (pipelineName, jobName) = parseLinkTip(linkTipValue)
 
         return MutexGroupTaskInfo(
             mutexGroupName = mutexGroup.fetchRuntimeMutexGroup(),
             buildId = buildId,
-            pipelineId = linkPipelineId ?: pipelineIdFromDb,
+            pipelineId = container.pipelineId,
             pipelineName = pipelineName,
             jobName = jobName,
-            jobId = containerId,
-            status = status,
-            isLockHolder = isLockHolder
+            jobId = container.jobId,
+            containerId = container.containerId,
+            status = container.status,
+            isLockHolder = isLockHolder,
         )
     }
 
     /**
-     * 解析 LinkTip 值，
-     * 与 MutexControl.logContainerMutex 中的解析模式一致
+     * 解析 LinkTip 值中的流水线名与 Job 名，格式为 `{pipelineId}_Pipeline[{流水线名}]Job[{Job名}]`
      */
-    private fun parseLinkTip(linkTipValue: String?): Triple<String?, String?, String?> {
-        if (linkTipValue.isNullOrBlank()) return Triple(null, null, null)
+    private fun parseLinkTip(linkTipValue: String?): Pair<String?, String?> {
+        if (linkTipValue.isNullOrBlank()) return null to null
         val firstUnderscore = linkTipValue.indexOf(DELIMITER)
-        if (firstUnderscore < 0) return Triple(null, null, null)
-        val pipelineId = linkTipValue.substring(0, firstUnderscore)
+        if (firstUnderscore < 0) return null to null
         val remaining = linkTipValue.substring(firstUnderscore + 1)
-        val pipelineName = extractBracketValue(remaining, "Pipeline[", "]")
-        val jobName = extractBracketValue(remaining, "Job[", "]")
-        return Triple(pipelineId, pipelineName, jobName)
-    }
-
-    /**
-     * 从字符串中提取指定括号标记内的值
-     */
-    private fun extractBracketValue(source: String, prefix: String, suffix: String): String? {
-        val startIndex = source.indexOf(prefix)
-        if (startIndex < 0) return null
-        val valueStart = startIndex + prefix.length
-        val endIndex = source.indexOf(suffix, valueStart)
-        if (endIndex < 0) return null
-        return source.substring(valueStart, endIndex)
+        val pipelinePrefix = "Pipeline["
+        val jobSeparator = "]Job["
+        if (!remaining.startsWith(pipelinePrefix)) return null to null
+        val separatorIndex = remaining.indexOf(jobSeparator, pipelinePrefix.length)
+        if (separatorIndex < 0) return null to null
+        val pipelineName = remaining.substring(pipelinePrefix.length, separatorIndex)
+        val jobName = remaining.substring(separatorIndex + jobSeparator.length).removeSuffix("]")
+        return pipelineName to jobName
     }
 
     companion object {

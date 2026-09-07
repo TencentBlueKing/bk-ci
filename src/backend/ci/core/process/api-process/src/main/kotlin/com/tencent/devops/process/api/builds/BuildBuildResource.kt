@@ -194,12 +194,15 @@ interface BuildBuildResource {
         taskId: String
     ): Result<Map<String, Any>?>
 
-    @Operation(summary = "查询互斥组当前任务列表")
+    @Operation(
+        summary = "查询互斥组当前任务列表",
+        description = "项目ID取自构建上下文，互斥组名称需传变量已替换后的运行时名称；返回空列表表示当前互斥组空闲",
+    )
     @GET
-    @Path("/{projectId}/mutexGroup/tasks")
+    @Path("/mutexGroup/tasks")
     fun getMutexGroupTasks(
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @Parameter(description = "互斥组名称", required = true)
         @QueryParam("mutexGroupName")
