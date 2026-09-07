@@ -97,6 +97,7 @@ import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_BRANCH_TEST_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
@@ -1053,7 +1054,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             }
             val status = record.atomStatus.toInt()
             // 分支测试版本仅展示到测试环节，不展示测试之后的发布流程
-            val branchTestFlag = record.branchTestFlag
+            val branchTestFlag = record.branchTestFlag ?: false
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核（分支测试版本无需该标记）
             val isNormalUpgrade = if (branchTestFlag) {
                 false
@@ -1127,7 +1128,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 加分布式锁防止并发操作同一插件版本
         RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode",
+            branchTestLockKey(atomCode, record.branch),
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1177,7 +1178,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         val atomCode = atomRecord.atomCode
         // 分支测试版本不走发布流程，转测试结束
-        if (atomRecord.branchTestFlag) {
+        if (atomRecord.branchTestFlag == true) {
             return endBranchVersionTestById(userId, atomId)
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
@@ -1658,15 +1659,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Result(atomId)
     }
 
+    protected fun branchTestLockKey(atomCode: String, branch: String?): String =
+        "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch"
+
     fun checkUpdateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
         RedisLock(
             redisOperation,
             "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
             60L
         ).use { redisLock ->
-            if (!redisLock.tryLock()) {
-                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
-            }
+            redisLock.lock()
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
                 val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
                 if (latestTestVersionId != null) {
@@ -1713,23 +1715,23 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 language = I18nUtil.getLanguage(userId)
             )
         val atomCode = atomRecord.atomCode
-        // 判断用户是否是该插件的成员
-        if (!storeMemberDao.isStoreMember(
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+        if (!(storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = atomCode,
                 storeType = StoreTypeEnum.ATOM.type.toByte()
-            )
+            ) || atomRecord.creator == userId)
         ) {
             throw ErrorCodeException(
-                errorCode = GET_INFO_NO_PERMISSION,
+                errorCode = NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION,
                 params = arrayOf(atomCode)
             )
         }
         // 并发控制：同一插件同一分支的结束测试操作串行化
         RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${atomRecord.branch}",
+            branchTestLockKey(atomCode, atomRecord.branch),
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1744,7 +1746,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     language = I18nUtil.getLanguage(userId)
                 )
             // 仅分支测试版本可结束测试
-            if (!latestRecord.branchTestFlag) {
+            if (latestRecord.branchTestFlag != true) {
                 return I18nUtil.generateResponseDataObject(
                     messageCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION,
                     data = false,
@@ -1759,6 +1761,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     language = I18nUtil.getLanguage(userId)
                 )
             }
+            // 清理该插件的最新测试版本标记
+            checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 marketAtomDao.setAtomStatusById(
@@ -1769,8 +1773,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     msg = ""
                 )
             }
-            // 清理该插件的最新测试版本标记
-            checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)

@@ -640,8 +640,10 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
-            if (branchTestFlag != null) {
-                baseStep.and(BRANCH_TEST_FLAG.eq(branchTestFlag))
+            when (branchTestFlag) {
+                null -> {}
+                false -> baseStep.and(formalVersionFlagCondition())
+                true -> baseStep.and(BRANCH_TEST_FLAG.eq(true))
             }
             baseStep.orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
@@ -671,21 +673,6 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ID.eq(atomId))
-                .fetchOne()
-        }
-    }
-
-    fun getAtomBranchTestVersion(
-        dslContext: DSLContext,
-        atomCode: String,
-        versionPrefix: String
-    ): TAtomRecord? {
-        with(TAtom.T_ATOM) {
-            return dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(VERSION.startsWith(versionPrefix))
-                .and(ATOM_STATUS.eq(AtomStatusEnum.TESTING.status.toByte()))
-                .orderBy(UPDATE_TIME.desc())
                 .fetchOne()
         }
     }
