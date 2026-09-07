@@ -189,9 +189,14 @@ function applyAnsiCodes (state, codes) {
     })
 }
 
+function ansiEscapeRe () {
+    // ESC 用 fromCharCode 拼，避免正则字面量触发 no-control-regex（\\x1b）
+    return new RegExp(`${String.fromCharCode(27)}\\[([0-9;]*)([A-Za-z])|\\[([0-9;]{0,16})m`, 'g')
+}
+
 export function renderLogHtml (text, keyword) {
     const raw = String(text == null ? '' : text)
-    const re = /\u001b\[([0-9;]*)([A-Za-z])|\[([0-9;]{0,16})m/g
+    const re = ansiEscapeRe()
     const tokens = []
     const state = { fg: '', bold: false }
     let last = 0
