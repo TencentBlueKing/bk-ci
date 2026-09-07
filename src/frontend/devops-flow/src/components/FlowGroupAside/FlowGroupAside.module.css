@@ -56,12 +56,13 @@
 }
 
 .menuItem.active {
-  background: var(--bg-hover-active);
+  background: var(--bg-hover-active) !important;
   color: var(--color-primary);
 }
 
 .menuItem.active .text,
-.menuItem.active .icon {
+.menuItem.active .icon,
+.menuItem.active .countTag {
   color: var(--color-primary);
 }
 
@@ -173,7 +174,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
 .increaseIcon {
@@ -213,7 +214,6 @@
   align-items: center;
   width: calc(var(--font-size-sm) * 2);
   text-align: center;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
   font-variant-numeric: tabular-nums;
 }
 

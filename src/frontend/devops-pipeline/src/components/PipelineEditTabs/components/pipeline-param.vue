@@ -26,6 +26,13 @@
                     >
                         {{ $t('newui.pipelineParam.addConst') }}
                     </bk-button>
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleManageVarGroup('constant')"
+                    >
+                        {{ $t('publicVar.manageGroup') }}
+                    </bk-button>
                 </template>
                 <bk-input
                     class="search-input"
@@ -50,6 +57,7 @@
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
+                @show-group="handleViewVarGroup"
             />
         </div>
 
@@ -65,6 +73,12 @@
                     @click="hideSlider"
                 />
                 {{ sliderTitle }}
+                <div
+                    v-if="isPublicVarGroup"
+                    class="public-var-group-name"
+                >
+                    {{ $t('publicVar.varGroupName', [sliderEditItem.varGroupName]) }}
+                </div>
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
@@ -72,7 +86,8 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
-                    :disabled="!editable"
+                    :disabled="!editable || isPublicVarGroup"
+                    :is-public-var="isPublicVarGroup"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -96,12 +111,20 @@
                 </bk-button>
             </div>
         </div>
+        <manage-variable-group
+            :is-show.sync="showManageVarGroupSlider"
+            :editable="editable"
+            :global-params="globalParams"
+            :group-name="groupName"
+            :save-variable="handleSaveVariableByGroup"
+        />
     </div>
 </template>
 
 <script>
     import {
-        getParamsGroupByLabel
+        getParamsGroupByLabel,
+        isBooleanParam
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy, navConfirm } from '@/utils/util'
@@ -111,11 +134,13 @@
         hasDisplayConditionOperatorSupportChanged
     } from './displayConditionUtils'
     import PipelineParamForm from './pipeline-param-form'
+    import ManageVariableGroup from '@/components/PublicVariable/ManageVariableGroup/'
 
     export default {
         components: {
             PipelineParamForm,
-            ParamGroup
+            ParamGroup,
+            ManageVariableGroup
         },
         props: {
             params: {
@@ -144,7 +169,9 @@
                 searchStr: '',
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
                 cancelText: this.$t('cancel'),
-                isAlertTips: true
+                isAlertTips: true,
+                showManageVarGroupSlider: false,
+                groupName: ''
             }
         },
         computed: {
@@ -212,6 +239,14 @@
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
                     ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
                 ]
+            },
+            isPublicVarGroup () {
+                return !!this.sliderEditItem.varGroupName
+            }
+        },
+        watch: {
+            showManageVarGroupSlider (isShow) {
+                this.$emit('var-group-slider-change', isShow)
             }
         },
         methods: {
@@ -250,11 +285,13 @@
                 this.sliderEditItem = {}
                 this.paramType = type
             },
-            handleEdit (paramId) {
-                if (!this.canEditParam) return
+            handleEdit ({ id, removeFlag, varGroupName }) {
+                if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
-                this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
-                this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
+                this.editIndex = varGroupName
+                    ? this.globalParams.findIndex(item => item.varGroupName === varGroupName && item.id === id)
+                    : this.globalParams.findIndex(item => item.id === id)
+                this.sliderEditItem = deepCopy(this.globalParams.find((item, index) => index === this.editIndex) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
             },
             async validParamOptions () {
@@ -282,12 +319,13 @@
                 this.$validator.validate('pipelineParam.*').then((result) => {
                     const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
+                        const normalizedParam = this.normalizeParam(param)
                         // 检查 options 中是否存在重复项，有重复则不允许保存
-                        if (param.options && param.options.length) {
+                        if (normalizedParam.options && normalizedParam.options.length) {
                             const keyMap = new Map()
                             const valueMap = new Map()
-                            for (let i = 0; i < param.options.length; i++) {
-                                const opt = param.options[i]
+                            for (let i = 0; i < normalizedParam.options.length; i++) {
+                                const opt = normalizedParam.options[i]
                                 if (opt.key && keyMap.has(opt.key)) {
                                     this.$bkMessage({
                                         theme: 'error',
@@ -309,14 +347,34 @@
                             }
                         }
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = param
+                            this.globalParams[this.editIndex] = normalizedParam
                         } else {
-                            this.globalParams.push(param)
+                            this.globalParams.push(normalizedParam)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
                     }
                 })
+            },
+            handleSaveVariableByGroup (list) {
+                this.updateContainerParams('params', [...list, ...this.versions])
+            },
+            normalizeParam (param) {
+                if (!isBooleanParam(param.type)) return param
+
+                let defaultValue = param.defaultValue
+                if (defaultValue === undefined || defaultValue === null || defaultValue === '') {
+                    defaultValue = true
+                } else if (defaultValue === 'true') {
+                    defaultValue = true
+                } else if (defaultValue === 'false') {
+                    defaultValue = false
+                }
+
+                return {
+                    ...param,
+                    defaultValue
+                }
             },
             validDisplayConditionOperator () {
                 if (this.editIndex < 0) return true
@@ -437,6 +495,15 @@
             },
             alertClose () {
                 this.isAlertTips = false
+            },
+
+            handleManageVarGroup () {
+                this.showManageVarGroupSlider = true
+            },
+
+            handleViewVarGroup (groupName) {
+                this.showManageVarGroupSlider = true
+                this.groupName = groupName
             }
         }
     }
@@ -464,7 +531,14 @@
         .current-edit-param-item {
             position: fixed;
             top: 48px;
-
+            .public-var-group-name {
+                color: #63656E;
+                background: #F0F1F5;
+                border-radius: 2px;
+                font-size: 12px;
+                padding: 2px 8px;
+                margin-left: 10px;
+            }
             .edit-var-content {
                 height: calc(100% - 138px);
             }
@@ -486,12 +560,12 @@
             align-items: center;
             justify-content: space-between;
             .var-btn {
-                min-width: 88px;
+                min-width: 78px;
                 width: -webkit-fill-available;
                 margin-right: 8px;
             }
             .search-input {
-                min-width: 215px;
+                min-width: 100px;
             }
         }
         .variable-content {

@@ -14,7 +14,6 @@
   padding: 0;
   min-width: 100px;
   list-style: none;
-  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
@@ -28,7 +27,7 @@
   padding: 0 20px;
   color: #63656e;
   background-color: var(--bg-primary);
-  text-align: center;
+  text-align: left;
   cursor: pointer;
 }
 

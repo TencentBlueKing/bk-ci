@@ -1,12 +1,15 @@
 package com.tencent.devops.auth.api.op
 
+import com.tencent.devops.auth.pojo.request.BatchDeleteProjectResourceRelationsRequest
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
+import com.tencent.devops.auth.pojo.vo.ProjectResourceRelationsDeleteVO
 import com.tencent.devops.auth.pojo.vo.PipelineViewWithoutDownloadGroupVO
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -44,6 +47,32 @@ interface OpPermissionFacadeResource {
         @Parameter(description = "操作列表", required = true)
         actions: List<String>
     ): Result<Boolean>
+
+    @DELETE
+    @Path("/{projectCode}/resourceTypes/{resourceType}/relations/")
+    @Operation(summary = "删除项目下某类资源在权限中心的关联")
+    fun deleteProjectResourceRelations(
+        @Parameter(description = "项目Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "是否仅预演，不执行真实删除", required = true)
+        @QueryParam("dryRun")
+        dryRun: Boolean = true,
+        @Parameter(description = "是否确认执行删除，仅在 dryRun=false 时生效", required = true)
+        @QueryParam("confirm")
+        confirm: Boolean = false
+    ): Result<ProjectResourceRelationsDeleteVO>
+
+    @POST
+    @Path("/resourceRelations/batchDelete/")
+    @Operation(summary = "批量删除多个项目下某类资源在权限中心的关联")
+    fun batchDeleteProjectResourceRelations(
+        @Parameter(description = "批量删除请求体", required = true)
+        request: BatchDeleteProjectResourceRelationsRequest
+    ): Result<List<ProjectResourceRelationsDeleteVO>>
 
     @GET
     @Path("/projectGroups/pipelineViewWithoutDownload/")

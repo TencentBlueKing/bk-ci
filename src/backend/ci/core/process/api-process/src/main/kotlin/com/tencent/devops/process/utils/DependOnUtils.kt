@@ -170,6 +170,43 @@ object DependOnUtils {
         }
     }
 
+    /**
+     * 判断[container]是否直接或间接依赖[targetContainerId]所指的Job。
+     * dependOn关系只在同一个Stage内声明，因此只在[stage]范围内做传递闭包搜索。
+     * 依赖映射由[initDependOn]在每次构建启动时刷新，调用前需确保其已执行。
+     */
+    fun dependOnContainer(stage: Stage, container: Container, targetContainerId: String): Boolean {
+        if (container.id == targetContainerId) {
+            return false
+        }
+        val containerMap = stage.containers.filter { !it.id.isNullOrBlank() }.associateBy { it.id!! }
+        val visited = mutableSetOf<String>()
+        val pending = mutableListOf(container)
+        while (pending.isNotEmpty()) {
+            val current = pending.removeAt(pending.size - 1)
+            val currentId = current.id
+            // initDependOn已做循环依赖校验，这里的visited仅作兜底防止意外死循环
+            if (currentId.isNullOrBlank() || !visited.add(currentId)) {
+                continue
+            }
+            val dependOnContainerIds = getDependOnContainerIds(current)
+            if (dependOnContainerIds.contains(targetContainerId)) {
+                return true
+            }
+            dependOnContainerIds.forEach { id -> containerMap[id]?.let { pending.add(it) } }
+        }
+        return false
+    }
+
+    private fun getDependOnContainerIds(container: Container): Set<String> {
+        val jobControlOption = when (container) {
+            is VMBuildContainer -> container.jobControlOption
+            is NormalContainer -> container.jobControlOption
+            else -> null
+        } ?: return emptySet()
+        return jobControlOption.dependOnContainerId2JobIds?.keys ?: emptySet()
+    }
+
     private fun getDependOnJobIds(dependOnConfig: DependOnConfig, params: Map<String, String>): List<String> {
         return when (dependOnConfig.dependOnType) {
             DependOnType.ID -> {

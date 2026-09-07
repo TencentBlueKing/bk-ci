@@ -40,6 +40,48 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  /* 抵消 CommonHeader 上下/右侧 padding，让发布按钮贴齐边缘并撑满高度 */
+  height: var(--header-height);
+  margin: calc(-1 * var(--spacing-sm)) calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-sm)) 0;
+  padding-right: var(--spacing-xl);
+}
+
+.headerRightWithPublish {
+  padding-right: 0;
+}
+
+.publishBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  height: 100%;
+  padding: 0 var(--spacing-xl);
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.publishBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.publishBtn:disabled {
+  background: #dcdee5;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.publishIcon {
+  position: relative;
+  top: 1px;
+  margin-right: var(--spacing-sm);
+  vertical-align: middle;
 }
 
 /* Version tag styles (similar to devops-pipeline EditHeader) */

@@ -28,7 +28,9 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -36,12 +38,14 @@ import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,7 +59,8 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
     override fun support(context: PipelineTemplateVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.SAVE_DRAFT
@@ -87,6 +92,10 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
+        // 在持久化之前校验公共变量组引用
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(model = it, projectId = projectId)
+        }
         val pTemplateResourceOnlyVersion = if (templateInfo == null) {
             val resourceOnlyVersion = pipelineTemplateGenerator.getDefaultVersion(
                 versionStatus = pTemplateResourceWithoutVersion.status
@@ -101,11 +110,28 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId
             )
-            if (draftResource == null) {
-                createDraftVersion()
-            } else {
-                updateDraftVersion(draftResource)
+            when {
+                draftResource == null -> createDraftVersion()
+                // 非草稿历史回滚:删除当前草稿(逻辑删),用新版本号重建草稿
+                overrideDraft -> createDraftVersion(oldDraftVersion = draftResource.version)
+                else -> updateDraftVersion(draftResource)
             }
+        }
+        (pTemplateResourceWithoutVersion.model as? Model)?.let {
+            publicVarGroupReferManageService.handleVarGroupReferBus(
+                PublicVarGroupReferDTO(
+                    userId = userId,
+                    projectId = projectId,
+                    model = it,
+                    referId = templateId,
+                    referType = PublicVarGroupReferenceTypeEnum.TEMPLATE,
+                    referName = pipelineTemplateInfo.name,
+                    referVersion = pTemplateResourceOnlyVersion.version.toInt(),
+                    referVersionName = pTemplateResourceOnlyVersion.versionName ?: "",
+                    // 模板草稿保存（COMMITTING）：只写引用明细，不同步 LATEST_FLAG
+                    activeVersion = false
+                )
+            )
         }
         return DeployTemplateResult(
             projectId = projectId,
@@ -120,7 +146,9 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
         )
     }
 
-    private fun PipelineTemplateVersionCreateContext.createDraftVersion(): PTemplateResourceOnlyVersion {
+    private fun PipelineTemplateVersionCreateContext.createDraftVersion(
+        oldDraftVersion: Long? = null
+    ): PTemplateResourceOnlyVersion {
         val resourceOnlyVersion = pipelineTemplateGenerator.generateDraftVersion(
             projectId = projectId,
             templateId = templateId,
@@ -130,7 +158,8 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
         fixSrcTemplate(resourceOnlyVersion)
         pipelineTemplatePersistenceService.createDraftVersion(
             context = this,
-            resourceOnlyVersion = resourceOnlyVersion
+            resourceOnlyVersion = resourceOnlyVersion,
+            oldDraftVersion = oldDraftVersion
         )
         return resourceOnlyVersion
     }
@@ -138,10 +167,21 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private fun PipelineTemplateVersionCreateContext.updateDraftVersion(
         draftResource: PipelineTemplateResource
     ): PTemplateResourceOnlyVersion {
+        val draftVersion = pipelineTemplateGenerator.incrementDraftVersion(
+            projectId = projectId,
+            templateId = templateId,
+            version = draftResource.version
+        )
         val resourceOnlyVersion = if (pTemplateResourceWithoutVersion.baseVersion == null) {
-            PTemplateResourceOnlyVersion(draftResource)
+            PTemplateResourceOnlyVersion(
+                pipelineTemplateResource = draftResource,
+                draftVersion = draftVersion
+            )
         } else {
-            PTemplateResourceOnlyVersion(draftResource).copy(
+            PTemplateResourceOnlyVersion(
+                pipelineTemplateResource = draftResource,
+                draftVersion = draftVersion
+            ).copy(
                 baseVersion = pTemplateResourceWithoutVersion.baseVersion,
                 baseVersionName = pTemplateResourceWithoutVersion.baseVersionName
             )
@@ -176,6 +216,6 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseHandler::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftSaveHandler::class.java)
     }
 }

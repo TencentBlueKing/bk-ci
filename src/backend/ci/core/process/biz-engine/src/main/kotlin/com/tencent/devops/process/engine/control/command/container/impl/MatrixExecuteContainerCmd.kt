@@ -147,6 +147,8 @@ class MatrixExecuteContainerCmd(
         var fail: BuildStatus? = null
         var cancel: BuildStatus? = null
         var failureContainerNum = 0
+        // 本次执行轮次（与父矩阵容器同一 executeCount）内失败的子Job数量，仅此触发 fast-kill
+        var currentRoundFailureNum = 0
         var cancelContainerNum = 0
         var skipContainerNum = 0
         var runningContainerNum = 0
@@ -161,6 +163,9 @@ class MatrixExecuteContainerCmd(
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 failureContainerNum++
+                // 仅统计本次重试轮次内失败的子Job；矩阵局部重试时历史失败的兄弟子Job（旧executeCount）不计入，
+                // 避免其误触发 fast-kill 把刚被重置为排队/运行的重试子Job直接终止。
+                if (container.executeCount == parentContainer.executeCount) currentRoundFailureNum++
                 fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
             } else if (container.status == BuildStatus.SKIP) {
                 skipContainerNum++
@@ -173,8 +178,9 @@ class MatrixExecuteContainerCmd(
             }
         }
 
-        // 判断是否要终止所有未完成的容器
-        val fastKill = failureContainerNum > 0 && matrixOption.fastKill == true
+        // 判断是否要终止所有未完成的容器：只有本次执行轮次内有子Job失败时才 fast-kill，
+        // 使局部重试不受历史失败子Job影响，只在“本轮某个失败Job刚完成”时才生效。
+        val fastKill = currentRoundFailureNum > 0 && matrixOption.fastKill == true
         if (fastKill) newActionType = ActionType.TERMINATE
         val maxConcurrency = min(
             matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,

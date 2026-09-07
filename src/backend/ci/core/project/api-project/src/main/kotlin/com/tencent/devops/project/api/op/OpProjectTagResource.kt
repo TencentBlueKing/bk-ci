@@ -2,7 +2,6 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectRoutingListRequest
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateRequest
 import com.tencent.devops.project.pojo.ProjectReleaseBatchCreateResult
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import com.tencent.devops.project.pojo.ProjectClusterPercentageResult
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
@@ -75,27 +73,6 @@ interface OpProjectTagResource {
         @Parameter(description = "项目路由发布批次执行或回滚请求", required = true)
         request: ProjectReleaseBatchExecuteRequest
     ): Result<ProjectReleaseBatchExecuteResult>
-
-    @Operation(summary = "向全局路由黑名单添加项目（强制排除，不参与任何放量）")
-    @POST
-    @Path("/blacklist/add")
-    fun addToBlacklist(
-        @Parameter(description = "黑名单请求入参", required = true)
-        request: ProjectRoutingListRequest
-    ): Result<Long>
-
-    @Operation(summary = "从全局路由黑名单移除项目")
-    @DELETE
-    @Path("/blacklist/remove")
-    fun removeFromBlacklist(
-        @Parameter(description = "黑名单请求入参", required = true)
-        request: ProjectRoutingListRequest
-    ): Result<Long>
-
-    @Operation(summary = "查询全局路由黑名单")
-    @GET
-    @Path("/blacklist")
-    fun getBlacklist(): Result<Set<String>>
 
     @Operation(summary = "设置默认路由 tag（用于无项目请求的兜底路由）")
     @PUT

@@ -14,13 +14,15 @@ abstract class CascadeParam constructor(
             // 最少两个链路节点，且节点数和链式处理器数量相等
             throw IllegalArgumentException("chain size must be 2 and equal to chainHandler size")
         }
-        val defaultValue = getDefaultValue(prop)
+        val defaultValue = parseChainValue(key = prop.id, value = prop.defaultValue, type = prop.type)
+        val value = prop.value?.let { parseChainValue(key = prop.id, value = it, type = prop.type) }
         val map = chain.associateBy({ it }) {
             val propsHandler =
                 chainHandler()[it] ?: throw IllegalArgumentException("can not find handler for $it|$type")
             propsHandler.handle(
                 key = it,
                 defaultValue = defaultValue[it] ?: "",
+                value = value?.get(it),
                 projectId = projectId
             )
         }
@@ -31,11 +33,15 @@ abstract class CascadeParam constructor(
         return map[chain.first()]!!
     }
 
-    private fun getDefaultValue(prop: BuildFormProperty): Map<String, String> {
+    private fun parseChainValue(
+        key: String,
+        value: Any,
+        type: BuildFormPropertyType?
+    ): Map<String, String> {
         val defaultValue = CascadePropertyUtils.parseDefaultValue(
-            key = prop.id,
-            defaultValue = prop.defaultValue,
-            type = prop.type
+            key = key,
+            defaultValue = value,
+            type = type
         )
         return if (!chain.find { !defaultValue.containsKey(it) }.isNullOrBlank()) {
             mapOf()
@@ -52,5 +58,5 @@ abstract class CascadeParam constructor(
 }
 
 interface CascadeParamPropsHandler {
-    fun handle(key: String, defaultValue: String, projectId: String): BuildCascadeProps
+    fun handle(key: String, defaultValue: String, value: String?, projectId: String): BuildCascadeProps
 }

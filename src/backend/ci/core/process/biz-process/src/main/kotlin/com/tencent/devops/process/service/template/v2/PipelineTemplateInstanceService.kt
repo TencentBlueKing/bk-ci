@@ -23,16 +23,12 @@ import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
-import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -85,7 +81,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
@@ -185,7 +180,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 successPipelines.add(instance.pipelineName)
                 successPipelineIds.add(deployPipeline.pipelineId)
             } catch (ignored: Throwable) {
-                val errorMessage = translateInstanceException(
+                val errorMessage = TemplateInstanceUtil.translateInstanceException(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = instance.pipelineId,
@@ -294,7 +289,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 successPipelines.add(instance.pipelineName)
                 successPipelineIds.add(deployPipeline.pipelineId)
             } catch (ignored: Throwable) {
-                val errorMessage = translateInstanceException(
+                val errorMessage = TemplateInstanceUtil.translateInstanceException(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = instance.pipelineId,
@@ -585,39 +580,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 val templateParam = templateParamMap[beforeInstanceParam.id]
                 // 值修改了,检查是否重置为模板默认值
                 return instanceParam!!.defaultValue == templateParam!!.defaultValue
-            }
-        }
-    }
-
-    fun translateInstanceException(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        exception: Throwable
-    ): PipelineCheckFailedReason {
-        logger.warn("Failed to instance template|$userId|$projectId|$pipelineId|${exception.message}")
-        return when (exception) {
-            is DuplicateKeyException -> {
-                PipelineCheckFailedMsg("duplicate!")
-            }
-
-            is ErrorCodeException -> {
-                val message = I18nUtil.generateResponseDataObject(
-                    messageCode = exception.errorCode,
-                    params = exception.params,
-                    data = null,
-                    defaultMessage = exception.defaultMessage
-                ).message ?: exception.defaultMessage ?: "unknown!"
-                // ERROR_PIPELINE_ELEMENT_CHECK_FAILED输出的是一个json,需要格式化输出
-                if (exception.errorCode == ERROR_PIPELINE_ELEMENT_CHECK_FAILED) {
-                    JsonUtil.to(message, PipelineCheckFailedErrors::class.java)
-                } else {
-                    PipelineCheckFailedMsg(message)
-                }
-            }
-
-            else -> {
-                PipelineCheckFailedMsg(exception.message ?: "template instance fail")
             }
         }
     }

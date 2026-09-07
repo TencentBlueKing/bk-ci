@@ -26,6 +26,7 @@ import { RouterView } from 'vue-router'
 import { FLOW_GROUP_TYPES } from './constants/flowGroup'
 import { ROUTE_NAMES } from './constants/routes'
 import { useAuthStore, useUIStore } from './stores'
+import { websocketRegister } from './utils/websocketRegister'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -177,3 +178,4 @@ const handleNoPermission = (permissionData: any) => {
 app.use(AuthorityDirectiveV3(handleNoPermission))
 
 app.mount('#app')
+websocketRegister.initialize(router)

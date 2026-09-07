@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.artifactory.util.DefaultPathUtils
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -80,7 +81,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         fileChannelType: FileChannelTypeEnum,
         staticFlag: Boolean?
     ): String {
-        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+        // disposition.fileName 由客户端控制，basename 化阻断 ../、绝对路径等危险输入；
+        // 这里在 ISO-8859-1 → UTF-8 解码之前先做净化，避免后续被作为子路径拼接到 destPath
+        val rawName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+        val fileName = FileUtil.getSafeFileName(rawName)
         val file = DefaultPathUtils.randomFile(fileName)
         file.outputStream().use { inputStream.copyTo(it) }
         return try {
@@ -111,7 +115,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val fileName = URLDecoder.decode(disposition.fileName, "utf-8")
+        // disposition.fileName 由客户端控制，先 basename 化再 URL 解码后做最终校验，
+        // 否则会被直接拼到 destPath，攻击者可通过 ../ 写出 customFilePath 之外的位置
+        val fileName = FileUtil.getSafeFileName(URLDecoder.decode(disposition.fileName, "utf-8"))
         val destPath = if (customFilePath?.endsWith(fileName) != true) {
             (customFilePath ?: "") + fileSeparator + fileName
         } else {

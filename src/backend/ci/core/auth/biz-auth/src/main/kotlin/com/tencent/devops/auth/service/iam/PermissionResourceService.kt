@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.vo.ProjectResourceRelationsDeleteVO
 import com.tencent.devops.common.api.pojo.Pagination
 
 /**
@@ -68,6 +69,23 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String
     ): Boolean
+
+    /**
+     * 删除项目下某类资源在权限中心的关联
+     */
+    fun resourceDeleteRelations(
+        projectCode: String,
+        resourceType: String,
+        dryRun: Boolean = false,
+        confirm: Boolean = false
+    ): ProjectResourceRelationsDeleteVO
+
+    fun batchDeleteProjectResourceRelations(
+        projectCodes: List<String>,
+        resourceType: String,
+        dryRun: Boolean = false,
+        confirm: Boolean = false
+    ): List<ProjectResourceRelationsDeleteVO>
 
     /**
      * 取消权限中心资源

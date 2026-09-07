@@ -16,8 +16,6 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-export const NODE_LIST_ASIDE_WIDTH_CACHE = 'node_list_aside_width_cache'
-export const NODE_LIST_ASIDE_PANEL_TOGGLE = 'node_list_aside_panel_toggle'
 export const ENV_ACTIVE_NODE_TYPE = 'ENV_ACTIVE_NODE_TYPE'
 export const ALLNODE = 'allNode'
 export const RESIZE_LAYOUT_CONFIG_STORAGE_KEY = 'bk_devops_resize_layout_config' // ResizeLayout组件的配置存储key，存储不同页面的配置
@@ -27,6 +25,13 @@ export const SERVICE_RESOURCE_TYPE = {
     PIPELINE: 'pipeline',
     CREATE: 'creative-stream'
 }
+
+// 创作流节点工作空间类型
+export const CREATE_WORKSPACE_TYPE = {
+    REMOTEDEV: 'REMOTEDEV', // 普通云桌面
+    DEVCLOUD: 'DEVCLOUD', // TEG iMate Linux
+    IEG_IMATE: 'IEG_IMATE' // IEG iMate linux/windows 云桌面
+}
 export const ENV_TYPE_MAP = {
     ALL: 'ALL',
     BUILD: 'BUILD',
@@ -34,4 +39,10 @@ export const ENV_TYPE_MAP = {
     DEV: 'DEV',
     DEVX: 'DEVX',
     CREATE: 'CREATE'
+}
+
+export const OS_LABEL_MAP = {
+    LINUX: 'Linux',
+    MACOS: 'macOS',
+    WINDOWS: 'Windows'
 }

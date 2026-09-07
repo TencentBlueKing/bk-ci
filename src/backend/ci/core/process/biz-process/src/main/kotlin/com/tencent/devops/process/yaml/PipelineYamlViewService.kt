@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
+import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
@@ -27,6 +28,7 @@ class PipelineYamlViewService(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineViewService: PipelineViewService,
     private val pipelineViewGroupService: PipelineViewGroupService,
+    private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val redisOperation: RedisOperation
 ) {
 
@@ -149,14 +151,28 @@ class PipelineYamlViewService(
     }
 
     /**
-     * 删除空的流水线组
+     * 删除 YAML 流水线后清理流水线组：
+     * 1. 从对应 YAML 流水线组中移除该流水线
+     * 2. 若该目录下已无 YAML 流水线，则删除空的流水线组
      */
-    fun deleteEmptyYamlView(
+    fun cleanupYamlView(
         userId: String,
         projectId: String,
         repoHashId: String,
-        directory: String
+        directory: String,
+        pipelineId: String
     ) {
+        val yamlView = getPipelineYamlView(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            directory = directory
+        ) ?: return
+        pipelineViewGroupDao.batchRemove(
+            dslContext = dslContext,
+            projectId = projectId,
+            viewId = yamlView.viewId,
+            pipelineIds = listOf(pipelineId)
+        )
         PipelineYamlViewLock(
             redisOperation = redisOperation,
             projectId = projectId,
@@ -171,23 +187,18 @@ class PipelineYamlViewService(
             )
             if (yamlPipelineCnt == 0L) {
                 logger.info("delete pipeline yaml view|$projectId|$repoHashId|$directory")
-                getPipelineYamlView(
+                deleteYamlView(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     directory = directory
-                )?.let {
-                    pipelineViewGroupService.deleteViewGroup(
-                        projectId = projectId,
-                        userId = userId,
-                        viewIdEncode = HashUtil.encodeLongId(it.viewId),
-                        checkPac = false
-                    )
-                    deleteYamlView(
-                        projectId = projectId,
-                        repoHashId = repoHashId,
-                        directory = directory
-                    )
-                }
+                )
+                pipelineViewGroupService.deleteViewGroup(
+                    projectId = projectId,
+                    userId = userId,
+                    viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
+                    checkPac = false,
+                    checkPermission = false
+                )
             }
         }
     }

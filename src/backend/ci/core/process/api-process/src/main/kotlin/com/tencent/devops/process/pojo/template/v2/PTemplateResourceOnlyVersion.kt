@@ -50,9 +50,11 @@ data class PTemplateResourceOnlyVersion(
     @get:Schema(title = "来源版本", required = false)
     val baseVersion: Long? = null,
     @get:Schema(title = "来源版本名称", required = false)
-    val baseVersionName: String? = null
+    val baseVersionName: String? = null,
+    @get:Schema(title = "该版本来源的草稿版本,草稿保存时传入", required = false)
+    val draftVersion: Int? = null
 ) {
-    constructor(pipelineTemplateResource: PipelineTemplateResource) : this(
+    constructor(pipelineTemplateResource: PipelineTemplateResource, draftVersion: Int? = null) : this(
         version = pipelineTemplateResource.version,
         number = pipelineTemplateResource.number,
         versionName = pipelineTemplateResource.versionName,
@@ -62,6 +64,7 @@ data class PTemplateResourceOnlyVersion(
         settingVersion = pipelineTemplateResource.settingVersion,
         settingVersionNum = pipelineTemplateResource.settingVersionNum,
         baseVersion = pipelineTemplateResource.baseVersion,
-        baseVersionName = pipelineTemplateResource.baseVersionName
+        baseVersionName = pipelineTemplateResource.baseVersionName,
+        draftVersion = draftVersion
     )
 }

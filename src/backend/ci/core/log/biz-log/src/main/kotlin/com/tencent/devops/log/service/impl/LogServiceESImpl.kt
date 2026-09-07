@@ -44,19 +44,25 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.log.configuration.LogBulkProperties
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.log.util.LogTrafficKey
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.BulkOfferResult
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogBulkAggregator
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
+import com.tencent.devops.log.service.LogStorageDegradeSwitcher
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
+import com.tencent.devops.log.util.LogDownloadHeader
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -104,7 +110,10 @@ class LogServiceESImpl(
     private val createIndexBean: CreateIndexBean,
     private val logStorageBean: LogStorageBean,
     private val redisOperation: RedisOperation,
-    private val buildLogPrintService: BuildLogPrintService
+    private val buildLogPrintService: BuildLogPrintService,
+    private val logBulkAggregator: LogBulkAggregator,
+    private val logStorageDegradeSwitcher: LogStorageDegradeSwitcher,
+    private val logBulkProperties: LogBulkProperties
 ) : LogService {
 
     companion object {
@@ -147,9 +156,50 @@ class LogServiceESImpl(
 
     override fun addLogEvent(event: LogOriginEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
-        if (logMessage.isNotEmpty()) {
-            buildLogPrintService.dispatchEvent(LogStorageEvent(event.buildId, logMessage))
+        if (logMessage.isEmpty()) {
+            return
         }
+        // 兼容开关：关闭聚合直写时，保持历史「origin → storage」双队列行为
+        if (!logBulkProperties.enabled) {
+            dispatchToStorage(event, logMessage)
+            return
+        }
+        val trafficKey = LogTrafficKey.of(event.projectId, event.buildId)
+        // 熔断开启时直接降级到 storage，避免继续打满 ES
+        if (logStorageDegradeSwitcher.shouldDegrade(trafficKey)) {
+            dispatchToStorage(event, logMessage)
+            logStorageDegradeSwitcher.recordDegrade()
+            logStorageBean.degradeToStorage()
+            return
+        }
+        try {
+            prepareIndex(event.buildId)
+            val result = writeLogsByAggregator(event.buildId, logMessage)
+            if (result.success) {
+                logStorageDegradeSwitcher.recordSuccess(result.elapseMs, trafficKey)
+                logStorageBean.batchWrite(result.elapseMs, true)
+                logStorageBean.directWrite(true)
+                return
+            }
+            logStorageDegradeSwitcher.recordFailure(result.elapseMs, trafficKey)
+            logStorageBean.batchWrite(result.elapseMs, false)
+            logStorageBean.directWrite(false)
+            logger.warn(
+                "[{}] Direct ES write failed, degrade to storage queue: {}",
+                event.buildId,
+                result.message
+            )
+        } catch (ignore: Exception) {
+            logStorageDegradeSwitcher.recordFailure(0, trafficKey)
+            logStorageBean.directWrite(false)
+            logger.warn(
+                "[${event.buildId}] Direct ES write exception, degrade to storage queue",
+                ignore
+            )
+        }
+        dispatchToStorage(event, logMessage)
+        logStorageDegradeSwitcher.recordDegrade()
+        logStorageBean.degradeToStorage()
     }
 
     override fun addBatchLogEvent(event: LogStorageEvent) {
@@ -157,26 +207,36 @@ class LogServiceESImpl(
         var success = false
         try {
             prepareIndex(event.buildId)
-            val logMessages = event.logs
-            val buf = mutableListOf<LogMessageWithLineNo>()
-            logMessages.forEach {
-                buf.add(it)
-                if (buf.size == Constants.BULK_BUFFER_SIZE) {
-                    if (doAddMultiLines(buf, event.buildId) == 0) {
-                        throw ExecuteException(
-                            "None of lines is inserted successfully to ES " +
+            if (logBulkProperties.enabled) {
+                val result = writeLogsByAggregator(event.buildId, event.logs)
+                if (!result.success) {
+                    throw ExecuteException(
+                        "None of lines is inserted successfully to ES " +
+                            "[${event.buildId}|${event.retryTime}] reason=${result.message}"
+                    )
+                }
+            } else {
+                val logMessages = event.logs
+                val buf = mutableListOf<LogMessageWithLineNo>()
+                logMessages.forEach {
+                    buf.add(it)
+                    if (buf.size == Constants.BULK_BUFFER_SIZE) {
+                        if (doAddMultiLines(buf, event.buildId) == 0) {
+                            throw ExecuteException(
+                                "None of lines is inserted successfully to ES " +
                                     "[${event.buildId}|${event.retryTime}]"
-                        )
-                    } else {
-                        buf.clear()
+                            )
+                        } else {
+                            buf.clear()
+                        }
                     }
                 }
-            }
-            if (buf.isNotEmpty()) {
-                if (doAddMultiLines(buf, event.buildId) == 0) {
-                    throw ExecuteException(
-                        "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
-                    )
+                if (buf.isNotEmpty()) {
+                    if (doAddMultiLines(buf, event.buildId) == 0) {
+                        throw ExecuteException(
+                            "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
+                        )
+                    }
                 }
             }
             success = true
@@ -189,6 +249,56 @@ class LogServiceESImpl(
                 "[${event.buildId}] addBatchLogEvent spent too much time($elapse) with tag=${event.logs.first().tag}"
             )
         }
+    }
+
+    private fun dispatchToStorage(event: LogOriginEvent, logMessage: List<LogMessageWithLineNo>) {
+        buildLogPrintService.dispatchEvent(
+            event = LogStorageEvent(
+                buildId = event.buildId,
+                logs = logMessage,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId
+            ),
+            recordTraffic = false
+        )
+    }
+
+    private fun writeLogsByAggregator(
+        buildId: String,
+        logMessages: List<LogMessageWithLineNo>
+    ): BulkOfferResult {
+        val index = indexService.getIndexName(buildId)
+        val client = logClient.hashClient(buildId)
+        val deterministicId = indexService.isLineNumReliable(buildId)
+        val requests = ArrayList<IndexRequest>(logMessages.size)
+        var approxBytes = 0L
+        logMessages.forEach { logMessage ->
+            val indexRequest = genIndexRequest(
+                buildId = buildId,
+                logMessage = logMessage,
+                index = index,
+                deterministicId = deterministicId
+            )
+            if (indexRequest != null) {
+                requests.add(indexRequest)
+                approxBytes += (logMessage.message.length * 2L).coerceAtLeast(64L)
+            }
+        }
+        if (requests.isEmpty()) {
+            return BulkOfferResult(success = false, elapseMs = 0, message = "no valid index requests")
+        }
+        val result = logBulkAggregator.offer(
+            client = client,
+            buildId = buildId,
+            requests = requests,
+            approxBytes = approxBytes,
+            timeoutMs = logBulkProperties.writeTimeoutMs
+        )
+        // 仅在真正发生 ES 写尝试时反馈集群健康：本地背压(队列满/无有效请求)elapseMs=0 不计入，避免误熔断集群
+        if (result.success || result.elapseMs > 0) {
+            logClient.reportWriteResult(client.clusterName, result.success, result.elapseMs)
+        }
+        return result
     }
 
     override fun updateLogStatus(event: LogStatusEvent) {
@@ -451,10 +561,12 @@ class LogServiceESImpl(
             }
         }
 
-        val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+            .header(
+                "content-disposition",
+                LogDownloadHeader.contentDisposition(fileName, pipelineId, buildId)
+            )
             .header("Cache-Control", "no-cache")
             .build()
     }
@@ -1149,6 +1261,7 @@ class LogServiceESImpl(
         val currentEpoch = System.currentTimeMillis()
         val index = indexService.getIndexName(buildId)
         val bulkClient = logClient.hashClient(buildId)
+        val deterministicId = indexService.isLineNumReliable(buildId)
         var lines = 0
         var bulkLines = 0
         val bulkRequest = BulkRequest()
@@ -1159,7 +1272,8 @@ class LogServiceESImpl(
             val indexRequest = genIndexRequest(
                 buildId = buildId,
                 logMessage = logMessage,
-                index = index
+                index = index,
+                deterministicId = deterministicId
             )
             if (indexRequest != null) {
                 bulkRequest.add(indexRequest)
@@ -1201,7 +1315,7 @@ class LogServiceESImpl(
                 logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
             val elapse = System.currentTimeMillis() - currentEpoch
-            logStorageBean.bulkRequest(elapse, bulkLines > 0)
+            logStorageBean.bulkRequest(elapse, bulkLines > 0, bulkClient.clusterName)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= INDEX_STORAGE_WARN_MILLIS && logMessages.isNotEmpty()) logger.warn(
@@ -1213,14 +1327,18 @@ class LogServiceESImpl(
     private fun genIndexRequest(
         buildId: String,
         logMessage: LogMessageWithLineNo,
-        index: String
+        index: String,
+        deterministicId: Boolean = true
     ): IndexRequest? {
         val builder = ESIndexUtils.getDocumentObject(buildId, logMessage)
         return try {
-            // 使用确定性 _id 保证 bulk 重试时的写入幂等性，避免出现同 lineNo 的重复文档
-            IndexRequest(index)
-                .id(buildDocId(buildId, logMessage.executeCount, logMessage.lineNo))
-                .source(builder)
+            // 使用确定性 _id 保证 bulk 重试时的写入幂等性，避免出现同 lineNo 的重复文档；
+            // 行号高水位丢失时该前提不再成立，必须让 ES 自动生成 _id，否则会覆盖历史日志
+            val request = IndexRequest(index)
+            if (deterministicId) {
+                request.id(buildDocId(buildId, logMessage.executeCount, logMessage.lineNo))
+            }
+            request.source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null

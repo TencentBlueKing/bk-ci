@@ -5,7 +5,7 @@
         </span> -->
         <section
             v-bk-clickoutside="closeLog"
-            :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']"
+            :class="[currentTab && currentTab !== 'log' ? 'white-theme' : 'black-theme over-hidden', 'log-main']"
         >
             <header class="log-head">
                 <span class="log-title"><status-icon
@@ -16,7 +16,9 @@
                 <slot name="tool"></slot>
             </header>
 
-            <slot name="content"></slot>
+            <main class="log-content">
+                <slot name="content"></slot>
+            </main>
         </section>
     </article>
 </template>
@@ -110,6 +112,10 @@
             &.over-hidden {
                 overflow: hidden;
             }
+            .log-content {
+                flex: 1 1 auto;
+                min-height: 0;
+            }
             .log-head {
                 background-color: #2E2E2E;
                 line-height: 48px;
@@ -134,11 +140,18 @@
             }
             &.black-theme {
                 background: #1A1A1A;
+                .log-content {
+                    display: flex;
+                    overflow: hidden;
+                }
             }
             &.white-theme {
                 background: #fff;
-                overflow: auto;
+                overflow: hidden;
                 box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
+                .log-content {
+                    overflow: auto;
+                }
                 &.log-main .log-head {
                     border-top-right-radius: 6px;
                 }

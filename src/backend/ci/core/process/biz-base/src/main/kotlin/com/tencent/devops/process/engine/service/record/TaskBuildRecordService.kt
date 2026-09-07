@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -84,7 +85,8 @@ class TaskBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -94,7 +96,8 @@ class TaskBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineResourceDraftVersionDao = pipelineResourceDraftVersionDao
 ) {
 
     fun updateTaskStatus(

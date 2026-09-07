@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -43,10 +44,12 @@ import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.utils.PipelineVersionUtils
@@ -66,7 +69,8 @@ class PipelineRepositoryVersionService(
     private val pipelineInfoDao: PipelineInfoDao,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val pipelineOperationLogService: PipelineOperationLogService
+    private val pipelineOperationLogService: PipelineOperationLogService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     companion object {
@@ -547,5 +551,55 @@ class PipelineRepositoryVersionService(
         } finally {
             lock.unlock()
         }
+    }
+
+    fun listPipelineDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        page: Int?,
+        pageSize: Int?
+    ): Page<PipelineDraftVersionSimple> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 5
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_BASE_VERSION_NOT_FOUND,
+            params = arrayOf(version.toString())
+        )
+        // 不是草稿版本, 返回空列表
+        if (pipelineVersionSimple.status != VersionStatus.COMMITTING) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+        val count = pipelineResourceDraftVersionDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        val records = pipelineResourceDraftVersionDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            limit = limit.limit,
+            offset = limit.offset
+        )
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = records
+        )
     }
 }

@@ -1,7 +1,7 @@
 /* 变量面板容器 */
 .variablePanel {
   position: fixed;
-  top: 52px;
+  top: 49px;
   right: 0;
   bottom: 0;
   width: 480px;
@@ -37,14 +37,14 @@
 /* 展开/收起按钮 */
 .toggleButton {
   position: absolute;
-  left: -20px;
+  left: 0;
   top: calc(50% - 50px);
   z-index: 2020;
   writing-mode: vertical-lr;
-  padding: 30px 2px;
-  background: var(--color-primary-hover);
+  padding: 30px 0px;
+  background: #a3c5fd;
   cursor: pointer;
-  border-radius: var(--border-radius-large) 0 0 var(--border-radius-large);
+  border-radius: 0 var(--border-radius-large) var(--border-radius-large) 0;
   font-size: var(--font-size-xs);
   line-height: var(--line-height-xs);
   color: #fff;
@@ -57,6 +57,8 @@
 /* 按钮收起状态 */
 .buttonClosed {
   background: #699df4;
+  left: -20px;
+  border-radius: var(--border-radius-large) 0 0 var(--border-radius-large);
 }
 
 .buttonClosed .bk-icon {
@@ -137,7 +139,7 @@
 .editFormHeader {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   border-bottom: 1px solid var(--border-color);
   padding-bottom: var(--spacing-sm);
 }
@@ -153,8 +155,7 @@
 }
 
 .editFormTitle {
-  font-size: var(--font-size-md);
-  font-weight: 600;
+  font-size: var(--font-size-sm);
   color: var(--color-text-primary);
 }
 
@@ -260,7 +261,6 @@
 .draggableList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm, 8px);
   min-height: 40px;
   padding: var(--sapcing-xs);
   border-radius: var(--sapcing-xs);
@@ -310,6 +310,5 @@
 .flatVariableList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
   padding-top: 0;
 }

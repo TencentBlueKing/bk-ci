@@ -46,15 +46,24 @@ data class PipelineResourceOnlyVersion(
     @get:Schema(title = "默认的基础版本,取的是最新的正式版本", required = false)
     val baseVersion: Int? = null,
     @get:Schema(title = "基础版本名称,用于记录操作日志", required = false)
-    val baseVersionName: String? = null
+    val baseVersionName: String? = null,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 ) {
-    constructor(pipelineResource: PipelineResourceVersion) : this(
+    constructor(
+        pipelineResource: PipelineResourceVersion,
+        draftVersion: Int,
+        baseVersion: Int?,
+        baseVersionName: String?
+    ) : this(
         version = pipelineResource.version,
         versionName = pipelineResource.versionName,
         versionNum = pipelineResource.versionNum,
         pipelineVersion = pipelineResource.pipelineVersion,
         triggerVersion = pipelineResource.triggerVersion,
         settingVersion = pipelineResource.settingVersion,
-        baseVersion = pipelineResource.baseVersion
+        baseVersion = baseVersion,
+        draftVersion = draftVersion,
+        baseVersionName = baseVersionName
     )
 }

@@ -87,7 +87,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
-    @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
+    @Value("\${scm.webhook.trigger.max-count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
 
     fun trigger(event: ScmWebhookTriggerEvent) {
@@ -258,49 +258,60 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
 
     fun yamlTrigger(event: PipelineYamlFileEvent) {
         with(event) {
-            logger.info(
-                "[PAC_PIPELINE]|Start to trigger yaml pipeline|$eventId|$projectId|$repoHashId|" +
-                        "$filePath|$ref|$blobId"
-            )
-            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
-                projectId = projectId, eventId = eventId
-            ) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
-                params = arrayOf(eventId.toString())
-            )
-            val eventBody = triggerEvent.eventBody ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
-                params = arrayOf(eventId.toString())
-            )
-            val pipelineYamlVersion = pipelineYamlVersionResolver.getPipelineYamlVersion(
+            val context = WebhookTriggerContext(
                 projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                ref = ref,
-                blobId = blobId!!,
-                defaultBranch = defaultBranch
-            ) ?: run {
+                pipelineId = filePath,
+                eventId = eventId
+            )
+            try {
                 logger.info(
-                    "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|$eventId|" +
-                            "$projectId|$repoHashId|$filePath|$blobId"
+                    "[PAC_PIPELINE]|Start to trigger yaml pipeline|$eventId|$projectId|$repoHashId|" +
+                        "$filePath|$ref|$blobId"
                 )
-                return
-            }
-            logger.info(
-                "[PAC_PIPELINE]|find yaml pipeline trigger version|$eventId|" +
+                val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
+                    projectId = projectId, eventId = eventId
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
+                    params = arrayOf(eventId.toString())
+                )
+                val eventBody = triggerEvent.eventBody ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
+                    params = arrayOf(eventId.toString())
+                )
+                val pipelineYamlVersion = pipelineYamlVersionResolver.getPipelineYamlVersion(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    ref = ref,
+                    blobId = blobId!!,
+                    defaultBranch = defaultBranch
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                    params = arrayOf(ref)
+                )
+                logger.info(
+                    "[PAC_PIPELINE]|find yaml pipeline trigger version|$eventId|" +
                         "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
                         "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
-            )
-            trigger(
-                projectId = projectId,
-                pipelineId = pipelineYamlVersion.pipelineId,
-                version = pipelineYamlVersion.version,
-                eventId = eventId,
-                repository = repository,
-                webhook = (eventBody as ScmWebhookEventBody).webhook,
-                eventTime = eventTime,
-                isYaml = true
-            )
+                )
+                trigger(
+                    projectId = projectId,
+                    pipelineId = pipelineYamlVersion.pipelineId,
+                    version = pipelineYamlVersion.version,
+                    eventId = eventId,
+                    repository = repository,
+                    webhook = (eventBody as ScmWebhookEventBody).webhook,
+                    eventTime = eventTime,
+                    isYaml = true
+                )
+            } catch (ignored: Exception) {
+                logger.error(
+                    "[PAC_PIPELINE]|Failed to trigger yaml pipeline|$eventId|" +
+                        "$projectId|$repoHashId|$filePath|$ref|$blobId",
+                    ignored
+                )
+                webhookTriggerManager.fireError(context, ignored)
+            }
         }
     }
 

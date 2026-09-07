@@ -27,11 +27,13 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactMetadataResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.artifact.PipelineArtifactInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -160,6 +162,35 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             pageSize = pageSize,
             modifiedTimeDesc = modifiedTimeDesc
         )
+    }
+
+    override fun listArtifactInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        artifactType: String?,
+        artifactName: String?,
+        artifactVersion: String?,
+        buildId: String?,
+        executeCount: Int?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineArtifactInfo>> {
+
+        return client.get(ServiceArtifactMetadataResource::class).listArtifactInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                artifactType = artifactType,
+                artifactName = artifactName,
+                artifactVersion = artifactVersion,
+                executeCount = executeCount,
+                buildId = buildId,
+                page = page,
+                pageSize = pageSize
+            )
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {

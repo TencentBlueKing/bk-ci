@@ -125,21 +125,25 @@ class PipelineYamlResourceManager @Autowired constructor(
      * 合并请求完成
      */
     fun completePullRequest(
+        userId: String,
         projectId: String,
         pipelineId: String,
         pullRequestId: Long,
         pullRequestUrl: String,
         pullRequestNumber: Int,
         merged: Boolean,
-        isTemplate: Boolean
+        isTemplate: Boolean,
+        exception: Throwable? = null
     ) {
         getService(isTemplate).completePullRequest(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pullRequestId = pullRequestId,
             pullRequestUrl = pullRequestUrl,
             pullRequestNumber = pullRequestNumber,
-            merged = merged
+            merged = merged,
+            exception = exception
         )
     }
 

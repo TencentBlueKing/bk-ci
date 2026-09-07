@@ -83,6 +83,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useEnvAside from '@/hooks/useEnvAside'
     import { convertTime } from '@/utils/util'
+    import { OS_LABEL_MAP } from '@/store/constants'
     
     export default {
         name: 'BasicInfo',
@@ -115,6 +116,13 @@
                     type: 'input',
                     maxlength: 30
                 },
+                ...(isCreateResType.value ? [
+                    {
+                        key: 'os',
+                        label: proxy.$t('environment.nodeInfo.os'),
+                        editable: false
+                    }
+                ] : []),
                 ...(!isCreateResType.value ? [
                     {
                         key: 'envType',
@@ -178,6 +186,9 @@
                 }
                 if (key === 'envType' && value) {
                     return proxy.$t(`environment.envInfo.${value}EnvType`)
+                }
+                if (key === 'os' && value) {
+                    return OS_LABEL_MAP[value] || value
                 }
                 return value
             }
@@ -274,7 +285,7 @@
     .info-item {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         line-height: 20px;
         font-size: 12px;
         

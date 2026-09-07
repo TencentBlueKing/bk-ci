@@ -1,0 +1,59 @@
+version: v3.0
+name: 模版参数_11
+desc: 模版参数_11
+extends:
+  template:
+    template-id: a617c545f2a04c80875bf108a99af72f
+    version: V18(P16.T5.18)
+    variables:
+      v_text:
+        value: dd
+        allow-modify-at-startup: true
+      v_bool:
+        value: true
+        allow-modify-at-startup: true
+      v_selector:
+        value: ""
+        allow-modify-at-startup: true
+      v_checkbox:
+        value:
+          - ""
+        allow-modify-at-startup: true
+      v_git_ref:
+        value: master
+        allow-modify-at-startup: true
+      v_repo:
+        value: royalhuang/royalhuang_pac
+        allow-modify-at-startup: true
+      v_repo_ref:
+        value:
+          repo-name: mingshewhe1/pac/pac
+          branch: develop
+        allow-modify-at-startup: true
+    trigger-conf:
+      y9i5eU:
+        disabled: false
+        cron: 0 0 1 * *
+        variables:
+          v_text: dd
+          v_checkbox: "1,2,3"
+          v_git_ref: master
+    recommended-version:
+      allow-modify-at-startup: true
+      major: 1
+      minor: 2
+      fix: 3
+      build-no:
+        initial-value: 2
+notices:
+  - if: FAILURE
+    type:
+      - email
+      - wework-message
+    receivers:
+      - "${{ci.actor}}"
+    content: "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。"
+concurrency:
+  queue-timeout-minutes: 10
+syntax-dialect: INHERIT
+cancel-policy: RESTRICTED

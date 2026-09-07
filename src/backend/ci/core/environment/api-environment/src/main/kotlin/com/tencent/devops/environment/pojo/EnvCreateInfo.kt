@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeSource
@@ -49,5 +50,7 @@ data class EnvCreateInfo(
     @get:Schema(title = "节点 HashId 列表", required = false)
     val nodeHashIds: List<String>?,
     @get:Schema(title = "节点标签列表", required = false)
-    val nodeTags: List<NodeTagAddOrDeleteTagItem>?
+    val nodeTags: List<NodeTagAddOrDeleteTagItem>?,
+    @get:Schema(title = "环境系统，创作流环境必填", required = false)
+    val os: OS?
 )

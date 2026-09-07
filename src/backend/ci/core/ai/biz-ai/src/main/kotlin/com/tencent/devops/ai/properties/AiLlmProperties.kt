@@ -45,7 +45,7 @@ data class AiLlmProperties(
      * 与 [executionTimeoutSeconds] 的首元素等待上限不同，此时限从订阅开始持续计时，
      * 即使模型持续返回 reasoning/SSE 数据也不会重置。超时后由 failover 链切换到下一候选模型。
      */
-    val totalExecutionTimeoutSeconds: Long = 120,
+    val totalExecutionTimeoutSeconds: Long = 180,
     /**
      * 最大尝试次数（含首次调用）。
      * 设为 5 次（首次 + 4 次重试）。比 OpenAI SDK 默认的 3 次更多，
@@ -189,7 +189,7 @@ data class AiLlmModelProperties(
     val readTimeoutSeconds: Long = 90,
     val writeTimeoutSeconds: Long = 30,
     val executionTimeoutSeconds: Long = 60,
-    val totalExecutionTimeoutSeconds: Long = 120,
+    val totalExecutionTimeoutSeconds: Long = 180,
     val maxAttempts: Int = 5,
     val initialBackoffSeconds: Long = 1,
     val maxBackoffSeconds: Long = 8,

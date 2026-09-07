@@ -35,6 +35,8 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -218,4 +220,30 @@ interface ServicePipelineViewResource {
         @Parameter(description = "按视图过滤", required = false)
         viewIdsEncode: List<String>
     ): Result<List<String>>
+
+    @Operation(summary = "流水线组下批量添加流水线")
+    @POST
+    @Path("/bulkAdd")
+    fun bulkAdd(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean>
+
+    @Operation(summary = "流水线组下批量移除流水线")
+    @POST
+    @Path("/bulkRemove")
+    fun bulkRemove(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        bulkRemove: PipelineViewBulkRemove
+    ): Result<Boolean>
 }

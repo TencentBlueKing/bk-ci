@@ -38,6 +38,7 @@
   padding: var(--spacing-sm) var(--spacing-lg);
   cursor: pointer;
   color: var(--color-text-secondary);
+  border-right: 2px solid transparent;
   transition: background-color var(--transition-fast);
 }
 
@@ -48,14 +49,29 @@
 .navItemActive {
   background: var(--bg-active);
   color: var(--color-primary);
+  border-right-color: var(--color-primary);
 }
 
 .navName {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 
 .navCount {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 16px;
+  padding: 0 6px;
   font-size: var(--font-size-xs);
+  line-height: 16px;
+  text-align: center;
+  color: var(--color-text-tertiary);
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.navItemActive .navCount {
+  background: var(--bg-primary);
 }
 
 .listContainer {
@@ -68,7 +84,7 @@
 
 .list {
   flex: 1;
-  padding: var(--spacing-lg) var(--spacing-xxl) var(--spacing-lg) var(--spacing-xl);
+  padding: var(--spacing-sm) 0  0 var(--spacing-sm);
   overflow-y: auto;
 }
 

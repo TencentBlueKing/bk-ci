@@ -144,6 +144,9 @@ export default defineComponent({
 
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
+    const isPluginEnabled = computed(() => localElement.value?.additionalOptions?.enable ?? true)
+    // 插件禁用时，表单全部不可编辑；启用开关本身仍可操作
+    const isFormDisabled = computed(() => isDisabled.value || !isPluginEnabled.value)
 
     const triggerErrorFields = computed(() => {
       if (!localElement.value) return []
@@ -291,6 +294,9 @@ export default defineComponent({
     const handleEnableChange = (value: boolean) => {
       if (!localElement.value?.additionalOptions) return
       localElement.value.additionalOptions.enable = value
+      if (!value) {
+        nameEditing.value = false
+      }
     }
 
     const updateInput = (key: string, value: any) => {
@@ -328,7 +334,7 @@ export default defineComponent({
               atomValue={atomValue.value}
               element={localElement.value}
               displayMode={DISPLAY_MODE.TRIGGER}
-              disabled={props.readonly}
+              disabled={isFormDisabled.value}
               errorFields={showErrors.value ? triggerErrorFields.value : []}
               onChange={updateInput}
               onFieldError={handleFieldError}
@@ -347,7 +353,7 @@ export default defineComponent({
       return (
         <div class={styles.panelBody}>
           <div class={styles.fieldGroup}>
-            <div class={[styles.stepIdAndVersionRow, isDisabled.value && styles.disabled]}>
+            <div class={[styles.stepIdAndVersionRow, isFormDisabled.value && styles.disabled]}>
               <div class={[styles.stepIdColumn, stepIdErrors.value.length > 0 && styles.stepIdError]}>
                 <div class={styles.labelWithIcon}>
                   <span>{t('flow.orchestration.stepId')}</span>
@@ -360,7 +366,7 @@ export default defineComponent({
                 <Input
                   modelValue={localElement.value.stepId || ''}
                   placeholder={t('flow.orchestration.stepIdPlaceholder')}
-                  disabled={isDisabled.value}
+                  disabled={isFormDisabled.value}
                   onChange={(val: string) => {
                     localElement.value!.stepId = val
                   }}
@@ -379,7 +385,7 @@ export default defineComponent({
                   modelValue={localElement.value.version || '1.latest'}
                   list={versionOptions.value}
                   loading={isLoadingVersions.value}
-                  disabled={isDisabled.value}
+                  disabled={isFormDisabled.value}
                   onChange={(ver: string) => {
                     if (!localElement.value || ver === localElement.value.version) return
                     localElement.value.version = ver
@@ -400,7 +406,7 @@ export default defineComponent({
           header: () => (
             <div class={styles.header}>
               <div class={styles.nameEdit}>
-                {!props.readonly && nameEditing.value ? (
+                {!isFormDisabled.value && nameEditing.value ? (
                   <Input
                     modelValue={editingName.value}
                     maxlength={30}
@@ -417,7 +423,7 @@ export default defineComponent({
                     <p class={styles.nameText} title={triggerName.value}>
                       {triggerName.value}
                     </p>
-                    {!props.readonly && (
+                    {!isFormDisabled.value && (
                       <span class={styles.editIcon} onClick={handleEditIconClick}>
                         <SvgIcon name="edit" size={16} />
                       </span>

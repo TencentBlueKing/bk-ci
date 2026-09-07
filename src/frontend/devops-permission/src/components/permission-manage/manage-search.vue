@@ -93,6 +93,7 @@ import tools from '@/utils/tools';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { cacheProjectCode } from '@/store/useCacheProjectCode'
+import { resolveDefaultProjectCode } from '@/utils/resolveDefaultProjectCode'
 
 const route = useRoute();
 const { t } = useI18n();
@@ -231,8 +232,13 @@ async function fetchResourceTypes() {
     ]);
     serviceList.value = resourceTypes;
     projectList.value = projects;
-    const hasLocationCode = projectList.value.find(item => item.englishName === cacheProjectCode.get() )
-    projectValue.value = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || (hasLocationCode && cacheProjectCode.get()) || projects[0].englishName
+    projectValue.value = resolveDefaultProjectCode({
+      routeProjectCode: route?.params.projectCode || route?.query.projectCode || route?.query.project_code,
+      cookieProjectCode: tools.getCookie('X-DEVOPS-PROJECT-ID'),
+      cachedProjectCode: cacheProjectCode.get(),
+      projectCodes: projectList.value.map(item => item.englishName),
+      fallbackProjectCode: projects[0].englishName,
+    })
     getSearch()
   } catch (error) {
     console.log(error);

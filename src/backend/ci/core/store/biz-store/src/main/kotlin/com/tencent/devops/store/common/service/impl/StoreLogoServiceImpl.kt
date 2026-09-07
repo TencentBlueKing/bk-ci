@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -93,7 +94,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         disposition: FormDataContentDisposition,
         storeType: StoreTypeEnum?
     ): Result<StoreLogoInfo?> {
-        val fileName = disposition.fileName
+        // multipart filename 由客户端控制，basename 化阻断 ../、绝对路径等可能流入 fileType/fileRepoPath 拼接
+        val fileName = FileUtil.getSafeFileName(disposition.fileName)
         logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).lowercase()

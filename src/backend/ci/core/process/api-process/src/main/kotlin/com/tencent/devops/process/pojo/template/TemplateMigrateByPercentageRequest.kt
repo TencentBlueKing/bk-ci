@@ -18,5 +18,9 @@ data class TemplateMigrateByPercentageRequest(
         title = "是否预览模式（true=仅统计不触发迁移，false=触发异步迁移）",
         description = "dryRun"
     )
-    val dryRun: Boolean = true
+    val dryRun: Boolean = true,
+
+    @get:JsonProperty(value = "blacklist", required = false)
+    @get:Schema(title = "项目黑名单，名单内项目不参与本次迁移；不传则不额外排除")
+    val blacklist: List<String>? = null
 )

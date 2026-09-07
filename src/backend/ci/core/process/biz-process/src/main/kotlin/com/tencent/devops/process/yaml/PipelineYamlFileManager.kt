@@ -103,6 +103,7 @@ class PipelineYamlFileManager @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
+        private const val MAX_PULL_REQUEST_TITLE_LENGTH = 255
     }
 
     fun syncYamlFile(
@@ -218,6 +219,7 @@ class PipelineYamlFileManager @Autowired constructor(
                             "$projectId$repoHashId|$filePath|$ref|${commit?.commitId}|$blobId",
                     ignored
                 )
+                handlePullRequestOnFailed(context = context, exception = ignored)
                 webhookTriggerManager.fireChangeError(context = context, exception = ignored)
                 false
             } finally {
@@ -378,6 +380,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 context.pipelineId = pipelineId
                 context.versionName = pipelineName
                 pipelineYamlResourceManager.completePullRequest(
+                    userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineYamlInfo.pipelineId,
                     pullRequestId = pullRequestId ?: 0L,
@@ -473,7 +476,7 @@ class PipelineYamlFileManager @Autowired constructor(
                         targetBranch = defaultBranch,
                         commitMessage = commitMessage,
                         newFile = filePushResult.newFile,
-                        authRepository = authRepository
+                        authRepository = pushAuthRepository
                     )
                 } else {
                     null
@@ -529,7 +532,8 @@ class PipelineYamlFileManager @Autowired constructor(
         authRepository: AuthRepository
     ): PullRequest? {
 
-        val title = getPullRequestTitle(newFile = newFile)
+        // 优先使用用户输入的描述作为 MR 标题,为空白时回退到平台自动生成标题
+        val title = buildPullRequestTitle(commitMessage = commitMessage, newFile = newFile)
         return client.get(ServiceScmPullRequestApiResource::class).createPullRequestIfAbsent(
             projectId = projectId,
             pullRequestCreateReq = ScmPullRequestCreateReq(
@@ -592,7 +596,7 @@ class PipelineYamlFileManager @Autowired constructor(
             } ?: run {
                 context.actionType = YamlPipelineActionType.NO_CHANGE
             }
-            handleMergedPullRequest(pipelineId = pipelineId)
+            handlePullRequestOnSuccess(pipelineId = pipelineId)
         }
     }
 
@@ -1023,7 +1027,7 @@ class PipelineYamlFileManager @Autowired constructor(
     /**
      * 合并到目标分支后处理源分支版本与 pr 状态
      */
-    private fun PipelineYamlFileEvent.handleMergedPullRequest(pipelineId: String) {
+    private fun PipelineYamlFileEvent.handlePullRequestOnSuccess(pipelineId: String) {
         // 如果合并到目标分支或者 fork 仓库合并,需要将源分支的分支版本删除
         if (!merged || (ref != defaultBranch && !fork)) {
             return
@@ -1031,6 +1035,7 @@ class PipelineYamlFileManager @Autowired constructor(
         deleteSourceWhenMerged(pipelineId = pipelineId)
         // pr 合并后,通知资源更新状态
         pipelineYamlResourceManager.completePullRequest(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pullRequestId = pullRequestId!!,
@@ -1039,6 +1044,38 @@ class PipelineYamlFileManager @Autowired constructor(
             merged = true,
             isTemplate = isTemplate
         )
+    }
+
+    /**
+     * MR 已合并但 yaml 处理失败时的兜底,避免模板实例状态一直停留在"更新中"
+     */
+    private fun PipelineYamlFileEvent.handlePullRequestOnFailed(
+        context: PipelineYamlChangeContext,
+        exception: Exception
+    ) {
+        val pipelineId = context.pipelineId
+        // 仅处理"MR 已合并 + 有合并请求 + 已知 pipelineId"的场景
+        if (!merged || pullRequestId == null || pipelineId.isNullOrBlank()) {
+            return
+        }
+        runCatching {
+            pipelineYamlResourceManager.completePullRequest(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pullRequestId = pullRequestId!!,
+                pullRequestUrl = pullRequestUrl ?: "",
+                pullRequestNumber = pullRequestNumber ?: 0,
+                merged = merged,
+                isTemplate = isTemplate,
+                exception = exception
+            )
+        }.onFailure {
+            logger.warn(
+                "[PAC_PIPELINE]|complete pull request on failed error|$projectId|$pipelineId",
+                it
+            )
+        }
     }
 
     /**
@@ -1127,26 +1164,28 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
-        pipelineYamlResourceManager.deletePipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            isTemplate = isTemplate
-        )
+        // 先删除yaml关联关系,再删除流水线,这样如果后面失败,用户可以页面删除
         pipelineYamlService.deleteYamlPipeline(
             userId = authUser,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
         )
-        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
+        pipelineYamlResourceManager.deletePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isTemplate = isTemplate
+        )
+        // 删除流水线后清理流水线组
         if (!isTemplate) {
             val directory = GitActionCommon.getCiDirectory(filePath)
-            pipelineYamlViewService.deleteEmptyYamlView(
+            pipelineYamlViewService.cleanupYamlView(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                directory = directory
+                directory = directory,
+                pipelineId = pipelineId
             )
         }
     }
@@ -1216,8 +1255,11 @@ class PipelineYamlFileManager @Autowired constructor(
         } ?: run {
             context.actionType = YamlPipelineActionType.NO_CHANGE
         }
-        deleteOldYamlPipeline(needDeleteOldInfo = needDeleteOldInfo)
-        handleMergedPullRequest(pipelineId = pipelineId)
+        deleteOldYamlPipeline(
+            pipelineId = pipelineId,
+            needDeleteOldInfo = needDeleteOldInfo
+        )
+        handlePullRequestOnSuccess(pipelineId = pipelineId)
     }
 
     /**
@@ -1321,7 +1363,10 @@ class PipelineYamlFileManager @Autowired constructor(
         return deployPipelineResult
     }
 
-    private fun PipelineYamlFileEvent.deleteOldYamlPipeline(needDeleteOldInfo: Boolean) {
+    private fun PipelineYamlFileEvent.deleteOldYamlPipeline(
+        pipelineId: String,
+        needDeleteOldInfo: Boolean
+    ) {
         logger.info(
             "[PAC_PIPELINE]|delete old yaml pipeline|" +
                 "$eventId|$projectId|$repoHashId|$filePath|$oldFilePath|$needDeleteOldInfo"
@@ -1334,15 +1379,19 @@ class PipelineYamlFileManager @Autowired constructor(
             oldFilePath = oldFilePath!!,
             needDeleteOldInfo = needDeleteOldInfo
         )
-        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
+        // 重命名导致目录变更时，从旧目录流水线组移除并清理空组；同目录重命名无需处理
         if (!isTemplate && needDeleteOldInfo) {
-            val directory = GitActionCommon.getCiDirectory(oldFilePath)
-            pipelineYamlViewService.deleteEmptyYamlView(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                directory = directory
-            )
+            val oldDirectory = GitActionCommon.getCiDirectory(oldFilePath)
+            val newDirectory = GitActionCommon.getCiDirectory(filePath)
+            if (oldDirectory != newDirectory) {
+                pipelineYamlViewService.cleanupYamlView(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = oldDirectory,
+                    pipelineId = pipelineId
+                )
+            }
         }
     }
 
@@ -1381,6 +1430,27 @@ class PipelineYamlFileManager @Autowired constructor(
             filePath = oldFilePath
         )
         return activeBranchList.size == 1 && activeBranchList.contains(ref)
+    }
+
+    /**
+     * 构造 MR 标题
+     *
+     * 优先使用用户输入的描述(commitMessage),为空白时回退到平台自动生成的标题。
+     * MR 标题需为单行,因此仅取描述第一行,并对超长标题进行截断。
+     */
+    private fun PipelineYamlFileReleaseReq.buildPullRequestTitle(
+        commitMessage: String,
+        newFile: Boolean
+    ): String {
+        val userTitle = commitMessage.substringBefore('\n').trim()
+        if (userTitle.isBlank()) {
+            return getPullRequestTitle(newFile = newFile)
+        }
+        return if (userTitle.length > MAX_PULL_REQUEST_TITLE_LENGTH) {
+            userTitle.take(MAX_PULL_REQUEST_TITLE_LENGTH - 3) + "..."
+        } else {
+            userTitle
+        }
     }
 
     private fun PipelineYamlFileReleaseReq.getPullRequestTitle(

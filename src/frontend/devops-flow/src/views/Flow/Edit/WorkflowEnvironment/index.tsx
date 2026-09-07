@@ -1,4 +1,5 @@
 import { useAuthoringEnvironment } from '@/hooks/useAuthoringEnvironment'
+import { useEnvironmentOsCompatibility } from '@/hooks/useEnvironmentOsCompatibility'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { Loading } from 'bkui-vue'
 import { defineComponent } from 'vue'
@@ -21,15 +22,18 @@ export default defineComponent({
       ...route.params,
       autoLoadEnvList: true,
     })
+    const { checkEnvironmentChange, updateJobBaseOs } = useEnvironmentOsCompatibility()
 
     // Handle user environment selection change
     const handleEnvChange = (envHashId: string) => {
       // Only update if actually changed by user
       if (flowSetting.value && envHashId !== (flowSetting.value as any).envHashId) {
+        const nextEnvironment = envSelectList.value.find((env) => env.envHashId === envHashId)
         updateFlowSetting({
           ...flowSetting.value,
           envHashId,
         })
+        updateJobBaseOs(nextEnvironment?.os)
       }
     }
 
@@ -45,6 +49,7 @@ export default defineComponent({
           envLoading={envListLoading.value}
           nodeLoading={nodeListLoading.value}
           nodeList={nodeList.value}
+          beforeChange={checkEnvironmentChange}
           onUpdate:modelValue={handleEnvChange}
         />
       </Loading>

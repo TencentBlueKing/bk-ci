@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.scm.listener
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CLOSE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CREATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_CREATE_SUCCESS
@@ -99,7 +100,7 @@ class WebhookTriggerEventListener(
                 eventId = eventId,
                 status = PipelineTriggerStatus.FAILED.name,
                 pipelineId = pipelineId,
-                pipelineName = pipelineInfo?.pipelineName ?: "",
+                pipelineName = pipelineInfo?.pipelineName ?: pipelineId,
                 reason = PipelineTriggerReason.TRIGGER_FAILED.name,
                 reasonDetail = exceptionReasonDetail
             )
@@ -155,6 +156,9 @@ class WebhookTriggerEventListener(
                         )
                     }
                 )
+            // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
+            exception is PermissionForbiddenException ->
+                PipelineTriggerFailedMsg(exception.defaultMessage ?: exception.message ?: "unknown error")
             exception is ErrorCodeException -> PipelineTriggerFailedErrorCode(
                 errorCode = exception.errorCode,
                 params = exception.params?.toList()

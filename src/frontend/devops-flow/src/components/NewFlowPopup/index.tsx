@@ -125,7 +125,7 @@ export default defineComponent({
               <Button
                 class={styles.btn}
                 loading={isLoading.value}
-                theme="primary"
+                theme={currentStep.value === 1 ? 'primary' : 'default'}
                 onClick={handleChangeStep}
               >
                 {currentStep.value === 1

@@ -29,7 +29,10 @@ package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.utils.ModelUtils
+import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.service.AtomPropVersionOsService
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomProp
 import org.slf4j.LoggerFactory
@@ -40,6 +43,7 @@ import org.springframework.stereotype.Service
 class PipelineTemplateAtomService @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val atomPropVersionOsService: AtomPropVersionOsService,
     private val client: Client
 ) {
 
@@ -67,6 +71,12 @@ class PipelineTemplateAtomService @Autowired constructor(
         val model = templateResource.model ?: return Result(null)
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getTemplateModelAtoms(model)
-        return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
+        return atomPropVersionOsService.fillVersionOsMap(
+            projectId = projectId,
+            atomVersions = AtomUtils.getTemplateModelAtomVersions(model),
+            atomPropResult = client.get(ServiceAtomResource::class).getAtomProps(atomCodes),
+            // 模板不归属某条流水线，无自身渠道记录可取，只能以请求渠道为准
+            channelCode = ChannelCode.getRequestChannelCode()
+        )
     }
 }

@@ -36,6 +36,8 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -316,5 +318,72 @@ interface ApigwPipelineViewResourceV4 {
             ]
         )
         pipelineView: PipelineViewForm
+    ): Result<Boolean>
+
+    @Operation(
+        summary = "流水线组下批量添加流水线",
+        tags = ["v4_user_pipeline_view_bulk_add", "v4_app_pipeline_view_bulk_add"]
+    )
+    @POST
+    @Path("/bulkAdd")
+    fun bulkAdd(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "批量添加请求，可将流水线添加到多个静态流水线组",
+            examples = [
+                ExampleObject(
+                    description = "将流水线添加到指定静态流水线组",
+                    value = """
+                            {
+                                "pipelineIds": [
+                                    "p-xxx",
+                                    "p-yyy"
+                                ],
+                                "viewIds": [
+                                    "10001",
+                                    "10002"
+                                ]
+                            }"""
+                )
+            ]
+        )
+        bulkAdd: PipelineViewBulkAdd
+    ): Result<Boolean>
+
+    @Operation(
+        summary = "流水线组下批量移除流水线",
+        tags = ["v4_user_pipeline_view_bulk_remove", "v4_app_pipeline_view_bulk_remove"]
+    )
+    @POST
+    @Path("/bulkRemove")
+    fun bulkRemove(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(
+            description = "批量移除请求，从指定静态流水线组中移除流水线",
+            examples = [
+                ExampleObject(
+                    description = "从指定静态流水线组中移除流水线",
+                    value = """
+                            {
+                                "pipelineIds": [
+                                    "p-xxx",
+                                    "p-yyy"
+                                ],
+                                "viewId": "10001"
+                            }"""
+                )
+            ]
+        )
+        bulkRemove: PipelineViewBulkRemove
     ): Result<Boolean>
 }
