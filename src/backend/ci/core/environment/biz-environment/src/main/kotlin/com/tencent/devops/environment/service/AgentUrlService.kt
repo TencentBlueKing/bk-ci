@@ -156,14 +156,12 @@ open class AgentUrlService @Autowired constructor(
         }
     }
 
-
     /**
      * 生成网关域名
      */
     fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return fixGateway(agentRecord.gateway)
     }
-
 
     /**
      * 生成文件网关域名
