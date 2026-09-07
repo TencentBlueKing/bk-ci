@@ -67,18 +67,29 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             status = data.taskStatusList
         )
         val records = when (data.view) {
-            TPAPipelineBuildView.PIPELINE -> thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
-                dslContext = dslContext,
-                agentId = data.agentId,
-                envId = envId,
-                limit = limit,
-                offset = offset,
-                startTime = data.startTime,
-                endTime = data.endTime,
-                pipelineId = data.pipelineId,
-                creator = data.creator,
-                status = data.taskStatusList
-            )
+            TPAPipelineBuildView.PIPELINE -> {
+                val buildRecord = thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
+                    dslContext = dslContext,
+                    agentId = data.agentId,
+                    envId = envId,
+                    limit = limit,
+                    offset = offset,
+                    startTime = data.startTime,
+                    endTime = data.endTime,
+                    pipelineId = data.pipelineId,
+                    creator = data.creator,
+                    status = data.taskStatusList
+                )
+                // 查询最近的构建的开始时间
+                val buildHistoryMap = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
+                    data = BatchFetchBuildRecordData(buildIds = buildRecord.filter { !it.buildId.isNullOrBlank() }
+                        .map { it.buildId!! }, executeCount = null)
+                ).data?.sortedByDescending { it.startTime }?.groupBy { it.buildId } ?: emptyMap()
+                buildRecord.forEach {
+                    it.lastBuildTime = buildHistoryMap[it.buildId]?.firstOrNull()?.startTime
+                }
+                buildRecord
+            }
 
             TPAPipelineBuildView.JOB -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
                 dslContext = dslContext,
@@ -390,7 +401,8 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             envId = envId,
             pipelineId = pipelineId
         )
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
+        // buildId维度的
+        val pipelineBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
             dslContext = dslContext,
             agentId = agentId,
             envId = envId,
@@ -398,9 +410,16 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             offset = offset,
             limit = limit
         )
-        if (agentBuilds.isEmpty()) {
+        if (pipelineBuilds.isEmpty()) {
             return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
+        // 带上job维度的
+        val agentBuilds = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
+            dslContext = dslContext,
+            agentId = agentId,
+            envId = envId,
+            buildIdList = pipelineBuilds.toSet()
+        )
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限
         val builds = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
             data = BatchFetchBuildRecordData(buildIds = agentBuilds.map { it.buildId }, executeCount = null)
