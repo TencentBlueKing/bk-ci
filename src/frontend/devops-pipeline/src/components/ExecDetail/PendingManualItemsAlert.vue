@@ -35,7 +35,10 @@
                                     color: row.config.iconColor
                                 }"
                             >
-                                <i :class="['devops-icon', row.config.iconClass]" />
+                                <logo
+                                    :name="row.config.logoName"
+                                    size="14"
+                                />
                             </span>
                             <span
                                 v-bk-overflow-tips
@@ -75,6 +78,7 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import {
         PENDING_ITEM_ACTION,
         getPendingItemConfig
@@ -90,6 +94,9 @@
 
     export default {
         name: 'PendingManualItemsAlert',
+        components: {
+            Logo
+        },
         props: {
             pendingItems: {
                 type: Array,

@@ -66,35 +66,35 @@ export const BUILD_RUNNING_INFO_CONFIG = {
  */
 export const PENDING_ITEM_CONFIG = {
     [PENDING_ITEM_TYPE.TASK_PAUSE]: {
-        iconClass: 'icon-pause',
+        logoName: 'pause',
         iconBg: '#FFE8C3',
         iconColor: '#FF9C01',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
     [PENDING_ITEM_TYPE.TASK_REVIEW]: {
-        iconClass: 'icon-edit',
+        logoName: 'manualAudit',
         iconBg: '#E1ECFF',
         iconColor: '#3A84FF',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
     [PENDING_ITEM_TYPE.TASK_QUALITY_GATE]: {
-        iconClass: 'icon-stop-shape',
+        logoName: 'qualityGateBlocked',
         iconBg: '#FFDDDD',
         iconColor: '#EA3636',
         action: PENDING_ITEM_ACTION.VIEW,
         actionLabelKey: 'details.view'
     },
     [PENDING_ITEM_TYPE.STAGE_REVIEW]: {
-        iconClass: 'icon-edit',
+        logoName: 'stageAudit',
         iconBg: '#E1ECFF',
         iconColor: '#3A84FF',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
     [PENDING_ITEM_TYPE.STAGE_QUALITY_GATE]: {
-        iconClass: 'icon-stop-shape',
+        logoName: 'qualityGateCheck',
         iconBg: '#FFDDDD',
         iconColor: '#EA3636',
         action: PENDING_ITEM_ACTION.VIEW,
@@ -114,7 +114,7 @@ export function getBuildRunningInfoConfig (category) {
  */
 export function getPendingItemConfig (itemType) {
     return PENDING_ITEM_CONFIG[itemType] || {
-        iconClass: 'icon-info-circle',
+        logoName: 'info-circle',
         iconBg: '#F0F1F5',
         iconColor: '#979BA5',
         action: PENDING_ITEM_ACTION.PROCESS,
