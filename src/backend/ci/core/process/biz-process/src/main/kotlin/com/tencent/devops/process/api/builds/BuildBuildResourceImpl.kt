@@ -151,7 +151,6 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(task?.taskParams ?: mapOf())
     }
 
-    @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
     override fun getMutexGroupTasks(
         projectId: String,
         mutexGroupName: String
