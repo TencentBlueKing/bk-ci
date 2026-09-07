@@ -107,7 +107,6 @@ import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_
 import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBER
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
-import com.tencent.devops.store.pojo.common.STORE_BRANCH_TEST_LOCK_KEY_PREFIX
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -454,10 +453,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_FOUR, NUM_TWO, DOING)
             }
-            AtomStatusEnum.BUILDING.status -> {
+            AtomStatusEnum.BUILDING.status, AtomStatusEnum.CODECCING.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_FOUR, NUM_THREE, DOING)
             }
-            AtomStatusEnum.BUILD_FAIL.status -> {
+            AtomStatusEnum.BUILD_FAIL.status, AtomStatusEnum.CODECC_FAIL.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_FOUR, NUM_THREE, FAIL)
             }
             AtomStatusEnum.TESTING.status -> {
@@ -468,6 +467,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             AtomStatusEnum.TESTED.status, AtomStatusEnum.GROUNDING_SUSPENSION.status -> {
                 // 测试完成（含取消发布）：测试步骤标记完成
                 storeCommonService.setProcessInfo(processInfo, NUM_FOUR, NUM_FOUR, SUCCESS)
+            }
+            else -> {
+                // 其余状态（AUDITING/AUDIT_REJECT/RELEASED/下架等）不改动默认进度
             }
         }
         return processInfo
@@ -1057,7 +1059,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): Result<String> {
         return RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch",
+            branchTestLockKey(atomCode, branch),
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1176,7 +1178,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 并发控制：同一插件同一分支的结束操作串行化
         return RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch",
+            branchTestLockKey(atomCode, branch),
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1225,7 +1227,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 并发控制：同一插件同一分支的结束测试操作串行化
         val result = RedisLock(
             redisOperation,
-            "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:${record.branch}",
+            branchTestLockKey(atomCode, record.branch),
             60L
         ).use { redisLock ->
             if (!redisLock.tryLock()) {
@@ -1237,7 +1239,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 params = arrayOf(atomId)
             )
             // 校验是否为分支测试版本
-            if (!latestRecord.branchTestFlag) {
+            if (latestRecord.branchTestFlag != true) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_NOT_BRANCH_TEST_VERSION)
             }
             // 校验测试状态：仅测试中的版本可结束测试
