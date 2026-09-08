@@ -16,7 +16,6 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
-import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Produces
