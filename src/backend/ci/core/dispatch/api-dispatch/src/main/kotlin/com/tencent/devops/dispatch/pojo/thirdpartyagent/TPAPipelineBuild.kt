@@ -1,6 +1,5 @@
 ﻿package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
