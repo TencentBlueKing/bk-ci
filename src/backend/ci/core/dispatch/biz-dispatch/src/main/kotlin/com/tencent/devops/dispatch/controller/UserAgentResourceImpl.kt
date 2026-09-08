@@ -16,6 +16,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineSearchReq
 import com.tencent.devops.dispatch.service.ThirdPartyAgentBuildService
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -117,29 +118,16 @@ class UserAgentResourceImpl @Autowired constructor(
     override fun fetchAgentBuildsByJob(
         userId: String,
         projectId: String,
-        agentId: String?,
-        envId: String?,
-        pipelineId: String,
-        jobId: String,
-        page: Int?,
-        pageSize: Int?,
-        startTime: Long?,
-        endTime: Long?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>> {
-        val envRId = AllCreateNodeEnv.hashIdToId(envId)
-        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        val envRId = AllCreateNodeEnv.hashIdToId(data.envId)
+        checkEnvOrAgentPermission(userId, projectId, data.agentId, envRId)
         return Result(
             thirdPartyAgentBuildService.fetchAgentBuildsByJob(
                 userId = userId,
                 projectId = projectId,
-                agentId = agentId,
                 envId = envRId,
-                pipelineId = pipelineId,
-                jobId = jobId,
-                page = page,
-                pageSize = pageSize,
-                startTime = startTime,
-                endTime = endTime
+                data = data
             )
         )
     }
@@ -147,27 +135,18 @@ class UserAgentResourceImpl @Autowired constructor(
     override fun fetchAgentBuildsByPipeline(
         userId: String,
         projectId: String,
-        agentId: String?,
-        envId: String?,
         pipelineId: String,
-        page: Int?,
-        pageSize: Int?,
-        startTime: Long?,
-        endTime: Long?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>> {
-        val envRId = AllCreateNodeEnv.hashIdToId(envId)
-        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        val envRId = AllCreateNodeEnv.hashIdToId(data.envId)
+        checkEnvOrAgentPermission(userId, projectId, data.agentId, envRId)
         return Result(
             thirdPartyAgentBuildService.fetchAgentBuildsByPipeline(
                 userId = userId,
                 projectId = projectId,
-                agentId = agentId,
                 envId = envRId,
                 pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize,
-                startTime = startTime,
-                endTime = endTime
+                data = data
             )
         )
     }
@@ -175,25 +154,20 @@ class UserAgentResourceImpl @Autowired constructor(
     override fun fetchAgentBuildsByBuild(
         userId: String,
         projectId: String,
-        agentId: String?,
-        envId: String?,
         buildId: String,
         executeCount: Int?,
-        page: Int?,
-        pageSize: Int?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>> {
-        val envRId = AllCreateNodeEnv.hashIdToId(envId)
-        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        val envRId = AllCreateNodeEnv.hashIdToId(data.envId)
+        checkEnvOrAgentPermission(userId, projectId, data.agentId, envRId)
         return Result(
             thirdPartyAgentBuildService.fetchAgentBuildsByBuild(
                 userId = userId,
                 projectId = projectId,
-                agentId = agentId,
                 envId = envRId,
                 buildId = buildId,
                 executeCount = executeCount,
-                page = page,
-                pageSize = pageSize
+                data = data
             )
         )
     }

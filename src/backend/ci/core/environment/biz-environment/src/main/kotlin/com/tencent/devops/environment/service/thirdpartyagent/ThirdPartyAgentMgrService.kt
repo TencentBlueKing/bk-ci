@@ -368,7 +368,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 "${trans(props.exitError.errorEnum, userId)}|${props.exitError.message}"
             } else {
                 null
-            }
+            },
+            nodeType = NodeType.get(nodeRecord.nodeType)
         )
 
         if (needHeartbeatInfo) {

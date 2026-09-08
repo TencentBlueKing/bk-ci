@@ -1,34 +1,74 @@
 ﻿package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
+interface TPAPipelineQuery {
+    val agentId: String?
+    val envId: String?
+    val page: Int?
+    val pageSize: Int?
+    val startTime: Long?
+    val endTime: Long?
+    val pipelineId: String?
+    val jobId: String?
+    val creator: String?
+    val taskStatusList: List<PipelineTaskStatus>?
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class TPAPipelineReq(
     @get:Schema(title = "agent Hash ID", required = false)
-    val agentId: String?,
+    override val agentId: String?,
     @get:Schema(title = "env Hash ID", required = false)
-    val envId: String?,
+    override val envId: String?,
     @get:Schema(title = "第几页", required = false)
-    val page: Int?,
+    override val page: Int?,
     @get:Schema(title = "每页多少条", required = false)
-    val pageSize: Int?,
+    override val pageSize: Int?,
     @get:Schema(title = "开按执行时间", required = false)
-    val startTime: Long?,
+    override val startTime: Long?,
     @get:Schema(title = "结束执行时间", required = false)
-    val endTime: Long?,
+    override val endTime: Long?,
     @get:Schema(title = "pipeline ID", required = false)
-    val pipelineId: String?,
+    override val pipelineId: String?,
     @get:Schema(title = "job ID", required = false)
-    val jobId: String?,
+    override val jobId: String?,
     @get:Schema(title = "执行人", required = false)
-    val creator: String?,
+    override val creator: String?,
     @get:Schema(title = "状态", required = false)
-    val taskStatusList: List<PipelineTaskStatus>?,
+    override val taskStatusList: List<PipelineTaskStatus>?,
     @get:Schema(title = "视图", required = false)
     val view: TPAPipelineBuildView
-)
+) : TPAPipelineQuery
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TPAPipelineSearchReq(
+    @get:Schema(title = "agent Hash ID", required = false)
+    override val agentId: String?,
+    @get:Schema(title = "env Hash ID", required = false)
+    override val envId: String?,
+    @get:Schema(title = "第几页", required = false)
+    override val page: Int?,
+    @get:Schema(title = "每页多少条", required = false)
+    override val pageSize: Int?,
+    @get:Schema(title = "开按执行时间", required = false)
+    override val startTime: Long?,
+    @get:Schema(title = "结束执行时间", required = false)
+    override val endTime: Long?,
+    @get:Schema(title = "pipeline ID", required = false)
+    override val pipelineId: String?,
+    @get:Schema(title = "job ID", required = false)
+    override val jobId: String?,
+    @get:Schema(title = "执行人", required = false)
+    override val creator: String?,
+    @get:Schema(title = "状态", required = false)
+    override val taskStatusList: List<PipelineTaskStatus>?
+) : TPAPipelineQuery
 
 @Schema(title = "第三方构建任务详情")
 data class TPAPipelineBuild(

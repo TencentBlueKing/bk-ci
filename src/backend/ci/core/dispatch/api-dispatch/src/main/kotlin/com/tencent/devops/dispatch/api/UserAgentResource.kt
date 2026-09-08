@@ -16,6 +16,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineSearchReq
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Produces
@@ -148,7 +149,7 @@ interface UserAgentResource {
 
 
     @Operation(summary = "根据JobId，获取Agent构建记录")
-    @GET
+    @POST
     @Path("/fetchAgentBuildsByJob")
     fun fetchAgentBuildsByJob(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -157,33 +158,11 @@ interface UserAgentResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "agent Hash ID", required = false)
-        @QueryParam("agentId")
-        agentId: String?,
-        @Parameter(description = "env Hash ID", required = false)
-        @QueryParam("envId")
-        envId: String?,
-        @Parameter(description = "筛选此pipelineId", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @QueryParam("jobId")
-        jobId: String,
-        @Parameter(description = "第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @Parameter(description = "开按执行时间", required = false)
-        @QueryParam("startTime")
-        startTime: Long?,
-        @Parameter(description = "结束执行时间", required = false)
-        @QueryParam("endTime")
-        endTime: Long?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>>
 
     @Operation(summary = "根据PipelineId，获取Agent构建记录")
-    @GET
+    @POST
     @Path("/fetchAgentBuildsByPipeline")
     fun fetchAgentBuildsByPipeline(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -192,31 +171,14 @@ interface UserAgentResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "agent Hash ID", required = false)
-        @QueryParam("agentId")
-        agentId: String?,
-        @Parameter(description = "env Hash ID", required = false)
-        @QueryParam("envId")
-        envId: String?,
         @Parameter(description = "筛选此pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @Parameter(description = "开按执行时间", required = false)
-        @QueryParam("startTime")
-        startTime: Long?,
-        @Parameter(description = "结束执行时间", required = false)
-        @QueryParam("endTime")
-        endTime: Long?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>>
 
     @Operation(summary = "根据BuildId，获取Agent构建记录")
-    @GET
+    @POST
     @Path("/fetchAgentBuildsByBuild")
     fun fetchAgentBuildsByBuild(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
@@ -225,23 +187,12 @@ interface UserAgentResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "agent Hash ID", required = false)
-        @QueryParam("agentId")
-        agentId: String?,
-        @Parameter(description = "env Hash ID", required = false)
-        @QueryParam("envId")
-        envId: String?,
         @Parameter(description = "筛选此buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
         @Parameter(description = "executeCount，必填，为空只是查询数据库为空的情况，而不是不查询", required = true)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(description = "第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
+        data: TPAPipelineSearchReq
     ): Result<Page<AgentPipelineContainerBuild>>
 }

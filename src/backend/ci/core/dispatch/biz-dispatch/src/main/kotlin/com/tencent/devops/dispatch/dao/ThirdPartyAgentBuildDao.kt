@@ -1171,7 +1171,8 @@ class ThirdPartyAgentBuildDao {
         agentId: String?,
         envId: Long?,
         buildId: String,
-        executeCount: Int?
+        executeCount: Int?,
+        status: List<PipelineTaskStatus>?
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
@@ -1187,6 +1188,9 @@ class ThirdPartyAgentBuildDao {
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
             }
+            if (status != null) {
+                dsl.and(STATUS.`in`(status.map { it.status }))
+            }
             return dsl.fetchOne(0, Long::class.java) ?: 0L
         }
     }
@@ -1199,7 +1203,8 @@ class ThirdPartyAgentBuildDao {
         buildId: String,
         executeCount: Int?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        status: List<PipelineTaskStatus>?
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -1214,6 +1219,9 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(EXECUTE_COUNT.isNull)
             } else {
                 dsl.and(EXECUTE_COUNT.eq(executeCount))
+            }
+            if (status != null) {
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             return dsl.orderBy(ID.desc()).limit(limit).offset(offset).fetch()
         }

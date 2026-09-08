@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.engine.common.VMUtils
 import java.util.Date
@@ -121,13 +122,22 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         val logMessage = StringBuilder(128)
 
-        logMessage.append(
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, agentDetail.nodeId),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
+        val detailText = I18nUtil.getCodeLanMessage(
+            messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
+            params = arrayOf(event.projectId, agentDetail.nodeId),
+            language = I18nUtil.getDefaultLocaleLanguage()
         )
+        val html = if (agentDetail.nodeType == NodeType.CREATE) {
+            """<a href=
+            |"/console/environment/${event.projectId}/creative-stream/node/allNode?nodeHashId=${agentDetail.nodeId}"
+            | target="_blank">$detailText</a>""".trimMargin()
+        } else {
+            """<a href=
+            |"/console/environment/${event.projectId}/pipeline/node/allNode?nodeHashId=${agentDetail.nodeId}"
+            | target="_blank">$detailText</a>""".trimMargin()
+        }
+
+        logMessage.append(html)
 
         // #7748 agent使用docker作为构建机
         var parallelTaskCount = agentDetail.parallelTaskCount
