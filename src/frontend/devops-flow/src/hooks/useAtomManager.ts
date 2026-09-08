@@ -7,6 +7,7 @@ import {
   type AtomClassify,
   type AtomItem,
 } from '@/api/atom'
+import { markAtomDisabled } from '@/utils/atomOs'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -16,9 +17,14 @@ export const RD_STORE_CODE = 'rdStore'
 interface AtomListCache {
   data: AtomItem[]
   hasMore: boolean
-  page: number
+  page: number // 云任务单阶段分页
   timestamp: number
   loading: boolean
+  // 构建任务双阶段状态
+  recommendPage: number
+  unCommendPage: number
+  commendAtomCount: number
+  isCommendAtomPageOver: boolean
 }
 
 interface AtomCacheMap {
@@ -87,107 +93,182 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     }
   }
 
-  // 获取插件列表
+  // 获取插件列表（内部管理分页，构建任务采用「适配优先 + 不适配追加」双阶段分页）
   const fetchAtomList = async (params: {
     classifyId?: string
     os?: string
     jobType?: JobType
     keyword?: string
     queryProjectAtomFlag?: boolean
-    page?: number
-    pageSize?: number
+    reset?: boolean
     forceRefresh?: boolean
   }): Promise<{
     records: AtomItem[]
     hasMore: boolean
-    page: number
   }> => {
     const {
       classifyId = '',
       keyword = '',
       jobType,
       queryProjectAtomFlag = true,
-      page = 1,
-      pageSize = 20,
+      reset = false,
       forceRefresh = false,
       os,
     } = params
 
-    const cacheKey = generateCacheKey({ classifyId, keyword, jobType, queryProjectAtomFlag })
+    const cacheKey = generateCacheKey({ classifyId, keyword, os, jobType, queryProjectAtomFlag })
 
     // 初始化缓存
     if (!atomCacheMap[cacheKey]) {
       atomCacheMap[cacheKey] = {
         data: [],
         hasMore: true,
-        page: 0,
+        page: 1,
         timestamp: 0,
         loading: false,
+        recommendPage: 1,
+        unCommendPage: 1,
+        commendAtomCount: 0,
+        isCommendAtomPageOver: false,
       }
     }
 
     const cache = atomCacheMap[cacheKey]
 
-    // 如果是第一页且缓存有效且不强制刷新，直接返回缓存数据
-    if (page === 1 && !forceRefresh && isCacheValid(cacheKey) && cache.data.length > 0) {
+    // 缓存命中（仅 reset 且未强制刷新且缓存有效且有数据）
+    if (reset && !forceRefresh && isCacheValid(cacheKey) && cache.data.length > 0) {
       return {
         records: cache.data,
         hasMore: cache.hasMore,
-        page: cache.page,
       }
+    }
+
+    // reset 或强制刷新：重置缓存与双阶段状态
+    if (reset || forceRefresh) {
+      cache.data = []
+      cache.hasMore = true
+      cache.page = 1
+      cache.recommendPage = 1
+      cache.unCommendPage = 1
+      cache.commendAtomCount = 0
+      cache.isCommendAtomPageOver = false
     }
 
     // 防止重复请求
     if (cache.loading) {
       return {
-        records: cache.data,
+        records: [],
         hasMore: cache.hasMore,
-        page: cache.page,
       }
     }
 
     cache.loading = true
 
     try {
-      const result = await fetchAtoms({
-        projectCode: projectCode.value,
-        category,
-        jobType,
-        classifyId,
-        os,
-        keyword,
-        queryProjectAtomFlag,
-        page,
-        pageSize,
-      })
+      const pageSize = 8
+      let records: AtomItem[] = []
+      let hasMore = false
 
-      const records = result.records || []
-      const hasMore = records.length >= pageSize
+      if (os) {
+        // 构建任务：双阶段分页（适配插件优先，拉完后追加不适配插件）
+        if (!cache.isCommendAtomPageOver) {
+          // 阶段一：适配当前 OS 的插件
+          const result = await fetchAtoms({
+            projectCode: projectCode.value,
+            category,
+            jobType,
+            classifyId,
+            os,
+            keyword,
+            queryProjectAtomFlag,
+            page: cache.recommendPage,
+            pageSize,
+          })
+          records = markAtomDisabled(result.records || [], os)
+          cache.data = [...cache.data, ...records]
+          cache.recommendPage += 1
 
-      if (page === 1 || forceRefresh) {
-        // 第一页或强制刷新，重置缓存
-        cache.data = records
-        cache.page = 1
+          const count = result.count
+          if (cache.data.length >= count) {
+            cache.isCommendAtomPageOver = true
+            cache.commendAtomCount = count
+            cache.unCommendPage = 1
+
+            // 适配插件拉完后，立即请求一页不适配插件（对齐流水线）
+            const unCommendResult = await fetchAtoms({
+              projectCode: projectCode.value,
+              category,
+              jobType: undefined,
+              classifyId,
+              os,
+              keyword,
+              queryProjectAtomFlag,
+              fitOsFlag: false,
+              queryFitAgentBuildLessAtomFlag: false,
+              page: cache.unCommendPage,
+              pageSize,
+            })
+            const unCommendRecords = markAtomDisabled(unCommendResult.records || [], os)
+            cache.data = [...cache.data, ...unCommendRecords]
+            cache.unCommendPage += 1
+            records = [...records, ...unCommendRecords]
+            hasMore = cache.data.length < cache.commendAtomCount + unCommendResult.count
+          } else {
+            hasMore = true
+          }
+        } else {
+          // 阶段二：不适配当前 OS 的插件
+          const result = await fetchAtoms({
+            projectCode: projectCode.value,
+            category,
+            jobType: undefined,
+            classifyId,
+            os,
+            keyword,
+            queryProjectAtomFlag,
+            fitOsFlag: false,
+            queryFitAgentBuildLessAtomFlag: false,
+            page: cache.unCommendPage,
+            pageSize,
+          })
+          records = markAtomDisabled(result.records || [], os)
+          cache.data = [...cache.data, ...records]
+          cache.unCommendPage += 1
+
+          hasMore = cache.data.length < cache.commendAtomCount + result.count
+        }
       } else {
-        // 后续页，追加数据
+        // 云任务（无构建环境）：单阶段分页
+        const result = await fetchAtoms({
+          projectCode: projectCode.value,
+          category,
+          jobType,
+          classifyId,
+          os,
+          keyword,
+          queryProjectAtomFlag,
+          page: cache.page,
+          pageSize,
+        })
+        records = markAtomDisabled(result.records || [], os)
         cache.data = [...cache.data, ...records]
-        cache.page = page
+        cache.page += 1
+
+        hasMore = records.length >= pageSize
       }
 
       cache.hasMore = hasMore
       cache.timestamp = Date.now()
 
       return {
-        records: cache.data,
+        records,
         hasMore,
-        page: cache.page,
       }
     } catch (error) {
       console.error('Failed to fetch atoms:', error)
       return {
-        records: cache.data,
+        records: [],
         hasMore: false,
-        page: cache.page,
       }
     } finally {
       cache.loading = false
@@ -221,7 +302,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         pageSize,
       })
       
-      const records = result.records || []
+      const records = markAtomDisabled(result.records || [], os)
       const hasMore = page < result.totalPages
       
       return {

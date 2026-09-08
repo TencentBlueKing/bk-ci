@@ -26,6 +26,7 @@ export interface AtomItem {
   version?: string
   defaultVersion?: string // 插件的默认版本
   os?: string[]
+  buildLessRunFlag?: boolean // 是否免构建运行
   score?: number
   recentExecuteNum?: number
   publisher?: string
