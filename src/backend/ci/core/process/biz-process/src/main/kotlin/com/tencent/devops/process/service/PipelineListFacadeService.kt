@@ -2335,7 +2335,9 @@ class PipelineListFacadeService @Autowired constructor(
         permission: Permission,
         excludePipelineId: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        pipelineName: String? = null,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): SQLPage<PipelineIdAndName> {
         val authPermission = when (permission) {
             Permission.DEPLOY -> AuthPermission.DEPLOY
@@ -2368,7 +2370,8 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineIds = permissionIds.toSet(),
             excludePipelineIds = excludePipelineId?.takeIf { it.isNotBlank() }?.let { setOf(it) },
-            channelCode = ChannelCode.getRequestChannelCode(),
+            channelCode = channelCode,
+            pipelineName = pipelineName,
             limit = sqlLimit?.limit,
             offset = sqlLimit?.offset
         )
