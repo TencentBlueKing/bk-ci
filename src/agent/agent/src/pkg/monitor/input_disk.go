@@ -18,10 +18,51 @@ var defaultDiskIgnoreFS = map[string]struct{}{
 	"tmpfs":    {},
 	"devtmpfs": {},
 	"devfs":    {},
+	"iso9660":  {}, // 光驱 / 镜像挂载，对齐 telegraf 默认 ignore_fs
 	"overlay":  {},
 	"aufs":     {},
 	"squashfs": {},
 	"nullfs":   {}, // macOS App Translocation / firmlinks 挂载到 /private/var/folders/...
+}
+
+// networkFSPrefixes 网络 / 可能因后端不可达而挂死的文件系统前缀。
+//
+// 关键：这类挂载点一旦后端不可达（NFS server 宕机、网络分区、SMB 掉线），
+// 底层 statfs/statvfs syscall 会进入不可中断睡眠（D 状态）永不返回，连
+// SIGKILL 都杀不掉——这正是 monitor input goroutine 累积卡死（触发
+// inflightHardCap 告警）的根因。Go 层无法打断已进入内核的 syscall，
+// 唯一可靠的办法是「根本不对它们发起 statfs」。
+//
+// 对齐 telegraf「ignore_fs 从源头绕开」的思路；telegraf 靠运维手动配置
+// ignore_fs 排除网络盘，我们无配置入口，故在代码里默认跳过。
+//
+// 用「前缀匹配」而非精确匹配，覆盖 fuse.sshfs / fuse.s3fs 等 fuse 变体
+// 以及 nfs / nfs4 等版本后缀。
+var networkFSPrefixes = []string{
+	"nfs",   // nfs, nfs3, nfs4
+	"cifs",  // Windows / Samba 共享
+	"smbfs", // macOS SMB
+	"smb",   // smb2/smb3 变体
+	"afpfs", // macOS AFP
+	"afp",
+	"fuse",     // fuse.sshfs / fuse.s3fs / fuse.glusterfs 等，后端多为网络
+	"9p",       // Plan9 / 虚拟机共享目录
+	"glusterfs",
+	"ceph",
+	"webdav",
+	"davfs",
+}
+
+// isNetworkFS 判断 fstype 是否属于「可能挂死」的网络文件系统。
+// 命中则 Gather 会跳过该挂载点，不发起 statfs。
+func isNetworkFS(fstype string) bool {
+	fs := strings.ToLower(fstype)
+	for _, p := range networkFSPrefixes {
+		if strings.HasPrefix(fs, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // Disk 对齐 telegraf plugins/inputs/disk。每个 physical mountpoint 产出
@@ -50,8 +91,13 @@ func (d *Disk) Name() string { return MeasurementDisk }
 // Gather 遍历所有 partition，跳过 ignore_fs 列表中的文件系统后调用 Usage
 // 取容量/inode 信息。
 //
-// 部分挂载点可能 Usage 失败（权限、NFS 挂死等）；这类挂载点会记 Debug 日志
-// 并跳过，不会影响其他挂载点的上报 —— 对齐 telegraf 的降级行为。
+// 卡死防护：网络文件系统（nfs/cifs/fuse 等）后端不可达时 statfs 会进入
+// 不可中断睡眠永不返回，是 monitor goroutine 累积卡死的根因。因此在调用
+// Usage 前先按 fstype 跳过这类挂载点（isNetworkFS），从源头避免阻塞
+// syscall —— 对齐 telegraf「ignore_fs 从源头绕开」的思路。
+//
+// 对于本地盘的 Usage 失败（权限等），记录跳过不影响其他挂载点，对齐
+// telegraf 的降级行为。
 func (d *Disk) Gather() ([]Metric, error) {
 	parts, err := d.partitionsFn(false)
 	if err != nil {
@@ -68,9 +114,14 @@ func (d *Disk) Gather() ([]Metric, error) {
 		if _, skip := ignore[p.Fstype]; skip {
 			continue
 		}
+		// 网络文件系统一旦后端挂死，statfs 会永久阻塞（D 状态，SIGKILL
+		// 都杀不掉）。绝不对它们发起 Usage，直接跳过。
+		if isNetworkFS(p.Fstype) {
+			continue
+		}
 		usage, uerr := d.usageFn(p.Mountpoint)
 		if uerr != nil || usage == nil {
-			// 挂载点不可读（例如 NFS 卡死）跳过
+			// 本地挂载点不可读（权限等）跳过，不影响其他挂载点上报
 			continue
 		}
 		if usage.Total == 0 {

@@ -1,8 +1,12 @@
-import { getAuthoringNodeDisplayText } from '@/api/authoringEnvironmentApi'
+import {
+  getAuthoringNodeDisplayText,
+  getEnvOsDisplayName,
+} from '@/api/authoringEnvironmentApi'
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
-import { Exception, Loading, Select, Tag } from 'bkui-vue'
-import { computed, defineComponent, nextTick, onMounted, ref, watch, type PropType } from 'vue'
+import type { EnvironmentOsCompatibilityResult } from '@/hooks/useEnvironmentOsCompatibility'
+import { Exception, InfoBox, Loading, Message, Select, Tag } from 'bkui-vue'
+import { computed, defineComponent, h, nextTick, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
 
@@ -48,15 +52,25 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    beforeChange: {
+      type: Function as PropType<(
+        currentEnv?: EnvSelectItem,
+        nextEnv?: EnvSelectItem,
+      ) => Promise<EnvironmentOsCompatibilityResult>>,
+      default: undefined,
+    },
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const envHashId = ref(props.modelValue)
-    const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
-    const envName = computed(() => {
-      return props.envList.find((env) => env.envHashId === envHashId.value)?.name || envHashId.value
+    const isCheckingOs = ref(false)
+    const { goEnvironment, getEnvironmentUrl, loadNodeList } = useAuthoringEnvironment()
+    const selectedEnv = computed(() => {
+      return props.envList.find((env) => env.envHashId === envHashId.value || env.value === envHashId.value)
     })
+    const envName = computed(() => selectedEnv.value?.name || envHashId.value)
+    const selectedOsLabel = computed(() => getEnvOsDisplayName(selectedEnv.value?.os))
 
     watch(
       () => props.modelValue,
@@ -76,11 +90,116 @@ export default defineComponent({
       }
     })
 
-    function handleChange() {
-      emit('update:modelValue', envHashId.value)
+    function commitEnvironmentChange(value: string) {
+      envHashId.value = value
+      emit('update:modelValue', value)
       nextTick(() => {
-        loadNodeList(envHashId.value)
+        loadNodeList(value)
       })
+    }
+
+    function getRequiredOsLabel(result: EnvironmentOsCompatibilityResult) {
+      const osSet = new Set<string>()
+      result.incompatiblePlugins.forEach((plugin) => {
+        plugin.supportedOs.forEach((os) => {
+          const label = getEnvOsDisplayName(os)
+          if (label) osSet.add(label)
+        })
+      })
+      if (osSet.size) return Array.from(osSet).join(' / ')
+      return getEnvOsDisplayName(result.previousOs)
+    }
+
+    function showOsCompatibilityInfo(value: string, result: EnvironmentOsCompatibilityResult) {
+      const previousOs = getEnvOsDisplayName(result.previousOs)
+      const nextOs = getEnvOsDisplayName(result.nextOs)
+
+      if (result.type === 'incompatible') {
+        InfoBox({
+          type: 'warning',
+          width: 560,
+          title: t('flow.content.environmentOsSwitchFailedTitle'),
+          contentAlign: 'left',
+          content: (() =>
+            h('div', { class: styles.osDialogContent }, [
+              h(
+                'p',
+                t('flow.content.environmentOsIncompatibleMsg', [
+                  nextOs,
+                  getRequiredOsLabel(result),
+                ]),
+              ),
+              h(
+                'ul',
+                { class: styles.osIncompatibleList },
+                result.incompatiblePlugins.map((plugin, index) =>
+                  h(
+                    'li',
+                    { key: `${plugin.atomCode}-${index}` },
+                    t('flow.content.environmentOsPluginTip', [
+                      plugin.name,
+                      plugin.supportedOs.map(getEnvOsDisplayName).join(' / '),
+                      nextOs,
+                    ]),
+                  ),
+                ),
+              ),
+            ])) as any,
+          confirmText: t('flow.content.known'),
+        })
+        return
+      }
+
+      InfoBox({
+        type: 'warning',
+        width: 560,
+        title: t('flow.content.environmentOsSwitchConfirmTitle'),
+        contentAlign: 'left',
+        content: (() =>
+          h(
+            'div',
+            { class: styles.osDialogContent },
+            t('flow.content.environmentOsCompatibleMsg', [previousOs, nextOs]),
+          )) as any,
+        confirmText: t('flow.content.continueSave'),
+        cancelText: t('flow.common.cancel'),
+        onConfirm: () => {
+          commitEnvironmentChange(value)
+        },
+      })
+    }
+
+    async function handleChange(value: string) {
+      if (!value || value === envHashId.value) return
+
+      const currentEnv = props.envList.find(
+        (env) => env.envHashId === envHashId.value || env.value === envHashId.value,
+      )
+      const nextEnv = props.envList.find(
+        (env) => env.envHashId === value || env.value === value,
+      )
+
+      if (!props.beforeChange) {
+        commitEnvironmentChange(value)
+        return
+      }
+
+      isCheckingOs.value = true
+      try {
+        const result = await props.beforeChange(currentEnv, nextEnv)
+        if (result.type === 'unchanged') {
+          commitEnvironmentChange(value)
+          return
+        }
+        showOsCompatibilityInfo(value, result)
+      } catch (error: any) {
+        Message({
+          theme: 'error',
+          message: error?.message || t('flow.content.environmentOsCheckFailed'),
+        })
+      } finally {
+        isCheckingOs.value = false
+      }
     }
 
     function goToEnvironment() {
@@ -96,31 +215,55 @@ export default defineComponent({
       )
     }
 
+    function renderEnvOption(env: EnvSelectItem) {
+      const osLabel = getEnvOsDisplayName(env.os)
+      return (
+        <Select.Option key={env.value} id={env.value} name={env.label}>
+          <div class={styles.envOption}>
+            {osLabel ? (
+              <Tag size="small" class={styles.envOsTag}>
+                {osLabel}
+              </Tag>
+            ) : null}
+            <span class={styles.envOptionName}>{env.label}</span>
+          </div>
+        </Select.Option>
+      )
+    }
+
+    function renderSelectedOsTag() {
+      if (!selectedOsLabel.value) return null
+      return (
+        <div class={styles.envSelectPrefix}>
+          <Tag size="small" class={styles.envOsTag}>
+            {selectedOsLabel.value}
+          </Tag>
+        </div>
+      )
+    }
+
     function renderEnvSelect() {
       const selectProps = {
-        class: styles.envSelect,
+        class: [styles.envSelect, selectedOsLabel.value && styles.envSelectWithOs],
         modelValue: envHashId.value,
         'onUpdate:modelValue': (value: string) => {
-          envHashId.value = value
+          handleChange(value)
         },
+        clearable: false,
         filterable: true,
-        list: props.envList,
-        loading: props.envLoading,
+        loading: props.envLoading || isCheckingOs.value,
         placeholder: t('flow.orchestration.selectPlaceholder'),
         searchPlaceholder: t('flow.content.searchEnvironment'),
-        onChange: handleChange,
       }
-      const select = props.showEnvironmentManagement ? (
-        <Select {...selectProps}>
-          {{
-            extension: renderEnvironmentManagement,
-          }}
-        </Select>
-      ) : (
-        <Select
-          {...selectProps}
-        ></Select>
-      )
+      const selectSlots: Record<string, () => unknown> = {
+        default: () => props.envList.map(renderEnvOption),
+      }
+      if (selectedOsLabel.value) {
+        selectSlots.prefix = renderSelectedOsTag
+      }
+      if (props.showEnvironmentManagement) {
+        selectSlots.extension = renderEnvironmentManagement
+      }
 
       return (
         <div class={[styles.envSelectLine, !props.selectLabel && styles.envSelectLinePlain]}>
@@ -130,7 +273,9 @@ export default defineComponent({
               {props.selectRequired ? <span class={styles.requiredMark}>*</span> : null}
             </label>
           ) : null}
-          <div class={styles.envSelectControl}>{select}</div>
+          <div class={styles.envSelectControl}>
+            <Select {...selectProps}>{selectSlots}</Select>
+          </div>
         </div>
       )
     }
@@ -138,7 +283,17 @@ export default defineComponent({
     function renderNodeEmpty() {
       return (
         <Exception type="empty" scene="part" class={styles.nodeEmpty}>
-          {t('flow.content.noCreationNodeInEnvironment')}
+          <span>
+            {t('flow.content.noCreationNodeInEnvironment')}
+            <a
+              class={styles.relateNodeLink}
+              href={getEnvironmentUrl(envHashId.value)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('flow.content.goRelateNode')}
+            </a>
+          </span>
         </Exception>
       )
     }
@@ -192,6 +347,11 @@ export default defineComponent({
         <div class={styles.authoringContent}>
           {!props.isEdit ? (
             <p class={styles.authoringHeader}>
+              {selectedOsLabel.value ? (
+                <Tag size="small" class={styles.envOsTag}>
+                  {selectedOsLabel.value}
+                </Tag>
+              ) : null}
               <span class={styles.headerText}>{envName.value}</span>
             </p>
           ) : null}

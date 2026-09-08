@@ -62,7 +62,8 @@ object TaskUtils {
     private val failToRunBuildStatusList = listOf(
         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL, // 不管同一Job下前面任务成功/失败/取消都执行
         RunCondition.PRE_TASK_FAILED_BUT_CANCEL, // 不管同一Job下前面任务成功/失败都执行，除了取消不执行
-        RunCondition.PRE_TASK_FAILED_ONLY // 同一Job下前面任务有失败才执行
+        RunCondition.PRE_TASK_FAILED_ONLY, // 同一Job下前面任务有失败才执行（包含失败自动跳过）
+        RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP // 同一Job下前面任务有失败才执行（不包含失败自动跳过）
     )
 
     /**
@@ -99,8 +100,13 @@ object TaskUtils {
             if (isContainerFailed) { // 当前容器有失败的任务
                 runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
             } else {
-                // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
-                runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+                when (runCondition) {
+                    // 设置了[前置任务失败时才运行]并且有失败并继续的任务，允许执行
+                    RunCondition.PRE_TASK_FAILED_ONLY -> hasFailedTaskInInSuccessContainer
+                    // [不包括失败跳过]模式下，容器未失败则不允许执行（失败自动跳过不算真正失败）
+                    RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP -> false
+                    else -> true
+                }
             }
         }
         if (conditionFlag) {

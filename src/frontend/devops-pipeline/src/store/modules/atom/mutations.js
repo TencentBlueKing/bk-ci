@@ -80,6 +80,7 @@ import {
     SET_STORE_SEARCH,
     SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
+    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -93,9 +94,10 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
     SAVE_PIPELINE_SNAPSHOT,
-    CLEAR_PIPELINE_SNAPSHOT,
-    UPDATE_WHOLE_ATOM_INPUT
+    CLEAR_PIPELINE_SNAPSHOT
 } from './constants'
 
 export default {
@@ -445,6 +447,11 @@ export default {
             commonParams
         })
     },
+    [SET_TRIGGER_PARAMS]: (state, triggerParams) => {
+        return Object.assign(state, {
+            triggerParams
+        })
+    },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
@@ -560,6 +567,10 @@ export default {
     },
     [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
         Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        Object.assign(state.pipeline, { publicVarGroups })
         return state
     }
 }

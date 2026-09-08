@@ -59,15 +59,8 @@
                                             content: item.tooltips,
                                             disabled: !item.disabled
                                         }"
-                                        v-perm="{
-                                            permissionData: {
-                                                projectId: projectId,
-                                                resourceType: currentResourceType,
-                                                resourceCode: projectId,
-                                                action: item.action
-                                            }
-                                        }"
-                                        @click="item.handler"
+                                        v-perm="item.perm || { hasPermission: true, disablePermissionApi: true }"
+                                        @click="!item.disabled && item.handler()"
                                         :key="item.key"
                                     >
                                         {{ $t(item.textKey) }}
@@ -603,35 +596,47 @@
                 return this.constructImportForm.installType === 'SERVICE'
             },
             batchMenuItems () {
+                const cannotDeleteNodes = this.selectedNodes.filter(node => !node.canDelete)
+                const cannotDeleteNames = cannotDeleteNodes.map(node => node.displayName).filter(Boolean).join('、')
+                const cannotEditNodes = this.selectedNodes.filter(node => !node.canEdit)
+                const cannotEditNames = cannotEditNodes.map(node => node.displayName).filter(Boolean).join('、')
                 return [
                     {
                         key: 'thirdPartyBuildMachine',
                         textKey: 'environment.batchSetTag',
-                        handler: () => this.batchSetTag(),
-                        action: this.currentResourceAction.EDIT
+                        tooltips: cannotEditNodes.length
+                            ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                            : '',
+                        disabled: cannotEditNodes.length > 0,
+                        handler: () => this.batchSetTag()
                     },
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
-                        tooltips: this.$t('environment.未选择构建节点，不支持修改'),
-                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
-                        handler: () => this.batchSetMaxConcurrency(),
-                        action: this.currentResourceAction.EDIT
+                        tooltips: cannotEditNodes.length
+                            ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                            : this.$t('environment.未选择构建节点，不支持修改'),
+                        disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) || cannotEditNodes.length > 0,
+                        handler: () => this.batchSetMaxConcurrency()
                     },
                     ...(!this.isCreateResType ? [
                         {
                             key: 'bulkResetImportUser',
                             textKey: 'environment.bulkResetImportUser',
-                            tooltips: this.$t('environment.未选择部署节点，不支持重置'),
-                            disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                            handler: () => this.batchResetImportUser(),
-                            action: this.currentResourceAction.EDIT
+                            tooltips: cannotEditNodes.length
+                                ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                                : this.$t('environment.未选择部署节点，不支持重置'),
+                            disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB')) || cannotEditNodes.length > 0,
+                            handler: () => this.batchResetImportUser()
                         },
                         {
                             key: 'idcTestMachine',
                             textKey: 'environment.batchDeleteNode',
-                            handler: () => this.batchDeleteNode(),
-                            action: this.currentResourceAction.DELETE
+                            tooltips: cannotDeleteNodes.length
+                                ? this.$t('environment.cannotDeleteNodesTips', [cannotDeleteNames])
+                                : '',
+                            disabled: cannotDeleteNodes.length > 0,
+                            handler: () => this.batchDeleteNode()
                         }
                     ] : [])
                 ]
@@ -831,6 +836,7 @@
             },
             batchSetTag () {
                 if (!this.hasSelectedNode()) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 const currentNodeType = this.$route.params.nodeType || ALLNODE
                 localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                 this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
@@ -844,6 +850,7 @@
             },
             batchSetMaxConcurrency (){
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowEditMaxConcurrency = true
             },
             async handleSetMaxConcurrency () {
@@ -884,6 +891,7 @@
             },
             batchResetImportUser (){
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'CMDB')) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowResetImportUser = true
             },
             async handleChangeImportUser () {
@@ -921,6 +929,7 @@
             },
             async batchDeleteNode () {
                 if (!this.hasSelectedNode()) return
+                if (this.selectedNodes.some(node => !node.canDelete)) return
                 this.$bkInfo({
                     title: `${this.$t('environment.deleteNodetips', [this.selectedNodes.length])}`,
                     extCls: 'info-content',

@@ -5,6 +5,7 @@ import {
   isValidFlowEditTab,
 } from '@/constants/routes'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { useAuthoringEnvironment } from '@/hooks/useAuthoringEnvironment'
 import { useModeStore } from '@/stores/flowMode'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { useUIStore } from '@/stores/ui'
@@ -62,6 +63,11 @@ export default defineComponent({
 
     const uiStore = useUIStore()
     const { isVariablePanelOpen } = storeToRefs(uiStore)
+
+    // Prefetch authoring env list so Job baseOS can resolve from selected env.os
+    useAuthoringEnvironment({
+      autoLoadEnvList: true,
+    })
 
     const orchTabName = computed(() => editTabs.value.WORKFLOW_ORCHESTRATION)
 

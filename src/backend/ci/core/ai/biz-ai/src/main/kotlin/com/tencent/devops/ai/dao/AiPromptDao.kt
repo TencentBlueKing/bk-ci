@@ -77,6 +77,14 @@ class AiPromptDao {
         }
     }
 
+    fun listAll(dslContext: DSLContext): Result<TAiPromptRecord> {
+        with(TAiPrompt.T_AI_PROMPT) {
+            return dslContext.selectFrom(this)
+                .orderBy(UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByUserId(
         dslContext: DSLContext,
         userId: String

@@ -2202,6 +2202,7 @@ class EnvService @Autowired constructor(
             EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name -> NodeType.CMDB
             EnvType.BUILD.name -> NodeType.THIRDPARTY
             EnvType.CREATE.name -> NodeType.CREATE
+            EnvType.DEVX.name -> NodeType.DEVX
             else -> null
         }
     }

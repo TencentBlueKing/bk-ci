@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.23
+**文档版本：** 1.0.24
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -53,6 +53,8 @@
 | T_PIPELINE_SETTING | 流水线基础配置表 |
 | T_PIPELINE_SETTING_DRAFT_VERSION | 流水线草稿基础配置版本表 |
 | T_PIPELINE_SETTING_VERSION | 流水线基础配置版本表 |
+| T_PIPELINE_SHARE_COPY_TRACE | 创作流分享复制溯源表 |
+| T_PIPELINE_SHARE_GRANT | 创作流分享授权表 |
 | T_PIPELINE_STAGE_TAG |  |
 | T_PIPELINE_SUB_REF | 子流水线依赖关系 |
 | T_PIPELINE_TEMPLATE_INFO | 流水线模板基础信息表 |
@@ -1196,6 +1198,62 @@
 |  36   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略：EXECUTE_PERMISSION-执行权限用户可取消，RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
 |  37   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境 HashId  |
 |  38   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+
+**表名：** <a>T_PIPELINE_SHARE_COPY_TRACE</a>
+
+**说明：** 创作流分享复制溯源表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 自增 ID  |
+|  2   | SHARE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 分享命名空间 ID  |
+|  3   | FLOW_ID |   varchar   | 128 |   0    |    N     |  N   |       | 分享条目 ID  |
+|  4   | SCENE |   varchar   | 32 |   0    |    N     |  N   |       | 分享场景  |
+|  5   | SHARE_MODE |   varchar   | 32 |   0    |    N     |  N   |   COPY    | 分享形态，当前恒为 COPY  |
+|  6   | TALENT_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 来源分身编码  |
+|  7   | SOURCE_PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 源项目 ID  |
+|  8   | SOURCE_PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 源创作流 ID  |
+|  9   | SOURCE_VERSION |   int   | 10 |   0    |    N     |  N   |       | 实际复制的源内部版本号  |
+|  10   | SOURCE_VERSION_NUM |   int   | 10 |   0    |    Y     |  N   |       | 实际复制的源发布版本号  |
+|  11   | TARGET_PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 目标项目 ID  |
+|  12   | TARGET_PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 目标创作流 ID  |
+|  13   | TARGET_PIPELINE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 目标创作流名称  |
+|  14   | TARGET_VERSION |   int   | 10 |   0    |    N     |  N   |       | 目标创作流版本  |
+|  15   | TARGET_VERSION_NUM |   int   | 10 |   0    |    Y     |  N   |       | 目标发布版本号  |
+|  16   | TARGET_ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 目标环境 HashId  |
+|  17   | COPY_ACTION |   varchar   | 32 |   0    |    N     |  N   |       | 复制动作：CREATED|OVERWRITTEN  |
+|  18   | VARIABLE_OVERRIDES |   text   | 65535 |   0    |    Y     |  N   |       | 变量覆盖快照 JSON，敏感值不落库  |
+|  19   | OPERATOR |   varchar   | 64 |   0    |    N     |  N   |       | 操作人，即发起复制的聘用者  |
+|  20   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a>T_PIPELINE_SHARE_GRANT</a>
+
+**说明：** 创作流分享授权表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | SHARE_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 分享命名空间 ID，来自 manifest 的 shareId  |
+|  2   | FLOW_ID |   varchar   | 128 |   0    |    N     |  Y   |       | 分享条目 ID，来自 manifest 的 flows[].id  |
+|  3   | SCENE |   varchar   | 32 |   0    |    N     |  N   |   TALENT_FOLLOW    | 分享场景  |
+|  4   | SHARE_MODE |   varchar   | 32 |   0    |    N     |  N   |   COPY    | 分享形态，当前恒为 COPY-复制副本；预留团队创作流的授权执行形态  |
+|  5   | SOURCE_PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 源项目 ID  |
+|  6   | SOURCE_PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 源创作流 ID  |
+|  7   | VERSION_SCOPE |   varchar   | 32 |   0    |    N     |  N   |       | 版本范围：LATEST-最新已发布 PINNED-钉死版本  |
+|  8   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 授权的内部版本号，PINNED 时非空  |
+|  9   | VERSION_NUM |   int   | 10 |   0    |    Y     |  N   |       | 授权的发布版本号，PINNED 时非空，仅用于展示  |
+|  10   | VALIDATE_RULES |   text   | 65535 |   0    |    Y     |  N   |       | 克隆校验规则 JSON，对应 CreativeFlowShareValidateRules  |
+|  11   | EXT_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 扩展信息 JSON，对应 CreativeFlowShareExtInfo  |
+|  12   | TALENT_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 来源分身编码，仅审计与批量撤销，不参与鉴权  |
+|  13   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   ENABLED    | 授权状态：ENABLED|REVOKED  |
+|  14   | GRANTED_BY |   varchar   | 64 |   0    |    N     |  N   |       | 授权人，即分身发布者  |
+|  15   | GRANTED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 授权时间  |
+|  16   | REVOKED_BY |   varchar   | 64 |   0    |    Y     |  N   |       | 撤销人  |
+|  17   | REVOKED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 撤销时间  |
+|  18   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_STAGE_TAG</a>
 

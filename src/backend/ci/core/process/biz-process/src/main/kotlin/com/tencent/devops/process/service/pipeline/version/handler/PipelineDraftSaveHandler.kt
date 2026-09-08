@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline.version.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -36,9 +37,11 @@ import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,7 +51,8 @@ class PipelineDraftSaveHandler @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.SAVE_DRAFT
@@ -74,6 +78,9 @@ class PipelineDraftSaveHandler @Autowired constructor(
     }
 
     private fun PipelineVersionCreateContext.doHandle(): DeployPipelineResult {
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model, projectId = projectId
+        )
         val resourceOnlyVersion = if (pipelineInfo == null) {
             val resourceOnlyVersion = pipelineVersionGenerator.getDefaultVersion(
                 versionStatus = pipelineResourceWithoutVersion.status
@@ -139,6 +146,20 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 resourceOnlyVersion
             }
         }
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = pipelineResourceWithoutVersion.model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = pipelineBasicInfo.pipelineName,
+                referVersion = resourceOnlyVersion.version,
+                referVersionName = resourceOnlyVersion.versionName,
+                // 草稿保存（COMMITTING）：只写引用明细，不同步 LATEST_FLAG
+                activeVersion = false
+            )
+        )
 
         return DeployPipelineResult(
             pipelineId = pipelineId,

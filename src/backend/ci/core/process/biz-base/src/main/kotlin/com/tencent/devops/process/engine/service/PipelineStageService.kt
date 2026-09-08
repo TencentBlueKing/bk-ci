@@ -38,14 +38,18 @@ import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventTy
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_IMATE_STAGE_REVIEW_WAITING
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_STAGE_REVIEW_EMPTY_REVIEWER
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
@@ -64,6 +68,7 @@ import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.ImateStageReview
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -94,7 +99,8 @@ class PipelineStageService @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val client: Client
+    private val client: Client,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -126,17 +132,8 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun listStages(
-        projectId: String,
-        buildId: String,
-        executeCount: Int? = null
-    ): List<PipelineBuildStage> {
-        return pipelineBuildStageDao.listBuildStages(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            executeCount = executeCount
-        )
+    fun listStages(projectId: String, buildId: String): List<PipelineBuildStage> {
+        return pipelineBuildStageDao.listBuildStages(dslContext, projectId, buildId)
     }
 
     fun batchSave(transactionContext: DSLContext?, stageList: Collection<PipelineBuildStage>) {
@@ -773,6 +770,40 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         }
+        logImateStageWaiting(stage)
+    }
+
+    private fun logImateStageWaiting(stage: PipelineBuildStage) {
+        val group = stage.checkIn?.groupToReview() ?: return
+        // 组名先短路：普通流水线审核组几乎都不是 IMATE，避免额外查库
+        if (!ImateStageReview.isImateGroup(group.name)) return
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(stage.projectId, stage.pipelineId)
+        if (pipelineInfo?.channelCode != ChannelCode.CREATIVE_STREAM) {
+            return
+        }
+        val variables = buildVariableService.getAllVariable(stage.projectId, stage.pipelineId, stage.buildId)
+        if (!ImateStageReview.needLock(pipelineInfo.channelCode, group.name, variables[CI_IMATE_SESSION_ID])) {
+            return
+        }
+        val taskId = ImateStageReview.taskId(
+            projectId = stage.projectId,
+            buildId = stage.buildId,
+            stageId = stage.stageId,
+            executeCount = stage.executeCount
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = stage.buildId,
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = BK_IMATE_STAGE_REVIEW_WAITING,
+                params = arrayOf(taskId)
+            ),
+            tag = stage.stageId,
+            executeCount = stage.executeCount,
+            jobId = null,
+            stepId = null,
+            projectId = stage.projectId,
+            pipelineId = stage.pipelineId
+        )
     }
 
     /**

@@ -77,6 +77,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineAutoSummaryService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
@@ -95,7 +96,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
-    private val pipelineAutoSummaryService: PipelineAutoSummaryService
+    private val pipelineAutoSummaryService: PipelineAutoSummaryService,
+    private val projectCacheService: ProjectCacheService
 ) : ServicePipelineResource {
 
     override fun status(
@@ -765,6 +767,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+        val projectInfo = projectCacheService.getProject(projectId)
+        if (projectInfo?.channelCode != ChannelCode.BS.name) {
+            return
         }
         // 上线观察期：先 warn，确认无存量非法 projectId 后再恢复硬校验
         // 与 AbsProjectServiceImpl#validate(english_name) 保持一致：2~32 字符，小写字母开头

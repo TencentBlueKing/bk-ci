@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.6](#v420-rc6)
+   - [Changelog since v4.2.0-rc.5](#changelog-since-v420-rc5)
+
 - [v4.2.0-rc.5](#v420-rc5)
    - [Changelog since v4.2.0-rc.4](#changelog-since-v420-rc4)
 
@@ -19,6 +22,89 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.6
+## 2026-08-18
+### Changelog since v4.2.0-rc.5
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 创作流：支持跟随 manifest 复制到个人项目，定时触发 YAML 增加启动节点关键字，并优化 OpenAPI 接口路由不再按项目区分
+- matrix job 支持失败步骤手动重试，且重试失败时仅重跑失败的 job 而非整个矩阵
+- 日志服务增加多种查询接口
+- 代码库支持以用户态接口获取分支列表与 Tag 列表
+- 研发商店插件外部任务链接支持 SDK 上报与画布跳转
+- 支持 GitHub issue 的 assignee 与 label 事件
+- 版本日志支持与前端镜像分离、多集群独立挂载
+- 构建历史支持隐藏操作列
+
+**Bug 修复**
+- 修复重试构建时被取消的 Job 残留 CANCELED 状态，导致最终构建状态错误标记为取消
+- 修复取消并发起新构建重放已重试构建时报「流水线构建不存在」
+- 修复重试时会误运行前序 matrix job
+- 修复流水线级回调在 events 清空后不会清理
+
+#### 新增
+
+##### 流水线
+- [新增] feat：matrix job 下的步骤，如果设置了失败时可手动重试，支持可以重试 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10780)
+
+##### 代码库
+- [新增] feat：支持用户态接口获取代码库分支列表/Tag 列表 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13013)
+
+##### 研发商店
+- [新增] feat：插件外部任务链接 SDK 上报与画布跳转 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13312)
+
+##### 日志服务
+- [新增] feat: 日志服务增加多种查询接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13230)
+
+##### 其他
+- [新增] bug: support GitHub issue assignee and label events [链接](http://github.com/TencentBlueKing/bk-ci/issues/13404)
+- [新增] feat: 创作流支持跟随manifest复制到个人项目 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13432)
+- [新增] feat: 增加op接口修改项目下流水线最大条数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13423)
+- [新增] feat：重试失败的 job 时，如果是 matrix job，支持仅重新运行失败的job，而不是整个矩阵全量运行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10799)
+- [新增] feat: 创作流定时触发yaml增加启动节点关键字 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13309)
+- [新增] Support hiding the actions column in build history table settings [链接](http://github.com/TencentBlueKing/bk-ci/issues/13376)
+- [新增] feat: 版本日志支持与前端镜像分离，支持多集群独立挂载 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13363)
+
+#### 优化
+
+##### 流水线
+- [优化] perf: 【PAC】流水线/模版发布时的MR标题使用用户输入的描述 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13444)
+
+##### 其他
+- [优化] pref:调用创作流openapi接口请求不再通过项目区分路由到不同的集群 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13410)
+- [优化] chore: 升级devopsScm到1.1.10 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13373)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 保存草稿并发/同秒场景下 draftVersion 重复导致 T_PIPELINE_RESOURCE_DRAFT_VERSION 主键冲突 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13459)
+- [修复] bug: tapd api创建的需求/bug没有ci.event_url变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13405)
+- [修复] bug: PAC 模板实例化流水线从代码库触发时，checkbox/多选下拉框默认值被破坏为 [] [链接](http://github.com/TencentBlueKing/bk-ci/issues/13447)
+- [修复] bug: 流水线/模版保存时取消子流水线分支版本校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13412)
+- [修复] bug: 【PAC】分支版本执行时,应该使用的是分支版本设置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12697)
+- [修复] bug: 优化触发事件没权限时文案 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13103)
+- [修复] bug: 流水线级回调，当开始events有值，然后改成没有值后，回调不会清理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13313)
+
+##### 其他
+- [修复] bug: 修复保存草稿校验错误提示显示函数源码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13454)
+- [修复] Fix real-time updates in the Creative Stream embedded view [链接](http://github.com/TencentBlueKing/bk-ci/issues/13426)
+- [修复] bug: 取消api调用流水线非正式版本的拦截 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13402)
+- [修复] bug: 资源锁定当使用变量时,yaml转ui时会报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13421)
+- [修复] fix: 取消并发起新构建(buildRestart)重放已重试过的构建时报"流水线构建[xxx]不存在" [链接](http://github.com/TencentBlueKing/bk-ci/issues/13430)
+- [修复] bug:分支版本/版本落后时发布同名模板不成功 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13427)
+- [修复] bug: 重试时会误运行前序matrix job [链接](http://github.com/TencentBlueKing/bk-ci/issues/13084)
+- [修复] fix: refresh timer trigger start-parameter options after flow variable changes [链接](http://github.com/TencentBlueKing/bk-ci/issues/13413)
+- [修复] bugfix: 环境管理启停功能被覆盖，动态环境没启停 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13398)
+- [修复] bug：重试构建时被取消的Job 残留 CANCELED 状态，导致最终构建状态错误标记为取消 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13407)
+- [修复] Fix boolean pipeline variable default value handling [链接](http://github.com/TencentBlueKing/bk-ci/issues/13329)
+- [修复] bug:创作流插件按指定操作系统查询优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13396)
+- [修复] bug:草稿即将覆盖警告弹窗获取的未发布草稿版本号有问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13387)
+- [修复] bug: yaml schema $.concurrency.queue-length默认长度调整到200 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13292)
+- [修复] 修改模板--新增变量（设置了运行时只读）后，实例更新时无法修改变量值 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13369)
+- [修复] Optimize artifact download preparation text spacing [链接](http://github.com/TencentBlueKing/bk-ci/issues/13328)
+
 # v4.2.0-rc.5
 ## 2026-08-04
 ### Changelog since v4.2.0-rc.4

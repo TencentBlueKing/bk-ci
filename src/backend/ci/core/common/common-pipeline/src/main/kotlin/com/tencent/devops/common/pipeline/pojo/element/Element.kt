@@ -166,7 +166,12 @@ abstract class Element(
         title = "子流水线构建信息（仅运行构建时有用的中间参数，不要在编排保存阶段设置值）",
         required = false
     )
-    open var subPipelineBuildInfo: SubPipelineBuildInfo? = null
+    open var subPipelineBuildInfo: SubPipelineBuildInfo? = null,
+    @get:Schema(
+        title = "插件上报的外部链接（仅运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var externalLink: String? = null
 ) {
 
     open fun getAtomCode() = getClassType()

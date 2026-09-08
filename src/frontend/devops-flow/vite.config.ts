@@ -93,6 +93,9 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
+    define: {
+      global: 'globalThis',
+    },
     optimizeDeps: {
       exclude: ['bkui-pipeline'],
     },
