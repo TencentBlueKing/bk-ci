@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,14 +64,6 @@ class MutexGroupQueryService @Autowired constructor(
         val lockHolderId = redisOperation.get(lockKey)
         val queueEntries: Map<String, String> = redisOperation.hentries(queueKey)
 
-        // 组装结果
-        val result = mutableListOf<MutexGroupTaskInfo>()
-
-        // 锁持有者排第一
-        if (!lockHolderId.isNullOrBlank()) {
-            buildTaskInfo(projectId, lockHolderId, mutexGroup, isLockHolder = true)?.let { result.add(it) }
-        }
-
         // 排队中的任务，按入队时间升序，与 MutexControl 抢锁时取最小入队时间的顺序一致
         val maxQueue = engineConfigService.getMutexMaxQueue()
         if (queueEntries.size > maxQueue) {
@@ -78,25 +71,87 @@ class MutexGroupQueryService @Autowired constructor(
                 "Mutex queue size exceeds limit|projectId=$projectId|group=$mutexGroupName|size=${queueEntries.size}",
             )
         }
-        queueEntries.entries
+        val sortedQueue = queueEntries.entries
             .filter { it.key != lockHolderId } // 去重，避免锁持有者同时出现在排队队列中的并发残留
             .sortedBy { it.value.toLongOrNull() ?: Long.MAX_VALUE }
-            .take(maxQueue)
-            .forEach { (containerMutexId, _) ->
-                buildTaskInfo(projectId, containerMutexId, mutexGroup, isLockHolder = false)?.let { result.add(it) }
+
+        // 锁持有者排第一，其后为排队任务；扫描条数为 maxQueue 加脏数据缓冲，受 SCAN_LIMIT_MAX 封顶
+        val candidates = mutableListOf<Pair<String, Boolean>>()
+        if (!lockHolderId.isNullOrBlank()) {
+            candidates.add(lockHolderId to true)
+        }
+        val scanLimit = (maxQueue + SCAN_DIRTY_TOLERANCE).coerceAtMost(SCAN_LIMIT_MAX)
+        if (sortedQueue.size > scanLimit) {
+            logger.warn(
+                "Mutex queue scan truncated|projectId=$projectId|group=$mutexGroupName|" +
+                    "queueSize=${sortedQueue.size}|scanLimit=$scanLimit",
+            )
+        }
+        sortedQueue.take(scanLimit).forEach { (containerMutexId, _) ->
+            candidates.add(containerMutexId to false)
+        }
+        val containers = listContainers(
+            projectId = projectId,
+            containerMutexIds = candidates.map { it.first },
+        )
+
+        // 组装结果，已结束的记录不占名额，避免 Redis 脏数据把存活的排队任务挤出结果
+        val result = mutableListOf<MutexGroupTaskInfo>()
+        var queued = 0
+        for ((containerMutexId, isLockHolder) in candidates) {
+            if (!isLockHolder && queued >= maxQueue) break
+            buildTaskInfo(
+                containerMutexId = containerMutexId,
+                mutexGroup = mutexGroup,
+                isLockHolder = isLockHolder,
+                containers = containers,
+            )?.let {
+                result.add(it)
+                if (!isLockHolder) queued++
             }
+        }
 
         return result
+    }
+
+    /**
+     * 批量查询 container，按 containerMutexId
+     */
+    private fun listContainers(
+        projectId: String,
+        containerMutexIds: Collection<String>,
+    ): Map<String, PipelineBuildContainer> {
+        val buildIds = mutableSetOf<String>()
+        containerMutexIds.forEach { containerMutexId ->
+            val parts = containerMutexId.split(DELIMITER)
+            if (parts.size >= 2) {
+                buildIds.add(parts[0])
+            }
+        }
+        if (buildIds.isEmpty()) {
+            return emptyMap()
+        }
+        val containers = try {
+            pipelineContainerService.listByBuildIds(projectId = projectId, buildIds = buildIds)
+        } catch (e: Throwable) {
+            logger.warn("Failed to query containers|projectId=$projectId|buildIds=${buildIds.size}", e)
+            throw e
+        }
+        val containerMap = mutableMapOf<String, PipelineBuildContainer>()
+        containers.forEach { container ->
+            containerMap["${container.buildId}$DELIMITER${container.containerId}"] = container
+        }
+        return containerMap
     }
 
     /**
      * 根据 containerMutexId（格式：buildId_containerId）构建任务信息
      */
     private fun buildTaskInfo(
-        projectId: String,
         containerMutexId: String,
         mutexGroup: MutexGroup,
         isLockHolder: Boolean,
+        containers: Map<String, PipelineBuildContainer>,
     ): MutexGroupTaskInfo? {
         val parts = containerMutexId.split(DELIMITER)
         if (parts.size < 2) {
@@ -104,23 +159,7 @@ class MutexGroupQueryService @Autowired constructor(
             return null
         }
         val buildId = parts[0]
-        val containerId = parts[1]
-
-        // 查询 MySQL 获取 container 状态
-        val container = try {
-            pipelineContainerService.getContainer(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = null,
-                containerId = containerId,
-            )
-        } catch (e: Throwable) {
-            logger.warn(
-                "Failed to query container: projectId=$projectId, buildId=$buildId, containerId=$containerId",
-                e,
-            )
-            null
-        }
+        val container = containers[containerMutexId]
 
         // 与 MutexControl.cleanMutex 判定一致：container 不存在或已结束不再作为当前任务返回
         if (container == null || container.status.isFinish()) {
@@ -170,5 +209,7 @@ class MutexGroupQueryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MutexGroupQueryService::class.java)
         private const val DELIMITER = "_"
+        private const val SCAN_DIRTY_TOLERANCE = 150
+        private const val SCAN_LIMIT_MAX = 500
     }
 }
