@@ -457,7 +457,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             AtomStatusEnum.TESTING.status -> {
                 // 测试进行中：先标记前序步骤完成，再手动将测试步骤置为进行中（避免末步被置为完成）
                 storeCommonService.setProcessInfo(processInfo, NUM_FOUR, NUM_THREE, SUCCESS)
-                processInfo.first { it.step == NUM_FOUR }.status = DOING
+                processInfo.firstOrNull { it.step == NUM_FOUR }?.status = DOING
             }
             AtomStatusEnum.TESTED.status, AtomStatusEnum.GROUNDING_SUSPENSION.status -> {
                 // 测试完成（含取消发布）：测试步骤标记完成
@@ -1171,7 +1171,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
         logger.info("endBranchVersionTest,userId:$userId | atomCode:$atomCode | branch=$branch")
         // 并发控制：同一插件同一分支的结束操作串行化
-        return RedisLock(
+        val result = RedisLock(
             redisOperation,
             branchTestLockKey(atomCode, branch),
             60L
@@ -1205,7 +1205,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 )
             }
             finishBranchVersionTest(userId, atomCode, record)
-            Result(true)
+            record.id to Result(true)
         }
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, result.first)
+        return result.second
     }
 }
