@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.service
 
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvVmStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
@@ -38,6 +39,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Resource
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.common.QuotaType
+import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
@@ -118,6 +120,33 @@ class StartCloudInterfaceService @Autowired constructor(
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true
+        )
+    }
+
+    /**
+     * 批量查询实例状态，返回 envId -> WorkspaceInfo。
+     * 底层走 BCS v2 批量接口；未命中的 envId 不会出现在结果中，由调用方按"未知"处理。
+     */
+    fun getWorkspaceInfoByEids(eids: List<String>): Map<String, WorkspaceInfo> {
+        if (eids.isEmpty()) {
+            return emptyMap()
+        }
+        return workspaceBcsClient.batchGetVmStatus(eids)
+            .mapValues { (_, item) -> item.toWorkspaceInfo() }
+    }
+
+    private fun EnvVmStatus.toWorkspaceInfo(): WorkspaceInfo {
+        val ip = this.ip ?: ""
+        return WorkspaceInfo(
+            status = this.status ?: EnvStatusEnum.unknow,
+            hostIP = ip,
+            environmentIP = ip,
+            clusterId = this.clusterId ?: "",
+            namespace = this.namespace ?: "",
+            environmentHost = ip,
+            ready = true,
+            started = true,
+            vmName = this.name
         )
     }
 

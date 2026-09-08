@@ -502,6 +502,18 @@ class WorkspaceCommon @Autowired constructor(
         }.getOrNull()
     }
 
+    fun getWorkspaceInfoByEids(eids: List<String>): Map<String, WorkspaceInfo> {
+        if (eids.isEmpty()) {
+            return emptyMap()
+        }
+        return kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .getWorkspaceInfoByEids(eids).data
+        }.onFailure {
+            logger.warn("Error getting workspace info by eids size ${eids.size}: ${it.message}")
+        }.getOrNull() ?: emptyMap()
+    }
+
     fun getCgsData(
         cgsIds: List<String>?,
         ips: List<String>?
