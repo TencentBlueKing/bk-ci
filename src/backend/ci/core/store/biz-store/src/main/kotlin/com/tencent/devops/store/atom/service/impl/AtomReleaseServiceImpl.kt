@@ -1117,13 +1117,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
-        if (!checkResult) {
-            throw ErrorCodeException(
-                errorCode = code,
-                params = params
-            )
-        }
         // 加分布式锁防止并发操作同一插件版本
         RedisLock(
             redisOperation,
@@ -1133,7 +1126,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (!redisLock.tryLock()) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
-            storeFileService.cleanStoreVersionReferenceFile(atomCode, record.version)
+            // 锁内重读版本记录
+            val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
+            // 已结束测试的分支测试版本不允许再取消发布
+            if (latestRecord.branchTestFlag == true &&
+                latestRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
+            ) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
+            }
+            val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
+            if (!checkResult) {
+                throw ErrorCodeException(
+                    errorCode = code,
+                    params = params
+                )
+            }
+            storeFileService.cleanStoreVersionReferenceFile(atomCode, latestRecord.version)
             marketAtomDao.setAtomStatusById(
                 dslContext = dslContext,
                 atomId = atomId,
@@ -1663,25 +1671,53 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         "$STORE_BRANCH_TEST_LOCK_KEY_PREFIX:$atomCode:$branch"
 
     fun checkUpdateAtomLatestTestFlag(userId: String, atomCode: String, atomId: String) {
+        withLatestTestFlagLock(atomCode) {
+            transferAtomLatestTestFlag(
+                context = dslContext,
+                userId = userId,
+                atomCode = atomCode,
+                atomId = atomId
+            )
+        }
+    }
+
+    /**
+     * 在最新测试版本标记锁内执行变更
+     */
+    private fun withLatestTestFlagLock(atomCode: String, block: () -> Unit) {
         RedisLock(
             redisOperation,
             "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
             60L
         ).use { redisLock ->
-            redisLock.lock()
-            if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
-                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
-                if (latestTestVersionId != null) {
-                    updateAtomLatestTestFlag(
-                        userId = userId,
-                        atomCode = atomCode,
-                        atomId = latestTestVersionId
-                    )
-                } else {
-                    // 无继任测试版本：清空该插件的最新测试版本标记，避免标记残留在已结束测试的版本上
-                    marketAtomDao.resetAtomLatestTestFlagByCode(dslContext, atomCode)
-                    logger.info("no successor test version, reset latest test flag|atomCode=$atomCode")
-                }
+            if (!redisLock.tryLock()) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
+            block()
+        }
+    }
+
+    /**
+     * 将插件的最新测试版本标记转移给继任测试版本，无继任版本则只清空标记
+     */
+    private fun transferAtomLatestTestFlag(
+        context: DSLContext,
+        userId: String,
+        atomCode: String,
+        atomId: String
+    ) {
+        if (marketAtomDao.isAtomLatestTestVersion(context, atomId) > 0) {
+            marketAtomDao.resetAtomLatestTestFlagByCode(context, atomCode)
+            val successorId = marketAtomDao.queryAtomLatestTestVersionId(context, atomCode, atomId)
+            if (successorId != null) {
+                marketAtomDao.setupAtomLatestTestFlagById(
+                    dslContext = context,
+                    atomId = successorId,
+                    userId = userId,
+                    latestFlag = true
+                )
+            } else {
+                logger.info("no successor test version, reset latest test flag|atomCode=$atomCode")
             }
         }
     }
@@ -1760,14 +1796,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      * 结束分支版本测试公共逻辑：置测试结束状态、取消发布总线产物、删除质量红线数据
      */
     protected fun finishBranchVersionTest(userId: String, atomCode: String, record: TAtomRecord) {
-        checkUpdateAtomLatestTestFlag(userId, atomCode, record.id)
-        marketAtomDao.setAtomStatusById(
-            dslContext = dslContext,
-            atomId = record.id,
-            atomStatus = AtomStatusEnum.TESTED.status.toByte(),
-            userId = userId,
-            msg = AtomStatusEnum.TESTED.getI18n(I18nUtil.getLanguage(userId))
-        )
+        withLatestTestFlagLock(atomCode) {
+            // 状态变更与最新测试版本标记转移在同一事务内完成
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                marketAtomDao.setAtomStatusById(
+                    dslContext = context,
+                    atomId = record.id,
+                    atomStatus = AtomStatusEnum.TESTED.status.toByte(),
+                    userId = userId,
+                    msg = AtomStatusEnum.TESTED.getI18n(I18nUtil.getLanguage(userId))
+                )
+                transferAtomLatestTestFlag(
+                    context = context,
+                    userId = userId,
+                    atomCode = atomCode,
+                    atomId = record.id
+                )
+            }
+        }
         doCancelReleaseBus(userId, record.id)
         // 删除质量红线相关数据
         client.get(ServiceQualityIndicatorMarketResource::class)

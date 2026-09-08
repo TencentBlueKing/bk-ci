@@ -100,6 +100,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.AtomVersionInfo
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
@@ -861,11 +862,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
-    override fun getNewestAtomByCodeWithPermissionCheck(
-        userId: String,
-        atomCode: String,
-        serviceScope: ServiceScopeEnum?
-    ): Result<AtomVersion?> {
+    override fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersionInfo?> {
         // 校验用户是否为该插件的成员，防止任意 atomCode 越权获取插件信息
         if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,
@@ -879,7 +876,31 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        return getNewestAtomByCode(userId = userId, atomCode = atomCode, serviceScope = serviceScope)
+        val newest = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
+        val latest = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        if (newest == null || latest == null) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+        val record = if (latest.id != newest.id &&
+            (newest.atomStatus as Byte).toInt() == AtomStatusEnum.TESTING.status
+        ) {
+            newest
+        } else {
+            latest
+        }
+        return Result(
+            AtomVersionInfo(
+                atomId = record.id,
+                atomCode = atomCode,
+                version = record.version,
+                atomStatus = AtomStatusEnum.getAtomStatus((record.atomStatus as Byte).toInt()),
+                branchTestFlag = record.branchTestFlag ?: false
+            )
+        )
     }
 
     /**

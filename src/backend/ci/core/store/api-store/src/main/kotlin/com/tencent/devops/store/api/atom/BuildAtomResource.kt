@@ -30,7 +30,7 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.AtomVersionInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
@@ -119,9 +119,6 @@ interface BuildAtomResource {
     @Operation(summary = "根据插件代码获取插件版本信息")
     @GET
     @Path("/atoms/{atomCode}/version/info")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
-    )
     fun getAtomVersionInfoByCode(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -129,5 +126,5 @@ interface BuildAtomResource {
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
-    ): Result<AtomVersion?>
+    ): Result<AtomVersionInfo?>
 }
