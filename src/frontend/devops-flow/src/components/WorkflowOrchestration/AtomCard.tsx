@@ -1,6 +1,6 @@
 import { defineComponent, computed, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button, Message } from 'bkui-vue'
+import { Button, Message, Popover } from 'bkui-vue'
 import { getEnvOsDisplayName } from '@/api/authoringEnvironmentApi'
 import { type AtomItem } from '@/api/atom'
 import { installAtom } from '@/api/atom'
@@ -25,6 +25,10 @@ export default defineComponent({
     projectCode: {
       type: String,
       required: true,
+    },
+    os: {
+      type: String,
+      default: undefined,
     },
   },
   emits: ['select', 'install-success', 'click'],
@@ -95,19 +99,12 @@ export default defineComponent({
       emit('click', props.atom.atomCode)
     }
 
-    const osTooltips = computed(() => {
-      const { atom } = props
-      const os = atom.os || []
-      let content = ''
-      if (os.length && !os.includes('NONE')) {
-        const osListStr = os.map(getEnvOsDisplayName).join('、')
-        content = t('flow.orchestration.envUseTips', [osListStr])
-      }
-      return {
-        delay: 500,
-        disabled: !isDisabled.value,
-        content,
-      }
+    // 悬浮提示文案：插件 os 列表包含当前环境 os（适配）则不提示，不适配时提示可用环境
+    const osTooltipContent = computed(() => {
+      const osList = props.atom.os || []
+      if (!osList.length || osList.includes('NONE')) return ''
+      if (props.os && osList.includes(props.os)) return ''
+      return t('flow.orchestration.envUseTips', [osList.map(getEnvOsDisplayName).join('、')])
     })
 
     function handleSelectAtomClick(e: MouseEvent) {
@@ -125,16 +122,24 @@ export default defineComponent({
     }
 
     return () => (
-      <div
-        class={[
-          styles.atomCard,
-          styles.atomItemMain,
-          isActive.value && styles.active,
-          isDisabled.value && styles.disabled,
-        ]}
-        onClick={handleClick}
-        v-bk-tooltips={osTooltips.value}
+      <Popover
+        placement="top"
+        // 插件选择面板 z-index 为 10000，bkui popper 默认从 8000 起会被遮挡，需显式指定更高层级
+        zIndex={10050}
+        disabled={!osTooltipContent.value}
+        v-slots={{
+          content: () => osTooltipContent.value,
+        }}
       >
+        <div
+          class={[
+            styles.atomCard,
+            styles.atomItemMain,
+            isActive.value && styles.active,
+            isDisabled.value && styles.disabled,
+          ]}
+          onClick={handleClick}
+        >
         {/* 插件图标 */}
         <div class={styles.atomLogo}>
           {props.atom.logoUrl ? (
@@ -224,6 +229,7 @@ export default defineComponent({
           </p>
         </div>
       </div>
+      </Popover>
     )
   },
 })

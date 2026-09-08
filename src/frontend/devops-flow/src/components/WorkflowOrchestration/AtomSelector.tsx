@@ -504,6 +504,7 @@ export default defineComponent({
                               activeAtomCode={activeAtomCode.value}
                               currentAtomCode={currentAtomCode.value}
                               projectCode={projectCode.value}
+                              os={atomListOs.value}
                               onSelect={handleSelectAtom}
                               onInstall-success={handleInstallSuccess}
                               onClick={handleSetActiveAtom}
@@ -534,6 +535,7 @@ export default defineComponent({
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
                           projectCode={projectCode.value}
+                          os={atomListOs.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}
@@ -559,6 +561,7 @@ export default defineComponent({
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
                           projectCode={projectCode.value}
+                          os={atomListOs.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}

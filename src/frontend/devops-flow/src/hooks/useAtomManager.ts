@@ -165,7 +165,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     cache.loading = true
 
     try {
-      const pageSize = 8
+      const pageSize = 20
       let records: AtomItem[] = []
       let hasMore = false
 
