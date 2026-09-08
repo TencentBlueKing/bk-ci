@@ -26,4 +26,8 @@ class ServiceAgentResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(agentService.deleteCreateNode(userId, projectId, workspaceName))
     }
+
+    override fun updateCreateNodeProject(userId: String, newProjectId: String, workspaceName: String): Result<Boolean> {
+        return Result(agentService.updateCreateNodeProject(userId, newProjectId, workspaceName))
+    }
 }

@@ -40,6 +40,10 @@ import (
 func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 	// agent配置
 	configChanged := false
+	if heartbeatResponse.ProjectId != "" && config.GAgentConfig.ProjectId != heartbeatResponse.ProjectId {
+		config.GAgentConfig.ProjectId = heartbeatResponse.ProjectId
+		configChanged = true
+	}
 	if config.GAgentConfig.ParallelTaskCount != heartbeatResponse.ParallelTaskCount {
 		config.GAgentConfig.ParallelTaskCount = heartbeatResponse.ParallelTaskCount
 		configChanged = true
