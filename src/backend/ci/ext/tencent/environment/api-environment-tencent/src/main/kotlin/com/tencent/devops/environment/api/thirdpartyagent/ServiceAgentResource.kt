@@ -50,4 +50,19 @@ interface ServiceAgentResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "修改创作流节点项目")
+    @POST
+    @Path("/update_create_node_project")
+    fun updateCreateNodeProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "要修改的项目ID", required = true)
+        @QueryParam("newProjectId")
+        newProjectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

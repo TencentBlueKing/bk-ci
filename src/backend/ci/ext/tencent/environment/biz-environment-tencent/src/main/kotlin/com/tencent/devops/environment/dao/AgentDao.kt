@@ -1,5 +1,7 @@
 ﻿package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -78,6 +80,13 @@ class AgentDao {
     fun getAllCreateAgent(dslContext: DSLContext): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this).where(CREATE_WORKSPACE_NAME.isNotNull).fetch()
+        }
+    }
+
+    fun updateProjectAndProps(dslContext: DSLContext, agentId: Long, projectId: String, props: AgentProps) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.update(this).set(PROJECT_ID, projectId).set(AGENT_PROPS, JsonUtil.toJson(props, false))
+                .where(ID.eq(agentId)).execute()
         }
     }
 }
