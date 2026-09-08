@@ -1219,12 +1219,39 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    fun fetchAgentBuildsByBuildExecuteCount(
+        dslContext: DSLContext,
+        agentId: String?,
+        envId: Long?,
+        buildExecuteCountList: Set<Pair<String, Int>>
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        if (buildExecuteCountList.isEmpty()) {
+            return emptyList()
+        }
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            // 按 (BUILD_ID, EXECUTE_COUNT) 组合精确匹配，保证与分页选中的组合一一对应
+            val rows = buildExecuteCountList.map { DSL.row(it.first, it.second) }
+            val dsl = dslContext.selectFrom(this)
+                .where(DSL.row(BUILD_ID, EXECUTE_COUNT).`in`(rows))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            return dsl.fetch()
+        }
+    }
+
     fun fetchAgentBuildsByBuildId(
         dslContext: DSLContext,
         agentId: String?,
         envId: Long?,
         buildIdList: Set<String>
     ): List<TDispatchThirdpartyAgentBuildRecord> {
+        if (buildIdList.isEmpty()) {
+            return emptyList()
+        }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.`in`(buildIdList))
