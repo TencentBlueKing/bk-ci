@@ -50,6 +50,9 @@ data class AgentProps(
                     null
                 }
             }
+            if (source == AgentPropsSource.IEG_IMATE) {
+                return AgentPropsSource.IEG_IMATE
+            }
             if (source == AgentPropsSource.DEVCLOUD || (source == null && os == OS.LINUX)) {
                 return AgentPropsSource.DEVCLOUD
             }
