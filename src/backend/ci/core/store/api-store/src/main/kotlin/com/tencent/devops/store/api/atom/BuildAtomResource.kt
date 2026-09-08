@@ -29,7 +29,7 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomVersionInfo
+import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
@@ -125,5 +125,5 @@ interface BuildAtomResource {
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
-    ): Result<AtomVersionInfo?>
+    ): Result<AtomVersion?>
 }
