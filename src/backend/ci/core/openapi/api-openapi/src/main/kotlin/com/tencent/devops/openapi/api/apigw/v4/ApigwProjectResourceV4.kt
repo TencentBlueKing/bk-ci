@@ -151,6 +151,28 @@ interface ApigwProjectResourceV4 {
         pageSize: Int? = 10
     ): Result<List<ProjectVO>>
 
+    @GET
+    @Path("/creative_stream_project_list")
+    @Operation(
+        summary = "查询当前用户有创作流权限的项目列表",
+        tags = ["v4_user_creative_stream_project_list", "v4_app_creative_stream_project_list"]
+    )
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/creative_stream_project_list")
+    fun listCreativeStreamProjects(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "是否启用", required = false)
+        @QueryParam("enabled")
+        enabled: Boolean?
+    ): Result<List<ProjectVO>>
+
     @POST
     @Path("/list/by/conditions/{page}/{pageSize}")
     @Operation(summary = "根据条件查询项目", tags = ["v4_app_list_projects_by_conditions"])
