@@ -795,5 +795,4 @@ class PipelineBuildWebhookService @Autowired constructor(
             logger.error("save auth user metrics", ignored)
         }
     }
-
 }
