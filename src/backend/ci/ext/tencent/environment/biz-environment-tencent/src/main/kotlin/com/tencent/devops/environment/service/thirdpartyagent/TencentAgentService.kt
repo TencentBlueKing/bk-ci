@@ -106,7 +106,7 @@ class TencentAgentService @Autowired constructor(
         if (!iegImateShareAccessService.isAdmin(
                 userId = userId,
                 workspaceName = workspaceName,
-                createdUser = userId
+                createdUser = record.createdUser
             )
         ) {
             logger.warn(
@@ -125,13 +125,13 @@ class TencentAgentService @Autowired constructor(
                 envNodeDao.deleteByNodeIds(context, record.projectId, listOf(record.nodeId))
                 environmentPermissionService.deleteNode(record.projectId, record.nodeId)
                 // 删除节点相关标签
-                nodeTagDao.deleteByNodes(dslContext, listOf(record.nodeId))
+                nodeTagDao.deleteByNodes(context, listOf(record.nodeId))
 
                 // 修改项目信息
-                nodeDao.updateProjectId(dslContext, record.projectId, newProjectId, record.nodeId)
+                nodeDao.updateProjectId(context, record.projectId, newProjectId, record.nodeId)
             }
             agentDao.updateProjectAndProps(
-                dslContext = dslContext,
+                dslContext = context,
                 agentId = record.id,
                 projectId = newProjectId,
                 props = JsonUtil.to(record.agentProps, object : TypeReference<AgentProps>() {})
