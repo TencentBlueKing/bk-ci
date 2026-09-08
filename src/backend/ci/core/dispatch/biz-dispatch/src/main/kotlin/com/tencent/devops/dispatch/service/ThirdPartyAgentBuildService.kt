@@ -426,12 +426,14 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
         // 带上job维度的
-        val agentBuilds = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildExecuteCount(
+        val agentBuildRecords = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
             dslContext = dslContext,
             agentId = agentId,
             envId = envId,
-            buildExecuteCountList = pipelineBuilds
+            buildIdList = pipelineBuilds.map { it.first }.toSet()
         ).sortedByDescending { it.id }
+        // 这里还要再用pipeline的数据筛一遍，防止过滤不对
+        val agentBuilds = agentBuildRecords.filter { (it.buildId to it.executeCount) in pipelineBuilds }
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限
         val builds = client.get(ServiceBuildResource::class).batchFetchBuildRecordStatus(
             data = BatchFetchBuildRecordData(buildIds = agentBuilds.map { it.buildId }, executeCount = null)
