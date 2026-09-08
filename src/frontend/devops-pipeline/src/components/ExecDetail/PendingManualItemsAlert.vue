@@ -1,6 +1,7 @@
 <template>
     <div class="pending-manual-items-alert-bar">
         <bk-popover
+            ref="pendingPopover"
             class="pending-manual-items-popover-trigger"
             placement="bottom-start"
             theme="light"
@@ -8,7 +9,10 @@
             ext-cls="pending-manual-items-popover"
             :tippy-options="tippyOptions"
         >
-            <div class="pending-manual-items-alert">
+            <div
+                class="pending-manual-items-alert"
+                @click.stop="showPendingPopover"
+            >
                 <i class="devops-icon icon-exclamation"></i>
                 <span>{{ $t('details.pendingManualCount', [pendingItemCount]) }}</span>
                 <i class="devops-icon icon-list pending-manual-items-alert-icon"></i>
@@ -20,6 +24,10 @@
                 <div class="pmi-header">
                     <span class="pmi-title">{{ $t('details.pendingManual') }}</span>
                     <span class="pmi-count">{{ pendingItemCount }}</span>
+                    <i
+                        class="devops-icon icon-close pmi-close"
+                        @click.stop="hidePendingPopover"
+                    />
                 </div>
                 <ul class="pmi-list">
                     <li
@@ -28,13 +36,7 @@
                         class="pmi-item"
                     >
                         <div class="pmi-item-head">
-                            <span
-                                class="pmi-item-icon"
-                                :style="{
-                                    background: row.config.iconBg,
-                                    color: row.config.iconColor
-                                }"
-                            >
+                            <span class="pmi-item-icon">
                                 <logo
                                     :name="row.config.logoName"
                                     size="14"
@@ -88,7 +90,8 @@
         theme: 'light',
         interactive: true,
         arrow: true,
-        trigger: 'mouseenter focus',
+        trigger: 'click',
+        hideOnClick: false,
         appendTo: () => document.body
     }
 
@@ -124,6 +127,12 @@
             }
         },
         methods: {
+            showPendingPopover () {
+                this.$refs.pendingPopover?.showHandler()
+            },
+            hidePendingPopover () {
+                this.$refs.pendingPopover?.hideHandler()
+            },
             formatHandlerText (item) {
                 const handlers = Array.isArray(item.handlers) ? item.handlers.filter(Boolean) : []
                 if (handlers.length) {
@@ -136,11 +145,12 @@
                 return ''
             },
             handleAction (item, action) {
+                this.hidePendingPopover()
                 if (action === PENDING_ITEM_ACTION.VIEW) {
                     this.$emit('highlight', item)
                     return
                 }
-                this.$emit('locateLog', item)
+                this.$emit('process', item)
             }
         }
     }
@@ -171,7 +181,7 @@
     line-height: 20px;
     font-weight: 700;
     color: #FF9C01;
-    cursor: default;
+    cursor: pointer;
 
     .devops-icon.icon-exclamation {
         font-size: 9px;
@@ -186,6 +196,7 @@
 
     .pending-manual-items-alert-icon {
         font-size: 12px;
+        font-weight: 700;
         color: #3A84FF;
         margin-left: 18px;
     }
@@ -224,18 +235,31 @@
         line-height: 18px;
     }
 
+    .pmi-close {
+        margin-left: auto;
+        font-size: 14px;
+        color: #979ba5;
+        cursor: pointer;
+
+        &:hover {
+            color: #63656e;
+        }
+    }
+
     .pmi-list {
         margin: 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 12px;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #DCDEE5;
     }
 
     .pmi-item {
         &:not(:last-child) {
             padding-bottom: 12px;
-            border-bottom: 1px solid #EAEBF0;
+            border-bottom: 1px solid #DCDEE5;
         }
     }
 
@@ -250,9 +274,6 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
         flex-shrink: 0;
         font-size: 12px;
     }
@@ -281,7 +302,6 @@
         align-items: center;
         gap: 8px;
         margin-top: 8px;
-        padding: 8px 12px;
         border-radius: 2px;
         background: #F5F7FA;
         overflow: hidden;
@@ -289,10 +309,10 @@
 
     .pmi-position-tag {
         margin: 0;
-        flex-shrink: 0;
-        background: #F0F1F5;
-        border-color: transparent;
+        background: #EAEBF0;
         color: #4D4F56;
+        height: 100%;
+        padding: 4px 8px;
     }
 
     .pmi-item-path {
@@ -300,13 +320,14 @@
         flex: 1;
         min-width: 0;
         font-size: 12px;
-        line-height: 20px;
-        color: #63656e;
+        padding: 4px 8px;
+        color: #979BA5;
     }
 
     .pmi-item-action {
         flex-shrink: 0;
         font-size: 12px;
+        padding: 4px 8px;
     }
 }
 </style>

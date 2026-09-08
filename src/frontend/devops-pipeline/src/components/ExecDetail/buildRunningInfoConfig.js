@@ -65,38 +65,33 @@ export const BUILD_RUNNING_INFO_CONFIG = {
  * 待人工处理项：图标与操作
  */
 export const PENDING_ITEM_CONFIG = {
+    // 执行前暂停
     [PENDING_ITEM_TYPE.TASK_PAUSE]: {
         logoName: 'pause',
-        iconBg: '#FFE8C3',
-        iconColor: '#FF9C01',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
+    // 人工审核
     [PENDING_ITEM_TYPE.TASK_REVIEW]: {
         logoName: 'manualAudit',
-        iconBg: '#E1ECFF',
-        iconColor: '#3A84FF',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
+    // 质量红线拦截
     [PENDING_ITEM_TYPE.TASK_QUALITY_GATE]: {
         logoName: 'qualityGateBlocked',
-        iconBg: '#FFDDDD',
-        iconColor: '#EA3636',
         action: PENDING_ITEM_ACTION.VIEW,
         actionLabelKey: 'details.view'
     },
+    // 阶段审核
     [PENDING_ITEM_TYPE.STAGE_REVIEW]: {
         logoName: 'stageAudit',
-        iconBg: '#E1ECFF',
-        iconColor: '#3A84FF',
         action: PENDING_ITEM_ACTION.PROCESS,
         actionLabelKey: 'details.goProcess'
     },
+    // 阶段质量红线把关
     [PENDING_ITEM_TYPE.STAGE_QUALITY_GATE]: {
         logoName: 'qualityGateCheck',
-        iconBg: '#FFDDDD',
-        iconColor: '#EA3636',
         action: PENDING_ITEM_ACTION.VIEW,
         actionLabelKey: 'details.view'
     }
@@ -113,13 +108,7 @@ export function getBuildRunningInfoConfig (category) {
  * 待人工处理项配置，未知类型走默认
  */
 export function getPendingItemConfig (itemType) {
-    return PENDING_ITEM_CONFIG[itemType] || {
-        logoName: 'info-circle',
-        iconBg: '#F0F1F5',
-        iconColor: '#979BA5',
-        action: PENDING_ITEM_ACTION.PROCESS,
-        actionLabelKey: 'details.goProcess'
-    }
+    return PENDING_ITEM_CONFIG[itemType]
 }
 
 /**

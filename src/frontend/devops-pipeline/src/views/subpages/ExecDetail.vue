@@ -131,9 +131,8 @@
                 :pending-items="execDetail.buildRunningInfo.pendingItems"
                 :pending-item-count="execDetail.buildRunningInfo.pendingItemCount"
                 @highlight="handleBuildEndPositionHighlight"
-                @locateLog="handleBuildEndPositionLocate"
+                @process="handlePendingManualProcess"
             />
-            <!-- 这里添加待人工处理项的Alert 警告 -->
             <p
                 class="summary-header-shadow"
                 v-show="show"
@@ -233,7 +232,7 @@
     import BuildRunningInfoPopover from '@/components/ExecDetail/BuildRunningInfoPopover'
     import PendingManualItemsAlert from '@/components/ExecDetail/PendingManualItemsAlert'
     import { getBuildEndInfoConfig } from '@/components/ExecDetail/buildEndInfoConfig'
-    import { getBuildRunningInfoConfig } from '@/components/ExecDetail/buildRunningInfoConfig'
+    import { getBuildRunningInfoConfig, PENDING_ITEM_TYPE } from '@/components/ExecDetail/buildRunningInfoConfig'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
@@ -712,6 +711,116 @@
             },
             handleBuildEndPositionLocate (position) {
                 this.runBuildEndPositionAction(position, { openLog: true })
+            },
+            showLocateFailedTips () {
+                const locateFailedKey = this.getBuildEndLocateFailedKey()
+                this.$showTips({
+                    message: this.$t(locateFailedKey),
+                    theme: 'warning'
+                })
+            },
+            runWithExecuteDetailTab (runAction) {
+                const needSwitchTab = this.curItemTab !== PANELS.executeDetail
+                if (needSwitchTab) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                this.$nextTick(() => {
+                    needSwitchTab ? this.$nextTick(runAction) : runAction()
+                })
+            },
+            closeAsidePanels () {
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
+                this.toggleStageReviewPanel({
+                    showStageReviewPanel: {
+                        isShow: false
+                    }
+                })
+                this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+            },
+            handlePendingManualProcess (item = {}) {
+                switch (item.itemType) {
+                    case PENDING_ITEM_TYPE.TASK_PAUSE:
+                        this.openPendingPausePanel(item)
+                        break
+                    case PENDING_ITEM_TYPE.TASK_REVIEW:
+                        this.openPendingReviewDialog(item)
+                        break
+                    case PENDING_ITEM_TYPE.STAGE_REVIEW:
+                        this.openPendingStageReview(item)
+                        break
+                    default:
+                        this.handleBuildEndPositionHighlight(item)
+                }
+            },
+            openPendingPausePanel (item) {
+                const editingElementPos = this.locateBuildEndPosition(item)
+                if (!editingElementPos || typeof editingElementPos.elementIndex !== 'number') {
+                    this.showLocateFailedTips()
+                    return
+                }
+                this.runWithExecuteDetailTab(() => {
+                    this.toggleStageReviewPanel({
+                        showStageReviewPanel: {
+                            isShow: false
+                        }
+                    })
+                    this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        showPanelType: 'PAUSE',
+                        editingElementPos
+                    })
+                    this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                        editingElementPos,
+                        position: item
+                    })
+                })
+            },
+            openPendingReviewDialog (item) {
+                if (!item.taskId) {
+                    this.showLocateFailedTips()
+                    return
+                }
+                const editingElementPos = this.locateBuildEndPosition(item)
+                this.runWithExecuteDetailTab(() => {
+                    this.closeAsidePanels()
+                    this.$refs.execDetailPanel?.reviewAtom?.({ id: item.taskId })
+                    if (editingElementPos) {
+                        this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                            editingElementPos,
+                            position: item
+                        })
+                    }
+                })
+            },
+            openPendingStageReview (item) {
+                const stages = this.execDetail?.model?.stages || []
+                const stageIndex = stages.findIndex(stage => stage.id === item.stageId)
+                if (stageIndex < 0) {
+                    this.showLocateFailedTips()
+                    return
+                }
+                const stage = stages[stageIndex]
+                const type = stage?.checkOut?.status === 'REVIEWING' ? 'checkOut' : 'checkIn'
+                this.runWithExecuteDetailTab(() => {
+                    this.togglePropertyPanel({
+                        isShow: false,
+                        showPanelType: ''
+                    })
+                    this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+                    this.toggleStageReviewPanel({
+                        showStageReviewPanel: {
+                            isShow: true,
+                            type
+                        },
+                        editingElementPos: {
+                            stageIndex
+                        }
+                    })
+                })
             },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
