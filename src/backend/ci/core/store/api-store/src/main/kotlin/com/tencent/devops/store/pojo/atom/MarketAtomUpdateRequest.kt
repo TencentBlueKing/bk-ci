@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
@@ -83,6 +85,8 @@ data class MarketAtomUpdateRequest(
     @get:Schema(title = "分支", required = false)
     var branch: String? = null,
     @get:Schema(title = "是否属于分支测试版本", required = false)
+    @JsonProperty("branchTestFlag")
+    @JsonAlias("isBranchTestVersion")
     var branchTestFlag: Boolean = false
 ) {
     fun toServiceScopeConfigs(): List<ServiceScopeConfig> {

@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.atom.BuildAtomResource
-import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.AtomVersionInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
@@ -74,8 +74,8 @@ class BuildAtomResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("branch_test_version_management")
-    override fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        return marketAtomService.getNewestAtomByCodeWithPermissionCheck(
+    override fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersionInfo?> {
+        return marketAtomService.getAtomVersionInfoByCode(
             userId = userId,
             atomCode = atomCode
         )
