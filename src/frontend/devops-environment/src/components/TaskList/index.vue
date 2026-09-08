@@ -58,7 +58,7 @@
             <template v-if="taskList.length > 0">
                 <div
                     v-for="(task, index) in taskList"
-                    :key="task.taskKey || index"
+                    :key="`${task.taskKey || index}-${index}`"
                     :ref="el => setTaskRef(el, task)"
                     class="task-item"
                     :class="{ expanded: task.isExpanded }"
@@ -911,7 +911,7 @@
                 // JOB
                 return {
                     ...base,
-                    taskKey: item.jobId || item.pipelineId,
+                    taskKey: `${item.pipelineId}-${item.jobId}`,
                     stageId: convertStageId(item.stageId),
                     buildCount: item.buildCount,
                     avgTimeInterval: formatSeconds(item.avgTimeInterval),
@@ -979,6 +979,7 @@
                 try {
                     task.isLoadingDetail = true
                     const params = {
+                        ...timeRangeParams.value,
                         page: task.pagination.current,
                         pageSize: task.pagination.limit
                     }
