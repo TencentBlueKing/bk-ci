@@ -1056,6 +1056,40 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType?,
+        enabled: Boolean?
+    ): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val projectCodes = getProjectFromAuth(
+                userId = userId,
+                permission = permission,
+                resourceType = resourceType?.value
+            )
+            if (projectCodes.isNullOrEmpty()) {
+                return emptyList()
+            }
+            val projectsResp = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectCodes,
+                enabled = enabled,
+                hidden = false
+            ).map { ProjectUtils.packagingBean(it) }
+            success = true
+            return projectsResp
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info(
+                "It took ${System.currentTimeMillis() - startEpoch}ms to list projects " +
+                    "by permission|$permission|$resourceType"
+            )
+        }
+    }
+
     override fun list(
         projectCodes: Set<String>,
         enabled: Boolean?
