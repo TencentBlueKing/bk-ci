@@ -28,11 +28,11 @@ class ApigwTXEnvironmentResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectId: String,
+        newProjectId: String,
         workspaceName: String
     ): Result<Boolean> {
-        logger.info("updateCreateNodeProject|$userId|$projectId|$workspaceName")
-        return client.get(ServiceAgentResource::class).updateCreateNodeProject(userId, projectId, workspaceName)
+        logger.info("updateCreateNodeProject|$userId|$newProjectId|$workspaceName")
+        return client.get(ServiceAgentResource::class).updateCreateNodeProject(userId, newProjectId, workspaceName)
     }
 
     companion object {
