@@ -50,18 +50,24 @@ export default function useTaskDetail () {
     }) => {
         try {
             const action = BUILD_DETAIL_ACTION_MAP[view] || BUILD_DETAIL_ACTION_MAP.JOB
-            const res = await proxy.$store.dispatch(action, {
-                params: {
-                    projectId: projectId.value,
-                    ...getIdParams(),
-                    ...(pipelineId ? { pipelineId } : {}),
-                    ...(jobId ? { jobId } : {}),
-                    ...(buildId ? { buildId } : {}),
-                    // 仅 BUILD 视图需要 executeCount：始终传值（包括 0），不做 undefined 剔除
-                    ...(view === 'BUILD' ? { executeCount: executeCount ?? '' } : {}),
-                    ...params
-                }
-            })
+            const body = {
+                ...getIdParams(),
+                ...params
+            }
+            const payload = {
+                projectId: projectId.value,
+                body
+            }
+            if (view === 'PIPELINE') {
+                payload.pipelineId = pipelineId
+            } else if (view === 'BUILD') {
+                payload.buildId = buildId
+                // 数据源：listAgentPipeline 接口里的 executeCount；即使 0/null 也强制传入
+                payload.executeCount = executeCount ?? ''
+            } else {
+                body.jobId = jobId
+            }
+            const res = await proxy.$store.dispatch(action, payload)
             return res
         } catch (e) {
             throw e
