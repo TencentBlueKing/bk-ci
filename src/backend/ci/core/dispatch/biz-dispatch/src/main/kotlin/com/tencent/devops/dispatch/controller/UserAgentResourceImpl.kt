@@ -122,7 +122,9 @@ class UserAgentResourceImpl @Autowired constructor(
         pipelineId: String,
         jobId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        startTime: Long?,
+        endTime: Long?
     ): Result<Page<AgentPipelineContainerBuild>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
@@ -135,7 +137,9 @@ class UserAgentResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 jobId = jobId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                startTime = startTime,
+                endTime = endTime
             )
         )
     }
@@ -147,7 +151,9 @@ class UserAgentResourceImpl @Autowired constructor(
         envId: String?,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        startTime: Long?,
+        endTime: Long?
     ): Result<Page<AgentPipelineContainerBuild>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
@@ -159,7 +165,9 @@ class UserAgentResourceImpl @Autowired constructor(
                 envId = envRId,
                 pipelineId = pipelineId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                startTime = startTime,
+                endTime = endTime
             )
         )
     }
