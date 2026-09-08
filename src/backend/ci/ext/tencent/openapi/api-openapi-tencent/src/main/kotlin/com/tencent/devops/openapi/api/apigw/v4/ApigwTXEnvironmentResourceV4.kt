@@ -58,8 +58,8 @@ interface ApigwTXEnvironmentResourceV4 {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "要修改的项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
+        @QueryParam("newProjectId")
+        newProjectId: String,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
