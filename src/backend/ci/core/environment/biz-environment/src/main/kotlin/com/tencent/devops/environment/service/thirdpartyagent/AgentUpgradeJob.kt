@@ -36,6 +36,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.AgentUpgradeType
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentScope
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.ProjectScope
@@ -167,7 +168,7 @@ class AgentUpgradeJob @Autowired constructor(
                     return@doLoop
                 }.forEach { record ->
                     vo.id = max(vo.id, record.id)
-                    if (checkProjectRouter(record.projectId)) {
+                    if (checkProjectRouter(record.projectId, record.agentType == AgentType.CREATE.name)) {
                         if (checkCanUpgrade(
                                 goAgentCurrentVersion = currentMasterVersion,
                                 workCurrentVersion = currentVersion,
@@ -220,7 +221,7 @@ class AgentUpgradeJob @Autowired constructor(
                 return@doLoop
             }.forEach { agentRecord ->
                 vo.id = max(vo.id, agentRecord.id)
-                if (checkProjectRouter(agentRecord.projectId)
+                if (checkProjectRouter(agentRecord.projectId, agentRecord.agentType == AgentType.CREATE.name)
                     && checkCanUpgrade(
                         goAgentCurrentVersion = currentMasterVersion,
                         workCurrentVersion = currentVersion,
@@ -240,7 +241,11 @@ class AgentUpgradeJob @Autowired constructor(
         logger.info("fetchPriorityUpgradeAgents|metrics: $metrics, agent_size: ${vo.data.size}")
     }
 
-    private fun checkProjectRouter(projectId: String): Boolean {
+    private fun checkProjectRouter(projectId: String, createMode: Boolean): Boolean {
+        if (createMode) {
+            // 创作流没有route tag先默认放开
+            return true
+        }
         return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
     }
 
