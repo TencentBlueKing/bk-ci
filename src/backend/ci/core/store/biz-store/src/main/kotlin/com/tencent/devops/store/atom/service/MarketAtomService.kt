@@ -35,7 +35,6 @@ import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionInfo
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
@@ -98,9 +97,13 @@ interface MarketAtomService {
     ): Result<AtomVersion?>
 
     /**
-     * 根据插件代码获取版本信息，并校验用户是否为该插件的成员
+     * 根据标识获取最新版本信息，并校验用户是否为该插件的成员
      */
-    fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersionInfo?>
+    fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?>
 
     /**
      * 安装插件到项目
