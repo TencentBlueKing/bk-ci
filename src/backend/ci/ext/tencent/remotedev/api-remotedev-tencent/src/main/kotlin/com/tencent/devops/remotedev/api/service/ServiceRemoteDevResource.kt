@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -24,6 +25,8 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -1202,4 +1205,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("taskId")
         taskId: String
     ): Result<TaskStatusResp>
+
+    @Operation(summary = "查询指定客户端组件在指定OS下的最新版本")
+    @GET
+    @Path("/client/latest_version")
+    fun getClientLatestVersion(
+        @Parameter(description = "升级组件", required = true)
+        @QueryParam("type")
+        type: ClientUpgradeComp,
+        @Parameter(description = "操作系统", required = true)
+        @QueryParam("os")
+        os: ClientOS
+    ): Result<ClientLatestVersion>
 }

@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.listener.event.CdsWebhookEvent
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.IWhiteList
@@ -41,6 +42,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -91,6 +94,7 @@ import com.tencent.devops.remotedev.service.WorkspaceHookService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.clientupgrade.ClientUpgradeService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
@@ -153,7 +157,8 @@ class ServiceRemoteDevResourceImpl(
     private val gitTransfer: RemoteDevGitTransfer,
     private val coffeeAIService: CoffeeAIService,
     private val openClawService: OpenClawService,
-    private val templateWorkspaceAssignService: TemplateWorkspaceAssignService
+    private val templateWorkspaceAssignService: TemplateWorkspaceAssignService,
+    private val clientUpgradeService: ClientUpgradeService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -1142,5 +1147,13 @@ class ServiceRemoteDevResourceImpl(
         taskId: String
     ): Result<TaskStatusResp> {
         return Result(openClawService.getTaskStatus(taskId))
+    }
+
+    override fun getClientLatestVersion(
+        type: ClientUpgradeComp,
+        os: ClientOS
+    ): Result<ClientLatestVersion> {
+        val version = clientUpgradeService.getLatestVersion(type, os).ifBlank { null }
+        return Result(ClientLatestVersion(version = version))
     }
 }

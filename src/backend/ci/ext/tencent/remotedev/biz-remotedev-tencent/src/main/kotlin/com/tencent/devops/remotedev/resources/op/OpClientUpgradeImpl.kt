@@ -21,57 +21,28 @@ class OpClientUpgradeImpl @Autowired constructor(
         return Result(
             ClientUpgradeVersions(
                 parallelUpgradeCount = upgradeProps.getMaxParallelUpgradeCount(),
-                macosClientVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, ClientOS.MACOS),
-                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, ClientOS.MACOS),
-                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.CLIENT, ClientOS.MACOS),
-                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(
-                        ClientUpgradeComp.CLIENT,
-                        ClientOS.MACOS
-                    ),
-                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.CLIENT, ClientOS.MACOS)
-                ),
-                winClientVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, ClientOS.WINDOWS),
-                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, ClientOS.WINDOWS),
-                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.CLIENT, ClientOS.WINDOWS),
-                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(
-                        ClientUpgradeComp.CLIENT,
-                        ClientOS.WINDOWS
-                    ),
-                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.CLIENT, ClientOS.WINDOWS)
-                ),
-                macosStartVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, ClientOS.MACOS),
-                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, ClientOS.MACOS),
-                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.START, ClientOS.MACOS),
-                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(
-                        ClientUpgradeComp.START,
-                        ClientOS.MACOS
-                    ),
-                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.START, ClientOS.MACOS)
-                ),
-                winStartVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.START, ClientOS.WINDOWS),
-                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.START, ClientOS.WINDOWS),
-                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.START, ClientOS.WINDOWS),
-                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(
-                        ClientUpgradeComp.START,
-                        ClientOS.WINDOWS
-                    ),
-                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.START, ClientOS.WINDOWS)
-                ),
-                andrClientVersion = UpgradeVersionsData(
-                    currentVersion = upgradeProps.getCurrentVersion(ClientUpgradeComp.CLIENT, ClientOS.ANDR),
-                    maxCanUpgradeNumber = upgradeProps.getMaxNumb(ClientUpgradeComp.CLIENT, ClientOS.ANDR),
-                    userVersion = upgradeProps.getUserVersion(ClientUpgradeComp.CLIENT, ClientOS.ANDR),
-                    workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(
-                        ClientUpgradeComp.CLIENT,
-                        ClientOS.ANDR
-                    ),
-                    projectVersion = upgradeProps.getProjectVersion(ClientUpgradeComp.CLIENT, ClientOS.ANDR)
-                )
+                macosClientVersion = upgradeVersionsData(ClientUpgradeComp.CLIENT, ClientOS.MACOS),
+                winClientVersion = upgradeVersionsData(ClientUpgradeComp.CLIENT, ClientOS.WINDOWS),
+                macosStartVersion = upgradeVersionsData(ClientUpgradeComp.START, ClientOS.MACOS),
+                winStartVersion = upgradeVersionsData(ClientUpgradeComp.START, ClientOS.WINDOWS),
+                andrClientVersion = upgradeVersionsData(ClientUpgradeComp.CLIENT, ClientOS.ANDR),
+                iosAppVersion = upgradeVersionsData(ClientUpgradeComp.APP, ClientOS.IOS),
+                androidAppVersion = upgradeVersionsData(ClientUpgradeComp.APP, ClientOS.ANDROID),
+                ohosAppVersion = upgradeVersionsData(ClientUpgradeComp.APP, ClientOS.OHOS)
             )
+        )
+    }
+
+    private fun upgradeVersionsData(
+        type: ClientUpgradeComp,
+        os: ClientOS
+    ): UpgradeVersionsData {
+        return UpgradeVersionsData(
+            currentVersion = upgradeProps.getCurrentVersion(type, os),
+            maxCanUpgradeNumber = upgradeProps.getMaxNumb(type, os),
+            userVersion = upgradeProps.getUserVersion(type, os),
+            workspaceNameVersion = upgradeProps.getWorkspaceNameVersion(type, os),
+            projectVersion = upgradeProps.getProjectVersion(type, os)
         )
     }
 

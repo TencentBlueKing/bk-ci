@@ -9,6 +9,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevRecordResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.ClientUpgradeComp
 import com.tencent.devops.remotedev.pojo.CreateOpenClawData
 import com.tencent.devops.remotedev.pojo.CreateOpenClawDataResp
 import com.tencent.devops.remotedev.pojo.FeatureSwitchType
@@ -32,6 +33,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
@@ -1112,6 +1115,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             enable = enable,
             switchType = FeatureSwitchType.LIVE_STREAMING_DEVCLOUD
+        )
+    }
+
+    override fun getClientLatestVersion(
+        appCode: String?,
+        apigwType: String?,
+        type: ClientUpgradeComp,
+        os: ClientOS
+    ): Result<ClientLatestVersion> {
+        logger.info("getClientLatestVersion |$appCode|$type|$os")
+        return client.get(ServiceRemoteDevResource::class).getClientLatestVersion(
+            type = type,
+            os = os
         )
     }
 }
