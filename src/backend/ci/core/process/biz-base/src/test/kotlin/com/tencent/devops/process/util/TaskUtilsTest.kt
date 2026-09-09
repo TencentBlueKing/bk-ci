@@ -28,10 +28,16 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -84,5 +90,42 @@ class TaskUtilsTest : TestBase() {
                 genTask(taskId = taskId, vmContainer = genVmBuildContainer(id = firstContainerIdInt))
             )
         )
+    }
+
+    @Test
+    fun getCancelTaskIdRedisKey() {
+        Assertions.assertEquals(
+            "CANCEL_TASK_IDS_b1_c1",
+            TaskUtils.getCancelTaskIdRedisKey("b1", "c1", true)
+        )
+        Assertions.assertEquals(
+            "CANCEL_TASK_IDS_b1_c1_set",
+            TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)
+        )
+    }
+
+    /**
+     * #13581 Job 取消标记需要落到 Job 级 Redis 集合，且与具体插件 ID 解耦。
+     */
+    @Test
+    fun markAndCheckJobCancelFlag() {
+        val redisOperation = mockk<RedisOperation>()
+        val key = TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)
+        every { redisOperation.addSetValue(key, TaskUtils.JOB_CANCEL_FLAG) } returns true
+        every { redisOperation.expire(key, any(), any()) } just runs
+        every { redisOperation.hasKey(key) } returns true
+
+        TaskUtils.markJobCancelFlag(redisOperation, "b1", "c1")
+        Assertions.assertTrue(TaskUtils.isJobCancelFlag(redisOperation, "b1", "c1"))
+
+        verify { redisOperation.addSetValue(key, TaskUtils.JOB_CANCEL_FLAG) }
+        verify { redisOperation.expire(key, any(), any()) }
+    }
+
+    @Test
+    fun isJobCancelFlagWhenKeyMissing() {
+        val redisOperation = mockk<RedisOperation>()
+        every { redisOperation.hasKey(any()) } returns false
+        Assertions.assertFalse(TaskUtils.isJobCancelFlag(redisOperation, "b1", "c1"))
     }
 }

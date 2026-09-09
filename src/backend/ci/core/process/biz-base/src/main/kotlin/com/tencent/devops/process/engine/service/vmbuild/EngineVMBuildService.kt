@@ -604,8 +604,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val finalBuildStatus = if (buildStatus.isFinish()) {
             buildStatus
         } else {
-            val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
-            val cancelFlag = redisOperation.isMember(cancelTaskSetKey, startUpVMTask.taskId)
+            val cancelFlag = TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)
             val runCondition = startUpVMTask.additionalOptions?.runCondition
             val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
             // 判断开机插件是否被取消
@@ -651,10 +650,45 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = allTasks.firstOrNull()
                 ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
 
+            // #13581 取消过程中禁止认领普通插件。插件执行很快时，当前插件完成后 Agent 会立刻 claim 下一个，
+            // 若此时取消集合已被清掉或取消瞬间没有 RUNNING 插件，Job 会继续跑完。
+            // PRE_TASK_FAILED_EVEN_CANCEL / 关机与结束节点仍按原逻辑认领，保证 finally 语义和资源回收。
+            if (shouldSkipClaimWhenJobCanceling(task, buildId, vmSeqId)) {
+                LOG.info(
+                    "ENGINE|$buildId|BC_CANCEL_WAIT|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}"
+                )
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
+            }
+
             return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
         } finally {
             containerIdLock.unlock()
         }
+    }
+
+    /**
+     * Job 取消中时，Agent 不能再认领普通插件。
+     * 仍允许认领：即使取消也执行的插件、引擎侧任务（关机等）、以及 end 节点。
+     */
+    private fun shouldSkipClaimWhenJobCanceling(
+        task: PipelineBuildTask,
+        buildId: String,
+        vmSeqId: String
+    ): Boolean {
+        if (!TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)) {
+            return false
+        }
+        val failedEvenCancel = task.additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        if (failedEvenCancel) {
+            return false
+        }
+        if (task.taskAtom.isNotBlank()) {
+            return false
+        }
+        if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) {
+            return false
+        }
+        return true
     }
 
     private fun claim(
@@ -1030,7 +1064,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val buildId = buildInfo.buildId
         val taskId = result.taskId
         val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
-        val cancelFlag = redisOperation.isMember(cancelTaskSetKey, taskId)
+        // #13581 除了当前插件 ID，Job 级取消标记也视为取消。避免快插件在取消集合写入前已切到下一插件。
+        val cancelFlag = redisOperation.isMember(cancelTaskSetKey, taskId) ||
+            TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)
         val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         if (cancelFlag && failedEvenCancelFlag) {
             redisOperation.set(
