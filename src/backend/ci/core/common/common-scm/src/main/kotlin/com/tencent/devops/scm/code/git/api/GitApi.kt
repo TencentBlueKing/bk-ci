@@ -221,8 +221,8 @@ open class GitApi {
             params["approvals"] = approvals.map {
                 mapOf(
                     "approve_url" to it.approveUrl,
-                    "approve_users" to it.approveUsers,
-                    "quickApproveEnabled" to it.quickApproveEnabled
+                    "approver_users" to it.approveUsers,
+                    "quick_approve_enabled" to it.quickApproveEnabled
                 )
             }
         }
