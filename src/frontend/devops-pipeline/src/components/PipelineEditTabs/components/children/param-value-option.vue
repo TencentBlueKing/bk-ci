@@ -228,8 +228,8 @@
                         :data-vv-scope="'pipelineParam'"
                         :value="param.defaultValue"
                         :handle-change="handleChange"
-                        :replace-key="param.replaceKey"
-                        :search-url="param.searchUrl"
+                        replace-key="{keyword}"
+                        :search-url="getSubPipelineSearchUrl()"
                     >
                     </request-selector>
                     <p
@@ -520,6 +520,12 @@
             },
             getSearchUrl (type) {
                 return `${this.getCodeUrl(type)}&aliasName={keyword}`
+            },
+            getSubPipelineSearchUrl () {
+                const { projectId, pipelineId } = this.$route.params
+                const query = `permission=EXECUTE&excludePipelineId=${pipelineId}` +
+                    '&pipelineName={keyword}&page=1&pageSize=100'
+                return `/process/api/user/pipelineInfos/${projectId}/idAndNames?${query}`
             },
             getSearchBranchUrl () {
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue['repo-name']}`

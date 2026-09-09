@@ -174,6 +174,9 @@ interface UserPipelineInfoResource {
         pageSize: Int?,
         @Parameter(description = "渠道代码", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        @Parameter(description = "流水线名称", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String?
     ): Result<Page<PipelineIdAndName>>
 }
