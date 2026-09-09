@@ -2790,17 +2790,21 @@ class PipelineBuildFacadeService(
         vmSeqId: String,
         nodeHashId: String?,
         executeCount: Int?,
+        createMode: Boolean?,
         simpleResult: SimpleResult
     ): Pair<String?, Boolean> {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
-            msg = "${
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId)
-                )
-            } $msg"
+            val link = if (createMode == true) {
+                "/console/environment/$projectCode/creative-stream/node/allNode?nodeHashId=$nodeHashId"
+            } else {
+                "/console/environment/$projectCode/pipeline/node/allNode?nodeHashId=$nodeHashId"
+            }
+            val linkTag = "<a target='_blank' href='$link'>${I18nUtil.getCodeLanMessage(
+                messageCode = BUILD_AGENT_DETAIL_LINK_ERROR
+            )}</a>"
+            msg = "$linkTag $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {

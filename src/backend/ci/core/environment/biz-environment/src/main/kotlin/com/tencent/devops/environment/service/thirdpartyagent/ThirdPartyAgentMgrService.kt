@@ -916,7 +916,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                masterVersion = agentRecord.masterVersion
+                masterVersion = agentRecord.masterVersion,
+                agentType = AgentType.fromValue(agentRecord.agentType)
             )
         )
     }

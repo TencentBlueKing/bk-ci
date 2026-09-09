@@ -863,6 +863,9 @@ interface ServiceBuildResource {
         @Parameter(description = "流水线执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "是否是创作流环境", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         @Parameter(description = "结果状态", required = true)
         simpleResult: SimpleResult
     ): Result<Pair<String?, Boolean>>
