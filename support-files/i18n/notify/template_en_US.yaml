@@ -219,11 +219,11 @@
     id: "930450b9edfe479e8c7504623261584d"
     sender: "DevOps"
     title: "${content}"
-    body: "Audit description: ${reviewDesc}\n\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+    body: "Audit description: ${reviewDesc}"
   weworkGroupTemplate:
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
-    body: "Audit description:\n${reviewDesc}\nComputer side: [to audit] (${reviewUrl})\nMobile: [check] (${reviewAppUrl})"
+    body: "Audit description: \n${reviewDesc} \nComputer side: [to audit] (${reviewUrl})\nMobile: [check] (${reviewAppUrl})"
     sender: "DevOps"
   creator: "system"
   modifior: "system"
@@ -815,7 +815,7 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage success, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+    body: "The build status is stage success, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
@@ -878,8 +878,6 @@
       Review description: ${body}
 
       If there is no need to remind, please modify the configuration of the manual review plug-in
-
-      PC-side review: ${reviewUrl} Mobile-side review: ${reviewAppUrl}
   creator: "system"
   modifior: "system"
 - index: 40

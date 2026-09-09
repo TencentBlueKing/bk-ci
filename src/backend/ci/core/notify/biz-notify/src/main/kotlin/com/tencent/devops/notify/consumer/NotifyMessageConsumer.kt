@@ -100,6 +100,20 @@ class NotifyMessageConsumer @Autowired constructor(
 
     fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
         try {
+            val templateCard = weworkNotifyMessageWithOperation.templateCard
+            if (templateCard != null) {
+                val ok = weworkService.sendTemplateCardMessage(
+                    receivers = weworkNotifyMessageWithOperation.getReceivers(),
+                    templateCard = templateCard
+                )
+                if (ok) {
+                    return
+                }
+                logger.warn(
+                    "send wework template card failed, fallback to text. receivers={}",
+                    weworkNotifyMessageWithOperation.getReceivers()
+                )
+            }
             val weworkNotifyTextMessage = WeworkNotifyTextMessage(
                 receivers = weworkNotifyMessageWithOperation.getReceivers(),
                 receiverType = WeworkReceiverType.single,

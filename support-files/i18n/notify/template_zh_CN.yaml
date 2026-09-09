@@ -215,11 +215,11 @@
     sender: "DevOps"
     bodyFormat: 1
     emailType: 1
-  weworkTemplate:
+    weworkTemplate:
     id: "930450b9edfe479e8c7504623261584d"
     sender: "DevOps"
     title: "${content}"
-    body: "审核说明: ${reviewDesc}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+    body: "审核说明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
@@ -815,7 +815,7 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
-    body: "构建状态为stage success，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+    body: "构建状态为stage success，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
@@ -878,8 +878,6 @@
       审核描述：${body}
 
       若无需提醒，请修改人工审核插件配置
-
-      PC端审核：${reviewUrl} 移动端审核：${reviewAppUrl}
   creator: "system"
   modifior: "system"
 - index: 40
