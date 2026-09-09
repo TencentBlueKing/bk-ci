@@ -3057,7 +3057,10 @@
                             "type" : "string"
                           },
                           "cpus" : {
-                            "type": ["string", "number"]
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
                           },
                           "memory" : {
                             "type" : "string"
@@ -3541,7 +3544,10 @@
                             "type" : "string"
                           },
                           "cpus" : {
-                            "type": ["string", "number"]
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
                           },
                           "memory" : {
                             "type" : "string"
