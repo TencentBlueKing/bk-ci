@@ -980,6 +980,8 @@
                     task.isLoadingDetail = true
                     const params = {
                         ...timeRangeParams.value,
+                        // 构建状态筛选时透传 taskStatusList 到展开明细接口（与列表过滤一致）
+                        ...(filterQuery.value.taskStatusList ? { taskStatusList: filterQuery.value.taskStatusList } : {}),
                         page: task.pagination.current,
                         pageSize: task.pagination.limit
                     }
