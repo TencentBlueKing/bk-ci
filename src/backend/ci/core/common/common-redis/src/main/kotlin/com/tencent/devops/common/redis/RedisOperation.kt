@@ -212,6 +212,10 @@ class RedisOperation(
         return masterRedisTemplate.opsForSet().members(getFinalKey(key, isDistinguishCluster))
     }
 
+    fun getSetSize(key: String, isDistinguishCluster: Boolean? = false): Long {
+        return masterRedisTemplate.opsForSet().size(getFinalKey(key, isDistinguishCluster)) ?: 0L
+    }
+
     /**
      * @param key key
      * @param hashKey hash key

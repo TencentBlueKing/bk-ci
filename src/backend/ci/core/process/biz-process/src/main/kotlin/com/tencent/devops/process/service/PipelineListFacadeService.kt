@@ -1552,10 +1552,11 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
-        // 获取归档中的流水线信息（使用缓存管理器优化）
+        // 获取归档中的流水线信息，项目不存在归档标识时不会产生逐条查询
         val pipelineArchivingFlagMap = ApiAccessLimitCacheManager.checkMigratingPipelines(
             redisOperation = redisOperation,
             moduleCode = SystemModuleEnum.PROCESS.name,
+            projectId = projectId,
             pipelineIds = pipelineIds.toTypedArray()
         )
 
