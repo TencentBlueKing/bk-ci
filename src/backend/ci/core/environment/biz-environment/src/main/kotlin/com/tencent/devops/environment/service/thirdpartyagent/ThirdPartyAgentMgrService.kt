@@ -1385,27 +1385,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         heartbeatTags[NewHeartbeatInfo::agentId.name] = agentHashId
         heartbeatTags[NewHeartbeatInfo::projectId.name] = projectId
         val agentId = HashUtil.decodeIdToLong(hash = agentHashId)
-        val heartbeatResponse = dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            val agentRecord = getAgentRecord(context = context, id = agentId, secretKey = secretKey)
-                ?: run {
-                    logger.warn("The agent($agentHashId) is not exist")
-                    return@transactionResult HeartbeatResponse(
-                        AgentStatus = AgentStatus.DELETE.name,
-                        language = commonConfig.devopsDefaultLocaleLanguage
-                    )
-                }
-
-            val nodeRecord = agentRecord.nodeId?.let {
-                nodeDao.get(dslContext = context, projectId = agentRecord.projectId, nodeId = it)
-            } ?: run {
-                logger.warn("The agent($agentHashId)'s node(${agentRecord.nodeId}) not exist!")
-                return@transactionResult HeartbeatResponse(
+        val agentRecord = getAgentRecord(context = dslContext, id = agentId, secretKey = secretKey)
+            ?: run {
+                logger.warn("The agent($agentHashId) is not exist")
+                return HeartbeatResponse(
                     AgentStatus = AgentStatus.DELETE.name,
                     language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
+        val nodeRecord = agentRecord.nodeId?.let {
+            nodeDao.get(dslContext = dslContext, projectId = agentRecord.projectId, nodeId = it)
+        } ?: run {
+            logger.warn("The agent($agentHashId)'s node(${agentRecord.nodeId}) not exist!")
+            return HeartbeatResponse(
+                AgentStatus = AgentStatus.DELETE.name,
+                language = commonConfig.devopsDefaultLocaleLanguage
+            )
+        }
+        val heartbeatResponse = dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
             val oldProps = if (agentRecord.agentProps != null) {
                 try {
                     JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
@@ -1503,6 +1502,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             heartbeatTags[NewHeartbeatInfo::agentIp.name] = agentRecord.ip
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
+                projectId = agentRecord.projectId,
                 masterVersion = newHeartbeatInfo.masterVersion,
                 slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
@@ -1521,8 +1521,14 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createMod = nodeRecord.nodeType == NodeType.CREATE.name
             )
         }
-        thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
-        online?.let { thirdPartAgentService.addAgentAction(projectId, agentId, action = AgentAction.ONLINE) }
+        thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(agentRecord.projectId, agentId, newHeartbeatInfo)
+        online?.let {
+            thirdPartAgentService.addAgentAction(
+                agentRecord.projectId,
+                agentId,
+                action = AgentAction.ONLINE
+            )
+        }
         agentMetricService.reportAgentMetrics(
             fields = heartbeatMetrics,
             name = AGENT_TELEGRAF_HEARTBEAT,

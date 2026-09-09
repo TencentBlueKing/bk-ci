@@ -16,6 +16,82 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.7
+## 2026-09-08
+### Changelog since v4.2.0-rc.6
+### Summary
+Key changes in this release:
+
+**Features**
+- Build steps support displaying runtime progress details
+- Pipelines support public variable management, with improved compatibility, count statistics, and internationalization configuration for public variable groups
+- Plugin run conditions add a "run only when a preceding plugin failed (excluding skipped failures)" condition
+- Environment Management optimizes node list display and adds a cloud desktop type
+- Creation Flow supports copying to personal projects by following the manifest, adds stage review locking, and Creation Environments support specifying the OS
+- Added backend management capabilities for the AI module
+
+**Bug Fixes**
+- Fixed cancelled jobs during a retried build leaving a residual CANCELED status that wrongly marked the final build status as cancelled
+- Fixed PAC listening incorrectly prompting an invalid configuration and allowing input
+- Fixed stage reviews not skipping already-executed stages during retries
+- Fixed Creation Flow scheduled triggers not executing
+
+#### New Features
+
+##### Pipeline
+- [New] feat: build steps support displaying runtime progress details [Link](http://github.com/TencentBlueKing/bk-ci/issues/12805)
+- [New] feat: pipeline public variable management [Link](http://github.com/TencentBlueKing/bk-ci/issues/12010)
+- [New] feat: plugin run conditions add the "run only when a preceding plugin failed (excluding skipped failures)" condition [Link](http://github.com/TencentBlueKing/bk-ci/issues/13429)
+
+##### Environment Management
+- [New] feat: environment - node list display optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13384)
+- [New] feat: environment adds cloud desktop type [Link](http://github.com/TencentBlueKing/bk-ci/issues/13486)
+
+##### Others
+- [New] feat: stage review locking added to creation flows initiated from imate sessions [Link](http://github.com/TencentBlueKing/bk-ci/issues/13530)
+- [New] feat: supplement backend management capabilities for the AI module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13535)
+- [New] feat: creation flow supports copying to personal projects by following the manifest [Link](http://github.com/TencentBlueKing/bk-ci/issues/13432)
+- [New] feat: creation environment supports specifying the OS [Link](http://github.com/TencentBlueKing/bk-ci/issues/13375)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: validate project id when creating/editing a pipeline [Link](http://github.com/TencentBlueKing/bk-ci/issues/13475)
+- [Improved] perf: supplement internationalization config for public variable group release logs [Link](http://github.com/TencentBlueKing/bk-ci/issues/13509)
+- [Improved] perf: public variable group YAML parsing environment compatibility [Link](http://github.com/TencentBlueKing/bk-ci/issues/13467)
+- [Improved] perf: public variable count statistics optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13274)
+- [Improved] perf: pipeline model serialization processing of variable parameters logic optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13257)
+
+##### Log Service
+- [Improved] perf: log module supports project-aggregated statistics and circuit breaking [Link](http://github.com/TencentBlueKing/bk-ci/issues/13379)
+- [Improved] perf: supplement pipeline build log interface parameters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13525)
+
+##### Others
+- [Improved] bug: version experience ext code rollback [Link](http://github.com/TencentBlueKing/bk-ci/issues/13368)
+- [Improved] perf: optimize service configuration [Link](http://github.com/TencentBlueKing/bk-ci/issues/13546)
+- [Improved] perf: sync update build log resource openapi interface with the latest parameters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13508)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] fix: when listening to PAC, it should not prompt an invalid configuration nor allow input [Link](http://github.com/TencentBlueKing/bk-ci/issues/13554)
+- [Fixed] bug: stage review not skipping already-executed stages during retries [Link](http://github.com/TencentBlueKing/bk-ci/issues/13500)
+- [Fixed] bug: cancelled jobs during a retried build leave a residual CANCELED status, causing the final build status to be wrongly marked as cancelled [Link](http://github.com/TencentBlueKing/bk-ci/issues/13407)
+- [Fixed] bug: scheduled task parameter checkbox type gets converted to [] [Link](http://github.com/TencentBlueKing/bk-ci/issues/13472)
+- [Fixed] bug: codecc channel does not limit the maximum number of pipelines [Link](http://github.com/TencentBlueKing/bk-ci/issues/13465)
+
+##### Environment Management
+- [Fixed] bug: environment management - node detail page, Agent offline records table not fully displayed and cannot scroll [Link](http://github.com/TencentBlueKing/bk-ci/issues/13496)
+
+##### Log Service
+- [Fixed] bug: exception handling for burst traffic in the log module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13327)
+
+##### Permission Center
+- [Fixed] fix: the project selected by default in the permission center is incorrect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13478)
+
+##### Others
+- [Fixed] bug: creation flow scheduled trigger not executing [Link](http://github.com/TencentBlueKing/bk-ci/issues/13490)
+
 # v4.2.0-rc.6
 ## 2026-08-18
 ### Changelog since v4.2.0-rc.5

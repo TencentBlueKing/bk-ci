@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
@@ -95,6 +96,22 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 sort = sort,
                 page = page,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType?,
+        enabled: Boolean?
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.listByPermission(
+                userId = userId,
+                permission = permission,
+                resourceType = resourceType,
+                enabled = enabled
             )
         )
     }

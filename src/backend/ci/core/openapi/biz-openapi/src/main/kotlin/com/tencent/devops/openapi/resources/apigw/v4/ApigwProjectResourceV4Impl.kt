@@ -27,6 +27,8 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
@@ -127,6 +129,21 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
             sort = sort,
             page = page,
             pageSize = pageSize
+        )
+    }
+
+    override fun listCreativeStreamProjects(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        enabled: Boolean?
+    ): Result<List<ProjectVO>> {
+        logger.info("OPENAPI_PROJECT_V4|$userId|listCreativeStreamProjects")
+        return client.get(ServiceProjectResource::class).listByPermission(
+            userId = userId,
+            permission = AuthPermission.CREATE,
+            resourceType = AuthResourceType.CREATIVE_STREAM,
+            enabled = enabled
         )
     }
 
