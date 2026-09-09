@@ -314,7 +314,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
+    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -403,18 +403,17 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
-                'failIfVariableInvalid'
+                'allPipelineParams',
+                'getBuildResourceTypeList'
             ]),
             ...mapState('atom', [
                 'pipeline'
             ]),
             varLengthRule () {
 
-                return Object.assign({
+                return {
                     required: this.valueRequired
-                }, this.failIfVariableInvalid ? {
-                    max: VAR_MAX_LENGTH
-                } : {})
+                }
             },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({

@@ -589,7 +589,8 @@
                 'fetchPipelineByVersion',
                 'selectPipelineVersion',
                 'setTempParamSet',
-                'fetchPacBranchPipeline'
+                'fetchPacBranchPipeline',
+                'resolveOverflowParamValues'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -697,6 +698,46 @@
                 this.buildValues = getParamsValuesMap(this.buildList, key, values)
                 this.constantValues = getParamsValuesMap(this.constantParams, key, values)
                 this.otherValues = getParamsValuesMap(this.otherParams, key, values)
+                // 使用最近一次参数时，后端可能回填 __BK_OVF__ 引用串，需解析成真实值
+                this.resolveOverflowInParamValues()
+            },
+            async resolveOverflowInParamValues (preferredBuildId) {
+                const { projectId, pipelineId } = this.$route.params
+                const buildId = preferredBuildId || this.tempParamSet?.buildId || null
+                const resolveOpts = {
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    debug: this.isDebugPipeline
+                }
+                const [
+                    paramsValues,
+                    versionParamValues,
+                    buildValues,
+                    constantValues,
+                    otherValues
+                ] = await Promise.all([
+                    this.resolveOverflowParamValues({ ...resolveOpts, values: this.paramsValues }),
+                    this.resolveOverflowParamValues({ ...resolveOpts, values: this.versionParamValues }),
+                    this.resolveOverflowParamValues({ ...resolveOpts, values: this.buildValues }),
+                    this.resolveOverflowParamValues({ ...resolveOpts, values: this.constantValues }),
+                    this.resolveOverflowParamValues({ ...resolveOpts, values: this.otherValues })
+                ])
+                this.paramsValues = paramsValues
+                this.versionParamValues = versionParamValues
+                this.buildValues = buildValues
+                this.constantValues = constantValues
+                this.otherValues = otherValues
+                this.setExecuteParams({
+                    pipelineId: this.pipelineId,
+                    params: {
+                        ...this.paramsValues,
+                        ...this.versionParamValues,
+                        ...this.buildValues,
+                        ...this.constantValues,
+                        ...this.otherValues
+                    }
+                })
             },
             updateParams (valueKey = 'defaultValue', values, versionValues) {
                 this.showChangedParamsAlert = valueKey === 'value'
@@ -1069,7 +1110,7 @@
                     diffMap
                 }
             },
-            updateParamsValues (setName, paramsValues, versionValues) {
+            async updateParamsValues (setName, paramsValues, versionValues) {
                 const applySetDiff = {
                     setName,
                     diffMap: {
@@ -1078,9 +1119,28 @@
                         noRequired: []
                     }
                 }
-                this.particalyUpdateParams(this.paramsValues, paramsValues, applySetDiff.diffMap)
-                if (versionValues) {
-                    this.particalyUpdateParams(this.versionParamValues, versionValues, applySetDiff.diffMap)
+                // 参数组合 / 最近一次使用可能带入引用串，先解析再回填
+                const preferredBuildId = this.tempParamSet?.buildId || null
+                const resolveOpts = {
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    buildId: preferredBuildId,
+                    debug: this.isDebugPipeline
+                }
+                const resolvedParamsValues = await this.resolveOverflowParamValues({
+                    ...resolveOpts,
+                    values: paramsValues
+                })
+                const resolvedVersionValues = versionValues
+                    ? await this.resolveOverflowParamValues({
+                        ...resolveOpts,
+                        values: versionValues
+                    })
+                    : versionValues
+
+                this.particalyUpdateParams(this.paramsValues, resolvedParamsValues, applySetDiff.diffMap)
+                if (resolvedVersionValues) {
+                    this.particalyUpdateParams(this.versionParamValues, resolvedVersionValues, applySetDiff.diffMap)
                 }
                 const changedMap = applySetDiff.diffMap.changed.reduce((acc, key) => {
                     acc[key] = true

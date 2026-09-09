@@ -51,36 +51,6 @@
                     </template>
                 </constraint-wraper>
             </bk-form-item>
-            <bk-form-item
-                ext-cls="variable-invalid"
-            >
-                <constraint-wraper
-                    :classify="CLASSIFY_ENUM.SETTING"
-                    field="failIfVariableInvalid"
-                    :label="$t('settings.whenVariableExceedsLength')"
-                >
-                    <template v-slot:constraint-area="{ props: { isOverride } }">
-                        <bk-radio-group
-                            v-model="proxyFailIfVariableInvalid"
-                            @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
-                        >
-                            <bk-radio
-                                :value="false"
-                                :disabled="!(editable || isOverride)"
-                            >
-                                {{ $t('settings.clearTheValue') }}
-                            </bk-radio>
-                            <bk-radio
-                                :value="true"
-                                class="ml20"
-                                :disabled="!(editable || isOverride)"
-                            >
-                                {{ $t('settings.errorAndHalt') }}
-                            </bk-radio>
-                        </bk-radio-group>
-                    </template>
-                </constraint-wraper>
-            </bk-form-item>
             <bk-form-item>
                 <constraint-wraper
                     :classify="CLASSIFY_ENUM.SETTING"
@@ -272,7 +242,6 @@
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
     import { BUILD_CANCEL_POLICY } from '@/store/constants'
-    import Vue from 'vue'
 
     export default {
         name: 'bkdevops-running-lock-setting-tab',
@@ -294,14 +263,6 @@
             },
             BUILD_CANCEL_POLICY () {
                 return BUILD_CANCEL_POLICY
-            },
-            proxyFailIfVariableInvalid: {
-                get () {
-                    return this.pipelineSetting.failIfVariableInvalid ?? false
-                },
-                set (val) {
-                    Vue.set(this.pipelineSetting, 'failIfVariableInvalid', val)
-                }
             },
             runTypeMap () {
                 return {
@@ -406,15 +367,6 @@
                 color: #979BA5;
                 font-size: 14px;
                 cursor: pointer;
-            }
-        }
-        .variable-invalid {
-            color: #63656E;
-            font-size: 12px;
-            font-weight: 500;
-
-            .variable-radio .bk-form-radio {
-                display: inline-block !important;
             }
         }
         .single-lock-sub-form {
