@@ -944,7 +944,7 @@ importers:
         version: 0.0.2-beta.7(@blueking/bkui-library@0.0.0-beta.6)(vue@3.5.29(typescript@5.9.3))
       '@blueking/search-select-v3':
         specifier: 0.0.1-beta.10
-        version: 0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
+        version: 0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@3.0.6(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       axios:
         specifier: 1.15.2
         version: 1.15.2(debug@4.4.3)
@@ -955,8 +955,8 @@ importers:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
       bkui-vue:
-        specifier: 2.0.2-beta.92
-        version: 2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3))
+        specifier: 3.0.6
+        version: 3.0.6(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3))
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
@@ -3408,6 +3408,11 @@ packages:
   '@blueking/login-modal@1.0.4':
     resolution: {integrity: sha512-HMSIZl4QeRAPEVcD/FV2vysnZxJiDSVeLppVw65wvQnvNwos2JwqjoCSoS46Joe/JY/H0r89RgA2WIkneOekNg==}
 
+  '@blueking/login-userinfo@0.0.21':
+    resolution: {integrity: sha512-71HixcC4HK2RxMA7FJX/huXY9QHjbItvAfIi9rYDhFv/qMgxTV4J6kZkaqTd6y0beWDWFjvPdYcrYK6kowy/Ng==}
+    peerDependencies:
+      vue: ^3
+
   '@blueking/platform-config@1.0.5':
     resolution: {integrity: sha512-z88WCgnPJ1V5XzFMcftEEwDVz3Cvfn7VWv+mRlfh+LfBBDJyUrwX4uhkMYr06kP+35NPIky8ZdETFb2VWDoMyg==}
 
@@ -5514,6 +5519,7 @@ packages:
     resolution: {integrity: sha512-t4ONHboXi/3E0rT6OZl1pKbl2Vgxf9vJfWgmUoCEVQVxhW6Cw/c8I6hbbu7DAvgp82RKiH7TpLwxnJeKv2pbsw==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.59.0':
     resolution: {integrity: sha512-CikFT7aYPA2ufMD086cVORBYGHffBo4K8MQ4uPS/ZnY54GKj36i196u8U+aDVT2LX4eSMbyHtyOh7D7Zvk2VvA==}
@@ -5537,6 +5543,7 @@ packages:
     resolution: {integrity: sha512-gbUSW/97f7+r4gHy3Jlup8zDG190AuodsWnNiXErp9mT90iCy9NKKU0Xwx5k8VlRAIV2uU9CsMnEFg/xXaOfXg==}
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-loong64-musl@4.59.0':
     resolution: {integrity: sha512-yTRONe79E+o0FWFijasoTjtzG9EBedFXJMl888NBEDCDV9I2wGbFFfJQQe63OijbFCUZqxpHz1GzpbtSFikJ4Q==}
@@ -5560,6 +5567,7 @@ packages:
     resolution: {integrity: sha512-NDYMpsXYJJaj+I7UdwIuHHNxXZ/b/N2hR15NyH3m2qAtb/hHPA4g4SuuvrdxetTdndfj9b1WOmy73kcPRoERUg==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.59.0':
     resolution: {integrity: sha512-nLckB8WOqHIf1bhymk+oHxvM9D3tyPndZH8i8+35p/1YiVoVswPid2yLzgX7ZJP0KQvnkhM4H6QZ5m0LzbyIAg==}
@@ -7463,8 +7471,9 @@ packages:
       highlight.js: ~11.5.0
       vue: ^3.2.0
 
-  bkui-vue@2.0.2-beta.92:
-    resolution: {integrity: sha512-s94jEY46087wheK2Q4Thx4y67ZR9o2woFEGZOMjjF2pDEqhX2DoYOrrmlYd3Hl04bxFmz91DFgpVkMq4adr3vQ==}
+  bkui-vue@3.0.6:
+    resolution: {integrity: sha512-C5hYlKIvp8WbLbXxHWMHIV2IHkKs0j9MZBIMjkaEXw0ZVDQdjpha/tt4HBqwuk0hsEvAdjJJuDD88i0g7WXhSg==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -16883,6 +16892,15 @@ packages:
     peerDependencies:
       vue: ^2.0.0 || ^3.0.0
 
+  vue-types@6.0.0:
+    resolution: {integrity: sha512-fBgCA4nrBrB8SCU/AN40tFq8HUxLGBvU2ds7a5+SEDse6dYc+TJyvy8mWiwwL8oWIC/aGS/8nTqmhwxApgU5eA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      vue:
+        optional: true
+
   vue@2.6.12:
     resolution: {integrity: sha512-uhmLFETqPPNyuLLbsKz6ioJ4q7AZHzD8ZVFNATNyICSZouqP2Sz0rotWQC8UNBF6VGSCs5abnKJoStA6JbCbfg==}
     deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
@@ -18710,14 +18728,20 @@ snapshots:
 
   '@blueking/login-modal@1.0.4': {}
 
+  '@blueking/login-userinfo@0.0.21(vue@3.5.29(typescript@5.9.3))':
+    dependencies:
+      js-cookie: 3.0.5
+      tippy.js: 6.3.7
+      vue: 3.5.29(typescript@5.9.3)
+
   '@blueking/platform-config@1.0.5':
     dependencies:
       xss: 1.0.15
 
-  '@blueking/search-select-v3@0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))':
+  '@blueking/search-select-v3@0.0.1-beta.10(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@3.0.6(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3))
+      bkui-vue: 3.0.6(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3))
       vue: 3.5.29(typescript@5.9.3)
 
   '@blueking/search-select@0.0.1-beta.2':
@@ -24050,9 +24074,9 @@ snapshots:
       vue: 3.4.38(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.38(typescript@4.9.5))
 
-  bkui-vue@2.0.2-beta.92(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)):
+  bkui-vue@3.0.6(highlight.js@11.11.1)(vue@3.5.29(typescript@5.9.3)):
     dependencies:
-      '@floating-ui/dom': 1.5.4
+      '@blueking/login-userinfo': 0.0.21(vue@3.5.29(typescript@5.9.3))
       '@popperjs/core': 2.11.8
       date-fns: 2.30.0
       dompurify: 3.2.6
@@ -24062,7 +24086,7 @@ snapshots:
       lodash: 4.18.1
       tinycolor2: 1.6.0
       vue: 3.5.29(typescript@5.9.3)
-      vue-types: 4.1.1(vue@3.5.29(typescript@5.9.3))
+      vue-types: 6.0.0(vue@3.5.29(typescript@5.9.3))
 
   bl@4.1.0:
     dependencies:
@@ -36060,6 +36084,10 @@ snapshots:
   vue-types@4.1.1(vue@3.5.29(typescript@5.9.3)):
     dependencies:
       is-plain-object: 5.0.0
+      vue: 3.5.29(typescript@5.9.3)
+
+  vue-types@6.0.0(vue@3.5.29(typescript@5.9.3)):
+    optionalDependencies:
       vue: 3.5.29(typescript@5.9.3)
 
   vue@2.6.12: {}
