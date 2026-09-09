@@ -1122,7 +1122,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
 
-        return updateAtomVersionInfo(
+        val result = updateAtomVersionInfo(
             userId = userId,
             projectCode = projectCode,
             newVersionFlag = newVersionFlag,
@@ -1135,6 +1135,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             convertUpdateRequest = marketAtomUpdateRequest,
             getAtomConfResult = getAtomConfResult
         )
+        // 构建未启动时返回失败
+        val createdAtomId = result.data
+        if (createdAtomId != null && marketAtomDao.getAtomRecordById(dslContext, createdAtomId)
+                ?.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte()
+        ) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = STORE_BRANCH_TEST_CREATE_FAIL,
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+        return result
     }
 
     /**
