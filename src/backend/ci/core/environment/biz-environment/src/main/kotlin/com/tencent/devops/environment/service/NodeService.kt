@@ -235,10 +235,15 @@ class NodeService @Autowired constructor(
             null
         } else {
             val t = mutableSetOf<Long>()
-            data?.tags?.forEach { tag ->
+            data.tags?.forEach { tag ->
                 t.addAll(tag.tagValues ?: return@forEach)
             }
             t
+        }
+        val nodeIpList = if (data?.ipListSearch.isNullOrBlank()) {
+            null
+        } else {
+            parseIpList(data.ipListSearch)?.toSet()
         }
         val nodeRecordList =
             if (-1 != page) {
@@ -267,15 +272,16 @@ class NodeService @Autowired constructor(
                     sortType = sortType,
                     collation = collation,
                     tagValueIds = tagValues,
-                    operatorStatus = operatorStatus
+                    operatorStatus = operatorStatus,
+                    nodeIpList = nodeIpList
                 )
             } else {
                 nodeDao.listNodes(
                     dslContext = dslContext, projectId = projectId, nodeType = if (createMode == true) {
-                    NodeType.CREATE
-                } else {
-                    nodeType
-                }
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    }
                 )
             }
         if (nodeRecordList.isEmpty()) {
@@ -326,7 +332,8 @@ class NodeService @Autowired constructor(
                 collation = collation,
                 tagValueIds = tagValues,
                 nodeIds = authorizedNodeIds,
-                operatorStatus = operatorStatus
+                operatorStatus = operatorStatus,
+                nodeIpList = nodeIpList
             ).toLong()
         }
         if (-1 != page) {
@@ -364,6 +371,44 @@ class NodeService @Autowired constructor(
             count = count,
             records = records
         )
+    }
+
+    private fun parseIpList(input: String?): List<String>? {
+        if (input.isNullOrBlank()) {
+            return null
+        }
+
+        val result = LinkedHashSet<String>()
+        val current = StringBuilder()
+
+        fun flushCurrent() {
+            val ip = current.toString().trim()
+            if (ip.isNotEmpty()) {
+                result.add(ip)
+            }
+            current.clear()
+        }
+
+        for (ch in input) {
+            if (isIpSeparator(ch)) {
+                flushCurrent()
+            } else {
+                current.append(ch)
+            }
+        }
+
+        flushCurrent()
+
+        return result.toList()
+    }
+
+    private fun isIpSeparator(ch: Char): Boolean {
+        return ch.isWhitespace() ||
+                ch == ',' ||
+                ch == '，' ||
+                ch == ';' ||
+                ch == '；' ||
+                ch == '|'
     }
 
     fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
