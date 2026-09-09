@@ -73,6 +73,9 @@ func buildDockerCreateArgs(containerName, image string, buildInfo *api.ThirdPart
 	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
 		args = append(args, "--cap-add", strings.TrimSpace(v))
 	}
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerRunArgs); ok {
+		args = append(args, job_docker.ParseExtraDockerArgs(v)...)
+	}
 	args = append(args, mountArgs...)
 	args = append(args, "--entrypoint", "/bin/sh", image, "-c", entryPointCmd)
 	return args, nil

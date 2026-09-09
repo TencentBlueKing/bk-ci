@@ -3055,6 +3055,12 @@
                           },
                           "user" : {
                             "type" : "string"
+                          },
+                          "cpus" : {
+                            "type" : "string"
+                          },
+                          "memory" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -3532,6 +3538,12 @@
                             }
                           },
                           "user" : {
+                            "type" : "string"
+                          },
+                          "cpus" : {
+                            "type" : "string"
+                          },
+                          "memory" : {
                             "type" : "string"
                           }
                         }
