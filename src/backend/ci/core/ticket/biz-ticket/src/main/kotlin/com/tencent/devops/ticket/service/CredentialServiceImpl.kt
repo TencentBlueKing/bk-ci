@@ -131,7 +131,8 @@ class CredentialServiceImpl @Autowired constructor(
             } else {
                 credential.credentialName!!
             },
-            updateUser = userId
+            updateUser = userId,
+            aesKeySha = credentialHelper.currentKeySha()
         )
     }
 
@@ -218,7 +219,8 @@ class CredentialServiceImpl @Autowired constructor(
             credentialV2 = credentialHelper.encryptCredential(credential.v2),
             credentialV3 = credentialHelper.encryptCredential(credential.v3),
             credentialV4 = credentialHelper.encryptCredential(credential.v4),
-            credentialRemark = credential.credentialRemark
+            credentialRemark = credential.credentialRemark,
+            aesKeySha = credentialHelper.currentKeySha()
         )
         credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
     }

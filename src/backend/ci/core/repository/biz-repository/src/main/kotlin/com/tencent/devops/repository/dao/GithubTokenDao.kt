@@ -43,7 +43,8 @@ class GithubTokenDao {
         tokenType: String,
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
-        operator: String
+        operator: String,
+        aesKeySha: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
@@ -56,7 +57,8 @@ class GithubTokenDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 TYPE,
-                OPERATOR
+                OPERATOR,
+                AES_KEY_SHA
             ).values(
                 userId,
                 accessToken,
@@ -65,7 +67,8 @@ class GithubTokenDao {
                 now,
                 now,
                 githubTokenType.name,
-                operator
+                operator,
+                aesKeySha
             ).execute()
         }
     }
@@ -77,7 +80,8 @@ class GithubTokenDao {
         tokenType: String,
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
-        operator: String
+        operator: String,
+        aesKeySha: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
@@ -90,6 +94,7 @@ class GithubTokenDao {
                     }
                     it
                 }
+                .set(AES_KEY_SHA, aesKeySha)
                 .where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name))
                 .execute()
         }

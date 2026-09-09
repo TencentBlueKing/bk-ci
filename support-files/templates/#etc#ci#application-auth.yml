@@ -48,6 +48,7 @@ monitor:
 # auth 服务加密，可修改
 aes:
   auth: __BK_CI_AUTH_AES_AUTH_KEY__
+  used-auth-keys: __BK_CI_AUTH_USED_AES_AUTH_KEYS__
 
 sync:
   cron:

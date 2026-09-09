@@ -48,7 +48,7 @@ class GitTokenDao {
         }
     }
 
-    fun saveAccessToken(dslContext: DSLContext, userId: String, token: GitToken): Int {
+    fun saveAccessToken(dslContext: DSLContext, userId: String, token: GitToken, aesKeySha: String): Int {
         val now = LocalDateTime.now()
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.insertInto(
@@ -60,7 +60,8 @@ class GitTokenDao {
                 EXPIRES_IN,
                 CREATE_TIME,
                 UPDATE_TIME,
-                OPERATOR
+                OPERATOR,
+                AES_KEY_SHA
             )
                 .values(
                     userId,
@@ -70,7 +71,8 @@ class GitTokenDao {
                     token.expiresIn,
                     now,
                     now,
-                    token.operator ?: userId
+                    token.operator ?: userId,
+                    aesKeySha
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
@@ -85,6 +87,7 @@ class GitTokenDao {
                     }
                     it
                 }
+                .set(AES_KEY_SHA, aesKeySha)
                 .execute()
         }
     }

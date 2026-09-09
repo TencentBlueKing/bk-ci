@@ -49,7 +49,8 @@ class ProjectPipelineCallbackDao {
         callbackUrl: String,
         secretToken: String?,
         id: Long? = null,
-        secretParam: String?
+        secretParam: String?,
+        aesKeySha: String
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             val now = LocalDateTime.now()
@@ -64,7 +65,8 @@ class ProjectPipelineCallbackDao {
                 CALLBACK_URL,
                 SECRET_TOKEN,
                 ID,
-                SECRET_PARAM
+                SECRET_PARAM,
+                AES_KEY_SHA
             ).values(
                 projectId,
                 events,
@@ -75,12 +77,16 @@ class ProjectPipelineCallbackDao {
                 callbackUrl,
                 secretToken,
                 id,
-                secretParam
+                secretParam,
+                aesKeySha
             ).onDuplicateKeyUpdate()
                 .set(UPDATED_TIME, now)
                 .set(UPDATOR, userId)
                 .set(CALLBACK_URL, callbackUrl)
-                .set(SECRET_TOKEN, secretToken).execute()
+                .set(SECRET_TOKEN, secretToken)
+                .set(SECRET_PARAM, secretParam)
+                .set(AES_KEY_SHA, aesKeySha)
+                .execute()
         }
     }
 

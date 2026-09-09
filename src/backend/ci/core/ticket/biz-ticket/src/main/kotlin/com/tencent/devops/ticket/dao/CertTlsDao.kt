@@ -57,7 +57,8 @@ class CertTlsDao {
         clientCrtFileName: String?,
         clientCrtFile: ByteArray?,
         clientKeyFileName: String?,
-        clientKeyFile: ByteArray?
+        clientKeyFile: ByteArray?,
+        aesKeySha: String
     ) {
         val now = LocalDateTime.now()
         with(TCertTls.T_CERT_TLS) {
@@ -75,7 +76,8 @@ class CertTlsDao {
                     CERT_CLIENT_KEY_FILE_NAME,
                     CERT_CLIENT_KEY_FILE,
                     CERT_CREATE_TIME,
-                    CERT_UPDATE_TIME
+                    CERT_UPDATE_TIME,
+                    AES_KEY_SHA
                 )
                 .values(
                     projectId,
@@ -89,7 +91,8 @@ class CertTlsDao {
                     clientKeyFileName,
                     clientKeyFile,
                     now,
-                    now
+                    now,
+                    aesKeySha
                 )
                 .execute()
         }
@@ -106,7 +109,8 @@ class CertTlsDao {
         clientCrtFileName: String?,
         clientCrtFile: ByteArray?,
         clientKeyFileName: String?,
-        clientKeyFile: ByteArray?
+        clientKeyFile: ByteArray?,
+        aesKeySha: String
     ) {
         with(TCertTls.T_CERT_TLS) {
             dslContext.update(this)
@@ -118,6 +122,7 @@ class CertTlsDao {
                 .set(CERT_CLIENT_CRT_FILE, clientCrtFile)
                 .set(CERT_CLIENT_KEY_FILE_NAME, clientKeyFileName)
                 .set(CERT_CLIENT_KEY_FILE, clientKeyFile)
+                .set(AES_KEY_SHA, aesKeySha)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CERT_ID.eq(certId))
                 .execute()

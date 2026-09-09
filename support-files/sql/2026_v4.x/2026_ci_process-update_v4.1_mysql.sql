@@ -103,6 +103,15 @@ BEGIN
             ADD COLUMN `AUTO_SUMMARY` text DEFAULT NULL COMMENT 'AI自动生成的流水线摘要' AFTER `LOCKED`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_CALLBACK'
+                    AND COLUMN_NAME = 'AES_KEY_SHA') THEN
+        ALTER TABLE `T_PIPELINE_CALLBACK`
+            ADD COLUMN `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

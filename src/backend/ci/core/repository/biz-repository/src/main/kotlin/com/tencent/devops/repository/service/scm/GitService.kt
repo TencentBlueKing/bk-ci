@@ -45,12 +45,12 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -131,7 +131,8 @@ class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
     private val gitTokenDao: GitTokenDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) : IGitService {
 
     companion object {
@@ -154,9 +155,6 @@ class GitService @Autowired constructor(
 
     @Value("\${scm.git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
 
     private val redirectUrl = gitConfig.redirectUrl
 
@@ -2147,7 +2145,7 @@ class GitService @Autowired constructor(
         val tokenRecord = gitTokenDao.getAccessToken(dslContext, userId) ?: throw ErrorCodeException(
             errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(userId)
         )
-        val accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        val accessToken = gitTokenCryptoHelper.decryptSm4OrAes(tokenRecord.accessToken)
         val projectId = gitProjectId ?: run {
             if (codeSrc.isNullOrBlank()) {
                 throw ErrorCodeException(
