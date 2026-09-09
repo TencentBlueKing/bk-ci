@@ -27,12 +27,12 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -57,6 +57,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,12 +83,23 @@ class MutexControl @Autowired constructor(
         private fun getMutexContainerId(buildId: String, containerId: String) = "${buildId}$DELIMITERS$containerId"
         private fun getBuildIdAndContainerId(mutexId: String): List<String> = mutexId.split(DELIMITERS)
 
-        fun parseTimeoutVar(timeout: Int, timeoutVar: String?, variables: Map<String, String>) =
+        fun parseTimeoutVar(
+            timeout: Int,
+            timeoutVar: String?,
+            variables: Map<String, String>,
+            overflowKeys: Set<String> = emptySet(),
+            overflowLoader: ((String) -> String?)? = null
+        ) =
             (
                 if (!timeoutVar.isNullOrBlank()) {
                     try {
                         if (PipelineVarUtil.isVar(timeoutVar)) { // ${{ xx }} 变量
-                            EnvReplacementParser.parse(timeoutVar, contextMap = variables).toInt()
+                            EnvReplacementParser.parse(
+                                value = timeoutVar,
+                                contextMap = variables,
+                                overflowKeys = overflowKeys,
+                                overflowLoader = overflowLoader
+                            ).toInt()
                         } else {
                             timeoutVar.toInt()
                         }
@@ -100,17 +112,35 @@ class MutexControl @Autowired constructor(
                 ).coerceAtLeast(0).coerceAtMost(Timeout.MAX_MINUTES)
     }
 
-    internal fun decorateMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
+    internal fun decorateMutexGroup(
+        mutexGroup: MutexGroup?,
+        variables: Map<String, String>,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
+    ): MutexGroup? {
         if (mutexGroup == null || !mutexGroup.runtimeMutexGroup.isNullOrBlank()) {
             return mutexGroup
         }
         // 超时时间限制，0表示排队不等待直接超时
-        val timeOut = parseTimeoutVar(mutexGroup.timeout, mutexGroup.timeoutVar, variables)
+        val timeOut = parseTimeoutVar(
+            timeout = mutexGroup.timeout,
+            timeoutVar = mutexGroup.timeoutVar,
+            variables = variables,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
         // 排队任务数量限制，0表示不排队
         val queue = mutexGroup.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
-        // 替换环境变量
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
+        // 替换环境变量（as-code 方言走 ${{ }}，可按需还原大变量）
         val mutexLockedGroup = if (!mutexGroup.mutexGroupName.isNullOrBlank()) {
-            EnvUtils.parseEnv(mutexGroup.mutexGroupName, variables)
+            EnvReplacementParser.parse(
+                value = mutexGroup.mutexGroupName,
+                contextMap = variables,
+                onlyExpression = dialect.supportUseExpression(),
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
         } else {
             mutexGroup.mutexGroupName
         }

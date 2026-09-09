@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -143,6 +144,8 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
+import com.tencent.devops.process.service.BuildStartupParamOverflowService
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -195,6 +198,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val recordModelDao: BuildRecordModelDao,
     private val buildVariableService: BuildVariableService,
+    private val buildStartupParamOverflowService: BuildStartupParamOverflowService,
     private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
@@ -354,7 +358,7 @@ class PipelineRuntimeService @Autowired constructor(
                 startUser = it.latestStartUser ?: "",
                 startTime = DateTimeUtil.toDateTime(it.latestStartTime),
                 endTime = DateTimeUtil.toDateTime(it.latestEndTime),
-                status = if (status != null) BuildStatus.values()[status].name else null
+                status = if (status != null) BuildStatus.entries[status].name else null
             )
         }
 
@@ -963,7 +967,21 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index, context.variables)
+                    // 启动组装阶段 context.variables 通常仍是完整值（VAR 溢出写入在其后）；
+                    // 若已含引用串，则按需还原，保证 ${{ }} 复用 ID 可解析。
+                    val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+                        buildVariableService = buildVariableService,
+                        projectId = context.projectId,
+                        buildId = context.buildId,
+                        variables = context.variables
+                    )
+                    agentReuseMutexTree.addNode(
+                        container = container,
+                        stageIndex = index,
+                        variables = context.variables,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -1153,12 +1171,24 @@ class PipelineRuntimeService @Autowired constructor(
             if (buildInfo != null) {
                 // 运行时的重试不需要刷新重试信息
                 if (!context.retryOnRunningBuild) {
+                    val retryInfoNonNull = retryInfo!!
+                    // 大启动参数引用化：>4K 的值落溢出表，retryInfo 里只留引用串（重试复用同 buildId，溢出行同库长期保留）
+                    retryInfoNonNull.buildParameters = retryInfoNonNull.buildParameters?.let { params ->
+                        buildStartupParamOverflowService.persistAndStrip(
+                            dslContext = transactionContext,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            buildId = context.buildId,
+                            debug = context.debug,
+                            params = params
+                        )
+                    }
                     pipelineBuildDao.updateBuildRetryInfo(
                         dslContext = transactionContext,
                         projectId = context.projectId,
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
-                        retryInfo = retryInfo!!
+                        retryInfo = retryInfoNonNull
                     )
                 }
             } else {
@@ -1205,8 +1235,22 @@ class PipelineRuntimeService @Autowired constructor(
                     debug = context.debug
                 )
                 context.watcher.stop()
+                // 大启动参数引用化：>4K 的值落溢出表，主历史表 BUILD_PARAMETERS 只写引用串，避免 mediumtext 溢出/读取 OOM。
+                // 注意：buildParameters 元素与 pipelineParamMap 共享，这里得到的是"引用化副本"，不修改原对象（VAR 表仍走完整值）。
+                val historyBuildParameters = buildStartupParamOverflowService.persistAndStrip(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    debug = context.debug,
+                    params = context.buildParameters
+                )
                 // 创建构建记录
-                pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
+                pipelineBuildDao.create(
+                    dslContext = transactionContext,
+                    startBuildContext = context,
+                    overflowStrippedParams = historyBuildParameters
+                )
             }
 
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
@@ -1967,7 +2011,9 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters = getBuildParametersFromStartup(projectId, buildId)
+            // 仅用于计算推荐版本号（只读 MAJOR/MINOR/FIX/BUILD_NO 等小型版本参数，永不溢出），
+            // 故无需把大启动参数引用解析为真实值，避免每次构建结束都白白加载（最多 32M）后丢弃
+            val buildParameters = getBuildParametersFromStartup(projectId, buildId, resolveOverflow = false)
             // 修正推荐版本号过长和流水号重复更新导致的问题
             val recommendVersion = PipelineVarUtil.getRecommendVersion(buildParameters)
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
@@ -2002,23 +2048,92 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildParametersFromStartup(
         projectId: String,
         buildId: String,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        // 是否把大启动参数引用串解析回真实值。
+        // 参数组合回填等"尽量还原"场景传 true（默认，走 resolveForDisplay 预算降级）；
+        // 启动参数 Tab / BuildStartControl 等传 false，只读引用串，避免无谓加载大值。
+        resolveOverflow: Boolean = true
     ): List<BuildParameters> {
         return try {
+            val queryContext = queryDslContext ?: dslContext
             val buildParameters = pipelineBuildDao.getBuildParameters(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = queryContext,
                 projectId = projectId,
                 buildId = buildId
             )
             return if (buildParameters.isNullOrEmpty()) {
                 emptyList()
             } else {
-                (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
+                val params = (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
                     .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
+                if (resolveOverflow) {
+                    // 单次解析上限固定（默认 32M）+ 越界降级为引用串
+                    buildStartupParamOverflowService.resolveForDisplay(
+                        dslContext = queryContext,
+                        projectId = projectId,
+                        buildId = buildId,
+                        params = params
+                    )
+                } else {
+                    params
+                }
             }
         } catch (ignore: Exception) {
             emptyList()
         }
+    }
+
+    /**
+     * 按 key 获取单条启动参数；大变量引用串从溢出表按需还原为真实值。
+     * @param storedParam 若调用方已持有引用态参数，可传入以避免重复读 BUILD_PARAMETERS
+     * @return 找不到该 key 时返回 null
+     */
+    fun getBuildParameterValue(
+        projectId: String,
+        buildId: String,
+        paramKey: String,
+        queryDslContext: DSLContext? = null,
+        storedParam: BuildParameters? = null
+    ): BuildParameters? {
+        val queryContext = queryDslContext ?: dslContext
+        val param = storedParam ?: getBuildParametersFromStartup(
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryContext,
+            resolveOverflow = false
+        ).find { it.key == paramKey } ?: return null
+        // 敏感参数短路脱敏：不查溢出表，避免把机密大值加载进内存（与 getBuildParameters 展示脱敏保持一致）
+        if (param.sensitive == true) {
+            return param.copy(value = HIDDEN_SYMBOL, defaultValue = HIDDEN_SYMBOL)
+        }
+        val resolved = buildStartupParamOverflowService.resolveSingleValue(
+            dslContext = queryContext,
+            projectId = projectId,
+            buildId = buildId,
+            key = paramKey,
+            storedValue = param.value
+        )
+        return if (resolved === param.value) param else param.copy(value = resolved ?: param.value)
+    }
+
+    /**
+     * 把启动参数中的大值引用串解析回真实值（仅供单构建的"重放/重试/展示"消费侧使用）。
+     * 列表 / 历史接口**不要**调用本方法，保持只读引用串以避免 OOM。
+     */
+    fun resolveStartupParamOverflow(
+        projectId: String,
+        buildId: String,
+        params: List<BuildParameters>?,
+        queryDslContext: DSLContext? = null
+    ): List<BuildParameters> {
+        if (params.isNullOrEmpty()) return params ?: emptyList()
+        // 重启侧：必须完整还原真实值（否则会把引用串当真实值喂给新构建），越界抛错而非静默降级
+        return buildStartupParamOverflowService.resolveForRestart(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            params = params
+        )
     }
 
     fun getExecuteTime(projectId: String, buildId: String): Long {
@@ -2250,12 +2365,22 @@ class PipelineRuntimeService @Autowired constructor(
         buildParameters: Collection<BuildParameters>,
         debug: Boolean
     ): Boolean {
+        // 大启动参数引用化：传入的可能是已解析的完整值（如 BuildStartControl 刷新 BUILD_NO 时），
+        // 写回前先把 >4K 的值落溢出表、JSON 只留引用串，避免把大值又写回 mediumtext。
+        val strippedParams = buildStartupParamOverflowService.persistAndStrip(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug,
+            params = buildParameters.toList()
+        )
         return pipelineBuildDao.updateBuildParameters(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            buildParameters = buildParameters,
+            buildParameters = strippedParams,
             debug = debug
         )
     }

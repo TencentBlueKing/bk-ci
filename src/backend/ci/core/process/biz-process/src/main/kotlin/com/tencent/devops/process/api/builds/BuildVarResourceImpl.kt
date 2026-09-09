@@ -41,7 +41,9 @@ import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -52,6 +54,9 @@ class BuildVarResourceImpl @Autowired constructor(
     private val pipelineContextService: PipelineContextService
 ) : BuildVarResource {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildVarResourceImpl::class.java)
+    }
     override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
@@ -91,7 +96,45 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
+        val candidate = variables[varName] ?: allContext[varName] ?: allContext[alisName]
+        // 单变量查询接口属于"零碎、单点"使用场景：如果命中大变量引用，则按需懒加载真实值。
+        // 这样既保持向后兼容（旧调用方拿到的是真实值，而非引用串），又只产生一次溢出表查询，
+        // 不会触发 BuildVarOverflowLoader 的批量内存放大。
+        val finalValue = if (BuildVarOverflowUtils.isOverflowReference(candidate)) {
+            val keyToLoad = when {
+                BuildVarOverflowUtils.isOverflowReference(variables[varName]) -> varName
+                BuildVarOverflowUtils.isOverflowReference(allContext[varName]) -> varName
+                BuildVarOverflowUtils.isOverflowReference(allContext[alisName]) && alisName.isNotBlank() -> alisName
+                else -> null
+            }
+            keyToLoad?.let { buildVariableService.getVariableValue(projectId, buildId, it) } ?: candidate
+        } else {
+            candidate
+        }
+        return Result(finalValue)
+    }
+
+    override fun getBuildVariableValue(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        varName: String
+    ): Result<String?> {
+        checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
+        checkPermission(projectId = projectId, pipelineId = pipelineId)
+        if (StringUtils.isBlank(varName)) {
+            throw ParamBlankException("varName is null or blank")
+        }
+        // 直接走单键按需加载：小变量原样返回，大变量从溢出表取真实值
+        val value = buildVariableService.getVariableValue(projectId, buildId, varName)
+        if (BuildVarOverflowUtils.isOverflowReference(value)) {
+            // 主表是引用但溢出表未命中：保留引用串并打点，便于排查写路径漏写
+            logger.warn(
+                "BUILD_VAR_VALUE_STILL_REF|projectId=$projectId|buildId=$buildId|" +
+                    "pipelineId=$pipelineId|varName=$varName|value=$value"
+            )
+        }
+        return Result(value)
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

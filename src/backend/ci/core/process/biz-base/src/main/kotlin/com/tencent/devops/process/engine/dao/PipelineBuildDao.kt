@@ -88,7 +88,13 @@ class PipelineBuildDao {
         private val logger = LoggerFactory.getLogger(PipelineBuildDao::class.java)
     }
 
-    fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
+    fun create(
+        dslContext: DSLContext,
+        startBuildContext: StartBuildContext,
+        // 写入 BUILD_PARAMETERS 列时实际使用的启动参数列表（大值已被替换为引用串）。
+        // 不传则回退为 startBuildContext.buildParameters，保持历史行为。
+        overflowStrippedParams: List<BuildParameters> = startBuildContext.buildParameters
+    ) {
         try {
             val nodeHashId = startBuildContext.pipelineParamMap[NODE_HASH_ID]?.value?.toString()
             if (!startBuildContext.debug) {
@@ -137,7 +143,7 @@ class PipelineBuildDao {
                         startBuildContext.channelCode.name,
                         startBuildContext.resourceVersion,
                         LocalDateTime.now(),
-                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                        JsonUtil.toJson(overflowStrippedParams, formatted = false),
                         startBuildContext.webhookInfo?.webhookType,
                         startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         startBuildContext.buildMsg,
@@ -196,7 +202,7 @@ class PipelineBuildDao {
                         startBuildContext.channelCode.name,
                         startBuildContext.resourceVersion,
                         LocalDateTime.now(),
-                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                        JsonUtil.toJson(overflowStrippedParams, formatted = false),
                         startBuildContext.webhookInfo?.webhookType,
                         startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         startBuildContext.buildMsg,

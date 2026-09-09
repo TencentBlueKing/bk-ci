@@ -1,12 +1,13 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
@@ -25,7 +26,9 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.EngineConfigService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -94,13 +97,32 @@ class AgentReuseMutexCmd @Autowired constructor(
             return mutex
         }
 
+        val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+            buildVariableService = buildVariableService,
+            projectId = commandContext.container.projectId,
+            buildId = commandContext.container.buildId,
+            variables = variables
+        )
+        val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         // 超时时间限制，0表示排队不等待直接超时
-        val timeOut = MutexControl.parseTimeoutVar(mutex.timeout, mutex.timeoutVar, variables)
+        val timeOut = MutexControl.parseTimeoutVar(
+            timeout = mutex.timeout,
+            timeoutVar = mutex.timeoutVar,
+            variables = variables,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
         // 排队任务数量限制，0表示不排队
         val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(engineConfigService.getMutexMaxQueue())
-        // 替换环境变量
+        // 替换环境变量（as-code 可还原大变量；经典 $ 仍见引用）
         var runtimeAgentOrEnvId = if (!mutex.agentOrEnvId.isNullOrBlank()) {
-            EnvUtils.parseEnv(mutex.agentOrEnvId, variables)
+            EnvReplacementParser.parse(
+                value = mutex.agentOrEnvId,
+                contextMap = variables,
+                onlyExpression = dialect.supportUseExpression(),
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
         } else {
             mutex.agentOrEnvId
         }

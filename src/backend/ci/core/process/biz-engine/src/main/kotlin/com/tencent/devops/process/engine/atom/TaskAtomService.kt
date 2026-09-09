@@ -115,6 +115,8 @@ class TaskAtomService @Autowired(required = false) constructor(
                 taskId = task.taskId,
                 executeCount = task.executeCount ?: 1
             )
+            // 内置 atom 下发引用态 Map：经典 $xxx/${xxx} 故意只见引用；
+            // 若自行解析 ${{ }}，须自行接 overflow（见 DispatchVMStartupTaskAtom）。
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
@@ -341,6 +343,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             AtomResponse(BuildStatus.FAILED)
         }
         try {
+            // 内置 atom 下发引用态 Map：经典 $xxx/${xxx} 故意只见引用；
+            // 若自行解析 ${{ }}，须自行接 overflow（见 DispatchVMStartupTaskAtom）。
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)

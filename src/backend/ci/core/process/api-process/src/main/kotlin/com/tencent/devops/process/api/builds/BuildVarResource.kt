@@ -90,4 +90,22 @@ interface BuildVarResource {
         @QueryParam("check")
         check: Boolean? = false
     ): Result<String?>
+
+    @Operation(summary = "按变量名获取构建变量真实值（大变量按需从溢出表加载）")
+    @Path("/value")
+    @GET
+    fun getBuildVariableValue(
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "变量名称", required = true)
+        @QueryParam("varName")
+        varName: String
+    ): Result<String?>
 }

@@ -33,6 +33,8 @@ import com.tencent.devops.process.engine.control.MutexControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -41,7 +43,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class CheckMutexContainerCmd(
-    private val mutexControl: MutexControl
+    private val mutexControl: MutexControl,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -66,7 +69,18 @@ class CheckMutexContainerCmd(
         val container = commandContext.container
         // 到了真正进入互斥环节时，修正互斥组中引用的变量或排队耗时
         if (container.controlOption.mutexGroup?.runtimeMutexGroup.isNullOrBlank()) { // 未初始化
-            val mg = mutexControl.decorateMutexGroup(container.controlOption.mutexGroup, commandContext.variables)
+            val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+                buildVariableService = buildVariableService,
+                projectId = container.projectId,
+                buildId = container.buildId,
+                variables = commandContext.variables
+            )
+            val mg = mutexControl.decorateMutexGroup(
+                mutexGroup = container.controlOption.mutexGroup,
+                variables = commandContext.variables,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
             if (mg?.runtimeMutexGroup != container.controlOption.mutexGroup?.runtimeMutexGroup) {
                 // 对于互斥组Job的锁定优化，防止重复锁定以及锁名称因变量的变化带来的锁变化，造成前锁无法被清理等，做变化替换
                 container.controlOption.mutexGroup = mg

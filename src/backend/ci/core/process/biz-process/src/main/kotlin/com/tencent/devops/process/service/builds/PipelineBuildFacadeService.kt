@@ -157,7 +157,6 @@ import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -218,7 +217,6 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService
@@ -417,14 +415,92 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 启动参数 Tab 为高频展示接口：大变量一律返回引用串，真实值走 getBuildParameterValue 按需加载
         return pipelineRuntimeService.getBuildParametersFromStartup(
-            projectId = projectId, buildId = buildId, queryDslContext = queryDslContext
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryDslContext,
+            resolveOverflow = false
         ).onEach {
             if (it.sensitive == true) {
                 it.value = HIDDEN_SYMBOL
                 it.defaultValue = HIDDEN_SYMBOL
             }
         }
+    }
+
+    /**
+     * 按变量名获取单条启动参数真实值（大变量从溢出表按需加载）。
+     * 供启动参数 Tab「查看完整值」使用；列表接口 [getBuildParameters] 不批量还原大值。
+     * 敏感参数直接返回脱敏值，不查溢出表。
+     */
+    fun getBuildParameterValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        paramKey: String,
+        archiveFlag: Boolean? = false
+    ): BuildParameters? {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 先读引用态，敏感参数短路脱敏，避免把机密大值加载进内存
+        val stored = pipelineRuntimeService.getBuildParametersFromStartup(
+            projectId = projectId,
+            buildId = buildId,
+            queryDslContext = queryDslContext,
+            resolveOverflow = false
+        ).find { it.key == paramKey } ?: return null
+        if (stored.sensitive == true) {
+            stored.value = HIDDEN_SYMBOL
+            stored.defaultValue = HIDDEN_SYMBOL
+            return stored
+        }
+        return pipelineRuntimeService.getBuildParameterValue(
+            projectId = projectId,
+            buildId = buildId,
+            paramKey = paramKey,
+            queryDslContext = queryDslContext,
+            storedParam = stored
+        )
+    }
+
+    /**
+     * 按变量名获取构建运行期变量真实值（VAR 表大变量按需加载）。
+     * 供日志「查看完整值」等场景使用。
+     */
+    fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        archiveFlag: Boolean? = false
+    ): String? {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // getVariableValue 已是「单 key 精准查主表 + 溢出按需加载」，直接调用即可，
+        // 无需先 getVariable 再判断是否溢出（避免重复查询）。归档库通过 queryDslContext 路由。
+        return buildVariableService.getVariableValue(
+            projectId = projectId,
+            buildId = buildId,
+            varName = varName,
+            queryDslContext = queryDslContext
+        )
     }
 
     fun retry(
@@ -474,9 +550,13 @@ class PipelineBuildFacadeService(
         val mergedValues = imateSessionId?.takeIf { it.isNotBlank() }?.let {
             values + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
         } ?: values
+        // 不直接打印 values（启动参数现在单值最多 4M，全量打印会撑爆日志/内存），仅打印 key 与长度
         logger.info(
-            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $mergedValues " +
-                    "and version[${version ?: branch}]"
+            "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: " +
+                    mergedValues.entries.joinToString(
+                        prefix = "{",
+                        postfix = "}"
+                    ) { "${it.key}(len=${it.value.length})" }
         )
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
@@ -2987,16 +3067,18 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             keys = setOf(PIPELINE_START_TASK_ID)
         )
-        // 按原有的启动参数组装启动参数(排除重试次数)
-        val startParameters = buildInfo.buildParameters?.filter {
+        // 按原有的启动参数组装启动参数(排除重试次数)；大值是引用串，重放前先解析回真实值
+        val startParameters = pipelineRuntimeService.resolveStartupParamOverflow(
+            projectId = projectId, buildId = buildInfo.buildId, params = buildInfo.buildParameters
+        ).filter {
             it.key != PIPELINE_RETRY_COUNT
-        }?.associate {
+        }.associate {
             it.key to if (CascadePropertyUtils.supportCascadeParam(it.valueType) && it.value is Map<*, *>) {
                 JsonUtil.toJson(it.value)
             } else {
                 it.value.toString()
             }
-        }?.toMutableMap() ?: mutableMapOf()
+        }.toMutableMap()
         startParameters.putAll(buildVars)
         val startType = StartType.toStartType(buildInfo.trigger)
         // 定时触发不存在调试的情况
@@ -3512,11 +3594,13 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数(排除重试次数)
+        // 按原有的启动参数组装启动参数(排除重试次数)；大值是引用串，重启前先解析回真实值
         val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.filter {
+        pipelineRuntimeService.resolveStartupParamOverflow(
+            projectId = projectId, buildId = buildInfo.buildId, params = buildInfo.buildParameters
+        ).filter {
             it.key != PIPELINE_RETRY_COUNT
-        }?.forEach {
+        }.forEach {
             startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)

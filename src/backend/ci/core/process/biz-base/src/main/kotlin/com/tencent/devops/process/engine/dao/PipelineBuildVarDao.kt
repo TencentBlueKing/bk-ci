@@ -30,9 +30,9 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.jooq.DSLContext
 import org.jooq.util.mysql.MySQLDSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
@@ -49,7 +49,11 @@ class PipelineBuildVarDao @Autowired constructor() {
         value: Any,
         readOnly: Boolean?
     ) {
-
+        val rawValue = value.toString()
+        // 注意：调用方（BuildVariableService）应当先把溢出值写入溢出表，
+        // 然后再调用本方法将"引用值"写入主表，确保读写一致。
+        // 引用值形如 `__BK_OVF__:<originalLength>`，主表不再保留任何截断的真实内容。
+        val mainValue = BuildVarOverflowUtils.toMainTableValue(rawValue)
         with(T_PIPELINE_BUILD_VAR) {
             dslContext.insertInto(
                 this,
@@ -60,10 +64,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                 VALUE,
                 READ_ONLY
             )
-                .values(projectId, pipelineId, buildId, name, value.toString(), readOnly)
+                .values(projectId, pipelineId, buildId, name, mainValue, readOnly)
                 .onDuplicateKeyUpdate()
                 .set(PIPELINE_ID, pipelineId)
-                .set(VALUE, value.toString())
+                .set(VALUE, mainValue)
                 .execute()
         }
     }
@@ -77,12 +81,13 @@ class PipelineBuildVarDao @Autowired constructor() {
         valueType: String? = null,
         rewriteReadOnly: Boolean? = null
     ): Int {
+        val mainValue = BuildVarOverflowUtils.toMainTableValue(value.toString())
         with(T_PIPELINE_BUILD_VAR) {
             val baseStep = dslContext.update(this)
             if (valueType != null) {
                 baseStep.set(VAR_TYPE, valueType)
             }
-            val whereStep = baseStep.set(VALUE, value.toString())
+            val whereStep = baseStep.set(VALUE, mainValue)
                 .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
             if (rewriteReadOnly != true) {
                 whereStep.and(READ_ONLY.isNull.or(READ_ONLY.eq(false)))
@@ -182,8 +187,11 @@ class PipelineBuildVarDao @Autowired constructor() {
         buildId: String,
         variables: List<BuildParameters>
     ) {
+        if (variables.isEmpty()) return
+        // 4M 硬上限由 BuildVariableService.acceptWithinHardLimit 在调用本方法之前过滤；
+        // 单条 VALUE 长度由 BuildVarOverflowUtils.toMainTableValue 折算（≤4K 真实值 或 ~25 字符引用串），
+        // 不会触碰 varchar(4000) 列上限，故此处无需重复校验。
         with(T_PIPELINE_BUILD_VAR) {
-            val maxLength = VALUE.dataType.length()
             dslContext.insertInto(
                 this,
                 BUILD_ID,
@@ -196,15 +204,11 @@ class PipelineBuildVarDao @Autowired constructor() {
                 SENSITIVE
             ).also {
                 variables.forEach { v ->
-                    val valueString = v.value.toString()
-                    if (valueString.length > maxLength) {
-                        LOG.warn("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
-                        return@forEach
-                    }
+                    val mainValue = BuildVarOverflowUtils.toMainTableValue(v.value.toString())
                     it.values(
                         buildId,
                         v.key,
-                        valueString,
+                        mainValue,
                         projectId,
                         pipelineId,
                         v.valueType?.name ?: "STRING",
@@ -233,11 +237,11 @@ class PipelineBuildVarDao @Autowired constructor() {
                 if (valueType != null) {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
-                // 仅当 sensitive 不为 null 时更新
                 if (v.sensitive != null) {
                     baseStep.set(SENSITIVE, v.sensitive)
                 }
-                baseStep.set(VALUE, v.value.toString()).where(
+                val mainValue = BuildVarOverflowUtils.toMainTableValue(v.value.toString())
+                baseStep.set(VALUE, mainValue).where(
                     BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(
                         READ_ONLY.notEqual(true).and(PROJECT_ID.eq(projectId))
                     )
@@ -275,9 +279,5 @@ class PipelineBuildVarDao @Autowired constructor() {
             }
             return dsl.fetch().map { it.value }.toSet()
         }
-    }
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(PipelineBuildVarDao::class.java)
     }
 }

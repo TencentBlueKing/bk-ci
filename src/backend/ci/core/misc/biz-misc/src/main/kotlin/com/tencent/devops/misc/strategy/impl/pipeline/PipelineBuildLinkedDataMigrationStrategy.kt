@@ -26,6 +26,12 @@ class PipelineBuildLinkedDataMigrationStrategy(
 
     private val logger = LoggerFactory.getLogger(PipelineBuildLinkedDataMigrationStrategy::class.java)
 
+    companion object {
+        // 溢出表迁移时每批搬运的 key 数：单值最大 4M，一批 4 个的堆峰值约 4×8MB≈32MB，
+        // 兼顾内存可控与查询往返次数（相比逐 key 减少约 3/4 的查询）。
+        private const val OVERFLOW_MIGRATE_KEY_BATCH_SIZE = 4
+    }
+
     // 定义泛型记录处理器接口
     private interface RecordHandler<T> {
         fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>): List<T>
@@ -38,7 +44,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     }
 
-    // 非归档状态下的处理器
+    // 非归档状态下的处理器（运行期 / 执行明细表，归档场景不保留）
     private val nonArchiveHandlers = listOf(
         // 迁移T_PIPELINE_BUILD_DETAIL相关表数据
         object : RecordHandler<TPipelineBuildDetailRecord> {
@@ -46,13 +52,6 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 processDataMigrateDao.getPipelineBuildDetailRecords(dslContext, projectId, buildIds)
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildDetailRecord>) =
                 processDataMigrateDao.migratePipelineBuildDetailData(migratingDslContext, records)
-        },
-        // 迁移T_PIPELINE_BUILD_VAR相关表数据
-        object : RecordHandler<TPipelineBuildVarRecord> {
-            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
-                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
-            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
-                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
         },
         // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
         object : RecordHandler<TPipelinePauseValueRecord> {
@@ -91,8 +90,18 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     )
 
-    // 所有状态下的处理器
+    // 所有状态下的处理器（归档与非归档都迁移）
     private val commonHandlers = listOf(
+        // 迁移T_PIPELINE_BUILD_VAR 变量主表：归档库要支持构建变量查询，故归档/非归档都迁。
+        // 注：两张溢出表（VAR_OVERFLOW / HISTORY_PARAM_OVERFLOW）因 mediumtext 单条 ~16M，
+        // 一次性按 SHORT_PAGE_SIZE（多 buildId）批量加载会造成内存峰值，改为按 buildId 流式迁移，
+        // 见 [migrateOverflowPerBuild]，不放入本 handler 组。
+        object : RecordHandler<TPipelineBuildVarRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
+                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
+        },
         // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
         object : RecordHandler<TPipelineTriggerReviewRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
@@ -219,7 +228,16 @@ class PipelineBuildLinkedDataMigrationStrategy(
 
         ListUtils.partition(buildIds, PageMigrationUtil.SHORT_PAGE_SIZE).forEach { batchIds ->
             with(context) {
-                // 非归档状态下迁移额外表
+                // 大变量 / 启动参数溢出表：归档与非归档都迁移。
+                // 按 buildId 流式迁移，避免一次性把多 build 的 mediumtext 全部加载到内存。
+                migrateOverflowPerBuild(
+                    buildIds = batchIds,
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    migratingDslContext = migratingShardingDslContext
+                )
+
+                // 运行期 / 执行明细表仅非归档场景迁移
                 if (archiveFlag != true) {
                     migrateHandlerGroup(
                         handlers = nonArchiveHandlers,
@@ -230,7 +248,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     )
                 }
 
-                // 迁移通用表
+                // 迁移通用表（含 T_PIPELINE_BUILD_VAR 变量主表，归档/非归档都迁）
                 migrateHandlerGroup(
                     handlers = commonHandlers,
                     buildIds = batchIds,
@@ -240,6 +258,92 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 )
             }
         }
+    }
+
+    /**
+     * 流式迁移单个项目下若干 buildId 对应的溢出表记录
+     * （T_PIPELINE_BUILD_VAR_OVERFLOW / T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW）。
+     *
+     * 设计要点：
+     *  - **按 (buildId, 一小批 key) 搬运**：先取该 build 的变量名（KEY）列表（仅 KEY 列，轻量），
+     *    再把 key 按 [OVERFLOW_MIGRATE_KEY_BATCH_SIZE] 分批拉取真实值并写入目标库。运行期大变量个数
+     *    无上限（插件输出 / setVariable 每条仅受 4M 上限约束，但一次构建的大变量总量不设总量闸门），
+     *    若一次性 fetch 整个 build 的溢出行，单 build 内存峰值 = Σ(该 build 大变量字符数)，极端场景可达数百 MB；
+     *    分小批后单次内存峰值 ≈ 批大小 × 单个大变量值（默认 4×4M，JVM UTF-16 约 32MB），与大变量个数无关，
+     *    同时相比逐 key 显著减少查询往返；
+     *  - 迁移失败按"快速失败"处理，避免迁移过程中"主表已迁、溢出表丢失"造成数据不一致。
+     */
+    private fun migrateOverflowPerBuild(
+        buildIds: List<String>,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        buildIds.forEach { buildId ->
+            try {
+                migrateVarOverflow(
+                    buildId = buildId,
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    migratingDslContext = migratingDslContext
+                )
+                migrateHistoryParamOverflow(
+                    buildId = buildId,
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    migratingDslContext = migratingDslContext
+                )
+            } catch (ignored: Throwable) {
+                logger.error("Failed to migrate overflow data for build[$buildId]", ignored)
+                throw ignored
+            }
+        }
+    }
+
+    /**
+     * 流式迁移大变量溢出表（T_PIPELINE_BUILD_VAR_OVERFLOW）：
+     * 按小批 key 拉取真实值再写入目标，避免整 build 多条 mediumtext 同时驻留内存。
+     */
+    private fun migrateVarOverflow(
+        buildId: String,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        processDataMigrateDao.getPipelineBuildVarOverflowKeys(dslContext, projectId, buildId)
+            .chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE)
+            .forEach { keyBatch ->
+                val records = processDataMigrateDao.getPipelineBuildVarOverflowRecordsByKeys(
+                    dslContext, projectId, buildId, keyBatch
+                )
+                if (records.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildVarOverflowData(migratingDslContext, records)
+                }
+            }
+    }
+
+    /**
+     * 流式迁移启动参数大值溢出表（T_PIPELINE_BUILD_HISTORY_PARAM_OVERFLOW）：
+     * 按小批 key 拉取真实值再写入目标，避免整 build 多条 mediumtext 同时驻留内存。
+     */
+    private fun migrateHistoryParamOverflow(
+        buildId: String,
+        dslContext: DSLContext,
+        projectId: String,
+        migratingDslContext: DSLContext
+    ) {
+        processDataMigrateDao.getPipelineBuildHistoryParamOverflowKeys(dslContext, projectId, buildId)
+            .chunked(OVERFLOW_MIGRATE_KEY_BATCH_SIZE)
+            .forEach { keyBatch ->
+                val paramRecords = processDataMigrateDao.getPipelineBuildHistoryParamOverflowRecordsByKeys(
+                    dslContext, projectId, buildId, keyBatch
+                )
+                if (paramRecords.isNotEmpty()) {
+                    processDataMigrateDao.migratePipelineBuildHistoryParamOverflowData(
+                        migratingDslContext, paramRecords
+                    )
+                }
+            }
     }
 
     /**
@@ -259,9 +363,9 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     // 调用接口内置的类型安全迁移方法，无需外部推断T
                     handler.migrateUnsafe(migratingDslContext, records)
                 }
-            } catch (e: Exception) {
-                logger.error("Failed to migrate linked data for handler", e)
-                throw e
+            } catch (ignored: Throwable) {
+                logger.error("Failed to migrate linked data for handler", ignored)
+                throw ignored
             }
         }
     }

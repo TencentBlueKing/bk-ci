@@ -36,6 +36,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.TestBase
+import com.tencent.devops.process.service.BuildVarExprSession
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import io.mockk.every
@@ -69,6 +71,9 @@ class ControlUtilsTest : TestBase() {
             SpringContextUtil.getBean(RedisOperation::class.java)
         } returns redisOperation
     }
+
+    /** 无大变量的场景，等价于历史上只传 variables 的调用 */
+    private fun varSession(vars: Map<String, String>) = BuildVarExprSession.empty(vars)
 
     @Test
     fun isEnable() {
@@ -112,7 +117,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
             )
@@ -120,7 +125,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_VARIABLE_MATCH
             )
@@ -134,7 +139,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
             )
@@ -142,7 +147,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_VARIABLE_MATCH
             )
@@ -150,7 +155,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = "key3=='un'"
@@ -159,7 +164,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = "key3==key3"
@@ -168,7 +173,7 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertFalse(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = "true==true"
@@ -177,10 +182,60 @@ class ControlUtilsTest : TestBase() {
         Assertions.assertTrue(
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = variables,
+                session = varSession(variables),
                 buildId = buildId,
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = "a==a"
+            )
+        )
+    }
+
+    @Test
+    fun `custom condition with overflow variable`() {
+        val payloadRef = BuildVarOverflowUtils.OVERFLOW_PREFIX + "5000"
+        val vars = mapOf("payload" to payloadRef, "payloadSize" to "5000")
+        val loadedKeys = mutableListOf<String>()
+        val session = BuildVarExprSession(
+            variables = vars,
+            overflowKeys = setOf("payload"),
+            overflowLoader = { key ->
+                loadedKeys.add(key)
+                if (key == "payload") "ok" else null
+            }
+        )
+        // 条件里引用了大变量：还原成真实值后条件成立，不跳过
+        Assertions.assertFalse(
+            ControlUtils.checkJobSkipCondition(
+                conditions = emptyList(),
+                session = session,
+                buildId = buildId,
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "payload=='ok'"
+            )
+        )
+        Assertions.assertEquals(listOf("payload"), loadedKeys)
+
+        // 条件里只出现了 payloadSize，payload 只是它的子串：不应为此拉取大变量真实值
+        loadedKeys.clear()
+        Assertions.assertFalse(
+            ControlUtils.checkStageSkipCondition(
+                conditions = emptyList(),
+                session = session,
+                buildId = buildId,
+                runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "payloadSize=='5000'"
+            )
+        )
+        Assertions.assertTrue(loadedKeys.isEmpty())
+
+        // 没有 loader（会话内无大变量）时保持历史行为：条件看到引用串，条件不成立所以跳过
+        Assertions.assertTrue(
+            ControlUtils.checkJobSkipCondition(
+                conditions = emptyList(),
+                session = varSession(vars),
+                buildId = buildId,
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "payload=='ok'"
             )
         )
     }
@@ -397,7 +452,7 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertFalse(
             ControlUtils.checkStageSkipCondition(
-                conditions = conditions, variables = variables, buildId = buildId,
+                conditions = conditions, session = varSession(variables), buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
             )
         )
@@ -406,7 +461,7 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertTrue(
             ControlUtils.checkStageSkipCondition(
-                conditions = conditions, variables = variables, buildId = buildId,
+                conditions = conditions, session = varSession(variables), buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
             )
         )
@@ -415,7 +470,7 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertFalse(
             ControlUtils.checkStageSkipCondition(
-                conditions = conditions, variables = variables, buildId = buildId,
+                conditions = conditions, session = varSession(variables), buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH
             )
         )
@@ -424,7 +479,7 @@ class ControlUtilsTest : TestBase() {
         // 条件匹配就跳过
         Assertions.assertTrue(
             ControlUtils.checkStageSkipCondition(
-                conditions = conditions, variables = variables, buildId = buildId,
+                conditions = conditions, session = varSession(variables), buildId = buildId,
                 runCondition = StageRunCondition.CUSTOM_VARIABLE_MATCH
             )
         )
@@ -432,14 +487,14 @@ class ControlUtilsTest : TestBase() {
         run other@{
             Assertions.assertFalse(
                 ControlUtils.checkStageSkipCondition(
-                    conditions = conditions, variables = variables, buildId = buildId,
+                    conditions = conditions, session = varSession(variables), buildId = buildId,
                     runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = "a==a"
                 )
             )
             Assertions.assertFalse(
                 ControlUtils.checkStageSkipCondition(
-                    conditions = conditions, variables = variables, buildId = buildId,
+                    conditions = conditions, session = varSession(variables), buildId = buildId,
                     runCondition = StageRunCondition.AFTER_LAST_FINISHED
                 )
             )
@@ -454,14 +509,14 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
 
@@ -469,21 +524,21 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.CUSTOM_CONDITION_MATCH),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         Assertions.assertTrue(
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.OTHER_TASK_RUNNING),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
     }
@@ -498,7 +553,7 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足执行条件 而不跳过
@@ -509,7 +564,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 不满足执行条件 而跳过
@@ -520,7 +575,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足不执行的条件 而跳过
@@ -531,7 +586,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 不满足不执行的条件 而不跳过
@@ -542,7 +597,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
     }
@@ -557,7 +612,7 @@ class ControlUtilsTest : TestBase() {
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足执行条件 而不跳过
@@ -568,7 +623,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 不满足执行条件 而跳过
@@ -579,7 +634,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 满足不执行的条件 而跳过
@@ -590,7 +645,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "b"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
         // 不满足不执行的条件 而不跳过
@@ -601,7 +656,7 @@ class ControlUtilsTest : TestBase() {
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     customVariables = mutableListOf(NameAndValue(key = "a", value = "a"))
                 ),
-                containerFinalStatus = fail, variables = variables, hasFailedTaskInSuccessContainer = failed
+                containerFinalStatus = fail, session = varSession(variables), hasFailedTaskInSuccessContainer = failed
             )
         )
     }
@@ -616,7 +671,7 @@ class ControlUtilsTest : TestBase() {
                 buildId = buildId,
                 additionalOptions = null,
                 containerFinalStatus = BuildStatus.RUNNING,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = true
             )
         )
@@ -629,7 +684,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.RUNNING,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = true
             )
         )
@@ -641,7 +696,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = true
             )
         )
@@ -653,7 +708,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = false
             )
         )
@@ -666,7 +721,7 @@ class ControlUtilsTest : TestBase() {
                     enable = false, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = false
             )
         )
@@ -679,7 +734,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.SUCCEED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = false
             )
         )
