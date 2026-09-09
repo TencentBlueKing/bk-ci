@@ -127,17 +127,14 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             params = arrayOf(event.projectId, agentDetail.nodeId),
             language = I18nUtil.getDefaultLocaleLanguage()
         )
-        val html = if (agentDetail.nodeType == NodeType.CREATE) {
-            """<a href=
-            |"/console/environment/${event.projectId}/creative-stream/node/allNode?nodeHashId=${agentDetail.nodeId}"
-            | target="_blank">$detailText</a>""".trimMargin()
+        val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        val link = if (agentDetail.nodeType == NodeType.CREATE) {
+            "$host/console/environment/${event.projectId}/creative-stream/node/allNode?nodeHashId=${agentDetail.nodeId}"
         } else {
-            """<a href=
-            |"/console/environment/${event.projectId}/pipeline/node/allNode?nodeHashId=${agentDetail.nodeId}"
-            | target="_blank">$detailText</a>""".trimMargin()
+            "$host/console/environment/${event.projectId}/pipeline/node/allNode?nodeHashId=${agentDetail.nodeId}"
         }
-
-        logMessage.append(html)
+        val msg = " <a target='_blank' href='$link'>$detailText</a>"
+        logMessage.append(msg)
 
         // #7748 agent使用docker作为构建机
         var parallelTaskCount = agentDetail.parallelTaskCount
