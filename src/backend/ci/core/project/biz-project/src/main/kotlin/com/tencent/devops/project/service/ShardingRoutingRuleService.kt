@@ -43,6 +43,18 @@ interface ShardingRoutingRuleService {
     fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean
 
     /**
+     * 添加分片路由规则，若规则已存在则复用已入库的规则
+     * 调用方必须以返回值作为最终生效的规则，不能使用自己生成的规则，否则并发分配时会出现读写路由不一致
+     * @param userId 用户ID
+     * @param shardingRoutingRule 待添加的分片路由规则
+     * @return 最终生效的分片路由规则
+     */
+    fun addShardingRoutingRuleIfAbsent(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): ShardingRoutingRule
+
+    /**
      * 删除分片路由规则
      * @param userId 用户ID
      * @param id 规则ID
