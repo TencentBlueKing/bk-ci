@@ -28,9 +28,11 @@
 package com.tencent.devops.environment.api.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
 import com.tencent.devops.environment.pojo.enums.AgentType
+import com.tencent.devops.environment.pojo.thirdpartyagent.RegistryResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -152,4 +154,17 @@ interface ExternalThirdPartyAgentResource {
         @QueryParam("userId")
         userId: String
     ): Response
+
+    @Operation(summary = "供sdk使用的，注册构建机")
+    @POST
+    @Path("/registry")
+    fun registry(
+        @QueryParam("token")
+        token: String,
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "供创作流使用", required = false)
+        @QueryParam("deviceId")
+        deviceId: String?
+    ): Result<RegistryResp>
 }

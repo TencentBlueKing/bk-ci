@@ -7,13 +7,16 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
+import com.tencent.devops.environment.pojo.thirdpartyagent.RegistryResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSource
 import com.tencent.devops.environment.service.AgentUrlService
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import jakarta.ws.rs.core.Response
+import java.util.Base64
 
 /**
  * 批量安装Agent相关
@@ -35,6 +39,7 @@ import jakarta.ws.rs.core.Response
 @Service
 class BatchInstallAgentService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig,
     private val agentBatchInstallTokenDao: AgentBatchInstallTokenDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val agentUrlService: AgentUrlService,
@@ -116,7 +121,6 @@ class BatchInstallAgentService @Autowired constructor(
 
         // 没有或者过期则重新生成，过期时间默认为3天后
         val tokenData = "$projectId;$userId;${now.toInstant(ZoneOffset.of("+8")).toEpochMilli()}"
-        logger.debug("genInstallLink token data $tokenData")
         val token = AESUtil.encrypt(batchInstallAesKey, tokenData)
         val expireTime = now.plusDays(3)
         agentBatchInstallTokenDao.createOrUpdateToken(
@@ -260,6 +264,105 @@ class BatchInstallAgentService @Autowired constructor(
             agentProps = AgentProps.emptyBySource(AgentPropsSource.REMOTEDEV)
         )
         return HashUtil.encodeLongId(agentId)
+    }
+
+    fun registry(
+        token: String,
+        userId: String,
+        deviceId: String?,
+    ): RegistryResp {
+        val (projectId, agentHashId, errMsg) = try {
+            verifyRegistryToken(token, deviceId, userId)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                defaultMessage = e.message
+            )
+        }
+        if (errMsg != null) {
+            logger.warn("registry $userId|$deviceId token check error $errMsg")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                defaultMessage = errMsg
+            )
+        }
+        val record = if (deviceId.isNullOrBlank()) {
+            thirdPartyAgentDao.getAgentByProject(
+                dslContext = dslContext,
+                id = HashUtil.decodeIdToLong(agentHashId),
+                projectId = projectId
+            )
+        } else {
+            thirdPartyAgentDao.getAgentByWorkspaceIdGlobal(
+                dslContext = dslContext,
+                workspaceId = deviceId,
+                projectId = projectId
+            )
+        }
+        if (record == null) {
+            logger.error("addCreateNode no found agent $projectId|$agentHashId|$deviceId|$userId")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(deviceId ?: "", agentHashId)
+            )
+        }
+        // 标注是 SDK
+        thirdPartyAgentDao.updateAgentProps(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = record.id,
+            props = AgentProps.parseAgentProps(record.agentProps)?.copy(sdk = true) ?: AgentProps.emptyBySdk(true)
+        )
+        return RegistryResp(
+            gateway = record.gateway ?: "",
+            fileGateway = record.fileGateway ?: "",
+            projectId = record.projectId,
+            agentId = HashUtil.encodeLongId(record.id),
+            secretKey = SecurityUtil.decrypt(record.secretKey),
+            parallelTaskCount = record.parallelTaskCount ?: 4,
+            dockerParallelTaskCount = record.dockerParallelTaskCount ?: 4,
+            language = commonConfig.devopsDefaultLocaleLanguage,
+        )
+    }
+
+    /**
+     * 校验注册token
+     * "projectId;userId;time"
+     * "projectId;deviceId;userId;time"
+     * @return <projectId, agentHashId, errMsg>
+     */
+    private fun verifyRegistryToken(token: String, deviceId: String?, userId: String): Triple<String, String, String?> {
+        val realToken = Base64.getUrlDecoder().decode(token)
+        val decodeSub = AESUtil.decrypt(batchInstallAesKey, realToken).toString(charset("UTF-8")).split(";")
+        if (!deviceId.isNullOrBlank()) {
+            if (decodeSub.size < 4) {
+                return Triple("", "", "token verify error")
+            }
+
+            if (decodeSub[1] != deviceId || decodeSub[2] != userId) {
+                return Triple("", "", "token's deviceId or user not find")
+            }
+
+            if (decodeSub[3].toLong() <= LocalDateTime.now().timestampmilli()) {
+                return Triple("", "", "token is expired")
+            }
+
+            return Triple(decodeSub[0], "", null)
+        } else {
+            if (decodeSub.size < 4) {
+                return Triple("", "", "token verify error")
+            }
+
+            if (decodeSub[2] != userId) {
+                return Triple("", "", "token's user not find")
+            }
+
+            if (decodeSub[3].toLong() <= LocalDateTime.now().timestampmilli()) {
+                return Triple("", "", "token is expired")
+            }
+
+            return Triple(decodeSub[0], decodeSub[1], null)
+        }
     }
 
     companion object {

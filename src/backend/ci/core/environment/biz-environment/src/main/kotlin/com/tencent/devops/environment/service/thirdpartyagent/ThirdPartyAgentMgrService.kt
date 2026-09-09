@@ -1466,7 +1466,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     dockerInitFileInfo = newHeartbeatInfoProps.dockerInitFileInfo,
                     exitError = newHeartbeatInfo.errorExitData,
                     osVersion = newHeartbeatInfoProps.osVersion,
-                    source = oldProps?.source
+                    source = oldProps?.source,
+                    sdk = oldProps?.sdk
                 )
                 if (oldProps != newProps) {
                     agentRecord.agentProps = JsonUtil.toJson(newProps, false)

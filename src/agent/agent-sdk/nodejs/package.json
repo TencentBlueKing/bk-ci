@@ -1,0 +1,34 @@
+{
+  "name": "@tencent/bk-ci-agent-sdk",
+  "version": "0.1.2",
+  "description": "BK-CI 第三方构建 Agent 的 Node.js SDK：实现少数几个接口即可复用 agent 主循环（领任务、上报心跳、采集监控）。",
+  "keywords": [
+    "bk-ci",
+    "agent",
+    "sdk",
+    "ci",
+    "devops"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "example": "ts-node examples/basic.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
