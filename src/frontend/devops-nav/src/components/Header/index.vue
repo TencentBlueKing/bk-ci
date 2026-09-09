@@ -39,7 +39,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
-                    :popover-width="250"
+                    :popover-width="318"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -51,31 +51,44 @@
                             <div class="option-item">
                                 <div
                                     class="project-name"
-                                    v-bk-tooltips="{ content: item.projectName, allowHTML: false, delay: [300, 0] }"
+                                    :title="item.projectName"
                                 >
-                                    {{ item.projectName }}
+                                    <span class="project-name-text">{{ item.projectName }}</span>
+                                    <span
+                                        v-if="item.projectScope === 1"
+                                        class="personal-tag"
+                                    >
+                                        {{ $t('个人') }}
+                                    </span>
                                 </div>
-                                <span
-                                    v-if="item.showUserManageIcon"
-                                    :class="{
-                                        'user-manaeg-icon': true,
-                                        'is-selected': projectId === item.projectCode,
-                                        'is-disabled': !item.managePermission
-                                    }"
-                                    v-bk-tooltips="$t('userManage')"
-                                    @click.stop.prevent="goToUserManage(item)"
-                                >
-                                    <img
-                                        v-if="item.managePermission"
-                                        src="../../assets/scss/logo/user-manage.svg"
-                                        alt=""
+                                <div class="option-actions">
+                                    <span
+                                        v-if="item.showUserManageIcon"
+                                        :class="{
+                                            'user-manaeg-icon': true,
+                                            'is-selected': projectId === item.projectCode,
+                                            'is-disabled': !item.managePermission
+                                        }"
+                                        :title="$t('userManage')"
+                                        @click.stop.prevent="goToUserManage(item)"
                                     >
-                                    <img
-                                        v-else
-                                        src="../../assets/scss/logo/user-manage-disabled.svg"
-                                        alt=""
-                                    >
-                                </span>
+                                        <img
+                                            :src="item.managePermission
+                                                ? require('../../assets/scss/logo/user-manage.svg')
+                                                : require('../../assets/scss/logo/user-manage-disabled.svg')"
+                                            alt=""
+                                        >
+                                    </span>
+                                    <i
+                                        :class="[
+                                            'devops-icon',
+                                            'collect-icon',
+                                            item.favor ? 'icon-star-shape' : 'icon-star'
+                                        ]"
+                                        :title="item.favor ? $t('collected') : $t('toCollect')"
+                                        @click.stop.prevent="handleToggleCollect(item)"
+                                    />
+                                </div>
                             </div>
                         </template>
                     </bk-option>
@@ -83,6 +96,7 @@
                         <div class="extension-wrapper">
                             <span
                                 class="bk-selector-create-item"
+                                :title="$t('newProject')"
                                 @click.stop.prevent="popProjectDialog"
                             >
                                 <i class="devops-icon icon-plus-circle mr5" />
@@ -91,6 +105,7 @@
                             <span class="extension-line" />
                             <span
                                 class="bk-selector-create-item"
+                                :title="$t('joinProject')"
                                 @click.stop.prevent="handleApplyProject"
                             >
                                 <icon
@@ -99,6 +114,19 @@
                                     class="mr5"
                                 />
                                 <span class="text">{{ $t('joinProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                :title="$t('projectManage')"
+                                @click.stop.prevent="goToPm"
+                            >
+                                <icon
+                                    name="fenzu"
+                                    size="14"
+                                    class="mr5"
+                                />
+                                <span class="text">{{ $t('projectManage') }}</span>
                             </span>
                         </div>
                     </template>
@@ -249,6 +277,7 @@
 
         @Action toggleProjectDialog
         @Action togglePopupShow
+        @Action toggleProjectCollect
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
@@ -372,6 +401,24 @@
         goToUserManage (payload): void {
             if (payload.managePermission) {
                 this.to(`/console/manage/${payload.projectCode}/group`)
+            }
+        }
+
+        async handleToggleCollect (item): Promise<void> {
+            const favor = !item.favor
+            const project = this.enableProjectList.find(
+                (projectItem: Project) => projectItem.projectCode === item.projectCode
+            )
+            if (!project) return
+            try {
+                this.$set(project, 'favor', favor)
+                await this.toggleProjectCollect({
+                    projectCode: item.projectCode,
+                    favor
+                })
+            } catch (e) {
+                console.warn(e)
+                this.$set(project, 'favor', !favor)
             }
         }
 
@@ -612,11 +659,44 @@
             .is-selected {
                 display: block !important;
             }
+            .collect-icon {
+                display: inline-block;
+            }
         }
         .project-name {
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            .project-name-text {
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+            .personal-tag {
+                flex-shrink: 0;
+                margin-left: 8px;
+                padding: 4px 8px;
+                line-height: 1;
+                font-size: 10px;
+                color: #3a84ff;
+                background: rgba(58, 132, 255, 0.1);
+                border-radius: 2px;
+            }
+        }
+        .option-actions {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .collect-icon {
+            display: none;
+            font-size: 16px;
+            margin-left: 8px;
+            cursor: pointer;
+            &.icon-star-shape {
+                display: inline-block;
+                color: #f9ce1d;
+            }
         }
         .user-manaeg-icon {
             width: 20px;
@@ -639,7 +719,6 @@
         align-items: center;
         cursor: pointer;
         font-size: 12px !important;
-        display: inline-block;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
