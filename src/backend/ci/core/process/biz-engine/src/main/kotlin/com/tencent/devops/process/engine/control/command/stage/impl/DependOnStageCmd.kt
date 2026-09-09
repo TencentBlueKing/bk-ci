@@ -9,7 +9,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
-import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.pojo.DependOnJob
 import com.tencent.devops.process.utils.DependOnUtils
@@ -68,14 +67,14 @@ class DependOnStageCmd(
             LOG.warn(
                 "ENGINE|${stage.buildId}|DEPEND_ON_CYCLE|s(${stage.stageId})|$message"
             )
-            dependOnContainers.forEach { container ->
-                addJobLog(
-                    container = container,
-                    message = message,
-                    executeCount = commandContext.executeCount,
-                    error = true
-                )
-            }
+            buildLogPrinter.addErrorLine(
+                buildId = stage.buildId,
+                message = message,
+                tag = stage.stageId,
+                executeCount = commandContext.executeCount,
+                jobId = null,
+                stepId = null
+            )
             commandContext.buildStatus = BuildStatus.FAILED
             commandContext.latestSummary = "s(${stage.stageId}) dependOn cycle"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
@@ -84,49 +83,23 @@ class DependOnStageCmd(
 
         pipelineContainerService.batchUpdateControlOption(dependOnContainers)
         dependOnContainers.forEach { container ->
-            val dependJobIds = container.controlOption.jobControlOption.dependOnContainerId2JobIds?.values
+            val dependRel = container.controlOption.jobControlOption.dependOnContainerId2JobIds
             LOG.info(
                 "ENGINE|${stage.buildId}|DEPEND_ON_INIT|s(${stage.stageId})|" +
-                    "j(${container.containerId})|jobId=${container.jobId}|dependOn=$dependJobIds"
+                    "j(${container.containerId})|jobId=${container.jobId}|dependOn=$dependRel"
             )
-            if (!dependJobIds.isNullOrEmpty()) {
-                addJobLog(
-                    container = container,
-                    message = "Job[${container.jobId ?: container.containerId}] dependOn $dependJobIds",
+            if (!dependRel.isNullOrEmpty()) {
+                val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
+                buildLogPrinter.addLine(
+                    buildId = stage.buildId,
+                    message = "Job[${container.jobId ?: container.containerId}] dependOn $dependRel",
+                    tag = startVmId,
+                    containerHashId = container.containerHashId,
                     executeCount = commandContext.executeCount,
-                    error = false
+                    jobId = null,
+                    stepId = startVmId
                 )
             }
-        }
-    }
-
-    private fun addJobLog(
-        container: PipelineBuildContainer,
-        message: String,
-        executeCount: Int,
-        error: Boolean
-    ) {
-        val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
-        if (error) {
-            buildLogPrinter.addErrorLine(
-                buildId = container.buildId,
-                message = message,
-                tag = startVmId,
-                containerHashId = container.containerHashId,
-                executeCount = executeCount,
-                jobId = null,
-                stepId = startVmId
-            )
-        } else {
-            buildLogPrinter.addLine(
-                buildId = container.buildId,
-                message = message,
-                tag = startVmId,
-                containerHashId = container.containerHashId,
-                executeCount = executeCount,
-                jobId = null,
-                stepId = startVmId
-            )
         }
     }
 

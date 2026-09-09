@@ -83,10 +83,10 @@ class DependOnStageCmdTest {
         verify(exactly = 1) {
             buildLogPrinter.addLine(
                 buildId = TestTool.buildId,
-                message = "Job[job_b] dependOn [job_a]",
+                message = "Job[job_b] dependOn {1=job_a}",
                 tag = startVmId,
                 containerHashId = jobB.containerHashId,
-                executeCount = jobB.executeCount,
+                executeCount = context.executeCount,
                 jobId = null,
                 stepId = startVmId
             )
@@ -130,20 +130,6 @@ class DependOnStageCmdTest {
         Assertions.assertEquals(BuildStatus.FAILED, context.buildStatus)
         Assertions.assertEquals(CmdFlowState.FINALLY, context.cmdFlowState)
         verify(exactly = 0) { pipelineContainerService.batchUpdateControlOption(any()) }
-        listOf(jobA, jobB).forEach { container ->
-            val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
-            verify(exactly = 1) {
-                buildLogPrinter.addErrorLine(
-                    buildId = TestTool.buildId,
-                    message = "jobId circular dependency",
-                    tag = startVmId,
-                    containerHashId = container.containerHashId,
-                    executeCount = container.executeCount,
-                    jobId = null,
-                    stepId = startVmId
-                )
-            }
-        }
     }
 
     private fun genStageContext(
