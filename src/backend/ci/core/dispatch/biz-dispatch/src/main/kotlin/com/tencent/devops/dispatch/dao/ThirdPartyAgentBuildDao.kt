@@ -1172,7 +1172,9 @@ class ThirdPartyAgentBuildDao {
         envId: Long?,
         buildId: String,
         executeCount: Int?,
-        status: List<PipelineTaskStatus>?
+        status: List<PipelineTaskStatus>?,
+        startTime: Long?,
+        endTime: Long?
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
@@ -1191,6 +1193,26 @@ class ThirdPartyAgentBuildDao {
             if (status != null) {
                 dsl.and(STATUS.`in`(status.map { it.status }))
             }
+            if (startTime != null) {
+                dsl.and(
+                    CREATED_TIME.ge(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(startTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
+            if (endTime != null) {
+                dsl.and(
+                    CREATED_TIME.le(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(endTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
             return dsl.fetchOne(0, Long::class.java) ?: 0L
         }
     }
@@ -1204,7 +1226,9 @@ class ThirdPartyAgentBuildDao {
         executeCount: Int?,
         offset: Int,
         limit: Int,
-        status: List<PipelineTaskStatus>?
+        status: List<PipelineTaskStatus>?,
+        startTime: Long?,
+        endTime: Long?
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -1222,6 +1246,26 @@ class ThirdPartyAgentBuildDao {
             }
             if (status != null) {
                 dsl.and(STATUS.`in`(status.map { it.status }))
+            }
+            if (startTime != null) {
+                dsl.and(
+                    CREATED_TIME.ge(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(startTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
+            if (endTime != null) {
+                dsl.and(
+                    CREATED_TIME.le(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(endTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
             }
             return dsl.orderBy(ID.desc()).limit(limit).offset(offset).fetch()
         }

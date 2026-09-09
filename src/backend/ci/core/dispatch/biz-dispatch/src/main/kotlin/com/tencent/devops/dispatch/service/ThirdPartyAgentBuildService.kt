@@ -506,7 +506,9 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             envId = envId,
             buildId = buildId,
             executeCount = executeCount,
-            status = data.taskStatusList
+            status = data.taskStatusList,
+            startTime = data.startTime,
+            endTime = data.endTime
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
             dslContext = dslContext,
@@ -516,7 +518,9 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             executeCount = executeCount,
             offset = offset,
             limit = limit,
-            status = data.taskStatusList
+            status = data.taskStatusList,
+            startTime = data.startTime,
+            endTime = data.endTime
         )
         if (agentBuilds.isEmpty()) {
             return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
