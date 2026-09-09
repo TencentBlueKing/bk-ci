@@ -101,6 +101,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_BRANCH_TEST_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_TESTED_CANNOT_CANCEL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_STATUS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -1132,7 +1133,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (latestRecord.branchTestFlag == true &&
                 latestRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
             ) {
-                throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
+                throw ErrorCodeException(errorCode = STORE_ATOM_TESTED_CANNOT_CANCEL)
             }
             val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
             if (!checkResult) {
@@ -1142,13 +1143,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             storeFileService.cleanStoreVersionReferenceFile(atomCode, latestRecord.version)
-            marketAtomDao.setAtomStatusById(
-                dslContext = dslContext,
-                atomId = atomId,
-                atomStatus = status,
-                userId = userId,
-                msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
-            )
+            // 状态变更与最新测试版本标记转移在同一事务内完成
+            withLatestTestFlagLock(atomCode) {
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    marketAtomDao.setAtomStatusById(
+                        dslContext = context,
+                        atomId = atomId,
+                        atomStatus = status,
+                        userId = userId,
+                        msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
+                    )
+                    transferAtomLatestTestFlag(
+                        context = context,
+                        userId = userId,
+                        atomCode = atomCode,
+                        atomId = atomId
+                    )
+                }
+            }
         }
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
@@ -1156,7 +1169,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             hashKey = VersionUtils.convertLatestVersion(record.version),
             values = "false"
         )
-        checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
         doCancelReleaseBus(userId, atomId)
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
