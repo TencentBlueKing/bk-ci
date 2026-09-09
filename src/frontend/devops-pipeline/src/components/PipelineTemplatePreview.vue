@@ -139,7 +139,9 @@
                         props: {
                             editable: false,
                             failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? [],
-                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? []
+                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? [],
+                            cancelSubscriptionList: this.pipelineSetting?.cancelSubscriptionList ?? [],
+                            publishSubscriptionList: this.pipelineSetting?.publishSubscriptionList ?? []
                         }
                     },
                     {

@@ -176,6 +176,8 @@
             },
             successSubscriptionList: Array,
             failSubscriptionList: Array,
+            cancelSubscriptionList: Array,
+            publishSubscriptionList: Array,
             updateSubscription: Function
         },
         data () {
@@ -195,6 +197,14 @@
                     {
                         type: 'failSubscriptionList',
                         name: this.$t('settings.whenFail')
+                    },
+                    {
+                        type: 'cancelSubscriptionList',
+                        name: this.$t('settings.whenCancel')
+                    },
+                    {
+                        type: 'publishSubscriptionList',
+                        name: this.$t('settings.whenPublish')
                     }
                 ],
                 renderFields: [
@@ -254,10 +264,39 @@
                     content: this.$t('settings.defaultFail')
                 }
             },
+            defaultCancel () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.actor}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultCancel')
+                }
+            },
+            defaultPublish () {
+                return {
+                    types: [],
+                    groups: [],
+                    users: '${{ci.pipeline_owner}}',
+                    wechatGroupFlag: false,
+                    wechatGroup: '',
+                    wechatGroupMarkdownFlag: false,
+                    detailFlag: false,
+                    content: this.$t('settings.defaultPublish')
+                }
+            },
             slideTitle () {
                 const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
-                const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
-                return actionType + ' - ' + targetType
+                const nameMap = {
+                    successSubscriptionList: this.$t('settings.whenSuc'),
+                    failSubscriptionList: this.$t('settings.whenFail'),
+                    cancelSubscriptionList: this.$t('settings.whenCancel'),
+                    publishSubscriptionList: this.$t('settings.whenPublish')
+                }
+                return actionType + ' - ' + (nameMap[this.editType] || '')
             }
         },
         async created () {
@@ -295,7 +334,13 @@
                 if (index > -1 && this[type][index]) {
                     this.sliderEditItem = deepCopy(this[type][index])
                 } else {
-                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? this.defaultFail : this.defaultSuc)
+                    const defaultMap = {
+                        successSubscriptionList: this.defaultSuc,
+                        failSubscriptionList: this.defaultFail,
+                        cancelSubscriptionList: this.defaultCancel,
+                        publishSubscriptionList: this.defaultPublish
+                    }
+                    this.sliderEditItem = deepCopy(defaultMap[type] || this.defaultSuc)
                     if (this.isTemplate) {
                         this.sliderEditItem.detailFlag = true
                     }
