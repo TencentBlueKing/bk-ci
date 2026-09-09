@@ -65,9 +65,9 @@ class KubernetesTaskClient @Autowired constructor(
     ): KubernetesResult<TaskStatusResp> {
         val url = "/api/tasks/$taskId/status"
         val request = if (needProxy) {
-            clientCommon.baseRequest(userId, url).get().build()
+            clientCommon.baseRequest(userId, url, projectId = "", method = "GET").get().build()
         } else {
-            clientCommon.microBaseRequest(url).get().build()
+            clientCommon.microBaseRequest(url, projectId = "", method = "GET").get().build()
         }
 
         try {

@@ -132,6 +132,7 @@ class BcsContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         retryTime: Int
     ): Result<DispatchBuildBuilderStatus> {
@@ -162,6 +163,7 @@ class BcsContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         param: DispatchBuildOperateBuilderParams
     ): String {

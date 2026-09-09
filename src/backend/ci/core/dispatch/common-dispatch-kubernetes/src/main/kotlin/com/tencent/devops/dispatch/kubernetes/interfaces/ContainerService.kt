@@ -69,6 +69,7 @@ interface ContainerService {
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         retryTime: Int = 3
     ): Result<DispatchBuildBuilderStatus>
@@ -82,6 +83,7 @@ interface ContainerService {
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         param: DispatchBuildOperateBuilderParams
     ): String

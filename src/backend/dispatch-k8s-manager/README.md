@@ -32,6 +32,16 @@ kubernetes-manager可以使用二进制方式启动，也可以使用容器方�
 配置bk-ci helm values
 'bkCiKubernetesHost': "http://node:port"  // // 默认kubernetes-manager的service类型为 NodePort
 'bkCiKubernetesToken': "landun" // 同kubernetesManager.apiserver.auth.apiToken.value配置
+跨集群时还必须把同一份 identitySigningKey 配到 manager 与 dispatch，否则已属主构建机无法回收。详见下方「安全配置项」。
+
+### 安全配置项（#13571）
+
+完整说明见 `docs/install/kubernetes-manager.md`「安全配置项」。摘要：
+
+- Helm 同 namespace 用 Secret `kubernetes-manager-auth` 下发 `debugTicketSecret` 与 `identitySigningKey`，dispatch 经 `KUBERNETES_IDENTITY_SIGNING_KEY` 共读，不必手写。
+- `debugTicketSecret` 留空或填仓库公开串：`/terminal` `/debug` 503。
+- `identitySigningKey` 任一侧留空、填公开串、或只配一边：自称头被丢，已属主构建机停/删/start 403，池位泄漏。
+- 跨集群必须两侧显式配置同一身份密钥。禁止把密钥注入构建容器。
 
 ### 以二进制的方式启动
 

@@ -108,6 +108,15 @@ apiserver:
     apiToken:
       key: Devops-Token
       value: landun
+    # debug 远程登录 HMAC 票据密钥。默认留空：空配置关闭 /terminal 与 /debug（503）。
+    # Helm 用 Secret lookup+首装随机下发到环境变量 K8S_MANAGER_DEBUG_TICKET_SECRET。
+    # 禁止再写仓库公开串 bkci-k8s-manager-debug-ticket-change-in-prod，写入也会被拒绝。
+    debugTicketSecret: ""
+    # 身份头 HMAC。空配置不回退公开串。Helm 注入 K8S_MANAGER_IDENTITY_SIGNING_KEY。
+    # 部署前置：dispatch 与 manager 必须同时覆盖同一 Secret kubernetes-manager-auth。
+    # 只配一边则自称头全丢，已属主构建机停/删失败（启动 Warn）。
+    # payload = uid|pid|tid|ts|METHOD|path，窗口 60s，防跨接口重放。
+    identitySigningKey: ""
     # 在这里保存私钥用来解密apitoken
     # 推荐使用rsa-generate生成公私钥，rsa-generate可通过make打包获得  
     rsaPrivateKey: ""

@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"disaptch-k8s-manager/pkg/apiserver/apis"
+	"disaptch-k8s-manager/pkg/apiserver/authz"
 	"disaptch-k8s-manager/pkg/apiserver/middleware"
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/logs"
@@ -24,6 +25,13 @@ func InitApiServer(accessLogFile string) error {
 
 	if !config.Envs.IsDebug {
 		gin.SetMode(gin.ReleaseMode)
+	}
+
+	if !authz.IdentitySigningKeyConfigured() {
+		logs.Warn("identitySigningKey 未配置或仍为仓库公开串：自称身份头将被丢弃。" +
+			"dispatch 与 manager 必须同时覆盖同一 Secret kubernetes-manager-auth" +
+			"（K8S_MANAGER_IDENTITY_SIGNING_KEY / KUBERNETES_IDENTITY_SIGNING_KEY），" +
+			"只配一边则已属主构建机将无法 stop/delete。此为部署前置检查。")
 	}
 
 	r := gin.Default()

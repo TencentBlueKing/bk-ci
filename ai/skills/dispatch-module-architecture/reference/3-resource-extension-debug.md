@@ -24,3 +24,4 @@
 - Dispatch 决定任务去哪跑
 - Agent 决定构建机如何接任务和拉起执行器
 - Worker 决定任务如何真正跑起来
+- Kubernetes 构建机的 manager 鉴权、密钥与启停删门禁：`reference/4-k8s-manager.md`

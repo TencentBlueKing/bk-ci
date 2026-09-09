@@ -146,6 +146,7 @@ class KubernetesContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         retryTime: Int
     ): Result<DispatchBuildBuilderStatus> {
@@ -154,6 +155,7 @@ class KubernetesContainerService @Autowired constructor(
             vmSeqId = vmSeqId,
             userId = userId,
             name = builderName,
+            projectId = projectId,
             retryTime = retryTime
         )
         if (result.isNotOk()) {
@@ -176,6 +178,7 @@ class KubernetesContainerService @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
+        projectId: String,
         builderName: String,
         param: DispatchBuildOperateBuilderParams
     ): String {
@@ -184,6 +187,7 @@ class KubernetesContainerService @Autowired constructor(
             vmSeqId = vmSeqId,
             userId = userId,
             name = builderName,
+            projectId = projectId,
             param = when (param.type) {
                 DispatchBuildOperateBuilderType.DELETE -> DeleteBuilderParams()
                 DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
@@ -218,6 +222,7 @@ class KubernetesContainerService @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
+                projectId = projectId,
                 builder = Builder(
                     name = builderName,
                     image = "$host/$name:$tag",
@@ -282,6 +287,7 @@ class KubernetesContainerService @Autowired constructor(
                 vmSeqId = vmSeqId,
                 userId = userId,
                 name = builderName,
+                projectId = projectId,
                 param = StartBuilderParams(
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
@@ -374,10 +380,14 @@ class KubernetesContainerService @Autowired constructor(
         val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
         val list = websocketUrl.split("/").toList()
         val targetHost = list[2]
+        val pathAndQuery = list.subList(3, list.size).stream().collect(Collectors.joining("/"))
+        // 原 URL 若已有 query（历史 ticket=?），必须用 & 追加，否则第二个 '?' 会并进票据。
+        val separator = if (pathAndQuery.contains("?")) "&" else "?"
         val newWsUrl = StringBuilder(webConsoleProxy)
             .append("/")
-            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
-            .append("?targetHost=$targetHost")
+            .append(pathAndQuery)
+            .append(separator)
+            .append("targetHost=$targetHost")
         return newWsUrl.toString()
     }
 

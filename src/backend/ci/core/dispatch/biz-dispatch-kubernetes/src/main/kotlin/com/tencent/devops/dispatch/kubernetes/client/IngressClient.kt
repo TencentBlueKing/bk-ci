@@ -57,7 +57,7 @@ class IngressClient @Autowired constructor(
         val url = "/api/namespace/$namespace/ingress"
         val body = JsonUtil.toJson(ingress)
         logger.info("Create ingress request url: $url, body: $body")
-        val request = clientCommon.microBaseRequest(url).post(
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "POST").post(
             RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
@@ -74,7 +74,7 @@ class IngressClient @Autowired constructor(
         ingressName: String
     ): KubernetesResult<Ingress> {
         val url = "/api/namespace/$namespace/ingress/$ingressName"
-        val request = clientCommon.microBaseRequest(url).get().build()
+        val request = clientCommon.microBaseRequest(url, userId = userId, projectId = "", method = "GET").get().build()
         logger.info("Get ingress: $ingressName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
@@ -97,7 +97,9 @@ class IngressClient @Autowired constructor(
         ingressName: String
     ): KubernetesResult<String> {
         val url = "/api/namespace/$namespace/ingress/$ingressName"
-        val request = clientCommon.microBaseRequest(url).delete().build()
+        val request = clientCommon.microBaseRequest(
+            url, userId = userId, projectId = "", method = "DELETE"
+        ).delete().build()
         logger.info("Delete ingress: $ingressName request url: $url, userId: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
