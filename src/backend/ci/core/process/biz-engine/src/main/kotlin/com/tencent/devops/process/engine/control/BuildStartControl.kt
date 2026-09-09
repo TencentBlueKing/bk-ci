@@ -71,6 +71,8 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -342,10 +344,12 @@ class BuildStartControl @Autowired constructor(
                 )?.buildId == buildId
             }
             // #6521 并发组中需要等待其他流水线
+            // #13450 排除当前 buildId，避免重试时把自己查成 RUNNING 后误取消
             val concurrencyGroupRunning = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                 projectId = projectId,
                 concurrencyGroup = concurrencyGroup,
-                status = listOf(BuildStatus.RUNNING)
+                status = listOf(BuildStatus.RUNNING),
+                excludeBuildId = buildId
             ).toMutableList()
 
             // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 #8143
@@ -355,7 +359,8 @@ class BuildStartControl @Autowired constructor(
                     pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        status = listOf(BuildStatus.RUNNING)
+                        status = listOf(BuildStatus.RUNNING),
+                        excludeBuildId = buildId
                     )
                 )
             }
@@ -382,11 +387,19 @@ class BuildStartControl @Autowired constructor(
                         stageId = null,
                         needShortUrl = false
                     )
-                    concurrencyGroupRunning.forEach { (pipelineId, buildId) ->
-                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
-                            projectId = projectId,
+                    val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
+                        candidateBuilds = concurrencyGroupRunning,
+                        currentContext = ConcurrencyCancelContext.of(
                             pipelineId = pipelineId,
                             buildId = buildId,
+                            isRetry = buildInfo.executeCount > 1
+                        ) { buildInfo.buildNum }
+                    )
+                    cancelTargets.forEach { target ->
+                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                            projectId = projectId,
+                            pipelineId = target.pipelineId,
+                            buildId = target.buildId,
                             userId = buildInfo.startUser,
                             groupName = concurrencyGroup,
                             detailUrl = detailUrl
@@ -395,8 +408,8 @@ class BuildStartControl @Autowired constructor(
                 }
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                     projectCode = projectId,
-                    pipelineId = concurrencyGroupRunning.first().first,
-                    buildId = concurrencyGroupRunning.first().second,
+                    pipelineId = concurrencyGroupRunning.first().pipelineId,
+                    buildId = concurrencyGroupRunning.first().buildId,
                     position = null,
                     stageId = null,
                     needShortUrl = false
@@ -407,7 +420,7 @@ class BuildStartControl @Autowired constructor(
                         params = arrayOf(
                             setting.runLockType.name, concurrencyGroup,
                             concurrencyGroupRunning.count().toString(),
-                            "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>"
+                            "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().buildId}</a>"
                         )
                     ),
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,

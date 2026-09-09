@@ -100,6 +100,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -267,33 +268,35 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
-    /** 根据状态信息获取并发组构建列表
-     * @return Pair( PIPELINE_ID , BUILD_ID )
-     */
+    /** 根据状态信息获取并发组构建列表 */
     fun getBuildInfoListByConcurrencyGroup(
         projectId: String,
         concurrencyGroup: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroup(
             dslContext = dslContext,
             projectId = projectId,
             concurrencyGroup = concurrencyGroup,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildInfoListByConcurrencyGroupNull(
         projectId: String,
         pipelineId: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroupNull(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
