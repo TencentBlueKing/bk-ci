@@ -933,4 +933,51 @@ object ProcessMessageCode {
 
     // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
     const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
+
+    // 用户手动取消构建
+    const val BK_BUILD_CANCEL_USER_MANUAL = "bkBuildCancelUserManual"
+    // {0} 处在途均已停止
+    const val BK_BUILD_CANCEL_USER_IN_FLIGHT_STOPPED = "bkBuildCancelUserInFlightStopped"
+    // 用户强制终止构建
+    const val BK_BUILD_CANCEL_USER_FORCE_TERMINATE = "bkBuildCancelUserForceTerminate"
+    // 用户重启构建，原构建被取消
+    const val BK_BUILD_CANCEL_USER_RESTART = "bkBuildCancelUserRestart"
+    // 系统服务端取消构建
+    const val BK_BUILD_CANCEL_SYSTEM_SERVICE_SHUTDOWN = "bkBuildCancelSystemServiceShutdown"
+    // 排队已满，新构建入队导致排队中的构建被自动取消
+    const val BK_BUILD_CANCEL_SYSTEM_QUEUE_FULL = "bkBuildCancelSystemQueueFull"
+    // 并发组[{0}]互斥，新构建入队导致排队中的构建被自动取消
+    const val BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_GROUP = "bkBuildCancelSystemConcurrencyGroup"
+    // 并发组[{0}]中有更高优先级的构建等待执行
+    const val BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_PRIORITY = "bkBuildCancelSystemConcurrencyPriority"
+    // 流水线编排模型不存在，无法启动构建
+    const val BK_BUILD_CANCEL_SYSTEM_MODEL_NOT_FOUND = "bkBuildCancelSystemModelNotFound"
+    // 流水线被删除，运行中的构建被终止
+    const val BK_BUILD_CANCEL_SYSTEM_PIPELINE_DELETED = "bkBuildCancelSystemPipelineDeleted"
+    // 构建机 Agent 异常退出，与节点失联
+    const val BK_BUILD_CANCEL_SYSTEM_HEARTBEAT_TIMEOUT = "bkBuildCancelSystemHeartbeatTimeout"
+    // 所属 Job 超过执行时限 {0}m，步骤被终止
+    const val BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT = "bkBuildCancelSystemJobExecTimeout"
+    // Job 排队超时，已被系统终止
+    const val BK_BUILD_CANCEL_SYSTEM_JOB_QUEUE_TIMEOUT = "bkBuildCancelSystemJobQueueTimeout"
+    // 本次构建随父流水线取消而终止
+    const val BK_BUILD_CANCEL_PARENT_PIPELINE = "bkBuildCancelParentPipeline"
+
+    // ---- 构建终态(失败/超时/成功)原因 ----
+    // 子流水线执行失败
+    const val BK_BUILD_END_FAIL_SUB_PIPELINE = "bkBuildEndFailSubPipeline"
+    // 已启用 Fastkill，因「{0}」失败被终止
+    const val BK_BUILD_END_FAIL_FAST_KILL = "bkBuildEndFailFastKill"
+    // 质量红线未达标(无指标详情时的兜底文案)
+    const val BK_BUILD_END_FAIL_QUALITY = "bkBuildEndFailQuality"
+    // {0} 超过阈值 {1}（阈值为上限的指标，如代码坏味道数）
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATOR_EXCEED = "bkBuildEndFailQualityIndicatorExceed"
+    // {0} 未达到阈值 {1}（阈值为下限的指标，如覆盖率）
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATOR_BELOW = "bkBuildEndFailQualityIndicatorBelow"
+    // {0} 等 {1} 项质量红线指标未达标
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATORS = "bkBuildEndFailQualityIndicators"
+    // 本步骤超过执行时限 {0}m
+    const val BK_BUILD_END_TIMEOUT_STEP = "bkBuildEndTimeoutStep"
+    // 阶段准入审核被驳回，后续阶段不再执行
+    const val BK_BUILD_END_STAGE_REVIEW_ABORT = "bkBuildEndStageReviewAbort"
 }

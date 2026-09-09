@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -1463,7 +1464,10 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = buildInfo.startUser,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.FAILED
+                    buildStatus = BuildStatus.FAILED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_SERVICE_SHUTDOWN
+                    )
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
@@ -2718,7 +2722,15 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.CANCELED,
-                    terminateFlag = finalTerminateFlag
+                    terminateFlag = finalTerminateFlag,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = if (finalTerminateFlag) {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_FORCE_TERMINATE
+                        } else {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL
+                        }
+                    )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
@@ -3138,7 +3150,11 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_RESTART
+                    )
                 )
                 return buildRestartPipeline(
                     projectId = projectId,

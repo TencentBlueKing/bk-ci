@@ -32,16 +32,22 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.EndPosition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_HEARTBEAT_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TIP_MESSAGE
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,7 +59,8 @@ class HeartbeatControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineContainerService: PipelineContainerService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     companion object {
@@ -147,6 +154,47 @@ class HeartbeatControl @Autowired constructor(
                 errorTypeName = ErrorType.BUILD_MACHINE.name,
                 errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
             )
+        )
+
+        // 保存构建级别的终态信息（含受影响容器位置），仅在尚未存在时写入
+        try {
+            val endPositions = resolveEndPositionsFromModel(buildInfo, container)
+            // Agent失联对用户而言是构建被系统中断，归为系统取消；具体成因由 reason 表达
+            val buildEndInfo = BuildEndInfo.ofCancelSystem(
+                reasonCode = BK_BUILD_CANCEL_SYSTEM_HEARTBEAT_TIMEOUT
+            ).withPositions(endPositions)
+            pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                executeCount = container.executeCount,
+                buildEndInfo = buildEndInfo
+            )
+        } catch (ignored: Throwable) {
+            LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_TIMEOUT|save buildEndInfo failed", ignored)
+        }
+    }
+
+    /**
+     * 从 Model 中定位超时容器，生成终态位置信息（支持 task 级粒度）。
+     * 超时是低频事件，加载一次 model 代价可接受。
+     */
+    private fun resolveEndPositionsFromModel(
+        buildInfo: BuildInfo,
+        container: PipelineBuildContainer
+    ): List<EndPosition> {
+        val model = pipelineBuildRecordService.getRecordModel(
+            projectId = container.projectId,
+            pipelineId = container.pipelineId,
+            version = buildInfo.version,
+            buildId = container.buildId,
+            executeCount = container.executeCount,
+            debug = buildInfo.debug
+        ) ?: return emptyList()
+        return EndPositionUtils.resolveEndPositions(
+            model = model,
+            targetStageId = container.stageId,
+            targetContainerId = container.containerId
         )
     }
 }

@@ -66,6 +66,8 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
@@ -110,7 +112,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRedisService: PipelineRedisService,
     private val meterRegistry: MeterRegistry,
     private val metricsService: MetricsService,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val buildEndInfoResolver: BuildEndInfoResolver
 ) {
 
     companion object {
@@ -168,7 +171,11 @@ class BuildEndControl @Autowired constructor(
         }
         LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
-        fixBuildInfo(buildInfo)
+        // 任务与阶段在错误信息聚合、终态详情解析中都要用到，此处统一加载一次避免重复查询
+        val buildTasks = pipelineTaskService.getAllBuildTask(projectId, buildId).toList()
+        val buildStages = pipelineStageService.getAllBuildStage(projectId, buildId).toList()
+
+        fixBuildInfo(buildInfo, buildTasks, buildStages)
 
         // 刷新详情页状态
         val (model, allStageStatus, timeCost) = pipelineBuildRecordService.buildEnd(
@@ -178,6 +185,20 @@ class BuildEndControl @Autowired constructor(
             buildStatus = buildStatus,
             errorInfoList = buildInfo.errorInfoList,
             errorMsg = errorMsg,
+            executeCount = buildInfo.executeCount
+        )
+
+        saveBuildEndInfo(
+            context = BuildEndContext(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                buildStatus = buildStatus,
+                model = model,
+                errorInfoList = buildInfo.errorInfoList,
+                buildTasks = buildTasks,
+                buildStages = buildStages
+            ),
             executeCount = buildInfo.executeCount
         )
 
@@ -373,9 +394,34 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.fixBuildInfo(buildInfo: BuildInfo) {
+    /**
+     * 解析并记录构建终态详情（失败/超时/成功）。
+     *
+     * 使用 IfAbsent 语义：用户取消、Job执行超时等场景已在更早的时点写入了更精确的信息，此处不覆盖。
+     * 整体做异常兜底——终态详情属于展示增强，任何异常都不应影响构建结束主流程。
+     */
+    private fun saveBuildEndInfo(context: BuildEndContext, executeCount: Int?) {
+        try {
+            val buildEndInfo = buildEndInfoResolver.resolve(context) ?: return
+            pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                executeCount = executeCount ?: 1,
+                buildEndInfo = buildEndInfo
+            )
+        } catch (ignored: Exception) {
+            LOG.warn("ENGINE|${context.buildId}|BUILD_END_INFO|save build end info failed", ignored)
+        }
+    }
+
+    private fun PipelineBuildFinishEvent.fixBuildInfo(
+        buildInfo: BuildInfo,
+        buildTasks: List<PipelineBuildTask>,
+        buildStages: List<PipelineBuildStage>
+    ) {
         val errorInfoList = mutableListOf<ErrorInfo>()
-        pipelineTaskService.getAllBuildTask(projectId, buildId).forEach { task ->
+        buildTasks.forEach { task ->
             // 将所有还在运行中的任务全部结束掉
             if (task.status.isRunning()) {
                 // 构建机直接结束
@@ -428,7 +474,7 @@ class BuildEndControl @Autowired constructor(
                 }
             }
         }
-        pipelineStageService.getAllBuildStage(projectId, buildId).forEach { stage ->
+        buildStages.forEach { stage ->
             if (stage.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
                 stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
             ) {

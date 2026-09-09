@@ -31,12 +31,16 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.ParentPipelineInfo
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -50,7 +54,9 @@ class PipelineBuildTaskService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     /**
@@ -177,13 +183,36 @@ class PipelineBuildTaskService @Autowired constructor(
                         stepId = null
                     )
                 }
+                val parentPipelineName = pipelineRepositoryService.getPipelineInfo(
+                    buildTask.projectId, buildTask.pipelineId
+                )?.pipelineName
+                val parentBuildNum = pipelineRuntimeService.getBuildInfo(
+                    buildTask.projectId, buildId
+                )?.buildNum
+                // 父构建的取消人在cancelBuild中已先于取消事件同步落库，此处可直接读取
+                val parentOperator = pipelineBuildRecordService.getBuildCancelUser(
+                    projectId = buildTask.projectId,
+                    buildId = buildId,
+                    executeCount = buildTask.executeCount ?: 1
+                )
                 pipelineRuntimeService.cancelBuild(
                     projectId = subBuildInfo.projectId,
                     pipelineId = subBuildInfo.pipelineId,
                     buildId = subBuildInfo.buildId,
                     userId = subBuildInfo.startUser,
                     executeCount = subBuildInfo.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelParentPipeline(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_PARENT_PIPELINE,
+                        parentPipelineInfo = ParentPipelineInfo(
+                            projectId = buildTask.projectId,
+                            pipelineId = buildTask.pipelineId,
+                            pipelineName = parentPipelineName,
+                            buildId = buildId,
+                            buildNum = parentBuildNum,
+                            operator = parentOperator
+                        )
+                    )
                 )
             } catch (ignored: Exception) {
                 logger.warn("ENGINE|$buildId|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")

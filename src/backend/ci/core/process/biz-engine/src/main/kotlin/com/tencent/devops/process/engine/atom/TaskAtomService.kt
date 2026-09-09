@@ -330,9 +330,14 @@ class TaskAtomService @Autowired(required = false) constructor(
     }
 
     /**
-     * 尝试结束插件任务[task], actionType为TERMINATE表示是强制结束，如果为其它值则表示尝试探测是否结束，但不会做强制结束
+     * 尝试结束插件任务[task], actionType为TERMINATE表示是强制结束，如果为其它值则表示尝试探测是否结束，但不会做强制结束。
+     * [terminateCause]为下发终止的一方给出的终止成因，插件自身给不出失败原因时以它落库。
      */
-    fun tryFinish(task: PipelineBuildTask, actionType: ActionType): AtomResponse {
+    fun tryFinish(
+        task: PipelineBuildTask,
+        actionType: ActionType,
+        terminateCause: TaskTerminateCause? = null
+    ): AtomResponse {
         val startTime = System.currentTimeMillis()
         // #8879 被动终止的插件应该设为取消状态
         var atomResponse = if (actionType.isTerminate()) {
@@ -345,6 +350,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)
+                .withTerminateCause(terminateCause)
             val runCondition = task.additionalOptions?.runCondition
             val stopFlag = actionType == ActionType.END && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
             log(atomResponse, task, stopFlag)
@@ -378,6 +384,25 @@ class TaskAtomService @Autowired(required = false) constructor(
             taskAfter(atomResponse, task, startTime)
         }
         return atomResponse
+    }
+
+    /**
+     * 用下发终止方给出的成因替换引擎填的占位错误：插件被强制终止时自身给不出失败原因，
+     * 引擎只会填 [ErrorCode.PLUGIN_DEFAULT_ERROR]（日志里的「Force Terminate!」「not definded error」），
+     * 终态详情便只能按插件类型归类，把 FastKill 连带终止的人工审核插件误判为「人工审核驳回」、
+     * 把被终止的开机任务误判为「执行失败」。插件给出了自己的错误码时保持原样，避免盖掉真实成因。
+     *
+     * 只能复制不能就地改：强制终止返回的 defaultFailAtomResponse 是全局共享实例。
+     */
+    private fun AtomResponse.withTerminateCause(cause: TaskTerminateCause?): AtomResponse {
+        if (cause == null || !buildStatus.isFinish() || buildStatus.isSuccess()) return this
+        val placeholderError = errorCode == null || errorCode == 0 || errorCode == ErrorCode.PLUGIN_DEFAULT_ERROR
+        if (!placeholderError) return this
+        return copy(
+            errorType = cause.errorType ?: errorType,
+            errorCode = cause.errorCode,
+            errorMsg = cause.errorMsg ?: errorMsg
+        )
     }
 
     private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
@@ -430,3 +455,13 @@ class TaskAtomService @Autowired(required = false) constructor(
         private val logger = LoggerFactory.getLogger(TaskAtomService::class.java)
     }
 }
+
+/**
+ * 被动终止插件时由下发终止的一方给出的终止成因，如 FastKill、Job执行超时、Agent失联。
+ * 与构建机任务已有的处理口径一致（见 TaskControl 中构建机任务的终止分支）。
+ */
+data class TaskTerminateCause(
+    val errorType: ErrorType?,
+    val errorCode: Int,
+    val errorMsg: String?
+)

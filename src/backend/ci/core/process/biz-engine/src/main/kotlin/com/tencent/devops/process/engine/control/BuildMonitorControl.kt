@@ -35,13 +35,18 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.EndPosition
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_JOB_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
@@ -63,6 +68,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -87,6 +93,7 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val redisOperation: RedisOperation
 ) {
@@ -131,7 +138,7 @@ class BuildMonitorControl @Autowired constructor(
 
         // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
         val stageMinInt = monitorStage(event, buildInfo)
-        val jobMinInt = monitorContainer(event)
+        val jobMinInt = monitorContainer(event, buildInfo)
 
         val minInterval = min(jobMinInt, stageMinInt)
 
@@ -152,7 +159,7 @@ class BuildMonitorControl @Autowired constructor(
         return true
     }
 
-    private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
+    private fun monitorContainer(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Long {
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
         // #5090 ==0 是为了兼容旧的监控事件
@@ -192,7 +199,7 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         for (container in containers) {
-            val interval = container.checkNextContainerMonitorIntervals(event.userId)
+            val interval = container.checkNextContainerMonitorIntervals(event.userId, buildInfo)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
                 minInterval = interval
@@ -259,7 +266,10 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Long {
+    private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(
+        userId: String,
+        buildInfo: BuildInfo
+    ): Long {
 
         val usedTimeMills: Long = if (status.isRunning() && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
@@ -314,6 +324,25 @@ class BuildMonitorControl @Autowired constructor(
                     errorTypeName = ErrorType.USER.name
                 )
             )
+            // 保存构建级别的终态信息（含受影响容器位置，仅在尚未存在时写入）
+            try {
+                val endPositions = resolveEndPositionsFromModel(buildInfo, this)
+                // Job执行超时派发的是TERMINATE事件，构建最终状态只会落在取消/终止/失败上，不会是超时状态，
+                // 因此终态子类型必须归入取消类（与最终状态同类），「超时」这个成因由 reason 表达
+                val endInfo = BuildEndInfo.ofCancelSystem(
+                    reasonCode = BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT,
+                    reasonParams = listOf("$minute")
+                ).withPositions(endPositions)
+                pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = executeCount,
+                    buildEndInfo = endInfo
+                )
+            } catch (e: Exception) {
+                LOG.warn("ENGINE|$buildId|JOB_EXEC_TIMEOUT|save buildEndInfo failed", e)
+            }
         }
 
         return interval
@@ -471,6 +500,21 @@ class BuildMonitorControl @Autowired constructor(
                     )
                 )
             )
+            // 保存构建级别的取消信息（仅在尚未存在时写入）
+            try {
+                pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    executeCount = event.executeCount,
+                    buildEndInfo = BuildEndInfo.of(
+                        endType = BuildEndType.TIMEOUT_QUEUE,
+                        reasonCode = BK_BUILD_CANCEL_SYSTEM_JOB_QUEUE_TIMEOUT
+                    )
+                )
+            } catch (ignored: Throwable) {
+                LOG.warn("ENGINE|${event.buildId}|JOB_QUEUE_TIMEOUT|save buildEndInfo failed", ignored)
+            }
         } else {
             // 判断当前监控的排队构建是否可以尝试启动(仅当前是在队列中排第1位的构建可以)
             val canStart = if (buildInfo.concurrencyGroup.isNullOrBlank()) { // 旧版串行队列
@@ -521,5 +565,28 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         return true
+    }
+
+    /**
+     * 从 Model 中定位超时容器，生成终态位置信息（支持 task 级粒度）。
+     * 超时是低频事件，加载一次 model 代价可接受。
+     */
+    private fun resolveEndPositionsFromModel(
+        buildInfo: BuildInfo,
+        container: PipelineBuildContainer
+    ): List<EndPosition> {
+        val model = pipelineBuildRecordService.getRecordModel(
+            projectId = container.projectId,
+            pipelineId = container.pipelineId,
+            version = buildInfo.version,
+            buildId = container.buildId,
+            executeCount = container.executeCount,
+            debug = buildInfo.debug
+        ) ?: return emptyList()
+        return EndPositionUtils.resolveEndPositions(
+            model = model,
+            targetStageId = container.stageId,
+            targetContainerId = container.containerId
+        )
     }
 }
