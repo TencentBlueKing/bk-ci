@@ -665,6 +665,46 @@ class PipelineBuildDao {
     }
 
     /**
+     * 按排队时间正序取出并发组[concurrencyGroup]内流水线[pipelineId]处于[statusSet]的构建，最多[limit]个。
+     *
+     * 用于排队数量超限时的收敛淘汰：排在最前面的是排队最久的构建，按现有的语义应被优先淘汰。
+     */
+    fun listConcurrencyQueueBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>,
+        limit: Int
+    ): List<BuildInfo> {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(mapper)
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(debugMapper)
+        }
+        return if (debug.isEmpty()) {
+            release
+        } else {
+            release.plus(debug).sortedBy { it.queueTime }.take(limit)
+        }
+    }
+
+    /**
      * 1：开始构建
      */
     fun startBuild(
