@@ -48,7 +48,7 @@ class EngineVMBuildServiceTest {
             buildTask(taskId = "${VMUtils.getStopVmLabel()}$VM_SEQ_ID", status = BuildStatus.QUEUE),
             buildTask(taskId = "${VMUtils.getEndLabel()}$VM_SEQ_ID", status = BuildStatus.QUEUE)
         )
-        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks))
+        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT))
     }
 
     @Test
@@ -59,7 +59,9 @@ class EngineVMBuildServiceTest {
                 buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
                 buildTask(taskId = BUSINESS_TASK_ID, status = status)
             )
-            Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks), "status=$status")
+            Assertions.assertFalse(
+                EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT), "status=$status"
+            )
         }
     }
 
@@ -70,7 +72,23 @@ class EngineVMBuildServiceTest {
             buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
             buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.SKIP)
         )
-        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks))
+        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT))
+    }
+
+    @Test
+    fun containsExecutedTaskFalseWhenTaskFromPreviousRound() {
+        // Job内局部重试：上一轮已成功的插件不会被重置，仍保留旧执行次数和开始时间，不能算本轮执行过
+        val tasks = listOf(
+            buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
+            buildTask(
+                taskId = BUSINESS_TASK_ID,
+                status = BuildStatus.SUCCEED,
+                started = true,
+                executeCount = PREVIOUS_EXECUTE_COUNT
+            ),
+            buildTask(taskId = "e-2", status = BuildStatus.QUEUE_CACHE)
+        )
+        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT))
     }
 
     @Test
@@ -80,7 +98,7 @@ class EngineVMBuildServiceTest {
             buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
             buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.RUNNING)
         )
-        Assertions.assertTrue(EngineVMBuildService.containsExecutedTask(tasks))
+        Assertions.assertTrue(EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT))
     }
 
     @Test
@@ -90,12 +108,12 @@ class EngineVMBuildServiceTest {
             buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.SUCCEED, started = true),
             buildTask(taskId = "e-2", status = BuildStatus.QUEUE_CACHE)
         )
-        Assertions.assertTrue(EngineVMBuildService.containsExecutedTask(tasks))
+        Assertions.assertTrue(EngineVMBuildService.containsExecutedTask(tasks, EXECUTE_COUNT))
     }
 
     @Test
     fun containsExecutedTaskFalseWhenNoTask() {
-        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(emptyList()))
+        Assertions.assertFalse(EngineVMBuildService.containsExecutedTask(emptyList(), EXECUTE_COUNT))
     }
 
     @Test
@@ -104,7 +122,8 @@ class EngineVMBuildServiceTest {
         listOf(BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING).forEach { status ->
             val action = EngineVMBuildService.decideRestartAction(
                 terminateEnabled = false,
-                tasks = listOf(buildTask(taskId = BUSINESS_TASK_ID, status = status))
+                tasks = listOf(buildTask(taskId = BUSINESS_TASK_ID, status = status)),
+                executeCount = EXECUTE_COUNT
             )
             Assertions.assertEquals(BuildProcessRestartAction.REJECT, action, "status=$status")
         }
@@ -114,7 +133,8 @@ class EngineVMBuildServiceTest {
     fun decideRestartActionTerminatesWhenTaskExecuted() {
         val action = EngineVMBuildService.decideRestartAction(
             terminateEnabled = true,
-            tasks = listOf(buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.RUNNING))
+            tasks = listOf(buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.RUNNING)),
+            executeCount = EXECUTE_COUNT
         )
         Assertions.assertEquals(BuildProcessRestartAction.TERMINATE, action)
     }
@@ -126,12 +146,38 @@ class EngineVMBuildServiceTest {
             tasks = listOf(
                 buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
                 buildTask(taskId = BUSINESS_TASK_ID, status = BuildStatus.QUEUE_CACHE)
-            )
+            ),
+            executeCount = EXECUTE_COUNT
         )
         Assertions.assertEquals(BuildProcessRestartAction.RESUME, action)
     }
 
-    private fun buildTask(taskId: String, status: BuildStatus, started: Boolean = false) = PipelineBuildTask(
+    @Test
+    fun decideRestartActionResumesWhenOnlyPreviousRoundExecuted() {
+        // Job内局部重试后容器重启：本轮还没执行任何步骤，历史轮次的成功插件不应把它误判成终止
+        val action = EngineVMBuildService.decideRestartAction(
+            terminateEnabled = true,
+            tasks = listOf(
+                buildTask(taskId = VMUtils.genStartVMTaskId(VM_SEQ_ID), status = BuildStatus.SUCCEED, started = true),
+                buildTask(
+                    taskId = BUSINESS_TASK_ID,
+                    status = BuildStatus.SUCCEED,
+                    started = true,
+                    executeCount = PREVIOUS_EXECUTE_COUNT
+                ),
+                buildTask(taskId = "e-2", status = BuildStatus.QUEUE_CACHE)
+            ),
+            executeCount = EXECUTE_COUNT
+        )
+        Assertions.assertEquals(BuildProcessRestartAction.RESUME, action)
+    }
+
+    private fun buildTask(
+        taskId: String,
+        status: BuildStatus,
+        started: Boolean = false,
+        executeCount: Int = EXECUTE_COUNT
+    ) = PipelineBuildTask(
         projectId = PROJECT_ID,
         pipelineId = PIPELINE_ID,
         buildId = BUILD_ID,
@@ -147,6 +193,7 @@ class EngineVMBuildServiceTest {
         status = status,
         taskParams = mutableMapOf(),
         additionalOptions = null,
+        executeCount = executeCount,
         starter = "admin",
         approver = null,
         subProjectId = null,
@@ -160,5 +207,9 @@ class EngineVMBuildServiceTest {
         private const val BUILD_ID = "b-1"
         private const val VM_SEQ_ID = "1"
         private const val BUSINESS_TASK_ID = "e-1"
+
+        // 当前这一轮的执行次数，取大于1的值以便和局部重试遗留的历史任务区分
+        private const val EXECUTE_COUNT = 2
+        private const val PREVIOUS_EXECUTE_COUNT = 1
     }
 }

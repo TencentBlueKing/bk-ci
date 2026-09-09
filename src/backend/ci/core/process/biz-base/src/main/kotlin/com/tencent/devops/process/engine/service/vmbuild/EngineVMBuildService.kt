@@ -168,20 +168,23 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
 
         /**
-         * 判断Job下是否已经有构建步骤真正执行过。
-         * 构建机领取任务前，引擎最多把任务推进到QUEUE_CACHE，此时startTime仍为空，
-         * 因此以运行中或已写入开始时间作为执行过的依据，被跳过的步骤不算执行过
+         * 判断Job在[executeCount]这一轮是否已有构建步骤真正执行过。
+         * 任务被领取前startTime为空，故以运行中或已写入开始时间为准，被跳过的步骤不算；
+         * 局部重试只会重置被重试的插件，旧轮次任务仍带着开始时间，因此必须按执行次数过滤
          */
-        fun containsExecutedTask(tasks: Collection<PipelineBuildTask>) = tasks.any {
-            !VMUtils.isVMTask(it.taskId) && (it.status.isRunning() || it.startTime != null)
+        fun containsExecutedTask(tasks: Collection<PipelineBuildTask>, executeCount: Int) = tasks.any {
+            !VMUtils.isVMTask(it.taskId) &&
+                (it.executeCount ?: 1) == executeCount &&
+                (it.status.isRunning() || it.startTime != null)
         }
 
         fun decideRestartAction(
             terminateEnabled: Boolean,
-            tasks: Collection<PipelineBuildTask>
+            tasks: Collection<PipelineBuildTask>,
+            executeCount: Int
         ) = when {
             !terminateEnabled -> BuildProcessRestartAction.REJECT
-            containsExecutedTask(tasks) -> BuildProcessRestartAction.TERMINATE
+            containsExecutedTask(tasks, executeCount) -> BuildProcessRestartAction.TERMINATE
             else -> BuildProcessRestartAction.RESUME
         }
     }
@@ -619,7 +622,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 projectId = container.projectId,
                 buildId = buildId,
                 containerSeqId = vmSeqId
-            )
+            ),
+            executeCount = container.executeCount
         )
         LOG.warn(
             "ENGINE|$buildId|BUILD_VM_RESTART_$action|${container.projectId}|j($vmSeqId)|$vmName|" +
