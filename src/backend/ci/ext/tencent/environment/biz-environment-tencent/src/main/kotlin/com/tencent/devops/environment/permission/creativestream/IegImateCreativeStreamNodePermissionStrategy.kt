@@ -70,8 +70,7 @@ class IegImateCreativeStreamNodePermissionStrategy(
         }
         val role = iegImateShareAccessService.getRole(
             userId = userId,
-            workspaceName = workspaceName,
-            createdUser = nodeTypeService.getCreatedUser(projectId, nodeId)
+            workspaceName = workspaceName
         )
         val allowed = permission in permissionsOf(role)
         if (!allowed && permission in WRITE_PERMISSIONS) {
@@ -89,9 +88,6 @@ class IegImateCreativeStreamNodePermissionStrategy(
         nodeId: Long
     ): WorkspaceShareRoleQueryItem? {
         if (!supports(projectId, nodeId)) {
-            return null
-        }
-        if (nodeTypeService.getCreatedUser(projectId, nodeId) == userId) {
             return null
         }
         val workspaceName = nodeTypeService.getWorkspaceName(projectId, nodeId) ?: return null

@@ -105,8 +105,7 @@ class TencentAgentService @Autowired constructor(
         }
         if (!iegImateShareAccessService.isAdmin(
                 userId = userId,
-                workspaceName = workspaceName,
-                createdUser = record.createdUser
+                workspaceName = workspaceName
             )
         ) {
             logger.warn(
