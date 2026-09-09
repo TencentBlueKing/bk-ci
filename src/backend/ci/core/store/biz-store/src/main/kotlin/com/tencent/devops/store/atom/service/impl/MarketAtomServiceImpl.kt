@@ -113,6 +113,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.VersionTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
@@ -968,16 +969,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        // 版本类型筛选：按分支测试版本标识区分，ALL-全部，TEST-测试版本，FORMAL-正式版本，非法值直接报错
-        val branchTestFlag = when (versionType?.uppercase()) {
-            null, "FORMAL" -> false
-            "ALL" -> null
-            "TEST" -> true
-            else -> throw ErrorCodeException(
+        // 未传时按 ALL 处理
+        val versionTypeEnum = VersionTypeEnum.from(versionType)
+            ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(versionType ?: "")
             )
-        }
+        val branchTestFlag = versionTypeEnum.branchTestFlag
         val totalCount = atomDao.countByCode(dslContext, atomCode, branchTestFlag)
         val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize, branchTestFlag)
         val atomVersions = mutableListOf<AtomVersionListItem>()
