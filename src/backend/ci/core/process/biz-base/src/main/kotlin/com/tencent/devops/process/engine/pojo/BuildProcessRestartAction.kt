@@ -33,12 +33,9 @@ package com.tencent.devops.process.engine.pojo
  * 同一个Job第二次上报环境就绪，说明原构建进程已消失，一般是容器重启或被驱逐
  */
 enum class BuildProcessRestartAction {
-    // 已执行过步骤，构建状态已不一致，终止Job
+    // 原构建进程状态已不可信，终止Job
     TERMINATE,
 
     // 开关关闭，保持原有行为，仅拒绝本次上报
-    REJECT,
-
-    // 未执行过步骤，放行由新的构建进程接管
-    RESUME
+    REJECT
 }

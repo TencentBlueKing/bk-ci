@@ -166,27 +166,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
         // 任务结束上报Key
         private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
-
-        /**
-         * 判断Job在[executeCount]这一轮是否已有构建步骤真正执行过。
-         * 任务被领取前startTime为空，故以运行中或已写入开始时间为准，被跳过的步骤不算；
-         * 局部重试只会重置被重试的插件，旧轮次任务仍带着开始时间，因此必须按执行次数过滤
-         */
-        fun containsExecutedTask(tasks: Collection<PipelineBuildTask>, executeCount: Int) = tasks.any {
-            !VMUtils.isVMTask(it.taskId) &&
-                (it.executeCount ?: 1) == executeCount &&
-                (it.status.isRunning() || it.startTime != null)
-        }
-
-        fun decideRestartAction(
-            terminateEnabled: Boolean,
-            tasks: Collection<PipelineBuildTask>,
-            executeCount: Int
-        ) = when {
-            !terminateEnabled -> BuildProcessRestartAction.REJECT
-            containsExecutedTask(tasks, executeCount) -> BuildProcessRestartAction.TERMINATE
-            else -> BuildProcessRestartAction.RESUME
-        }
     }
 
     /**
@@ -268,8 +247,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
                     /**
                      * 处理同一个Job第二次上报环境就绪的情况，说明原构建进程已消失，一般是容器重启或被驱逐。
-                     * 已经执行过步骤的，构建状态已不一致，终止构建并拒绝本次上报；
-                     * 还没执行过步骤的，放行由新的构建进程接管
+                     * 也可能是异常情况下同一个Job被拉起了两个容器，两个构建进程会互相抢任务，
+                     * 无法判断哪一个可信，因此一律终止构建并拒绝本次上报
                      */
                     if (startUpVMTask?.status?.isFinish() == true && retryCount <= 0) {
                         handleBuildProcessRestart(
@@ -616,30 +595,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     ) {
         val vmSeqId = container.containerId
         val buildId = container.buildId
-        val action = decideRestartAction(
-            terminateEnabled = terminateOnContainerRestart,
-            tasks = pipelineTaskService.listContainerBuildTasks(
-                projectId = container.projectId,
-                buildId = buildId,
-                containerSeqId = vmSeqId
-            ),
-            executeCount = container.executeCount
-        )
+        val action = if (terminateOnContainerRestart) {
+            BuildProcessRestartAction.TERMINATE
+        } else {
+            BuildProcessRestartAction.REJECT
+        }
         LOG.warn(
             "ENGINE|$buildId|BUILD_VM_RESTART_$action|${container.projectId}|j($vmSeqId)|$vmName|" +
                 "executeCount(${container.executeCount})"
         )
-        when (action) {
-            BuildProcessRestartAction.TERMINATE -> terminateOnBuildProcessRestart(container, startUpVMTask)
-            BuildProcessRestartAction.REJECT -> Unit
-            BuildProcessRestartAction.RESUME -> {
-                printContainerRestartLog(
-                    container = container,
-                    messageCode = ProcessMessageCode.BK_BUILD_CONTAINER_RESTARTED_RESUMED,
-                    red = false
-                )
-                return
-            }
+        if (action == BuildProcessRestartAction.TERMINATE) {
+            terminateOnBuildProcessRestart(container, startUpVMTask)
         }
         throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
@@ -648,14 +614,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     /**
-     * 构建进程重启且已执行过步骤时，直接终止Job，避免等待心跳超时
+     * 构建进程重启时直接终止Job，避免等待心跳超时
      */
     private fun terminateOnBuildProcessRestart(container: PipelineBuildContainer, startUpVMTask: PipelineBuildTask) {
-        val reason = printContainerRestartLog(
-            container = container,
-            messageCode = ProcessMessageCode.BK_BUILD_CONTAINER_RESTARTED,
-            red = true
-        )
+        val reason = printContainerRestartLog(container)
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
                 source = "build_process_restart",
@@ -679,34 +641,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 把容器重启原因打印到Set Up Job位置，并返回该提示，供失败原因复用
      */
-    private fun printContainerRestartLog(
-        container: PipelineBuildContainer,
-        messageCode: String,
-        red: Boolean
-    ): String {
-        val message = I18nUtil.getCodeLanMessage(messageCode)
+    private fun printContainerRestartLog(container: PipelineBuildContainer): String {
+        val message = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_BUILD_CONTAINER_RESTARTED)
         val tag = VMUtils.genStartVMTaskId(container.containerId)
-        if (red) {
-            buildLogPrinter.addRedLine(
-                buildId = container.buildId,
-                message = message,
-                tag = tag,
-                containerHashId = container.containerHashId,
-                executeCount = container.executeCount,
-                jobId = null,
-                stepId = tag
-            )
-        } else {
-            buildLogPrinter.addYellowLine(
-                buildId = container.buildId,
-                message = message,
-                tag = tag,
-                containerHashId = container.containerHashId,
-                executeCount = container.executeCount,
-                jobId = null,
-                stepId = tag
-            )
-        }
+        buildLogPrinter.addRedLine(
+            buildId = container.buildId,
+            message = message,
+            tag = tag,
+            containerHashId = container.containerHashId,
+            executeCount = container.executeCount,
+            jobId = null,
+            stepId = tag
+        )
         return message
     }
 
