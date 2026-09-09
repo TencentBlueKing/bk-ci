@@ -3,6 +3,7 @@
         :userinfo="userinfo"
         :render-slot="renderSlot"
         :action-list="actionList"
+        :offset="[20, 20]"
     />
 </template>
 
