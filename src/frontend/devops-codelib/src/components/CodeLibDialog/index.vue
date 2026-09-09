@@ -9,6 +9,7 @@
         :padding="24"
         :quick-close="false"
         :show-footer="showDialogFooter"
+        render-directive="if"
     >
         <h3
             slot="header"
@@ -17,6 +18,7 @@
             {{ title }}
         </h3>
         <component
+            v-if="isShow"
             ref="form"
             :is="comName"
             :oauth-user-list="oauthUserList"
@@ -236,6 +238,7 @@
             
             shouldCheckScmAuth: {
                 handler: async function (newVal) {
+                    if (!this.isShow) return
                     const { projectId, codelibTypeConstants } = this
                     if (this.codelib['@type']?.startsWith('scm') && this.codelib.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({
@@ -267,7 +270,7 @@
             
             async submitCodelib () {
                 if (this.isOAUTH && !this.oAuth.hasPower) {
-                    this.toggleCodelibDialog(false)
+                    this.isShow = false
                     return
                 }
                 
@@ -299,7 +302,7 @@
                                     id: res.hashId
                                 }))
                                 this.$emit('updateRepoId', res.hashId)
-                                this.toggleCodelibDialog(false)
+                                this.isShow = false
                                 this.hasValidate = false
                                 this.$bkMessage({
                                     message: repositoryHashId
@@ -346,8 +349,8 @@
             },
             handleCancel () {
                 this.hasValidate = false
-                this.$refs.form.$refs.form.clearError()
-                this.toggleCodelibDialog(false)
+                this.$refs.form?.$refs?.form?.clearError()
+                this.isShow = false
                 this.updateCodelib({
                     url: '',
                     aliasName: '',

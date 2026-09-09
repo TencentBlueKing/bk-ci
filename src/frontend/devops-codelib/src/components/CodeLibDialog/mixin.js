@@ -15,16 +15,26 @@ import {
     getCodelibConfig
 } from '../../config/'
 import { parsePathAlias } from '../../utils'
+import { cloneDeep } from 'lodash-es'
 const vue = new Vue()
 export default {
     props: {
         oauthUserList: {
             type: Array,
             default: () => []
+        },
+        isEditMode: {
+            type: Boolean,
+            default: false
+        },
+        enablePac: {
+            type: Boolean,
+            default: false
         }
     },
     data () {
         return {
+            editCacheCodelib: null,
             pacProjectName: '', // 已开启PAC的项目名
             isLoadingTickets: false,
             urlErrMsg: '',
@@ -88,6 +98,28 @@ export default {
                 hasPower,
                 project
             }
+        },
+        oauthProjectList () {
+            if (this.usePacUrlInput) {
+                return []
+            }
+            const projects = [...(this.oAuth.project || [])]
+            const url = this.codelib?.url
+            if (this.isEditMode && url && !projects.some(p => p.httpUrl === url)) {
+                projects.unshift({
+                    httpUrl: url,
+                    nameWithNameSpace: this.codelib.aliasName
+                })
+            }
+            return projects
+        },
+        oauthUserOptions () {
+            const users = [...(this.oauthUserList || [])]
+            const userName = this.codelib?.userName
+            if (userName && !users.some(u => u.username === userName)) {
+                users.unshift({ username: userName })
+            }
+            return users
         },
         codelibTypeName () {
             return this.codelib && this.codelib['@type']
@@ -187,7 +219,10 @@ export default {
             return this.placeholders.port[this.codelibConfig.label]
         },
         isScmConfig () {
-            this.codelib.scmCode.includes('SCM_')
+            return this.codelib?.scmCode?.includes('SCM_')
+        },
+        usePacUrlInput () {
+            return this.isEditMode && this.enablePac && this.isOAUTH
         },
         selectComBindData () {
             const bindData = {
@@ -195,10 +230,10 @@ export default {
                 clearable: false,
                 placeholder: this.$t('codelib.codelibUrlPlaceholder')
             }
+            // 编辑模式下也需要支持远程搜索，方便切换代码库地址
             if (this.isGit) {
                 bindData.remoteMethod = this.handleSearchCodeLib
             }
-            
             if (this.isScmGit) {
                 bindData.remoteMethod = this.handleSearchScmCodeLib
             }
@@ -224,7 +259,7 @@ export default {
                         validator: async function (value) {
                             let result = true
                             await vue.$ajax.get(
-                                `${REPOSITORY_API_URL_PREFIX}/user/repositories/${_.projectId}/hasAliasName?aliasName=${value}${this.repositoryHashId ? `&repositoryHashId=${this.repositoryHashId}` : ''}`
+                                `${REPOSITORY_API_URL_PREFIX}/user/repositories/${_.projectId}/hasAliasName?aliasName=${value}${_.repositoryHashId ? `&repositoryHashId=${_.repositoryHashId}` : ''}`
                             )
                                 .then((res) => {
                                     result = !res
@@ -272,8 +307,10 @@ export default {
         tickets () {
             this.isLoadingTickets = false
         },
-        'codelib.url': function (newVal) {
-            this.handleCheckPacProject(newVal)
+        'codelib.url': function (newVal, oldVal) {
+            if (!this.isEditMode) {
+                this.handleCheckPacProject(newVal)
+            }
             const { codelib, codelibTypeName } = this
             const { alias, msg } = parsePathAlias(
                 codelibTypeName,
@@ -286,14 +323,32 @@ export default {
             if (!newVal) {
                 this.urlErrMsg = ''
             }
+
+            if (this.isEditMode && newVal === oldVal) {
+                return
+            }
+
+            const projectName = this.isP4
+                ? newVal
+                : (alias || this.codelib.projectName || '')
             
             const param = {
-                projectName: this.isP4 ? newVal : alias,
+                projectName,
                 url: newVal
             }
 
-            param.aliasName = alias || this.codelib.aliasName
+            if (!this.isEditMode) {
+                param.aliasName = alias || this.codelib.aliasName
+            }
             this.updateCodelib(param)
+        },
+
+        isEditMode (val) {
+            if (val && this.codelib?.repositoryHashId) {
+                this.editCacheCodelib = cloneDeep(this.codelib)
+            } else if (!val) {
+                this.editCacheCodelib = null
+            }
         },
         
         showCodelibDialog (val) {
@@ -342,6 +397,67 @@ export default {
         },
         
         authTypeChange (codelib) {
+            if (this.isEditMode) {
+                const cache = this.editCacheCodelib || {}
+                const val = codelib.authType
+                const aliasName = codelib.aliasName
+                if (val === cache.authType) {
+                    Object.assign(codelib, {
+                        url: cache.url,
+                        credentialId: cache.credentialId,
+                        userName: cache.userName,
+                        aliasName
+                    })
+                    this.$refs.form?.clearError()
+                    this.urlErrMsg = ''
+                    if (val !== 'OAUTH') {
+                        this.$nextTick(() => this.getTickets())
+                    }
+                    return
+                }
+                if (this.isGitLab) {
+                    if (val === 'HTTP' && cache.authType === 'SSH') {
+                        const { url } = codelib
+                        codelib.url = `https://${url.split('@')[1].replace(':', '/')}`
+                        codelib.credentialId = ''
+                    } else if (val === 'SSH' && cache.authType === 'HTTP') {
+                        const { url } = codelib
+                        codelib.url = `git@${url.split('://')[1].replace('.com/', '.com:')}`
+                        codelib.credentialId = ''
+                    }
+                }
+                if (this.isGit) {
+                    if (['OAUTH', 'HTTP'].includes(val) && cache.authType === 'SSH') {
+                        const { url } = codelib
+                        codelib.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                        codelib.credentialId = ''
+                    } else if (val === 'SSH' && ['OAUTH', 'HTTP'].includes(cache.authType)) {
+                        const { url } = codelib
+                        if (url.startsWith('https://')) {
+                            codelib.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                        } else {
+                            codelib.url = url.replace('com/', 'com:').replace('http://', 'git@')
+                        }
+                        codelib.credentialId = ''
+                    } else if (val === 'HTTP' && cache.authType === 'OAUTH') {
+                        codelib.url = cache.url
+                        codelib.credentialId = ''
+                    } else if (val === 'OAUTH' && cache.authType === 'HTTP') {
+                        const { url } = codelib
+                        if (url.startsWith('http://')) {
+                            codelib.url = url.replace('http://', 'https://')
+                        }
+                        codelib.userName = cache.userName || codelib.userName
+                    }
+                }
+                codelib.aliasName = aliasName
+                this.$refs.form?.clearError()
+                this.urlErrMsg = ''
+                if (val !== 'OAUTH') {
+                    this.$nextTick(() => this.getTickets())
+                }
+                return
+            }
             // 切换重置参数
             Object.assign(codelib, {
                 aliasName: '',
@@ -353,7 +469,54 @@ export default {
         },
 
         authTypeChangeAsCustom (codelib) {
-            const authType = this.providerConfig.credentialTypeList.find(i => i.credentialType === codelib.credentialType).authType
+            const credentialTypeItem = this.providerConfig?.credentialTypeList?.find(
+                i => i.credentialType === codelib.credentialType
+            )
+            const authType = credentialTypeItem?.authType
+            if (this.isEditMode) {
+                const cache = this.editCacheCodelib || {}
+                const val = codelib.credentialType
+                const oldVal = cache.credentialType
+                const aliasName = codelib.aliasName
+                Object.assign(codelib, {
+                    authType,
+                    svnType: authType
+                })
+                if (val === oldVal) {
+                    Object.assign(codelib, {
+                        url: cache.url,
+                        credentialId: cache.credentialId,
+                        userName: cache.userName,
+                        aliasName
+                    })
+                } else {
+                    if (this.isScmGit && oldVal) {
+                        if ((val.includes('OAUTH') || val.includes('USERNAME_PASSWORD')) && oldVal.includes('SSH')) {
+                            const { url } = codelib
+                            codelib.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                        }
+                        if (val.includes('SSH') && (oldVal.includes('OAUTH') || oldVal.includes('USERNAME_PASSWORD'))) {
+                            const { url } = codelib
+                            if (url.startsWith('https://')) {
+                                codelib.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                            } else {
+                                codelib.url = url.replace('com/', 'com:').replace('http://', 'git@')
+                            }
+                        }
+                    }
+                    codelib.credentialId = ''
+                    if (val.includes('OAUTH')) {
+                        codelib.userName = cache.userName || codelib.userName
+                    }
+                    codelib.aliasName = aliasName
+                }
+                this.$refs.form?.clearError()
+                this.urlErrMsg = ''
+                if (!val?.includes('OAUTH')) {
+                    this.$nextTick(() => this.getTickets())
+                }
+                return
+            }
             Object.assign(codelib, {
                 authType,
                 svnType: authType,
@@ -393,6 +556,34 @@ export default {
             )
         },
         svnTypeChange () {
+            if (this.isEditMode) {
+                const cache = this.editCacheCodelib || {}
+                const val = this.codelib.svnType
+                if (val === cache.svnType) {
+                    this.updateCodelib({
+                        url: cache.url,
+                        credentialId: cache.credentialId
+                    })
+                    this.$refs.form?.clearError()
+                    this.urlErrMsg = ''
+                    this.$nextTick(() => this.getTickets())
+                    return
+                }
+                const { url } = this.codelib
+                const urlArr = (url || '').split('://')
+                const hostPart = urlArr.length > 1 ? urlArr[1] : url
+                const newUrl = val === 'ssh'
+                    ? `svn+ssh://${hostPart}`
+                    : `https://${hostPart}`
+                this.updateCodelib({
+                    url: newUrl,
+                    credentialId: ''
+                })
+                this.$refs.form?.clearError()
+                this.urlErrMsg = ''
+                this.$nextTick(() => this.getTickets())
+                return
+            }
             this.updateCodelib({
                 url: '',
                 aliasName: '',
@@ -402,11 +593,20 @@ export default {
             this.urlErrMsg = ''
         },
 
+        resetEditCache () {
+            this.editCacheCodelib = null
+        },
+
+        initEditCache (codelib) {
+            this.editCacheCodelib = cloneDeep(codelib)
+        },
+
         /**
          * @desc 校验项目是否已经开启PAC模式
          * @params {String} repoUrl 仓库url
          */
         handleCheckPacProject (repoUrl) {
+            if (this.isEditMode) return
             if (this.providerConfig.pacEnabled && this.isOAUTH && repoUrl) {
                 this.checkPacProject({
                     repoUrl,
