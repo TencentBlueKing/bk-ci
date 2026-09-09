@@ -109,17 +109,18 @@ class TencentAgentService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
-        if (!iegImateShareAccessService.isAdmin(
-                userId = userId,
-                workspaceName = workspaceName
-            )
-        ) {
+        val role = iegImateShareAccessService.getRole(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+        if (!role.equals(IegImateShareAccessService.ADMIN_ROLE, ignoreCase = true)) {
             logger.warn(
                 "updateCreateNodeProject denied|userId=$userId|workspaceName=$workspaceName|" +
-                        "createdUser=${record.createdUser}|fromProject=${record.projectId}|newProjectId=$newProjectId"
+                        "createdUser=${record.createdUser}|fromProject=${record.projectId}|" +
+                    "newProjectId=$newProjectId|role=$role"
             )
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                errorCode = EnvironmentMessageCode.ERROR_IMATE_NO_ADMIN_IMPORT_PERMISSION,
                 defaultMessage = "只有分身管理员才能导入"
             )
         }
