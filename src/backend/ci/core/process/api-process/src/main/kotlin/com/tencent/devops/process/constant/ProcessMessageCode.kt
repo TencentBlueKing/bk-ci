@@ -933,4 +933,10 @@ object ProcessMessageCode {
 
     // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
     const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
+
+    // 构建机容器发生重启，构建进程已中断
+    const val BK_BUILD_CONTAINER_RESTARTED = "bkBuildContainerRestarted"
+
+    // 构建机容器发生重启，但尚未执行任何步骤，已由新的构建进程接管
+    const val BK_BUILD_CONTAINER_RESTARTED_RESUMED = "bkBuildContainerRestartedResumed"
 }
