@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -78,6 +79,18 @@ class DependOnStageCmdTest {
         )
         Assertions.assertEquals(CmdFlowState.CONTINUE, context.cmdFlowState)
         verify(exactly = 1) { pipelineContainerService.batchUpdateControlOption(any()) }
+        val startVmId = VMUtils.genStartVMTaskId(jobB.seq.toString())
+        verify(exactly = 1) {
+            buildLogPrinter.addLine(
+                buildId = TestTool.buildId,
+                message = "Job[job_b] dependOn [job_a]",
+                tag = startVmId,
+                containerHashId = jobB.containerHashId,
+                executeCount = jobB.executeCount,
+                jobId = null,
+                stepId = startVmId
+            )
+        }
     }
 
     @Test
@@ -117,6 +130,20 @@ class DependOnStageCmdTest {
         Assertions.assertEquals(BuildStatus.FAILED, context.buildStatus)
         Assertions.assertEquals(CmdFlowState.FINALLY, context.cmdFlowState)
         verify(exactly = 0) { pipelineContainerService.batchUpdateControlOption(any()) }
+        listOf(jobA, jobB).forEach { container ->
+            val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
+            verify(exactly = 1) {
+                buildLogPrinter.addErrorLine(
+                    buildId = TestTool.buildId,
+                    message = "jobId circular dependency",
+                    tag = startVmId,
+                    containerHashId = container.containerHashId,
+                    executeCount = container.executeCount,
+                    jobId = null,
+                    stepId = startVmId
+                )
+            }
+        }
     }
 
     private fun genStageContext(
