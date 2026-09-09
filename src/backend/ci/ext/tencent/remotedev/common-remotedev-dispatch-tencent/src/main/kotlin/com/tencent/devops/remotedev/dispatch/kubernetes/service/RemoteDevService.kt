@@ -134,6 +134,15 @@ class RemoteDevService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
     }
 
+    fun getWorkspaceInfos(
+        userId: String,
+        workspaceNames: List<String>,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Map<String, WorkspaceInfo> {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType)
+            .getWorkspaceInfos(userId, workspaceNames)
+    }
+
     fun deleteWorkspace(
         workspaceName: String,
         bakWorkspaceName: String?

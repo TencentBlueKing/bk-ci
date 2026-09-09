@@ -72,7 +72,8 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
-    private val startAndBcsCommonService: StartAndBcsCommonService
+    private val startAndBcsCommonService: StartAndBcsCommonService,
+    private val startCloudInterfaceService: StartCloudInterfaceService
 ) : RemoteDevInterface {
 
     override fun createWorkspace(
@@ -447,6 +448,23 @@ class StartCloudRemoteDevService @Autowired constructor(
             regionId = workspaceInfo.regionId,
             vmName = workspaceStatus.name
         )
+    }
+
+    override fun getWorkspaceInfos(
+        userId: String,
+        workspaceNames: List<String>
+    ): Map<String, WorkspaceInfo> {
+        if (workspaceNames.isEmpty()) {
+            return emptyMap()
+        }
+        val nameToEnvId = dispatchWorkspaceDao.getEnvIdsByWorkspaceNames(workspaceNames, dslContext)
+        val envIds = nameToEnvId.values.filter { it.isNotBlank() }.distinct()
+        val envIdToInfo = startCloudInterfaceService.getWorkspaceInfoByEids(envIds)
+        return workspaceNames.mapNotNull { name ->
+            val envId = nameToEnvId[name]?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val info = envIdToInfo[envId] ?: return@mapNotNull null
+            name to info
+        }.toMap()
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {
