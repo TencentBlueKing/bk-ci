@@ -1,4 +1,4 @@
-package com.tencent.devops.process.utils
+package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.option.JobControlOption
 

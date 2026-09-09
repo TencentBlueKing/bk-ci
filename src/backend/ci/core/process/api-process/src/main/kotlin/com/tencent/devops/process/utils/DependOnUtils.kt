@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.DependOnConfig
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.pojo.DependOnJob
 import java.util.regex.Pattern
 import jakarta.ws.rs.core.Response
 

@@ -187,6 +187,24 @@ class PipelineContainerService @Autowired constructor(
         }
     }
 
+    fun batchUpdateControlOption(containerList: List<PipelineBuildContainer>) {
+        if (containerList.isEmpty()) {
+            return
+        }
+        JooqUtils.retryWhenDeadLock {
+            containerList.forEach { container ->
+                pipelineBuildContainerDao.updateControlOption(
+                    dslContext = dslContext,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    stageId = container.stageId,
+                    containerId = container.containerId,
+                    controlOption = container.controlOption
+                )
+            }
+        }
+    }
+
     fun updateContainerStatus(
         projectId: String,
         buildId: String,

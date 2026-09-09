@@ -1,12 +1,12 @@
 package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -14,20 +14,29 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.utils.TestTool
+import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class DependOnStageCmdTest {
 
     private val pipelineContainerService: PipelineContainerService = mockk()
-    private val buildLogPrinter = BuildLogPrinter(mockk<Client>(), mockk())
+    private val buildLogPrinter = mockk<BuildLogPrinter>(relaxed = true)
     private val cmd = DependOnStageCmd(
         pipelineContainerService = pipelineContainerService,
         buildLogPrinter = buildLogPrinter
     )
+
+    @AfterEach
+    fun tearDown() {
+        unmockkObject(I18nUtil)
+    }
 
     @Test
     fun `canExecute only when stage ready to run`() {
@@ -40,18 +49,7 @@ class DependOnStageCmdTest {
 
     @Test
     fun `execute resolve dependOn with runtime variable and persist`() {
-        justRun { pipelineContainerService.batchUpdate(any(), any()) }
-        justRun {
-            buildLogPrinter.addLine(
-                buildId = any(),
-                message = any(),
-                tag = any(),
-                containerHashId = any(),
-                executeCount = any(),
-                jobId = any(),
-                stepId = any()
-            )
-        }
+        justRun { pipelineContainerService.batchUpdateControlOption(any()) }
         val jobA = TestTool.genVmBuildContainer(
             vmSeqId = 1,
             status = BuildStatus.QUEUE
@@ -74,23 +72,20 @@ class DependOnStageCmdTest {
 
         cmd.execute(context)
 
-        Assertions.assertEquals(mapOf("1" to "job_a"), jobBOption.dependOnContainerId2JobIds)
+        Assertions.assertEquals(
+            mapOf("1" to "job_a"),
+            jobB.controlOption.jobControlOption.dependOnContainerId2JobIds
+        )
         Assertions.assertEquals(CmdFlowState.CONTINUE, context.cmdFlowState)
-        verify(exactly = 1) { pipelineContainerService.batchUpdate(any(), any()) }
+        verify(exactly = 1) { pipelineContainerService.batchUpdateControlOption(any()) }
     }
 
     @Test
     fun `execute fail stage when runtime dependOn cycle`() {
-        justRun {
-            buildLogPrinter.addErrorLine(
-                buildId = any(),
-                message = any(),
-                tag = any(),
-                jobId = any(),
-                executeCount = any(),
-                stepId = any()
-            )
-        }
+        mockkObject(I18nUtil)
+        every {
+            I18nUtil.getCodeLanMessage(any(), any(), any(), any(), any(), any())
+        } returns "jobId circular dependency"
         val jobAOption = JobControlOption(
             enable = true,
             dependOnType = DependOnType.NAME,
@@ -121,7 +116,7 @@ class DependOnStageCmdTest {
 
         Assertions.assertEquals(BuildStatus.FAILED, context.buildStatus)
         Assertions.assertEquals(CmdFlowState.FINALLY, context.cmdFlowState)
-        verify(exactly = 0) { pipelineContainerService.batchUpdate(any(), any()) }
+        verify(exactly = 0) { pipelineContainerService.batchUpdateControlOption(any()) }
     }
 
     private fun genStageContext(

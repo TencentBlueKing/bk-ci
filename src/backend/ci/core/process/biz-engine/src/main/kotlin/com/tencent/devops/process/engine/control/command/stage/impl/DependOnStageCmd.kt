@@ -9,7 +9,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.utils.DependOnJob
+import com.tencent.devops.process.pojo.DependOnJob
 import com.tencent.devops.process.utils.DependOnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -30,24 +30,28 @@ class DependOnStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
-        val dependOnContainers = commandContext.containers.filter { container ->
-            container.matrixGroupId.isNullOrBlank() &&
-                DependOnUtils.enableDependOn(container.controlOption.jobControlOption)
+        val stageContainers = commandContext.containers.filter { container ->
+            container.matrixGroupId.isNullOrBlank()
+        }
+        val dependOnContainers = stageContainers.filter { container ->
+            DependOnUtils.enableDependOn(container.controlOption.jobControlOption)
         }
         if (dependOnContainers.isEmpty()) {
             return
         }
 
         val stage = commandContext.stage
+        // 解析时必须带上同 Stage 全部 Job，否则被依赖的 jobId 不在查找表中，映射会丢
+        val jobs = stageContainers.map { container ->
+            DependOnJob(
+                jobId = container.jobId,
+                containerId = container.containerId,
+                jobControlOption = container.controlOption.jobControlOption
+            )
+        }
         try {
             DependOnUtils.initDependOn(
-                jobs = dependOnContainers.map { container ->
-                    DependOnJob(
-                        jobId = container.jobId,
-                        containerId = container.containerId,
-                        jobControlOption = container.controlOption.jobControlOption
-                    )
-                },
+                jobs = jobs,
                 params = commandContext.variables
             )
         } catch (e: ErrorCodeException) {
@@ -76,7 +80,7 @@ class DependOnStageCmd(
             return
         }
 
-        pipelineContainerService.batchUpdate(transactionContext = null, containerList = dependOnContainers)
+        pipelineContainerService.batchUpdateControlOption(dependOnContainers)
         dependOnContainers.forEach { container ->
             val dependRel = container.controlOption.jobControlOption.dependOnContainerId2JobIds
             LOG.info(

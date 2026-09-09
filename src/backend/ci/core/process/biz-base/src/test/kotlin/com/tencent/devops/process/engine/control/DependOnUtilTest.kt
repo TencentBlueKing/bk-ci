@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
-import com.tencent.devops.process.utils.DependOnJob
+import com.tencent.devops.process.pojo.DependOnJob
 import com.tencent.devops.process.utils.DependOnUtils
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
