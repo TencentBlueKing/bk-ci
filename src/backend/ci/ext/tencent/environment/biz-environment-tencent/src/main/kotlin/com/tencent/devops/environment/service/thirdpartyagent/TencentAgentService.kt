@@ -95,13 +95,19 @@ class TencentAgentService @Autowired constructor(
             "updateCreateNodeProject start|userId=$userId|newProjectId=$newProjectId|workspaceName=$workspaceName"
         )
         val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, null)
-            ?: throw NotFoundException("The agent is not exist")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(workspaceName)
+            )
         if (record.agentType != AgentType.CREATE.name) {
             logger.warn(
                 "updateCreateNodeProject agent type invalid|userId=$userId|" +
-                    "workspaceName=$workspaceName|agentType=${record.agentType}"
+                        "workspaceName=$workspaceName|agentType=${record.agentType}"
             )
-            throw NotFoundException("The agent is not create node")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(workspaceName)
+            )
         }
         if (!iegImateShareAccessService.isAdmin(
                 userId = userId,
@@ -110,7 +116,7 @@ class TencentAgentService @Autowired constructor(
         ) {
             logger.warn(
                 "updateCreateNodeProject denied|userId=$userId|workspaceName=$workspaceName|" +
-                    "createdUser=${record.createdUser}|fromProject=${record.projectId}|newProjectId=$newProjectId"
+                        "createdUser=${record.createdUser}|fromProject=${record.projectId}|newProjectId=$newProjectId"
             )
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
