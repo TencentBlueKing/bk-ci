@@ -29,6 +29,7 @@ package com.tencent.devops.scm.pojo
 
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.v3.oas.annotations.Parameter
 
@@ -67,5 +68,7 @@ data class CommitCheckRequest(
     @Parameter(description = "报表数据", required = true)
     val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
     @Parameter(description = "检查结果关联的MR", required = true)
-    val targetBranch: List<String>? = null
+    val targetBranch: List<String>? = null,
+    @Parameter(description = "待审批步骤列表，state=need_approve 时有意义", required = false)
+    val approvals: List<CommitCheckApproval>? = null
 )
