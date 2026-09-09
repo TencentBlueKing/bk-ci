@@ -24,7 +24,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSour
 import com.tencent.devops.environment.service.openworkspace.IegImateShareAccessService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
