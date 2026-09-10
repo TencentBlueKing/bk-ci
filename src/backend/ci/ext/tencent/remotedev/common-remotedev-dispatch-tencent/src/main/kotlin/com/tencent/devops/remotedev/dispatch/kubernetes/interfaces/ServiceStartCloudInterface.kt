@@ -83,6 +83,10 @@ interface ServiceStartCloudInterface {
         eid: String
     ): Result<WorkspaceInfo>
 
+    fun getWorkspaceInfoByEids(
+        eids: List<String>
+    ): Result<Map<String, WorkspaceInfo>>
+
     fun getTaskInfoByUid(
         uid: String
     ): Result<TaskStatus?>
