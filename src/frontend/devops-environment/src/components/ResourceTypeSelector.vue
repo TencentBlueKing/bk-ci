@@ -78,7 +78,7 @@
                 {
                     value: SERVICE_RESOURCE_TYPE.CREATE,
                     label: proxy.$t('environment.creativeResource'),
-                    icon: 'color-logo-pipeline'
+                    icon: 'color-logo-creative'
                 }
             ])
             
