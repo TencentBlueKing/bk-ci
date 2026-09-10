@@ -102,7 +102,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PER
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_BUILD_START_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_BRANCH_TEST_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
-import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_TESTED_CANNOT_CANCEL
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_IN_RELEASE_PROCESS
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_STATUS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -680,13 +680,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     )
                 }
 
+                // 分支测试版本使用带版本号的标签，正式版本使用不带版本号的标签
+                val tagVersion = if (atomVersion.startsWith("$TEST-$branch-")) atomVersion else null
+
                 // 先注册基础数据
                 val metadataResultMap = registerMetadata(
                     userId = userId,
                     atomCode = atomCode,
                     atomName = atomName,
                     indicators = indicators,
-                    version = if (atomVersion.startsWith("$TEST-$branch-")) atomVersion else null
+                    version = tagVersion
                 )
 
                 // 再注册指标
@@ -696,6 +699,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
+                    tagVersion = tagVersion,
                     stage = stageCode,
                     metadataResultMap = metadataResultMap,
                     indicators = indicators
@@ -707,13 +711,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     atomVersion = atomVersion,
+                    tagVersion = tagVersion,
                     stage = stageCode,
                     projectId = projectCode
                 )
 
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
-                val extra = if (atomVersion.startsWith("$TEST-$atomVersion-")) {
+                val extra = if (atomVersion.startsWith("$TEST-$branch-")) {
                     "$IN_READY_TEST($atomVersion)"
                 } else {
                     IN_READY_TEST
@@ -758,13 +763,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomName: String,
         atomVersion: String,
+        tagVersion: String?,
         stage: String,
         projectId: String
     ) {
         client.get(ServiceQualityControlPointMarketResource::class).setTestControlPoint(
             userId = userId,
-            tag =
-            if (atomVersion.startsWith("$TEST-$atomVersion-")) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST,
+            tag = tagVersion?.let { "$IN_READY_TEST($tagVersion)" } ?: IN_READY_TEST,
             controlPoint = QualityControlPoint(
                 hashId = "",
                 type = atomCode,
@@ -789,12 +794,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomName: String,
         atomVersion: String,
+        tagVersion: String?,
         stage: String,
         metadataResultMap: Map<String, Long>,
         indicators: Map<String, Any>
     ) {
-        val tag =
-            if (atomVersion.startsWith("$TEST-$atomVersion-")) "$IN_READY_TEST($atomVersion)" else IN_READY_TEST
+        val tag = tagVersion?.let { "$IN_READY_TEST($tagVersion)" } ?: IN_READY_TEST
         val indicatorsList = indicators.map {
             val map = it.value as Map<String, Any>
             val type = map["type"] as String?
@@ -1119,21 +1124,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        // 仅分支测试版本加分支测试锁；正式版本不加
-        if (record.branchTestFlag == true) {
-            RedisLock(
-                redisOperation,
-                branchTestLockKey(atomCode, record.branch),
-                60L
-            ).use { redisLock ->
-                if (!redisLock.tryLock()) {
-                    throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
-                }
-                doCancelReleaseLocked(userId, atomId, atomCode, status)
-            }
-        } else {
-            doCancelReleaseLocked(userId, atomId, atomCode, status)
-        }
+        doCancelReleaseLocked(userId, atomId, atomCode, status)
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1155,11 +1146,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     private fun doCancelReleaseLocked(userId: String, atomId: String, atomCode: String, status: Byte) {
         val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return
-        // 已结束测试的分支测试版本不允许再取消发布
-        if (latestRecord.branchTestFlag == true &&
-            latestRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
-        ) {
-            throw ErrorCodeException(errorCode = STORE_ATOM_TESTED_CANNOT_CANCEL)
+        // 分支测试版本不属于发布流程，取消发布属错误调用
+        if (latestRecord.branchTestFlag == true) {
+            throw ErrorCodeException(
+                errorCode = STORE_ATOM_NOT_IN_RELEASE_PROCESS,
+                params = arrayOf(latestRecord.version)
+            )
         }
         val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
         if (!checkResult) {
