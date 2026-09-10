@@ -1188,6 +1188,9 @@
     .date-picker {
         width: 240px;
         margin-right: 8px;
+        @media (min-width: 1600px) {
+            width: 300px;
+        }
     }
     .search-input {
         width: 350px;
