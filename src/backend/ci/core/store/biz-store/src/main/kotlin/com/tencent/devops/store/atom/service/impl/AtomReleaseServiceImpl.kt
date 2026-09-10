@@ -99,6 +99,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_BUILD_START_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_NOT_BRANCH_TEST_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_TESTED_CANNOT_CANCEL
@@ -1118,50 +1119,20 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
         val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        // 加分布式锁防止并发操作同一插件版本
-        RedisLock(
-            redisOperation,
-            branchTestLockKey(atomCode, record.branch),
-            60L
-        ).use { redisLock ->
-            if (!redisLock.tryLock()) {
-                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
-            }
-            // 锁内重读版本记录
-            val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
-            // 已结束测试的分支测试版本不允许再取消发布
-            if (latestRecord.branchTestFlag == true &&
-                latestRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
-            ) {
-                throw ErrorCodeException(errorCode = STORE_ATOM_TESTED_CANNOT_CANCEL)
-            }
-            val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
-            if (!checkResult) {
-                throw ErrorCodeException(
-                    errorCode = code,
-                    params = params
-                )
-            }
-            storeFileService.cleanStoreVersionReferenceFile(atomCode, latestRecord.version)
-            // 状态变更与最新测试版本标记转移在同一事务内完成
-            withLatestTestFlagLock(atomCode) {
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    marketAtomDao.setAtomStatusById(
-                        dslContext = context,
-                        atomId = atomId,
-                        atomStatus = status,
-                        userId = userId,
-                        msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
-                    )
-                    transferAtomLatestTestFlag(
-                        context = context,
-                        userId = userId,
-                        atomCode = atomCode,
-                        atomId = atomId
-                    )
+        // 仅分支测试版本加分支测试锁；正式版本不加
+        if (record.branchTestFlag == true) {
+            RedisLock(
+                redisOperation,
+                branchTestLockKey(atomCode, record.branch),
+                60L
+            ).use { redisLock ->
+                if (!redisLock.tryLock()) {
+                    throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
                 }
+                doCancelReleaseLocked(userId, atomId, atomCode, status)
             }
+        } else {
+            doCancelReleaseLocked(userId, atomId, atomCode, status)
         }
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
@@ -1177,6 +1148,46 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, IN_READY_TEST)
         client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, IN_READY_TEST)
         return Result(true)
+    }
+
+    /**
+     * 取消发布实际变更：锁内重读、状态与权限校验、状态变更与最新测试版本标记在同一事务内完成
+     */
+    private fun doCancelReleaseLocked(userId: String, atomId: String, atomCode: String, status: Byte) {
+        val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return
+        // 已结束测试的分支测试版本不允许再取消发布
+        if (latestRecord.branchTestFlag == true &&
+            latestRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
+        ) {
+            throw ErrorCodeException(errorCode = STORE_ATOM_TESTED_CANNOT_CANCEL)
+        }
+        val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
+        if (!checkResult) {
+            throw ErrorCodeException(
+                errorCode = code,
+                params = params
+            )
+        }
+        storeFileService.cleanStoreVersionReferenceFile(atomCode, latestRecord.version)
+        // 状态变更与最新测试版本标记转移在同一事务内完成
+        withLatestTestFlagLock(atomCode) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                marketAtomDao.setAtomStatusById(
+                    dslContext = context,
+                    atomId = atomId,
+                    atomStatus = status,
+                    userId = userId,
+                    msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
+                )
+                transferAtomLatestTestFlag(
+                    context = context,
+                    userId = userId,
+                    atomCode = atomCode,
+                    atomId = atomId
+                )
+            }
+        }
     }
 
     abstract fun doCancelReleaseBus(userId: String, atomId: String)
@@ -1675,6 +1686,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 msg = AtomStatusEnum.BUILD_FAIL.getI18n(I18nUtil.getLanguage(userId))
             )
+            // 仅分支测试版本返回失败 + 推送；正式版本保持原行为（返回成功，用户在进度页重试），
+            // 避免分支测试逻辑外溢影响正式版本正常使用
+            if (convertUpdateRequest.branchTestFlag) {
+                // 通过websocket推送状态变更消息
+                storeWebsocketService.sendWebsocketMessage(userId, atomId)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = STORE_ATOM_BUILD_START_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
         }
         return Result(atomId)
     }
@@ -1702,9 +1723,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             "$STORE_LATEST_TEST_FLAG_KEY_PREFIX:$atomCode",
             60L
         ).use { redisLock ->
-            if (!redisLock.tryLock()) {
-                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
-            }
+            redisLock.lock()
             block()
         }
     }

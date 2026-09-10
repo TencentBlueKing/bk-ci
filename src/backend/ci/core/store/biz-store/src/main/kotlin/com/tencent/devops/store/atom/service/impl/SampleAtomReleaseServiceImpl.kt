@@ -159,7 +159,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
             }
             // 仓库来源升级提交后进入构建/代码检查阶段，归入提交环节的进行中/失败展示
-            AtomStatusEnum.BUILDING.status, AtomStatusEnum.CODECCING.status, AtomStatusEnum.AUDITING.status -> {
+            AtomStatusEnum.BUILDING.status, AtomStatusEnum.CODECCING.status -> {
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
             }
             AtomStatusEnum.BUILD_FAIL.status, AtomStatusEnum.CODECC_FAIL.status -> {
@@ -174,7 +174,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_THREE, SUCCESS)
             }
             else -> {
-                // 其余状态（如已发布、下架等）不改动默认进度，保持提交/测试环节未开始
+                // 分支测试不应进入 AUDITING 等状态，命中即记录 warn 以便发现脏数据
+                logger.warn("handleBranchTestProcessInfo unexpected status|status=$status")
             }
         }
         return processInfo

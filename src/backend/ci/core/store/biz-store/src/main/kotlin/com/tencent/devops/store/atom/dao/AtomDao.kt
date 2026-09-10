@@ -1212,6 +1212,7 @@ class AtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(formalVersionConditions(atomCode))
+                .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
