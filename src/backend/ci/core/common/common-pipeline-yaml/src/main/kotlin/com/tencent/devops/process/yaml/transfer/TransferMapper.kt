@@ -1,9 +1,16 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.io.IOContext
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.BeanProperty
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer
+import com.fasterxml.jackson.databind.jsontype.TypeDeserializer
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -88,6 +95,51 @@ object TransferMapper {
         private fun looksLikeHexNumber(value: String): Boolean {
             if (value.length < 3) return false
             return value.startsWith("0x", ignoreCase = true) || value.startsWith("0X")
+        }
+    }
+
+    /**
+     * YAML 1.1 允许整数用 `_` 做分隔符，jackson 的 YAMLParser 会把 2026_8_6 这类标量清成 202686。
+     * 日期、编码类的值常写成这种形态，丢掉 `_` 属于静默改数据，所以在反序列化时保留原始文本。
+     *
+     * 挂在 Any 上而不是具体字段上：YAML 模型里 `Map<String, Any>` / `Any?` 遍布 variables、
+     * steps.with、job.env 等处，逐个字段加注解覆盖不全。
+     *
+     * 必须继承而不能委托：父类 mapObject/mapArray 对 deserialize 是虚调用，继承后嵌套
+     * 层级会回到这里；改成持有 delegate 则只有最外层生效。
+     * Vanilla 已在 2.19 删除，这里继承 UntypedObjectDeserializer，并锁住
+     * createContextual，避免被替换成内部实现后嵌套不再走本类。
+     */
+    class UnderscoreNumberUntypedDeserializer : UntypedObjectDeserializer(null, null) {
+
+        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any? {
+            return rawUnderscoreNumber(p) ?: super.deserialize(p, ctxt)
+        }
+
+        override fun deserializeWithType(
+            p: JsonParser,
+            ctxt: DeserializationContext,
+            typeDeserializer: TypeDeserializer
+        ): Any? {
+            return rawUnderscoreNumber(p) ?: super.deserializeWithType(p, ctxt, typeDeserializer)
+        }
+
+        override fun createContextual(
+            ctxt: DeserializationContext,
+            property: BeanProperty?
+        ): JsonDeserializer<*> = this
+
+        /**
+         * YAMLParser 把原始标量存在 _textValue、去掉 `_` 的结果存在 _cleanedTextValue，
+         * getNumberValue 用后者而 getText 用前者，所以此时 p.text 仍是 YAML 里的原文。
+         */
+        private fun rawUnderscoreNumber(p: JsonParser): String? {
+            if (p.currentToken()?.isNumeric != true) return null
+            return p.text?.takeIf { UNDERSCORE_NUMBER.matches(it) }
+        }
+
+        companion object {
+            private val UNDERSCORE_NUMBER = Regex("[+-]?[0-9]+(?:_[0-9]+)+")
         }
     }
 
@@ -512,7 +564,13 @@ object TransferMapper {
             .disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
             .stringQuotingChecker(CustomStringQuotingChecker()).build()
     ).setSerializationInclusion(JsonInclude.Include.NON_NULL).apply {
-        registerKotlinModule().setFilterProvider(
+        registerKotlinModule()
+        registerModule(
+            SimpleModule("yamlUnderscoreNumber").addDeserializer(
+                Any::class.java, UnderscoreNumberUntypedDeserializer()
+            )
+        )
+        setFilterProvider(
             SimpleFilterProvider().addFilter(
                 YAME_META_DATA_JSON_FILTER,
                 SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)

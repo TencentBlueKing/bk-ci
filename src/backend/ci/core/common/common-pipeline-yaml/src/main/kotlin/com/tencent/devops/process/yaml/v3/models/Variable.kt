@@ -30,10 +30,6 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
@@ -82,7 +78,6 @@ interface IVariable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
-    @param:JsonDeserialize(using = VariableValueDeserializer::class)
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
@@ -301,27 +296,5 @@ enum class VariablePropType(val value: String) {
 
             return null
         }
-    }
-}
-
-/**
- * 变量默认值反序列化器。
- *
- * value 声明为 Any?，YAML 1.1 会把 2026_8_6 这类标量按整数解析并丢掉下划线。
- * 仅对命中该格式的数字保留原始文本，其余仍走 Jackson 默认 Any 反序列化。
- */
-class VariableValueDeserializer : JsonDeserializer<Any>() {
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any? {
-        if (p.currentToken?.isNumeric == true) {
-            val raw = p.text
-            if (raw != null && UNDERSCORE_NUMBER.matches(raw)) {
-                return raw
-            }
-        }
-        return ctxt.readValue(p, Any::class.java)
-    }
-
-    companion object {
-        private val UNDERSCORE_NUMBER = Regex("[+-]?[0-9]+(?:_[0-9]+)+")
     }
 }
