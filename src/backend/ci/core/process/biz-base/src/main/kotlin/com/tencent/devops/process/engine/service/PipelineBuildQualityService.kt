@@ -75,7 +75,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -100,8 +99,7 @@ class PipelineBuildQualityService(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val taskBuildRecordService: TaskBuildRecordService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildVariableService: BuildVariableService
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     companion object {
 
@@ -263,18 +261,12 @@ class PipelineBuildQualityService(
 
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
         return try {
-            val auditUserSet = client.get(ServiceQualityRuleResource::class).getAuditUserList(
+            client.get(ServiceQualityRuleResource::class).getAuditUserList(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
             ).data ?: setOf()
-
-            auditUserSet.map {
-                buildVariableService.replaceTemplate(projectId, buildId, it)
-            }.flatMap {
-                it.split(";", ",")
-            }.toSet()
         } catch (ignore: Exception) {
             logger.error("quality get audit user list fail: ${ignore.message}", ignore)
             setOf()
