@@ -298,9 +298,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            when (branchTestFlag) {
+                null -> {}
+                false -> conditions.add(formalVersionFlagCondition())
+                true -> conditions.add(BRANCH_TEST_FLAG.eq(true))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -381,16 +388,6 @@ class AtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetchOne()
-        }
-    }
-
-    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
-                .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
@@ -1214,7 +1211,8 @@ class AtomDao : AtomBaseDao() {
     fun getRecentAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
+                .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }

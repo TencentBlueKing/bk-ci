@@ -76,6 +76,8 @@ data class AtomVersion(
     val atomStatus: String,
     @get:Schema(title = "发布类型")
     val releaseType: String?,
+    @get:Schema(title = "是否为分支测试版本", required = false)
+    val branchTestFlag: Boolean = false,
     @get:Schema(title = "版本日志")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
