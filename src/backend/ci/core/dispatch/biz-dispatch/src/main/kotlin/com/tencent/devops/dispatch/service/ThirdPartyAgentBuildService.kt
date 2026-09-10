@@ -399,6 +399,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             agentId = data.agentId,
             envId = envId,
             pipelineId = pipelineId,
+            status = data.taskStatusList,
             startTime = data.startTime,
             endTime = data.endTime
         )
@@ -410,6 +411,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             pipelineId = pipelineId,
             offset = offset,
             limit = limit,
+            status = data.taskStatusList,
             startTime = data.startTime,
             endTime = data.endTime
         ).toHashSet()

@@ -1078,6 +1078,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String?,
         envId: Long?,
         pipelineId: String,
+        status: List<PipelineTaskStatus>?,
         startTime: Long?,
         endTime: Long?
     ): Long {
@@ -1092,6 +1093,9 @@ class ThirdPartyAgentBuildDao {
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
+            }
+            if (status != null) {
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             if (startTime != null) {
                 dsl.and(
@@ -1125,6 +1129,7 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String,
         offset: Int,
         limit: Int,
+        status: List<PipelineTaskStatus>?,
         startTime: Long?,
         endTime: Long?
     ): List<Pair<String, Int>> {
@@ -1139,6 +1144,9 @@ class ThirdPartyAgentBuildDao {
             }
             if (envId != null) {
                 dsl.and(ENV_ID.eq(envId))
+            }
+            if (status != null) {
+                dsl.and(STATUS.`in`(status.map { it.status }))
             }
             if (startTime != null) {
                 dsl.and(
