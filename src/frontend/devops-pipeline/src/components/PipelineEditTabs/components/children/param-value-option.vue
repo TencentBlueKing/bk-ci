@@ -119,7 +119,7 @@
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
             :required="valueRequired"
-            :disabled="valueRequired || disabled"
+            :disabled="valueRequired || isPublicVar"
             @toggleConstraint="handleToggleConstraint"
         >
             <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
@@ -137,7 +137,7 @@
                             v-bind="remoteParamOption"
                             v-validate.initial="{ required: valueRequired }"
                             :popover-min-width="250"
-                            :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                            :disabled="isPublicVar || (disabled && !isOverride)"
                             name="defaultValue"
                             :multi-select="isMultipleParam(param.type)"
                             :data-vv-scope="'pipelineParam'"
@@ -155,7 +155,7 @@
                             v-validate="{ required: valueRequired }"
                             :data-vv-scope="'pipelineParam'"
                             :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                            :disabled="isPublicVar || (disabled && !isOverride)"
                             show-select-all
                             :key="param.type"
                             :value="selectDefautVal"
@@ -166,15 +166,14 @@
                         v-if="isBooleanParam(param.type)"
                         name="defaultValue"
                         :list="boolList"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         :value="param.defaultValue"
                     >
                     </enum-input>
-                  
                     <vuex-input
                         v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isRepoParam(param.type)"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -187,7 +186,7 @@
                         v-if="isFileParam(param.type)"
                         name="defaultValue"
                         :required="valueRequired"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :value="param.defaultValue"
                         :enable-version-control="param.enableVersionControl"
                         :random-sub-path="param.randomStringInPath"
@@ -195,7 +194,7 @@
                     />
                     <vuex-textarea
                         v-if="isTextareaParam(param.type)"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -208,7 +207,7 @@
                         :popover-min-width="250"
                         :url="getCodeUrl(param.scmType)"
                         v-bind="codelibOption"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -222,7 +221,7 @@
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
-                        :disabled="isTemplateInstance ? disabled || !isOverride : disabled"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -367,6 +366,11 @@
         mixins: [validMixins],
         props: {
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            // 是否为公共变量组下的变量（查看态，禁止切换模板约束）
+            isPublicVar: {
                 type: Boolean,
                 default: false
             },
@@ -582,7 +586,7 @@
                 })
             },
             handleToggleConstraint (isOverride) {
-                if (!this.pipeline) return
+                if (!this.pipeline || this.isPublicVar) return
                 if (!isOverride) {
                     const param = this.pipeline.stages[0].containers[0].params.find(item => item.id === this.param.id)
                     this.handleChange('defaultValue', param.defaultValue)
