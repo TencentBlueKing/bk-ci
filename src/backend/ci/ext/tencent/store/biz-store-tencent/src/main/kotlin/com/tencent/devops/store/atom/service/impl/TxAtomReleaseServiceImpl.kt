@@ -1083,7 +1083,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val versionRecord = marketAtomDao.getLatestBranchTestVersion(dslContext, atomCode, branch)
         var newVersionFlag = true
         if (versionRecord != null) {
-            newVersionFlag = checkBranchHasNewCommit(versionRecord, userId, branch)
+            newVersionFlag = if (isBranchTestBuildFailed(versionRecord.atomStatus)) {
+                false
+            } else {
+                checkBranchHasNewCommit(versionRecord, userId, branch)
+            }
         }
         val (version, atomId) = if (newVersionFlag) {
             val branchTestVersion = generateBranchTestVersion(branch)
@@ -1147,6 +1151,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         return result
     }
+
+    /**
+     * 分支测试版本是否处于构建失败态（构建失败或代码检查失败）
+     */
+    private fun isBranchTestBuildFailed(atomStatus: Byte?): Boolean =
+        atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte() ||
+            atomStatus == AtomStatusEnum.CODECC_FAIL.status.toByte()
 
     /**
      * 检查分支最近一次提交是否有更新，并判断是否创建新版本
