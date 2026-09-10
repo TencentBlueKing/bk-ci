@@ -82,7 +82,7 @@ interface IVariable
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
-    @JsonDeserialize(using = VariableValueDeserializer::class)
+    @param:JsonDeserialize(using = VariableValueDeserializer::class)
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
