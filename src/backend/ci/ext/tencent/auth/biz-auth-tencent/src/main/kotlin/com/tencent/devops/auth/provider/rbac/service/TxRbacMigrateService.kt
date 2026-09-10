@@ -13,7 +13,6 @@ import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
 
 class TxRbacMigrateService(
     private val client: Client,
