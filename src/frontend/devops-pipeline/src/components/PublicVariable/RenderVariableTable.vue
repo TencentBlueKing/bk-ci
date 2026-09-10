@@ -122,12 +122,19 @@
                                 ext-popover-cls="delete-param-popconfrim-content"
                                 @confirm="data.handleDeleteParam(row.varName)"
                             >
-                                <bk-button
-                                    text
-                                    :disabled="!!row.referCount"
+                                <span
+                                    v-bk-tooltips="{
+                                        content: $t('publicVar.hasRefVarDeleteTips'),
+                                        disabled: !row.referCount
+                                    }"
                                 >
-                                    {{ $t('delete') }}
-                                </bk-button>
+                                    <bk-button
+                                        text
+                                        :disabled="!!row.referCount"
+                                    >
+                                        {{ $t('delete') }}
+                                    </bk-button>
+                                </span>
                             </bk-popconfirm>
                         </template>
                     </bk-table-column>

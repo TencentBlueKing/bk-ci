@@ -2370,6 +2370,7 @@
     "remove": "移除",
     "hasRefNumTips": "この変数は既に参照されているため、変数グループを削除できません。",
     "hasRefNumDeleteTips": "この変数は既に参照されているため、変数グループを削除できません。",
+    "hasRefVarDeleteTips": "この変数は既に参照されているため、削除できません。",
     "noViewPermissionCopyTips": "変数グループの権限がないため、コピーできません",
     "noViewPermissionExportTips": "変数グループの権限がないため、エクスポートできません",
     "viewGroup": "変数グループを表示",
