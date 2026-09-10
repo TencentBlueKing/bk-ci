@@ -225,7 +225,7 @@ interface UserMarketAtomResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10,
-        @Parameter(description = "版本类型筛选：ALL-全部 FORMAL-正式版本 TEST-测试版本，默认正式版本", required = false)
+        @Parameter(description = "版本类型筛选：ALL-全部 FORMAL-正式版本 TEST-测试版本，null-ALL", required = false)
         @QueryParam("versionType")
         versionType: String? = null
     ): Result<Page<AtomVersionListItem>>
