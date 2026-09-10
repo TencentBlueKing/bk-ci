@@ -69,7 +69,8 @@
     // 跳转到对应的流水线/模板
     function handleToPipeline (row) {
         if (!row?.referUrl) return
-        window.open(row.referUrl, '_blank')
+        const win = window.open(row.referUrl, '_blank')
+        if (win) win.opener = null
     }
 </script>
 
