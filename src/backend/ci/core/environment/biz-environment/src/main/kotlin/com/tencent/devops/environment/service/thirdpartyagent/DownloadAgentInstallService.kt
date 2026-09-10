@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.nio.file.Files
 import java.util.Locale
 import java.util.Locale.getDefault
 
@@ -376,12 +377,14 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     fun getUpgradeFile(fileName: String): File {
-        val file = File(agentPackage, fileName)
-        if (!file.exists()) {
-            logger.warn("The file(${file.absolutePath}) is not exist")
-            throw FileNotFoundException("The file is not exist")
+        val base = File(agentPackage).toPath().toRealPath()
+        val target = File(agentPackage, fileName).toPath().toRealPath()
+
+        if (!target.startsWith(base) || !Files.isRegularFile(target)) {
+            throw NotFoundException("File not found")
         }
-        return file
+
+        return target.toFile()
     }
 
     /**

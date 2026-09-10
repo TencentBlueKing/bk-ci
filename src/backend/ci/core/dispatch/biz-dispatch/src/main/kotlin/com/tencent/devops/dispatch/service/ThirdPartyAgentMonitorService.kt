@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.engine.common.VMUtils
 import java.util.Date
@@ -85,7 +86,12 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     fun monitor(event: TPAMonitorEvent): Boolean {
-        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return false
+        val record = thirdPartyAgentBuildDao.get(
+            dslContext = dslContext,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            executeCount = event.executeCount
+        ) ?: return false
         if (record.executeCount != event.executeCount) {
             logger.warn("monitor|${event.toLog()}|executeCount not equal ${record.executeCount}")
             return false
@@ -116,13 +122,19 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         val logMessage = StringBuilder(128)
 
-        logMessage.append(
-            I18nUtil.getCodeLanMessage(
-                messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, agentDetail.nodeId),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
+        val detailText = I18nUtil.getCodeLanMessage(
+            messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
+            params = arrayOf(event.projectId, agentDetail.nodeId),
+            language = I18nUtil.getDefaultLocaleLanguage()
         )
+        val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        val link = if (agentDetail.nodeType == NodeType.CREATE) {
+            "$host/console/environment/${event.projectId}/creative-stream/node/allNode?nodeHashId=${agentDetail.nodeId}"
+        } else {
+            "$host/console/environment/${event.projectId}/pipeline/node/allNode?nodeHashId=${agentDetail.nodeId}"
+        }
+        val msg = " <a target='_blank' href='$link'>$detailText</a>"
+        logMessage.append(msg)
 
         // #7748 agent使用docker作为构建机
         var parallelTaskCount = agentDetail.parallelTaskCount
@@ -195,7 +207,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         if (record.dockerInfo != null) {
             heartbeatInfo.dockerTaskList?.forEach dockerInfoFor@{
-                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                thirdPartyAgentBuildDao.getWithExecuteCount(dslContext, it.buildId, it.vmSeqId, null)?.let { r1 ->
                     if (r1.dockerInfo == null) {
                         return@dockerInfoFor
                     }
@@ -210,7 +222,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             }
         } else {
             heartbeatInfo.taskList?.forEach taskInfoFor@{
-                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                thirdPartyAgentBuildDao.getWithExecuteCount(dslContext, it.buildId, it.vmSeqId, null)?.let { r1 ->
                     if (r1.dockerInfo != null) {
                         return@taskInfoFor
                     }
@@ -231,7 +243,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     fun tryRollBackQueueMonitor(event: AgentStartMonitor) {
-        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
+        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId, event.executeCount) ?: return
         if (record.executeCount != event.executeCount) {
             logger.warn("tryRollBackQueueMonitor|$event|executeCount not equal ${record.executeCount}")
             return

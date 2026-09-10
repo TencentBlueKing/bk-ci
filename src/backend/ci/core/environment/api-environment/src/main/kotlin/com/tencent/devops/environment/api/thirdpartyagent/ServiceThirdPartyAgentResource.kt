@@ -49,6 +49,8 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoData
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchNodeInfoResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
@@ -529,4 +531,14 @@ interface ServiceThirdPartyAgentResource {
         envId: Long,
         nodeIds: Set<Long>
     ): Result<EnabledStrategiesWithTags>
+
+    @Operation(summary = "批量获取节点信息")
+    @POST
+    @Path("/batchFetchNodeInfo")
+    fun batchFetchNodeInfo(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        data: BatchFetchNodeInfoData
+    ): Result<List<BatchFetchNodeInfoResp>>
 }
