@@ -416,18 +416,33 @@ const actions = {
         })
     },
 
-    // 获取agent任务详情
-    requestAgentJobTaskList ({ commit }, { projectId, params }) {
-        const queryString = new URLSearchParams(params).toString()
-        return request.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs?projectId=${projectId}&${queryString}`).then(response => {
+    // 获取agent任务详情列表（视图：PIPELINE / JOB / BUILD）
+    requestAgentPipelineList ({ commit }, { projectId, body }) {
+        return vue.$ajax.post(`${dispatchPrefix}/user/agents/listAgentPipeline?projectId=${projectId}`, body).then(response => {
             return response
         })
     },
 
-    // 获取指定流水线和job的构建历史
-    requestPipelineBuildHistory ({ commit }, { params }) {
-        const queryString = new URLSearchParams(params).toString()
-        return request.get(`${dispatchPrefix}/user/agents/fetchAgentBuildsByJob?${queryString}`).then(response => {
+    // 根据 PipelineId 获取 Agent 构建记录（流水线视图展开）
+    fetchAgentBuildsByPipeline ({ commit }, { projectId, pipelineId, body }) {
+        return vue.$ajax.post(`${dispatchPrefix}/user/agents/fetchAgentBuildsByPipeline?projectId=${projectId}&pipelineId=${pipelineId}`, body).then(response => {
+            return response
+        })
+    },
+
+    // 根据 JobId 获取 Agent 构建记录（Job 视图展开）
+    fetchAgentBuildsByJob ({ commit }, { projectId, body }) {
+        return vue.$ajax.post(`${dispatchPrefix}/user/agents/fetchAgentBuildsByJob?projectId=${projectId}`, body).then(response => {
+            return response
+        })
+    },
+
+    // 根据 BuildId 获取 Agent 构建记录（构建视图展开）
+    fetchAgentBuildsByBuild ({ commit }, { projectId, buildId, executeCount, body }) {
+        const query = new URLSearchParams(
+            Object.entries({ projectId, buildId, executeCount }).filter(([, v]) => v !== undefined)
+        ).toString()
+        return vue.$ajax.post(`${dispatchPrefix}/user/agents/fetchAgentBuildsByBuild?${query}`, body).then(response => {
             return response
         })
     },
