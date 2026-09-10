@@ -29,6 +29,7 @@ package com.tencent.devops.environment.permission.creativestream
 
 enum class CreativeStreamNodeType {
     IMATE,
+    IEG_IMATE,
     CLOUD_DESKTOP,
     OTHER
 }

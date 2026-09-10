@@ -148,6 +148,7 @@ type AgentPropsInfo struct {
 }
 
 type AgentHeartbeatResponse struct {
+	ProjectId               string            `json:"projectId"`
 	MasterVersion           string            `json:"masterVersion"`
 	SlaveVersion            string            `json:"slaveVersion"`
 	AgentStatus             string            `json:"agentStatus"`
