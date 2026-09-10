@@ -498,6 +498,8 @@ object ProcessMessageCode {
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101374"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
+    // 获取Fork仓库YAML失败：PR触发人[{0}]尚未完成OAUTH授权或没有仓库[{1}]读取权限
+    const val ERROR_PAC_FORK_YAML_OAUTH = "2101375"
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
