@@ -17,6 +17,7 @@ import { getCookies } from './utils/cookie'
 import './styles/global.css'
 import './styles/utils.css'
 import './styles/variables.css'
+import 'bkui-vue/dist/style.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
