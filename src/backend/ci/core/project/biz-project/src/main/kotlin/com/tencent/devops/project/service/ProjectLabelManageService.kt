@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.ProjectLabelDao
+import com.tencent.devops.project.dao.ProjectLabelManageDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.pojo.ProjectLabelVO
 import com.tencent.devops.project.pojo.enums.ProjectLabel
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 class ProjectLabelManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val projectLabelDao: ProjectLabelDao,
+    private val projectLabelManageDao: ProjectLabelManageDao,
     private val projectLabelRelDao: ProjectLabelRelDao
 ) {
 
@@ -54,7 +54,7 @@ class ProjectLabelManageService @Autowired constructor(
      * 标签无绑定项目时返回空列表。
      */
     fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
-        return projectLabelDao.listEnglishNamesByLabelName(dslContext, label.name)
+        return projectLabelManageDao.listEnglishNamesByLabelName(dslContext, label.name)
     }
 
     /**
@@ -86,7 +86,7 @@ class ProjectLabelManageService @Autowired constructor(
     }
 
     fun listAll(): List<ProjectLabelVO> {
-        return projectLabelDao.getAllProjectLabel(dslContext)?.map { record ->
+        return projectLabelManageDao.getAllProjectLabel(dslContext)?.map { record ->
             ProjectLabelVO(
                 id = record.id,
                 labelName = record.labelName,
@@ -111,14 +111,14 @@ class ProjectLabelManageService @Autowired constructor(
                 defaultMessage = "Label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
             )
         }
-        if (projectLabelDao.getByName(dslContext, name) != null) {
+        if (projectLabelManageDao.getByName(dslContext, name) != null) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.LABLE_EXIST,
                 defaultMessage = "Project label [$name] already exists"
             )
         }
         try {
-            projectLabelDao.add(dslContext, name)
+            projectLabelManageDao.add(dslContext, name)
         } catch (ignored: DuplicateKeyException) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.LABLE_EXIST,
@@ -128,12 +128,12 @@ class ProjectLabelManageService @Autowired constructor(
     }
 
     fun delete(labelId: String) {
-        projectLabelDao.getProjectLabel(dslContext, labelId) ?: throw ErrorCodeException(
+        projectLabelManageDao.getProjectLabel(dslContext, labelId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ID_INVALID,
             defaultMessage = "Project label [$labelId] does not exist"
         )
         projectLabelRelDao.deleteByLabelId(dslContext, labelId)
-        projectLabelDao.delete(dslContext, labelId)
+        projectLabelManageDao.delete(dslContext, labelId)
     }
 
     /**
@@ -221,7 +221,7 @@ class ProjectLabelManageService @Autowired constructor(
     }
 
     private fun getExistingLabelId(dslContext: DSLContext, labelName: String): String {
-        val existed = projectLabelDao.getByName(dslContext, labelName)
+        val existed = projectLabelManageDao.getByName(dslContext, labelName)
             ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(labelName),

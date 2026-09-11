@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class ProjectLabelDao {
+class ProjectLabelManageDao {
 
     fun add(dslContext: DSLContext, labelName: String): String {
         val id = UUIDUtil.generate()
