@@ -47,7 +47,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PROJECT_LABEL", description = "项目标签")
-@Path("/op/project/labels")
+@Path("/op/projects/labels")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProjectLabelResource {
