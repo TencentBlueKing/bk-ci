@@ -51,6 +51,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -308,6 +309,10 @@ class ServiceProjectResourceImpl @Autowired constructor(
             projectOrganizationInfo = projectOrganizationInfo
         )
         return Result(true)
+    }
+
+    override fun listProjectIdsByLabel(label: ProjectLabel): Result<List<String>> {
+        return Result(projectService.listProjectIdsByLabel(label))
     }
 
     override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {

@@ -104,6 +104,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
@@ -114,6 +115,7 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
+import com.tencent.devops.project.service.ProjectLabelService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -147,7 +149,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectApprovalService: ProjectApprovalService,
     private val clientTokenService: ClientTokenService,
     private val profile: Profile,
-    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
+    private val projectLabelService: ProjectLabelService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -318,6 +321,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
+                projectLabelService.replaceIfPresent(
+                    dslContext = context,
+                    projectUuid = projectId,
+                    labels = createInfo.labels
+                )
             }
             updateProjectRouterTag(createInfo.englishName)
         } catch (e: DuplicateKeyException) {
@@ -716,6 +724,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectUpdateHistoryDao.create(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
+                )
+                projectLabelService.replaceIfPresent(
+                    dslContext = dslContext,
+                    projectUuid = projectId,
+                    labels = projectUpdateInfo.labels
                 )
                 if (!projectUpdateInfo.secrecy) {
                     redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
@@ -1753,6 +1766,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             projectOrganizationInfo = projectOrganizationInfo
         )
+    }
+
+    override fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
+        return projectLabelService.listProjectIdsByLabel(label)
     }
 
     override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {

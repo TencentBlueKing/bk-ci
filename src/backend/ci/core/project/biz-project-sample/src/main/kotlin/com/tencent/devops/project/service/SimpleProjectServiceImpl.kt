@@ -81,7 +81,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectApprovalService: ProjectApprovalService,
     clientTokenService: ClientTokenService,
     profile: Profile,
-    projectUpdateHistoryDao: ProjectUpdateHistoryDao
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao,
+    projectLabelService: ProjectLabelService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -98,7 +99,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectApprovalService = projectApprovalService,
     clientTokenService = clientTokenService,
     profile = profile,
-    projectUpdateHistoryDao = projectUpdateHistoryDao
+    projectUpdateHistoryDao = projectUpdateHistoryDao,
+    projectLabelService = projectLabelService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {

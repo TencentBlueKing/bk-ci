@@ -87,4 +87,12 @@ class ProjectLabelRelDao {
                     .execute()
         }
     }
+
+    fun deleteByLabelId(dslContext: DSLContext, labelId: String) {
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(LABEL_ID.eq(labelId))
+                .execute()
+        }
+    }
 }

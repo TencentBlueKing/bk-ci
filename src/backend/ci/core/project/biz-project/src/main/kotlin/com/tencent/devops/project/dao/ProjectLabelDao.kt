@@ -28,9 +28,11 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.TProjectLabel
 import com.tencent.devops.model.project.tables.TProjectLabelRel
 import com.tencent.devops.model.project.tables.records.TProjectLabelRecord
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,7 +41,8 @@ import java.time.LocalDateTime
 @Repository
 class ProjectLabelDao {
 
-    fun add(dslContext: DSLContext, labelName: String) {
+    fun add(dslContext: DSLContext, labelName: String): String {
+        val id = UUIDUtil.generate()
         with(TProjectLabel.T_PROJECT_LABEL) {
             dslContext.insertInto(
                 this,
@@ -47,11 +50,33 @@ class ProjectLabelDao {
                 LABEL_NAME
             )
                 .values(
-                    UUIDUtil.generate(),
+                    id,
                     labelName
                 )
                 .execute()
         }
+        return id
+    }
+
+    fun getByName(dslContext: DSLContext, labelName: String): TProjectLabelRecord? {
+        return with(TProjectLabel.T_PROJECT_LABEL) {
+            dslContext.selectFrom(this)
+                .where(LABEL_NAME.eq(labelName))
+                .fetchOne()
+        }
+    }
+
+    fun listEnglishNamesByLabelName(dslContext: DSLContext, labelName: String): List<String> {
+        val label = TProjectLabel.T_PROJECT_LABEL
+        val rel = TProjectLabelRel.T_PROJECT_LABEL_REL
+        val project = TProject.T_PROJECT
+        return dslContext.select(project.ENGLISH_NAME)
+            .from(label)
+            .join(rel).on(label.ID.eq(rel.LABEL_ID))
+            .join(project).on(rel.PROJECT_ID.eq(project.PROJECT_ID))
+            .where(label.LABEL_NAME.eq(labelName))
+            .and(project.CHANNEL.`in`(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name))
+            .fetch(project.ENGLISH_NAME)
     }
 
     fun countByName(dslContext: DSLContext, labelName: String): Int {
