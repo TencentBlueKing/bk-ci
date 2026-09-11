@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -18,7 +19,7 @@ import (
 // FIN_WAIT1 / FIN_WAIT2 / TIME_WAIT / CLOSE / CLOSE_WAIT / LAST_ACK /
 // LISTEN / CLOSING / NONE，field 名在 names.go 中定义。
 type Netstat struct {
-	connsFn func(kind string) ([]net.ConnectionStat, error)
+	connsFn func(ctx context.Context, kind string) ([]net.ConnectionStat, error)
 	nowFn   func() time.Time
 }
 
@@ -27,7 +28,7 @@ type Netstat struct {
 // 覆盖 tcp/udp 全部，简单起见直接用 Connections("all")。
 func NewNetstat() *Netstat {
 	return &Netstat{
-		connsFn: net.Connections,
+		connsFn: net.ConnectionsWithContext,
 		nowFn:   time.Now,
 	}
 }
@@ -36,8 +37,8 @@ func NewNetstat() *Netstat {
 func (n *Netstat) Name() string { return MeasurementNetstat }
 
 // Gather 统计每种状态的连接数。
-func (n *Netstat) Gather() ([]Metric, error) {
-	conns, err := n.connsFn("all")
+func (n *Netstat) Gather(ctx context.Context) ([]Metric, error) {
+	conns, err := n.connsFn(ctx, "all")
 	if err != nil {
 		return nil, errors.Wrap(err, "netstat: Connections failed")
 	}

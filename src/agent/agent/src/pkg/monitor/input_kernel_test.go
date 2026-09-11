@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -17,11 +18,11 @@ func TestKernel_Name(t *testing.T) {
 
 func TestKernel_Gather_Success(t *testing.T) {
 	k := &Kernel{
-		bootTimeFn:   func() (uint64, error) { return 1700000000, nil },
+		bootTimeFn:   func(_ context.Context) (uint64, error) { return 1700000000, nil },
 		nowFn:        time.Now,
 		linuxExtraFn: nil, // 非 Linux 场景，不产出 Linux 专属字段
 	}
-	metrics, err := k.Gather()
+	metrics, err := k.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,8 +42,8 @@ func TestKernel_Gather_Success(t *testing.T) {
 
 func TestKernel_Gather_Error(t *testing.T) {
 	sentinel := errors.New("boom")
-	k := &Kernel{bootTimeFn: func() (uint64, error) { return 0, sentinel }, nowFn: time.Now}
-	if _, err := k.Gather(); err == nil || !errors.Is(err, sentinel) {
+	k := &Kernel{bootTimeFn: func(_ context.Context) (uint64, error) { return 0, sentinel }, nowFn: time.Now}
+	if _, err := k.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -51,7 +52,7 @@ func TestKernel_Gather_Error(t *testing.T) {
 // interrupts/context_switches/procs/entropy_avail 等字段，应合并到 env metric。
 func TestKernel_Gather_LinuxExtraMerged(t *testing.T) {
 	k := &Kernel{
-		bootTimeFn: func() (uint64, error) { return 1700000000, nil },
+		bootTimeFn: func(_ context.Context) (uint64, error) { return 1700000000, nil },
 		nowFn:      time.Now,
 		linuxExtraFn: func() (map[string]interface{}, error) {
 			return map[string]interface{}{
@@ -63,7 +64,7 @@ func TestKernel_Gather_LinuxExtraMerged(t *testing.T) {
 			}, nil
 		},
 	}
-	metrics, err := k.Gather()
+	metrics, err := k.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,13 +91,13 @@ func TestKernel_Gather_LinuxExtraMerged(t *testing.T) {
 // uptime，不报错、不丢 env metric。
 func TestKernel_Gather_LinuxExtraError(t *testing.T) {
 	k := &Kernel{
-		bootTimeFn: func() (uint64, error) { return 1700000000, nil },
+		bootTimeFn: func(_ context.Context) (uint64, error) { return 1700000000, nil },
 		nowFn:      time.Now,
 		linuxExtraFn: func() (map[string]interface{}, error) {
 			return nil, errors.New("permission denied /proc/stat")
 		},
 	}
-	metrics, err := k.Gather()
+	metrics, err := k.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("extra fn error should be swallowed, got %v", err)
 	}

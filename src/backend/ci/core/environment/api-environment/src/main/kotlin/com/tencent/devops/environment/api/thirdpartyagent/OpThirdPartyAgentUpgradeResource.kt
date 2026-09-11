@@ -263,6 +263,14 @@ interface OpThirdPartyAgentUpgradeResource {
         count: Long
     ): Result<Boolean>
 
+    @Operation(summary = "设置稳定Agent版本，支持覆盖")
+    @PUT
+    @Path("/agents/set_release_version")
+    fun setAgentReleaseVersion(
+        @Parameter(description = "projectIds", required = true)
+        versionList: List<String>
+    ): Result<Boolean>
+
     @Operation(summary = "获取所有升级设置")
     @GET
     @Path("/agents/get_all_upgrade_scope")

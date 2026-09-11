@@ -23,7 +23,7 @@ type stubInput struct {
 
 func (s *stubInput) Name() string { return s.name }
 
-func (s *stubInput) Gather() ([]Metric, error) {
+func (s *stubInput) Gather(_ context.Context) ([]Metric, error) {
 	s.calls.Add(1)
 	if s.err != nil {
 		return nil, s.err
@@ -75,7 +75,7 @@ func TestDoOneGather_AggregatesAndReports(t *testing.T) {
 	dir := t.TempDir()
 	dumper := NewMonitorDumper(dir)
 
-	doOneGather(context.Background(), ins, reporter, dumper)
+	doOneGather(context.Background(), newInputRunners(ins), reporter, dumper)
 
 	if stub1.calls.Load() != 1 || stub2.calls.Load() != 1 {
 		t.Errorf("each input should be called once: stub1=%d stub2=%d",
@@ -110,7 +110,7 @@ func TestDoOneGather_InputErrorIsolated(t *testing.T) {
 	}
 	dumper := NewMonitorDumper(t.TempDir())
 
-	doOneGather(context.Background(), ins, reporter, dumper)
+	doOneGather(context.Background(), newInputRunners(ins), reporter, dumper)
 
 	if atomic.LoadInt32(&posted) != 1 {
 		t.Errorf("reporter should be invoked once even with partial failures, got %d", posted)
@@ -138,7 +138,7 @@ func TestDoOneGather_EmptySkipsReport(t *testing.T) {
 		},
 	}
 	dumper := NewMonitorDumper(t.TempDir())
-	doOneGather(context.Background(), ins, reporter, dumper)
+	doOneGather(context.Background(), newInputRunners(ins), reporter, dumper)
 	if atomic.LoadInt32(&posted) != 0 {
 		t.Errorf("empty gather should not trigger HTTP, posted=%d", posted)
 	}

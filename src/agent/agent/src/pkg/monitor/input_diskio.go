@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,7 +15,7 @@ import (
 // 每个物理磁盘一条 metric，tag name 为 device 名（sda、nvme0n1），数值
 // 为累计计数器（自内核启动起的 reads/writes/bytes），由后端按相邻采样做差。
 type DiskIO struct {
-	ioCountersFn func() (map[string]disk.IOCountersStat, error)
+	ioCountersFn func(ctx context.Context) (map[string]disk.IOCountersStat, error)
 	nowFn        func() time.Time
 }
 
@@ -22,8 +23,8 @@ type DiskIO struct {
 // 注意 disk.IOCounters 在 Windows 上通过 PDH 查询 PhysicalDisk 计数器。
 func NewDiskIO() *DiskIO {
 	return &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
-			return disk.IOCounters()
+		ioCountersFn: func(ctx context.Context) (map[string]disk.IOCountersStat, error) {
+			return disk.IOCountersWithContext(ctx)
 		},
 		nowFn: time.Now,
 	}
@@ -33,8 +34,8 @@ func NewDiskIO() *DiskIO {
 func (d *DiskIO) Name() string { return RenamedIO }
 
 // Gather 每个磁盘产出一条 metric。没有 IO 统计时返回空列表，不报错。
-func (d *DiskIO) Gather() ([]Metric, error) {
-	counters, err := d.ioCountersFn()
+func (d *DiskIO) Gather(ctx context.Context) ([]Metric, error) {
+	counters, err := d.ioCountersFn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "diskio: IOCounters failed")
 	}

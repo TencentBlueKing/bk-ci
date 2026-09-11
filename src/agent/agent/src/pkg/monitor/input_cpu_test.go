@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"testing"
@@ -13,8 +14,8 @@ import (
 )
 
 // fakeCPUTimes 按 percpu 参数返回预设数据。seq 用来模拟两次调用返回不同值。
-func fakeCPUTimes(pcpu, total []cpu.TimesStat, err error) func(bool) ([]cpu.TimesStat, error) {
-	return func(percpu bool) ([]cpu.TimesStat, error) {
+func fakeCPUTimes(pcpu, total []cpu.TimesStat, err error) func(ctx context.Context, percpu bool) ([]cpu.TimesStat, error) {
+	return func(_ context.Context, percpu bool) ([]cpu.TimesStat, error) {
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +43,7 @@ func TestCPU_Gather_FirstCallNoMetrics(t *testing.T) {
 		nowFn: time.Now,
 		last:  make(map[string]cpu.TimesStat),
 	}
-	metrics, err := c.Gather()
+	metrics, err := c.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("Gather: %v", err)
 	}
@@ -64,7 +65,7 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 
 	calls := 0
 	c := &CPU{
-		timesFn: func(percpu bool) ([]cpu.TimesStat, error) {
+		timesFn: func(_ context.Context, percpu bool) ([]cpu.TimesStat, error) {
 			calls++
 			// Gather 内部对每次 Gather 会调用 timesFn 两次（percpu + total），
 			// 所以第一轮用 1/2 两次调用，第二轮用 3/4 两次调用。
@@ -82,10 +83,10 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 		nowFn: time.Now,
 		last:  make(map[string]cpu.TimesStat),
 	}
-	if _, err := c.Gather(); err != nil {
+	if _, err := c.Gather(context.Background()); err != nil {
 		t.Fatalf("warmup: %v", err)
 	}
-	metrics, err := c.Gather()
+	metrics, err := c.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("second Gather: %v", err)
 	}
@@ -131,7 +132,7 @@ func TestCPU_Gather_SecondCallProducesMetrics(t *testing.T) {
 func TestCPU_Gather_ErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
 	c := &CPU{timesFn: fakeCPUTimes(nil, nil, sentinel), nowFn: time.Now, last: map[string]cpu.TimesStat{}}
-	if _, err := c.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := c.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v, want wrapping sentinel", err)
 	}
 }
@@ -145,8 +146,8 @@ func TestCPU_Gather_ZeroTotalDeltaSkipped(t *testing.T) {
 		nowFn:   time.Now,
 		last:    make(map[string]cpu.TimesStat),
 	}
-	_, _ = c.Gather()
-	metrics, _ := c.Gather()
+	_, _ = c.Gather(context.Background())
+	metrics, _ := c.Gather(context.Background())
 	if len(metrics) != 0 {
 		t.Errorf("identical samples should yield 0 metrics, got %d", len(metrics))
 	}

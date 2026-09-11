@@ -47,6 +47,16 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
         } else {
             EnvUtils.parseEnv(options?.user, variables)
         }
+        options?.cpus = if (options?.cpus == null) {
+            null
+        } else {
+            EnvUtils.parseEnv(options?.cpus, variables)
+        }
+        options?.memory = if (options?.memory == null) {
+            null
+        } else {
+            EnvUtils.parseEnv(options?.memory, variables)
+        }
     }
     if (!imagePullPolicy.isNullOrBlank()) {
         imagePullPolicy = EnvUtils.parseEnv(imagePullPolicy, variables)
@@ -74,6 +84,8 @@ data class DockerOptions(
     var privileged: Boolean?,
     var network: List<String>?,
     var user: String?,
+    var cpus: String?,
+    var memory: String?
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

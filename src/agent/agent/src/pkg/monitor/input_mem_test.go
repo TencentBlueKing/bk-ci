@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -12,8 +13,8 @@ import (
 )
 
 // fakeVirtualMem 返回预设的 VirtualMemoryStat，用于 Gather 的确定性测试。
-func fakeVirtualMem(stat *mem.VirtualMemoryStat, err error) func() (*mem.VirtualMemoryStat, error) {
-	return func() (*mem.VirtualMemoryStat, error) {
+func fakeVirtualMem(stat *mem.VirtualMemoryStat, err error) func(ctx context.Context) (*mem.VirtualMemoryStat, error) {
+	return func(_ context.Context) (*mem.VirtualMemoryStat, error) {
 		return stat, err
 	}
 }
@@ -45,7 +46,7 @@ func TestMem_Gather_Success(t *testing.T) {
 		platform: "linux", // Linux 分支字段最全，覆盖通用 + 专属字段断言
 	}
 
-	metrics, err := m.Gather()
+	metrics, err := m.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("Gather() unexpected error: %v", err)
 	}
@@ -106,7 +107,7 @@ func TestMem_Gather_PctUsedIgnoresGopsutil(t *testing.T) {
 		}, nil),
 		nowFn: time.Now,
 	}
-	metrics, _ := m.Gather()
+	metrics, _ := m.Gather(context.Background())
 	v, _ := metrics[0].Fields["pct_used"].(float64)
 	if v != 43.0 {
 		// 100 * 43 / 100 = 43，但类型必须是 float64（非 int / uint）
@@ -119,7 +120,7 @@ func TestMem_Gather_PctUsedIgnoresGopsutil(t *testing.T) {
 		}, nil),
 		nowFn: time.Now,
 	}
-	metrics2, _ := m2.Gather()
+	metrics2, _ := m2.Gather(context.Background())
 	v2, _ := metrics2[0].Fields["pct_used"].(float64)
 	if v2 != 43.5 {
 		t.Errorf("pct_used = %v, want 43.5 (self-computed, not gopsutil's int-truncated 43)", v2)
@@ -168,7 +169,7 @@ func TestMem_Gather_PlatformBranches(t *testing.T) {
 				nowFn:    time.Now,
 				platform: tc.platform,
 			}
-			metrics, err := m.Gather()
+			metrics, err := m.Gather(context.Background())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -193,7 +194,7 @@ func TestMem_Gather_ErrorPropagates(t *testing.T) {
 		virtualMemFn: fakeVirtualMem(nil, sentinel),
 		nowFn:        time.Now,
 	}
-	_, err := m.Gather()
+	_, err := m.Gather(context.Background())
 	if err == nil {
 		t.Fatal("Gather() expected error, got nil")
 	}
@@ -208,7 +209,7 @@ func TestMem_Gather_NilStat(t *testing.T) {
 		virtualMemFn: fakeVirtualMem(nil, nil),
 		nowFn:        time.Now,
 	}
-	_, err := m.Gather()
+	_, err := m.Gather(context.Background())
 	if err == nil {
 		t.Fatal("Gather() with nil stat should return error")
 	}
@@ -221,7 +222,7 @@ func TestMem_Gather_ZeroTotal(t *testing.T) {
 		virtualMemFn: fakeVirtualMem(&mem.VirtualMemoryStat{Total: 0}, nil),
 		nowFn:        time.Now,
 	}
-	metrics, err := m.Gather()
+	metrics, err := m.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("Gather() unexpected error: %v", err)
 	}
