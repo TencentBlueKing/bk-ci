@@ -40,6 +40,8 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import jakarta.annotation.PostConstruct
+import java.security.MessageDigest
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -167,16 +169,24 @@ class RemoteDevService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 
-    /*请求合法性校验时使用的密钥*/
+    /*请求合法性校验时使用的密钥，留空禁止启动*/
     @Value("\${workspaceTaskCallExternalKey:}")
     val workspaceTaskCallExternalKey = ""
+
+    @PostConstruct
+    fun checkKey() {
+        check(workspaceTaskCallExternalKey.isNotBlank()) {
+            "workspaceTaskCallExternalKey must be configured (fail-closed), blank value is not allowed"
+        }
+    }
 
     fun workspaceTaskCallbackNew(
         taskStatus: TaskStatus,
         key: String,
         mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
     ): Boolean {
-        if (key != workspaceTaskCallExternalKey) {
+        if (!MessageDigest.isEqual(key.toByteArray(), workspaceTaskCallExternalKey.toByteArray())) {
+            logger.warn("workspaceTaskCallbackNew rejected|uid=${taskStatus.uid}")
             return false
         }
 

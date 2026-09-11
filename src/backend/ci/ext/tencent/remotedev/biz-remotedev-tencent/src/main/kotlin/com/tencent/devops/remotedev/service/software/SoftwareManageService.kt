@@ -56,6 +56,7 @@ import com.tencent.devops.remotedev.service.HttpCallBackService
 import com.tencent.devops.remotedev.service.projectworkspace.CloneWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
@@ -101,14 +102,38 @@ class SoftwareManageService @Autowired constructor(
     @Value("\${devopsGateway.host:#{null}}")
     val backendHost = ""
 
-    /*请求合法性校验时使用的密钥*/
-    @Value("\${externalKey:}")
-    val externalKey = ""
-
     companion object {
         private val logger = LoggerFactory.getLogger(SoftwareManageService::class.java)
         private const val IOANAME = "IOA"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        private const val CALLBACK_TOKEN_BYTES = 32
+        // 软件安装回调 token 有效期（秒），需覆盖安装耗时，到期失效
+        private const val SOFTWARE_CALLBACK_TOKEN_TTL_SECONDS = 7200L
+    }
+
+    /**
+     * 生成软件安装回调一次性 token，绑定 workspaceName 写入 Redis，短期有效。
+     * token 到期失效，TTL 内可重复校验以容忍回调重试。
+     */
+    private fun generateSoftwareCallbackToken(workspaceName: String): String {
+        val bytes = ByteArray(CALLBACK_TOKEN_BYTES).also { java.security.SecureRandom().nextBytes(it) }
+        val token = bytes.joinToString("") { "%02x".format(it) }
+        redisOperation.set(
+            key = "${RedisKeys.SOFTWARE_CALLBACK_TOKEN_PREFIX}$token",
+            value = workspaceName,
+            expiredInSecond = SOFTWARE_CALLBACK_TOKEN_TTL_SECONDS
+        )
+        return token
+    }
+
+    /**
+     * 校验软件安装回调 token：token 必须存在且绑定的 workspaceName 与请求一致。
+     * 秘密性由 token 本身（122bit 随机）与 Redis 存在性保证，workspaceName 用常量时间比较。
+     */
+    fun verifySoftwareCallbackToken(token: String, workspaceName: String): Boolean {
+        if (token.isBlank()) return false
+        val bound = redisOperation.get("${RedisKeys.SOFTWARE_CALLBACK_TOKEN_PREFIX}$token") ?: return false
+        return java.security.MessageDigest.isEqual(bound.toByteArray(), workspaceName.toByteArray())
     }
 
     fun safeInitialization(
@@ -324,8 +349,9 @@ class SoftwareManageService @Autowired constructor(
                 )
             )
         }
+        val callbackToken = generateSoftwareCallbackToken(workspaceName)
         val callBackUrl = "$backendHost/remotedev/api/external/remotedev/software_install_callback" +
-            "?type=SYSTEM&key=$externalKey&workspaceName=$workspaceName&" +
+            "?type=SYSTEM&key=$callbackToken&workspaceName=$workspaceName&" +
             "projectId=$projectId&userId=$creator&x-devops-project-id=$projectId"
         installSoftwareFromXingyun(
             userId = creator,
@@ -358,7 +384,11 @@ class SoftwareManageService @Autowired constructor(
             callbackUrl = callBackUrl
         )
         val body = JsonUtil.toJson(softwareCreate, false)
-        logger.info("installSoftwareFromXingyun|installSoftwareUrl|$installSoftwareUrl|body|$body")
+        // 不打印 body，其含回调 token；仅记录可观测信息
+        logger.info(
+            "installSoftwareFromXingyun|installSoftwareUrl|$installSoftwareUrl|ip|$ip|" +
+                "software|${softwareInfoList.map { it.name }}"
+        )
         val headerStr = ObjectMapper().writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
             .replace("\\s".toRegex(), "")
         val request = Request.Builder()
