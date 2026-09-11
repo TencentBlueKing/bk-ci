@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ import (
 
 // Net 对齐 telegraf win_perf_counters 的 Network Interface 速率计数器。
 type Net struct {
-	ioCountersFn func(pernic bool) ([]net.IOCountersStat, error)
+	ioCountersFn func(ctx context.Context, pernic bool) ([]net.IOCountersStat, error)
 	nowFn        func() time.Time
 	sleepFn      func(time.Duration) // 单测注入点
 	// adapterDescFn 返回 FriendlyName→Description 映射，用于把 gopsutil
@@ -39,7 +40,7 @@ type Net struct {
 // NewNet 返回默认 Net 采集器。
 func NewNet() *Net {
 	return &Net{
-		ioCountersFn:  net.IOCounters,
+		ioCountersFn:  net.IOCountersWithContext,
 		nowFn:         time.Now,
 		sleepFn:       time.Sleep,
 		adapterDescFn: adapterDescriptions,
@@ -50,8 +51,8 @@ func NewNet() *Net {
 func (n *Net) Name() string { return MeasurementNet }
 
 // Gather 执行一次 twin-sample 并返回速率字段已换算的 metric。
-func (n *Net) Gather() ([]Metric, error) {
-	s1, err := n.ioCountersFn(true)
+func (n *Net) Gather(ctx context.Context) ([]Metric, error) {
+	s1, err := n.ioCountersFn(ctx, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "net: IOCounters first sample failed")
 	}
@@ -59,7 +60,7 @@ func (n *Net) Gather() ([]Metric, error) {
 
 	n.sleepFn(rateSampleInterval)
 
-	s2, err := n.ioCountersFn(true)
+	s2, err := n.ioCountersFn(ctx, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "net: IOCounters second sample failed")
 	}
