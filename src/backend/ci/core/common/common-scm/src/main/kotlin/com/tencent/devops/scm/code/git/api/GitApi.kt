@@ -30,6 +30,7 @@ package com.tencent.devops.scm.code.git.api
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -204,9 +205,10 @@ open class GitApi {
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approvals: List<CommitCheckApproval>? = null
     ) {
-        val params = mapOf(
+        val params = mutableMapOf<String, Any?>(
             "state" to state,
             "target_url" to detailUrl,
             "description" to description,
@@ -214,6 +216,16 @@ open class GitApi {
             "block" to block,
             "target_branches" to targetBranch
         )
+        // 需人工审核场景下，将所有待审步骤的审批链接、审批人、快速审批标志汇总回写给工蜂
+        if (!approvals.isNullOrEmpty()) {
+            params["approvals"] = approvals.map {
+                mapOf(
+                    "approve_url" to it.approveUrl,
+                    "approver_users" to it.approveUsers,
+                    "quick_approve_enabled" to it.quickApproveEnabled
+                )
+            }
+        }
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)
@@ -562,7 +574,8 @@ open class GitApi {
         pageSize: Int
     ): List<ChangeFileInfo> {
         val url = "projects/${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
-        val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
+        // calc_lines=false: 触发判断只需变更文件列表(路径)，不计算文件变更行数，大diff下返回更快，避免超时导致漏拉文件
+        val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize&calc_lines=false"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(
             getBody(getMessageByLocale(CommonMessageCode.OPERATION_GET_CHANGE_FILE_LIST), request)

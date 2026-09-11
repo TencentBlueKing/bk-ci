@@ -2,9 +2,9 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.25
 
-**文档描述：** devops_ci_environment 的数据库文档
+**文档描述：** devops_ci_environment的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
 | T_AGENT_BATCH_INSTALL_TOKEN |  |
@@ -14,19 +14,20 @@
 | T_ENV | 环境信息表 |
 | T_ENVIRONMENT_AGENT_PIPELINE |  |
 | T_ENVIRONMENT_SLAVE_GATEWAY |  |
-| T_ENVIRONMENT_THIRDPARTY_AGENT | 第三方构建机 agent 信息表 |
+| T_ENVIRONMENT_THIRDPARTY_AGENT | 第三方构建机agent信息表 |
 | T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION |  |
-| T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD | Agent 离线时段统计表 |
+| T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD | Agent离线时段统计表 |
 | T_ENVIRONMENT_THIRDPARTY_ENABLE_PROJECTS |  |
 | T_ENV_DISPATCH_STRATEGY | 环境调度策略表 |
 | T_ENV_NODE | 环境-节点映射表 |
 | T_ENV_OPERATE_LOG | 环境操作记录表 |
 | T_ENV_SHARE_PROJECT |  |
 | T_ENV_TAG | 环境-标签映射表 |
+| T_ENV_TAG_NODE_ENABLE | 动态环境-节点开关映射表 |
 | T_NODE | 节点信息表 |
 | T_NODE_TAGS |  |
-| T_NODE_TAG_INTERNAL_KEY | 内部标签，ID 需要是负数和用户标签区分 |
-| T_NODE_TAG_INTERNAL_VALUES | 内部标签，ID 需要是负数和用户标签区分 |
+| T_NODE_TAG_INTERNAL_KEY | 内部标签，ID需要是负数和用户标签区分 |
+| T_NODE_TAG_INTERNAL_VALUES | 内部标签，ID需要是负数和用户标签区分 |
 | T_NODE_TAG_KEY |  |
 | T_NODE_TAG_VALUES |  |
 | T_PROJECT_CONFIG |  |
@@ -39,9 +40,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | token 用户  |
-|  3   | TOKEN |   varchar   | 64 |   0    |    N     |  N   |       | Base64 编码后 TOKEN  |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | token用户  |
+|  3   | TOKEN |   varchar   | 64 |   0    |    N     |  N   |       | Base64编码后TOKEN  |
 |  4   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  5   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
 
@@ -53,8 +54,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | USER_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 用户 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | USER_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 用户ID  |
 |  3   | NOTIFY_TYPES |   varchar   | 32 |   0    |    Y     |  N   |       | 通知类型  |
 
 **表名：** <a>T_AGENT_PIPELINE_REF</a>
@@ -65,11 +66,11 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  N   |       | 节点 ID  |
-|  3   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机 ID  |
-|  4   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  5   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  N   |       | 节点ID  |
+|  3   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机ID  |
+|  4   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  5   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
 |  6   | PIEPLINE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 流水线名称  |
 |  7   | VM_SEQ_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 构建序列号  |
 |  8   | JOB_ID |   varchar   | 34 |   0    |    Y     |  N   |       | JOBID  |
@@ -85,8 +86,8 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | AGENT_ID |   bigint   | 20 |   0    |    N     |  Y   |       | AgentID  |
-|  2   | MAIN_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主项目 ID  |
-|  3   | SHARED_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 共享的目标项目 ID  |
+|  2   | MAIN_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主项目ID  |
+|  3   | SHARED_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 共享的目标项目ID  |
 |  4   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
 |  5   | CREATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  6   | UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 更新时间  |
@@ -99,8 +100,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | ENV_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 环境名称  |
 |  4   | ENV_DESC |   varchar   | 128 |   0    |    N     |  N   |       | 环境描述  |
 |  5   | ENV_TYPE |   varchar   | 128 |   0    |    N     |  N   |       | 环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）  |
@@ -109,9 +110,10 @@
 |  8   | UPDATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
 |  9   | CREATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  10   | UPDATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 修改时间  |
-|  11   | ENV_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 环境哈希 ID  |
+|  11   | ENV_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 环境哈希ID  |
 |  12   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除  |
 |  13   | ENV_NODE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   NODE    | 环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}  |
+|  14   | OS |   varchar   | 16 |   0    |    Y     |  N   |       | 环境节点系统类型  |
 
 **表名：** <a>T_ENVIRONMENT_AGENT_PIPELINE</a>
 
@@ -121,10 +123,10 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机 ID  |
-|  3   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
-|  4   | USER_ID |   varchar   | 32 |   0    |    N     |  N   |       | 用户 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机ID  |
+|  3   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
+|  4   | USER_ID |   varchar   | 32 |   0    |    N     |  N   |       | 用户ID  |
 |  5   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  6   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
 |  7   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 状态  |
@@ -139,7 +141,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | NAME |   varchar   | 32 |   0    |    N     |  N   |       | 名称  |
 |  3   | SHOW_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 展示名称  |
 |  4   | GATEWAY |   varchar   | 127 |   0    |    Y     |  N   |       | 网关地址  |
@@ -148,24 +150,24 @@
 
 **表名：** <a>T_ENVIRONMENT_THIRDPARTY_AGENT</a>
 
-**说明：** 第三方构建机 agent 信息表
+**说明：** 第三方构建机agent信息表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | NODE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 节点 ID  |
-|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 节点ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | HOSTNAME |   varchar   | 128 |   0    |    Y     |  N   |       | 主机名称  |
-|  5   | IP |   varchar   | 64 |   0    |    Y     |  N   |       | ip 地址  |
+|  5   | IP |   varchar   | 64 |   0    |    Y     |  N   |       | ip地址  |
 |  6   | OS |   varchar   | 16 |   0    |    N     |  N   |       | 操作系统  |
 |  7   | DETECT_OS |   varchar   | 128 |   0    |    Y     |  N   |       | 检测操作系统  |
 |  8   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 状态  |
 |  9   | SECRET_KEY |   varchar   | 256 |   0    |    N     |  N   |       | 密钥  |
 |  10   | CREATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
 |  11   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
-|  12   | START_REMOTE_IP |   varchar   | 64 |   0    |    Y     |  N   |       | 主机 IP  |
+|  12   | START_REMOTE_IP |   varchar   | 64 |   0    |    Y     |  N   |       | 主机IP  |
 |  13   | GATEWAY |   varchar   | 256 |   0    |    Y     |  N   |       | 目标服务网关  |
 |  14   | VERSION |   varchar   | 128 |   0    |    Y     |  N   |       | 版本号  |
 |  15   | MASTER_VERSION |   varchar   | 128 |   0    |    Y     |  N   |       | 主版本  |
@@ -174,8 +176,8 @@
 |  18   | STARTED_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  19   | AGENT_ENVS |   text   | 65535 |   0    |    Y     |  N   |       | 环境变量  |
 |  20   | FILE_GATEWAY |   varchar   | 256 |   0    |    Y     |  N   |       | 文件网关路径  |
-|  21   | AGENT_PROPS |   text   | 65535 |   0    |    Y     |  N   |       | agentconfig 配置项 Json  |
-|  22   | DOCKER_PARALLEL_TASK_COUNT |   int   | 10 |   0    |    Y     |  N   |       | Docker 构建机并行任务计数  |
+|  21   | AGENT_PROPS |   text   | 65535 |   0    |    Y     |  N   |       | agentconfig配置项Json  |
+|  22   | DOCKER_PARALLEL_TASK_COUNT |   int   | 10 |   0    |    Y     |  N   |       | Docker构建机并行任务计数  |
 |  23   | AGENT_TYPE |   varchar   | 36 |   0    |    Y     |  N   |   BUILD    | 第三方构建机类型  |
 |  24   | CREATE_WORKSPACE_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 云桌面工作空间名称  |
 
@@ -187,25 +189,25 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机 ID  |
-|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | ACTION |   varchar   | 64 |   0    |    N     |  N   |       | 操作  |
 |  5   | ACTION_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 操作时间  |
 
 **表名：** <a>T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD</a>
 
-**说明：** Agent 离线时段统计表
+**说明：** Agent离线时段统计表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机 ID  |
-|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | OFFLINE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 下线时间  |
-|  5   | ONLINE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 上线时间（NULL 表示还未上线）  |
+|  5   | ONLINE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 上线时间（NULL表示还未上线）  |
 |  6   | DURATION_SECONDS |   bigint   | 20 |   0    |    Y     |  N   |       | 离线时长（秒）  |
 |  7   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  8   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -218,7 +220,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
 |  2   | ENALBE |   bit   | 1 |   0    |    Y     |  N   |       | 是否启用  |
 |  3   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  4   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
@@ -231,15 +233,15 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  3   | ENV_ID |   bigint   | 20 |   0    |    N     |  N   |       | 环境 ID  |
-|  4   | STRATEGY_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 策略类型：DEFAULT-默认策略，CUSTOM-自定义策略  |
-|  5   | DEFAULT_STRATEGY_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 默认策略标识，自定义策略为 NULL  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | ENV_ID |   bigint   | 20 |   0    |    N     |  N   |       | 环境ID  |
+|  4   | STRATEGY_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 策略类型：DEFAULT-默认策略,CUSTOM-自定义策略  |
+|  5   | DEFAULT_STRATEGY_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 默认策略标识，自定义策略为NULL  |
 |  6   | STRATEGY_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 策略名称  |
-|  7   | SCOPE |   varchar   | 32 |   0    |    N     |  N   |       | Agent 范围：PRE_BUILD-最近使用，ALL-全部节点  |
-|  8   | NODE_RULE |   varchar   | 32 |   0    |    Y     |  N   |       | 节点规则：IDLE-空闲节点，AVAILABLE-可用节点  |
-|  9   | LABEL_SELECTOR |   text   | 65535 |   0    |    Y     |  N   |       | 标签选择器 JSON  |
+|  7   | SCOPE |   varchar   | 32 |   0    |    N     |  N   |       | Agent范围：PRE_BUILD-最近使用,ALL-全部节点  |
+|  8   | NODE_RULE |   varchar   | 32 |   0    |    Y     |  N   |       | 节点规则：IDLE-空闲节点,AVAILABLE-可用节点  |
+|  9   | LABEL_SELECTOR |   text   | 65535 |   0    |    Y     |  N   |       | 标签选择器JSON  |
 |  10   | ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用  |
 |  11   | PRIORITY |   int   | 10 |   0    |    N     |  N   |   0    | 优先级，数字越小越优先  |
 |  12   | CREATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
@@ -255,9 +257,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
-|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
-|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | ENABLE_NODE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用节点  |
 
 **表名：** <a>T_ENV_OPERATE_LOG</a>
@@ -268,9 +270,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  3   | ENV_ID |   bigint   | 20 |   0    |    N     |  N   |       | 环境 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | ENV_ID |   bigint   | 20 |   0    |    N     |  N   |       | 环境ID  |
 |  4   | OPERATE_ORIGIN |   varchar   | 32 |   0    |    N     |  N   |       | 操作来源  |
 |  5   | OPERATE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 操作名称  |
 |  6   | OPERATE_CONTENT |   json   | 1073741824 |   0    |    Y     |  N   |       | 操作内容  |
@@ -285,10 +287,10 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
+|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境ID  |
 |  2   | ENV_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 环境名称  |
-|  3   | MAIN_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主项目 ID  |
-|  4   | SHARED_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 共享的目标项目 ID  |
+|  3   | MAIN_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主项目ID  |
+|  4   | SHARED_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 共享的目标项目ID  |
 |  5   | SHARED_PROJECT_NAME |   varchar   | 1024 |   0    |    Y     |  N   |       | 目标项目名称  |
 |  6   | TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 类型  |
 |  7   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
@@ -303,10 +305,23 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境 ID  |
-|  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
-|  4   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值 ID  |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境ID  |
+|  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名ID  |
+|  4   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值ID  |
+
+**表名：** <a>T_ENV_TAG_NODE_ENABLE</a>
+
+**说明：** 动态环境-节点开关映射表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ENV_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 环境ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点ID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  4   | ENABLE_NODE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否启用节点  |
 
 **表名：** <a>T_NODE</a>
 
@@ -316,14 +331,14 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID 主键 ID  |
-|  2   | NODE_STRING_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 节点 ID 字符串  |
-|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  4   | NODE_IP |   varchar   | 64 |   0    |    N     |  N   |       | 节点 IP  |
+|  1   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点ID主键ID  |
+|  2   | NODE_STRING_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 节点ID字符串  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  4   | NODE_IP |   varchar   | 64 |   0    |    N     |  N   |       | 节点IP  |
 |  5   | NODE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 节点名称  |
 |  6   | NODE_STATUS |   varchar   | 64 |   0    |    N     |  N   |       | 节点状态  |
 |  7   | NODE_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 节点类型  |
-|  8   | NODE_CLUSTER_ID |   varchar   | 128 |   0    |    Y     |  N   |       | 集群 ID  |
+|  8   | NODE_CLUSTER_ID |   varchar   | 128 |   0    |    Y     |  N   |       | 集群ID  |
 |  9   | NODE_NAMESPACE |   varchar   | 128 |   0    |    Y     |  N   |       | 节点命名空间  |
 |  10   | CREATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
 |  11   | CREATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
@@ -335,19 +350,19 @@
 |  17   | AGENT_STATUS |   bit   | 1 |   0    |    Y     |  N   |       | 构建机状态  |
 |  18   | DISPLAY_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 别名  |
 |  19   | IMAGE |   varchar   | 512 |   0    |    Y     |  N   |       | 镜像  |
-|  20   | TASK_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 任务 id  |
+|  20   | TASK_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 任务id  |
 |  21   | LAST_MODIFY_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 最近修改时间  |
 |  22   | LAST_MODIFY_USER |   varchar   | 512 |   0    |    Y     |  N   |       | 最近修改者  |
 |  23   | BIZ_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 所属业务  |
-|  24   | NODE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 节点哈希 ID  |
-|  25   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线 Job 引用数  |
+|  24   | NODE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 节点哈希ID  |
+|  25   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线Job引用数  |
 |  26   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
-|  27   | LAST_BUILD_PIPELINE_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 最近构建流水线 ID  |
-|  28   | HOST_ID |   bigint   | 20 |   0    |    Y     |  N   |       | CC 的 host_id  |
-|  29   | CLOUD_AREA_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 云区域 id，公司内为 0  |
-|  30   | AGENT_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | agent 版本  |
-|  31   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
-|  32   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
+|  27   | LAST_BUILD_PIPELINE_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 最近构建流水线ID  |
+|  28   | HOST_ID |   bigint   | 20 |   0    |    Y     |  N   |       | CC的host_id  |
+|  29   | CLOUD_AREA_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 云区域id，公司内为0  |
+|  30   | AGENT_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | agent版本  |
+|  31   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从CC中查到的os类型  |
+|  32   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器id  |
 |  33   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
 |  34   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
 
@@ -359,14 +374,14 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点 ID  |
-|  3   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值 ID  |
-|  4   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点ID  |
+|  3   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值ID  |
+|  4   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名ID  |
 
 **表名：** <a>T_NODE_TAG_INTERNAL_KEY</a>
 
-**说明：** 内部标签，ID 需要是负数和用户标签区分
+**说明：** 内部标签，ID需要是负数和用户标签区分
 
 **数据列：**
 
@@ -374,18 +389,18 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
 |  2   | KEY_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
-|  3   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此 key 下的值  |
+|  3   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此key下的值  |
 
 **表名：** <a>T_NODE_TAG_INTERNAL_VALUES</a>
 
-**说明：** 内部标签，ID 需要是负数和用户标签区分
+**说明：** 内部标签，ID需要是负数和用户标签区分
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
-|  2   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+|  2   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名ID  |
 |  3   | VALUE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签值  |
 
 **表名：** <a>T_NODE_TAG_KEY</a>
@@ -397,9 +412,9 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | KEY_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
-|  4   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此 key 下的值  |
+|  4   | ALLOW_MUL_VALUES |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否允许一个节点可以有多个此key下的值  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
 
 **表名：** <a>T_NODE_TAG_VALUES</a>
@@ -411,8 +426,8 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名 ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  N   |       | 标签名ID  |
 |  4   | VALUE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签值  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
 
@@ -424,7 +439,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
 |  2   | UPDATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改者  |
 |  3   | UPDATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 修改时间  |
 |  4   | BCSVM_ENALBED |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |

@@ -49,6 +49,7 @@ import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
+import com.tencent.devops.log.util.LogDownloadHeader
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -85,7 +86,9 @@ class LogServiceLuceneImpl constructor(
             buildLogPrintService.dispatchEvent(
                 event = LogStorageEvent(
                     buildId = event.buildId,
-                    logs = logMessage
+                    logs = logMessage,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId
                 ),
                 recordTraffic = false
             )
@@ -288,10 +291,12 @@ class LogServiceLuceneImpl constructor(
             jobId = jobId,
             stepId = stepId
         )
-        val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+            .header(
+                "content-disposition",
+                LogDownloadHeader.contentDisposition(fileName, pipelineId, buildId)
+            )
             .header("Cache-Control", "no-cache")
             .build()
     }

@@ -331,18 +331,24 @@
         display: flex;
         flex-direction: column;
         padding: 16px;
-        height: 100%;
+        flex: 1;
+        min-height: 0;
         background-color: #FFFFFF;
         border-top: 1px solid #DCDEE5;
         .add-env-btn {
+            flex-shrink: 0;
             width: 100%;
             &:hover {
                 color: #3A84FF;
                 border-color: #3A84FF;
             }
         }
+        .search-env-input {
+            flex-shrink: 0;
+        }
     }
     .filer-type-menu {
+        flex-shrink: 0;
         margin-top: 16px;
         font-size: 12px;
         &::after {
@@ -375,21 +381,26 @@
         }
     }
     .env-list-menu {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
         font-size: 12px;
         .title {
+            flex-shrink: 0;
             color: #979BA5;
             margin-bottom: 8px;
         }
         .env-list {
             display: flex;
             flex-direction: column;
-            min-height: 300px;
+            flex: 1;
+            min-height: 0;
             padding-bottom: 40px;
             gap: 4px;
             margin: 0 -16px;
             background: #FFFFFF;
             overflow-y: auto;
-            max-height: calc(100vh - 440px);
             &::-webkit-scrollbar {
                 width: 4px;
             }
@@ -443,6 +454,7 @@
             justify-content: space-between;
             align-items: center;
             flex: 1;
+            min-width: 0;
             margin-right: 8px;
         }
         
@@ -467,6 +479,7 @@
         }
         .env-name {
             flex: 1;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

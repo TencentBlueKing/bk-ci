@@ -28,6 +28,7 @@
 package com.tencent.devops.log.jmx
 
 import com.tencent.devops.log.metrics.LogMetrics
+import com.tencent.devops.log.service.BulkOfferResult
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
@@ -49,6 +50,7 @@ class LogStorageBean @Autowired constructor(
     private val bulkRequestCount = AtomicLong(0)
     private val bulkRequestElapse = AtomicLong(0)
     private val bulkRequestFailureCount = AtomicLong(0)
+    private val bulkOfferFailureCount = AtomicLong(0)
 
     private val queryLogCount = AtomicLong(0)
     private val queryLogElapse = AtomicLong(0)
@@ -94,6 +96,23 @@ class LogStorageBean @Autowired constructor(
             bulkRequestFailureCount.incrementAndGet()
         }
         logMetrics.recordEsBulk(elapse, success, cluster)
+    }
+
+    /**
+     * 单次 flush 的聚合规模，用于判断 maxWaitMs / maxDocs 的攒批效果。
+     */
+    fun bulkFlush(batches: Int, docs: Int, cluster: String? = null) {
+        logMetrics.recordBulkFlush(batches, docs, cluster)
+    }
+
+    /**
+     * 聚合器 offer 的最终结果，reason 区分背压拒绝、等待超时与 bulk 失败。
+     */
+    fun bulkOffer(elapse: Long, reason: String) {
+        if (reason != BulkOfferResult.REASON_OK) {
+            bulkOfferFailureCount.incrementAndGet()
+        }
+        logMetrics.recordBulkOffer(elapse, reason)
     }
 
     @Synchronized
@@ -177,6 +196,9 @@ class LogStorageBean @Autowired constructor(
 
     @ManagedAttribute
     fun getBulkFailureCount() = bulkRequestFailureCount.get()
+
+    @ManagedAttribute
+    fun getBulkOfferFailureCount() = bulkOfferFailureCount.get()
 
     @ManagedAttribute
     fun getQueryCount() = queryLogCount.get()

@@ -32,9 +32,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class MsgInfo(
     val content: String,
 
+    /**
+     * userid 列表，用于 @群成员；传 "@all" 可提醒所有人（暂未在业务侧启用）。
+     * 另可在 content 中使用 <@userid> 语法 @成员（暂未在业务侧启用，markdown_v2 不支持）。
+     */
     @JsonProperty("mentioned_list")
     var mentionedList: List<String>? = mutableListOf(),
 
+    /**
+     * 手机号列表，用于 @对应群成员；同样支持 "@all"（暂未在业务侧启用）。
+     */
     @JsonProperty("mentioned_mobile_list")
     var mentionedMobileList: List<String>? = mutableListOf()
 )

@@ -36,6 +36,14 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserLlmConfigDao {
 
+    fun listAll(dslContext: DSLContext): org.jooq.Result<TAiUserLlmConfigRecord> {
+        with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
+            return dslContext.selectFrom(this)
+                .orderBy(UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun getByUserId(
         dslContext: DSLContext,
         userId: String

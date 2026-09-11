@@ -2,9 +2,9 @@
 
 **数据库名：** devops_ci_image
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.25
 
-**文档描述：** devops_ci_image 的数据库文档
+**文档描述：** devops_ci_image的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
 | T_UPLOAD_IMAGE_TASK |  |
@@ -17,8 +17,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | TASK_ID |   varchar   | 128 |   0    |    N     |  Y   |       | 任务 ID  |
-|  2   | PROJECT_ID |   varchar   | 128 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | TASK_ID |   varchar   | 128 |   0    |    N     |  Y   |       | 任务ID  |
+|  2   | PROJECT_ID |   varchar   | 128 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | OPERATOR |   varchar   | 128 |   0    |    N     |  N   |       | 操作员  |
 |  4   | CREATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  5   | UPDATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 修改时间  |

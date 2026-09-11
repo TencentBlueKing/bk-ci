@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -109,6 +110,9 @@ class ReviewReminderService @Autowired constructor(
             null
         }
 
+        val notifyType = NotifyUtils.checkNotifyType(param.notifyType)
+        // 与人工审核插件一致：勾选企业微信群消息时，催审群通知 @审核人
+        val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -116,7 +120,7 @@ class ReviewReminderService @Autowired constructor(
                 source = "ManualReviewTaskAtom", projectId = projectId, pipelineId = pipelineId,
                 userId = buildTask.starter, buildId = buildId,
                 receivers = reviewUsers.toList(),
-                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
+                notifyType = notifyType,
                 titleParams = mutableMapOf(),
                 bodyParams = mutableMapOf(
                     "title" to notifyTitle,
@@ -139,7 +143,8 @@ class ReviewReminderService @Autowired constructor(
                 ),
                 position = null,
                 stageId = null,
-                markdownContent = param.markdownContent
+                markdownContent = param.markdownContent,
+                mentionReceivers = mentionReceivers
             ),
             this.copy(reminderCount = reminderCount + 1)
         )

@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
@@ -93,7 +94,9 @@ class PipelineResourceFactory @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode,
         yamlFileInfo: PipelineYamlFileInfo? = null,
-        pipelineDialect: IPipelineDialect? = null
+        pipelineDialect: IPipelineDialect? = null,
+        runEnvOsChange: PipelineRunEnvOsChange? = null,
+        modelCarriedOver: Boolean = false
     ): PipelineModelBasicInfo {
         val triggerContainer = model.getTriggerContainer()
         var canManualStartup = false
@@ -124,7 +127,9 @@ class PipelineResourceFactory @Autowired constructor(
             versionStatus = versionStatus,
             channelCode = channelCode,
             yamlFileInfo = yamlFileInfo,
-            pipelineDialect = pipelineDialect
+            pipelineDialect = pipelineDialect,
+            runEnvOsChange = runEnvOsChange,
+            modelCarriedOver = modelCarriedOver
         )
         return PipelineModelBasicInfo(
             canManualStartup = canManualStartup,

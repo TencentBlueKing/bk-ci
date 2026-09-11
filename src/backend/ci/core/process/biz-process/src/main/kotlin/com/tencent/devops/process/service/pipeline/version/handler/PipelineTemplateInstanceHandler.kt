@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
@@ -38,10 +39,13 @@ import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
 import com.tencent.devops.process.yaml.PipelineYamlReleaseService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,7 +56,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
     private val pipelineVersionGenerator: PipelineVersionGenerator,
     private val pipelineVersionPersistenceService: PipelineVersionPersistenceService,
     private val pipelineYamlReleaseService: PipelineYamlReleaseService,
-    private val pipelineRemoteAuthService: PipelineRemoteAuthService
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext) =
         context.versionAction == PipelineVersionAction.TEMPLATE_INSTANCE
@@ -120,6 +125,11 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             )
         }
 
+        // 在持久化之前校验公共变量组引用，极端场景下变量组可能在校验后被删除
+        publicVarGroupReferManageService.validateVarGroupReferences(
+            model = pipelineResourceWithoutVersion.model,
+            projectId = projectId
+        )
         pipelineYamlReleaseService.validateReleaseYamlFile(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
@@ -154,6 +164,22 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 )
             }
         }
+
+        // 同步变量组引用关系（校验已通过）
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = pipelineResourceWithoutVersion.model,
+                referId = pipelineId,
+                referType = PublicVarGroupReferenceTypeEnum.PIPELINE,
+                referName = pipelineSettingWithoutVersion.pipelineName,
+                referVersion = resourceOnlyVersion.version,
+                referVersionName = resourceOnlyVersion.versionName,
+                // 模板实例化生成的是 RELEASED/BRANCH 生效版本：需同步 LATEST_FLAG
+                activeVersion = true
+            )
+        )
 
         // 推送文件
         val yamlFileReleaseResult = pipelineYamlReleaseService.releaseYamlFile(

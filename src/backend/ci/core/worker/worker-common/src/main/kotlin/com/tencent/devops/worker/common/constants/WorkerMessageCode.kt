@@ -174,4 +174,10 @@ object WorkerMessageCode {
     const val BK_VARIABLE_PARAM_MAX_LENGTH = "bkVariableParamMaxLength"
     // [set-error error_code={0}]格式错误，将被忽略。要求：错误码以 8 开头、6位数字。
     const val BK_USER_SET_ERROR_FAILED = "bkUserSetErrorFailed"
+    const val BK_PROGRESS_RATE_EMPTY_PAYLOAD = "bkProgressRateEmptyPayload"
+    const val BK_PROGRESS_RATE_PAYLOAD_TOO_LARGE = "bkProgressRatePayloadTooLarge"
+    const val BK_PROGRESS_RATE_INVALID_NUMBER = "bkProgressRateInvalidNumber"
+    const val BK_PROGRESS_RATE_INVALID_NUMBER_RANGE = "bkProgressRateInvalidNumberRange"
+    const val BK_PROGRESS_RATE_INVALID_JSON_OR_SCHEMA = "bkProgressRateInvalidJsonOrSchema"
+    const val BK_PROGRESS_RATE_INVALID_FORMAT = "bkProgressRateInvalidFormat"
 }

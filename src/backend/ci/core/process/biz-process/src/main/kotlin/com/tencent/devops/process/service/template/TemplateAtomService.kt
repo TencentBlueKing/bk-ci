@@ -32,10 +32,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.AtomPropVersionOsService
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomProp
 import org.jooq.DSLContext
@@ -48,6 +51,7 @@ import jakarta.ws.rs.core.Response
 class TemplateAtomService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val dslContext: DSLContext,
+    private val atomPropVersionOsService: AtomPropVersionOsService,
     private val client: Client
 ) {
 
@@ -61,14 +65,16 @@ class TemplateAtomService @Autowired constructor(
         templateId: String,
         version: Long? = null
     ): Result<Map<String, AtomProp>?> {
-        var templateObj = if (version != null) {
+        val srcTemplateObj = if (version != null) {
             templateDao.getTemplate(dslContext = dslContext, version = version)
         } else {
             // 版本号为空则默认查最新版本的模板
             templateDao.getLatestTemplate(dslContext, projectId, templateId)
         }
-        if (templateObj?.type == TemplateType.CONSTRAINT.name) {
-            templateObj = templateDao.getTemplate(dslContext, templateObj.srcTemplateId)
+        val templateObj = if (srcTemplateObj?.type == TemplateType.CONSTRAINT.name) {
+            templateDao.getTemplate(dslContext, srcTemplateObj.srcTemplateId)
+        } else {
+            srcTemplateObj
         }
         val modelStr = templateObj?.template
         if (modelStr.isNullOrBlank()) {
@@ -81,6 +87,15 @@ class TemplateAtomService @Autowired constructor(
         val model = JsonUtil.to(modelStr, Model::class.java)
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
-        return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
+        return atomPropVersionOsService.fillVersionOsMap(
+            // 约束模式的编排取自源模板，插件的项目可用性与调试版本须按编排所属项目解析，
+            // 否则源模板里引用了本项目未安装的插件时，整批查询会失败而丢掉全部适用操作系统。
+            // 研发商店的公共模板 PROJECT_ID 为空串，此时回退到当前项目
+            projectId = templateObj.projectId?.takeIf { it.isNotBlank() } ?: projectId,
+            atomVersions = AtomUtils.getModelAtomVersions(model),
+            atomPropResult = client.get(ServiceAtomResource::class).getAtomProps(atomCodes),
+            // 模板不归属某条流水线，无自身渠道记录可取，只能以请求渠道为准
+            channelCode = ChannelCode.getRequestChannelCode()
+        )
     }
 }

@@ -2,9 +2,9 @@
 
 **数据库名：** devops_ci_op
 
-**文档版本：** 1.0.22
+**文档版本：** 1.0.25
 
-**文档描述：** devops_ci_op 的数据库文档
+**文档描述：** devops_ci_op的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
 | dept_info |  |
@@ -50,10 +50,10 @@
 |  4   | approver |   varchar   | 100 |   0    |    Y     |  N   |       | æ‰¹å‡†äºº  |
 |  5   | cc_app_id |   int   | 10 |   0    |    Y     |  N   |       | åº”ç”¨ID  |
 |  6   | created_at |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
-|  7   | creator |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……  |
-|  8   | creator_bg_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……äº‹ä¸šç¾¤åç§°  |
-|  9   | creator_center_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……ä¸­å¿ƒåå­—  |
-|  10   | creator_dept_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……é¡¹ç›®æ‰€å±žäºŒçº§æœºæž„åç§°  |
+|  7   | creator |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…  |
+|  8   | creator_bg_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…äº‹ä¸šç¾¤åç§°  |
+|  9   | creator_center_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…ä¸­å¿ƒåå­—  |
+|  10   | creator_dept_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…é¡¹ç›®æ‰€å±žäºŒçº§æœºæž„åç§°  |
 |  11   | english_name |   varchar   | 255 |   0    |    Y     |  N   |       | è‹±æ–‡åç§°  |
 |  12   | is_offlined |   bit   | 1 |   0    |    Y     |  N   |       | æ˜¯å¦åœç”¨  |
 |  13   | is_secrecy |   bit   | 1 |   0    |    Y     |  N   |       | æ˜¯å¦ä¿å¯†  |
@@ -110,10 +110,10 @@
 |  2   | version |   varchar   | 50 |   0    |    Y     |  N   |       | ç‰ˆæœ¬å·  |
 |  3   | description |   varchar   | 200 |   0    |    N     |  N   |       | æè¿°  |
 |  4   | type |   varchar   | 20 |   0    |    N     |  N   |       | ç±»åž‹  |
-|  5   | script |   varchar   | 1000 |   0    |    N     |  N   |       | æ‰“åŒ……è„šæœ¬  |
+|  5   | script |   varchar   | 1000 |   0    |    N     |  N   |       | æ‰“åŒ…è„šæœ¬  |
 |  6   | checksum |   int   | 10 |   0    |    Y     |  N   |       | æ ¡éªŒå’Œ  |
-|  7   | installed_by |   varchar   | 100 |   0    |    N     |  N   |       | å®‰è£……è€……  |
-|  8   | installed_on |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | å®‰è£……æ—¶é—´  |
+|  7   | installed_by |   varchar   | 100 |   0    |    N     |  N   |       | å®‰è£…è€…  |
+|  8   | installed_on |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | å®‰è£…æ—¶é—´  |
 |  9   | execution_time |   int   | 10 |   0    |    N     |  N   |       | æ‰§è¡Œæ—¶é—´  |
 |  10   | success |   bit   | 1 |   0    |    N     |  N   |       | æ˜¯å¦æˆåŠŸ  |
 

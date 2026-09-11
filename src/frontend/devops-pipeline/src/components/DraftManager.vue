@@ -309,6 +309,8 @@
             primaryButtonText () {
                 if (this.isConflictStatus) {
                     return this.$t('continueSaving')
+                } else if (this.isReleaseOutDatedStatus) {
+                    return this.$t('editBasedOnLatest')
                 } else {
                     return this.$t('newDraft')
                 }
@@ -603,6 +605,11 @@
         border-radius: 2px;
         color: #4d4f56;
         font-size: 14px;
+    }
+    .bk-dialog-footer {
+        border-top: none !important;
+        background-color: #fff !important;
+        padding: 7px 24px 33px !important;
     }
 }
 .develop-txt-disabled {

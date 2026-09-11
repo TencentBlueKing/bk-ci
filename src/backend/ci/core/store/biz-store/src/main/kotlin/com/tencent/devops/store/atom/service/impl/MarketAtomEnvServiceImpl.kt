@@ -47,6 +47,7 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.atom.util.AtomOsMapUtil
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -190,7 +191,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                         isLegacyAtomRunInfoCache(legacy).also { isLegacy ->
                             if (isLegacy) {
                                 logger.info(
-                                    "atomRunInfo cache is legacy(missing jobType/jobTypeMap/serviceScope), " +
+                                    "atomRunInfo cache is legacy(missing jobType/jobTypeMap/serviceScope/osMap), " +
                                             "fallback to db: atomCode=$atomCode, version=$version"
                                 )
                             }
@@ -215,9 +216,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
      *    会被误判为「与 Job 运行环境不匹配」；
      * 2. serviceScope 为空：插件在 DB 中一定声明了服务范围，缓存中为空说明是旧结构，
      *    会导致服务范围校验（isAtomServiceScopeAllowed）因「空即放行」而绕过渠道隔离。
+     * 3. osMap 为 null：该字段是后加的，旧代码写入的缓存里没有这个 key，
+     *    会导致运行环境操作系统校验因「空即放行」而漏判。
+     *    注意这里只能判 null 不能判空map：插件确实可以没有任何 OS 声明，
+     *    而 [queryAtomRunInfoFromDb] 回写时对这种情况写入的是空map，
+     *    因此每个插件版本最多只会因该条件回查一次 DB，不会造成缓存长期失效。
      */
     private fun isLegacyAtomRunInfoCache(atomRunInfo: AtomRunInfo): Boolean =
         atomRunInfo.serviceScope.isNullOrEmpty() ||
+            atomRunInfo.osMap == null ||
             (atomRunInfo.jobType.isNullOrBlank() && atomRunInfo.jobTypeMap.isNullOrBlank())
 
     private fun handleAtomVersions(
@@ -282,7 +289,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
             sensitiveParams = sensitiveParams?.joinToString(","),
             canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) },
-            serviceScope = atomEnv.serviceScope
+            serviceScope = atomEnv.serviceScope,
+            // 插件确实没有 OS 声明时写入空map而非null，使缓存中「字段缺失(null)」可作为旧结构的判据
+            osMap = atomEnv.osMap ?: emptyMap()
         )
         if (!testFlag && !historyBuildQueryFlag) {
             // 将db中的环境信息写入缓存
@@ -464,7 +473,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
             finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
             authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level,
-            serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE]).ifEmpty { null }
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomBaseInfoRecord[tAtom.SERVICE_SCOPE])
+                .ifEmpty { null },
+            // 完整的 jobType -> OS 映射，供保存/校验阶段判断插件与运行环境操作系统的适配度。
+            // OS_MAP 为空的旧插件记录需由 OS/JOB_TYPE 兜底还原出映射，故三者一并传入
+            osMap = AtomOsMapUtil.getAllOs(
+                osValue = atomBaseInfoRecord[tAtom.OS],
+                osMapValue = atomBaseInfoRecord[tAtom.OS_MAP],
+                jobTypeValue = jobType
+            ).ifEmpty { null }
         )
         return Result(atomEnv)
     }

@@ -180,7 +180,7 @@ class CallBackControlTest : TestBase() {
             )
         } returns (callbacks!!)
         every {
-            projectPipelineCallBackService.getPipelineCallback(
+            projectPipelineCallBackService.listPipelineCallback(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = events.toString()

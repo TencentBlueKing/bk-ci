@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
@@ -89,6 +90,24 @@ interface ServiceProjectResource {
         @Parameter(description = "每页条数(默认10)", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int? = null
+    ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/listByPermission")
+    @Operation(summary = "按权限查询用户有权限的项目")
+    fun listByPermission(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "权限action", required = true)
+        @QueryParam("permission")
+        permission: AuthPermission,
+        @Parameter(description = "资源类型，为空则按项目权限查询")
+        @QueryParam("resourceType")
+        resourceType: AuthResourceType?,
+        @Parameter(description = "是否启用", required = false)
+        @QueryParam("enabled")
+        enabled: Boolean?
     ): Result<List<ProjectVO>>
 
     @GET

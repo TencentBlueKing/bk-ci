@@ -7,12 +7,15 @@
 .headerText {
   font-size: var(--font-size-xs);
   color: var(--color-text-primary);
-  margin-left: var(--spacing-lg);
 }
 
 .authoringHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   height: 40px;
-  line-height: 40px;
+  padding: 0 var(--spacing-lg);
+  box-sizing: border-box;
   background: var(--bg-secondary);
 }
 
@@ -55,6 +58,23 @@
   width: 100%;
 }
 
+.envOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.envOsTag {
+  flex-shrink: 0;
+}
+
+.envOptionName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .envSelect :global(.bk-select-trigger) {
   width: 100%;
 }
@@ -71,6 +91,13 @@
   color: var(--color-text-secondary);
 }
 
+.envSelectPrefix {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-left: var(--spacing-lg);
+}
+
 .envSelect :global(.bk-input--text) {
   width: 100%;
   padding-left: var(--spacing-lg);
@@ -78,6 +105,10 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-primary);
   background-color: #f5f7fa;
+}
+
+.envSelectWithOs :global(.bk-input--text) {
+  padding-left: 8px;
 }
 
 .envManageEntry {
@@ -172,11 +203,38 @@
   margin-top: -4px !important;
 }
 
+.relateNodeLink {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.relateNodeLink:hover {
+  color: var(--color-primary-hover);
+}
+
 .noData {
   margin-top: 58px;
   text-align: center;
   font-size: var(--font-size-xs);
   color: var(--color-text-disabled);
+}
+
+.osDialogContent {
+  line-height: 22px;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.osDialogContent p {
+  margin: 0 0 12px;
+}
+
+.osIncompatibleList {
+  max-height: 240px;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  overflow-y: auto;
 }
 
 /* Loading styles and code editor wrapper moved to layout.module.css */

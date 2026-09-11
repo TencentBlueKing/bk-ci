@@ -44,6 +44,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_TASK_RUN_
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_FAILURE_OR_CANCEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_RUNS_EVEN_IF_CANCELED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TASK_DISABLED
@@ -184,10 +185,17 @@ object ControlUtils {
                 I18nUtil.getCodeLanMessage(BK_TASK_DISABLED)
             )
         } else when {
-            // [只有前面有任务失败时才运行]，之前存在失败的任务
+            // [只有前面有任务失败时才运行]，之前存在失败的任务（包含失败自动跳过的情况）
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
                 skip = !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
                 message.append("${I18nUtil.getCodeLanMessage(BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED)} skip=$skip")
+            }
+            // [只有前面有任务失败时才运行（不包括失败自动跳过）]，仅当容器真正失败时才运行
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP -> {
+                skip = !containerFinalStatus.isFailure()
+                message.append(
+                    "${I18nUtil.getCodeLanMessage(BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP)} skip=$skip"
+                )
             }
             // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
             runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {

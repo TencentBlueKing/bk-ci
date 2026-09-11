@@ -515,6 +515,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun diff(userId: String, englishName: String): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val approvalStatus = ProjectApproveStatus.parse(record.approvalStatus)
+        if (approvalStatus.isCreatePending() && record.creator != userId) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_PROJECT,
+                params = arrayOf(englishName),
+                defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+            )
+        }
+        if (approvalStatus.isSuccess()) {
+            val verify = validatePermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.VIEW
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.VIEW} validatePermission fail")
+                throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            }
+        }
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
         val beforeProductName = if (record.productId != null) {
@@ -1035,6 +1054,40 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             hasNext = projectsResp.size == pageSize,
             records = projectsResp
         )
+    }
+
+    override fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType?,
+        enabled: Boolean?
+    ): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val projectCodes = getProjectFromAuth(
+                userId = userId,
+                permission = permission,
+                resourceType = resourceType?.value
+            )
+            if (projectCodes.isNullOrEmpty()) {
+                return emptyList()
+            }
+            val projectsResp = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectCodes,
+                enabled = enabled,
+                hidden = false
+            ).map { ProjectUtils.packagingBean(it) }
+            success = true
+            return projectsResp
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info(
+                "It took ${System.currentTimeMillis() - startEpoch}ms to list projects " +
+                    "by permission|$permission|$resourceType"
+            )
+        }
     }
 
     override fun list(
@@ -1830,6 +1883,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             hidden = hidden
         )
+    }
+
+    override fun updatePipelineLimit(userId: String, englishName: String, pipelineLimit: Int): Boolean {
+        logger.info("update project pipelineLimit|$userId|$englishName|$pipelineLimit")
+        if (pipelineLimit <= 1000 || pipelineLimit >= 10000) {
+            throw IllegalArgumentException("pipelineLimit must be greater than 1000 and less than 10000")
+        }
+        projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw ProjectNotExistException("projectCode=$englishName")
+        return projectDao.updatePipelineLimit(
+            dslContext = dslContext,
+            englishName = englishName,
+            pipelineLimit = pipelineLimit
+        ) > 0
     }
 
     private fun validateProperties(properties: ProjectProperties?) {

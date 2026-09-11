@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.processor
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineAiSummaryEvent
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -53,8 +54,14 @@ class PipelineAiSummaryVersionPostProcessor constructor(
         pipelineSetting: PipelineSetting
     ) {
         with(context) {
-            // 仅对已发布的版本且渠道为 CREATIVE_STREAM 的流水线触发AI摘要生成
+            // 仅对已发布的版本且渠道为 CREATIVE_STREAM 或 BS 的流水线触发AI摘要生成
             if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
+                return
+            }
+            if (
+                pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM &&
+                pipelineBasicInfo.channelCode != ChannelCode.BS
+            ) {
                 return
             }
 

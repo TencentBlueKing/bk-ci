@@ -260,11 +260,13 @@ const (
 	TagObjectName = "objectname" // Windows PDH ObjectName（如 Processor / PhysicalDisk / Network Interface）
 
 	// 全局 tag（由 reporter 从 config 注入）
-	TagProjectID   = "projectId"
-	TagAgentID     = "agentId"
-	TagAgentSecret = "agentSecret"
-	TagHostName    = "hostName"
-	TagHostIP      = "hostIp"
+	TagProjectID      = "projectId"
+	TagAgentID        = "agentId"
+	TagAgentSecret    = "agentSecret"
+	TagHostName       = "hostName"
+	TagHostIP         = "hostIp"
+	TagCpuProductInfo = "cpuProductInfo"
+	TagGpuProductInfo = "gpuProductInfo"
 
 	// tag 值
 	TagValueCPUTotal = "cpu-total"

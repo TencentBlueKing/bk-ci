@@ -21,6 +21,7 @@ interface ParamConfig {
   list?: Array<{ key: string; value: string; type?: string }>
   url?: string
   urlQuery?: Record<string, string>
+  pipelineInfoQuery?: Record<string, string>
 }
 
 const isObject = (val: unknown): val is Record<string, unknown> =>
@@ -133,23 +134,38 @@ export default defineComponent({
       if (param?.paramType === 'list' && Array.isArray(param.list)) {
         return 'list'
       }
-
+      
       if (!param?.url) return ''
-
-      const [url] = generateReqUrl(param.url, {
+      const urlQueryParams = {
         ...props.atomValue,
         projectId: route.params.projectId,
         pipelineId: route.params.flowId,
-      })
+        buildId: route.params.buildNo,
+      }
+      const [url] = generateReqUrl(param.url, urlQueryParams)
       if (!url) return ''
 
-      let finalUrl = url
+      const queryParams: Array<[string, unknown]> = []
       const urlQuery = param.urlQuery || {}
-      Object.keys(urlQuery).forEach((key, index) => {
-        const value = props.atomValue[key] ?? urlQuery[key]
-        finalUrl += `${index <= 0 ? '?' : '&'}${key}=${value}`
+      Object.keys(urlQuery).forEach((key) => {
+        const value = urlQueryParams[key as keyof typeof urlQueryParams] ?? urlQuery[key]
+        queryParams.push([key, value])
       })
-      return finalUrl
+
+      // Keep the request version aligned with the currently edited draft.
+      // This matches devops-pipeline's pipelineInfoQuery behavior, where the
+      // timer trigger requests the parameter schema for the current version.
+      const pipelineInfoQuery = param.pipelineInfoQuery || {}
+      Object.keys(pipelineInfoQuery).forEach((key) => {
+        queryParams.push([key, route.params[key] ?? pipelineInfoQuery[key]])
+      })
+
+      if (!queryParams.length) return url
+
+      const query = queryParams
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value ?? ''))}`)
+        .join('&')
+      return `${url}?${query}`
     })
 
     // Fetch parameters list from API
