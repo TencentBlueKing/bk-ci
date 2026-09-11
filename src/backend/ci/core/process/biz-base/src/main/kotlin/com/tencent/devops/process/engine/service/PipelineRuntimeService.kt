@@ -907,7 +907,7 @@ class PipelineRuntimeService @Autowired constructor(
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
-                if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                if (context.shouldSkipRefreshWhenRetryRunning(stage, container)) {
                     logger.info(
                         "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
                     )
