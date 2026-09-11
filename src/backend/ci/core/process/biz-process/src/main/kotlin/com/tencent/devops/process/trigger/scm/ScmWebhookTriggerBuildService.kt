@@ -171,14 +171,9 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                 )
             val model = resource.model
 
-            val variables = mutableMapOf<String, String>()
             val container = model.stages[0].containers[0] as TriggerContainer
-            // 解析变量
-            container.params.forEach { param ->
-                variables[param.id] = param.defaultValue.toString()
-            }
-            // 填充[variables.]前缀
-            variables.putAll(PipelineVarUtil.fillVariableMap(variables))
+            // 解析变量，兼容代码库分支等级联参数
+            val variables = pipelineRepositoryService.getTriggerParams(container).toMutableMap()
             if (repository.enablePac == true) {
                 variables[PIPELINE_PAC_REPO_HASH_ID] = repository.repoHashId!!
             }
