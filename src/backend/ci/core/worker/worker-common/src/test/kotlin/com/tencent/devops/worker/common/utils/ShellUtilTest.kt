@@ -260,6 +260,17 @@ class ShellUtilTest {
     private fun runSh(scriptFile: File, workspace: File): Pair<Int, String> =
         runShWith("bash", scriptFile, workspace)
 
+    /**
+     * 断言脚本以 0 退出。失败时把控制台输出与生成脚本一并写入断言消息，
+     */
+    private fun assertShellOk(shell: String, scriptFile: File, exitCode: Int, console: String) {
+        Assertions.assertEquals(
+            0,
+            exitCode,
+            "[$shell] exit=$exitCode\n--- console ---\n$console\n--- generated script ---\n${scriptFile.readText()}"
+        )
+    }
+
     /** 用指定解释器真实执行生成的 .sh */
     private fun runShWith(shell: String, scriptFile: File, workspace: File): Pair<Int, String> {
         val consoleFile = File.createTempFile("sh_e2e_console_", ".log")
@@ -299,7 +310,7 @@ class ShellUtilTest {
         )
 
         val (exitCode, console) = runSh(file, workspace)
-        Assertions.assertEquals(0, exitCode, console)
+        assertShellOk("bash", file, exitCode, console)
 
         val decoded = ScriptTask.decodeMultipleLines(
             lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
@@ -349,9 +360,9 @@ class ShellUtilTest {
         )
 
         val (bashExit, bashConsole) = runShWith("bash", bashFile, bashWorkspace)
-        Assertions.assertEquals(0, bashExit, bashConsole)
+        assertShellOk("bash", bashFile, bashExit, bashConsole)
         val (posixExit, posixConsole) = runShWith("sh", posixFile, posixWorkspace)
-        Assertions.assertEquals(0, posixExit, posixConsole)
+        assertShellOk("sh", posixFile, posixExit, posixConsole)
 
         val bashLines = ScriptEnvUtils.getMultipleLines(bashBuildId, bashWorkspace)
         val posixLines = ScriptEnvUtils.getMultipleLines(posixBuildId, posixWorkspace)
@@ -395,7 +406,7 @@ class ShellUtilTest {
         )
 
         val (exitCode, console) = runSh(file, workspace)
-        Assertions.assertEquals(0, exitCode, console)
+        assertShellOk("bash", file, exitCode, console)
         /* 内容必须原样落盘，不得被执行 */
         Assertions.assertFalse(sideEffect.exists(), "payload was executed as a command: $console")
 

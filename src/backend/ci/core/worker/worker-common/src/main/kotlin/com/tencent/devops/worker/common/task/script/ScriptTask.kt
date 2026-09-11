@@ -204,9 +204,11 @@ open class ScriptTask : ITask() {
                     )
                 }
             )
-            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, context) &&
-                failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
+            /* 三个 map 分开求值，避免 && 短路导致后面 map 的超长告警不打印 */
+            val envsCheck = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
+            val contextCheck = failIfVariableInvalidCheck(failIfVariableInvalid, context)
+            val multiLineCheck = failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)
+            failIfVariableInvalidCheckFlag = envsCheck && contextCheck && multiLineCheck
             addEnv(envs)
             addEnv(context)
             addEnv(multiLineContext)
