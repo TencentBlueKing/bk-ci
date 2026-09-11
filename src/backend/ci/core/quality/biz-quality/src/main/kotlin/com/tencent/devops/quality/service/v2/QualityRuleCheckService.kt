@@ -807,7 +807,7 @@ class QualityRuleCheckService @Autowired constructor(
             return detailMsg
         }
         val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)
-        return "<a href='$msg'>$bkSeeDetails</a>"
+        return "<a target='_blank' href='$msg'>$bkSeeDetails</a>"
     }
 
     /**
@@ -1021,21 +1021,7 @@ class QualityRuleCheckService @Autowired constructor(
             }
         }
 
-        // $变量的解析从process服务移至quality统一处理
-        if (auditUserList.isEmpty()) {
-            return auditUserList
-        }
-        val runtimeVariable = try {
-            client.get(ServiceVarResource::class).getBuildVars(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId
-            ).data
-        } catch (ignored: Exception) {
-            logger.warn("QUALITY|getAuditUserList|getBuildVars fail|$buildId|${ignored.message}")
-            emptyMap()
-        }
-        return parseNotifyUserList(auditUserList.toList(), runtimeVariable).toSet()
+        return auditUserList
     }
 
     private fun getProjectName(projectId: String): String {
