@@ -28,6 +28,7 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.OpProjectLabelBindRequest
 import com.tencent.devops.project.pojo.OpProjectLabelRequest
 import com.tencent.devops.project.pojo.ProjectLabelVO
 import com.tencent.devops.project.pojo.Result
@@ -39,12 +40,13 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OP_PROJECT_LABEL", description = "项目标签字典")
+@Tag(name = "OP_PROJECT_LABEL", description = "项目标签")
 @Path("/op/project/labels")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -80,5 +82,16 @@ interface OpProjectLabelResource {
         @Parameter(description = "标签ID", required = true)
         @PathParam("labelId")
         labelId: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/projects")
+    @Operation(summary = "批量为项目绑定一个标签，已有该标签的项目会跳过")
+    fun bindProjects(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "绑定信息", required = true)
+        request: OpProjectLabelBindRequest
     ): Result<Boolean>
 }

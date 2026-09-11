@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.pojo.ProjectLabelVO
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectLabelService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val projectDao: ProjectDao,
     private val projectLabelDao: ProjectLabelDao,
     private val projectLabelRelDao: ProjectLabelRelDao
 ) {
@@ -134,6 +136,70 @@ class ProjectLabelService @Autowired constructor(
         projectLabelDao.delete(dslContext, labelId)
     }
 
+    /**
+     * 给一批项目追加同一个已有标签，不覆盖项目上的其他标签。
+     * 已绑定该标签的项目会跳过。
+     */
+    fun bindToProjects(labelName: String, englishNames: List<String>) {
+        val name = labelName.trim()
+        if (name.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.NAME_EMPTY,
+                defaultMessage = "Label name cannot be empty"
+            )
+        }
+        val distinctEnglishNames = englishNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        if (distinctEnglishNames.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                params = arrayOf("englishNames"),
+                defaultMessage = "englishNames cannot be empty"
+            )
+        }
+        if (distinctEnglishNames.size > MAX_BATCH_PROJECTS) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_NUM_TOO_BIG,
+                params = arrayOf(MAX_BATCH_PROJECTS.toString()),
+                defaultMessage = "At most $MAX_BATCH_PROJECTS projects can be bound at once"
+            )
+        }
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val labelId = getExistingLabelId(context, name)
+            val projectIdMap = projectDao.listIdByEnglishNames(context, distinctEnglishNames)
+            val missing = distinctEnglishNames.filterNot { projectIdMap.containsKey(it) }
+            if (missing.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(missing.joinToString(",")),
+                    defaultMessage = "Projects not found: ${missing.joinToString(",")}"
+                )
+            }
+            val projectUuids = distinctEnglishNames.map { projectIdMap.getValue(it) }
+            val boundUuids = projectLabelRelDao.listProjectIdsByLabelId(context, labelId, projectUuids)
+            val toAdd = projectUuids.filterNot { boundUuids.contains(it) }
+            if (toAdd.isEmpty()) {
+                return@transaction
+            }
+            val labelCountMap = projectLabelRelDao.countByProjectIds(context, toAdd)
+            val overflow = toAdd.filter { (labelCountMap[it] ?: 0) >= MAX_LABELS_PER_PROJECT }
+            if (overflow.isNotEmpty()) {
+                val overflowSet = overflow.toSet()
+                val overflowNames = distinctEnglishNames.filter { projectIdMap[it] in overflowSet }
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(overflowNames.joinToString(",")),
+                    defaultMessage = "A project can have at most $MAX_LABELS_PER_PROJECT labels"
+                )
+            }
+            projectLabelRelDao.batchAddProjects(
+                dslContext = context,
+                labelId = labelId,
+                projectIds = toAdd
+            )
+        }
+    }
+
     private fun replaceProjectLabels(
         dslContext: DSLContext,
         projectUuid: String,
@@ -167,5 +233,6 @@ class ProjectLabelService @Autowired constructor(
     companion object {
         private const val MAX_LABELS_PER_PROJECT = 20
         private const val MAX_LABEL_NAME_LENGTH = 45
+        private const val MAX_BATCH_PROJECTS = 1000
     }
 }

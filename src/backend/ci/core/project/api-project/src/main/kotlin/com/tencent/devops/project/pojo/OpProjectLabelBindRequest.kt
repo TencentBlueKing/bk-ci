@@ -24,41 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectLabelResource
-import com.tencent.devops.project.pojo.OpProjectLabelBindRequest
-import com.tencent.devops.project.pojo.OpProjectLabelRequest
-import com.tencent.devops.project.pojo.ProjectLabelVO
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectLabelService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class OpProjectLabelResourceImpl @Autowired constructor(
-    private val projectLabelService: ProjectLabelService
-) : OpProjectLabelResource {
-
-    override fun list(userId: String): Result<List<ProjectLabelVO>> {
-        return Result(projectLabelService.listAll())
-    }
-
-    override fun add(userId: String, request: OpProjectLabelRequest): Result<Boolean> {
-        projectLabelService.create(request.labelName)
-        return Result(true)
-    }
-
-    override fun delete(userId: String, labelId: String): Result<Boolean> {
-        projectLabelService.delete(labelId)
-        return Result(true)
-    }
-
-    override fun bindProjects(userId: String, request: OpProjectLabelBindRequest): Result<Boolean> {
-        projectLabelService.bindToProjects(
-            labelName = request.labelName,
-            englishNames = request.englishNames
-        )
-        return Result(true)
-    }
-}
+@Schema(title = "项目标签批量绑定-请求")
+data class OpProjectLabelBindRequest(
+    @get:Schema(title = "标签名称", required = true)
+    val labelName: String,
+    @get:Schema(title = "项目ID列表（englishName）", required = true)
+    val englishNames: List<String>
+)
