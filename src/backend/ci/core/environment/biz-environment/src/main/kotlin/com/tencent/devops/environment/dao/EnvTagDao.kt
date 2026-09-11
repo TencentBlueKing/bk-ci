@@ -1,8 +1,11 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
 import com.tencent.devops.environment.pojo.NodeTagValue
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
+import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvTag
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagKey
@@ -11,6 +14,13 @@ import com.tencent.devops.model.environment.tables.TNodeTags
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+
+data class DynamicEnvTagRule(
+    val envId: Long,
+    val envHashId: String,
+    val envName: String,
+    val tags: Map<Long, Set<Long>>
+)
 
 @Repository
 class EnvTagDao {
@@ -107,6 +117,48 @@ class EnvTagDao {
                 }
         }
         return resultMap
+    }
+
+    /**
+     * Reads every tag rule of the project's dynamic environments. Matching must use both key and value IDs;
+     * tag value IDs alone are not a valid match boundary.
+     */
+    fun fetchDynamicEnvTagRules(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<DynamicEnvTagRule> {
+        val env = TEnv.T_ENV
+        val envTag = TEnvTag.T_ENV_TAG
+        val rows = dslContext.select(
+            env.ENV_ID,
+            env.ENV_HASH_ID,
+            env.ENV_NAME,
+            envTag.TAG_KEY_ID,
+            envTag.TAG_VALUE_ID
+        ).from(envTag)
+            .innerJoin(env)
+            .on(
+                env.ENV_ID.eq(envTag.ENV_ID)
+                    .and(env.PROJECT_ID.eq(envTag.PROJECT_ID))
+            )
+            .where(envTag.PROJECT_ID.eq(projectId))
+            .and(env.PROJECT_ID.eq(projectId))
+            .and(env.ENV_NODE_TYPE.eq(EnvNodeType.TAG.name))
+            .and(env.IS_DELETED.eq(false))
+            .fetch()
+
+        return rows.groupBy { it[env.ENV_ID] }.map { (envId, rules) ->
+            val first = rules.first()
+            DynamicEnvTagRule(
+                envId = envId,
+                envHashId = first[env.ENV_HASH_ID] ?: HashUtil.encodeLongId(envId),
+                envName = first[env.ENV_NAME],
+                tags = rules.groupBy(
+                    keySelector = { it[envTag.TAG_KEY_ID] },
+                    valueTransform = { it[envTag.TAG_VALUE_ID] }
+                ).mapValues { (_, values) -> values.toSet() }
+            )
+        }
     }
 
     fun deleteByEnvId(dslContext: DSLContext, envId: Long) {

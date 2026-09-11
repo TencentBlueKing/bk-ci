@@ -27,24 +27,53 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
-interface AgentUrlService {
-
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+@Service
+open class AgentUrlService @Autowired constructor(
+    private val commonConfig: CommonConfig
+) {
+    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val gw = genGateway(agentRecord)
+        val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        return "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/install"
+    }
 
     /**
      *生成Agent URL
      */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val gw = genGateway(agentRecord)
+        val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        return if (agentRecord.os == OS.WINDOWS.name) {
+            // windows下不需要区分架构，删除arch
+            "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/agent"
+        } else {
+            "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/agent?arch=\${ARCH}"
+        }
+    }
 
     /**
      * 生成构建机脚本下载链接
      */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val installUrl = genAgentInstallUrl(agentRecord)
+        return if (agentRecord.os != OS.WINDOWS.name) {
+            "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: ${agentRecord.projectId}\" $installUrl | bash"
+        } else {
+            ""
+        }
+    }
 
     /**
      * 生成批量下载构建机脚本链接
@@ -59,20 +88,101 @@ interface AgentUrlService {
         installType: TPAInstallType?,
         reInstallId: String?,
         agentType: AgentType?
-    ): String
+    ): String {
+        val gw = fixGateway(gateway)
+        if (os == OS.WINDOWS) {
+            var sc = "\$ProgressPreference = 'SilentlyContinue';" +
+                    "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+                    "\$uri = \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+            var t = "?"
+            if (!zoneName.isNullOrBlank()) {
+                sc += "${t}zoneName=$zoneName"
+                t = "&"
+            }
+            if (!loginName.isNullOrBlank()) {
+                sc += "${t}loginName=${URLEncoder.encode(loginName, "UTF-8")}"
+                t = "&"
+            }
+            if (!loginPassword.isNullOrBlank()) {
+                sc += "${t}loginPassword=${URLEncoder.encode(loginPassword, "UTF-8")}"
+                t = "&"
+            }
+            if (installType != null) {
+                sc += "${t}installType=$installType"
+                t = "&"
+            }
+            if (reInstallId != null) {
+                sc += "${t}reInstallId=$reInstallId"
+                t = "&"
+            }
+            if (agentType != null) {
+                sc += "${t}agentType=${agentType.name}"
+                t = "&"
+            }
+            sc += "\";\$webClient = New-Object System.Net.WebClient;" +
+                    "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};"
+            sc += "\$ps = \$webClient.DownloadString(\$uri);Invoke-Expression -Command \$ps"
+            return sc
+        }
+        var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
+                "\"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+        var t = "?"
+        if (!zoneName.isNullOrBlank()) {
+            url += "${t}zoneName=$zoneName"
+            t = "&"
+        }
+        if (reInstallId != null) {
+            url += "${t}reInstallId=$reInstallId"
+            t = "&"
+        }
+        return "$url\" | bash"
+    }
+
+    /**
+     * 生成安装会话对应的构建机安装命令，具体配置由后台会话快照决定。
+     */
+    fun genAgentSessionInstallScript(os: OS, gateway: String?, token: String): String {
+        val gw = fixGateway(gateway)
+        val url = "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/sessionInstall"
+        return if (os == OS.WINDOWS) {
+            "\$ProgressPreference = 'SilentlyContinue';" +
+                    "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+                    "\$webClient = New-Object System.Net.WebClient;" +
+                    "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};" +
+                    "\$ps = \$webClient.DownloadString(\"$url\");" +
+                    "Invoke-Expression -Command \$ps"
+        } else {
+            "curl -H \"$BATCH_TOKEN_HEADER: $token\" \"$url\" | bash"
+        }
+    }
 
     /**
      * 生成网关域名
      */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        return fixGateway(agentRecord.gateway)
+    }
 
     /**
      * 生成文件网关域名
      */
-    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        return if (agentRecord.fileGateway.isNullOrBlank()) {
+            genGateway(agentRecord)
+        } else {
+            fixGateway(agentRecord.fileGateway)
+        }
+    }
 
     /**
      * 调整gateway格式
      */
-    fun fixGateway(gateway: String?): String
+    fun fixGateway(gateway: String?): String {
+        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
+        return if (gw!!.startsWith("http")) {
+            gw.removeSuffix("/")
+        } else {
+            "http://$gw"
+        }
+    }
 }
