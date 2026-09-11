@@ -109,7 +109,7 @@ class OpenWorkspaceShareRoleClient(
             return null
         }
         val roles = result.data.orEmpty()
-        logger.info("Query share access roles success|resultSize={}", roles.size)
+        logger.info("Query share access roles success|resultSize={}|roles={}", roles.size, roles)
         return roles
     }
 

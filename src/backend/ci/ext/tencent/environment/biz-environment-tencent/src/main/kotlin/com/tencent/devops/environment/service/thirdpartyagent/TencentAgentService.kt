@@ -24,7 +24,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.create.AgentPropsSour
 import com.tencent.devops.environment.service.openworkspace.IegImateShareAccessService
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -95,26 +94,32 @@ class TencentAgentService @Autowired constructor(
             "updateCreateNodeProject start|userId=$userId|newProjectId=$newProjectId|workspaceName=$workspaceName"
         )
         val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, null)
-            ?: throw NotFoundException("The agent is not exist")
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(workspaceName)
+            )
         if (record.agentType != AgentType.CREATE.name) {
             logger.warn(
                 "updateCreateNodeProject agent type invalid|userId=$userId|" +
-                    "workspaceName=$workspaceName|agentType=${record.agentType}"
-            )
-            throw NotFoundException("The agent is not create node")
-        }
-        if (!iegImateShareAccessService.isAdmin(
-                userId = userId,
-                workspaceName = workspaceName,
-                createdUser = record.createdUser
-            )
-        ) {
-            logger.warn(
-                "updateCreateNodeProject denied|userId=$userId|workspaceName=$workspaceName|" +
-                    "createdUser=${record.createdUser}|fromProject=${record.projectId}|newProjectId=$newProjectId"
+                        "workspaceName=$workspaceName|agentType=${record.agentType}"
             )
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(workspaceName)
+            )
+        }
+        val role = iegImateShareAccessService.getRole(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+        if (!role.equals(IegImateShareAccessService.ADMIN_ROLE, ignoreCase = true)) {
+            logger.warn(
+                "updateCreateNodeProject denied|userId=$userId|workspaceName=$workspaceName|" +
+                        "createdUser=${record.createdUser}|fromProject=${record.projectId}|" +
+                    "newProjectId=$newProjectId|role=$role"
+            )
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_IMATE_NO_ADMIN_IMPORT_PERMISSION,
                 defaultMessage = "只有分身管理员才能导入"
             )
         }

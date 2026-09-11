@@ -36,7 +36,7 @@ import java.util.Optional
 import java.util.concurrent.TimeUnit
 
 /**
- * IEG iMate 团队共享分身角色：owner 恒为 admin，其余走 CDS ShareAccessRole，结果缓存 5 秒。
+ * IEG iMate 团队共享分身角色：一律走 CDS ShareAccessRole，结果缓存 5 秒。
  */
 @Service
 class IegImateShareAccessService(
@@ -47,18 +47,14 @@ class IegImateShareAccessService(
         .expireAfterWrite(ROLE_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
         .build()
 
-    fun isAdmin(userId: String, workspaceName: String, createdUser: String? = null): Boolean {
+    fun isAdmin(userId: String, workspaceName: String): Boolean {
         return getRole(
             userId = userId,
-            workspaceName = workspaceName,
-            createdUser = createdUser
+            workspaceName = workspaceName
         ).equals(ADMIN_ROLE, ignoreCase = true)
     }
 
-    fun getRole(userId: String, workspaceName: String, createdUser: String? = null): String? {
-        if (createdUser == userId) {
-            return ADMIN_ROLE
-        }
+    fun getRole(userId: String, workspaceName: String): String? {
         val cacheKey = RoleCacheKey(userId = userId, workspaceName = workspaceName)
         roleCache.getIfPresent(cacheKey)?.let { return it.orElse(null) }
         prefetchRoles(
@@ -89,8 +85,8 @@ class IegImateShareAccessService(
             val cacheKey = RoleCacheKey(userId = item.userId, workspaceName = item.workspaceName)
             val role = resultByKey[cacheKey]?.role?.takeIf { it.isNotBlank() }
             roleCache.put(cacheKey, Optional.ofNullable(role))
-            logger.debug(
-                "Cached ieg imate share role|userId={}|workspaceName={}|role={}",
+            logger.info(
+                "Got ieg imate share role|userId={}|workspaceName={}|role={}",
                 item.userId,
                 item.workspaceName,
                 role
