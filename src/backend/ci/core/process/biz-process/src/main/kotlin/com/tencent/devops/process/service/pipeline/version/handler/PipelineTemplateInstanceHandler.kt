@@ -113,15 +113,14 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
             )
         } else {
             pipelineVersionGenerator.generateInstanceVersion(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 newModel = pipelineResourceWithoutVersion.model,
                 enablePac = enablePac,
                 repoHashId = yamlFileInfo?.repoHashId,
                 targetAction = targetAction,
-                targetBranch = branchName,
-                templateId = templateInstanceBasicInfo!!.templateId,
-                templateVersion = templateInstanceBasicInfo.templateVersion
+                targetBranch = branchName
             )
         }
 
