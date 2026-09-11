@@ -85,14 +85,119 @@ class ShellUtilTest {
         workspace.deleteRecursively()
     }
 
+    @Test
+    fun formatMultipleLinesPosixInjectedTest() {
+        val buildId = "sh_posix_inject_test"
+        val workspace = File(tmpDir, "sh_posix_inject_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/bin/sh\necho hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        /* 保留用户 shebang */
+        Assertions.assertTrue(content.contains("#!/bin/sh"))
+        /* POSIX 分支：编码逻辑由 bash -c 承载 */
+        Assertions.assertTrue(content.contains("bash -c"))
+        /* 不出现 bash 版特有的 local 声明 */
+        Assertions.assertFalse(content.contains("local content="))
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun formatMultipleLinesEnvShShebangInjectedTest() {
+        val buildId = "sh_env_posix_inject_test"
+        val workspace = File(tmpDir, "sh_env_posix_inject_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/usr/bin/env sh\necho hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        Assertions.assertTrue(content.contains("bash -c"))
+        Assertions.assertFalse(content.contains("local content="))
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun formatMultipleLinesBashShebangInjectedTest() {
+        val buildId = "sh_bash_inject_test"
+        val workspace = File(tmpDir, "sh_bash_inject_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/bin/bash\necho hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        /* bash 系维持既有实现 */
+        Assertions.assertTrue(content.contains("local content="))
+        Assertions.assertFalse(content.contains("bash -c"))
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun formatMultipleLinesNoShebangKeepsBashTest() {
+        val buildId = "sh_no_shebang_test"
+        val workspace = File(tmpDir, "sh_no_shebang_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "echo hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        Assertions.assertTrue(content.contains("local content="))
+        Assertions.assertFalse(content.contains("bash -c"))
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
     /**
      * 用 bash 真实执行生成的 .sh。
      * 输出重定向到文件后再 waitFor(timeout)：避免管道读阻塞导致超时保护失效。
      */
-    private fun runSh(scriptFile: File, workspace: File): Pair<Int, String> {
+    private fun runSh(scriptFile: File, workspace: File): Pair<Int, String> =
+        runShWith("bash", scriptFile, workspace)
+
+    /** 用指定解释器真实执行生成的 .sh */
+    private fun runShWith(shell: String, scriptFile: File, workspace: File): Pair<Int, String> {
         val consoleFile = File.createTempFile("sh_e2e_console_", ".log")
         consoleFile.deleteOnExit()
-        val process = ProcessBuilder("bash", scriptFile.absolutePath)
+        val process = ProcessBuilder(shell, scriptFile.absolutePath)
             .directory(workspace)
             .redirectErrorStream(true)
             .redirectOutput(consoleFile)
@@ -101,7 +206,7 @@ class ShellUtilTest {
         if (!finished) {
             process.destroyForcibly()
         }
-        Assertions.assertTrue(finished, "bash 执行超时")
+        Assertions.assertTrue(finished, "$shell 执行超时")
         return process.exitValue() to consoleFile.readText()
     }
 
@@ -141,5 +246,57 @@ class ShellUtilTest {
 
         file.delete()
         workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesPosixMatchesBashTest() {
+        /* 同一输入分别经 bash 分支与 POSIX(sh) 分支编码，产物应逐字节相同 */
+        val bashBuildId = "sh_impl_compare_bash"
+        val posixBuildId = "sh_impl_compare_posix"
+        val bashWorkspace = File(tmpDir, "sh_impl_compare_bash_workspace")
+        val posixWorkspace = File(tmpDir, "sh_impl_compare_posix_workspace")
+        listOf(bashWorkspace, posixWorkspace).forEach {
+            it.deleteRecursively()
+            it.mkdirs()
+        }
+        /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CR / 尾换行 / 叹号 */
+        val value = "line1\n100% done\nliteral %0A here\n中文\r\nhello!world\n"
+        val call = "format_multiple_lines \"::set-output name=RESULT::$value\""
+
+        val bashFile = ShellUtil.getCommandFile(
+            buildId = bashBuildId,
+            script = "#!/bin/bash\n$call",
+            dir = bashWorkspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = bashWorkspace
+        )
+        val posixFile = ShellUtil.getCommandFile(
+            buildId = posixBuildId,
+            script = "#!/bin/sh\n$call",
+            dir = posixWorkspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = posixWorkspace
+        )
+
+        val (bashExit, bashConsole) = runShWith("bash", bashFile, bashWorkspace)
+        Assertions.assertEquals(0, bashExit, bashConsole)
+        val (posixExit, posixConsole) = runShWith("sh", posixFile, posixWorkspace)
+        Assertions.assertEquals(0, posixExit, posixConsole)
+
+        val bashLines = ScriptEnvUtils.getMultipleLines(bashBuildId, bashWorkspace)
+        val posixLines = ScriptEnvUtils.getMultipleLines(posixBuildId, posixWorkspace)
+        /* 两个实现的编码产物逐字节相同 */
+        Assertions.assertEquals(bashLines, posixLines)
+        /* 且往返后与原文一致（含尾换行） */
+        val decoded = ScriptTask.decodeMultipleLines(lines = posixLines, jobId = jobId, stepId = stepId)
+        Assertions.assertEquals(value, decoded["jobs.$jobId.steps.$stepId.outputs.RESULT"])
+
+        bashFile.delete()
+        posixFile.delete()
+        bashWorkspace.deleteRecursively()
+        posixWorkspace.deleteRecursively()
     }
 }

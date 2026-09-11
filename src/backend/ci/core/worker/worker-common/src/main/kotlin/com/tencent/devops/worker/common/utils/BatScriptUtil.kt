@@ -72,14 +72,18 @@ object BatScriptUtil {
         "    goto:eof\r\n"
 
     private const val formatMultipleLines = ":format_multiple_lines\r\n" +
+        "    setlocal\r\n" +
+        "    set \"BK_ML_KEY=%~1\"\r\n" +
+        "    set \"BK_ML_FILE=%~2\"\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
-        "        \"try{\$c=[System.IO.File]::ReadAllText('%~2');\" ^\r\n" +
+        "        \"try{\$c=[System.IO.File]::ReadAllText(\$env:BK_ML_FILE);\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
-        "        \"\$line='::set-output name=%~1::'+\$c;\" ^\r\n" +
+        "        \"\$line='::set-output name='+\$env:BK_ML_KEY+'::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
         "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine," +
         " \$enc)}catch{exit 1}\"\r\n" +
         "    if errorlevel 1 exit 1\r\n" +
+        "    endlocal\r\n" +
         "    goto:eof\r\n"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
@@ -281,7 +285,7 @@ object BatScriptUtil {
             }
             val key = start.groupValues[1]
             val block = extractMultilineBlock(lines, i, key)
-            val fileName = "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_${counter++}.txt"
+            val fileName = ScriptEnvUtils.getMultipleLineBlockFileName(buildId, counter++)
             val file = File(System.getProperty("java.io.tmpdir"), fileName)
             file.writeText(block.content, Charsets.UTF_8)
             file.deleteOnExit()

@@ -39,6 +39,8 @@ object ScriptEnvUtils {
     private const val ERROR_FILE = "setError.log"
     private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
+    /** 多行输出文件的大小上限（字节） */
+    private const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
     private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
@@ -88,6 +90,10 @@ object ScriptEnvUtils {
     fun getMultipleLines(buildId: String, workspace: File): List<String> {
         val f = File(workspace, getMultipleLineFile(buildId))
         if (!f.exists() || f.isDirectory) return emptyList()
+        if (f.length() > MULTILINE_FILE_MAX_LENGTH) {
+            logger.warn("The multiLine file is too large and will be skipped: ${f.length()} bytes")
+            return emptyList()
+        }
         return f.readText(Charsets.UTF_8)
             .removePrefix("\uFEFF")
             .split(lineSplitRegex)
@@ -126,12 +132,31 @@ object ScriptEnvUtils {
         val flagFile = getFlagFile(buildId)
         val multiLineFilePath = getMultipleLineFile(buildId)
         deleteFile(multiLineFilePath, workspace)
+        cleanMultilineBlockFiles(buildId)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
         deleteFile(randomSetErrorFilePath, workspace)
         deleteFile(flagFile, workspace)
         ExecutorUtil.removeThreadLocal()
+    }
+
+    /** 内联多行块临时文件名（与 BatScriptUtil 写入时保持一致） */
+    fun getMultipleLineBlockFileName(buildId: String, index: Int): String {
+        return "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_$index.txt"
+    }
+
+    /**
+     * 删除内联多行块临时文件：序号由 0 连续递增，遇到第一个不存在的文件即结束
+     */
+    private fun cleanMultilineBlockFiles(buildId: String) {
+        val tmpDir = System.getProperty("java.io.tmpdir") ?: return
+        var index = 0
+        while (true) {
+            val blockFile = File(tmpDir, getMultipleLineBlockFileName(buildId, index))
+            if (!blockFile.exists() || !blockFile.delete()) return
+            index++
+        }
     }
 
     private fun deleteFile(filePath: String, workspace: File) {

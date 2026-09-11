@@ -166,4 +166,21 @@ class ScriptTaskTest {
         Assertions.assertEquals(emptyMap<String, String>(), result)
         Assertions.assertEquals(listOf("my-key"), invalidKeys)
     }
+
+    @Test
+    fun decodeMultipleLinesInvalidLineCallbackTest() {
+        /*缺少 set-output 前缀的行被忽略，且回调收到该行内容*/
+        val invalidLines = mutableListOf<String>()
+        val result = ScriptTask.decodeMultipleLines(
+            lines = listOf("some random log", "::set-output name=RESULT::value"),
+            jobId = jobId,
+            stepId = stepId,
+            onInvalidLine = { invalidLines.add(it) }
+        )
+        Assertions.assertEquals(
+            mapOf("jobs.$jobId.steps.$stepId.outputs.RESULT" to "value"),
+            result
+        )
+        Assertions.assertEquals(listOf("some random log"), invalidLines)
+    }
 }

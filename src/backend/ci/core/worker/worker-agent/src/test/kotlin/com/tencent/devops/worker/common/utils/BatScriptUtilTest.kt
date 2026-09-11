@@ -293,8 +293,8 @@ class BatScriptUtilTest {
         val workspace = File(tmpDir, "bat_e2e_file_workspace")
         workspace.deleteRecursively()
         workspace.mkdirs()
-        /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CRLF */
-        val content = "line1\r\n100% done\r\nliteral %0A here\r\n中文"
+        /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CRLF / 叹号 */
+        val content = "line1\r\n100% done\r\nliteral %0A here\r\n中文\r\nhello!world"
         val blockFile = File(workspace, "result.txt").apply { writeText(content, Charsets.UTF_8) }
 
         val bat = BatScriptUtil.getCommandFile(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -86,6 +87,18 @@ object ShellUtil {
         "    printf '%s\\n' \"\$content\" >> \"##multiLineFile##\"\n" +
         "}\n"
 
+    /**
+     * 多行输出函数（POSIX shell：sh / dash / ash）：通过 bash -c 执行与 [formatMultipleLines] 相同的编码逻辑
+     */
+    private val formatMultipleLinesPosix = """
+        format_multiple_lines() {
+            bash -c "content=\"${'$'}1\"; content=\"${'$'}{content//%/%25}\"; content=\"${'$'}{content//${'$'}'\r'/%0D}\"; content=\"${'$'}{content//${'$'}'\n'/%0A}\"; printf '%s\n' \"${'$'}content\"" _ "${'$'}1" >> "##multiLineFile##"
+        }
+    """.trimIndent()
+
+    /** 匹配 POSIX shell（sh / dash / ash）的 shebang */
+    private val posixShellShebang = Regex("""^#!.*\b(sh|dash|ash)\s*$""")
+
     lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
@@ -129,6 +142,7 @@ object ShellUtil {
         )
     }
 
+    /* internal：仅为同模块的 ShellUtilTest 可见 */
     internal fun getCommandFile(
         buildId: String,
         script: String,
@@ -228,8 +242,10 @@ object ShellUtil {
                 newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""
             )
         )
+        val multiLineFunction =
+            if (posixShellShebang.matches(bashStr)) formatMultipleLinesPosix else formatMultipleLines
         command.append(
-            formatMultipleLines.replace(
+            multiLineFunction.replace(
                 oldValue = "##multiLineFile##",
                 newValue = "\"${File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath}\""
             )
@@ -237,8 +253,10 @@ object ShellUtil {
         command.append(". ${userScriptFile.absolutePath}")
         userScriptFile.writeText(script)
         file.writeText(command.toString())
-        executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
-        executeUnixCommand(command = "chmod +x ${userScriptFile.absolutePath}", sourceDir = dir)
+        if (AgentEnv.getOS() != OSType.WINDOWS) {
+            executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
+            executeUnixCommand(command = "chmod +x ${userScriptFile.absolutePath}", sourceDir = dir)
+        }
 
         return file
     }
