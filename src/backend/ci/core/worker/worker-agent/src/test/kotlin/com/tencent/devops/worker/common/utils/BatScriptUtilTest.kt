@@ -76,6 +76,11 @@ class BatScriptUtilTest {
         val expectedFileName = ScriptEnvUtils.getMultipleLineFile(buildId)
         /*占位符被替换*/
         Assertions.assertFalse(content.contains("##multiLineFile##"))
+        /*不存在任何未替换的占位符*/
+        Assertions.assertFalse(
+            Regex("##[a-zA-Z]+##").containsMatchIn(content),
+            "there are unreplaced placeholders in the generated bat"
+        )
         /*文件名正确*/
         Assertions.assertTrue(content.contains(expectedFileName))
 

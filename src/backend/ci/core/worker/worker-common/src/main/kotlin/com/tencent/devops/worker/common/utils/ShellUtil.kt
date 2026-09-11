@@ -88,16 +88,33 @@ object ShellUtil {
         "}\n"
 
     /**
-     * 多行输出函数（POSIX shell：sh / dash / ash）：通过 bash -c 执行与 [formatMultipleLines] 相同的编码逻辑
+     * 多行输出函数（POSIX shell：sh / dash / ash）：整段编码逻辑经 `bash -c` 执行。
+     * 脚本体中的 `$` 以 `\$` 传入，由外层 shell 还原为字面 `$` 后交给内层 bash；
+     * 尾部的 `"$1"` 不加转义，由外层展开为取值内容。
      */
     private val formatMultipleLinesPosix = """
         format_multiple_lines() {
-            bash -c "content=\"${'$'}1\"; content=\"${'$'}{content//%/%25}\"; content=\"${'$'}{content//${'$'}'\r'/%0D}\"; content=\"${'$'}{content//${'$'}'\n'/%0A}\"; printf '%s\n' \"${'$'}content\"" _ "${'$'}1" >> "##multiLineFile##"
+            bash -c "content=\"\${'$'}1\"; content=\"\${'$'}{content//%/%25}\"; content=\"\${'$'}{content//\${'$'}'\r'/%0D}\"; content=\"\${'$'}{content//\${'$'}'\n'/%0A}\"; printf '%s\n' \"\${'$'}content\"" _ "${'$'}1" >> "##multiLineFile##"
         }
     """.trimIndent()
 
-    /** 匹配 POSIX shell（sh / dash / ash）的 shebang */
-    private val posixShellShebang = Regex("""^#!.*\b(sh|dash|ash)\s*$""")
+    /** POSIX shell（sh / dash / ash）的解释器名 */
+    private val posixShellNames = setOf("sh", "dash", "ash")
+
+    /** shebang 的空白分隔符 */
+    private val shebangSeparator = Regex("\\s+")
+
+    /**
+     * 判定首行是否为 POSIX shell（sh / dash / ash）的 shebang。
+     * 逐段取 shebang 中的程序名比对，兼容 `#!/bin/sh`、`#!/usr/bin/env sh`、`#!/bin/sh -e`、
+     * `#!/usr/bin/env -u VAR sh` 等写法；不含 `#!` 或非 POSIX shell 一律返回 false。
+     */
+    private fun isPosixShell(shebang: String): Boolean {
+        return shebang.startsWith("#!") &&
+            shebang.removePrefix("#!").trim()
+                .split(shebangSeparator)
+                .any { it.substringAfterLast('/') in posixShellNames }
+    }
 
     lateinit var buildEnvs: List<BuildEnv>
 
@@ -243,7 +260,7 @@ object ShellUtil {
             )
         )
         val multiLineFunction =
-            if (posixShellShebang.matches(bashStr)) formatMultipleLinesPosix else formatMultipleLines
+            if (isPosixShell(bashStr)) formatMultipleLinesPosix else formatMultipleLines
         command.append(
             multiLineFunction.replace(
                 oldValue = "##multiLineFile##",

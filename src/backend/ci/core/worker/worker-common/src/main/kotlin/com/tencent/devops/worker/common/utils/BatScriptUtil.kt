@@ -75,13 +75,15 @@ object BatScriptUtil {
         "    setlocal\r\n" +
         "    set \"BK_ML_KEY=%~1\"\r\n" +
         "    set \"BK_ML_FILE=%~2\"\r\n" +
+        "    set \"BK_ML_OUT=##multiLineFile##\"\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
         "        \"try{\$c=[System.IO.File]::ReadAllText(\$env:BK_ML_FILE);\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
         "        \"\$line='::set-output name='+\$env:BK_ML_KEY+'::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
-        "        \"[System.IO.File]::AppendAllText('##multiLineFile##', \$line + [Environment]::NewLine," +
-        " \$enc)}catch{exit 1}\"\r\n" +
+        "        \"[System.IO.File]::AppendAllText(\$env:BK_ML_OUT, \$line + [Environment]::NewLine," +
+        " \$enc)}catch{[Console]::Error.WriteLine('format_multiple_lines failed: ' + \$env:BK_ML_KEY +" +
+        " ' - ' + \$_.Exception.Message);exit 1}\"\r\n" +
         "    if errorlevel 1 exit 1\r\n" +
         "    endlocal\r\n" +
         "    goto:eof\r\n"

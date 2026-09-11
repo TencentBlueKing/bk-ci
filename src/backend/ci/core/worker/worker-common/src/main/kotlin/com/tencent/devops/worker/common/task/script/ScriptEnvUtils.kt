@@ -27,6 +27,11 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_FILE_TOO_LARGE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_READ_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -88,10 +93,34 @@ object ScriptEnvUtils {
     }
 
     fun getMultipleLines(buildId: String, workspace: File): List<String> {
+        return try {
+            readMultipleLines(buildId, workspace)
+        } catch (ignore: Throwable) {
+            /* 告警写入失败不影响读取结果 */
+            runCatching {
+                LoggerService.addWarnLine(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_MULTILINE_READ_FAILED,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = arrayOf(ignore.message ?: "")
+                    )
+                )
+            }
+            emptyList()
+        }
+    }
+
+    private fun readMultipleLines(buildId: String, workspace: File): List<String> {
         val f = File(workspace, getMultipleLineFile(buildId))
         if (!f.exists() || f.isDirectory) return emptyList()
         if (f.length() > MULTILINE_FILE_MAX_LENGTH) {
-            logger.warn("The multiLine file is too large and will be skipped: ${f.length()} bytes")
+            LoggerService.addWarnLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MULTILINE_FILE_TOO_LARGE,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(f.length().toString(), MULTILINE_FILE_MAX_LENGTH.toString())
+                )
+            )
             return emptyList()
         }
         return f.readText(Charsets.UTF_8)

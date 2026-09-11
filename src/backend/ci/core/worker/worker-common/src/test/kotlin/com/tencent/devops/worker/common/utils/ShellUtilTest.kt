@@ -186,6 +186,73 @@ class ShellUtilTest {
         workspace.deleteRecursively()
     }
 
+    @Test
+    fun formatMultipleLinesPosixShebangVariantsTest() {
+        /* 以下写法均使用 POSIX shell，必须命中 POSIX 分支（解释器可位于参数或其它程序之后） */
+        listOf(
+            "#!/bin/sh",
+            "#!/usr/bin/env sh",
+            "#!/bin/busybox sh",
+            "#!/bin/dash",
+            "#!/bin/ash",
+            "#!/bin/sh -e",
+            "#!/usr/bin/env -S sh -e",
+            "#!/usr/bin/env -u VAR sh",
+            "#!/usr/bin/nice sh",
+            "#!/usr/bin/time -p sh",
+            "#!/bin/sh\t-e"
+        ).forEachIndexed { index, shebang ->
+            val buildId = "sh_shebang_posix_test_$index"
+            val workspace = File(tmpDir, "${buildId}_workspace")
+            workspace.deleteRecursively()
+            workspace.mkdirs()
+
+            val content = ShellUtil.getCommandFile(
+                buildId = buildId,
+                script = "$shebang\necho hi",
+                dir = workspace,
+                buildEnvs = emptyList(),
+                runtimeVariables = emptyMap(),
+                workspace = workspace
+            ).readText()
+
+            Assertions.assertTrue(content.contains("bash -c"), "should use POSIX branch: $shebang")
+            Assertions.assertFalse(content.contains("local content="), "should not use bash branch: $shebang")
+
+            workspace.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun formatMultipleLinesPosixInnerDollarEscapedTest() {
+        /* 与 OS 无关的契约测试：内层脚本体中的 $ 必须全部被反斜杠转义，
+           否则会被外层 sh 提前展开——表现为变量值丢失，且内容可逃逸为命令 */
+        val buildId = "sh_escape_contract_test"
+        val workspace = File(tmpDir, "sh_escape_contract_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/bin/sh\necho hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        /*取 `bash -c "…" _ ` 之间的内层脚本体*/
+        val body = Regex("""bash -c "(.*?)" _ """).find(content)!!.groupValues[1]
+        Assertions.assertFalse(
+            Regex("""(?<!\\)\$""").containsMatchIn(body),
+            "inner script body contains unescaped \$: $body"
+        )
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
     /**
      * 用 bash 真实执行生成的 .sh。
      * 输出重定向到文件后再 waitFor(timeout)：避免管道读阻塞导致超时保护失效。
@@ -299,4 +366,78 @@ class ShellUtilTest {
         bashWorkspace.deleteRecursively()
         posixWorkspace.deleteRecursively()
     }
+
+    /**
+     * 内容含引号与命令替换时的注入抵抗：外层若提前展开内容，二者都会被当作命令执行。
+     * 内容经变量传入（而非内联进调用字面量），以便构造含引号的用例。
+     */
+    @Test
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesPosixInjectionResistanceTest() {
+        val buildId = "sh_inject_test"
+        val workspace = File(tmpDir, "sh_inject_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val sideEffect = File(workspace, "PWNED")
+        val marker = sideEffect.absolutePath
+        val value = "x\"; touch $marker; echo \"\$(touch $marker)"
+        val script = "#!/bin/sh\n__v=" + shellSingleQuote(value) +
+            "\nformat_multiple_lines \"::set-output name=K::\$__v\""
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = script,
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runSh(file, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+        /* 内容必须原样落盘，不得被执行 */
+        Assertions.assertFalse(sideEffect.exists(), "payload was executed as a command: $console")
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals(value, decoded["jobs.$jobId.steps.$stepId.outputs.K"])
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun getMultipleLinesTooLargeReturnsEmptyTest() {
+        /* 文件超限时跳过读取并返回空列表（不进内存），不抛异常 */
+        val buildId = "ml_too_large_test"
+        val workspace = File(tmpDir, "ml_too_large_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId))
+        file.outputStream().use { it.write(ByteArray(10 * 1024 * 1024 + 1)) }
+
+        Assertions.assertEquals(emptyList<String>(), ScriptEnvUtils.getMultipleLines(buildId, workspace))
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun getMultipleLinesMissingFileReturnsEmptyTest() {
+        val buildId = "ml_missing_test"
+        val workspace = File(tmpDir, "ml_missing_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        Assertions.assertEquals(emptyList<String>(), ScriptEnvUtils.getMultipleLines(buildId, workspace))
+
+        workspace.deleteRecursively()
+    }
+
+    /** 转成单引号 shell 字面量，用于把待测内容安全嵌入被测脚本 */
+    private fun shellSingleQuote(s: String): String = "'" + s.replace("'", "'\\''") + "'"
 }
