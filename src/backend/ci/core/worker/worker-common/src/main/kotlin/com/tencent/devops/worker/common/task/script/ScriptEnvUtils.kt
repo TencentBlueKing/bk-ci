@@ -27,6 +27,11 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_FILE_TOO_LARGE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_READ_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -37,8 +42,12 @@ object ScriptEnvUtils {
     private const val FLAG_FILE = "flag.log"
     private const val CONTEXT_FILE = "context.log"
     private const val ERROR_FILE = "setError.log"
+    private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
+    /** 多行输出文件的大小上限（字节） */
+    private const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
+    private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
     fun cleanEnv(buildId: String, workspace: File) {
@@ -77,6 +86,47 @@ object ScriptEnvUtils {
         val randomNum = ExecutorUtil.getThreadLocal()
         return "$buildId-$randomNum-$ERROR_FILE"
     }
+
+    fun getMultipleLineFile(buildId: String): String {
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$MULTILINE_FILE"
+    }
+
+    fun getMultipleLines(buildId: String, workspace: File): List<String> {
+        return try {
+            readMultipleLines(buildId, workspace)
+        } catch (ignore: Throwable) {
+            runCatching {
+                LoggerService.addWarnLine(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_MULTILINE_READ_FAILED,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = arrayOf(ignore.message ?: "")
+                    )
+                )
+            }
+            emptyList()
+        }
+    }
+
+    private fun readMultipleLines(buildId: String, workspace: File): List<String> {
+        val f = File(workspace, getMultipleLineFile(buildId))
+        if (!f.exists() || f.isDirectory) return emptyList()
+        if (f.length() > MULTILINE_FILE_MAX_LENGTH) {
+            LoggerService.addWarnLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MULTILINE_FILE_TOO_LARGE,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(f.length().toString(), MULTILINE_FILE_MAX_LENGTH.toString())
+                )
+            )
+            return emptyList()
+        }
+        return f.readText(Charsets.UTF_8)
+            .removePrefix("\uFEFF")
+            .split(lineSplitRegex)
+            .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
+    }
     /*限定文件名*/
     fun getFlagFile(buildId: String): String {
         val randomNum = ExecutorUtil.getThreadLocal()
@@ -108,12 +158,33 @@ object ScriptEnvUtils {
         val randomContextFilePath = getContextFile(buildId)
         val randomSetErrorFilePath = getSetErrorFile(buildId)
         val flagFile = getFlagFile(buildId)
+        val multiLineFilePath = getMultipleLineFile(buildId)
+        deleteFile(multiLineFilePath, workspace)
+        cleanMultilineBlockFiles(buildId)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
         deleteFile(randomSetErrorFilePath, workspace)
         deleteFile(flagFile, workspace)
         ExecutorUtil.removeThreadLocal()
+    }
+
+    /** 内联多行块临时文件名（与 BatScriptUtil 写入时保持一致） */
+    fun getMultipleLineBlockFileName(buildId: String, index: Int): String {
+        return "ml_block_${buildId}_${ExecutorUtil.getThreadLocal()}_$index.txt"
+    }
+
+    /**
+     * 删除内联多行块临时文件：序号由 0 连续递增，遇到第一个不存在的文件即结束
+     */
+    private fun cleanMultilineBlockFiles(buildId: String) {
+        val tmpDir = System.getProperty("java.io.tmpdir") ?: return
+        var index = 0
+        while (true) {
+            val blockFile = File(tmpDir, getMultipleLineBlockFileName(buildId, index))
+            if (!blockFile.exists() || !blockFile.delete()) return
+            index++
+        }
     }
 
     private fun deleteFile(filePath: String, workspace: File) {
