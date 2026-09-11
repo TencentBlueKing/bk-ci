@@ -27,11 +27,17 @@
 
 package com.tencent.devops.process.trigger.scm.converter
 
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
 import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
@@ -89,20 +95,11 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             ref = pullRequest.targetRef.name,
             authRepository = AuthRepository(repository)
         )
-        val sourceFileTrees = pipelineYamlFileService.listFileTree(
+        val sourceFileTrees = listSourceFileTrees(
             projectId = projectId,
-            ref = pullRequest.sourceRef.name,
-            authRepository = if (fork) {
-                // fork仓库,需要获取pr触发人的oauth获取文件信息
-                AuthRepository(
-                    scmCode = repository.scmCode,
-                    url = sourceRepo.httpUrl,
-                    userName = repository.userName,
-                    auth = UserOauthTokenAuthCred(hook.sender.name)
-                )
-            } else {
-                AuthRepository(repository)
-            }
+            repository = repository,
+            hook = hook,
+            fork = fork
         )
         return computeNotMergeYamlDiffs(
             eventId = eventId,
@@ -455,20 +452,11 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         if (!fork && defaultBranch == sourceBranch) {
             return
         }
-        val sourceFileTrees = pipelineYamlFileService.listFileTree(
+        val sourceFileTrees = listSourceFileTrees(
             projectId = projectId,
-            ref = pullRequest.sourceRef.name,
-            authRepository = if (fork) {
-                // fork仓库,需要获取pr触发人的oauth获取文件信息
-                AuthRepository(
-                    scmCode = repository.scmCode,
-                    url = sourceRepo.httpUrl,
-                    userName = repository.userName,
-                    auth = UserOauthTokenAuthCred(hook.sender.name)
-                )
-            } else {
-                AuthRepository(repository)
-            }
+            repository = repository,
+            hook = hook,
+            fork = fork
         )
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
@@ -563,6 +551,69 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 sourceFullName = sourceRepo.fullName
             )
             yamlDiffs.add(yamlDiff)
+        }
+    }
+
+    /**
+     * 列出源分支 YAML 文件树。fork 仓库使用 PR 触发人登录用户名的 OAuth。
+     */
+    private fun listSourceFileTrees(
+        projectId: String,
+        repository: Repository,
+        hook: PullRequestHook,
+        fork: Boolean
+    ): List<Tree> {
+        val sourceRepo = hook.pullRequest.sourceRepo
+        val authRepository = if (fork) {
+            buildForkAuthRepository(repository = repository, hook = hook)
+        } else {
+            AuthRepository(repository)
+        }
+        return try {
+            pipelineYamlFileService.listFileTree(
+                projectId = projectId,
+                ref = hook.pullRequest.sourceRef.name,
+                authRepository = authRepository
+            )
+        } catch (ignored: Exception) {
+            if (fork && isForkYamlAuthError(ignored)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PAC_FORK_YAML_OAUTH,
+                    params = arrayOf(hook.userName, sourceRepo.httpUrl)
+                )
+            }
+            throw ignored
+        }
+    }
+
+    /**
+     * fork 仓库需要用 PR 触发人的登录用户名获取 OAuth，不能使用展示名。
+     */
+    private fun buildForkAuthRepository(
+        repository: Repository,
+        hook: PullRequestHook
+    ): AuthRepository {
+        return AuthRepository(
+            scmCode = repository.scmCode,
+            url = hook.pullRequest.sourceRepo.httpUrl,
+            userName = repository.userName,
+            auth = UserOauthTokenAuthCred(hook.userName)
+        )
+    }
+
+    private fun isForkYamlAuthError(exception: Exception): Boolean {
+        val oauthErrorCodes = setOf(
+            RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH,
+            RepositoryMessageCode.ERROR_SCM_API_NOT_READ_PERMISSION
+        )
+        return when (exception) {
+            is ErrorCodeException -> exception.errorCode in oauthErrorCodes
+            is RemoteServiceException -> {
+                exception.errorCode?.toString() in oauthErrorCodes ||
+                    exception.httpStatus == HTTP_401 ||
+                    exception.httpStatus == HTTP_403
+            }
+            else -> false
         }
     }
 }
