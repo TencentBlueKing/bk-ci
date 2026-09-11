@@ -27,35 +27,35 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.op.OpProjectLabelResource
+import com.tencent.devops.project.api.op.OpProjectLabelManageResource
 import com.tencent.devops.project.pojo.OpProjectLabelBindRequest
 import com.tencent.devops.project.pojo.OpProjectLabelRequest
 import com.tencent.devops.project.pojo.ProjectLabelVO
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectLabelService
+import com.tencent.devops.project.service.ProjectLabelManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpProjectLabelResourceImpl @Autowired constructor(
-    private val projectLabelService: ProjectLabelService
-) : OpProjectLabelResource {
+class OpProjectLabelManageResourceImpl @Autowired constructor(
+    private val projectLabelManageService: ProjectLabelManageService
+) : OpProjectLabelManageResource {
 
     override fun list(userId: String): Result<List<ProjectLabelVO>> {
-        return Result(projectLabelService.listAll())
+        return Result(projectLabelManageService.listAll())
     }
 
     override fun add(userId: String, request: OpProjectLabelRequest): Result<Boolean> {
-        projectLabelService.create(request.labelName)
+        projectLabelManageService.create(request.labelName)
         return Result(true)
     }
 
     override fun delete(userId: String, labelId: String): Result<Boolean> {
-        projectLabelService.delete(labelId)
+        projectLabelManageService.delete(labelId)
         return Result(true)
     }
 
     override fun bindProjects(userId: String, request: OpProjectLabelBindRequest): Result<Boolean> {
-        projectLabelService.bindToProjects(
+        projectLabelManageService.bindToProjects(
             labelName = request.labelName,
             englishNames = request.englishNames
         )

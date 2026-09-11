@@ -115,7 +115,7 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
-import com.tencent.devops.project.service.ProjectLabelService
+import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -155,7 +155,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     @Autowired
     @Lazy
-    private lateinit var projectLabelService: ProjectLabelService
+    private lateinit var projectLabelManageService: ProjectLabelManageService
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
@@ -325,7 +325,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
-                projectLabelService.replaceIfPresent(
+                projectLabelManageService.replaceIfPresent(
                     dslContext = context,
                     projectUuid = projectId,
                     labels = createInfo.labels
@@ -729,7 +729,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
                 )
-                projectLabelService.replaceIfPresent(
+                projectLabelManageService.replaceIfPresent(
                     dslContext = dslContext,
                     projectUuid = projectId,
                     labels = projectUpdateInfo.labels
@@ -1773,7 +1773,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
-        return projectLabelService.listProjectIdsByLabel(label)
+        return projectLabelManageService.listProjectIdsByLabel(label)
     }
 
     override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {

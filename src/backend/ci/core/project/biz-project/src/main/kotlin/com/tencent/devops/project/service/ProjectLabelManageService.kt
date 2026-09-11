@@ -42,7 +42,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectLabelService @Autowired constructor(
+class ProjectLabelManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectLabelDao: ProjectLabelDao,

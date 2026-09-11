@@ -50,7 +50,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/op/projects/labels")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpProjectLabelResource {
+interface OpProjectLabelManageResource {
 
     @GET
     @Path("/")
