@@ -2329,6 +2329,59 @@ class PipelineListFacadeService @Autowired constructor(
         return SQLPage(count = count.toLong(), records = records)
     }
 
+    fun listPipelineIdAndName(
+        userId: String,
+        projectId: String,
+        permission: Permission,
+        excludePipelineId: String?,
+        page: Int?,
+        pageSize: Int?,
+        pipelineName: String? = null,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
+    ): SQLPage<PipelineIdAndName> {
+        val authPermission = when (permission) {
+            Permission.DEPLOY -> AuthPermission.DEPLOY
+            Permission.DOWNLOAD -> AuthPermission.DOWNLOAD
+            Permission.EDIT -> AuthPermission.EDIT
+            Permission.EXECUTE -> AuthPermission.EXECUTE
+            Permission.DELETE -> AuthPermission.DELETE
+            Permission.VIEW -> AuthPermission.VIEW
+            Permission.CREATE -> AuthPermission.CREATE
+            Permission.LIST -> AuthPermission.LIST
+        }
+        val permissionIds = pipelinePermissionService.getResourceByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = authPermission
+        ).toMutableList()
+        if (!excludePipelineId.isNullOrBlank()) {
+            permissionIds.remove(excludePipelineId)
+        }
+        if (permissionIds.isEmpty()) {
+            return SQLPage(count = 0, records = emptyList())
+        }
+        val pageSizeNotNull = pageSize ?: -1
+        val sqlLimit = if (pageSizeNotNull == -1) {
+            null
+        } else {
+            PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSizeNotNull)
+        }
+        val condition = PipelineInfoQueryCondition(
+            projectId = projectId,
+            pipelineIds = permissionIds.toSet(),
+            excludePipelineIds = excludePipelineId?.takeIf { it.isNotBlank() }?.let { setOf(it) },
+            channelCode = channelCode,
+            pipelineName = pipelineName,
+            limit = sqlLimit?.limit,
+            offset = sqlLimit?.offset
+        )
+        val count = pipelineInfoDao.countByCondition(dslContext, condition)
+        val records = pipelineInfoDao.listByCondition(dslContext, condition).map {
+            PipelineIdAndName(it.pipelineId, it.pipelineName)
+        }
+        return SQLPage(count = count, records = records)
+    }
+
     fun listDisabledPipelines(
         projectId: String
     ): List<String> {
