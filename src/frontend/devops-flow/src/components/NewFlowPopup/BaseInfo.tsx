@@ -1,5 +1,6 @@
 import AuthoringEnv from '@/components/AuthoringEnv'
 import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
+import { applyNativeInputValue } from '@/utils/nativeInputValue'
 import { Form, Input } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -42,6 +43,11 @@ export default defineComponent({
       emit('update:modelValue', baseInfoData.value)
     }
 
+    function commitTextField(field: 'pipelineName' | 'pipelineDesc', e: Event) {
+      applyNativeInputValue(baseInfoData.value, field, e)
+      handleChange()
+    }
+
     function updateAuthoringEnv(env: string) {
       baseInfoData.value.envHashId = env
       handleChange()
@@ -60,6 +66,7 @@ export default defineComponent({
             <Input
               v-model={baseInfoData.value.pipelineName}
               onChange={handleChange}
+              onBlur={(e: FocusEvent) => commitTextField('pipelineName', e)}
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
@@ -67,6 +74,7 @@ export default defineComponent({
             <Input
               v-model={baseInfoData.value.pipelineDesc}
               onChange={handleChange}
+              onBlur={(e: FocusEvent) => commitTextField('pipelineDesc', e)}
               type="textarea"
             ></Input>
           </Form.FormItem>
