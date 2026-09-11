@@ -96,7 +96,7 @@ object ShellUtil {
         format_multiple_lines() {
             bash -c "content=\"\${'$'}1\"; content=\"\${'$'}{content//%/%25}\"; content=\"\${'$'}{content//\${'$'}'\r'/%0D}\"; content=\"\${'$'}{content//\${'$'}'\n'/%0A}\"; printf '%s\n' \"\${'$'}content\"" _ "${'$'}1" >> "##multiLineFile##"
         }
-    """.trimIndent()
+    """.trimIndent() + "\n"
 
     /** POSIX shell（sh / dash / ash）的解释器名 */
     private val posixShellNames = setOf("sh", "dash", "ash")

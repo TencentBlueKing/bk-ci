@@ -204,7 +204,6 @@ open class ScriptTask : ITask() {
                     )
                 }
             )
-            /* 三个 map 分开求值，避免 && 短路导致后面 map 的超长告警不打印 */
             val envsCheck = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
             val contextCheck = failIfVariableInvalidCheck(failIfVariableInvalid, context)
             val multiLineCheck = failIfVariableInvalidCheck(failIfVariableInvalid, multiLineContext)

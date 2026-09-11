@@ -96,7 +96,6 @@ object ScriptEnvUtils {
         return try {
             readMultipleLines(buildId, workspace)
         } catch (ignore: Throwable) {
-            /* 告警写入失败不影响读取结果 */
             runCatching {
                 LoggerService.addWarnLine(
                     MessageUtil.getMessageByLocale(

@@ -5,6 +5,7 @@ import com.tencent.devops.worker.common.task.script.ScriptTask
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
@@ -16,6 +17,7 @@ class ShellUtilTest {
     private val stepId = "step_xx"
 
     @Test
+    @DisplayName("bash 版函数注入与编码目标正确")
     fun formatMultipleLinesInjectedTest() {
         val buildId = "sh_multi_line_test"
         val script = "format_multiple_lines \"::set-output name=TEST::test_value\""
@@ -61,6 +63,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("不调用时仍注入函数且占位符已替换")
     fun formatMultipleLinesWithoutCallTest() {
         val buildId = "sh_no_call_test"
         val workspace = File(tmpDir, "sh_no_call_test_workspace")
@@ -86,6 +89,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("#!/bin/sh 命中 POSIX 分支")
     fun formatMultipleLinesPosixInjectedTest() {
         val buildId = "sh_posix_inject_test"
         val workspace = File(tmpDir, "sh_posix_inject_test_workspace")
@@ -114,6 +118,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("#!/usr/bin/env sh 命中 POSIX 分支")
     fun formatMultipleLinesEnvShShebangInjectedTest() {
         val buildId = "sh_env_posix_inject_test"
         val workspace = File(tmpDir, "sh_env_posix_inject_test_workspace")
@@ -138,6 +143,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("#!/bin/bash 保持 bash 分支")
     fun formatMultipleLinesBashShebangInjectedTest() {
         val buildId = "sh_bash_inject_test"
         val workspace = File(tmpDir, "sh_bash_inject_test_workspace")
@@ -163,6 +169,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("无 shebang 保持 bash 分支（既有行为）")
     fun formatMultipleLinesNoShebangKeepsBashTest() {
         val buildId = "sh_no_shebang_test"
         val workspace = File(tmpDir, "sh_no_shebang_test_workspace")
@@ -187,6 +194,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("带参数等 11 种 POSIX shebang 写法均命中")
     fun formatMultipleLinesPosixShebangVariantsTest() {
         /* 以下写法均使用 POSIX shell，必须命中 POSIX 分支（解释器可位于参数或其它程序之后） */
         listOf(
@@ -224,6 +232,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("内层脚本体中的 $ 必须全部转义")
     fun formatMultipleLinesPosixInnerDollarEscapedTest() {
         /* 与 OS 无关的契约测试：内层脚本体中的 $ 必须全部被反斜杠转义，
            否则会被外层 sh 提前展开——表现为变量值丢失，且内容可逃逸为命令 */
@@ -251,6 +260,34 @@ class ShellUtilTest {
 
         file.delete()
         workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("函数定义与后续 source 命令之间必须分行")
+    fun formatMultipleLinesFunctionEndsWithNewlineTest() {
+        /* 注入的函数定义与后续 source 用户脚本的命令之间必须有换行 */
+        listOf("#!/bin/sh", "#!/bin/bash", "").forEachIndexed { index, shebang ->
+            val buildId = "sh_fn_newline_test_$index"
+            val workspace = File(tmpDir, "${buildId}_workspace")
+            workspace.deleteRecursively()
+            workspace.mkdirs()
+
+            val content = ShellUtil.getCommandFile(
+                buildId = buildId,
+                script = shebang + "\necho hi",
+                dir = workspace,
+                buildEnvs = emptyList(),
+                runtimeVariables = emptyMap(),
+                workspace = workspace
+            ).readText()
+
+            Assertions.assertTrue(
+                content.contains("}\n. "),
+                "function definition is not terminated by newline (shebang=$shebang)"
+            )
+
+            workspace.deleteRecursively()
+        }
     }
 
     /**
@@ -289,6 +326,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("真实 bash 执行且值逐字符往返一致")
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesEndToEndTest() {
         val buildId = "sh_e2e_multi"
@@ -327,6 +365,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("POSIX 与 bash 两实现产物逐字节一致")
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesPosixMatchesBashTest() {
         /* 同一输入分别经 bash 分支与 POSIX(sh) 分支编码，产物应逐字节相同 */
@@ -378,13 +417,11 @@ class ShellUtilTest {
         posixWorkspace.deleteRecursively()
     }
 
-    /**
-     * 内容含引号与命令替换时的注入抵抗：外层若提前展开内容，二者都会被当作命令执行。
-     * 内容经变量传入（而非内联进调用字面量），以便构造含引号的用例。
-     */
     @Test
+    @DisplayName("内容含引号与命令替换时不得被执行")
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesPosixInjectionResistanceTest() {
+        /* 内容经变量传入（而非内联进调用字面量），以便构造含引号的用例 */
         val buildId = "sh_inject_test"
         val workspace = File(tmpDir, "sh_inject_test_workspace")
         workspace.deleteRecursively()
@@ -422,6 +459,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("多行文件超限时返回空列表且不抛异常")
     fun getMultipleLinesTooLargeReturnsEmptyTest() {
         /* 文件超限时跳过读取并返回空列表（不进内存），不抛异常 */
         val buildId = "ml_too_large_test"
@@ -438,6 +476,7 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("多行文件不存在时返回空列表")
     fun getMultipleLinesMissingFileReturnsEmptyTest() {
         val buildId = "ml_missing_test"
         val workspace = File(tmpDir, "ml_missing_test_workspace")
