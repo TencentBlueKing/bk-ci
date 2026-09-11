@@ -104,6 +104,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
@@ -114,6 +115,7 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
+import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -125,6 +127,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
@@ -149,6 +152,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val profile: Profile,
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
+
+    @Autowired
+    @Lazy
+    private lateinit var projectLabelManageService: ProjectLabelManageService
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
@@ -318,6 +325,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
+                projectLabelManageService.replaceIfPresent(
+                    dslContext = context,
+                    projectUuid = projectId,
+                    labels = createInfo.labels
+                )
             }
             updateProjectRouterTag(createInfo.englishName)
         } catch (e: DuplicateKeyException) {
@@ -716,6 +728,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectUpdateHistoryDao.create(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
+                )
+                projectLabelManageService.replaceIfPresent(
+                    dslContext = dslContext,
+                    projectUuid = projectId,
+                    labels = projectUpdateInfo.labels
                 )
                 if (!projectUpdateInfo.secrecy) {
                     redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
@@ -1753,6 +1770,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             projectOrganizationInfo = projectOrganizationInfo
         )
+    }
+
+    override fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
+        return projectLabelManageService.listProjectIdsByLabel(label)
     }
 
     override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {

@@ -46,6 +46,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -214,6 +215,16 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
             productName = productName,
             productId = productId
         )
+    }
+
+    override fun listProjectIdsByLabel(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        label: ProjectLabel
+    ): Result<List<String>> {
+        logger.info("OPENAPI_PROJECT_V4|$userId|listProjectIdsByLabel|$label")
+        return client.get(ServiceProjectResource::class).listProjectIdsByLabel(label)
     }
 
     override fun getProjectListByProductId(
