@@ -34,6 +34,7 @@ const CodelibSelector = defineAsyncComponent(() => import('./CodelibSelector'))
 const DevopsSelect = defineAsyncComponent(() => import('./DevopsSelect'))
 const DynamicParameterSimple = defineAsyncComponent(() => import('./DynamicParameterSimple'))
 const Tips = defineAsyncComponent(() => import('./Tips'))
+const MetadataTigger = defineAsyncComponent(() => import('./MetadataTigger'))
 
 const SELF_ERROR_COMPONENTS = new Set(['timer-cron-tab'])
 
@@ -74,6 +75,7 @@ export const COMPONENT_MAP: Record<string, any> = {
   'codelib-selector': CodelibSelector,
   'devops-select': DevopsSelect,
   'dynamic-parameter-simple': DynamicParameterSimple,
+  'metadata-tigger': MetadataTigger,
 }
 
 // Display mode types
