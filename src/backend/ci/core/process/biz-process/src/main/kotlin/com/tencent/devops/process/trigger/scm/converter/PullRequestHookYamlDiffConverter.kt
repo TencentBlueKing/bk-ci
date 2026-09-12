@@ -31,7 +31,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
@@ -136,14 +136,14 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         val defaultBranch = serverRepo.defaultBranch!!
         val fork = sourceRepo.id != targetRepo.id
 
-        val targetFilePaths = targetFileTrees.map { GitActionCommon.getCiFilePath(it.path) }
-        val sourceFilePaths = sourceFileTrees.map { GitActionCommon.getCiFilePath(it.path) }
+        val targetFilePaths = targetFileTrees.map { YamlFileUtils.getCiFilePath(it.path) }
+        val sourceFilePaths = sourceFileTrees.map { YamlFileUtils.getCiFilePath(it.path) }
 
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
         val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         sourceFileTrees.forEach { sourceTree ->
-            val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
+            val sourcePath = YamlFileUtils.getCiFilePath(sourceTree.path)
             val baseYamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
@@ -154,7 +154,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 filePath = sourcePath,
                 fileType = YamlFileType.getFileType(sourcePath),
                 triggerUser = hook.userName,
-                ref = GitActionCommon.getSourceRef(
+                ref = YamlFileUtils.getSourceRef(
                     fork = fork,
                     sourceFullName = sourceRepo.fullName,
                     sourceBranch = sourceBranch
@@ -204,7 +204,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             }
         }
         targetFileTrees.forEach { targetTree ->
-            val targetPath = GitActionCommon.getCiFilePath(targetTree.path)
+            val targetPath = YamlFileUtils.getCiFilePath(targetTree.path)
             if (targetPath in yamlDiffs.map { it.filePath }.toSet()) {
                 return@forEach
             }
@@ -240,7 +240,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 // 源分支没有，目标分支有，删除列表有，说明是删除,需要删除
                 targetPath !in sourceFilePaths && targetPath in changeFiles.deletedFiles -> {
                     val yamlDiff = baseYamlDiff.copy(
-                        ref = GitActionCommon.getSourceRef(
+                        ref = YamlFileUtils.getSourceRef(
                             fork = fork,
                             sourceFullName = sourceRepo.fullName,
                             sourceBranch = sourceBranch
@@ -324,7 +324,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         // 目标文件变更事件
         targetFileTrees.forEach { targetTree ->
-            val targetPath = GitActionCommon.getCiFilePath(targetTree.path)
+            val targetPath = YamlFileUtils.getCiFilePath(targetTree.path)
             val baseYamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
@@ -380,7 +380,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             }
         }
         // 目标文件删除事件
-        changeFiles.deletedFiles.filter { GitActionCommon.isCiFile(it) }.forEach { filePath ->
+        changeFiles.deletedFiles.filter { YamlFileUtils.isCiFile(it) }.forEach { filePath ->
             val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
@@ -473,7 +473,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
         val changeFiles = WebhookConverterUtils.getChangeFiles(hook.changes)
 
         sourceFileTrees.forEach { sourceTree ->
-            val sourcePath = GitActionCommon.getCiFilePath(sourceTree.path)
+            val sourcePath = YamlFileUtils.getCiFilePath(sourceTree.path)
             val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,
@@ -484,7 +484,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
                 filePath = sourcePath,
                 fileType = YamlFileType.getFileType(sourcePath),
                 triggerUser = hook.userName,
-                ref = GitActionCommon.getSourceRef(
+                ref = YamlFileUtils.getSourceRef(
                     fork = fork,
                     sourceFullName = sourceRepo.fullName,
                     sourceBranch = sourceBranch
@@ -539,7 +539,7 @@ class PullRequestHookYamlDiffConverter @Autowired constructor(
             authRepository = AuthRepository(repository)
         )
         defaultFileTrees.forEach { tree ->
-            val filePath = GitActionCommon.getCiFilePath(tree.path)
+            val filePath = YamlFileUtils.getCiFilePath(tree.path)
             val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,

@@ -38,10 +38,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DEFAULT_BRANCH_IS_EMPTY
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
@@ -54,18 +51,13 @@ import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.repository.service.scm.IGitOauthService
-import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -86,7 +78,6 @@ class CodeGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService,
-    private val gitService: IGitService,
     private val repositoryAuthorizationService: RepositoryAuthorizationService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
@@ -104,9 +95,6 @@ class CodeGitRepositoryService @Autowired constructor(
             errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
             params = arrayOf(repository.url, userId)
         )
-        if (repository.enablePac == true) {
-            pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = false)
-        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryId = repositoryDao.create(
@@ -327,121 +315,6 @@ class CodeGitRepositoryService @Autowired constructor(
         return getPacRepository(externalId = gitProjectId.toString())?.projectId
     }
 
-    override fun pacCheckEnabled(projectId: String, userId: String, record: TRepositoryRecord, retry: Boolean) {
-        val repository = compose(record)
-        if (repository.authType != RepoAuthType.OAUTH) {
-            throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
-        }
-        val gitProjectId =
-            pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = retry)
-        // 修复历史数据
-        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
-            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
-            repositoryCodeGitDao.updateGitProjectId(
-                dslContext = dslContext,
-                id = repositoryId,
-                gitProjectId = gitProjectId
-            )
-        }
-    }
-
-    private fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        repository: CodeGitRepository,
-        retry: Boolean
-    ): Long {
-        if (repository.authType != RepoAuthType.OAUTH) {
-            throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
-        }
-        val credentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
-        // 获取工蜂ID
-        val gitProjectInfo = try {
-            getGitProjectInfo(
-                repo = repository, token = credentialInfo.token
-            )
-        } catch (ignore: Exception) {
-            null
-        } ?: throw ErrorCodeException(
-            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
-            params = arrayOf(repository.url, repository.userName)
-        )
-        if (gitProjectInfo.defaultBranch == null) {
-            throw ErrorCodeException(
-                errorCode = ERROR_DEFAULT_BRANCH_IS_EMPTY
-            )
-        }
-        val gitProjectId = gitProjectInfo.id.toString()
-        // 重试不需要校验开启的pac仓库
-        if (!retry) {
-            getPacRepository(externalId = gitProjectId)?.let {
-                throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
-                    params = arrayOf(it.projectId, it.aliasName)
-                )
-            }
-        }
-        val member = gitService.getProjectMembersAll(
-            gitProjectId = gitProjectId,
-            page = 1,
-            pageSize = 1,
-            search = repository.userName,
-            tokenType = TokenTypeEnum.OAUTH,
-            token = credentialInfo.token
-        ).data?.firstOrNull() ?: throw ErrorCodeException(
-            errorCode = RepositoryMessageCode.ERROR_MEMBER_NOT_FOUND,
-            params = arrayOf(repository.userName)
-        )
-        if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER,
-                params = arrayOf(repository.userName)
-            )
-        }
-        // 初始化应该新增push和mr事件
-        scmOauthService.addWebHook(
-            projectName = gitProjectInfo.id.toString(),
-            url = repository.url,
-            type = ScmType.CODE_GIT,
-            privateKey = null,
-            passPhrase = null,
-            token = credentialInfo.token,
-            region = null,
-            userName = userId,
-            event = CodeGitWebhookEvent.PUSH_EVENTS.value
-        )
-        scmOauthService.addWebHook(
-            projectName = gitProjectInfo.id.toString(),
-            url = repository.url,
-            type = ScmType.CODE_GIT,
-            privateKey = null,
-            passPhrase = null,
-            token = credentialInfo.token,
-            region = null,
-            userName = userId,
-            event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-        )
-        return gitProjectInfo.id
-    }
-
-    override fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo> {
-        val codeGitRepository = compose(record)
-        val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
-        val gitProjectInfo = getGitProjectInfo(
-            repoUrl = record.url,
-            userId = codeGitRepository.userName,
-            token = credentialInfo.token
-        )
-        return gitService.getGitFileTree(
-            gitProjectId = gitProjectInfo.id.toString(),
-            ref = gitProjectInfo.defaultBranch,
-            path = RepositoryConstants.CI_DIR_PATH,
-            token = credentialInfo.token,
-            recursive = false,
-            tokenType = TokenTypeEnum.OAUTH
-        ).data ?: emptyList()
-    }
-
     /**
      * 检查凭证信息
      */
@@ -487,7 +360,11 @@ class CodeGitRepositoryService @Autowired constructor(
             dslContext = dslContext,
             gitProjectId = externalId.toLong()
         ).map { it.repositoryId }
-        return repositoryDao.getPacRepositoryByIds(dslContext = dslContext, repositoryIds = repositoryIds)
+        return repositoryDao.getPacRepositoryByIds(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            type = ScmType.CODE_GIT.name
+        )
     }
 
     /**

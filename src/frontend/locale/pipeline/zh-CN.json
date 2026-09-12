@@ -1868,6 +1868,7 @@
   "bkTimingStartEventDesc": "{user} 定时触发",
   "bkEventReplayDesc": "事件 [{event}] 由 {user} 重放",
   "bkRepoEnablePacEventDesc": "{user} 开启PAC",
+  "bkRepoDisablePacEventDesc": "{user} 关闭PAC",
   "bkSubPipelineCircularDependencyErrorMessage": "子流水线 [{pipeline}] 调用了当前流水线，形成循环依赖",
   "bkOtherSubPipelineCircularDependencyErrorMessage": "子流水线 [{pipeline}] 调用了 [{targetPipeline}] 流水线，形成循环依赖",
   "bkGitPushEventDesc": "[{branch}] 提交 [{commit}] 由 {user} 推送",

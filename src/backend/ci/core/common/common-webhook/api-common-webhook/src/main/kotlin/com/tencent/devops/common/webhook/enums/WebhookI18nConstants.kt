@@ -173,6 +173,9 @@ object WebhookI18nConstants {
     // 代码库开启PAC事件描述
     const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
 
+    // 代码库关闭PAC事件描述
+    const val DISABLE_PAC_EVENT_DESC = "bkRepoDisablePacEventDesc"
+
     // Git Tag操作类型不匹配
     const val TAG_ACTION_NOT_MATCH = "bkRepoTriggerTagActionNotMatch"
 

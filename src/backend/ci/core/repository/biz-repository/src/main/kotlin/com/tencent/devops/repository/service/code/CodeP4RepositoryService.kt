@@ -42,7 +42,6 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -210,19 +209,6 @@ class CodeP4RepositoryService @Autowired constructor(
     }
 
     override fun getPacProjectId(userId: String, repoUrl: String): String? = null
-
-    override fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord,
-        retry: Boolean
-    ) = Unit
-
-    override fun getGitFileTree(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord
-    ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 

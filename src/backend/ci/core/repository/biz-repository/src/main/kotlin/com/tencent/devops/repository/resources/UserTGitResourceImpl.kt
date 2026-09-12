@@ -51,7 +51,8 @@ class UserTGitResourceImpl @Autowired constructor(
         redirectUrl: String?,
         gitProjectId: Long?,
         refreshToken: Boolean?,
-        validationCheck: Boolean?
+        validationCheck: Boolean?,
+        resetType: String?
     ): Result<AuthorizeResult> {
         return Result(
             tGitOauthService.isOAuth(
@@ -73,9 +74,18 @@ class UserTGitResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String?,
-        search: String?
+        search: String?,
+        oauthUserId: String?
     ): Result<AuthorizeResult> {
-        return Result(tGitOauthService.getProject(userId, projectId, repoHashId, search))
+        return Result(
+            tGitOauthService.getProject(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                search = search,
+                oauthUserId = oauthUserId
+            )
+        )
     }
 
     override fun getProjectList(userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {

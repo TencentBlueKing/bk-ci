@@ -1865,6 +1865,7 @@
   "bkTimingStartEventDesc": "{user} スケジュールトリガー",
   "bkEventReplayDesc": "イベント [{event}] が {user} により再実行されました",
   "bkRepoEnablePacEventDesc": "{user} PACを有効化",
+  "bkRepoDisablePacEventDesc": "{user} PACを無効化",
   "bkSubPipelineCircularDependencyErrorMessage": "サブパイプライン [{pipeline}] が現在のパイプラインを呼び出し、循環依存が発生しました",
   "bkOtherSubPipelineCircularDependencyErrorMessage": "サブパイプライン [{pipeline}] が [{targetPipeline}] パイプラインを呼び出し、循環依存が発生しました",
   "bkGitPushEventDesc": "[{branch}] コミット [{commit}] が {user} によりプッシュされました",
