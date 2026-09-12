@@ -25,7 +25,22 @@
         "items" : {
           "type" : "object",
           "minProperties" : 1,
-          "additionalProperties" : false,
+          "additionalProperties" : {
+            "type" : "object",
+            "minProperties" : 1,
+            "properties" : {
+              "id" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "enable" : {
+                "type" : "boolean"
+              }
+            },
+            "additionalProperties" : true
+          },
           "properties" : {
             "push" : {
               "oneOf" : [ {
@@ -751,12 +766,7 @@
               "type" : "string"
             },
             "type" : {
-              "type" : "string",
-              "uniqueItems" : true,
-              "items" : {
-                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
-              },
-              "additionalItems" : false
+              "type" : "string"
             },
             "change-commit" : {
               "oneOf" : [ {
@@ -1071,7 +1081,22 @@
       }, {
         "type" : "object",
         "minProperties" : 1,
-        "additionalProperties" : false,
+        "additionalProperties" : {
+          "type" : "object",
+          "minProperties" : 1,
+          "properties" : {
+            "id" : {
+              "type" : "string"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "enable" : {
+              "type" : "boolean"
+            }
+          },
+          "additionalProperties" : true
+        },
         "properties" : {
           "push" : {
             "oneOf" : [ {
@@ -1797,12 +1822,7 @@
             "type" : "string"
           },
           "type" : {
-            "type" : "string",
-            "uniqueItems" : true,
-            "items" : {
-              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
-            },
-            "additionalItems" : false
+            "type" : "string"
           },
           "change-commit" : {
             "oneOf" : [ {

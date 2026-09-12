@@ -6,7 +6,8 @@
 export const EVENT_DESC_SLOT_NAMES = [
     'branch', 'commit', 'user', 'issue', 'mr', 'source', 'tag', 'note',
     'review', 'pr', 'change', 'action', 'revision', 'remoteUser', 'pipeline',
-    'event', 'targetPipeline', 'name', 'version', 'oldName', 'newName'
+    'event', 'targetPipeline', 'name', 'version', 'oldName', 'newName',
+    'size', 'repo', 'buildNo'
 ]
 
 export const BUILD_NUM_LINK_REG = /^<a href="([^"]+)" target="_blank">([^<]+)<\/a>$/
@@ -24,6 +25,28 @@ const mapParams = mapping => params => Object.entries(mapping).reduce((acc, [nam
     acc[name] = mapper(params)
     return acc
 }, {})
+const repoParam = index => params => {
+    const repo = toText(params[index])
+    if (!repo) {
+        return { type: 'text', text: '' }
+    }
+    return {
+        type: 'i18n',
+        text: repo === 'custom' ? 'bkArtifactRepoCustom' : 'bkArtifactRepoPipeline'
+    }
+}
+const artifactArrivedParams = mapParams({
+    name: linkParam(0, 1),
+    size: textParam(2),
+    pipeline: linkParam(3, 4),
+    user: userParam(5),
+    repo: repoParam(6)
+})
+const artifactImageArrivedParams = mapParams({
+    name: linkParam(0, 1),
+    pipeline: linkParam(2, 3),
+    user: userParam(4)
+})
 
 const tgitIssueParams = mapParams({
     issue: linkParam(0, 1, '!'),
@@ -287,7 +310,10 @@ export const EVENT_DESC_PARAM_MAPPERS = {
     bkTapdBugStatusChangeEventDesc: tapdItemParams,
     bkTapdStoryBugLinkEventDesc: tapdItemParams,
     bkTapdStoryBugUnlinkEventDesc: tapdItemParams,
-    bkTapdGenericEventDesc: tapdGenericParams
+    bkTapdGenericEventDesc: tapdGenericParams,
+    bkArtifactFileArrivedEventDesc: artifactArrivedParams,
+    bkArtifactFolderArrivedEventDesc: artifactArrivedParams,
+    bkArtifactImageArrivedEventDesc: artifactImageArrivedParams
 }
 
 /**

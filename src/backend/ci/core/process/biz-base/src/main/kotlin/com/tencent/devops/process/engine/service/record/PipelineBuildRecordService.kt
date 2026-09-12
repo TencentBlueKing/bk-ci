@@ -43,13 +43,6 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -58,8 +51,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_EVENT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_WAREHOUSE_EVENTS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
@@ -350,55 +342,18 @@ class PipelineBuildRecordService @Autowired constructor(
             queryDslContext = queryDslContext
         )
         watcher.start("parseTriggerInfo")
-        // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
         val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
-            triggerContainer.elements.find { it.status == BuildStatus.SUCCEED.name }?.let {
-                when (it) {
-                    is CodeGitWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Git")
-                        )
-                    }
-                    is CodeTGitWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Git")
-                        )
-                    }
-                    is CodeGithubWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("GitHub")
-                        )
-                    }
-                    is CodeGitlabWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Gitlab")
-                        )
-                    }
-                    is CodeP4WebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("P4")
-                        )
-                    }
-                    is CodeSVNWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("SVN")
-                        )
-                    }
-                    is TapdWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("TAPD")
-                        )
-                    }
-                    else -> null
-                }
-            } ?: I18nUtil.getCodeLanMessage(messageCode = BK_WAREHOUSE_EVENTS)
+            val classType = triggerContainer.elements
+                .find { it.status == BuildStatus.SUCCEED.name }
+                ?.getClassType()
+            val alias = classType?.let {
+                I18nUtil.getCodeLanMessage(messageCode = "$it.alias", defaultMessage = "")
+            }
+            if (alias.isNullOrBlank()) {
+                I18nUtil.getCodeLanMessage(messageCode = BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS)
+            } else {
+                alias
+            }
         } else {
             StartType.toReadableString(
                 buildInfo.trigger,

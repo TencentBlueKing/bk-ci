@@ -88,7 +88,12 @@ data class TriggerOn(
     @get:Schema(title = "story")
     var story: TapdRule? = null,
     @get:Schema(title = "bug")
-    var bug: TapdRule? = null
+    var bug: TapdRule? = null,
+    // ---- 统一触发器框架通用扩展位（新增触发器/事件无需再增字段）----
+    // 通用框架触发器（generic=true，如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
+    // 由对应 TriggerConverter 负责与自身事件 POJO 的相互转换，新增事件类型无需改动本类。
+    @get:Schema(title = "events")
+    var events: Map<String, Any?>? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
@@ -143,7 +148,8 @@ data class TriggerOn(
         scmCode = scmCode,
         workspaceId = workspaceId,
         story = story,
-        bug = bug
+        bug = bug,
+        events = events?.toMutableMap() ?: mutableMapOf()
     )
 
     private fun simpleManual() = when {
@@ -173,7 +179,7 @@ interface IPreTriggerOn : YamlVersionParser {
     val changeContent: Any?
     val shelveCommit: Any?
     val shelveSubmit: Any?
-    // 以下三个字段为 TAPD 触发（type == "tapd"）的顶层配置，与代码库触发的 push/tag/mr 平级。
+    // 以下两个字段为 TAPD 触发（type == "tapd"）的顶层配置，与代码库触发的 push/tag/mr 平级。
     @get:Schema(title = "story")
     val story: Any?
     @get:Schema(title = "bug")

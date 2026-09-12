@@ -818,6 +818,8 @@ object ScriptYmlUtils {
             res.repoName = preTriggerOn.repoName
             res.scmCode = preTriggerOn.scmCode
             res.workspaceId = preTriggerOn.workspaceId
+            // 统一框架触发器的通用事件载荷原样透传，由对应 TriggerConverter 解析
+            res.events = preTriggerOn.events.ifEmpty { null }
         }
 
         return res

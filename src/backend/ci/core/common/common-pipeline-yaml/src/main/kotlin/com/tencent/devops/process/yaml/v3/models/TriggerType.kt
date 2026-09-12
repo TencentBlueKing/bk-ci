@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v3.models
 
 import com.tencent.devops.common.api.enums.ScmType
 
-enum class TriggerType(val alis: String) {
+enum class TriggerType(val alis: String, val generic: Boolean = false) {
     CODE_SVN("svn"),
     CODE_GIT("git"),
     CODE_GITLAB("gitlab"),
@@ -39,7 +39,10 @@ enum class TriggerType(val alis: String) {
     BASE("base"),
     SCM_GIT("scm_git"),
     SCM_SVN("scm_svn"),
-    TAPD("tapd")
+    TAPD("tapd"),
+    // generic=true 表示采用统一（通用）触发器框架的「触发器 -> 事件类型」YAML 形态，
+    // 单触发器输出为 on.{type}.{event}，多触发器输出为 on[].type + event。
+    ARTIFACT("artifact", generic = true)
     ;
 
     companion object {

@@ -77,7 +77,7 @@ import java.time.LocalDateTime
 class ScmWebhookTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val webhookTriggerManager: WebhookTriggerManager,
-    private val webhookTriggerMatcher: WebhookTriggerMatcher,
+    private val scmWebhookTriggerMatcher: ScmWebhookTriggerMatcher,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
@@ -188,7 +188,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                 if (!element.elementEnabled()) {
                     return@elements
                 }
-                val atomResponse = webhookTriggerMatcher.matches(
+                val atomResponse = scmWebhookTriggerMatcher.matches(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     repository = repository,
@@ -197,9 +197,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                     element = element
                 )
                 when (atomResponse.matchStatus) {
-                    MatchStatus.REPOSITORY_NOT_MATCH,
-                    MatchStatus.ELEMENT_NOT_MATCH,
-                    MatchStatus.EVENT_TYPE_NOT_MATCH -> return@elements
+                    MatchStatus.SKIP -> return@elements
 
                     MatchStatus.CONDITION_NOT_MATCH -> {
                         failedMatchElements.add(

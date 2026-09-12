@@ -81,6 +81,10 @@ import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
+import com.tencent.devops.common.archive.pojo.webhook.BkRepoWebhook
+import com.tencent.devops.common.archive.pojo.webhook.BkRepoAssociationType
+import com.tencent.devops.common.archive.pojo.webhook.BkRepoWebhookCreateRequest
+import com.tencent.devops.common.archive.pojo.webhook.BkRepoWebhookUpdateRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderRequest
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.archive.pojo.defender.ScanTask
@@ -1287,6 +1291,81 @@ class BkRepoClient constructor(
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId/$labelKey"
         val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .delete()
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    /**
+     * 查询关联对象下的 webhook 列表
+     *
+     * associationId 规则：
+     * - PROJECT: associationId = {projectId}
+     * - REPO: associationId = {projectId}:{repoName}
+     * - PATH: associationId = {projectId}:{repoName}:{path}
+     */
+    fun listWebhooks(
+        userId: String,
+        projectId: String,
+        associationType: BkRepoAssociationType,
+        associationId: String
+    ): List<BkRepoWebhook> {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/webhook/api/webhook/list" +
+                "?associationType=${associationType.name}&associationId=$associationId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<List<BkRepoWebhook>>>()?.data ?: emptyList()
+    }
+
+    /**
+     * 创建 webhook
+     */
+    fun createWebhook(
+        userId: String,
+        projectId: String,
+        createRequest: BkRepoWebhookCreateRequest
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/webhook/api/webhook/create"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(objectMapper.writeValueAsString(createRequest).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    /**
+     * 更新 webhook
+     */
+    fun updateWebhook(
+        userId: String,
+        projectId: String,
+        updateRequest: BkRepoWebhookUpdateRequest
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/webhook/api/webhook/update"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .put(objectMapper.writeValueAsString(updateRequest).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    /**
+     * 删除 webhook
+     */
+    fun deleteWebhook(
+        userId: String,
+        projectId: String,
+        webhookId: String
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/webhook/api/webhook/delete/$webhookId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
