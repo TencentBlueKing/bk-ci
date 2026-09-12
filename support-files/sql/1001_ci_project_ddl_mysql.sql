@@ -99,6 +99,19 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8 COMMENT='关注收藏表';
 
 -- ----------------------------
+-- Table structure for T_PROJECT_FAVOR
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_FAVOR` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目英文名',
+  `CREATE_USER` varchar(64) NOT NULL COMMENT '收藏用户',
+  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNI_PROJECT_USER` (`PROJECT_ID`, `CREATE_USER`),
+  KEY `IDX_CREATE_USER` (`CREATE_USER`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目收藏表';
+
+-- ----------------------------
 -- Table structure for T_PROJECTS
 -- ----------------------------
 
