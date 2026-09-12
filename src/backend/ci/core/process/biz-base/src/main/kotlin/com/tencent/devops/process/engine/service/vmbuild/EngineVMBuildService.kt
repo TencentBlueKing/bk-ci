@@ -79,6 +79,7 @@ import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.BuildProcessRestartAction
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
@@ -120,6 +121,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Suppress(
@@ -154,6 +156,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineProgressRateService: PipelineProgressRateService,
     private val projectCacheService: ProjectCacheService
 ) {
+
+    @Value("\${pipeline.vmStarted.terminateOnContainerRestart:true}")
+    private val terminateOnContainerRestart: Boolean = true
 
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
@@ -240,14 +245,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         throw OperationException("vmName($vmName) has been shutdown")
                     }
                     val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
-                    // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
-                    Preconditions.checkTrue(
-                        condition = startUpVMTask?.status?.isFinish() != true || retryCount > 0,
-                        exception = ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
-                            params = arrayOf(c.startVMStatus ?: "")
+                    /**
+                     * 处理同一个Job第二次上报环境就绪的情况，说明原构建进程已消失，一般是容器重启或被驱逐。
+                     * 也可能是异常情况下同一个Job被拉起了两个容器，两个构建进程会互相抢任务，
+                     * 无法判断哪一个可信，因此一律终止构建并拒绝本次上报
+                     */
+                    if (startUpVMTask?.status?.isFinish() == true && retryCount <= 0) {
+                        handleBuildProcessRestart(
+                            container = container,
+                            startUpVMTask = startUpVMTask,
+                            vmName = vmName,
+                            startVMStatus = c.startVMStatus
                         )
-                    )
+                    }
                     // #4518 填充构建机环境变量、构建上下文、获取超时时间
                     val (containerEnv, context, timeoutMills) = getContainerContext(
                         container = c,
@@ -575,6 +585,75 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
         return true
+    }
+
+    private fun handleBuildProcessRestart(
+        container: PipelineBuildContainer,
+        startUpVMTask: PipelineBuildTask,
+        vmName: String,
+        startVMStatus: String?
+    ) {
+        val vmSeqId = container.containerId
+        val buildId = container.buildId
+        val action = if (terminateOnContainerRestart) {
+            BuildProcessRestartAction.TERMINATE
+        } else {
+            BuildProcessRestartAction.REJECT
+        }
+        LOG.warn(
+            "ENGINE|$buildId|BUILD_VM_RESTART_$action|${container.projectId}|j($vmSeqId)|$vmName|" +
+                "executeCount(${container.executeCount})"
+        )
+        if (action == BuildProcessRestartAction.TERMINATE) {
+            terminateOnBuildProcessRestart(container, startUpVMTask)
+        }
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
+            params = arrayOf(startVMStatus ?: "")
+        )
+    }
+
+    /**
+     * 构建进程重启时直接终止Job，避免等待心跳超时
+     */
+    private fun terminateOnBuildProcessRestart(container: PipelineBuildContainer, startUpVMTask: PipelineBuildTask) {
+        val reason = printContainerRestartLog(container)
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "build_process_restart",
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                userId = startUpVMTask.starter,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerId = container.containerId,
+                containerHashId = container.containerHashId,
+                containerType = container.containerType,
+                actionType = ActionType.TERMINATE,
+                executeCount = container.executeCount,
+                reason = reason,
+                errorTypeName = ErrorType.BUILD_MACHINE.name,
+                errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
+            )
+        )
+    }
+
+    /**
+     * 把容器重启原因打印到Set Up Job位置，并返回该提示，供失败原因复用
+     */
+    private fun printContainerRestartLog(container: PipelineBuildContainer): String {
+        val message = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_BUILD_CONTAINER_RESTARTED)
+        val tag = VMUtils.genStartVMTaskId(container.containerId)
+        buildLogPrinter.addRedLine(
+            buildId = container.buildId,
+            message = message,
+            tag = tag,
+            containerHashId = container.containerHashId,
+            executeCount = container.executeCount,
+            jobId = null,
+            stepId = tag
+        )
+        return message
     }
 
     private fun getStartUpVMTask(
