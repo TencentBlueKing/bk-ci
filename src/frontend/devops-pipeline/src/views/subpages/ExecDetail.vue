@@ -22,7 +22,67 @@
                     }"
                 ></span>
                 <aside class="exec-detail-summary-header-title">
+                    <build-end-info-popover
+                        v-if="showBuildEndInfoPopover"
+                        :build-end-info="execDetail.buildEndInfo"
+                        :start-time="buildEndStartTime"
+                        :trigger-user="startUser"
+                        :trigger-type-desc="execDetail.buildMsg"
+                        @highlight="handleBuildEndPositionHighlight"
+                        @locateLog="handleBuildEndPositionLocate"
+                    >
+                        <bk-tag
+                            class="exec-status-tag"
+                            type="stroke"
+                            :theme="statusTagTheme"
+                        >
+                            <span class="exec-status-label">
+                                <logo
+                                    v-if="execDetail.status === 'STAGE_SUCCESS'"
+                                    name="flag"
+                                    size="12"
+                                    fill="#34d97b"
+                                />
+                                {{ statusLabel }}
+                                <span
+                                    v-if="!execDetail.buildEndInfo"
+                                    v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                                <span
+                                    v-else
+                                    class="devops-icon icon-info-circle"
+                                >
+                                </span>
+                            </span>
+                        </bk-tag>
+                    </build-end-info-popover>
+                    <build-running-info-popover
+                        v-else-if="showBuildRunningInfoPopover"
+                        :build-running-info="execDetail.buildRunningInfo"
+                        :current-timestamp="execDetail.currentTimestamp"
+                        @highlight="handleBuildEndPositionHighlight"
+                    >
+                        <bk-tag
+                            class="exec-status-tag"
+                            type="stroke"
+                            :theme="statusTagTheme"
+                        >
+                            <span class="exec-status-label">
+                                <i
+                                    :class="['devops-icon', {
+                                        'icon-hourglass hourglass-queue': execDetail.status === 'QUEUE',
+                                        'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                                    }]"
+                                />
+                                {{ statusLabel }}
+                                <span class="devops-icon icon-info-circle"></span>
+                            </span>
+                        </bk-tag>
+                    </build-running-info-popover>
                     <bk-tag
+                        v-else
                         class="exec-status-tag"
                         type="stroke"
                         :theme="statusTagTheme"
@@ -36,12 +96,6 @@
                                 }]"
                             />
                             {{ statusLabel }}
-                            <span
-                                v-if="execDetail.status === 'CANCELED'"
-                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
-                                class="devops-icon icon-info-circle"
-                            >
-                            </span>
                         </span>
                     </bk-tag>
                     <span
@@ -72,6 +126,13 @@
                     </span>
                 </aside>
             </div>
+            <pending-manual-items-alert
+                v-if="showPendingManualAlert"
+                :pending-items="execDetail.buildRunningInfo.pendingItems"
+                :pending-item-count="execDetail.buildRunningInfo.pendingItemCount"
+                @highlight="handleBuildEndPositionHighlight"
+                @process="handlePendingManualProcess"
+            />
             <p
                 class="summary-header-shadow"
                 v-show="show"
@@ -111,6 +172,7 @@
                 }]"
             >
                 <component
+                    ref="execDetailPanel"
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
                     v-on="curPanel.listeners"
@@ -166,6 +228,11 @@
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import codeRecord from '@/components/codeRecord'
     import emptyTips from '@/components/devops/emptyTips'
+    import BuildEndInfoPopover from '@/components/ExecDetail/BuildEndInfoPopover'
+    import BuildRunningInfoPopover from '@/components/ExecDetail/BuildRunningInfoPopover'
+    import PendingManualItemsAlert from '@/components/ExecDetail/PendingManualItemsAlert'
+    import { getBuildEndInfoConfig } from '@/components/ExecDetail/buildEndInfoConfig'
+    import { getBuildRunningInfoConfig, PENDING_ITEM_TYPE } from '@/components/ExecDetail/buildRunningInfoConfig'
     import job from '@/components/ExecDetail/job'
     import plugin from '@/components/ExecDetail/plugin'
     import stage from '@/components/ExecDetail/stage'
@@ -208,7 +275,10 @@
             stageReviewPanel,
             Logo,
             AtomPropertyPanel,
-            Summary
+            Summary,
+            BuildEndInfoPopover,
+            BuildRunningInfoPopover,
+            PendingManualItemsAlert
         },
         mixins: [pipelineOperateMixin],
 
@@ -428,6 +498,21 @@
             },
             startUser () {
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
+            },
+            buildEndStartTime () {
+                return this.execDetail?.startTime || this.execDetail?.queueTime
+            },
+            showBuildEndInfoPopover () {
+                return !!getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)
+                    && !!this.execDetail?.buildEndInfo
+            },
+            showBuildRunningInfoPopover () {
+                return this.isRunning
+                    && !!getBuildRunningInfoConfig(this.execDetail?.buildRunningInfo?.runningCategory)
+                    && !!this.execDetail?.buildRunningInfo
+            },
+            showPendingManualAlert () {
+                return Number(this.execDetail?.buildRunningInfo?.pendingItemCount) > 0
             }
         },
 
@@ -538,6 +623,205 @@
                     editingElementPos: args
                 })
             },
+            locateBuildEndPosition (position = {}) {
+                try {
+                    const { stageId, containerId, taskId } = position
+                    const stages = this.execDetail?.model?.stages || []
+                    const stageIndex = stages.findIndex(stage => stage.id === stageId)
+                    if (stageIndex < 0) return null
+
+                    const stage = stages[stageIndex]
+                    let containerIndex
+                    let containerGroupIndex
+                    let container
+
+                    for (let i = 0; i < stage.containers.length; i++) {
+                        const item = stage.containers[i]
+                        if (item.matrixGroupFlag) {
+                            const groupIndex = item.groupContainers?.findIndex?.(group => group.id === containerId)
+                            if (groupIndex > -1) {
+                                containerIndex = i
+                                containerGroupIndex = groupIndex
+                                container = item.groupContainers[groupIndex]
+                                break
+                            }
+                        } else if (item.id === containerId) {
+                            containerIndex = i
+                            container = item
+                            break
+                        }
+                    }
+
+                    if (!container) return null
+
+                    const elementIndex = taskId
+                        ? container.elements?.findIndex?.(element => element.id === taskId)
+                        : undefined
+
+                    return {
+                        stageIndex,
+                        containerIndex: containerIndex > -1 ? containerIndex : undefined,
+                        containerGroupIndex: containerGroupIndex > -1 ? containerGroupIndex : undefined,
+                        elementIndex: elementIndex > -1 ? elementIndex : undefined
+                    }
+                } catch (e) {
+                    console.error(e)
+                    return null
+                }
+            },
+            getBuildEndLocateFailedKey () {
+                const endKey = getBuildEndInfoConfig(this.execDetail?.buildEndInfo?.endCategory)?.locateFailedKey
+                if (endKey) return endKey
+                return getBuildRunningInfoConfig(this.execDetail?.buildRunningInfo?.runningCategory)?.locateFailedKey
+            },
+            runBuildEndPositionAction (position, { openLog = false } = {}) {
+                console.log(position,'???????')
+                
+                const editingElementPos = this.locateBuildEndPosition(position)
+                if (!editingElementPos) {
+                    const locateFailedKey = this.getBuildEndLocateFailedKey()
+                    this.$showTips({
+                        message: this.$t(locateFailedKey),
+                        theme: 'warning'
+                    })
+                    return
+                }
+                const needSwitchTab = this.curItemTab !== PANELS.executeDetail
+                if (needSwitchTab) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                const runAction = () => {
+                    this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                        editingElementPos,
+                        position
+                    })
+                    if (openLog) {
+                        this.togglePropertyPanel({
+                            isShow: true,
+                            editingElementPos
+                        })
+                    }
+                }
+                this.$nextTick(() => {
+                    needSwitchTab ? this.$nextTick(runAction) : runAction()
+                })
+            },
+            handleBuildEndPositionHighlight (position) {
+                this.runBuildEndPositionAction(position)
+            },
+            handleBuildEndPositionLocate (position) {
+                this.runBuildEndPositionAction(position, { openLog: true })
+            },
+            showLocateFailedTips () {
+                const locateFailedKey = this.getBuildEndLocateFailedKey()
+                this.$showTips({
+                    message: this.$t(locateFailedKey),
+                    theme: 'warning'
+                })
+            },
+            runWithExecuteDetailTab (runAction) {
+                const needSwitchTab = this.curItemTab !== PANELS.executeDetail
+                if (needSwitchTab) {
+                    this.switchTab({ name: PANELS.executeDetail })
+                }
+                this.$nextTick(() => {
+                    needSwitchTab ? this.$nextTick(runAction) : runAction()
+                })
+            },
+            closeAsidePanels () {
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
+                this.toggleStageReviewPanel({
+                    showStageReviewPanel: {
+                        isShow: false
+                    }
+                })
+                this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+            },
+            handlePendingManualProcess (item = {}) {
+                switch (item.itemType) {
+                    case PENDING_ITEM_TYPE.TASK_PAUSE:
+                        this.openPendingPausePanel(item)
+                        break
+                    case PENDING_ITEM_TYPE.TASK_REVIEW:
+                        this.openPendingReviewDialog(item)
+                        break
+                    case PENDING_ITEM_TYPE.STAGE_REVIEW:
+                        this.openPendingStageReview(item)
+                        break
+                    default:
+                        this.handleBuildEndPositionHighlight(item)
+                }
+            },
+            openPendingPausePanel (item) {
+                const editingElementPos = this.locateBuildEndPosition(item)
+                if (!editingElementPos || typeof editingElementPos.elementIndex !== 'number') {
+                    this.showLocateFailedTips()
+                    return
+                }
+                this.runWithExecuteDetailTab(() => {
+                    this.toggleStageReviewPanel({
+                        showStageReviewPanel: {
+                            isShow: false
+                        }
+                    })
+                    this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        showPanelType: 'PAUSE',
+                        editingElementPos
+                    })
+                    this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                        editingElementPos,
+                        position: item
+                    })
+                })
+            },
+            openPendingReviewDialog (item) {
+                if (!item.taskId) {
+                    this.showLocateFailedTips()
+                    return
+                }
+                const editingElementPos = this.locateBuildEndPosition(item)
+                this.runWithExecuteDetailTab(() => {
+                    this.closeAsidePanels()
+                    this.$refs.execDetailPanel?.reviewAtom?.({ id: item.taskId })
+                    if (editingElementPos) {
+                        this.$refs.execDetailPanel?.setBuildEndHighlight?.({
+                            editingElementPos,
+                            position: item
+                        })
+                    }
+                })
+            },
+            openPendingStageReview (item) {
+                const stages = this.execDetail?.model?.stages || []
+                const stageIndex = stages.findIndex(stage => stage.id === item.stageId)
+                if (stageIndex < 0) {
+                    this.showLocateFailedTips()
+                    return
+                }
+                const stage = stages[stageIndex]
+                const type = stage?.checkOut?.status === 'REVIEWING' ? 'checkOut' : 'checkIn'
+                this.runWithExecuteDetailTab(() => {
+                    this.togglePropertyPanel({
+                        isShow: false,
+                        showPanelType: ''
+                    })
+                    this.$refs.execDetailPanel?.toggleCheckDialog?.(false)
+                    this.toggleStageReviewPanel({
+                        showStageReviewPanel: {
+                            isShow: true,
+                            type
+                        },
+                        editingElementPos: {
+                            stageIndex
+                        }
+                    })
+                })
+            },
             handleStageCheck ({ type, stageIndex }) {
                 this.toggleStageReviewPanel({
                     showStageReviewPanel: {
@@ -633,6 +917,12 @@
 
       .exec-status-tag {
         margin: 0;
+      }
+
+      .build-end-info-popover-trigger,
+      .build-running-info-popover-trigger {
+        display: inline-flex;
+        align-items: center;
       }
 
       .exec-status-label {
