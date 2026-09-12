@@ -1,17 +1,26 @@
 <template>
     <article class="log-home">
-        <!-- <span @click="closeLog" class="log-home-close-bar">
+        <span @click="closeLog" class="log-home-close-bar" title="收起日志">
             <i class="devops-icon icon-angle-right"></i>
-        </span> -->
+        </span>
         <section
-            v-bk-clickoutside="closeLog"
+            v-bk-clickoutside="handleClickOutside"
             :class="[currentTab && currentTab !== 'log' ? 'white-theme' : 'black-theme over-hidden', 'log-main']"
         >
             <header class="log-head">
-                <span class="log-title"><status-icon
-                    :status="status"
-                    :is-hook="isHook"
-                ></status-icon>{{ title }}</span>
+                <span class="log-title">
+                    <status-icon
+                        :status="status"
+                        :is-hook="isHook"
+                        small
+                    ></status-icon>
+                    <span
+                        v-if="position"
+                        class="log-pos"
+                        :title="position"
+                    >{{ position }}</span>
+                    <span class="log-title-text">{{ title }}</span>
+                </span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -38,16 +47,28 @@
             title: {
                 type: String
             },
+            position: {
+                type: String,
+                default: ''
+            },
             currentTab: {
                 type: String
             },
             isHook: {
                 type: Boolean
+            },
+            ignoreClose: {
+                type: Boolean,
+                default: false
             }
         },
 
         methods: {
-            closeLog (event) {
+            handleClickOutside () {
+                if (this.ignoreClose) return
+                this.closeLog()
+            },
+            closeLog () {
                 this.$emit('close')
             }
         }
@@ -57,22 +78,27 @@
 <style lang="scss" scoped>
     ::v-deep .head-tab {
         font-size: 0;
+        display: flex;
+        align-items: center;
         span {
-            font-size: 14px;
+            font-size: 12px;
+            line-height: 20px;
+            height: 26px;
+            box-sizing: border-box;
             cursor: pointer;
             font-weight: normal;
-            padding: 4px 12px;
-            color: #999999;
+            padding: 3px 12px;
+            color: #fff;
             background: #2e3342;
             &.active {
                 color: #fff;
-                background: #1a6df3;
+                background: #3a84ff;
             }
             &:first-child {
-                border-radius: 3px 0 0 3px;
+                border-radius: 2px 0 0 2px;
             }
             &:last-child {
-                border-radius: 0 3px 3px 0;
+                border-radius: 0 2px 2px 0;
             }
         }
     }
@@ -106,7 +132,7 @@
             display: flex;
             flex-direction: column;
             margin: 16px;
-            border-radius: 6px;
+            border-radius: 0 4px 4px 4px;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
             &.over-hidden {
@@ -117,29 +143,67 @@
                 min-height: 0;
             }
             .log-head {
-                background-color: #2E2E2E;
-                line-height: 48px;
-                padding: 5px 20px;
-                border-bottom: 1px solid;
-                border-bottom-color: #2b2b2b;
+                background-color: #242a36;
+                height: 60px;
+                line-height: normal;
+                padding: 0 16px;
+                border-bottom: none;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                color: #d4d4d4;
+                flex-wrap: nowrap;
+                color: #f0f1f5;
                 position: relative;
                 flex: 0 0 auto; /* 确保 header 固定在顶部 */
                 .head-tab {
                     position: absolute;
                     left: 50%;
+                    top: 17px;
                     transform: translateX(-50%);
+                    line-height: 20px;
                 }
                 .log-title {
                     display: flex;
                     align-items: center;
+                    gap: 8px;
+                    min-width: 0;
+                    max-width: 22%;
+                }
+                .log-pos {
+                    flex-shrink: 0;
+                    padding: 0 6px;
+                    height: 18px;
+                    line-height: 18px;
+                    border-radius: 2px;
+                    background: #3a3f4b;
+                    color: #c4c6cc;
+                    font-size: 11px;
+                    font-variant-numeric: tabular-nums;
+                }
+                .log-title-text {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 12px;
+                    line-height: 20px;
+                    color: #fff;
+                }
+                .lp-toolbar {
+                    align-self: center;
+                    height: 26px;
+                    line-height: 1;
+                }
+                .lp-search-input {
+                    height: 26px !important;
+                    min-height: 26px;
+                    max-height: 26px;
+                    margin: 0;
+                    line-height: 26px;
+                    box-sizing: border-box;
                 }
             }
             &.black-theme {
-                background: #1A1A1A;
+                background: #2c2d34;
                 .log-content {
                     display: flex;
                     overflow: hidden;
@@ -151,26 +215,30 @@
                 box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
                 .log-content {
                     overflow: auto;
+                    display: flex;
+                    flex-direction: column;
+                    background: #f5f7fa;
                 }
                 &.log-main .log-head {
-                    border-top-right-radius: 6px;
+                    border-top-right-radius: 4px;
                 }
             }
         }
     }
     .log-home-close-bar {
         cursor: pointer;
-        height: 59px;
-        width: 26px;
+        height: 60px;
+        width: 24px;
         position: absolute;
         right: calc(80vw + 42px);
         top: 16px;
         background: #464953;
-        color: white;
+        color: #c4c6cc;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-top-left-radius: 6px;
-        border-bottom-left-radius: 6px;
+        border-top-left-radius: 2px;
+        border-bottom-left-radius: 2px;
+        &:hover { color: #fff; }
     }
 </style>

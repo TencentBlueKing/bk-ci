@@ -1,58 +1,87 @@
 <template>
-    <detail-container
-        @close="$emit('close')"
-        :title="currentJob.name"
-        :status="currentJob.status"
-        :current-tab="currentTab"
-    >
-        <span
-            class="head-tab"
-            slot="tab"
+    <div>
+        <detail-container
+            @close="$emit('close')"
+            :title="currentJob.name || ''"
+            :position="panelPosition"
+            :status="currentJob.status"
+            :current-tab="currentTab"
+            :ignore-close="configOpen"
         >
             <span
-                @click="currentTab = 'log'"
-                :class="{ active: currentTab === 'log' }"
-            >{{ $t('execDetail.log') }}</span>
+                class="head-tab"
+                slot="tab"
+            >
+                <span
+                    @click="currentTab = 'log'"
+                    :class="{ active: currentTab === 'log' }"
+                >{{ $t('execDetail.log') }}</span>
+                <span
+                    @click="currentTab = 'setting'"
+                    :class="{ active: currentTab === 'setting' }"
+                >{{ $t('execDetail.setting') }}</span>
+            </span>
             <span
-                @click="currentTab = 'setting'"
-                :class="{ active: currentTab === 'setting' }"
-            >{{ $t('execDetail.setting') }}</span>
-        </span>
-        <span
-            slot="tool"
-            v-if="currentTab === 'setting' && showDebugDockerBtn"
-            class="head-tool"
-            @click="handleDebug"
-        >{{ $t('editPage.docker.debugConsole') }}</span>
-        <template v-slot:content>
-            <error-summary
-                v-if="activeErorr && currentTab === 'log'"
-                :error="activeErorr"
-            ></error-summary>
-            <template v-if="currentTab === 'log'">
-                <plugin-log
-                    :id="currentJob.containerHashId"
-                    :key="currentJob.containerHashId"
-                    :build-id="execDetail.id"
-                    :exec-detail="execDetail"
-                    :current-tab="currentTab"
-                    :execute-count="currentJob.executeCount"
-                    type="containerLog"
-                    ref="jobLog"
-                    v-if="currentJob.matrixGroupFlag"
-                />
-                <job-log
-                    v-else
-                    :key="currentJob.id"
-                    :plugin-list="pluginList"
-                    :build-id="execDetail.id"
-                    :down-load-link="downLoadJobLink"
-                    :execute-count="executeCount"
-                    ref="jobLog"
+                slot="tool"
+                v-if="currentTab === 'setting' && showDebugDockerBtn"
+                class="head-tool"
+                @click="handleDebug"
+            >{{ $t('editPage.docker.debugConsole') }}</span>
+            <template v-slot:content>
+                <error-summary
+                    v-if="activeErorr && currentTab === 'log' && useLegacyLog"
+                    :error="activeErorr"
+                ></error-summary>
+                <template v-if="currentTab === 'log'">
+                    <plugin-log
+                        :id="currentJob.containerHashId"
+                        :key="currentJob.containerHashId"
+                        :build-id="execDetail.id"
+                        :exec-detail="execDetail"
+                        :current-tab="currentTab"
+                        :execute-count="currentJob.executeCount"
+                        type="containerLog"
+                        ref="jobLog"
+                        v-if="currentJob.matrixGroupFlag"
+                    />
+                    <job-log-panel
+                        v-else-if="!useLegacyLog"
+                        :key="'v2-' + currentJob.id"
+                        :build-id="execDetail.id"
+                        :exec-detail="execDetail"
+                        :job="currentJob"
+                        :plugins="pluginList"
+                        ref="jobLog"
+                        @fallback="useLegacyLog = true"
+                    />
+                    <job-log
+                        v-else
+                        :key="currentJob.id"
+                        :plugin-list="pluginList"
+                        :build-id="execDetail.id"
+                        :down-load-link="downLoadJobLink"
+                        :execute-count="executeCount"
+                        ref="jobLog"
+                    />
+                </template>
+                <job-config-view
+                    v-if="currentTab === 'setting'"
+                    :rows="jobConfigRows"
+                    @view-config="configOpen = true"
                 />
             </template>
+        </detail-container>
+        <bk-sideslider
+            :is-show.sync="configOpen"
+            :width="640"
+            :quick-close="true"
+            :z-index="2100"
+            :title="$t('logPanel.jobConfigTitle')"
+            class="job-config-slider"
+        >
             <container-content
-                v-if="currentTab === 'setting'"
+                v-if="configOpen"
+                slot="content"
                 :container-index="editingElementPos.containerIndex"
                 :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
@@ -61,14 +90,17 @@
                 :pipeline="pipeline"
                 ref="container"
             />
-        </template>
-    </detail-container>
+        </bk-sideslider>
+    </div>
 </template>
 
 <script>
     import { mapGetters } from 'vuex'
     import jobLog from './log/jobLog'
     import pluginLog from './log/pluginLog'
+    import JobLogPanel from './log-panel/JobLogPanel'
+    import JobConfigView from './log-panel/JobConfigView'
+    import { positionCode, buildJobConfigRows } from './log-panel/logPanelAdapter'
     import detailContainer from './detailContainer'
     import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
@@ -78,6 +110,8 @@
             detailContainer,
             jobLog,
             pluginLog,
+            JobLogPanel,
+            JobConfigView,
             ContainerContent,
             ErrorSummary
         },
@@ -98,7 +132,9 @@
             return {
                 showTime: false,
                 searchStr: '',
-                currentTab: 'log'
+                currentTab: 'log',
+                useLegacyLog: false,
+                configOpen: false
             }
         },
 
@@ -106,6 +142,9 @@
             ...mapGetters('atom', [
                 'checkShowDebugDockerBtn'
             ]),
+            panelPosition () {
+                return positionCode(this.editingElementPos, 2)
+            },
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
@@ -129,6 +168,9 @@
                     return {}
                 }
             },
+            jobConfigRows () {
+                return buildJobConfigRows(this.currentJob)
+            },
 
             pluginList () {
                 const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}`, executeCount: this.currentJob.executeCount || 1 }
@@ -145,16 +187,12 @@
             },
             activeErorr () {
                 return null
-                // try {
-                //     return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id && !error.taskId)
-                // } catch (error) {
-                //     return null
-                // }
             }
         },
         methods: {
             handleDebug () {
-                this.$refs.container?.startDebug?.()
+                this.configOpen = true
+                this.$nextTick(() => this.$refs.container?.startDebug?.())
             }
         }
     }
@@ -162,10 +200,18 @@
 
 <style lang="scss" scoped>
     ::v-deep .container-property-panel {
-        padding: 10px 50px;
+        padding: 10px 24px 24px;
         overflow: auto;
         .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
             margin-right: 10px;
+        }
+    }
+</style>
+<style lang="scss">
+    .job-config-slider {
+        .bk-sideslider-content {
+            overflow: auto;
+            background: #fff;
         }
     }
 </style>
