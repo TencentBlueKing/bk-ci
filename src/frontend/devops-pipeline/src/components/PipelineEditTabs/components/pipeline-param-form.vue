@@ -60,6 +60,7 @@
                 :param="param"
                 :disabled="disabled"
                 :value-required="paramType === 'constant'"
+                :is-public-var="isPublicVar"
                 :handle-change="handleUpdateParam"
                 :init-param-item="initParamItem"
             >
