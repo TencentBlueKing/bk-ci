@@ -246,9 +246,14 @@
                 const atomCode = this.detailCode
                 const serviceScope = 'CREATIVE_STREAM'
 
-                return this.requestAtom({ atomCode, serviceScope }).then((atomDetail) => {
+                return Promise.all([
+                    this.requestAtom({ atomCode, serviceScope }),
+                    this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM', serviceScope })
+                ]).then(([atomDetail, atomStatic]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
+                    detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
+                    detail.hotFlag = atomStatic.hotFlag
                     this.setDetail(detail)
                 })
             },
