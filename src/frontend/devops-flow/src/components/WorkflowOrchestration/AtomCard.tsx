@@ -1,6 +1,7 @@
 import { defineComponent, computed, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Button, Message, Rate } from 'bkui-vue'
+import { Button, Message, Popover } from 'bkui-vue'
+import { getEnvOsDisplayName } from '@/api/authoringEnvironmentApi'
 import { type AtomItem } from '@/api/atom'
 import { installAtom } from '@/api/atom'
 import { SvgIcon } from '@/components/SvgIcon'
@@ -24,6 +25,10 @@ export default defineComponent({
     projectCode: {
       type: String,
       required: true,
+    },
+    os: {
+      type: String,
+      default: undefined,
     },
   },
   emits: ['select', 'install-success', 'click'],
@@ -94,15 +99,13 @@ export default defineComponent({
       emit('click', props.atom.atomCode)
     }
 
-    function getOsTooltip() {
-      const { atom } = props
-      const os = atom.os || []
-      if (os.length && !os.includes('NONE')) {
-        const osListStr = os.join('、')
-        return t('flow.orchestration.envUseTips', [osListStr])
-      }
-      return t('flow.orchestration.noEnvUseTips')
-    }
+    // 悬浮提示文案：插件 os 列表包含当前环境 os（适配）则不提示，不适配时提示可用环境
+    const osTooltipContent = computed(() => {
+      const osList = props.atom.os || []
+      if (!osList.length || osList.includes('NONE')) return ''
+      if (props.os && osList.includes(props.os)) return ''
+      return t('flow.orchestration.envUseTips', [osList.map(getEnvOsDisplayName).join('、')])
+    })
 
     function handleSelectAtomClick(e: MouseEvent) {
       e.stopPropagation()
@@ -119,16 +122,24 @@ export default defineComponent({
     }
 
     return () => (
-      <div
-        class={[
-          styles.atomCard,
-          styles.atomItemMain,
-          isActive.value && styles.active,
-          isDisabled.value && styles.disabled,
-        ]}
-        onClick={handleClick}
-        title={isDisabled.value ? getOsTooltip() : ''}
+      <Popover
+        placement="top"
+        // 插件选择面板 z-index 为 10000，bkui popper 默认从 8000 起会被遮挡，需显式指定更高层级
+        zIndex={10050}
+        disabled={!osTooltipContent.value}
+        v-slots={{
+          content: () => osTooltipContent.value,
+        }}
       >
+        <div
+          class={[
+            styles.atomCard,
+            styles.atomItemMain,
+            isActive.value && styles.active,
+            isDisabled.value && styles.disabled,
+          ]}
+          onClick={handleClick}
+        >
         {/* 插件图标 */}
         <div class={styles.atomLogo}>
           {props.atom.logoUrl ? (
@@ -155,19 +166,27 @@ export default defineComponent({
           <p class={styles.desc}>{props.atom.summary || t('flow.orchestration.noDesc')}</p>
           <section class={styles.atomRate}>
             <div class={styles.scoreGroup}>
-              {/* 评分显示 */}
-              <div class={styles.rateStars}>
-                <Rate modelValue={props.atom.score} editable={false} />
-              </div>
+              {/* 评分显示：单星 + 分数，半星用宽度裁剪实现 */}
+              <span class={styles.scoreStarBase}>
+                <SvgIcon class={styles.starGray} name="star" size={14} />
+              </span>
+              <span
+                class={styles.scoreStarReal}
+                style={{ width: (props.atom.score ?? 0) >= 5 ? '14px' : '7px' }}
+              >
+                <SvgIcon class={styles.starGold} name="star" size={14} />
+              </span>
+              <span class={styles.scoreNum}>{props.atom.score ?? 0}</span>
             </div>
             {/* 热度图标 */}
             <span class={styles.hotIconContainer}>
-              <SvgIcon class={styles.hotIcon} name="heat-fill" />
+              <SvgIcon
+                class={props.atom.hotFlag ? styles.hotIconRed : styles.hotIconGray}
+                name="heat-fill"
+                size={18}
+              />
               {getShowNum(props.atom.recentExecuteNum)}
             </span>
-            <p class={styles.atomFrom}>
-              {props.atom.publisher || '--'} {t('flow.orchestration.provided')}
-            </p>
           </section>
         </div>
 
@@ -185,7 +204,7 @@ export default defineComponent({
             <Button
               class={styles.selectAtomBtn}
               size="small"
-              disabled={!props.atom.installFlag}
+              disabled={!props.atom.installFlag || isDisabled.value}
               loading={isInstalling.value}
               onClick={handleInstallAtomClick}
               title={props.atom.installFlag ? '' : t('flow.orchestration.noPermToInstall')}
@@ -205,8 +224,12 @@ export default defineComponent({
               {t('flow.orchestration.knowMore')}
             </a>
           )}
+          <p class={styles.atomFrom}>
+            {props.atom.publisher || '--'} {t('flow.orchestration.provided')}
+          </p>
         </div>
       </div>
+      </Popover>
     )
   },
 })

@@ -5,7 +5,7 @@ import { useAtomManager, RD_STORE_CODE } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
 import { useAuthoringBaseOS } from '@/hooks/useAuthoringBaseOS'
 import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
-import { Transition, computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { Transition, computed, defineComponent, nextTick, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AtomCard from './AtomCard'
@@ -54,13 +54,15 @@ export default defineComponent({
     const searchKey = ref('')
     const classifyCode = ref('all')
     const activeAtomCode = ref('')
-    const currentPage = ref(1)
+    const searchInputRef = ref<any>(null)
     const tabSectionRef = ref<HTMLElement | null>(null)
     const searchResultRef = ref<HTMLElement | null>(null)
     const isThrottled = ref(false)
     const isSelectingAtom = ref(false)
     const atomList = ref<AtomItem[]>([])
     const hasMore = ref(true)
+    // 仅在首屏/重置加载时展示整页 Loading，滚动加载下一页不展示
+    const isResetLoading = ref(false)
     
     // 搜索模式状态
     const searchInstalledList = ref<AtomItem[]>([])
@@ -172,6 +174,10 @@ export default defineComponent({
 
           activeAtomCode.value = currentAtomCode.value
           searchKey.value = ''
+
+          // 面板打开后聚焦搜索框
+          await nextTick()
+          searchInputRef.value?.focus?.()
         }
       },
     )
@@ -311,9 +317,17 @@ export default defineComponent({
       }
     }
 
+    /**
+     * 滚动加载更多。
+     * 注意：scroll 事件不冒泡，且 Tab 模式下真正滚动的元素是 .bk-tab-content
+     * （.tabSection 的高度百分比被 bkui Loading 包裹层打断，自身不滚动），
+     * 因此通过 setPopupRef 在弹层根节点上以捕获阶段监听 scroll 统一接管，
+     * event.target 即实际滚动的元素。
+     */
     function handleScrollLoadMore(event: Event) {
       const target = event.target as HTMLElement
       if (!target || isThrottled.value) return
+      if (target === event.currentTarget) return
 
       const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
       if (bottomDis <= 600) {
@@ -330,14 +344,27 @@ export default defineComponent({
       }
     }
 
+    // 弹层根节点：以捕获阶段监听内部任意滚动容器的 scroll 事件
+    let popupEl: HTMLElement | null = null
+    function setPopupRef(el: unknown) {
+      if (popupEl) {
+        popupEl.removeEventListener('scroll', handleScrollLoadMore, true)
+      }
+      popupEl = (el as HTMLElement) || null
+      if (popupEl) {
+        popupEl.addEventListener('scroll', handleScrollLoadMore, true)
+      }
+    }
+
     async function loadAtomList(reset = false, forceRefresh = false) {
       if (reset) {
-        currentPage.value = 1
         atomList.value = []
         hasMore.value = true
       }
 
       if (!hasMore.value) return
+
+      isResetLoading.value = reset
 
       try {
         const result = await atomManager.fetchAtomList({
@@ -346,8 +373,7 @@ export default defineComponent({
           jobType: jobType.value,
           os: atomListOs.value,
           queryProjectAtomFlag: queryProjectAtomFlag.value,
-          page: currentPage.value,
-          pageSize: 20,
+          reset,
           forceRefresh,
         })
         if (reset) {
@@ -357,9 +383,10 @@ export default defineComponent({
         }
 
         hasMore.value = result.hasMore
-        currentPage.value = result.page + 1
       } catch (error) {
         console.error('Failed to load atom list:', error)
+      } finally {
+        isResetLoading.value = false
       }
     }
 
@@ -430,7 +457,11 @@ export default defineComponent({
     return () => (
       <Transition name="selector-slide">
         {props.visible && (
-          <div v-clickoutside={handleClose} class={styles.atomSelectorPopup}>
+          <div
+            v-clickoutside={handleClose}
+            class={styles.atomSelectorPopup}
+            ref={setPopupRef}
+          >
             <header class={styles.atomSelectorHeader}>
               <h3>
                 {t('flow.orchestration.choosePlugin')}
@@ -442,6 +473,9 @@ export default defineComponent({
                 </span>
               </h3>
               <Input
+                ref={(el) => {
+                  searchInputRef.value = el
+                }}
                 v-model={searchKey.value}
                 placeholder={t('flow.orchestration.searchPluginPlaceholder')}
                 clearable
@@ -460,13 +494,9 @@ export default defineComponent({
                     name={classify}
                     label={classifyMap.value[classify]?.classifyName}
                   >
-                    <Loading loading={isLoadingAtoms.value}>
+                    <Loading loading={isResetLoading.value}>
                       {curTabList.value.length > 0 ? (
-                        <div
-                          ref={tabSectionRef}
-                          class={styles.tabSection}
-                          onScroll={handleScrollLoadMore}
-                        >
+                        <div ref={tabSectionRef} class={styles.tabSection}>
                           {curTabList.value.map((atom) => (
                             <AtomCard
                               key={atom.atomCode}
@@ -474,6 +504,7 @@ export default defineComponent({
                               activeAtomCode={activeAtomCode.value}
                               currentAtomCode={currentAtomCode.value}
                               projectCode={projectCode.value}
+                              os={atomListOs.value}
                               onSelect={handleSelectAtom}
                               onInstall-success={handleInstallSuccess}
                               onClick={handleSetActiveAtom}
@@ -491,11 +522,7 @@ export default defineComponent({
               </Tab>
             ) : (
               <div class={styles.searchResultWrapper}>
-                  <section
-                    ref={searchResultRef}
-                    class={styles.searchResult}
-                    onScroll={handleScrollLoadMore}
-                  >
+                  <section ref={searchResultRef} class={styles.searchResult}>
                   {installArr.value.length > 0 && (
                     <>
                       <h3 class={styles.searchTitle}>
@@ -508,6 +535,7 @@ export default defineComponent({
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
                           projectCode={projectCode.value}
+                          os={atomListOs.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}
@@ -533,6 +561,7 @@ export default defineComponent({
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
                           projectCode={projectCode.value}
+                          os={atomListOs.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}
