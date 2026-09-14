@@ -25,35 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.ExpressionOutput
-import com.tencent.devops.common.expression.expression.IFunctionInfo
-import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.process.pojo.BuildVariableSnapshot
 
 /**
- * 表达式替换上下文
+ * 一次表达式求值会话：携带变量 Map + 大变量 overflowKeys/loader。
+ *
+ * 生命周期与"一次任务参数解析 / 一次条件求值"对齐，**不要长期持有**。
  */
-@Schema(title = "表达式替换参数")
-data class ExprReplacementOptions @JvmOverloads constructor(
-    @get:Schema(title = "环境变量", required = true)
-    val contextMap: Map<String, String>,
-    @get:Schema(title = "值是否能不存在", required = true)
-    val contextNotNull: Boolean = false,
-    @get:Schema(title = "表达式上下文", required = true)
-    val contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
-    val functions: Iterable<IFunctionInfo>? = null,
-    val output: ExpressionOutput? = null,
-    /**
-     * "溢出"变量名集合（对应主表 VALUE 仅存摘要的大变量）。
-     * 仅 ${{ xxx }} 表达式语法可以解析其完整值。
-     */
-    val overflowKeys: Set<String> = emptySet(),
-    /**
-     * 当表达式访问溢出变量时调用，按需拉取完整值。
-     * 如果没有溢出变量，可以为 null。
-     */
-    val overflowLoader: ((String) -> String?)? = null
-)
+data class BuildVarExprSession(
+    val variables: Map<String, String>,
+    val overflowKeys: Set<String>,
+    val overflowLoader: ((String) -> String?)?
+) {
+    companion object {
+        fun fromSnapshot(snapshot: BuildVariableSnapshot): BuildVarExprSession {
+            val loader = if (snapshot.largeKeys.isEmpty()) {
+                null
+            } else {
+                snapshot.largeValueLoader
+            }
+            return BuildVarExprSession(
+                variables = snapshot.smallVars,
+                overflowKeys = snapshot.largeKeys,
+                overflowLoader = loader
+            )
+        }
+
+        fun empty(variables: Map<String, String> = emptyMap()): BuildVarExprSession {
+            return BuildVarExprSession(
+                variables = variables,
+                overflowKeys = emptySet(),
+                overflowLoader = null
+            )
+        }
+    }
+}

@@ -61,6 +61,8 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -76,7 +78,8 @@ class StartActionTaskContainerCmd(
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -480,7 +483,15 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
-            val msg = TaskUtils.parseTimeout(toDoTask, contextMap)
+            val msg = TaskUtils.parseTimeout(
+                task = toDoTask,
+                session = BuildVarExprOverflowHelper.session(
+                    buildVariableService = buildVariableService,
+                    projectId = toDoTask.projectId,
+                    buildId = toDoTask.buildId,
+                    variables = contextMap
+                )
+            )
             buildLogPrinter.addDebugLine(
                 buildId = toDoTask.buildId,
                 message = msg,
@@ -505,12 +516,18 @@ class StartActionTaskContainerCmd(
         message: StringBuilder
     ): Boolean {
 
+        val session = BuildVarExprOverflowHelper.session(
+            buildVariableService = buildVariableService,
+            projectId = projectId,
+            buildId = buildId,
+            variables = contextMap
+        )
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
             return ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
-                variables = contextMap,
+                session = session,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
                 message = message
             )
@@ -525,7 +542,7 @@ class StartActionTaskContainerCmd(
                     buildId = buildId,
                     additionalOptions = it.additionalOptions,
                     containerFinalStatus = containerContext.buildStatus,
-                    variables = contextMap,
+                    session = session,
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
                     message = message
                 )

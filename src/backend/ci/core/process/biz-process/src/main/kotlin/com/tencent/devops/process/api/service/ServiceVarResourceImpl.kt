@@ -33,6 +33,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,7 +55,14 @@ class ServiceVarResourceImpl @Autowired constructor(
         return if (varName.isNullOrBlank()) {
             Result(buildVariableService.getAllVariable(projectId, pid, buildId))
         } else {
-            Result(mapOf(varName to (buildVariableService.getVariable(projectId, pid, buildId, varName) ?: "")))
+            // 单变量查询：命中大变量引用时按需还原真实值（与 BuildVarResource 行为对齐）
+            val main = buildVariableService.getVariable(projectId, pid, buildId, varName)
+            val value = if (BuildVarOverflowUtils.isOverflowReference(main)) {
+                buildVariableService.getVariableValue(projectId, buildId, varName) ?: main
+            } else {
+                main
+            }
+            Result(mapOf(varName to (value ?: "")))
         }
     }
 

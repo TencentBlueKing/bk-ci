@@ -85,7 +85,14 @@ data class PipelineSetting(
     var concurrencyCancelInProgress: Boolean = false,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
-    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
+    @get:Schema(
+        title = "[已废弃] 是否配置流水线变量值超长时终止执行；" +
+            "升级到大变量按需加载方案后该开关已无意义，仅为兼容旧 Yaml 反序列化保留，" +
+            "实际不会生效",
+        required = false,
+        deprecated = true
+    )
+    @Deprecated("Replaced by overflow-aware variable storage; kept for backward compatibility")
     var failIfVariableInvalid: Boolean? = false,
     @get:Schema(title = "构建取消权限策略", required = false)
     var buildCancelPolicy: BuildCancelPolicy = BuildCancelPolicy.EXECUTE_PERMISSION,

@@ -60,20 +60,27 @@ object EnvReplacementParser {
      * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
      * @param functions 用户自定义的拓展用函数
      * @param output 表达式计算时输出
+     * @param overflowKeys 溢出大变量键集合（仅 ${{ xxx }} 可解析其完整值）
+     * @param overflowLoader 溢出大变量按需加载器
      */
+    @Suppress("LongParameterList")
     fun parse(
         value: Any?,
         contextMap: Map<String, String>,
         onlyExpression: Boolean? = false,
         contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
         functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
+        output: ExpressionOutput? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): String {
         val options = ExprReplacementOptions(
             contextMap = contextMap,
             contextPair = contextPair,
             functions = functions,
-            output = output
+            output = output,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
         )
         return parse(value = value, onlyExpression = onlyExpression, options = options)
     }
@@ -82,19 +89,24 @@ object EnvReplacementParser {
      * 根据环境变量map进行object处理并保持原类型
      * 根据方言的配置判断是否能够使用${}
      */
+    @Suppress("LongParameterList")
     fun parse(
         value: Any?,
         contextMap: Map<String, String>,
         dialect: IPipelineDialect,
         contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
         functions: Iterable<IFunctionInfo>? = null,
-        output: ExpressionOutput? = null
+        output: ExpressionOutput? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): String {
         val options = ExprReplacementOptions(
             contextMap = contextMap,
             contextPair = contextPair,
             functions = functions,
-            output = output
+            output = output,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
         )
         return parse(
             value = value,
@@ -112,6 +124,9 @@ object EnvReplacementParser {
         return if (onlyExpression == true) {
             ExprReplaceEnvVarUtil.replaceEnvVar(value, options)
         } else {
+            // 旧风格 `${xxx}` / `$xxx` 不支持大变量懒加载——contextMap 里大变量是
+            // 纯引用串（`__BK_OVF__:<len>`），既不会泄漏真实内容，也不会触发
+            // 任何溢出表 IO，与改造前的 4K 截断行为相比"显示效果不同但内存代价更低"。
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, options.contextMap)
         }.let {
             JsonUtil.toJson(it, false)
@@ -120,11 +135,15 @@ object EnvReplacementParser {
 
     fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
-        extendNamedValueMap: List<RuntimeNamedValue>? = null
+        extendNamedValueMap: List<RuntimeNamedValue>? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Pair<ExecutionContext, List<NamedValueInfo>>? {
         return ExprReplacementUtil.getCustomExecutionContextByMap(
             variables = variables,
-            extendNamedValueMap = extendNamedValueMap
+            extendNamedValueMap = extendNamedValueMap,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
         )
     }
 

@@ -122,6 +122,54 @@ interface UserBuildResource {
         archiveFlag: Boolean? = false
     ): Result<List<BuildParameters>>
 
+    @Operation(summary = "按变量名获取构建启动参数真实值（大变量按需加载）")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/parameters/value")
+    fun getBuildParameterValue(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "启动参数变量名", required = true)
+        @QueryParam("key")
+        paramKey: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
+    ): Result<BuildParameters?>
+
+    @Operation(summary = "按变量名获取构建运行期变量真实值（大变量按需加载，供日志点击查询等）")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/variables/value")
+    fun getBuildVariableValue(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "变量名", required = true)
+        @QueryParam("key")
+        varName: String,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
+    ): Result<String?>
+
     @Operation(summary = "手动启动流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
