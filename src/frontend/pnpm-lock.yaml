@@ -10,7 +10,7 @@ overrides:
   flatted@<3.4.2: 3.4.2
   socket.io-parser@<4.2.6: 4.2.6
   parse-url@<8.1.0: '>=8.1.0'
-  ejs@<3.1.7: ~3.1.10
+  ejs@<3.1.10: ~3.1.10
   echarts@<5.0.0: 5.3.2
   zrender@<5.2.1: '>=5.2.1'
   http-cache-semantics@<4.1.1: '>=4.1.1'
@@ -22,7 +22,6 @@ overrides:
   tough-cookie@<4.1.3: '>=4.1.3'
   ip@<1.1.9: '>=1.1.9'
   braces@<3.0.3: '>=3.0.3'
-  ejs@<3.1.10: '>=3.1.10'
   ws@>=8.0.0 <8.17.1: '>=8.17.1'
   ws@>=7.0.0 <7.5.10: '>=7.5.10'
   ws@>=6.0.0 <6.2.3: '>=6.2.3'
@@ -307,7 +306,7 @@ importers:
         version: 0.8.2
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -506,7 +505,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -558,13 +557,13 @@ importers:
         version: 2.0.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@vue/cli-plugin-babel':
         specifier: ~5.0.0
-        version: 5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(clean-css@5.3.3)(core-js@3.26.0)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(supports-color@8.1.1)(uglify-js@3.19.3)(vue@3.5.42(typescript@6.0.3))(webpack-cli@6.0.1)
+        version: 5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(clean-css@5.3.3)(core-js@3.26.0)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(supports-color@8.1.1)(uglify-js@3.19.3)(vue@3.5.42(typescript@6.0.3))(webpack-cli@6.0.1)
       '@vue/cli-plugin-eslint':
         specifier: ~5.0.0
-        version: 5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
+        version: 5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
       '@vue/cli-service':
         specifier: ~5.0.0
-        version: 5.0.9(9fc4238d63450bfbaf92b04edbcd1591)
+        version: 5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)
       eslint:
         specifier: ^7.32.0
         version: 7.32.0(supports-color@8.1.1)
@@ -727,7 +726,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -851,7 +850,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -1008,7 +1007,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -1126,7 +1125,7 @@ importers:
         version: 0.23.1
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       vue-property-decorator:
         specifier: ^6.0.0
         version: 6.1.0
@@ -1261,7 +1260,7 @@ importers:
         specifier: 7.3.2
         version: 7.3.2(@types/node@22.20.1)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(terser@5.51.2)(yaml@2.9.0)
       vite-plugin-html:
-        specifier: ^3.2.2
+        specifier: 3.2.2
         version: 3.2.2(vite@7.3.2(@types/node@22.20.1)(jiti@2.7.0)(less@4.9.1(supports-color@8.1.1))(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(terser@5.51.2)(yaml@2.9.0))
       vite-plugin-vue-devtools:
         specifier: ^8.0.3
@@ -1317,7 +1316,7 @@ importers:
         version: 7.29.7
       '@blueking/eslint-config-bk':
         specifier: 2.1.0-beta.12
-        version: 2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+        version: 2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       '@blueking/stylelint-config-bk':
         specifier: ^2.1.0-beta.9
         version: 2.1.0-beta.10(postcss@8.4.49)(supports-color@8.1.1)
@@ -1347,7 +1346,7 @@ importers:
         version: 12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       peer-cli-service-webpack:
         specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@6.0.1)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
+        version: 0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@3.1.10)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
       postcss:
         specifier: ~8.4.16
         version: 8.4.49
@@ -1408,7 +1407,7 @@ importers:
         version: 7.29.7
       '@blueking/eslint-config-bk':
         specifier: 2.1.0-beta.6
-        version: 2.1.0-beta.6(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)
+        version: 2.1.0-beta.6(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)
       '@blueking/stylelint-config-bk':
         specifier: ^2.0.0
         version: 2.0.0(supports-color@8.1.1)
@@ -1652,7 +1651,7 @@ importers:
         version: 3.7.5
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -1692,7 +1691,7 @@ importers:
         version: 7.29.7
       '@blueking/eslint-config-bk':
         specifier: 2.1.0-beta.12
-        version: 2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)
+        version: 2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)
       '@blueking/stylelint-config-bk':
         specifier: ^2.1.0-beta.9
         version: 2.1.0-beta.10(postcss@8.4.49)(supports-color@8.1.1)
@@ -1722,7 +1721,7 @@ importers:
         version: 4.18.1
       peer-cli-service-webpack:
         specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@6.0.1)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
+        version: 0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@3.1.10)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
       postcss:
         specifier: ~8.4.16
         version: 8.4.49
@@ -1987,7 +1986,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -2229,7 +2228,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -2323,7 +2322,7 @@ importers:
     devDependencies:
       '@vue/eslint-config-standard':
         specifier: ~6.1.0
-        version: 6.1.0(8f6a6c75442ddebbba14aaab509a06f3)
+        version: 6.1.0(b4af1caa5720ae0db84a36ff3e6b3091)
       better-npm-run:
         specifier: ~0.1.1
         version: 0.1.1
@@ -2470,10 +2469,10 @@ importers:
         version: 1.1.2(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       vue-markdown-loader:
         specifier: ~2.4.1
-        version: 2.4.1(vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))
+        version: 2.4.1(vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)
@@ -2570,7 +2569,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -2694,7 +2693,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       webpack:
         specifier: ~5.76.1
         version: 5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
@@ -2815,7 +2814,7 @@ importers:
         version: 0.23.1
       vue-loader:
         specifier: 15.10.1
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -2966,7 +2965,7 @@ importers:
         version: 5.6.1(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@5.2.18)(uglify-js@3.19.3)(webpack@5.76.3)
       vue-loader:
         specifier: ~15.10.0
-        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
+        version: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3)
       vue-style-loader:
         specifier: ^3.0.3
         version: 3.1.2
@@ -8927,7 +8926,7 @@ packages:
       dustjs-linkedin: ^2.7.5
       eco: ^1.1.0-rc-3
       ect: ^0.5.9
-      ejs: '>=3.1.10'
+      ejs: ~3.1.10
       haml-coffee: ^1.14.1
       hamlet: ^0.3.3
       hamljs: ^0.6.2
@@ -10214,9 +10213,9 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  ejs@6.0.1:
-    resolution: {integrity: sha512-UaaM14yby8U3k02ihS1Bmj5Kz2d7CCQM1scxpgs4Mhkq8F1wR2gl3+Ts4h5Ne4Mnt7M9m4Dw7jsuMr3+xO4vZA==}
-    engines: {node: '>=0.12.18'}
+  ejs@3.1.10:
+    resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
+    engines: {node: '>=0.10.0'}
     hasBin: true
 
   electron-to-chromium@1.5.423:
@@ -11080,6 +11079,9 @@ packages:
 
   file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+
+  filelist@1.0.6:
+    resolution: {integrity: sha512-5giy2PkLYY1cP39p17Ech+2xlpTRL9HLspOfEgm0L6CwBXBTgsK5ou0JtzYuepxkaQ/tvhCFIJ5uXo0OrM2DxA==}
 
   filesize@3.6.1:
     resolution: {integrity: sha512-7KjR1vv6qnicaPMi1iiTcI85CyYwRO/PSFCu6SvqL8jN2Wjt/NIYQTFtFs7fSDCYOstUkEWIQGFUg5YZQfjlcg==}
@@ -12624,6 +12626,11 @@ packages:
     resolution: {integrity: sha512-ykkVRwrYvFm1nb2AJfKKYPr0emF6IiXDYUaFx4Zn9ZuIH7MrzEZ3sD5RlqGXNRpHtvUHJyOnCEFxOlNDtGo7wg==}
     engines: {node: 20 || >=22}
 
+  jake@10.9.4:
+    resolution: {integrity: sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   jasmine-core@3.99.1:
     resolution: {integrity: sha512-Hu1dmuoGcZ7AfyynN3LsfruwMbxMALMka+YtZeGoLuDEySVmVAPaonkNoBRIw/ectu8b9tVQCJNgp4a4knp+tg==}
 
@@ -13698,6 +13705,10 @@ packages:
 
   minimatch@3.1.5:
     resolution: {integrity: sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w==}
+
+  minimatch@5.1.9:
+    resolution: {integrity: sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==}
+    engines: {node: '>=10'}
 
   minimatch@9.0.3:
     resolution: {integrity: sha512-RHiac9mvaRw0x3AYRgDC1CxAP7HTcNrrECeA8YYJeWnpo+2Q5CegtZjaotWTWxDG3UeGA1coE05iH1mPjT/2mg==}
@@ -20442,37 +20453,12 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  '@blueking/eslint-config-bk@2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))':
-    dependencies:
-      '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))
-      '@typescript-eslint/eslint-plugin': 5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
-      '@typescript-eslint/parser': 5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5)
-      '@vue/eslint-config-standard': 6.1.0(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
-      eslint: 8.57.1(supports-color@8.1.1)
-      eslint-config-tencent: 1.2.0(@babel/core@7.29.7(supports-color@8.1.1))(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(prettier@3.6.2)(supports-color@8.1.1)(typescript@4.6.4)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
-      eslint-plugin-node: 11.1.0(eslint@8.57.1(supports-color@8.1.1))
-      eslint-plugin-promise: 6.0.1(eslint@8.57.1(supports-color@8.1.1))
-      eslint-plugin-standard: 5.0.0(eslint@8.57.1(supports-color@8.1.1))
-      eslint-plugin-vue: 8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
-      typescript: 4.6.4
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@vue/cli-service'
-      - eslint-config-prettier
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - prettier
-      - supports-color
-      - webpack
-
-  '@blueking/eslint-config-bk@2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)':
+  '@blueking/eslint-config-bk@2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)':
     dependencies:
       '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))
       '@typescript-eslint/eslint-plugin': 5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
       '@typescript-eslint/parser': 5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
-      '@vue/eslint-config-standard': 6.1.0(f38ccf286ab480a4b579da0ac991e193)
+      '@vue/eslint-config-standard': 6.1.0(d80a2bd817d7a4c71977777b4a230b0a)
       '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-config-tencent: 1.2.0(@babel/core@7.29.7(supports-color@8.1.1))(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(prettier@3.6.2)(supports-color@8.1.1)(typescript@4.6.4)
@@ -20492,12 +20478,37 @@ snapshots:
       - supports-color
       - webpack
 
-  '@blueking/eslint-config-bk@2.1.0-beta.6(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)':
+  '@blueking/eslint-config-bk@2.1.0-beta.12(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))':
+    dependencies:
+      '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))
+      '@typescript-eslint/eslint-plugin': 5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
+      '@typescript-eslint/parser': 5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5)
+      '@vue/eslint-config-standard': 6.1.0(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
+      eslint: 8.57.1(supports-color@8.1.1)
+      eslint-config-tencent: 1.2.0(@babel/core@7.29.7(supports-color@8.1.1))(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(prettier@3.6.2)(supports-color@8.1.1)(typescript@4.6.4)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-node: 11.1.0(eslint@8.57.1(supports-color@8.1.1))
+      eslint-plugin-promise: 6.0.1(eslint@8.57.1(supports-color@8.1.1))
+      eslint-plugin-standard: 5.0.0(eslint@8.57.1(supports-color@8.1.1))
+      eslint-plugin-vue: 8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
+      typescript: 4.6.4
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@vue/cli-service'
+      - eslint-config-prettier
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - prettier
+      - supports-color
+      - webpack
+
+  '@blueking/eslint-config-bk@2.1.0-beta.6(@babel/core@7.29.7(supports-color@8.1.1))(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(prettier@3.6.2)(supports-color@8.1.1)(webpack@5.100.2)':
     dependencies:
       '@babel/eslint-parser': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))
       '@typescript-eslint/eslint-plugin': 5.20.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
       '@typescript-eslint/parser': 5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
-      '@vue/eslint-config-standard': 6.1.0(47ac82981f847503faa94ab8206ceb4b)
+      '@vue/eslint-config-standard': 6.1.0(720fda5725dfe638a32f69ecc41b52ab)
       '@vue/eslint-config-typescript': 10.0.0(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4)
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-config-tencent: 1.2.0(@babel/core@7.29.7(supports-color@8.1.1))(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.6.4))(eslint-config-prettier@10.1.8(eslint@7.32.0(supports-color@8.1.1)))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(prettier@3.6.2)(supports-color@8.1.1)(typescript@4.6.4)
@@ -22585,7 +22596,7 @@ snapshots:
   '@nx/devkit@19.5.1(nx@19.5.1)':
     dependencies:
       '@nrwl/devkit': 19.5.1(nx@19.5.1)
-      ejs: 6.0.1
+      ejs: 3.1.10
       enquirer: 2.3.6
       ignore: 5.3.2
       minimatch: 9.0.3
@@ -25045,11 +25056,11 @@ snapshots:
 
   '@vue/cli-overlay@5.0.9': {}
 
-  '@vue/cli-plugin-babel@5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(clean-css@5.3.3)(core-js@3.26.0)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(supports-color@8.1.1)(uglify-js@3.19.3)(vue@3.5.42(typescript@6.0.3))(webpack-cli@6.0.1)':
+  '@vue/cli-plugin-babel@5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(clean-css@5.3.3)(core-js@3.26.0)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(supports-color@8.1.1)(uglify-js@3.19.3)(vue@3.5.42(typescript@6.0.3))(webpack-cli@6.0.1)':
     dependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
       '@vue/babel-preset-app': 5.0.9(@babel/core@7.29.7(supports-color@8.1.1))(core-js@3.26.0)(supports-color@8.1.1)(vue@3.5.42(typescript@6.0.3))
-      '@vue/cli-service': 5.0.9(9fc4238d63450bfbaf92b04edbcd1591)
+      '@vue/cli-service': 5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
       babel-loader: 8.4.1(@babel/core@7.29.7(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       thread-loader: 3.0.4(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
@@ -25073,9 +25084,9 @@ snapshots:
       - vue
       - webpack-cli
 
-  '@vue/cli-plugin-eslint@5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)':
+  '@vue/cli-plugin-eslint@5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(encoding@0.1.13)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)':
     dependencies:
-      '@vue/cli-service': 5.0.9(9fc4238d63450bfbaf92b04edbcd1591)
+      '@vue/cli-service': 5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
       eslint: 7.32.0(supports-color@8.1.1)
       eslint-webpack-plugin: 3.2.0(eslint@7.32.0(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
@@ -25098,343 +25109,68 @@ snapshots:
       - uglify-js
       - webpack-cli
 
-  '@vue/cli-plugin-router@5.0.9(9cb9d5a70822182eeb862c47e2783e3b)':
+  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(encoding@0.1.13)':
     dependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
     optional: true
 
-  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(encoding@0.1.13)':
+  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(encoding@0.1.13)':
     dependencies:
-      '@vue/cli-service': 5.0.9(9eab8cf90d7e578f535198a3f160be45)
+      '@vue/cli-service': 5.0.9(c0f61a4b8f95957f20acb000ae40ac3b)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
     optional: true
 
-  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(encoding@0.1.13)':
+  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(encoding@0.1.13)':
     dependencies:
-      '@vue/cli-service': 5.0.9(9fc4238d63450bfbaf92b04edbcd1591)
+      '@vue/cli-service': 5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
 
-  '@vue/cli-plugin-router@5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(encoding@0.1.13)':
+  '@vue/cli-plugin-router@5.0.9(c5b6624d13f96808aff063f8537003d2)':
     dependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
     optional: true
 
-  '@vue/cli-plugin-vuex@5.0.9(35087a00f5507fd7f697c40dead7fa7e)':
+  '@vue/cli-plugin-vuex@5.0.9(66be27cb364971afd941b7aff302f010)':
     dependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
     optional: true
 
-  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))':
+  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))':
     dependencies:
-      '@vue/cli-service': 5.0.9(9eab8cf90d7e578f535198a3f160be45)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
     optional: true
 
-  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))':
+  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))':
     dependencies:
-      '@vue/cli-service': 5.0.9(9fc4238d63450bfbaf92b04edbcd1591)
-
-  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))':
-    dependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(c0f61a4b8f95957f20acb000ae40ac3b)
     optional: true
 
-  '@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45)':
+  '@vue/cli-plugin-vuex@5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))':
     dependencies:
-      '@babel/helper-compilation-targets': 7.29.7
-      '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      '@soda/get-current-script': 1.0.2
-      '@types/minimist': 1.2.5
-      '@vue/cli-overlay': 5.0.9
-      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(encoding@0.1.13)
-      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))
-      '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
-      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      '@vue/web-component-wrapper': 1.3.0
-      acorn: 8.18.0
-      acorn-walk: 8.3.5
-      address: 1.2.2
-      autoprefixer: 10.5.5(postcss@8.5.28)
-      browserslist: 4.28.9
-      case-sensitive-paths-webpack-plugin: 2.4.0
-      cli-highlight: 2.1.11
-      clipboardy: 2.3.0
-      cliui: 7.0.4
-      copy-webpack-plugin: 9.0.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      css-minimizer-webpack-plugin: 3.4.1(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.28.2)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      cssnano: 5.1.15(postcss@8.5.28)
-      debug: 4.4.3(supports-color@8.1.1)
-      default-gateway: 6.0.3
-      dotenv: 10.0.0
-      dotenv-expand: 5.1.0
-      fs-extra: 9.1.0
-      globby: 11.1.0
-      hash-sum: 2.0.0
-      html-webpack-plugin: 5.6.8(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      is-file-esm: 1.0.0
-      launch-editor-middleware: 2.14.1
-      lodash.defaultsdeep: 4.6.1
-      lodash.mapvalues: 4.6.0
-      mini-css-extract-plugin: 2.10.2(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      minimist: 1.2.8
-      module-alias: 2.3.4
-      portfinder: 1.0.38(supports-color@8.1.1)
-      postcss: 8.5.28
-      postcss-loader: 6.2.1(postcss@8.5.28)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      progress-webpack-plugin: 1.0.16(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      ssri: 8.0.1
-      terser-webpack-plugin: 5.6.1(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      thread-loader: 3.0.4(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.4.38(typescript@4.9.5))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-style-loader: 4.1.3
-      webpack: 5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
-      webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      webpack-chain: 6.5.1
-      webpack-dev-server: 4.15.2(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      webpack-merge: 5.10.0
-      webpack-virtual-modules: 0.4.6
-      whatwg-fetch: 3.6.20
-    optionalDependencies:
-      less-loader: 12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      sass-loader: 13.3.3(sass@1.104.0)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      stylus-loader: 7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-template-compiler: 2.7.16
-      webpack-sources: 3.5.1
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@parcel/css'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - '@vue/compiler-sfc'
-      - arc-templates
-      - atpl
-      - babel-core
-      - bracket-template
-      - bufferutil
-      - clean-css
-      - coffee-script
-      - csso
-      - dot
-      - dust
-      - dustjs-helpers
-      - dustjs-linkedin
-      - eco
-      - ect
-      - ejs
-      - encoding
-      - esbuild
-      - haml-coffee
-      - hamlet
-      - hamljs
-      - handlebars
-      - hogan.js
-      - html-minifier-terser
-      - htmling
-      - jade
-      - jazz
-      - jqtpl
-      - just
-      - lightningcss
-      - liquid-node
-      - liquor
-      - lodash
-      - marko
-      - mote
-      - mustache
-      - nunjucks
-      - plates
-      - pug
-      - qejs
-      - ractive
-      - razor-tmpl
-      - react
-      - react-dom
-      - slm
-      - squirrelly
-      - supports-color
-      - swig
-      - swig-templates
-      - teacup
-      - templayed
-      - then-jade
-      - then-pug
-      - tinyliquid
-      - toffee
-      - twig
-      - twing
-      - uglify-js
-      - underscore
-      - utf-8-validate
-      - vash
-      - velocityjs
-      - vue
-      - walrus
-      - webpack-cli
-      - whiskers
-    optional: true
+      '@vue/cli-service': 5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)
 
-  '@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591)':
-    dependencies:
-      '@babel/helper-compilation-targets': 7.29.7
-      '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      '@soda/get-current-script': 1.0.2
-      '@types/minimist': 1.2.5
-      '@vue/cli-overlay': 5.0.9
-      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))(encoding@0.1.13)
-      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(9fc4238d63450bfbaf92b04edbcd1591))
-      '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
-      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      '@vue/web-component-wrapper': 1.3.0
-      acorn: 8.18.0
-      acorn-walk: 8.3.5
-      address: 1.2.2
-      autoprefixer: 10.5.5(postcss@8.5.28)
-      browserslist: 4.28.9
-      case-sensitive-paths-webpack-plugin: 2.4.0
-      cli-highlight: 2.1.11
-      clipboardy: 2.3.0
-      cliui: 7.0.4
-      copy-webpack-plugin: 9.0.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      css-minimizer-webpack-plugin: 3.4.1(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.28.2)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      cssnano: 5.1.15(postcss@8.5.28)
-      debug: 4.4.3(supports-color@8.1.1)
-      default-gateway: 6.0.3
-      dotenv: 10.0.0
-      dotenv-expand: 5.1.0
-      fs-extra: 9.1.0
-      globby: 11.1.0
-      hash-sum: 2.0.0
-      html-webpack-plugin: 5.6.8(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      is-file-esm: 1.0.0
-      launch-editor-middleware: 2.14.1
-      lodash.defaultsdeep: 4.6.1
-      lodash.mapvalues: 4.6.0
-      mini-css-extract-plugin: 2.10.2(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      minimist: 1.2.8
-      module-alias: 2.3.4
-      portfinder: 1.0.38(supports-color@8.1.1)
-      postcss: 8.5.28
-      postcss-loader: 6.2.1(postcss@8.5.28)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      progress-webpack-plugin: 1.0.16(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      ssri: 8.0.1
-      terser-webpack-plugin: 5.6.1(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      thread-loader: 3.0.4(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.5.42(typescript@6.0.3))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-style-loader: 4.1.3
-      webpack: 5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
-      webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      webpack-chain: 6.5.1
-      webpack-dev-server: 4.15.2(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      webpack-merge: 5.10.0
-      webpack-virtual-modules: 0.4.6
-      whatwg-fetch: 3.6.20
-    optionalDependencies:
-      less-loader: 12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      sass-loader: 13.3.3(sass@1.104.0)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      stylus-loader: 7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-template-compiler: 2.7.16
-      webpack-sources: 3.5.1
-    transitivePeerDependencies:
-      - '@minify-html/node'
-      - '@parcel/css'
-      - '@rspack/core'
-      - '@swc/core'
-      - '@swc/css'
-      - '@swc/html'
-      - '@vue/compiler-sfc'
-      - arc-templates
-      - atpl
-      - babel-core
-      - bracket-template
-      - bufferutil
-      - clean-css
-      - coffee-script
-      - csso
-      - dot
-      - dust
-      - dustjs-helpers
-      - dustjs-linkedin
-      - eco
-      - ect
-      - ejs
-      - encoding
-      - esbuild
-      - haml-coffee
-      - hamlet
-      - hamljs
-      - handlebars
-      - hogan.js
-      - html-minifier-terser
-      - htmling
-      - jade
-      - jazz
-      - jqtpl
-      - just
-      - lightningcss
-      - liquid-node
-      - liquor
-      - lodash
-      - marko
-      - mote
-      - mustache
-      - nunjucks
-      - plates
-      - pug
-      - qejs
-      - ractive
-      - razor-tmpl
-      - react
-      - react-dom
-      - slm
-      - squirrelly
-      - supports-color
-      - swig
-      - swig-templates
-      - teacup
-      - templayed
-      - then-jade
-      - then-pug
-      - tinyliquid
-      - toffee
-      - twig
-      - twing
-      - uglify-js
-      - underscore
-      - utf-8-validate
-      - vash
-      - velocityjs
-      - vue
-      - walrus
-      - webpack-cli
-      - whiskers
-
-  '@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)':
+  '@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)':
     dependencies:
       '@babel/helper-compilation-targets': 7.29.7
       '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2)
       '@soda/get-current-script': 1.0.2
       '@types/minimist': 1.2.5
       '@vue/cli-overlay': 5.0.9
-      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(encoding@0.1.13)
-      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))
+      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))(encoding@0.1.13)
+      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1))
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
-      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
       '@vue/web-component-wrapper': 1.3.0
       acorn: 8.18.0
       acorn-walk: 8.3.5
@@ -25561,18 +25297,18 @@ snapshots:
       - whiskers
     optional: true
 
-  '@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)':
+  '@vue/cli-service@5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)':
     dependencies:
       '@babel/helper-compilation-targets': 7.29.7
       '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       '@soda/get-current-script': 1.0.2
       '@types/minimist': 1.2.5
       '@vue/cli-overlay': 5.0.9
-      '@vue/cli-plugin-router': 5.0.9(9cb9d5a70822182eeb862c47e2783e3b)
-      '@vue/cli-plugin-vuex': 5.0.9(35087a00f5507fd7f697c40dead7fa7e)
+      '@vue/cli-plugin-router': 5.0.9(c5b6624d13f96808aff063f8537003d2)
+      '@vue/cli-plugin-vuex': 5.0.9(66be27cb364971afd941b7aff302f010)
       '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
-      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       '@vue/web-component-wrapper': 1.3.0
       acorn: 8.18.0
       acorn-walk: 8.3.5
@@ -25699,6 +25435,281 @@ snapshots:
       - whiskers
     optional: true
 
+  '@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b)':
+    dependencies:
+      '@babel/helper-compilation-targets': 7.29.7
+      '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      '@soda/get-current-script': 1.0.2
+      '@types/minimist': 1.2.5
+      '@vue/cli-overlay': 5.0.9
+      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(encoding@0.1.13)
+      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))
+      '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      '@vue/web-component-wrapper': 1.3.0
+      acorn: 8.18.0
+      acorn-walk: 8.3.5
+      address: 1.2.2
+      autoprefixer: 10.5.5(postcss@8.5.28)
+      browserslist: 4.28.9
+      case-sensitive-paths-webpack-plugin: 2.4.0
+      cli-highlight: 2.1.11
+      clipboardy: 2.3.0
+      cliui: 7.0.4
+      copy-webpack-plugin: 9.0.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      css-minimizer-webpack-plugin: 3.4.1(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.28.2)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      cssnano: 5.1.15(postcss@8.5.28)
+      debug: 4.4.3(supports-color@8.1.1)
+      default-gateway: 6.0.3
+      dotenv: 10.0.0
+      dotenv-expand: 5.1.0
+      fs-extra: 9.1.0
+      globby: 11.1.0
+      hash-sum: 2.0.0
+      html-webpack-plugin: 5.6.8(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      is-file-esm: 1.0.0
+      launch-editor-middleware: 2.14.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.mapvalues: 4.6.0
+      mini-css-extract-plugin: 2.10.2(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      minimist: 1.2.8
+      module-alias: 2.3.4
+      portfinder: 1.0.38(supports-color@8.1.1)
+      postcss: 8.5.28
+      postcss-loader: 6.2.1(postcss@8.5.28)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      progress-webpack-plugin: 1.0.16(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      ssri: 8.0.1
+      terser-webpack-plugin: 5.6.1(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      thread-loader: 3.0.4(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.4.38(typescript@4.9.5))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-style-loader: 4.1.3
+      webpack: 5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
+      webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      webpack-chain: 6.5.1
+      webpack-dev-server: 4.15.2(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      webpack-merge: 5.10.0
+      webpack-virtual-modules: 0.4.6
+      whatwg-fetch: 3.6.20
+    optionalDependencies:
+      less-loader: 12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      sass-loader: 13.3.3(sass@1.104.0)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      stylus-loader: 7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-template-compiler: 2.7.16
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@vue/compiler-sfc'
+      - arc-templates
+      - atpl
+      - babel-core
+      - bracket-template
+      - bufferutil
+      - clean-css
+      - coffee-script
+      - csso
+      - dot
+      - dust
+      - dustjs-helpers
+      - dustjs-linkedin
+      - eco
+      - ect
+      - ejs
+      - encoding
+      - esbuild
+      - haml-coffee
+      - hamlet
+      - hamljs
+      - handlebars
+      - hogan.js
+      - html-minifier-terser
+      - htmling
+      - jade
+      - jazz
+      - jqtpl
+      - just
+      - lightningcss
+      - liquid-node
+      - liquor
+      - lodash
+      - marko
+      - mote
+      - mustache
+      - nunjucks
+      - plates
+      - pug
+      - qejs
+      - ractive
+      - razor-tmpl
+      - react
+      - react-dom
+      - slm
+      - squirrelly
+      - supports-color
+      - swig
+      - swig-templates
+      - teacup
+      - templayed
+      - then-jade
+      - then-pug
+      - tinyliquid
+      - toffee
+      - twig
+      - twing
+      - uglify-js
+      - underscore
+      - utf-8-validate
+      - vash
+      - velocityjs
+      - vue
+      - walrus
+      - webpack-cli
+      - whiskers
+    optional: true
+
+  '@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91)':
+    dependencies:
+      '@babel/helper-compilation-targets': 7.29.7
+      '@soda/friendly-errors-webpack-plugin': 1.8.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      '@soda/get-current-script': 1.0.2
+      '@types/minimist': 1.2.5
+      '@vue/cli-overlay': 5.0.9
+      '@vue/cli-plugin-router': 5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))(encoding@0.1.13)
+      '@vue/cli-plugin-vuex': 5.0.9(@vue/cli-service@5.0.9(fcdbc4e9fd0db72d76f7b62256d0ee91))
+      '@vue/cli-shared-utils': 5.0.9(encoding@0.1.13)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/vue-loader-v15': vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      '@vue/web-component-wrapper': 1.3.0
+      acorn: 8.18.0
+      acorn-walk: 8.3.5
+      address: 1.2.2
+      autoprefixer: 10.5.5(postcss@8.5.28)
+      browserslist: 4.28.9
+      case-sensitive-paths-webpack-plugin: 2.4.0
+      cli-highlight: 2.1.11
+      clipboardy: 2.3.0
+      cliui: 7.0.4
+      copy-webpack-plugin: 9.0.1(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      css-minimizer-webpack-plugin: 3.4.1(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.28.2)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      cssnano: 5.1.15(postcss@8.5.28)
+      debug: 4.4.3(supports-color@8.1.1)
+      default-gateway: 6.0.3
+      dotenv: 10.0.0
+      dotenv-expand: 5.1.0
+      fs-extra: 9.1.0
+      globby: 11.1.0
+      hash-sum: 2.0.0
+      html-webpack-plugin: 5.6.8(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      is-file-esm: 1.0.0
+      launch-editor-middleware: 2.14.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.mapvalues: 4.6.0
+      mini-css-extract-plugin: 2.10.2(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      minimist: 1.2.8
+      module-alias: 2.3.4
+      portfinder: 1.0.38(supports-color@8.1.1)
+      postcss: 8.5.28
+      postcss-loader: 6.2.1(postcss@8.5.28)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      progress-webpack-plugin: 1.0.16(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      ssri: 8.0.1
+      terser-webpack-plugin: 5.6.1(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      thread-loader: 3.0.4(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.5.42(typescript@6.0.3))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-style-loader: 4.1.3
+      webpack: 5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)
+      webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      webpack-chain: 6.5.1
+      webpack-dev-server: 4.15.2(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      webpack-merge: 5.10.0
+      webpack-virtual-modules: 0.4.6
+      whatwg-fetch: 3.6.20
+    optionalDependencies:
+      less-loader: 12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      sass-loader: 13.3.3(sass@1.104.0)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      stylus-loader: 7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-template-compiler: 2.7.16
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@parcel/css'
+      - '@rspack/core'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - '@vue/compiler-sfc'
+      - arc-templates
+      - atpl
+      - babel-core
+      - bracket-template
+      - bufferutil
+      - clean-css
+      - coffee-script
+      - csso
+      - dot
+      - dust
+      - dustjs-helpers
+      - dustjs-linkedin
+      - eco
+      - ect
+      - ejs
+      - encoding
+      - esbuild
+      - haml-coffee
+      - hamlet
+      - hamljs
+      - handlebars
+      - hogan.js
+      - html-minifier-terser
+      - htmling
+      - jade
+      - jazz
+      - jqtpl
+      - just
+      - lightningcss
+      - liquid-node
+      - liquor
+      - lodash
+      - marko
+      - mote
+      - mustache
+      - nunjucks
+      - plates
+      - pug
+      - qejs
+      - ractive
+      - razor-tmpl
+      - react
+      - react-dom
+      - slm
+      - squirrelly
+      - supports-color
+      - swig
+      - swig-templates
+      - teacup
+      - templayed
+      - then-jade
+      - then-pug
+      - tinyliquid
+      - toffee
+      - twig
+      - twing
+      - uglify-js
+      - underscore
+      - utf-8-validate
+      - vash
+      - velocityjs
+      - vue
+      - walrus
+      - webpack-cli
+      - whiskers
+
   '@vue/cli-shared-utils@5.0.9(encoding@0.1.13)':
     dependencies:
       '@achrinza/node-ipc': 9.2.10
@@ -25784,9 +25795,9 @@ snapshots:
       '@vue/compiler-dom': 3.5.42
       '@vue/shared': 3.5.42
 
-  '@vue/component-compiler-utils@3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)':
+  '@vue/component-compiler-utils@3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)':
     dependencies:
-      consolidate: 0.15.1(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      consolidate: 0.15.1(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       hash-sum: 1.0.2
       lru-cache: 4.1.5
       merge-source-map: 1.1.0
@@ -25916,7 +25927,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/eslint'
 
-  '@vue/eslint-config-standard@6.1.0(47ac82981f847503faa94ab8206ceb4b)':
+  '@vue/eslint-config-standard@6.1.0(720fda5725dfe638a32f69ecc41b52ab)':
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-config-standard: 16.0.3(eslint-plugin-import@2.32.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint@8.57.1(supports-color@8.1.1))
@@ -25927,28 +25938,12 @@ snapshots:
       eslint-plugin-promise: 6.0.1(eslint@8.57.1(supports-color@8.1.1))
       eslint-plugin-vue: 8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
     transitivePeerDependencies:
       - supports-color
       - webpack
 
-  '@vue/eslint-config-standard@6.1.0(8f6a6c75442ddebbba14aaab509a06f3)':
-    dependencies:
-      eslint: 7.32.0(supports-color@8.1.1)
-      eslint-config-standard: 16.0.3(eslint-plugin-import@2.32.0)(eslint-plugin-node@11.1.0(eslint@7.32.0(supports-color@8.1.1)))(eslint-plugin-promise@5.1.1(eslint@7.32.0(supports-color@8.1.1)))(eslint@7.32.0(supports-color@8.1.1))
-      eslint-import-resolver-node: 0.3.10(supports-color@8.1.1)
-      eslint-import-resolver-webpack: 0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@2.7.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@3.7.5))(eslint-import-resolver-webpack@0.13.11)(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
-      eslint-plugin-node: 11.1.0(eslint@7.32.0(supports-color@8.1.1))
-      eslint-plugin-promise: 5.1.1(eslint@7.32.0(supports-color@8.1.1))
-      eslint-plugin-vue: 7.20.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
-    optionalDependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
-    transitivePeerDependencies:
-      - supports-color
-      - webpack
-
-  '@vue/eslint-config-standard@6.1.0(@vue/cli-service@5.0.9(9eab8cf90d7e578f535198a3f160be45))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))':
+  '@vue/eslint-config-standard@6.1.0(@vue/cli-service@5.0.9(c0f61a4b8f95957f20acb000ae40ac3b))(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-vue@8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))':
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-config-standard: 16.0.3(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.20.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@4.9.5))(eslint-import-resolver-webpack@0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@8.57.1(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint@8.57.1(supports-color@8.1.1))
@@ -25959,12 +25954,28 @@ snapshots:
       eslint-plugin-promise: 6.0.1(eslint@8.57.1(supports-color@8.1.1))
       eslint-plugin-vue: 8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
-      '@vue/cli-service': 5.0.9(9eab8cf90d7e578f535198a3f160be45)
+      '@vue/cli-service': 5.0.9(c0f61a4b8f95957f20acb000ae40ac3b)
     transitivePeerDependencies:
       - supports-color
       - webpack
 
-  '@vue/eslint-config-standard@6.1.0(f38ccf286ab480a4b579da0ac991e193)':
+  '@vue/eslint-config-standard@6.1.0(b4af1caa5720ae0db84a36ff3e6b3091)':
+    dependencies:
+      eslint: 7.32.0(supports-color@8.1.1)
+      eslint-config-standard: 16.0.3(eslint-plugin-import@2.32.0)(eslint-plugin-node@11.1.0(eslint@7.32.0(supports-color@8.1.1)))(eslint-plugin-promise@5.1.1(eslint@7.32.0(supports-color@8.1.1)))(eslint@7.32.0(supports-color@8.1.1))
+      eslint-import-resolver-node: 0.3.10(supports-color@8.1.1)
+      eslint-import-resolver-webpack: 0.13.11(eslint-plugin-import@2.32.0)(supports-color@8.1.1)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@2.7.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@3.7.5))(eslint-import-resolver-webpack@0.13.11)(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
+      eslint-plugin-node: 11.1.0(eslint@7.32.0(supports-color@8.1.1))
+      eslint-plugin-promise: 5.1.1(eslint@7.32.0(supports-color@8.1.1))
+      eslint-plugin-vue: 7.20.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
+    optionalDependencies:
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@2.7.16)(webpack-cli@3.3.12)(webpack-sources@3.5.1)
+    transitivePeerDependencies:
+      - supports-color
+      - webpack
+
+  '@vue/eslint-config-standard@6.1.0(d80a2bd817d7a4c71977777b4a230b0a)':
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-config-standard: 16.0.3(eslint-plugin-import@2.32.0(@typescript-eslint/parser@2.7.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@3.7.5))(eslint-import-resolver-webpack@0.13.11)(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1))(eslint-plugin-node@11.1.0(eslint@7.32.0(supports-color@8.1.1)))(eslint-plugin-promise@6.0.1(eslint@8.57.1(supports-color@8.1.1)))(eslint@8.57.1(supports-color@8.1.1))
@@ -25975,7 +25986,7 @@ snapshots:
       eslint-plugin-promise: 6.0.1(eslint@8.57.1(supports-color@8.1.1))
       eslint-plugin-vue: 8.7.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)
     optionalDependencies:
-      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@6.0.1)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
+      '@vue/cli-service': 5.0.9(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(ejs@3.1.10)(encoding@0.1.13)(esbuild@0.28.2)(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less-loader@12.3.3(less@4.9.1(supports-color@8.1.1))(webpack@5.100.2))(lodash@4.18.1)(sass-loader@13.3.3(sass@1.104.0)(webpack@5.100.2))(stylus-loader@7.1.3(stylus@0.59.0(supports-color@8.1.1))(webpack@5.100.2))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)(webpack-sources@3.5.1)
     transitivePeerDependencies:
       - supports-color
       - webpack
@@ -28122,11 +28133,11 @@ snapshots:
 
   console-control-strings@1.1.0: {}
 
-  consolidate@0.15.1(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1):
+  consolidate@0.15.1(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1):
     dependencies:
       bluebird: 3.7.2
     optionalDependencies:
-      ejs: 6.0.1
+      ejs: 3.1.10
       handlebars: 4.7.9
       lodash: 4.18.1
 
@@ -29763,7 +29774,7 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.4.7
+      dotenv: 16.6.1
 
   dotenv-expand@5.1.0: {}
 
@@ -29825,7 +29836,9 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  ejs@6.0.1: {}
+  ejs@3.1.10:
+    dependencies:
+      jake: 10.9.4
 
   electron-to-chromium@1.5.423: {}
 
@@ -31489,6 +31502,10 @@ snapshots:
 
   file-uri-to-path@1.0.0:
     optional: true
+
+  filelist@1.0.6:
+    dependencies:
+      minimatch: 5.1.9
 
   filesize@3.6.1: {}
 
@@ -33250,6 +33267,12 @@ snapshots:
     dependencies:
       '@isaacs/cliui': 9.0.0
 
+  jake@10.9.4:
+    dependencies:
+      async: 3.2.6
+      filelist: 1.0.6
+      picocolors: 1.1.1
+
   jasmine-core@3.99.1: {}
 
   jasmine@3.99.0:
@@ -34658,6 +34681,10 @@ snapshots:
     dependencies:
       brace-expansion: 1.1.18
 
+  minimatch@5.1.9:
+    dependencies:
+      brace-expansion: 2.1.4
+
   minimatch@9.0.3:
     dependencies:
       brace-expansion: 2.1.4
@@ -35782,7 +35809,7 @@ snapshots:
       sha.js: 2.4.12
       to-buffer: 1.2.2
 
-  peer-cli-service-webpack@0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@6.0.1)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
+  peer-cli-service-webpack@0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@3.1.10)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
     dependencies:
       '@blueking/cli-utils': 2.0.1
       babel-loader: 9.2.1(@babel/core@7.29.7(supports-color@8.1.1))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
@@ -35813,7 +35840,7 @@ snapshots:
       typescript: 5.9.3
       vue: 3.4.38(typescript@4.9.5)
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.4.38(typescript@4.9.5))(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
-      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       vue-style-loader: 4.1.3
       webpack: 5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)
       webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -35905,7 +35932,7 @@ snapshots:
       - webpack-cli
       - whiskers
 
-  peer-cli-service-webpack@0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@6.0.1)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
+  peer-cli-service-webpack@0.0.2(@babel/core@7.29.7(supports-color@8.1.1))(@vue/compiler-sfc@3.5.42)(bufferutil@4.1.0)(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(debug@4.4.3(supports-color@8.1.1))(ejs@3.1.10)(esbuild@0.28.2)(eslint@7.32.0(supports-color@8.1.1))(handlebars@4.7.9)(html-minifier-terser@7.2.0)(less@4.9.1(supports-color@8.1.1))(loader-utils@2.0.4)(lodash@4.18.1)(postcss@8.4.49)(sass@1.104.0)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
     dependencies:
       '@blueking/cli-utils': 2.0.1
       babel-loader: 9.2.1(@babel/core@7.29.7(supports-color@8.1.1))(webpack@5.100.2)
@@ -35936,7 +35963,7 @@ snapshots:
       typescript: 5.9.3
       vue: 3.4.38(typescript@4.9.5)
       vue-loader: 17.4.2(@vue/compiler-sfc@3.5.42)(vue@3.4.38(typescript@4.9.5))(webpack@5.100.2)
-      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
+      vue-loader-bk: 15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
       vue-style-loader: 4.1.3
       webpack: 5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.4.49))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)
       webpack-bundle-analyzer: 4.10.2(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -41323,7 +41350,7 @@ snapshots:
       consola: 2.15.3
       dotenv: 16.6.1
       dotenv-expand: 8.0.3
-      ejs: 6.0.1
+      ejs: 3.1.10
       fast-glob: 3.3.3
       fs-extra: 10.1.0
       html-minifier-terser: 6.1.0
@@ -41773,9 +41800,9 @@ snapshots:
       clipboard: 2.0.11
       vue: 2.7.16
 
-  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
+  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
     dependencies:
-      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
+      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
       - arc-templates
@@ -41836,9 +41863,9 @@ snapshots:
       - webpack
       - whiskers
 
-  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
+  vue-loader-bk@15.10.0(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
     dependencies:
-      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
+      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2)
     transitivePeerDependencies:
       - '@vue/compiler-sfc'
       - arc-templates
@@ -41899,9 +41926,9 @@ snapshots:
       - webpack
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 0.28.11
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -41966,9 +41993,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@0.28.11)(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 0.28.11
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42033,9 +42060,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42100,9 +42127,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42168,9 +42195,9 @@ snapshots:
       - whiskers
     optional: true
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@5.1.15(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42235,9 +42262,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1)):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 6.11.0(webpack@5.100.2(clean-css@5.3.3)(cssnano@6.1.2(postcss@5.2.18))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.4.49)(uglify-js@3.19.3)(webpack-cli@6.0.1))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42302,9 +42329,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.100.2))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.100.2):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 6.11.0(webpack@5.100.2)
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42369,9 +42396,9 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3):
+  vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@6.11.0(webpack@5.76.3))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)
+      '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)
       css-loader: 6.11.0(webpack@5.76.3)
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -42477,13 +42504,13 @@ snapshots:
       '@vue/compiler-sfc': 3.5.42
       vue: 3.5.42(typescript@6.0.3)
 
-  vue-markdown-loader@2.4.1(vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))):
+  vue-markdown-loader@2.4.1(vue-loader@15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))):
     dependencies:
       cheerio: 0.20.0
       highlight.js: 11.12.0
       loader-utils: 1.4.2
       markdown-it: 14.3.1
-      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@6.0.1)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
+      vue-loader: 15.10.1(@vue/compiler-sfc@3.5.42)(css-loader@2.1.1(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12)))(ejs@3.1.10)(handlebars@4.7.9)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.76.3(clean-css@5.3.3)(cssnano@6.1.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(postcss@8.5.28)(uglify-js@3.19.3)(webpack-cli@3.3.12))
 
   vue-observe-visibility@0.4.6: {}
 
@@ -42735,7 +42762,7 @@ snapshots:
       bfj: 6.1.2
       chalk: 2.4.2
       commander: 2.20.3
-      ejs: 6.0.1
+      ejs: 3.1.10
       express: 4.19.2(supports-color@8.1.1)
       filesize: 3.6.1
       gzip-size: 5.1.1
