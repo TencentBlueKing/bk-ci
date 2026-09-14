@@ -17,14 +17,14 @@ export const RD_STORE_CODE = 'rdStore'
 interface AtomListCache {
   data: AtomItem[]
   hasMore: boolean
-  page: number // 云任务单阶段分页
   timestamp: number
   loading: boolean
-  // 构建任务双阶段状态
+  // 双阶段状态（构建任务：适配/不适配插件；云任务：可用/不可用插件）
   recommendPage: number
   unCommendPage: number
   commendAtomCount: number
   isCommendAtomPageOver: boolean
+  loadedAtomCodes: string[] // 已加载插件编码（阶段间去重，防止后端 jobType 查询交叉导致重复展示）
 }
 
 interface AtomCacheMap {
@@ -123,13 +123,13 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       atomCacheMap[cacheKey] = {
         data: [],
         hasMore: true,
-        page: 1,
         timestamp: 0,
         loading: false,
         recommendPage: 1,
         unCommendPage: 1,
         commendAtomCount: 0,
         isCommendAtomPageOver: false,
+        loadedAtomCodes: [],
       }
     }
 
@@ -147,11 +147,11 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     if (reset || forceRefresh) {
       cache.data = []
       cache.hasMore = true
-      cache.page = 1
       cache.recommendPage = 1
       cache.unCommendPage = 1
       cache.commendAtomCount = 0
       cache.isCommendAtomPageOver = false
+      cache.loadedAtomCodes = []
     }
 
     // 防止重复请求
@@ -186,6 +186,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
           })
           records = markAtomDisabled(result.records || [], os)
           cache.data = [...cache.data, ...records]
+          cache.loadedAtomCodes.push(...records.map((atom) => atom.atomCode))
           cache.recommendPage += 1
 
           const count = result.count
@@ -208,7 +209,10 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
               page: cache.unCommendPage,
               pageSize,
             })
-            const unCommendRecords = markAtomDisabled(unCommendResult.records || [], os)
+            const unCommendRecords = markAtomDisabled(unCommendResult.records || [], os).filter(
+              (atom) => !cache.loadedAtomCodes.includes(atom.atomCode),
+            )
+            cache.loadedAtomCodes.push(...unCommendRecords.map((atom) => atom.atomCode))
             cache.data = [...cache.data, ...unCommendRecords]
             cache.unCommendPage += 1
             records = [...records, ...unCommendRecords]
@@ -231,30 +235,98 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
             page: cache.unCommendPage,
             pageSize,
           })
-          records = markAtomDisabled(result.records || [], os)
+          records = markAtomDisabled(result.records || [], os).filter(
+            (atom) => !cache.loadedAtomCodes.includes(atom.atomCode),
+          )
+          cache.loadedAtomCodes.push(...records.map((atom) => atom.atomCode))
           cache.data = [...cache.data, ...records]
           cache.unCommendPage += 1
 
           hasMore = cache.data.length < cache.commendAtomCount + result.count
         }
       } else {
-        // 云任务（无构建环境）：单阶段分页
-        const result = await fetchAtoms({
-          projectCode: projectCode.value,
-          category,
-          jobType,
-          classifyId,
-          os,
-          keyword,
-          queryProjectAtomFlag,
-          page: cache.page,
-          pageSize,
-        })
-        records = markAtomDisabled(result.records || [], os)
-        cache.data = [...cache.data, ...records]
-        cache.page += 1
+        // 云任务（无构建环境）：双阶段分页（先拉云任务可用插件，拉完后追加不可用的创作流插件，
+        // 对齐流水线无编译环境时切换 jobType 查询另一类型插件的行为）
+        if (!cache.isCommendAtomPageOver) {
+          // 阶段一：云任务可用插件
+          const result = await fetchAtoms({
+            projectCode: projectCode.value,
+            category,
+            jobType,
+            classifyId,
+            os,
+            keyword,
+            queryProjectAtomFlag,
+            page: cache.recommendPage,
+            pageSize,
+          })
+          records = markAtomDisabled(result.records || [], os)
+          cache.data = [...cache.data, ...records]
+          cache.loadedAtomCodes.push(...records.map((atom) => atom.atomCode))
+          cache.recommendPage += 1
 
-        hasMore = records.length >= pageSize
+          const count = result.count
+          if (cache.data.length >= count) {
+            cache.isCommendAtomPageOver = true
+            cache.commendAtomCount = count
+            cache.unCommendPage = 1
+
+            // 可用插件拉完后，立即请求一页不可用插件
+            const unCommendResult = await fetchAtoms({
+              projectCode: projectCode.value,
+              category,
+              jobType: JobType.CREATIVE_STREAM,
+              classifyId,
+              os,
+              keyword,
+              queryProjectAtomFlag,
+              // 排除无编译环境插件（云任务可用，阶段一已包含）
+              queryFitAgentBuildLessAtomFlag: false,
+              page: cache.unCommendPage,
+              pageSize,
+            })
+            const rawRecords = unCommendResult.records || []
+            // 创作流插件在云任务下不可用，统一置灰；同时过滤与阶段一交叉的插件
+            const unCommendRecords = rawRecords
+              .filter((atom) => !cache.loadedAtomCodes.includes(atom.atomCode))
+              .map((atom) => ({ ...atom, disabled: true }))
+            cache.loadedAtomCodes.push(...unCommendRecords.map((atom) => atom.atomCode))
+            cache.data = [...cache.data, ...unCommendRecords]
+            cache.unCommendPage += 1
+            records = [...records, ...unCommendRecords]
+            // 用未过滤的原始页条数判断阶段二是否拉完，避免交叉插件被过滤后误判提前结束
+            hasMore =
+              rawRecords.length >= pageSize &&
+              cache.data.length < cache.commendAtomCount + unCommendResult.count
+          } else {
+            hasMore = true
+          }
+        } else {
+          // 阶段二：不可用的创作流插件
+          const result = await fetchAtoms({
+            projectCode: projectCode.value,
+            category,
+            jobType: JobType.CREATIVE_STREAM,
+            classifyId,
+            os,
+            keyword,
+            queryProjectAtomFlag,
+            queryFitAgentBuildLessAtomFlag: false,
+            page: cache.unCommendPage,
+            pageSize,
+          })
+          const rawRecords = result.records || []
+          records = rawRecords
+            .filter((atom) => !cache.loadedAtomCodes.includes(atom.atomCode))
+            .map((atom) => ({ ...atom, disabled: true }))
+          cache.loadedAtomCodes.push(...records.map((atom) => atom.atomCode))
+          cache.data = [...cache.data, ...records]
+          cache.unCommendPage += 1
+
+          hasMore =
+            rawRecords.length >= pageSize &&
+            cache.data.length < cache.commendAtomCount + result.count
+        }
       }
 
       cache.hasMore = hasMore
