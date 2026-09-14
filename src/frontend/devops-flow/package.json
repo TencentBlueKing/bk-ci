@@ -26,7 +26,7 @@
     "axios": "1.13.6",
     "bk-permission": "workspace:bk-permission",
     "bkui-pipeline": "workspace:bk-pipeline",
-    "bkui-vue": "3.0.6",
+    "bkui-vue": "2.0.2-beta.92",
     "monaco-editor": "^0.52.2",
     "monaco-yaml": "^5.2.2",
     "pinia": "^3.0.3",
