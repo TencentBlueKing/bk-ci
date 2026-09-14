@@ -1,5 +1,8 @@
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.worker.common.utils.CommandLineUtils
+import java.io.File
+import kotlin.text.Charsets
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -182,5 +185,64 @@ class ScriptTaskTest {
             result
         )
         Assertions.assertEquals(listOf("some random log"), invalidLines)
+    }
+
+    @Test
+    fun decodeMultipleLinesDuplicateKeyTest() {
+        /*同一 KEY 出现多次时后一条覆盖前一条*/
+        val result = decode(
+            listOf(
+                "::set-output name=DUP::first",
+                "::set-output name=DUP::second"
+            )
+        )
+        Assertions.assertEquals(
+            mapOf("jobs.$jobId.steps.$stepId.outputs.DUP" to "second"),
+            result
+        )
+    }
+
+    @Test
+    fun decodeMultipleLinesLongValueNotTruncatedTest() {
+        /*解码层不截断：4000 字符上限由 ScriptTask 的 failIfVariableInvalidCheck 另行判定*/
+        val longValue = "A".repeat(5000)
+        val result = decode(listOf("::set-output name=LONG::$longValue"))
+        Assertions.assertEquals(
+            mapOf("jobs.$jobId.steps.$stepId.outputs.LONG" to longValue),
+            result
+        )
+    }
+
+    @Test
+    fun multiLineOverridesSingleLineOutputTest() {
+        /*验收 A-11：单行通道与多行通道写入同一 KEY 时，取多行值*/
+        val buildId = "override_single_line_test"
+        val workspace = File(System.getProperty("java.io.tmpdir"), "override_single_line_ws")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        CommandLineUtils.appendOutputToFile(
+            tmpLine = "::set-output name=SAME::from_single_line",
+            workspace = workspace,
+            resultLogFile = ScriptEnvUtils.getContextFile(buildId),
+            jobId = jobId,
+            stepId = stepId
+        )
+        File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId))
+            .writeText("::set-output name=SAME::from_multi_line", Charsets.UTF_8)
+
+        val merged = linkedMapOf<String, String>().apply {
+            putAll(ScriptEnvUtils.getContext(buildId, workspace))
+            putAll(
+                ScriptTask.decodeMultipleLines(
+                    lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                    jobId = jobId,
+                    stepId = stepId
+                )
+            )
+        }
+        Assertions.assertEquals("from_multi_line", merged["jobs.$jobId.steps.$stepId.outputs.SAME"])
+
+        workspace.deleteRecursively()
     }
 }

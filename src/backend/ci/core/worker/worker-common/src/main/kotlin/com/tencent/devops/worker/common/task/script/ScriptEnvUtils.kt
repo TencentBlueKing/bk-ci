@@ -46,7 +46,12 @@ object ScriptEnvUtils {
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
     /** 多行输出文件的大小上限（字节） */
     private const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
-    private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
+
+    /** 合法变量名的正则片段：字母或下划线开头，仅含字母、数字、下划线 */
+    const val VAR_NAME_SEGMENT = "[a-zA-Z_][a-zA-Z0-9_]*"
+
+    /** 合法变量名的完整匹配正则 */
+    val varNameRegex = Regex("^${VAR_NAME_SEGMENT}$")
     private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
@@ -224,7 +229,7 @@ object ScriptEnvUtils {
                 split[0].trim() to split[1].trim()
             }.filter {
                 // #3453 保存时再次校验key的合法性
-                keyRegex.matches(it.first)
+                varNameRegex.matches(it.first)
             }.toMap()
         }
     }

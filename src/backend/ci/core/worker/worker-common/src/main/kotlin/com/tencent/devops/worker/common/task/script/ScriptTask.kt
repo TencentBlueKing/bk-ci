@@ -319,7 +319,6 @@ open class ScriptTask : ITask() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
-        private val outputKeyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\$")
 
         /**
          * 解码 format_multiple_lines 写入的多行输出内容
@@ -345,7 +344,7 @@ open class ScriptTask : ITask() {
                 val value = line.removePrefix(prefixOutput)
                 val firstColonIndex = value.indexOf("::")
                 val key = if (firstColonIndex >= 0) value.substring(0, firstColonIndex) else value
-                if (firstColonIndex < 0 || key.isBlank() || !key.matches(outputKeyRegex)) {
+                if (firstColonIndex < 0 || key.isBlank() || !key.matches(ScriptEnvUtils.varNameRegex)) {
                     onInvalidKey?.invoke(key.take(100))
                     continue
                 }

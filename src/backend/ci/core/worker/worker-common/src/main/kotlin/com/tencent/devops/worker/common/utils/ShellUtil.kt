@@ -94,6 +94,7 @@ object ShellUtil {
      */
     private val formatMultipleLinesPosix = """
         format_multiple_lines() {
+            command -v bash >/dev/null 2>&1 || { echo "format_multiple_lines: bash not found" >&2; return 1; }
             bash -c "content=\"\${'$'}1\"; content=\"\${'$'}{content//%/%25}\"; content=\"\${'$'}{content//\${'$'}'\r'/%0D}\"; content=\"\${'$'}{content//\${'$'}'\n'/%0A}\"; printf '%s\n' \"\${'$'}content\"" _ "${'$'}1" >> "##multiLineFile##"
         }
     """.trimIndent() + "\n"

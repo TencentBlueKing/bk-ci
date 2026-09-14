@@ -1,9 +1,12 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import com.tencent.devops.worker.common.task.script.ScriptTask
 import java.io.File
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 import kotlin.text.Charsets
 import org.junit.jupiter.api.Assertions
@@ -384,5 +387,253 @@ class BatScriptUtilTest {
 
         bat.delete()
         workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesWindowsPathEndToEndTest() {
+        /* 验收 A-3：字面 \n / \N / \r 属于路径内容，不得被解释为换行 */
+        val buildId = "bat_e2e_win_path"
+        val workspace = File(tmpDir, "bat_e2e_win_path_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val cases = linkedMapOf(
+            "WTC03" to """C:\newlogs\report.txt""",
+            "WTC04" to """C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common""",
+            "WTC05" to """D:\reports\log.txt"""
+        )
+        val script = cases.entries.joinToString("\r\n") { (key, content) ->
+            val file = File(workspace, "$key.txt").apply { writeText(content, Charsets.UTF_8) }
+            """call:format_multiple_lines $key "${file.absolutePath}""""
+        }
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = script,
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        cases.forEach { (key, content) ->
+            Assertions.assertEquals(content, decoded["jobs.$jobId.steps.$stepId.outputs.$key"])
+        }
+
+        bat.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesEmptyFileEndToEndTest() {
+        val buildId = "bat_e2e_empty_file"
+        val workspace = File(tmpDir, "bat_e2e_empty_file_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val emptyFile = File(workspace, "empty.txt").apply { writeText("", Charsets.UTF_8) }
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = """call:format_multiple_lines EMPTY "${emptyFile.absolutePath}"""",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals("", decoded["jobs.$jobId.steps.$stepId.outputs.EMPTY"])
+
+        bat.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesNonUtf8FileEndToEndTest() {
+        /*约束 2：非 UTF-8 输入当前按 UTF-8 解码会乱码；钉住"不失败、变量仍产出"的底线行为*/
+        val buildId = "bat_e2e_gbk"
+        val workspace = File(tmpDir, "bat_e2e_gbk_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val gbkFile = File(workspace, "gbk.txt").apply {
+            writeText("中文内容", Charset.forName("GBK"))
+        }
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = """call:format_multiple_lines GBK "${gbkFile.absolutePath}"""",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertEquals(0, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertTrue(decoded.containsKey("jobs.$jobId.steps.$stepId.outputs.GBK"))
+
+        bat.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun executeUnterminatedBlockThrowsUserInputErrorTest() {
+        val buildId = "bat_exec_unterminated"
+        val workspace = File(tmpDir, "bat_exec_unterminated_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
+            BatScriptUtil.execute(
+                buildId = buildId,
+                script = "call:format_multiple_lines CONFIG \"\nline1",
+                runtimeVariables = emptyMap(),
+                dir = workspace
+            )
+        }
+        Assertions.assertEquals(ErrorType.USER, exception.errorType)
+        Assertions.assertEquals(ErrorCode.USER_INPUT_INVAILD, exception.errorCode)
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun executeUnterminatedBlockDoesNotRetryTest() {
+        /*验收 A-9：未闭合内联块属确定性用户输入错误，不得触发 checkFlag 自动重试*/
+        val buildId = "bat_exec_no_retry"
+        val workspace = File(tmpDir, "bat_exec_no_retry_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        BatScriptUtil.retryClean()
+        try {
+            Assertions.assertThrows(TaskExecuteException::class.java) {
+                BatScriptUtil.execute(
+                    buildId = buildId,
+                    script = "call:format_multiple_lines CONFIG \"\nline1",
+                    runtimeVariables = emptyMap(),
+                    dir = workspace
+                )
+            }
+            Assertions.assertEquals(0, BatScriptUtil.retryTimes())
+        } finally {
+            BatScriptUtil.retryClean()
+            workspace.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun preprocessMultilineBlockCallWithSpaceTest() {
+        /*`call :label` 与 `call:label` 同为合法 batch 写法，内联块须同样被预处理*/
+        val buildId = "bat_call_space_test"
+        val workspace = File(tmpDir, "bat_call_space_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call :format_multiple_lines CONFIG \"\n[server]\n\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        assertInlineBlockPreprocessed(file)
+
+        file.delete()
+        deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun preprocessMultilineBlockUpperCaseTest() {
+        /*batch 标签与命令大小写不敏感，大写写法须同样被预处理*/
+        val buildId = "bat_call_upper_test"
+        val workspace = File(tmpDir, "bat_call_upper_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "CALL:FORMAT_MULTIPLE_LINES CONFIG \"\n[server]\n\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        assertInlineBlockPreprocessed(file)
+
+        file.delete()
+        deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    /** 内联块内容须被移入临时文件，生成的 bat 中只保留文件版调用 */
+    private fun assertInlineBlockPreprocessed(bat: File) {
+        val content = bat.readText()
+        Assertions.assertFalse(content.contains("[server]"), "块内容不应残留在 bat 中: $content")
+        Assertions.assertTrue(
+            Regex("""call:format_multiple_lines CONFIG "[^"]+"""").containsMatchIn(content),
+            "应改写为文件版调用: $content"
+        )
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesCallVariantEndToEndTest() {
+        /*`call :` 与 `CALL:` 两种写法真跑 cmd.exe：须成功退出且产出正确多行值*/
+        mapOf(
+            "bat_e2e_call_space" to "call :format_multiple_lines CONFIG \"",
+            "bat_e2e_call_upper" to "CALL:FORMAT_MULTIPLE_LINES CONFIG \""
+        ).forEach { (buildId, callLine) ->
+            val workspace = File(tmpDir, "${buildId}_workspace")
+            workspace.deleteRecursively()
+            workspace.mkdirs()
+
+            val bat = BatScriptUtil.getCommandFile(
+                buildId = buildId,
+                script = "$callLine\n[server]\nhost=0.0.0.0\n\"",
+                runtimeVariables = emptyMap(),
+                dir = workspace,
+                workspace = workspace
+            )
+
+            val (exitCode, console) = runBat(bat, workspace)
+            Assertions.assertEquals(0, exitCode, "variant=$callLine console=$console")
+
+            val decoded = ScriptTask.decodeMultipleLines(
+                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                jobId = jobId,
+                stepId = stepId
+            )
+            Assertions.assertEquals(
+                "[server]\r\nhost=0.0.0.0",
+                decoded["jobs.$jobId.steps.$stepId.outputs.CONFIG"],
+                "variant=$callLine"
+            )
+
+            bat.delete()
+            deleteBlockFiles(buildId)
+            workspace.deleteRecursively()
+        }
     }
 }

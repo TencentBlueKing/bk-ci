@@ -488,6 +488,174 @@ class ShellUtilTest {
         workspace.deleteRecursively()
     }
 
+    @Test
+    @DisplayName("字面 \\n / \\N / 反斜杠原样往返")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesLiteralBackslashEndToEndTest() {
+        /* 验收 A-3：Windows 路径与 JSON 转义中的字面 \n \N \\ 不得被解释为换行 */
+        val buildId = "sh_e2e_literal"
+        val workspace = File(tmpDir, "sh_e2e_literal_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val cases = linkedMapOf(
+            "LITERAL_N" to """C:\newlogs\report.txt""",
+            "LITERAL_NU" to """C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common""",
+            "JSON" to """{"path":"C:\\data\\file"}"""
+        )
+        val script = cases.entries.joinToString("\n") { (key, value) ->
+            "format_multiple_lines '::set-output name=$key::$value'"
+        }
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = script,
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runSh(file, workspace)
+        assertShellOk("bash", file, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        cases.forEach { (key, value) ->
+            Assertions.assertEquals(value, decoded["jobs.$jobId.steps.$stepId.outputs.$key"])
+        }
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("空值产生空字符串变量")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesEmptyValueEndToEndTest() {
+        val buildId = "sh_e2e_empty"
+        val workspace = File(tmpDir, "sh_e2e_empty_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "format_multiple_lines \"::set-output name=EMPTY::\"",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runSh(file, workspace)
+        assertShellOk("bash", file, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals("", decoded["jobs.$jobId.steps.$stepId.outputs.EMPTY"])
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("同一 KEY 多次调用后者覆盖前者")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesSameKeyTwiceEndToEndTest() {
+        val buildId = "sh_e2e_same_key"
+        val workspace = File(tmpDir, "sh_e2e_same_key_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "format_multiple_lines \"::set-output name=DUP::first\"\n" +
+                "format_multiple_lines \"::set-output name=DUP::second\"",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runSh(file, workspace)
+        assertShellOk("bash", file, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals("second", decoded["jobs.$jobId.steps.$stepId.outputs.DUP"])
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("POSIX 分支注入 bash 存在性检查")
+    fun formatMultipleLinesPosixBashCheckInjectedTest() {
+        val buildId = "sh_bash_check_test"
+        val workspace = File(tmpDir, "sh_bash_check_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val content = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/bin/sh\necho hi",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        ).readText()
+        Assertions.assertTrue(content.contains("command -v bash"))
+        Assertions.assertTrue(content.contains("bash not found"))
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("无 bash 时显式报错而非静默丢失")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesNoBashFailsLoudlyTest() {
+        val buildId = "sh_no_bash"
+        val workspace = File(tmpDir, "sh_no_bash_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "#!/bin/sh\nformat_multiple_lines \"::set-output name=K::v\"",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+        val consoleFile = File.createTempFile("sh_nobash_console_", ".log")
+        consoleFile.deleteOnExit()
+        val process = ProcessBuilder("/bin/sh", file.absolutePath)
+            .directory(workspace)
+            .redirectErrorStream(true)
+            .redirectOutput(consoleFile)
+            .apply { environment()["PATH"] = "/nonexistent" }
+            .start()
+        val finished = process.waitFor(60, TimeUnit.SECONDS)
+        if (!finished) {
+            process.destroyForcibly()
+        }
+        Assertions.assertTrue(finished, "sh 执行超时")
+        Assertions.assertTrue(
+            consoleFile.readText().contains("bash not found"),
+            "无 bash 时应显式报错: ${consoleFile.readText()}"
+        )
+
+        workspace.deleteRecursively()
+    }
+
     /** 转成单引号 shell 字面量，用于把待测内容安全嵌入被测脚本 */
     private fun shellSingleQuote(s: String): String = "'" + s.replace("'", "'\\''") + "'"
 }

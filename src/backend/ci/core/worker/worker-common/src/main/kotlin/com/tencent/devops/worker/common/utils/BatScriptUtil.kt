@@ -127,7 +127,8 @@ object BatScriptUtil {
      * 行首仅允许空白，行尾恰为单个引号（引号后无内容）
      */
     private val multilineStartRegex = Regex(
-        """^\s*call:format_multiple_lines\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+"\s*$"""
+        """^\s*call\s*:\s*format_multiple_lines\s+(${ScriptEnvUtils.VAR_NAME_SEGMENT})\s+"\s*$""",
+        RegexOption.IGNORE_CASE
     )
 
     @Suppress("ALL")
