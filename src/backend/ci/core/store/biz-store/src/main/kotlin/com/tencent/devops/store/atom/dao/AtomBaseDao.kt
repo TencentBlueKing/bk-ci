@@ -341,7 +341,10 @@ abstract class AtomBaseDao {
      * @param ta TAtom 表
      * @param jobType 要筛选的 Job 类型名称（如 AGENT、AGENT_LESS、CREATIVE_STREAM、CLOUD_TASK）
      * @param serviceScope 服务范围，null 视为 PIPELINE
-     * @param queryFitAgentBuildLessAtomFlag 仅 PIPELINE+AGENT 时有效：true 表示同时匹配 BUILD_LESS_RUN_FLAG=true；false 表示排除无编译；null 不附加
+     * @param queryFitAgentBuildLessAtomFlag 仅编译环境 jobType 有效：
+     *   PIPELINE+AGENT 用 BUILD_LESS_RUN_FLAG 标记双环境；
+     *   CREATIVE_STREAM 用 JOB_TYPE_MAP 是否同时包含 CLOUD_TASK。
+     *   true 包含双环境插件，false 排除只保留编译环境专属插件，null 不附加。
      * @return 查询条件，若 jobType 为空则返回 null
      */
     protected fun buildJobTypeCondition(
@@ -368,14 +371,60 @@ abstract class AtomBaseDao {
             isMapValid.and(mapJsonContains)
         }
 
-        val isBuildEnvJobType = runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrDefault(false)
-        if (isBuildEnvJobType && queryFitAgentBuildLessAtomFlag != null) {
-            return when (queryFitAgentBuildLessAtomFlag) {
-                true -> jobTypeMatchCondition.or(ta.BUILD_LESS_RUN_FLAG.eq(true))
-                false -> jobTypeMatchCondition.and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull))
+        val jobTypeEnum = JobTypeEnum.parseOrNull(jobType)
+        if (jobTypeEnum?.isBuildEnv() != true || queryFitAgentBuildLessAtomFlag == null) {
+            return jobTypeMatchCondition
+        }
+        return when (queryFitAgentBuildLessAtomFlag) {
+            true -> {
+                val include = buildIncludePairedNonBuildEnvCondition(ta, jobTypeEnum)
+                if (include != null) jobTypeMatchCondition.or(include) else jobTypeMatchCondition
+            }
+            false -> {
+                val exclude = buildExcludePairedNonBuildEnvCondition(ta, jobTypeEnum, effectiveScope)
+                if (exclude != null) jobTypeMatchCondition.and(exclude) else jobTypeMatchCondition
             }
         }
-        return jobTypeMatchCondition
+    }
+
+    /**
+     * 编译环境查询时额外纳入「也可在无编译环境运行」的插件。
+     * PIPELINE 用 BUILD_LESS_RUN_FLAG；创作流双环境插件已同时写入 CREATIVE_STREAM，无需额外 OR。
+     */
+    private fun buildIncludePairedNonBuildEnvCondition(
+        ta: TAtom,
+        buildEnvJobType: JobTypeEnum
+    ): Condition? {
+        return when (buildEnvJobType) {
+            JobTypeEnum.AGENT -> ta.BUILD_LESS_RUN_FLAG.eq(true)
+            else -> null
+        }
+    }
+
+    /**
+     * 编译环境查询时排除「也可在无编译环境运行」的插件，用于选插件面板下半部分（不适用）。
+     * PIPELINE 排除 BUILD_LESS_RUN_FLAG=true；创作流排除 JOB_TYPE_MAP 中同时包含 CLOUD_TASK 的插件。
+     */
+    private fun buildExcludePairedNonBuildEnvCondition(
+        ta: TAtom,
+        buildEnvJobType: JobTypeEnum,
+        effectiveScope: String
+    ): Condition? {
+        return when (buildEnvJobType) {
+            JobTypeEnum.AGENT ->
+                ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)
+            JobTypeEnum.CREATIVE_STREAM -> {
+                val paired = buildEnvJobType.pairedNonBuildEnv() ?: return null
+                // 与 jobType 正向匹配共用 JSON_CONTAINS 写法，避免两套 SQL 漂移。
+                // 外层已要求 JOB_TYPE_MAP 含 CREATIVE_STREAM，路径存在，CONTAINS 对 CLOUD_TASK 只返回 0/1。
+                jsonContainsCondition(
+                    jsonField = ta.JOB_TYPE_MAP,
+                    value = paired.name,
+                    path = buildScopeJsonPath(effectiveScope)
+                ).not()
+            }
+            else -> null
+        }
     }
 
     /**
@@ -383,12 +432,8 @@ abstract class AtomBaseDao {
      * PIPELINE 为 AGENT_LESS；创作流（CREATIVE_STREAM）为 CLOUD_TASK；其他 scope 返回 null。
      */
     protected fun getAgentLessJobTypeForScope(serviceScope: ServiceScopeEnum?): String? {
-        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) } ?: return null
-        return when (normalizedScope) {
-            ServiceScopeEnum.PIPELINE.name -> JobTypeEnum.AGENT_LESS.name
-            ServiceScopeEnum.CREATIVE_STREAM.name -> JobTypeEnum.CLOUD_TASK.name
-            else -> null
-        }
+        val buildEnv = getBuildEnvJobTypeForScope(serviceScope) ?: return null
+        return JobTypeEnum.parseOrNull(buildEnv)?.pairedNonBuildEnv()?.name
     }
 
     /**

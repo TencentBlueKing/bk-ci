@@ -2012,7 +2012,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             concurrencyGroup = buildHistory.concurrencyGroup!!,
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
-        ).indexOfFirst { it.second == buildHistory.id } + 1
+        ).indexOfFirst { it.buildId == buildHistory.id } + 1
     } else {
         pipelineRuntimeService.getTotalBuildHistoryCount(
             projectId = projectId,

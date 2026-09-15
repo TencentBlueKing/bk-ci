@@ -66,4 +66,6 @@ interface Project {
     logoAddr?: string
     gray?: boolean
     routerTag?: string
+    favor?: boolean
+    projectScope?: number
 }

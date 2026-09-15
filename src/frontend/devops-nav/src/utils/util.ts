@@ -327,3 +327,14 @@ export function showLoginPopup () {
         )
     }
 }
+
+/**
+ * 收藏项置顶，并按项目名称排序；未收藏项保持原相对顺序
+ */
+export function reorderProjectListByFavor (list: any[] = []): any[] {
+    const favored = list
+        .filter(project => project.favor)
+        .sort((a, b) => (a.projectName || '').localeCompare(b.projectName || '', 'zh-CN'))
+    const others = list.filter(project => !project.favor)
+    return [...favored, ...others]
+}
