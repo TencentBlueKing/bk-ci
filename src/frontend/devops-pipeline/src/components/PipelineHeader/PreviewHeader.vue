@@ -42,7 +42,7 @@
             <span v-bk-tooltips="execTips">
                 <bk-button
                     theme="primary"
-                    :disabled="executeStatus || versionNotMatch || hasPacError || branchLoading"
+                    :disabled="executeStatus || execDisabled || hasPacError || branchLoading"
                     :loading="executeStatus || branchLoading"
                     v-if="!isDebugPipeline"
                     v-perm="{
@@ -65,7 +65,14 @@
 </template>
 
 <script>
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, bus } from '@/utils/bus'
+    import {
+        UPDATE_PREVIEW_PIPELINE_NAME,
+        UPDATE_STARTUP_INFO,
+        PAC_BRANCH_CHANGE,
+        UPDATE_PAC_ERROR_STATUS,
+        PAC_BRANCH_LOADING,
+        bus
+    } from '@/utils/bus'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
@@ -83,7 +90,8 @@
                 paramsValid: true,
                 previewPipelineName: '',
                 hasPacError: false,
-                branchLoading: false
+                branchLoading: false,
+                canManualStartup: true
             }
         },
         computed: {
@@ -91,8 +99,7 @@
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 isBranchVersion: 'atom/isBranchVersion',
-                isReleaseVersion: 'atom/isReleaseVersion',
-                canManualStartup: 'pipelines/canManualStartup'
+                isReleaseVersion: 'atom/isReleaseVersion'
             }),
             ...mapState('atom', [
                 'pipelineInfo'
@@ -131,15 +138,35 @@
             },
             versionNotMatch () {
                 try {
-                    return !this.isDebugPipeline && !this.isBranchVersion && !this.isReleaseVersion
+                    // 只有 RELEASED 版本才需要判断是否为最新发布版本
+                    if (this.isDebugPipeline || this.isBranchVersion) return false
+                    return !this.isReleaseVersion
+                } catch (error) {
+                    return false
+                }
+            },
+            execDisabled () {
+                try {
+                    // BRANCH 分支版本只需判断是否允许手动触发
+                    if (this.isBranchVersion) return !this.canManualStartup
+                    // RELEASED 版本：需为最新发布版本且允许手动触发
+                    return this.versionNotMatch || !this.canManualStartup
                 } catch (error) {
                     return false
                 }
             },
             execTips () {
+                // 非最新发布版本，提示版本不匹配
+                if (this.versionNotMatch) {
+                    return {
+                        content: this.$t('versionNotMatch'),
+                        disabled: false
+                    }
+                }
+                // 最新版本（含 BRANCH 分支版本）禁止手动触发时，提示非手动触发流水线
                 return {
-                    content: this.$t('versionNotMatch'),
-                    disabled: !this.versionNotMatch
+                    content: this.$t('pipelineManualDisable'),
+                    disabled: this.canManualStartup
                 }
             }
         },
@@ -157,11 +184,13 @@
         },
         mounted () {
             bus.$on(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            bus.$on(UPDATE_STARTUP_INFO, this.updateCanManualStartup)
             bus.$on(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
             bus.$on(PAC_BRANCH_LOADING, this.updateBranchLoading)
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            bus.$off(UPDATE_STARTUP_INFO, this.updateCanManualStartup)
             bus.$off(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
             bus.$off(PAC_BRANCH_LOADING, this.updateBranchLoading)
             this.selectPipelineVersion(null)
@@ -170,6 +199,9 @@
             ...mapActions('atom', ['selectPipelineVersion']),
             updatePipelineName (name) {
                 this.previewPipelineName = name
+            },
+            updateCanManualStartup (canManualStartup) {
+                this.canManualStartup = !!canManualStartup
             },
             updatePacErrorStatus (hasError) {
                 this.hasPacError = hasError
