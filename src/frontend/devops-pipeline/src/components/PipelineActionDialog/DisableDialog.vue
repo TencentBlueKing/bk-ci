@@ -21,12 +21,15 @@
                 <p>{{ $t(lock ? 'enablePipelineConfirmDesc' : 'disablePipelineConfirmDesc') }}</p>
             </template>
 
-            <!-- ↓↓↓ PAC 流水线：以下 4 种场景。场景判断条件（pacYamlDisabled）及禁用人/时间/原因等字段，
-                 均为 data 中的占位数据，语义待后端接口确认对应真实字段后再对接 ↓↓↓ -->
-            <template v-else-if="!lock && pacYamlDisabled">
-                <!-- 场景三：仅代码库 YAML 禁用，无法通过页面启用 -->
+            <!-- 场景一：仅YAML 禁用，不能直接启用 -->
+            <template v-else-if="!lock && isCurPipelineYamlLocked">
                 <h3>{{ $t('cannotEnablePipelineTips') }}</h3>
-                <p class="disable-pipeline-name">{{ $t('pipeline') }}：{{ pipelineName }}</p>
+                <p
+                    class="disable-pipeline-name"
+                    :title="pipelineName"
+                >
+                    {{ $t('pipeline') }}：{{ pipelineName }}
+                </p>
                 <div class="disable-pipeline-tip-box">
                     <i18n
                         tag="span"
@@ -52,10 +55,15 @@
                     </span>
                 </div>
             </template>
+            <!-- 禁用 PAC 流水线弹窗展示 -->
             <template v-else-if="!lock">
-                <!-- 场景一：禁用 PAC 流水线，需填写禁用原因 -->
                 <h3>{{ $t('disablePipelineConfirmTips') }}</h3>
-                <p class="disable-pipeline-name">{{ $t('pipeline') }}：{{ pipelineName }}</p>
+                <p
+                    class="disable-pipeline-name"
+                    :title="pipelineName"
+                >
+                    {{ $t('pipeline') }}：{{ pipelineName }}
+                </p>
                 <div class="disable-pipeline-tip-box">
                     {{ $t('disablePipelineConfirmDesc1') }}
                 </div>
@@ -65,7 +73,7 @@
                         <span class="pac-disable-reason-required">*</span>
                     </label>
                     <bk-input
-                        v-model="pacDisableForm.reason"
+                        v-model="disableReason"
                         :maxlength="120"
                         show-word-limit
                         :placeholder="$t('disableReasonPlaceholder')"
@@ -79,10 +87,15 @@
                     </p>
                 </div>
             </template>
-            <template v-else-if="pacYamlDisabled">
-                <!-- 场景四：UI 与 YAML 均被禁用，启用时只解除页面禁用 -->
+            <!-- 场景二：UI 与 YAML 均被禁用，启用时只解除页面禁用 -->
+            <template v-else-if="isCurPipelineYamlLocked">
                 <h3>{{ $t('enablePipelineConfirmTips') }}</h3>
-                <p class="disable-pipeline-name">{{ $t('pipeline') }}：{{ pipelineName }}</p>
+                <p
+                    class="disable-pipeline-name"
+                    :title="pipelineName"
+                >
+                    {{ $t('pipeline') }}：{{ pipelineName }}
+                </p>
                 <div class="disable-pipeline-tip-box">
                     <i18n
                         tag="span"
@@ -108,10 +121,15 @@
                     </span>
                 </div>
             </template>
+            <!-- 场景三：仅 UI 禁用，启用时展示禁用人/禁用时间/禁用原因 -->
             <template v-else>
-                <!-- 场景二：仅 UI 禁用，启用时展示禁用人/禁用时间/禁用原因 -->
                 <h3>{{ $t('enablePipelineConfirmTips') }}</h3>
-                <p class="disable-pipeline-name">{{ $t('pipeline') }}：{{ pipelineName }}</p>
+                <p
+                    class="disable-pipeline-name"
+                    :title="pipelineName"
+                >
+                    {{ $t('pipeline') }}：{{ pipelineName }}
+                </p>
                 <ul class="pac-disable-info-list">
                     <li>
                         <span class="pac-disable-info-label">{{ $t('disabledByLabel') }}</span>
@@ -127,11 +145,10 @@
                     </li>
                 </ul>
             </template>
-            <!-- ↑↑↑ PAC 流水线占位逻辑结束 ↑↑↑ -->
         </div>
         <footer slot="footer">
             <bk-button
-                v-if="!(pacEnabled && !lock && pacYamlDisabled)"
+                v-if="!onlyYamlDisabledScene"
                 :loading="disabling"
                 theme="primary"
                 @click="handleConfirm"
@@ -139,7 +156,7 @@
                 {{ $t(lock ? 'enable' : 'disable') }}
             </bk-button>
             <bk-button @click="handleCancel">
-                {{ $t((pacEnabled && !lock && pacYamlDisabled) ? 'close' : 'cancel') }}
+                {{ $t(onlyYamlDisabledScene ? 'close' : 'cancel') }}
             </bk-button>
         </footer>
     </bk-dialog>
@@ -148,7 +165,7 @@
 <script>
     import CopyIcon from '@/components/CopyIcon'
     import { mapActions } from 'vuex'
-    import { copyToClipboard } from '@/utils/util'
+    import { convertTime, copyToClipboard } from '@/utils/util'
     import Logo from '@/components/Logo'
 
     export default {
@@ -161,54 +178,66 @@
             pipelineName: String,
             value: Boolean,
             pacEnabled: Boolean,
-            lock: Boolean
+            yamlInfo: Object,
+            // UI 禁用态
+            lock: Boolean,
+            // 代码库 YAML 中声明 disable-pipeline: true 导致的禁用
+            yamlLocked: Boolean,
+            // UI 禁用人
+            lockedUser: String,
+            // UI 禁用时间
+            lockedTime: Number,
+            // UI 禁用原因
+            lockedReason: String
         },
         data () {
             return {
                 disabling: false,
                 // 禁用 PAC 流水线时填写的禁用原因（表单字段）
-                pacDisableForm: {
-                    reason: ''
-                },
-                // 提交禁用原因时的校验错误态
-                pacReasonError: false,
-
-                // ↓↓↓ TODO: 以下 4 个变量均为占位数据，代表 PAC 流水线 4 种场景判断/展示所需的真实字段，
-                // 待后端接口确认对应字段名与取值后，替换为真实数据绑定（不要再使用这里的假数据）。
-                // 代码库 YAML 中是否存在 disable-pipeline: true 导致的禁用，用于区分启用时的 3 种子场景
-                pacYamlDisabled: false,
-                // 已禁用（仅 UI 禁用场景）时展示的禁用人
-                pacDisabledByUser: '--',
-                // 已禁用（仅 UI 禁用场景）时展示的禁用时间
-                pacDisabledAt: '--',
-                // 已禁用（仅 UI 禁用场景）时展示的禁用原因
-                pacDisabledReason: '--',
-                // YAML 禁用场景下展示的文件路径（如 bk-ci/demo-pipeline / .ci/e2e-nightly.yml）
-                pacYamlFilePath: 'bk-ci/demo-pipeline / .ci/e2e-nightly.yml',
-                // 点击跳转图标时打开的代码库文件链接
-                pacYamlFileUrl: ''
-                // ↑↑↑ 占位数据结束 ↑↑↑
+                disableReason: '',
+                pacReasonError: false
+            }
+        },
+        computed: {
+            // 代码库 YAML 中声明 disable-pipeline: true 导致的禁用
+            isCurPipelineYamlLocked () {
+                return this.yamlLocked
+            },
+            // 已禁用（仅 UI 禁用场景）时展示的禁用人
+            pacDisabledByUser () {
+                return this.lockedUser || '--'
+            },
+            // 已禁用（仅 UI 禁用场景）时展示的禁用时间
+            pacDisabledAt () {
+                return convertTime(this.lockedTime)
+            },
+            // 已禁用（仅 UI 禁用场景）时展示的禁用原因
+            pacDisabledReason () {
+                return this.lockedReason || '--'
+            },
+            // YAML 禁用场景下展示的文件路径
+            pacYamlFilePath () {
+                return this.yamlInfo?.filePath || '--'
+            },
+            // 点击跳转图标时打开的代码库文件链接
+            pacYamlFileUrl () {
+                return this.yamlInfo?.fileUrl || ''
+            },
+            // PAC 流水线仅被代码库 YAML 禁用，无法在页面启用，只展示关闭按钮
+            onlyYamlDisabledScene () {
+                return this.pacEnabled && !this.lock && this.isCurPipelineYamlLocked
             }
         },
         methods: {
             ...mapActions('pipelines', ['lockPipeline']),
+            ...mapActions('atom', ['requestPipelineSummary']),
             handleConfirm () {
-                if (this.pacEnabled) {
-                    return this.handlePacConfirm()
-                }
-                return this.disablePipeline()
-            },
-            // TODO: PAC 流水线的禁用/启用接口后端暂未提供，可能与普通流水线接口不同，待接口确认后再补充真实调用逻辑
-            handlePacConfirm () {
-                if (!this.lock && !this.pacDisableForm.reason.trim()) {
+                // PAC 流水线禁用时需要填写禁用原因
+                if (this.pacEnabled && !this.lock && !this.disableReason.trim()) {
                     this.pacReasonError = true
                     return
                 }
-                console.warn('[DisableDialog] PAC 流水线禁用/启用接口待后端确认，当前未执行任何操作', {
-                    pipelineId: this.pipelineId,
-                    enable: this.lock,
-                    reason: this.pacDisableForm.reason
-                })
+                return this.disablePipeline()
             },
             // 复制 YAML 文件路径
             handleCopyYamlPath () {
@@ -230,8 +259,16 @@
                     await this.lockPipeline({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.pipelineId,
-                        enable: this.lock
+                        params: {
+                            enable: this.lock,
+                            // 仅 PAC 流水线禁用时需要传禁用原因
+                            ...(this.pacEnabled && !this.lock ? { lockedReason: this.disableReason } : {})
+                        }
                     })
+                    // PAC 流水线在详情页需重新拉取详情，刷新禁用人/禁用时间/禁用原因等展示数据
+                    if (this.pacEnabled && this.$route.params.pipelineId) {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t(this.lock ? 'enableSuc' : 'disableSuc', [this.pipelineName]),
@@ -251,6 +288,8 @@
                 }
             },
             handleCancel () {
+                this.pacReasonError = false
+                this.disableReason = ''
                 this.$emit('input', false)
                 this.$emit('close')
             }
@@ -281,6 +320,9 @@
         color: #63656e;
         font-size: 14px;
         text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .disable-pipeline-tip-box {
         margin: 16px 0 0;
@@ -361,5 +403,11 @@
     border-top: none !important;
     background-color: #fff !important;
     padding: 7px 24px 33px !important;
+}
+.lock-dialog h3 {
+    font-size: 20px;
+    line-height: 32px;
+    font-weight: 500;
+    color: #3c3c43;
 }
 </style>
