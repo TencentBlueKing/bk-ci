@@ -117,9 +117,8 @@ class ShardingDbBuildService @Autowired constructor(
             "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr' " +
             "LIMIT $maxBkDataSyncNum")
         val bkDataQueryData = queryBkData(bkDataQueryParam).data
-        // 2、统计各分区库、各分区表最近总构建量
-        val shardingBuildInfoMap = mutableMapOf<String, Long>()
-        val shardingRuleInfoMap = mutableMapOf<String, String>()
+        // 2、统计各分区库、各分区表最近总构建量，外层key为缓存key，内层key为路由规则
+        val shardingBuildInfoMap = mutableMapOf<String, MutableMap<String, Long>>()
         bkDataQueryData?.list?.forEach { dataMap ->
             val moduleCode = dataMap[MODULE_CODE] as String // 模块代码
             val ruleType = dataMap[TYPE] as String // 分片类型
@@ -143,22 +142,21 @@ class ShardingDbBuildService @Autowired constructor(
                     tableName = tableName
                 )
             }
-            shardingRuleInfoMap[buildNumRedisKey] = routingRule
-            if (shardingBuildInfoMap.containsKey(buildNumRedisKey)) {
-                // 该规则如果已经存在则追加数量
-                val value = shardingBuildInfoMap[buildNumRedisKey] ?: 0L
-                shardingBuildInfoMap[buildNumRedisKey] = value + totalBuildNum
-            } else {
-                shardingBuildInfoMap[buildNumRedisKey] = totalBuildNum
-            }
+            // 同一个缓存key下有多条路由规则的数据，须按路由规则分别累加，
+            // 否则各路由规则的构建量会被汇总成一个总量并写到最后一条规则的字段上
+            val ruleBuildNumMap = shardingBuildInfoMap.getOrPut(buildNumRedisKey) { mutableMapOf() }
+            // 该规则如果已经存在则追加数量
+            ruleBuildNumMap[routingRule] = (ruleBuildNumMap[routingRule] ?: 0L) + totalBuildNum
         }
         // 3、将各分区库、各分区表最近总构建量存入redis中
-        shardingBuildInfoMap.forEach { (buildNumRedisKey, totalBuildNum) ->
-            redisOperation.hset(
-                key = buildNumRedisKey,
-                hashKey = shardingRuleInfoMap[buildNumRedisKey]!!,
-                values = totalBuildNum.toString()
-            )
+        shardingBuildInfoMap.forEach { (buildNumRedisKey, ruleBuildNumMap) ->
+            ruleBuildNumMap.forEach { (routingRule, totalBuildNum) ->
+                redisOperation.hset(
+                    key = buildNumRedisKey,
+                    hashKey = routingRule,
+                    values = totalBuildNum.toString()
+                )
+            }
         }
     }
 
@@ -175,9 +173,8 @@ class ShardingDbBuildService @Autowired constructor(
             "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr' " +
             "LIMIT $maxBkDataSyncNum")
         val bkDataQueryData = queryBkData(bkDataQueryParam).data
-        // 2、统计各分区库、各分区表最近总构建项目数量
-        val shardingBuildProjectInfoMap = mutableMapOf<String, Long>()
-        val shardingRuleInfoMap = mutableMapOf<String, String>()
+        // 2、统计各分区库、各分区表最近总构建项目数量，外层key为缓存key，内层key为路由规则
+        val shardingBuildProjectInfoMap = mutableMapOf<String, MutableMap<String, Long>>()
         bkDataQueryData?.list?.forEach { dataMap ->
             val moduleCode = dataMap[MODULE_CODE] as String // 模块代码
             val ruleType = dataMap[TYPE] as String // 分片类型
@@ -201,22 +198,21 @@ class ShardingDbBuildService @Autowired constructor(
                     tableName = tableName
                 )
             }
-            shardingRuleInfoMap[buildProjectNumRedisKey] = routingRule
-            if (shardingBuildProjectInfoMap.containsKey(buildProjectNumRedisKey)) {
-                // 该规则如果已经存在则追加数量
-                val value = shardingBuildProjectInfoMap[buildProjectNumRedisKey] ?: 0L
-                shardingBuildProjectInfoMap[buildProjectNumRedisKey] = value + totalProjectNum
-            } else {
-                shardingBuildProjectInfoMap[buildProjectNumRedisKey] = totalProjectNum
-            }
+            // 同一个缓存key下有多条路由规则的数据，须按路由规则分别累加，
+            // 否则各路由规则的构建项目数量会被汇总成一个总量并写到最后一条规则的字段上
+            val ruleProjectNumMap = shardingBuildProjectInfoMap.getOrPut(buildProjectNumRedisKey) { mutableMapOf() }
+            // 该规则如果已经存在则追加数量
+            ruleProjectNumMap[routingRule] = (ruleProjectNumMap[routingRule] ?: 0L) + totalProjectNum
         }
         // 3、将各分区库、各分区表最近总构建项目数量存入redis中
-        shardingBuildProjectInfoMap.forEach { (buildNumRedisKey, totalProjectNum) ->
-            redisOperation.hset(
-                key = buildNumRedisKey,
-                hashKey = shardingRuleInfoMap[buildNumRedisKey]!!,
-                values = totalProjectNum.toString()
-            )
+        shardingBuildProjectInfoMap.forEach { (buildProjectNumRedisKey, ruleProjectNumMap) ->
+            ruleProjectNumMap.forEach { (routingRule, totalProjectNum) ->
+                redisOperation.hset(
+                    key = buildProjectNumRedisKey,
+                    hashKey = routingRule,
+                    values = totalProjectNum.toString()
+                )
+            }
         }
     }
 
@@ -231,6 +227,11 @@ class ShardingDbBuildService @Autowired constructor(
             // 查询接口出错打印告警日志
             logger.warn("[$bkDataQueryParam] queryData fail, bkDataQueryResult:$bkDataQueryResult")
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
+        val recordSize = bkDataQueryResult.data?.list?.size ?: 0
+        if (recordSize >= maxBkDataSyncNum) {
+            // 查询结果被maxBkDataSyncNum截断，没取到数据的路由规则会被当成零构建量而被优先分配，需要调大该配置
+            logger.warn("queryData may be truncated, recordSize:$recordSize|maxBkDataSyncNum:$maxBkDataSyncNum")
         }
         return bkDataQueryResult
     }
