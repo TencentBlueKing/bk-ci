@@ -768,6 +768,28 @@ class PipelineRuntimeService @Autowired constructor(
         terminateFlag: Boolean = false
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // #13581 先同步给未结束 Job 打取消标记，再发异步取消事件。
+        // Agent 认领插件是 HTTP 同步路径，若等 MQ 落地再标记，快插件已经切到下一步。
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containers = pipelineContainerService.listContainers(
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        containers.forEach { container ->
+            TaskUtils.markJobCancelFlag(
+                redisOperation = redisOperation,
+                buildId = buildId,
+                containerId = container.containerId
+            )
+        }
         // 记录该构建取消人信息
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
@@ -799,19 +821,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
         // 给未结束的job发送心跳监控事件
-        val statusSet = setOf(
-            BuildStatus.QUEUE,
-            BuildStatus.QUEUE_CACHE,
-            BuildStatus.DEPENDENT_WAITING,
-            BuildStatus.LOOP_WAITING,
-            BuildStatus.PREPARE_ENV,
-            BuildStatus.RUNNING
-        )
-        val containers = pipelineContainerService.listContainers(
-            projectId = projectId,
-            buildId = buildId,
-            statusSet = statusSet
-        )
         containers.forEach { container ->
             pipelineEventDispatcher.dispatch(
                 PipelineContainerAgentHeartBeatEvent(
