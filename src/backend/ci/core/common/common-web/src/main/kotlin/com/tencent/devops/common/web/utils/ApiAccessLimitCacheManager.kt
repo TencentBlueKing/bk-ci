@@ -50,14 +50,14 @@ object ApiAccessLimitCacheManager {
      * 项目缓存过期时间（秒）
      * 用于项目限制列表的 Set 缓存
      */
-    const val PROJECT_CACHE_EXPIRE_SECONDS = 30L
+    private const val PROJECT_CACHE_EXPIRE_SECONDS = 30L
 
     /**
      * 状态缓存过期时间（秒）
      * 用于单个流水线/项目状态的缓存
      * 注意：适当延长过期时间可以减少Redis查询压力，但会影响实时性
      */
-    const val STATUS_CACHE_EXPIRE_SECONDS = 5L
+    private const val STATUS_CACHE_EXPIRE_SECONDS = 5L
 
     /**
      * 状态缓存最大大小
@@ -66,6 +66,28 @@ object ApiAccessLimitCacheManager {
      */
     private const val STATUS_CACHE_MAX_SIZE = 50000L
 
+    /**
+     * 走集合快照的最小批量大小
+     *
+     * 单条查询（如迁移前置校验）继续逐条查 Redis，保持原有的精确度；
+     * 批量查询（如流水线列表页）走快照，避免流水线条数越多 Redis 往返越多
+     */
+    private const val SNAPSHOT_MIN_BATCH_SIZE = 2
+
+    /**
+     * 项目归档流水线集合允许加载的最大元素数
+     *
+     * 该集合只存放项目下正在归档迁移的流水线，正常情况下规模很小（绝大多数时候为空）。
+     * 一旦超过该阈值说明集合异常膨胀（如实例宕机导致残留），此时放弃快照回退到逐条查询，
+     * 避免一次性把超大 Set 拉到本地
+     */
+    private const val MIGRATING_SNAPSHOT_MAX_SIZE = 10000L
+
+    /**
+     * 项目归档流水线集合快照缓存的最大条目数，按 "moduleCode:projectId" 缓存
+     */
+    private const val MIGRATING_SNAPSHOT_CACHE_MAX_SIZE = 10000L
+
     // 迁移中流水线状态缓存（按流水线ID缓存，支持多个 moduleCode）
     // key: "moduleCode:pipelineId", value: Boolean (是否在迁移中)
     // 使用短过期时间（5秒），因为迁移状态变动频繁
@@ -73,6 +95,30 @@ object ApiAccessLimitCacheManager {
         .maximumSize(STATUS_CACHE_MAX_SIZE)
         .expireAfterWrite(STATUS_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
         .build()
+
+    // 项目归档流水线集合快照缓存
+    // key: "moduleCode:projectId", value: 该项目下正在迁移的流水线集合快照
+    // 过期时间与单条状态缓存保持一致（5秒），保证时效性不比逐条查询差
+    private val migratingPipelineSnapshotCache: Cache<String, MigratingPipelineSnapshot> = Caffeine.newBuilder()
+        .maximumSize(MIGRATING_SNAPSHOT_CACHE_MAX_SIZE)
+        .expireAfterWrite(STATUS_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
+        .build()
+
+    /**
+     * 项目下迁移中流水线集合的本地快照
+     *
+     * @param pipelineIds 项目下正在迁移的流水线ID集合，[available] 为 false 时该字段无意义
+     * @param available 快照是否可用，false 表示集合过大或加载失败，调用方需回退到逐条查询
+     */
+    private data class MigratingPipelineSnapshot(
+        val pipelineIds: Set<String>,
+        val available: Boolean
+    )
+
+    private val emptyMigratingSnapshot = MigratingPipelineSnapshot(pipelineIds = emptySet(), available = true)
+
+    private val unavailableMigratingSnapshot =
+        MigratingPipelineSnapshot(pipelineIds = emptySet(), available = false)
 
     // 项目权限限制列表缓存
     // 当 Redis Set 更新时，通过 invalidateProjectLimitCache() 立即清除缓存
@@ -90,10 +136,13 @@ object ApiAccessLimitCacheManager {
         .build()
 
     /**
-     * 构建迁移中流水线的缓存 key
+     * 构建迁移相关缓存的 key
+     *
+     * @param moduleCode 模块标识
+     * @param resourceId 资源ID，按流水线缓存状态时传流水线ID，按项目缓存归档集合快照时传项目ID
      */
-    private fun buildMigratingCacheKey(moduleCode: String, pipelineId: String): String {
-        return "$moduleCode:$pipelineId"
+    private fun buildMigratingCacheKey(moduleCode: String, resourceId: String): String {
+        return "$moduleCode:$resourceId"
     }
 
     /**
@@ -316,24 +365,137 @@ object ApiAccessLimitCacheManager {
     }
 
     /**
-     * 批量检查流水线是否在迁移中（优化版：按需缓存单个流水线状态）
+     * 加载项目归档流水线集合快照
      *
-     * 优化策略：
-     * 1. 不缓存整个 Set，而是按需缓存单个流水线的状态
-     * 2. 使用短过期时间（5秒），快速失效
-     * 3. 批量查询时，先检查缓存，未命中的再批量查询 Redis
+     * 先用一次 SCARD 判断项目的归档标识是否存在：集合为空说明项目下没有流水线处于归档中，
+     * 无需再拉取成员，直接得出"该项目所有流水线都不在迁移中"的结论。
      *
      * @param redisOperation Redis 操作对象
      * @param moduleCode 模块标识（如 SystemModuleEnum.PROCESS.name）
+     * @param projectId 项目ID
+     * @return 集合快照，集合异常膨胀时返回不可用快照，由调用方回退到逐条查询
+     */
+    private fun loadMigratingPipelineSnapshot(
+        redisOperation: RedisOperation,
+        moduleCode: String,
+        projectId: String
+    ): MigratingPipelineSnapshot {
+        val snapshot = loadMigratingPipelineSnapshot(
+            redisOperation = redisOperation,
+            redisKey = BkApiUtil.getMigratingPipelinesRedisKey(moduleCode, projectId)
+        )
+        if (snapshot.pipelineIds.isNotEmpty() || !snapshot.available) {
+            return snapshot
+        }
+        // 项目归档标识不存在时再兜底看一眼全局集合，兼容灰度期只写了全局集合的老实例，
+        // 待全部实例升级后可移除
+        return loadMigratingPipelineSnapshot(
+            redisOperation = redisOperation,
+            redisKey = BkApiUtil.getMigratingPipelinesRedisKey(moduleCode)
+        )
+    }
+
+    private fun loadMigratingPipelineSnapshot(
+        redisOperation: RedisOperation,
+        redisKey: String
+    ): MigratingPipelineSnapshot {
+        val size = redisOperation.getSetSize(redisKey)
+        if (size <= 0L) {
+            return emptyMigratingSnapshot
+        }
+        if (size > MIGRATING_SNAPSHOT_MAX_SIZE) {
+            logger.warn("Migrating pipeline set[$redisKey] size[$size] exceeds $MIGRATING_SNAPSHOT_MAX_SIZE")
+            return unavailableMigratingSnapshot
+        }
+        return MigratingPipelineSnapshot(
+            pipelineIds = redisOperation.getSetMembers(redisKey) ?: emptySet(),
+            available = true
+        )
+    }
+
+    /**
+     * 获取项目归档流水线集合快照（带本地缓存）
+     *
+     * @param redisOperation Redis 操作对象
+     * @param moduleCode 模块标识（如 SystemModuleEnum.PROCESS.name）
+     * @param projectId 项目ID
+     * @return 集合快照，加载失败时返回不可用快照，由调用方回退到逐条查询
+     */
+    private fun getMigratingPipelineSnapshot(
+        redisOperation: RedisOperation,
+        moduleCode: String,
+        projectId: String
+    ): MigratingPipelineSnapshot {
+        val cacheKey = buildMigratingCacheKey(moduleCode, projectId)
+        return try {
+            migratingPipelineSnapshotCache.get(cacheKey) {
+                loadMigratingPipelineSnapshot(redisOperation, moduleCode, projectId)
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to load migrating pipeline snapshot for project: $cacheKey", ignored)
+            unavailableMigratingSnapshot
+        }
+    }
+
+    /**
+     * 批量检查流水线是否在迁移中
+     *
+     * 优化策略：
+     * 1. 以项目的归档标识作为前置开关：项目归档流水线集合为空时，说明项目下没有流水线处于归档中，
+     *    所有流水线直接判定为非迁移中，不再逐条查询 Redis。
+     *    这是绝大多数请求的路径，Redis 往返次数与项目下流水线条数无关，
+     *    解决大项目下几千条流水线逐条查询 Redis 的耗时问题
+     * 2. 标识存在时才把项目的归档流水线集合（规模很小）拉到本地做内存判定
+     * 3. 单条查询仍走按流水线缓存的逐条查询，保持迁移前置校验的精确度
+     * 4. 快照过期时间与单条状态缓存一致（5秒），时效性不会变差；
+     *    且同一批流水线取自同一份快照，结果比逐条查询更一致
+     * 5. 快照不可用（集合异常膨胀或加载失败）时回退到逐条查询，保证功能可用
+     *
+     * @param redisOperation Redis 操作对象
+     * @param moduleCode 模块标识（如 SystemModuleEnum.PROCESS.name）
+     * @param projectId 项目ID
      * @param pipelineIds 流水线ID列表
      * @return Map<String, Boolean> 流水线ID -> 是否在迁移中
      */
     fun checkMigratingPipelines(
         redisOperation: RedisOperation,
         moduleCode: String,
+        projectId: String,
         pipelineIds: Array<String>
     ): Map<String, Boolean> {
-        val redisKey = BkApiUtil.getMigratingPipelinesRedisKey(moduleCode)
+        if (pipelineIds.isEmpty()) {
+            return emptyMap()
+        }
+        val projectRedisKey = BkApiUtil.getMigratingPipelinesRedisKey(moduleCode, projectId)
+        if (pipelineIds.size >= SNAPSHOT_MIN_BATCH_SIZE) {
+            val snapshot = getMigratingPipelineSnapshot(redisOperation, moduleCode, projectId)
+            if (snapshot.available) {
+                val migratingPipelineIds = snapshot.pipelineIds
+                return pipelineIds.associateWith { migratingPipelineIds.contains(it) }
+            }
+            return batchCheckMigratingStatus(redisOperation, moduleCode, projectRedisKey, pipelineIds)
+        }
+        val result = batchCheckMigratingStatus(redisOperation, moduleCode, projectRedisKey, pipelineIds)
+        if (result.containsValue(true)) {
+            return result
+        }
+        // 单条查询用于迁移前置校验，精确度优先：项目集合里查不到时再兜底看一眼全局集合，
+        // 兼容灰度期只写了全局集合的老实例，待全部实例升级后可移除
+        val pipelineId = pipelineIds.first()
+        return mapOf(
+            pipelineId to redisOperation.isMember(
+                key = BkApiUtil.getMigratingPipelinesRedisKey(moduleCode),
+                item = pipelineId
+            )
+        )
+    }
+
+    private fun batchCheckMigratingStatus(
+        redisOperation: RedisOperation,
+        moduleCode: String,
+        redisKey: String,
+        pipelineIds: Array<String>
+    ): Map<String, Boolean> {
         return batchCheckStatus(
             cache = migratingPipelineStatusCache,
             redisKey = redisKey,
@@ -349,11 +511,14 @@ object ApiAccessLimitCacheManager {
      * 当流水线的迁移状态更新时调用此方法，立即清除本地缓存
      *
      * @param moduleCode 模块标识（如 SystemModuleEnum.PROCESS.name）
+     * @param projectId 项目ID
      * @param pipelineId 流水线ID
      */
-    fun invalidateMigratingPipelineCache(moduleCode: String, pipelineId: String) {
+    fun invalidateMigratingPipelineCache(moduleCode: String, projectId: String, pipelineId: String) {
         val cacheKey = buildMigratingCacheKey(moduleCode, pipelineId)
         migratingPipelineStatusCache.invalidate(cacheKey)
+        // 项目归档标识同样需要失效，否则本实例在快照自然过期前仍会返回旧的迁移标识
+        migratingPipelineSnapshotCache.invalidate(buildMigratingCacheKey(moduleCode, projectId))
         logger.info("Invalidated migrating pipeline cache: $cacheKey")
     }
 

@@ -61,7 +61,6 @@
                         v-for="item in osTypeOptions"
                         :key="item.value"
                         :value="item.value"
-                        :disabled="item.disabled"
                     >
                         <div class="mr10">{{ item.label }}</div>
                     </bk-radio>
@@ -117,7 +116,6 @@
 <script>
     import { computed, watch } from 'vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
-    import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
     import { ENV_TYPE_MAP, OS_LABEL_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
@@ -125,7 +123,6 @@
         name: 'CreateEnvDialog',
         setup () {
             const { proxy } = useInstance()
-            const { isPersonalProject } = useEnvDetail()
 
             const {
                 isShow,
@@ -142,14 +139,10 @@
                 // ENV_TYPE_MAP.DEV,
                 // ENV_TYPE_MAP.DEVX
             ]))
-            const enabledOsType = computed(() => (
-                isPersonalProject.value ? 'WINDOWS' : 'LINUX'
-            ))
             const osTypeOptions = computed(() => (
                 Object.entries(OS_LABEL_MAP).map(([value, label]) => ({
                     label,
-                    value,
-                    disabled: enabledOsType.value !== value
+                    value
                 }))
             ))
             const formRules = computed(() => {
@@ -198,12 +191,6 @@
             watch(isShow, (val) => {
                 if (val && isCreateResType.value) {
                     envParams.value.envType = ENV_TYPE_MAP.CREATE
-                    envParams.value.os = ''
-                }
-            })
-
-            watch(enabledOsType, (enabledOs) => {
-                if (isCreateResType.value && envParams.value.os && envParams.value.os !== enabledOs) {
                     envParams.value.os = ''
                 }
             })
