@@ -98,7 +98,7 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
             projectId = projectId,
             concurrencyGroup = concurrencyGroup,
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
-        ).count { it.first == pipelineId }
+        ).count { it.pipelineId == pipelineId }
         if (queueCount <= maxQueueSize) {
             return 0
         }
