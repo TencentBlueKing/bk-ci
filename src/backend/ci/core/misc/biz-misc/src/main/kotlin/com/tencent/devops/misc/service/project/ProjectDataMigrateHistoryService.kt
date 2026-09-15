@@ -76,6 +76,7 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
             val result = ApiAccessLimitCacheManager.checkMigratingPipelines(
                 redisOperation = redisOperation,
                 moduleCode = SystemModuleEnum.PROCESS.name,
+                projectId = projectId,
                 pipelineIds = arrayOf(pipelineId)
             )
             result[pipelineId] ?: false
