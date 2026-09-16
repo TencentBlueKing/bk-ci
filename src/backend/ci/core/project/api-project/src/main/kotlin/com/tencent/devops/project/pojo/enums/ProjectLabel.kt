@@ -35,5 +35,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "项目标签")
 enum class ProjectLabel {
     @Schema(title = "IMATE")
-    COMMON_IMATE
+    COMMON_IMATE;
+
+    companion object {
+        private val builtInNames = entries.map { it.name }.toSet()
+
+        fun isBuiltIn(name: String): Boolean = name in builtInNames
+
+        fun builtInNames(): Set<String> = builtInNames
+    }
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -408,8 +409,14 @@ interface ServiceProjectResource {
     fun listProjectIdsByLabel(
         @Parameter(description = "项目标签", required = true)
         @QueryParam("label")
-        label: ProjectLabel
-    ): Result<List<String>>
+        label: ProjectLabel,
+        @Parameter(description = "页码，从1开始", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页条数，默认100，最大1000", required = false, example = "100")
+        @QueryParam("pageSize")
+        pageSize: Int? = 100
+    ): Result<Page<String>>
 
     @GET
     @Path("/getProjectListByProductId")

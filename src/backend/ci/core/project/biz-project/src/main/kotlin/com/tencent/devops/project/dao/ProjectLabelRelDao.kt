@@ -65,7 +65,7 @@ class ProjectLabelRelDao {
     fun batchAdd(dslContext: DSLContext, projectId: String, labelIdList: List<String>) {
         with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
             val bachExceute = dslContext.batch(
-                "INSERT INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
+                "INSERT IGNORE INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
             for (item in labelIdList) {
                 bachExceute.bind(UUIDUtil.generate(), item, projectId)
             }
@@ -86,6 +86,39 @@ class ProjectLabelRelDao {
             dslContext.deleteFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .execute()
+        }
+    }
+
+    fun deleteByProjectIdAndLabelIds(
+        dslContext: DSLContext,
+        projectId: String,
+        labelIds: Collection<String>
+    ) {
+        if (labelIds.isEmpty()) {
+            return
+        }
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LABEL_ID.`in`(labelIds))
+                .execute()
+        }
+    }
+
+    fun deleteByProjectIdExcludingLabelIds(
+        dslContext: DSLContext,
+        projectId: String,
+        excludeLabelIds: Collection<String>
+    ) {
+        if (excludeLabelIds.isEmpty()) {
+            deleteByProjectId(dslContext, projectId)
+            return
+        }
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LABEL_ID.notIn(excludeLabelIds))
+                .execute()
         }
     }
 
@@ -140,7 +173,7 @@ class ProjectLabelRelDao {
             return
         }
         val batchExecute = dslContext.batch(
-            "INSERT INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)"
+            "INSERT IGNORE INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)"
         )
         for (projectId in projectIds) {
             batchExecute.bind(UUIDUtil.generate(), labelId, projectId)

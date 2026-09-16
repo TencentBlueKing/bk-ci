@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -311,8 +312,18 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun listProjectIdsByLabel(label: ProjectLabel): Result<List<String>> {
-        return Result(projectService.listProjectIdsByLabel(label))
+    override fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<String>> {
+        return Result(
+            projectService.listProjectIdsByLabel(
+                label = label,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {

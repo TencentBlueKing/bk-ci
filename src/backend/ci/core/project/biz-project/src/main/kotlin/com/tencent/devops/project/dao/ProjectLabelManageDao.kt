@@ -35,6 +35,7 @@ import com.tencent.devops.model.project.tables.records.TProjectLabelRecord
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -66,17 +67,54 @@ class ProjectLabelManageDao {
         }
     }
 
-    fun listEnglishNamesByLabelName(dslContext: DSLContext, labelName: String): List<String> {
+    fun listIdsByNames(dslContext: DSLContext, names: Collection<String>): Set<String> {
+        if (names.isEmpty()) {
+            return emptySet()
+        }
+        return with(TProjectLabel.T_PROJECT_LABEL) {
+            dslContext.select(ID)
+                .from(this)
+                .where(LABEL_NAME.`in`(names))
+                .fetchSet(ID)
+        }
+    }
+
+    fun listEnglishNamesByLabelName(
+        dslContext: DSLContext,
+        labelName: String,
+        offset: Int,
+        limit: Int
+    ): List<String> {
         val label = TProjectLabel.T_PROJECT_LABEL
         val rel = TProjectLabelRel.T_PROJECT_LABEL_REL
         val project = TProject.T_PROJECT
-        return dslContext.select(project.ENGLISH_NAME)
+        return dslContext.selectDistinct(project.ENGLISH_NAME)
             .from(label)
             .join(rel).on(label.ID.eq(rel.LABEL_ID))
             .join(project).on(rel.PROJECT_ID.eq(project.PROJECT_ID))
             .where(label.LABEL_NAME.eq(labelName))
             .and(project.CHANNEL.`in`(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name))
+            .and(project.ENABLED.eq(true))
+            .and(project.IS_OFFLINED.eq(false))
+            .orderBy(project.ENGLISH_NAME.asc())
+            .limit(limit)
+            .offset(offset)
             .fetch(project.ENGLISH_NAME)
+    }
+
+    fun countEnglishNamesByLabelName(dslContext: DSLContext, labelName: String): Int {
+        val label = TProjectLabel.T_PROJECT_LABEL
+        val rel = TProjectLabelRel.T_PROJECT_LABEL_REL
+        val project = TProject.T_PROJECT
+        return dslContext.select(DSL.countDistinct(project.ENGLISH_NAME))
+            .from(label)
+            .join(rel).on(label.ID.eq(rel.LABEL_ID))
+            .join(project).on(rel.PROJECT_ID.eq(project.PROJECT_ID))
+            .where(label.LABEL_NAME.eq(labelName))
+            .and(project.CHANNEL.`in`(ProjectChannelCode.BS.name, ProjectChannelCode.PREBUILD.name))
+            .and(project.ENABLED.eq(true))
+            .and(project.IS_OFFLINED.eq(false))
+            .fetchOne(0, Int::class.java) ?: 0
     }
 
     fun countByName(dslContext: DSLContext, labelName: String): Int {

@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -221,10 +222,16 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
-        label: ProjectLabel
-    ): Result<List<String>> {
-        logger.info("OPENAPI_PROJECT_V4|$userId|listProjectIdsByLabel|$label")
-        return client.get(ServiceProjectResource::class).listProjectIdsByLabel(label)
+        label: ProjectLabel,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<String>> {
+        logger.info("OPENAPI_PROJECT_V4|$userId|listProjectIdsByLabel|$label|$page|$pageSize")
+        return client.get(ServiceProjectResource::class).listProjectIdsByLabel(
+            label = label,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getProjectListByProductId(

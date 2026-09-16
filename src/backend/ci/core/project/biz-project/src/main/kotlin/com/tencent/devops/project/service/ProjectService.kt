@@ -290,7 +290,11 @@ interface ProjectService {
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
 
-    fun listProjectIdsByLabel(label: ProjectLabel): List<String>
+    fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Page<String>
 
     fun getProjectListByProductId(
         productId: Int

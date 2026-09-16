@@ -37,31 +37,30 @@ import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
-import org.springframework.util.CollectionUtils
 
 @Suppress("ALL")
 class DefaultOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val projectLabelRelDao: ProjectLabelRelDao,
+    private val projectLabelManageService: ProjectLabelManageService,
     private val projectDispatcher: SampleEventDispatcher,
     private val redisOperation: RedisOperation,
     private val projectService: ProjectService
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
-    projectLabelRelDao = projectLabelRelDao,
+    projectLabelManageService = projectLabelManageService,
     redisOperation = redisOperation,
     projectDispatcher = projectDispatcher,
     projectService = projectService
@@ -104,12 +103,12 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
                     MessageUtil.getMessageByLocale(PROJECT_NAME_EXIST, I18nUtil.getLanguage(userId))
                 )
             }
-            // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
-            projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
-            val labelIdList = projectInfoRequest.labelIdList
-            if (!CollectionUtils.isEmpty(labelIdList)) {
-                projectLabelRelDao.batchAdd(transactionContext, projectId = projectId, labelIdList = labelIdList!!)
-            }
+            // 只替换非枚举标签，避免覆盖用户侧业务标签
+            projectLabelManageService.replaceNonEnumLabels(
+                dslContext = transactionContext,
+                projectUuid = projectId,
+                labelIdList = projectInfoRequest.labelIdList
+            )
             if (!projectInfoRequest.secrecyFlag) {
                 redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
             } else {

@@ -701,6 +701,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             subjectScopesStr = subjectScopesStr,
                             logoAddress = logoAddress
                         )
+                        projectLabelManageService.replaceIfPresent(
+                            dslContext = context,
+                            projectUuid = projectId,
+                            labels = projectUpdateInfo.labels
+                        )
                         projectDispatcher.dispatch(
                             ProjectUpdateBroadCastEvent(
                                 userId = userId,
@@ -753,11 +758,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
                 )
-                projectLabelManageService.replaceIfPresent(
-                    dslContext = dslContext,
-                    projectUuid = projectId,
-                    labels = projectUpdateInfo.labels
-                )
+                if (finalNeedApproval) {
+                    projectLabelManageService.replaceIfPresent(
+                        dslContext = dslContext,
+                        projectUuid = projectId,
+                        labels = projectUpdateInfo.labels
+                    )
+                }
                 if (!projectUpdateInfo.secrecy) {
                     redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 } else {
@@ -1805,8 +1812,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
-        return projectLabelManageService.listProjectIdsByLabel(label)
+    override fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int?,
+        pageSize: Int?
+    ): Page<String> {
+        return projectLabelManageService.listProjectIdsByLabel(
+            label = label,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {

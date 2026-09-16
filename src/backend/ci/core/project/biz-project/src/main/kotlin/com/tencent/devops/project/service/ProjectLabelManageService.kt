@@ -28,7 +28,9 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelManageDao
@@ -50,16 +52,42 @@ class ProjectLabelManageService @Autowired constructor(
 ) {
 
     /**
-     * 按标签查询业务项目 ID（englishName）。
-     * 标签无绑定项目时返回空列表。
+     * 按标签查询启用且未下线的业务项目 ID（englishName）。
+     * 标签无绑定项目时返回空分页。
      */
-    fun listProjectIdsByLabel(label: ProjectLabel): List<String> {
-        return projectLabelManageDao.listEnglishNamesByLabelName(dslContext, label.name)
+    fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Page<String> {
+        val validPage = if (page == null || page <= 0) PageUtil.DEFAULT_PAGE else page
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(
+            page = validPage,
+            pageSize = pageSize ?: DEFAULT_LABEL_QUERY_PAGE_SIZE,
+            maxPageSize = MAX_LABEL_QUERY_PAGE_SIZE
+        )
+        val count = projectLabelManageDao.countEnglishNamesByLabelName(dslContext, label.name)
+        val records = if (count <= 0) {
+            emptyList()
+        } else {
+            projectLabelManageDao.listEnglishNamesByLabelName(
+                dslContext = dslContext,
+                labelName = label.name,
+                offset = sqlLimit.offset,
+                limit = sqlLimit.limit
+            )
+        }
+        return Page(
+            page = validPage,
+            pageSize = sqlLimit.limit,
+            count = count.toLong(),
+            records = records
+        )
     }
 
     /**
-     * 更新项目标签。
-     * [labels] 为 null 时不改；空列表清空；非空则按枚举名查询已有字典后全量替换。
+     * 更新项目上的枚举业务标签，不影响 OP 维护的其它标签关联。
+     * [labels] 为 null 时不改；空列表只清空枚举标签；非空则按枚举名查询已有字典后替换枚举关联。
      * 字典中不存在的标签会直接报错，且不会先删除原关联。
      */
     fun replaceIfPresent(
@@ -128,12 +156,47 @@ class ProjectLabelManageService @Autowired constructor(
     }
 
     fun delete(labelId: String) {
-        projectLabelManageDao.getProjectLabel(dslContext, labelId) ?: throw ErrorCodeException(
+        val existed = projectLabelManageDao.getProjectLabel(dslContext, labelId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ID_INVALID,
             defaultMessage = "Project label [$labelId] does not exist"
         )
+        if (ProjectLabel.isBuiltIn(existed.labelName)) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ENUM_LABEL_CANNOT_DELETE,
+                params = arrayOf(existed.labelName),
+                defaultMessage = "Built-in project label [${existed.labelName}] cannot be deleted"
+            )
+        }
         projectLabelRelDao.deleteByLabelId(dslContext, labelId)
         projectLabelManageDao.delete(dslContext, labelId)
+    }
+
+    /**
+     * 全量替换项目上的非枚举标签，保留枚举业务标签关联。
+     */
+    fun replaceNonEnumLabels(
+        dslContext: DSLContext,
+        projectUuid: String,
+        labelIdList: List<String>?
+    ) {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val enumIds = listEnumLabelIds(context)
+            projectLabelRelDao.deleteByProjectIdExcludingLabelIds(
+                dslContext = context,
+                projectId = projectUuid,
+                excludeLabelIds = enumIds
+            )
+            val toAdd = labelIdList.orEmpty().distinct().filterNot { it in enumIds }
+            if (toAdd.isEmpty()) {
+                return@transaction
+            }
+            projectLabelRelDao.batchAdd(
+                dslContext = context,
+                projectId = projectUuid,
+                labelIdList = toAdd
+            )
+        }
     }
 
     /**
@@ -208,7 +271,12 @@ class ProjectLabelManageService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val labelIdList = labels.map { getExistingLabelId(context, it) }
-            projectLabelRelDao.deleteByProjectId(context, projectUuid)
+            val enumIds = listEnumLabelIds(context)
+            projectLabelRelDao.deleteByProjectIdAndLabelIds(
+                dslContext = context,
+                projectId = projectUuid,
+                labelIds = enumIds
+            )
             if (labelIdList.isEmpty()) {
                 return@transaction
             }
@@ -218,6 +286,10 @@ class ProjectLabelManageService @Autowired constructor(
                 labelIdList = labelIdList
             )
         }
+    }
+
+    private fun listEnumLabelIds(dslContext: DSLContext): Set<String> {
+        return projectLabelManageDao.listIdsByNames(dslContext, ProjectLabel.builtInNames())
     }
 
     private fun getExistingLabelId(dslContext: DSLContext, labelName: String): String {
@@ -234,5 +306,7 @@ class ProjectLabelManageService @Autowired constructor(
         private const val MAX_LABELS_PER_PROJECT = 20
         private const val MAX_LABEL_NAME_LENGTH = 45
         private const val MAX_BATCH_PROJECTS = 1000
+        private const val DEFAULT_LABEL_QUERY_PAGE_SIZE = 100
+        private const val MAX_LABEL_QUERY_PAGE_SIZE = 10000
     }
 }
