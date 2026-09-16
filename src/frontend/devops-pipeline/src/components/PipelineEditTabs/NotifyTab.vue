@@ -402,6 +402,7 @@
                 border: 1px solid #DCDEE5;
                 padding: 24px 24px 8px;
                 margin-bottom: 16px;
+                margin-right: 140px;
                 .operate-icons {
                     .notices-more-menu-trigger.notices-more-is-disabled {
                         cursor: not-allowed;
@@ -413,9 +414,6 @@
                     display: flex;
                     align-items: center;
                     font-size: 16px;
-                }
-                &:nth-child(odd) {
-                    margin-right: 140px;
                 }
                 .item-info {
                     display: flex;

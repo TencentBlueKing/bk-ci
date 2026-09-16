@@ -310,6 +310,7 @@
       "wechatGroupMarkdown": "使用Markdown格式",
       "noticeGroupPlaceholder": "请输入通知组，多个用英文逗号分隔",
       "noticeGroupTip": "多个通知组请用英文逗号分隔",
+      "emptyNoticeGroup": "通知组为空",
       "noticeUserPlaceholder": "请输入通知人，多个用英文逗号分隔",
       "noticeUserTip": "多个通知人请用英文逗号分隔",
       "noticeContentPlaceholder": "请输入通知内容，可使用变量",

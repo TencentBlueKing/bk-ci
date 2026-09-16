@@ -27,6 +27,24 @@
   /* 20px 24px */
   height: calc(100vh - 120px);
   overflow-y: auto;
+  font-size: var(--font-size-xs);
+  /* 12px */
+
+  :global(.bk-form-label) {
+    font-size: var(--font-size-xs);
+    /* 12px */
+  }
+
+  :global(.bk-checkbox-label) {
+    font-size: var(--font-size-xs);
+    /* 12px */
+  }
+
+  :global(input),
+  :global(textarea) {
+    font-size: var(--font-size-xs);
+    /* 12px */
+  }
 }
 
 .typeCheckboxGroup {
@@ -38,6 +56,44 @@
   :global(.bk-checkbox) {
     margin-left: 0;
   }
+}
+
+.groupCheckboxGroup {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: var(--spacing-sm);
+  /* 8px */
+
+  :global(.bk-checkbox) {
+    margin-left: 0;
+  }
+}
+
+.groupCheckbox {
+  display: flex;
+  align-items: flex-start;
+  width: 33.33%;
+  margin-right: 0;
+
+  :global(.bk-checkbox-label) {
+    white-space: normal;
+    word-break: break-all;
+    line-height: 18px;
+  }
+}
+
+.groupUserCount {
+  color: var(--color-text-tertiary);
+}
+
+.groupUserPopover {
+  max-width: 300px;
+  word-break: normal;
+  word-wrap: break-word;
+}
+
+.userTagInput {
+  width: 100%;
 }
 
 .switchRow {

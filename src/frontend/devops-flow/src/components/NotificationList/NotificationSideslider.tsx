@@ -3,12 +3,22 @@
  * A sideslider for adding/editing notification configurations
  */
 import type { Subscription } from '@/types/flow'
-import { Button, Checkbox, Form, Input, Sideslider, Switcher } from 'bkui-vue'
-import { computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { get } from '@/utils/http'
+import { Button, Checkbox, Form, Input, Popover, Sideslider, Switcher, TagInput } from 'bkui-vue'
+import { computed, defineComponent, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import styles from './NotificationSideslider.module.css'
 
+interface ProjectGroup {
+  groupId: string
+  groupName: string
+  users: string[]
+}
+
 // Notification type options
+const { Group: CheckboxGroup } = Checkbox
+
 const NOTIFICATION_TYPES = [
   { id: 'EMAIL', name: 'flow.content.emailNotice' },
   { id: 'WEWORK', name: 'flow.content.weworkNotice' },
@@ -16,7 +26,7 @@ const NOTIFICATION_TYPES = [
   { id: 'WEWORK_GROUP', name: 'flow.content.weworkGroup' },
   { id: 'VOICE', name: 'flow.content.voiceNotice' },
   // { id: 'WECHAT', name: 'flow.content.wechatNotice' },
-  { id: 'SMS', name: 'flow.content.smsNotice' },
+  // { id: 'SMS', name: 'flow.content.smsNotice' },
 ]
 
 // Default subscription object
@@ -61,8 +71,59 @@ export default defineComponent({
   emits: ['update:visible', 'save'],
   setup(props, { emit }) {
     const { t } = useI18n()
+    const route = useRoute()
     const { FormItem } = Form
     const formRef = ref<InstanceType<typeof Form> | null>(null)
+
+    // Project notification groups (same data source as pipeline notify setting)
+    const projectGroupAndUsers = ref<ProjectGroup[]>([])
+    const loadProjectGroupAndUsers = async () => {
+      const projectId = route.params.projectId as string
+      if (!projectId) return
+      try {
+        const res = await get<any[]>(
+          `/quality/api/user/groups/${projectId}/projectGroupAndUsers`,
+        )
+        // Filter out invalid/duplicate groups (e.g. IAM custom groups with empty name)
+        const groupMap = new Map<string, ProjectGroup>()
+        ;(res || []).forEach((item: any) => {
+          const groupId = item.groupId ?? ''
+          const groupName = item.groupName ?? ''
+          if (!groupId || !groupName || groupMap.has(groupId)) return
+          groupMap.set(groupId, { groupId, groupName, users: item.users ?? [] })
+        })
+        projectGroupAndUsers.value = [...groupMap.values()]
+      } catch {
+        projectGroupAndUsers.value = []
+      }
+    }
+    onMounted(loadProjectGroupAndUsers)
+
+    // Group options, keeping legacy manual-entered groups as extra options when editing
+    const groupOptions = computed<ProjectGroup[]>(() => {
+      const options = [...projectGroupAndUsers.value]
+      const ids = new Set(options.map((option) => option.groupId))
+      const extra = localNotification.value.groups
+        .filter((group) => !ids.has(group))
+        .map((group) => ({ groupId: group, groupName: group, users: [] as string[] }))
+      return [...options, ...extra]
+    })
+
+    // Candidate users for fuzzy search, collected from project notification group members
+    const userOptions = computed<Array<{ id: string; name: string }>>(() => {
+      const userMap = new Map<string, string>()
+      projectGroupAndUsers.value.forEach((group) => {
+        ;(group.users || []).forEach((user) => {
+          if (user && !userMap.has(user)) userMap.set(user, user)
+        })
+      })
+      return [...userMap].map(([id, name]) => ({ id, name }))
+    })
+
+    // Users as array for TagInput
+    const usersArray = computed(() =>
+      (localNotification.value.users || '').split(',').map((u) => u.trim()).filter(Boolean),
+    )
 
     // Local notification state
     const localNotification = ref<Subscription>(createDefaultSubscription())
@@ -142,19 +203,6 @@ export default defineComponent({
       handleClose()
     }
 
-    // Handle users input change
-    const handleUsersChange = (value: string) => {
-      localNotification.value.users = value
-    }
-
-    // Handle groups input change (comma separated)
-    const handleGroupsChange = (value: string) => {
-      localNotification.value.groups = value
-        .split(',')
-        .map((g) => g.trim())
-        .filter((g) => g)
-    }
-
     // Handle content change
     const handleContentChange = (value: string) => {
       localNotification.value.content = value
@@ -175,13 +223,8 @@ export default defineComponent({
       localNotification.value.wechatGroupMarkdownFlag = value
     }
 
-    // Get groups as string for display
-    const groupsAsString = computed(() => {
-      return localNotification.value.groups.join(', ')
-    })
-
     return () => (
-      <Sideslider isShow={props.visible} width={560} onClosed={handleClose}>
+      <Sideslider isShow={props.visible} width={640} onClosed={handleClose}>
         {{
           header: () => (
             <div class={styles.header}>
@@ -258,22 +301,57 @@ export default defineComponent({
 
                 {/* Notification Groups */}
                 <FormItem label={t('flow.content.noticeGroup')}>
-                  <Input
-                    modelValue={groupsAsString.value}
-                    placeholder={t('flow.content.noticeGroupPlaceholder')}
-                    onUpdate:modelValue={handleGroupsChange}
-                  />
-                  <div class={styles.fieldTip}>{t('flow.content.noticeGroupTip')}</div>
+                  <CheckboxGroup
+                    class={styles.groupCheckboxGroup}
+                    modelValue={localNotification.value.groups}
+                    onUpdate:modelValue={(val: string[]) => {
+                      localNotification.value.groups = val
+                    }}
+                  >
+                    {groupOptions.value.map((group) => (
+                      <Checkbox
+                        key={group.groupId}
+                        label={group.groupId}
+                        class={styles.groupCheckbox}
+                      >
+                        {group.groupName}
+                        <Popover placement="top">
+                          {{
+                            default: () => (
+                              <span class={styles.groupUserCount}>
+                                ({group.users.length})
+                              </span>
+                            ),
+                            content: () => (
+                              <div class={styles.groupUserPopover}>
+                                {group.users.length
+                                  ? group.users.join(';')
+                                  : t('flow.content.emptyNoticeGroup')}
+                              </div>
+                            ),
+                          }}
+                        </Popover>
+                      </Checkbox>
+                    ))}
+                  </CheckboxGroup>
                 </FormItem>
 
                 {/* Notification Users */}
                 <FormItem label={t('flow.content.noticeUser')}>
-                  <Input
-                    modelValue={localNotification.value.users}
+                  <TagInput
+                    class={styles.userTagInput}
+                    modelValue={usersArray.value}
+                    list={userOptions.value}
+                    searchKey={['id', 'name']}
+                    allowCreate
+                    allowAutoMatch
+                    copyable={false}
+                    separator=","
                     placeholder={t('flow.content.noticeUserPlaceholder')}
-                    onUpdate:modelValue={handleUsersChange}
+                    onChange={(val: string[]) => {
+                      localNotification.value.users = val.join(',')
+                    }}
                   />
-                  <div class={styles.fieldTip}>{t('flow.content.noticeUserTip')}</div>
                 </FormItem>
 
                 {/* Notification Content */}

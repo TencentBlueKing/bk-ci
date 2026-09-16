@@ -310,6 +310,7 @@
       "wechatGroupMarkdown": "Use Markdown format",
       "noticeGroupPlaceholder": "Enter notification groups, separated by commas",
       "noticeGroupTip": "Multiple notification groups should be separated by commas",
+      "emptyNoticeGroup": "Groups to be notified are empty",
       "noticeUserPlaceholder": "Enter notification users, separated by commas",
       "noticeUserTip": "Multiple notification users should be separated by commas",
       "noticeContentPlaceholder": "Enter notification content, variables can be used",
