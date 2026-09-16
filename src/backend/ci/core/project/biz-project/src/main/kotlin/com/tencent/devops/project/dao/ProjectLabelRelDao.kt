@@ -105,23 +105,6 @@ class ProjectLabelRelDao {
         }
     }
 
-    fun deleteByProjectIdExcludingLabelIds(
-        dslContext: DSLContext,
-        projectId: String,
-        excludeLabelIds: Collection<String>
-    ) {
-        if (excludeLabelIds.isEmpty()) {
-            deleteByProjectId(dslContext, projectId)
-            return
-        }
-        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(LABEL_ID.notIn(excludeLabelIds))
-                .execute()
-        }
-    }
-
     fun deleteByLabelId(dslContext: DSLContext, labelId: String) {
         with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
             dslContext.deleteFrom(this)

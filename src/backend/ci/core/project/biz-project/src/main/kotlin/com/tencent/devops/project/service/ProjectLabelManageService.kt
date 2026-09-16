@@ -172,34 +172,6 @@ class ProjectLabelManageService @Autowired constructor(
     }
 
     /**
-     * 全量替换项目上的非枚举标签，保留枚举业务标签关联。
-     */
-    fun replaceNonEnumLabels(
-        dslContext: DSLContext,
-        projectUuid: String,
-        labelIdList: List<String>?
-    ) {
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val enumIds = listEnumLabelIds(context)
-            projectLabelRelDao.deleteByProjectIdExcludingLabelIds(
-                dslContext = context,
-                projectId = projectUuid,
-                excludeLabelIds = enumIds
-            )
-            val toAdd = labelIdList.orEmpty().distinct().filterNot { it in enumIds }
-            if (toAdd.isEmpty()) {
-                return@transaction
-            }
-            projectLabelRelDao.batchAdd(
-                dslContext = context,
-                projectId = projectUuid,
-                labelIdList = toAdd
-            )
-        }
-    }
-
-    /**
      * 给一批项目追加同一个已有标签，不覆盖项目上的其他标签。
      * 已绑定该标签的项目会跳过。
      */

@@ -413,7 +413,7 @@ interface ServiceProjectResource {
         @Parameter(description = "页码，从1开始", required = false, example = "1")
         @QueryParam("page")
         page: Int? = 1,
-        @Parameter(description = "每页条数，默认100，最大1000", required = false, example = "100")
+        @Parameter(description = "每页条数，默认100，最大10000", required = false, example = "100")
         @QueryParam("pageSize")
         pageSize: Int? = 100
     ): Result<Page<String>>

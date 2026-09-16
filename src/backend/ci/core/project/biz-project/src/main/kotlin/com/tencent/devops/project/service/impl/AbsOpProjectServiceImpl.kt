@@ -39,13 +39,13 @@ import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.OpProjectService
-import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -53,12 +53,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
+import org.springframework.util.CollectionUtils
 
 @Suppress("ALL")
 abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val projectLabelManageService: ProjectLabelManageService,
+    private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
     private val projectDispatcher: SampleEventDispatcher,
     private val projectService: ProjectService
@@ -108,12 +109,16 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                     )
                 )
             }
-            // 只替换非枚举标签，避免覆盖用户侧业务标签
-            projectLabelManageService.replaceNonEnumLabels(
-                dslContext = transactionContext,
-                projectUuid = projectId,
-                labelIdList = projectInfoRequest.labelIdList
-            )
+            // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
+            projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
+            val labelIdList = projectInfoRequest.labelIdList
+            if (!CollectionUtils.isEmpty(labelIdList)) {
+                projectLabelRelDao.batchAdd(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    labelIdList = labelIdList!!
+                )
+            }
             if (!projectInfoRequest.secrecyFlag) {
                 redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
             } else {
