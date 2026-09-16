@@ -79,6 +79,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectFavorDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
@@ -119,6 +120,7 @@ import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
+import com.tencent.devops.project.util.ProjectFavorHelper
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import jakarta.ws.rs.NotFoundException
@@ -152,6 +154,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val profile: Profile,
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
+
+    @Autowired
+    @Lazy
+    private lateinit var projectFavorDao: ProjectFavorDao
 
     @Autowired
     @Lazy
@@ -348,6 +354,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             throw ignored
         }
+        if (createInfo.projectScope == ProjectScopeType.PERSONAL.value) {
+            projectFavorDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = createInfo.englishName
+            )
+        }
         return projectId
     }
 
@@ -448,7 +461,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The user don't have the permission to visit the project")
             throw OperationException("The user don't have the permission to visit the project")
         }
-        return projectVO
+        return projectVO.copy(
+            favor = projectFavorDao.exist(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = englishName
+            )
+        )
     }
 
     override fun show(userId: String, englishName: String): ProjectVO? {
@@ -490,7 +509,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         return projectInfo.copy(
             tipsStatus = tipsStatus,
-            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
+            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName },
+            favor = projectFavorDao.exist(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = englishName
+            )
         )
     }
 
@@ -1009,7 +1033,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             success = true
-            return projectsResp
+            val favorProjectIds = projectFavorDao.list(
+                dslContext = dslContext,
+                userId = userId
+            ).toSet()
+            return ProjectFavorHelper.attachAndSort(
+                projects = projectsResp,
+                favorProjectIds = favorProjectIds,
+                sortType = sortType,
+                collation = collation
+            )
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
@@ -1894,6 +1927,51 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName)
             ?: throw ProjectNotExistException("projectCode=$englishName")
         return record.hidden ?: false
+    }
+
+    override fun favor(userId: String, projectId: String, favor: Boolean): Boolean {
+        projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
+            ?: throw ErrorCodeException(
+                errorCode = PROJECT_NOT_EXIST,
+                params = arrayOf(projectId),
+                defaultMessage = "project - $projectId is not exist!"
+            )
+        val hasVisitPermission = getProjectFromAuth(userId).contains(projectId)
+        if (!hasVisitPermission) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PEM_CHECK_FAIL,
+                defaultMessage = "Do not have permission to operate this project"
+            )
+        }
+        return if (favor) {
+            projectFavorDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId
+            )
+            true
+        } else {
+            projectFavorDao.delete(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId
+            )
+            true
+        }
+    }
+
+    override fun migratePersonalProjectFavor(): Int {
+        val personalProjects = projectDao.listPersonalProjectIds(dslContext = dslContext)
+        var inserted = 0
+        personalProjects.forEach { (projectId, creator) ->
+            inserted += projectFavorDao.create(
+                dslContext = dslContext,
+                userId = creator,
+                projectId = projectId
+            )
+        }
+        logger.info("migrate personal project favor|size=${personalProjects.size}|inserted=$inserted")
+        return inserted
     }
 
     override fun updateHiddenStatus(englishName: String, hidden: Boolean) {

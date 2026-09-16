@@ -177,6 +177,8 @@ class UpgradeService @Autowired constructor(
 
         val goAgentCheckFun = fun() = currentGoAgentVersion != info.goAgentVersion
         val goAgentVersion = when {
+            // 如果存在稳定版本则不参与升级
+            agentPropsScope.checkInReleaseVersion(info.goAgentVersion) -> false
             currentGoAgentVersion.isBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
             agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) && goAgentCheckFun() -> true
