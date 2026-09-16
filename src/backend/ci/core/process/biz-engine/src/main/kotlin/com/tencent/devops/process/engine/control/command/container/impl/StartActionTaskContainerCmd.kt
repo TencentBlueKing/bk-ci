@@ -222,6 +222,9 @@ class StartActionTaskContainerCmd(
                 // 如果是要终止，则需要拿出当前任务进行终止
                 toDoTask = findRunningTask(containerContext, currentTask = t)
             } else if (t.status.isFailure() || t.status.isCancel()) {
+                if (t.status.isCancel() && containerContext.canceledTaskId == null) {
+                    containerContext.canceledTaskId = t.taskId
+                }
                 needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
@@ -416,7 +419,11 @@ class StartActionTaskContainerCmd(
             needSkip -> { // 检查条件跳过
                 var taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 // 将第一个因为构建取消而被设置为UNEXEC状态的插件，重置为取消，作为后续Container状态状态的抓手 #5048
-                if (containerContext.firstQueueTaskId == null && containerContext.buildStatus.isCancel()) {
+                // #13579 Job下已有取消态的插件时，该插件即为抓手，未开始执行的插件不能再被置为取消状态
+                if (containerContext.firstQueueTaskId == null &&
+                    containerContext.canceledTaskId == null &&
+                    containerContext.buildStatus.isCancel()
+                ) {
                     taskStatus = BuildStatus.CANCELED
                     containerContext.firstQueueTaskId = this.taskId
                 }

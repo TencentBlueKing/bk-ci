@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 
 /**
  * 插件 OS 映射工具类 —— 处理 T_ATOM.OS 和 T_ATOM.OS_MAP 字段的读写。
@@ -126,6 +127,34 @@ object AtomOsMapUtil {
     ): List<String> {
         val allOs = getAllOs(osValue, osMapValue)
         return allOs[jobType] ?: emptyList()
+    }
+
+    /**
+     * 列表接口按查询条件解析返回给前端的 OS。
+     *
+     * - 无编译环境 jobType（AGENT_LESS、CLOUD_TASK）：OS 恒为空数组
+     * - 编译环境：优先从 OS_MAP 取对应 jobType；AGENT（或 jobType/scope 均为空）回退 OS 字段
+     */
+    fun resolveOsForListItem(
+        osValue: String?,
+        osMapValue: String?,
+        jobType: String?,
+        serviceScope: ServiceScopeEnum?
+    ): List<String> {
+        val jobTypeEnum = JobTypeEnum.parseOrNull(jobType)
+        if (jobTypeEnum != null && !jobTypeEnum.isBuildEnv()) {
+            return emptyList()
+        }
+        val osMapKey = when {
+            jobTypeEnum != null -> jobTypeEnum.name
+            serviceScope == null || serviceScope == ServiceScopeEnum.PIPELINE -> null
+            serviceScope == ServiceScopeEnum.CREATIVE_STREAM -> JobTypeEnum.CREATIVE_STREAM.name
+            else -> null
+        }
+        if (osMapKey == null || osMapKey == JobTypeEnum.AGENT.name || osMapValue.isNullOrBlank()) {
+            return if (osValue.isNullOrBlank()) emptyList() else parseOsListJson(osValue)
+        }
+        return getOsByJobType(osMapKey, osValue, osMapValue)
     }
 
     /**

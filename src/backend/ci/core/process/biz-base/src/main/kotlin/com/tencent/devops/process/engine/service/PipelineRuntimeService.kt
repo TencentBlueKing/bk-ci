@@ -100,6 +100,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -267,33 +268,35 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
-    /** 根据状态信息获取并发组构建列表
-     * @return Pair( PIPELINE_ID , BUILD_ID )
-     */
+    /** 根据状态信息获取并发组构建列表 */
     fun getBuildInfoListByConcurrencyGroup(
         projectId: String,
         concurrencyGroup: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroup(
             dslContext = dslContext,
             projectId = projectId,
             concurrencyGroup = concurrencyGroup,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildInfoListByConcurrencyGroupNull(
         projectId: String,
         pipelineId: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroupNull(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
@@ -774,6 +777,28 @@ class PipelineRuntimeService @Autowired constructor(
         terminateFlag: Boolean = false
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // #13581 先同步给未结束 Job 打取消标记，再发异步取消事件。
+        // Agent 认领插件是 HTTP 同步路径，若等 MQ 落地再标记，快插件已经切到下一步。
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containers = pipelineContainerService.listContainers(
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        containers.forEach { container ->
+            TaskUtils.markJobCancelFlag(
+                redisOperation = redisOperation,
+                buildId = buildId,
+                containerId = container.containerId
+            )
+        }
         // 记录该构建取消人信息
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
@@ -805,19 +830,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
         // 给未结束的job发送心跳监控事件
-        val statusSet = setOf(
-            BuildStatus.QUEUE,
-            BuildStatus.QUEUE_CACHE,
-            BuildStatus.DEPENDENT_WAITING,
-            BuildStatus.LOOP_WAITING,
-            BuildStatus.PREPARE_ENV,
-            BuildStatus.RUNNING
-        )
-        val containers = pipelineContainerService.listContainers(
-            projectId = projectId,
-            buildId = buildId,
-            statusSet = statusSet
-        )
         containers.forEach { container ->
             pipelineEventDispatcher.dispatch(
                 PipelineContainerAgentHeartBeatEvent(
