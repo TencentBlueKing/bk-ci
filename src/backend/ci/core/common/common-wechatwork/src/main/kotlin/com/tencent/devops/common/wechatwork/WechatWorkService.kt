@@ -428,6 +428,9 @@ class WechatWorkService @Autowired constructor(
      *
      * markerDownFlag 为 true 时走 markdown 通道，为 false 时走 richtext 通道并通过 mentioned 节点 @成员。
      * markdown 通道不支持 @，richtext 通道不支持 markdown 语法。
+     * 后续可扩展（暂未实现）：
+     * - @all：mentioned 列表增加 "@all" 或等价能力
+     * - markdown 场景也可改为在 content 中拼接 <@userid>
      */
     fun sendByApp(
         chatId: String,
