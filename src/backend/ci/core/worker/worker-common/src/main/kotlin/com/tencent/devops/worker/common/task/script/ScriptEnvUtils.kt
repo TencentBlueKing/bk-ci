@@ -47,11 +47,10 @@ object ScriptEnvUtils {
     /** 多行输出文件的大小上限（字节），由 BatScriptUtil / ShellUtil 注入脚本侧预检 */
     const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
 
-    /** 合法变量名的正则片段：字母或下划线开头，仅含字母、数字、下划线 */
     const val VAR_NAME_SEGMENT = "[a-zA-Z_][a-zA-Z0-9_]*"
 
     /** 合法变量名的完整匹配正则 */
-    val varNameRegex = Regex("^${VAR_NAME_SEGMENT}$")
+    val varNameRegex = Regex("^$VAR_NAME_SEGMENT$")
     private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
