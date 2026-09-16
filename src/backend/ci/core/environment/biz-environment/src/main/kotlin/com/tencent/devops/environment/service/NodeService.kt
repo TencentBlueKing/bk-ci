@@ -395,7 +395,7 @@ class NodeService @Autowired constructor(
         val pageSize = 100
         var count = Long.MAX_VALUE
         val dataList = mutableListOf<Array<String?>>()
-        while (page * pageSize < count) {
+        while ((page - 1) * pageSize < count) {
             val res = listNew(
                 userId = userId,
                 projectId = projectId,
@@ -419,6 +419,7 @@ class NodeService @Autowired constructor(
                 createMode = createMode,
                 data = data
             )
+            if (res.records.isEmpty()) break
             count = res.count
             page++
             res.records.forEach { record ->
