@@ -92,19 +92,18 @@ class TxShardingRoutingRuleServiceImpl(
         if (!redisOperation.hasKey(dbBuildNumRedisKey) || !redisOperation.hasKey(dbBuildProjectNumRedisKey)) {
             logger.info("load shardingDbBuildCache fail,randomly select an available dataSource")
             // 如果没有成功同步构建数据则从可用的数据源中随机选择一个分配给该项目
-            val maxSizeIndex = dataSourceNames.size - 1
-            val randomIndex = (0..maxSizeIndex).random()
-            return dataSourceNames[randomIndex]
+            return dataSourceNames.random()
         }
-        val lock = RedisLock(redisOperation, DB_LOCK_KEY, 10)
+        // 锁按被更新的redis key收敛，避免不同集群、模块的规则分配相互阻塞
+        val lock = RedisLock(redisOperation, "$DB_LOCK_KEY:$dbBuildNumRedisKey", 10)
         try {
             lock.lock()
-            // 获取最小构建量数据源名称
+            // 获取最小构建量数据源名称，同步的构建数据不可用时退化为随机分配
             return getMinBuildNumComponentName(
                 componentNames = dataSourceNames,
                 buildNumRedisKey = dbBuildNumRedisKey,
                 buildProjectNumRedisKey = dbBuildProjectNumRedisKey
-            )
+            ) ?: dataSourceNames.random()
         } finally {
             // 释放锁
             lock.unlock()
@@ -126,6 +125,13 @@ class TxShardingRoutingRuleServiceImpl(
         val clusterName = CommonUtils.getDbClusterName()
         val moduleCode = tableShardingConfig.moduleCode
         val tableName = tableShardingConfig.tableName
+        val shardingNum = tableShardingConfig.shardingNum
+        if (shardingNum < 1) {
+            // 分表数量配置异常，降级到默认分表，与分片算法取不到规则时的兜底行为保持一致
+            logger.warn("invalid shardingNum($shardingNum)|$clusterName|$moduleCode|$tableName")
+            return "${tableName}_0"
+        }
+        val tableNames = (0 until shardingNum).map { "${tableName}_$it" }
         val tableBuildNumRedisKey = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = clusterName,
             moduleCode = moduleCode.name,
@@ -140,27 +146,21 @@ class TxShardingRoutingRuleServiceImpl(
             routingName = "$dataSourceName:$PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM_REDIS_KEY",
             tableName = tableName
         )
-        val shardingNum = tableShardingConfig.shardingNum
-        val maxSizeIndex = shardingNum - 1
         if (!redisOperation.hasKey(tableBuildNumRedisKey) || !redisOperation.hasKey(tableBuildProjectNumRedisKey)) {
             logger.info("load shardingDbBuildCache fail,randomly select an available table")
             // 如果没有成功同步构建数据则从可用的数据库表中随机选择一个分配给该项目
-            val randomIndex = (0..maxSizeIndex).random()
-            return "${tableName}_$randomIndex"
+            return tableNames.random()
         }
-        val lock = RedisLock(redisOperation, TABLE_LOCK_KEY, 10)
+        // 锁按被更新的redis key收敛，避免不同数据源、分表的规则分配相互阻塞
+        val lock = RedisLock(redisOperation, "$TABLE_LOCK_KEY:$tableBuildNumRedisKey", 10)
         try {
             lock.lock()
-            // 获取最小构建量数据库表名称
-            val tableNames = mutableListOf<String>()
-            for (index in 0..maxSizeIndex) {
-                tableNames.add("${tableName}_$index")
-            }
+            // 获取最小构建量数据库表名称，同步的构建数据不可用时退化为随机分配
             return getMinBuildNumComponentName(
                 componentNames = tableNames,
                 buildNumRedisKey = tableBuildNumRedisKey,
                 buildProjectNumRedisKey = tableBuildProjectNumRedisKey
-            )
+            ) ?: tableNames.random()
         } finally {
             // 释放锁
             lock.unlock()
@@ -172,58 +172,39 @@ class TxShardingRoutingRuleServiceImpl(
      * @param componentNames 组件名称集合
      * @param buildNumRedisKey 构建量redis缓存key值
      * @param buildProjectNumRedisKey 构建项目数量redis缓存key值
-     * @return 最小构建量组件名称
+     * @return 最小构建量组件名称，同步的构建数据不足以计算时返回null
      */
     private fun getMinBuildNumComponentName(
         componentNames: List<String>,
         buildNumRedisKey: String,
         buildProjectNumRedisKey: String
-    ): String {
-        // 1、找出低于平均构建量的最小构建量组件
+    ): String? {
+        if (componentNames.isEmpty()) {
+            return null
+        }
+        // 一次性取回整个hash，避免在锁内按组件逐个查询redis
+        val buildNumMap = redisOperation.hentries(buildNumRedisKey)
+        val buildProjectNumMap = redisOperation.hentries(buildProjectNumRedisKey)
+        // 1、找出最小构建量组件，构建量相同时取集合中靠前的组件
         var minBuildNumComponentName = componentNames[0]
+        var minBuildNumComponentBuildNum = buildNumMap.numOf(minBuildNumComponentName)
         var totalBuildNum = 0L // 总构建量
         var totalBuildProjectNum = 0L // 总构建项目数量
-        var minBuildNumComponentBuildNum = redisOperation.hget(
-            key = buildNumRedisKey,
-            hashKey = minBuildNumComponentName
-        )?.toLong() ?: 0L
-        var minBuildNumComponentBuildProjectNum = redisOperation.hget(
-            key = buildProjectNumRedisKey,
-            hashKey = minBuildNumComponentName
-        )?.toLong() ?: 0L
-        // 从redis中获取组件构建数据和构建项目数据来得到最小构建量组件
         componentNames.forEach { componentName ->
-            var changeFlag = false // 最小构建量组件是否需要调整标识
-            val componentBuildNum = if (componentName != minBuildNumComponentName) {
-                val buildNum = redisOperation.hget(
-                    key = buildNumRedisKey,
-                    hashKey = componentName
-                )?.toLong() ?: 0L
-                if (buildNum < minBuildNumComponentBuildNum) {
-                    // 构建量小于当前最小构建量组件的构建量，则需要重新赋值调整当前最小构建量组件的数据
-                    minBuildNumComponentBuildNum = buildNum
-                    changeFlag = true
-                }
-                buildNum
-            } else {
-                minBuildNumComponentBuildNum
+            val componentBuildNum = buildNumMap.numOf(componentName)
+            if (componentBuildNum < minBuildNumComponentBuildNum) {
+                // 构建量小于当前最小构建量组件的构建量，则需要重新赋值调整当前最小构建量组件的数据
+                minBuildNumComponentName = componentName
+                minBuildNumComponentBuildNum = componentBuildNum
             }
             totalBuildNum += componentBuildNum
-            val componentBuildProjectNum = if (componentName != minBuildNumComponentName) {
-                val buildProjectNum = redisOperation.hget(
-                    key = buildProjectNumRedisKey,
-                    hashKey = componentName
-                )?.toLong() ?: 0L
-                if (changeFlag) {
-                    // 最小构建量组件构建项目数量需要重新赋值调整
-                    minBuildNumComponentName = componentName
-                    minBuildNumComponentBuildProjectNum = buildProjectNum
-                }
-                buildProjectNum
-            } else {
-                minBuildNumComponentBuildProjectNum
-            }
-            totalBuildProjectNum += componentBuildProjectNum
+            totalBuildProjectNum += buildProjectNumMap.numOf(componentName)
+        }
+        if (totalBuildProjectNum < 1) {
+            // hasKey只能判断缓存存在，无法保证缓存里有当前组件的数据（如分表数量调整后规则名称对不上）
+            // 此时无法计算项目平均构建量，交由调用方退化为随机分配，避免除零异常导致规则分配整体失败
+            logger.warn("no available buildProjectNum data|$buildProjectNumRedisKey|$componentNames")
+            return null
         }
         // 更新redis缓存数据以便能为下一个项目分配最近一段时间构建量最低的组件
         val projectAvgBuildNum = totalBuildNum / totalBuildProjectNum
@@ -237,8 +218,15 @@ class TxShardingRoutingRuleServiceImpl(
         redisOperation.hset(
             key = buildProjectNumRedisKey,
             hashKey = minBuildNumComponentName,
-            values = (minBuildNumComponentBuildProjectNum + 1).toString()
+            values = (buildProjectNumMap.numOf(minBuildNumComponentName) + 1).toString()
         )
         return minBuildNumComponentName
+    }
+
+    /**
+     * 获取组件在缓存数据中对应的数量，数据缺失或格式非法时按0处理
+     */
+    private fun Map<String, String>.numOf(componentName: String): Long {
+        return this[componentName]?.toLongOrNull() ?: 0L
     }
 }

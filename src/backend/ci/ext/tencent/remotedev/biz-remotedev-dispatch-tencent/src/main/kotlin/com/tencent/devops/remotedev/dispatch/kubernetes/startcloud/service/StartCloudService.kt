@@ -109,6 +109,10 @@ class StartCloudService @Autowired constructor(
         return Result(startCloudInterfaceService.getWorkspaceInfoByEid(eid))
     }
 
+    override fun getWorkspaceInfoByEids(eids: List<String>): Result<Map<String, WorkspaceInfo>> {
+        return Result(startCloudInterfaceService.getWorkspaceInfoByEids(eids))
+    }
+
     override fun getTaskInfoByUid(uid: String): Result<TaskStatus?> {
         return Result(startCloudInterfaceService.getTaskInfoByUid(uid))
     }

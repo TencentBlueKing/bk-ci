@@ -28,7 +28,6 @@ import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
-import java.util.stream.Collectors
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -143,16 +142,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         val end = (start + pageSizeNotNull).coerceAtMost(filteredResources.size)
         val pagedResources = filteredResources.subList(start, end)
 
-        val envStatusMap: Map<String, String> = pagedResources
+        val availableEnvIds = pagedResources
             .filter { it.status == Constansts.CGS_AVAIABLE_STATUS && !it.envId.isNullOrBlank() }
-            .parallelStream()
-            .map { resource ->
-                val envStatus = kotlin.runCatching {
-                    workspaceCommon.getWorkspaceInfoByEid(resource.envId!!)?.status?.name
-                }.getOrNull() ?: ENV_STATUS_UNKNOWN
-                resource.envId!! to envStatus
-            }
-            .collect(Collectors.toMap({ it.first }, { it.second }, { a, _ -> a }))
+            .map { it.envId!! }
+            .distinct()
+        val infoMap = workspaceCommon.getWorkspaceInfoByEids(availableEnvIds)
+        val envStatusMap: Map<String, String> = availableEnvIds.associateWith { envId ->
+            infoMap[envId]?.status?.name ?: ENV_STATUS_UNKNOWN
+        }
 
         val records = pagedResources.map { item ->
             val map = JsonUtil.toMap(item).toMutableMap()

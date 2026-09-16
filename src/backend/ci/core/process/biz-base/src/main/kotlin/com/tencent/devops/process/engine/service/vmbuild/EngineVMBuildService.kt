@@ -79,6 +79,7 @@ import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.BuildProcessRestartAction
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
@@ -120,6 +121,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Suppress(
@@ -154,6 +156,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineProgressRateService: PipelineProgressRateService,
     private val projectCacheService: ProjectCacheService
 ) {
+
+    @Value("\${pipeline.vmStarted.terminateOnContainerRestart:true}")
+    private val terminateOnContainerRestart: Boolean = true
 
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
@@ -240,14 +245,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         throw OperationException("vmName($vmName) has been shutdown")
                     }
                     val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
-                    // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
-                    Preconditions.checkTrue(
-                        condition = startUpVMTask?.status?.isFinish() != true || retryCount > 0,
-                        exception = ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
-                            params = arrayOf(c.startVMStatus ?: "")
+                    /**
+                     * 处理同一个Job第二次上报环境就绪的情况，说明原构建进程已消失，一般是容器重启或被驱逐。
+                     * 也可能是异常情况下同一个Job被拉起了两个容器，两个构建进程会互相抢任务，
+                     * 无法判断哪一个可信，因此一律终止构建并拒绝本次上报
+                     */
+                    if (startUpVMTask?.status?.isFinish() == true && retryCount <= 0) {
+                        handleBuildProcessRestart(
+                            container = container,
+                            startUpVMTask = startUpVMTask,
+                            vmName = vmName,
+                            startVMStatus = c.startVMStatus
                         )
-                    )
+                    }
                     // #4518 填充构建机环境变量、构建上下文、获取超时时间
                     val (containerEnv, context, timeoutMills) = getContainerContext(
                         container = c,
@@ -577,6 +587,75 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         return true
     }
 
+    private fun handleBuildProcessRestart(
+        container: PipelineBuildContainer,
+        startUpVMTask: PipelineBuildTask,
+        vmName: String,
+        startVMStatus: String?
+    ) {
+        val vmSeqId = container.containerId
+        val buildId = container.buildId
+        val action = if (terminateOnContainerRestart) {
+            BuildProcessRestartAction.TERMINATE
+        } else {
+            BuildProcessRestartAction.REJECT
+        }
+        LOG.warn(
+            "ENGINE|$buildId|BUILD_VM_RESTART_$action|${container.projectId}|j($vmSeqId)|$vmName|" +
+                "executeCount(${container.executeCount})"
+        )
+        if (action == BuildProcessRestartAction.TERMINATE) {
+            terminateOnBuildProcessRestart(container, startUpVMTask)
+        }
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_REPEATEDLY_START_VM,
+            params = arrayOf(startVMStatus ?: "")
+        )
+    }
+
+    /**
+     * 构建进程重启时直接终止Job，避免等待心跳超时
+     */
+    private fun terminateOnBuildProcessRestart(container: PipelineBuildContainer, startUpVMTask: PipelineBuildTask) {
+        val reason = printContainerRestartLog(container)
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "build_process_restart",
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                userId = startUpVMTask.starter,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerId = container.containerId,
+                containerHashId = container.containerHashId,
+                containerType = container.containerType,
+                actionType = ActionType.TERMINATE,
+                executeCount = container.executeCount,
+                reason = reason,
+                errorTypeName = ErrorType.BUILD_MACHINE.name,
+                errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
+            )
+        )
+    }
+
+    /**
+     * 把容器重启原因打印到Set Up Job位置，并返回该提示，供失败原因复用
+     */
+    private fun printContainerRestartLog(container: PipelineBuildContainer): String {
+        val message = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_BUILD_CONTAINER_RESTARTED)
+        val tag = VMUtils.genStartVMTaskId(container.containerId)
+        buildLogPrinter.addRedLine(
+            buildId = container.buildId,
+            message = message,
+            tag = tag,
+            containerHashId = container.containerHashId,
+            executeCount = container.executeCount,
+            jobId = null,
+            stepId = tag
+        )
+        return message
+    }
+
     private fun getStartUpVMTask(
         projectId: String,
         buildId: String,
@@ -604,8 +683,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val finalBuildStatus = if (buildStatus.isFinish()) {
             buildStatus
         } else {
-            val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
-            val cancelFlag = redisOperation.isMember(cancelTaskSetKey, startUpVMTask.taskId)
+            val cancelFlag = TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)
             val runCondition = startUpVMTask.additionalOptions?.runCondition
             val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
             // 判断开机插件是否被取消
@@ -651,10 +729,45 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = allTasks.firstOrNull()
                 ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
 
+            // #13581 取消过程中禁止认领普通插件。插件执行很快时，当前插件完成后 Agent 会立刻 claim 下一个，
+            // 若此时取消集合已被清掉或取消瞬间没有 RUNNING 插件，Job 会继续跑完。
+            // PRE_TASK_FAILED_EVEN_CANCEL / 关机与结束节点仍按原逻辑认领，保证 finally 语义和资源回收。
+            if (shouldSkipClaimWhenJobCanceling(task, buildId, vmSeqId)) {
+                LOG.info(
+                    "ENGINE|$buildId|BC_CANCEL_WAIT|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}"
+                )
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
+            }
+
             return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
         } finally {
             containerIdLock.unlock()
         }
+    }
+
+    /**
+     * Job 取消中时，Agent 不能再认领普通插件。
+     * 仍允许认领：即使取消也执行的插件、引擎侧任务（关机等）、以及 end 节点。
+     */
+    private fun shouldSkipClaimWhenJobCanceling(
+        task: PipelineBuildTask,
+        buildId: String,
+        vmSeqId: String
+    ): Boolean {
+        if (!TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)) {
+            return false
+        }
+        val failedEvenCancel = task.additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        if (failedEvenCancel) {
+            return false
+        }
+        if (task.taskAtom.isNotBlank()) {
+            return false
+        }
+        if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) {
+            return false
+        }
+        return true
     }
 
     private fun claim(
@@ -1030,7 +1143,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val buildId = buildInfo.buildId
         val taskId = result.taskId
         val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
-        val cancelFlag = redisOperation.isMember(cancelTaskSetKey, taskId)
+        // #13581 除了当前插件 ID，Job 级取消标记也视为取消。避免快插件在取消集合写入前已切到下一插件。
+        val cancelFlag = redisOperation.isMember(cancelTaskSetKey, taskId) ||
+            TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)
         val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         if (cancelFlag && failedEvenCancelFlag) {
             redisOperation.set(

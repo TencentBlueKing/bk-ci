@@ -820,7 +820,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomStatus = atom.atomStatus,
             sensitiveParams = params?.joinToString(","),
             canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props),
-            serviceScope = ServiceScopeUtil.parseServiceScopes(atom.serviceScope).ifEmpty { null }
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atom.serviceScope).ifEmpty { null },
+            osMap = resolveAtomRunInfoOsMap(atom)
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -870,20 +871,24 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
         if (!atomRunInfoJson.isNullOrEmpty()) {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-            if (atomName != null) atomRunInfo.atomName = atomName
-            atomRunInfo.jobType = atomRecord.jobType
-            atomRunInfo.jobTypeMap = atomRecord.jobTypeMap
-            if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
-            if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
-            val params = getAtomSensitiveParams(props ?: atomRecord.props)
-            atomRunInfo.sensitiveParams = params?.joinToString(",")
-            atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
-            atomRunInfo.serviceScope = serviceScope?.let { ServiceScopeUtil.normalizeList(it) }?.ifEmpty { null }
+            val effectiveProps = props ?: atomRecord.props
+            val updatedAtomRunInfo = atomRunInfo.copy(
+                atomName = atomName ?: atomRecord.name,
+                atomStatus = atomRecord.atomStatus,
+                jobType = atomRecord.jobType,
+                jobTypeMap = atomRecord.jobTypeMap,
+                buildLessRunFlag = buildLessRunFlag ?: atomRecord.buildLessRunFlag,
+                inputTypeInfos = generateInputTypeInfos(effectiveProps),
+                sensitiveParams = effectiveProps?.let { getAtomSensitiveParams(it)?.joinToString(",") },
+                canPauseBeforeRun = effectiveProps?.let { getAtomCanPauseBeforeRun(it) } ?: false,
+                serviceScope = resolveAtomRunInfoServiceScope(serviceScope, atomRecord.serviceScope),
+                osMap = resolveAtomRunInfoOsMap(atomRecord)
+            )
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,
                 hashKey = version,
-                values = JsonUtil.toJson(atomRunInfo)
+                values = JsonUtil.toJson(updatedAtomRunInfo)
             )
             val updateLatestAtomCacheFlag = if (latestFlag == true) {
                 true
@@ -896,10 +901,33 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 redisOperation.hset(
                     key = atomRunInfoKey,
                     hashKey = VersionUtils.convertLatestVersion(version),
-                    values = JsonUtil.toJson(atomRunInfo)
+                    values = JsonUtil.toJson(updatedAtomRunInfo)
                 )
             }
         }
+    }
+
+    /**
+     * 缓存中 osMap 必须写非 null（无 OS 声明时写空 map），才能和「字段缺失=旧缓存」的判据区分开。
+     */
+    private fun resolveAtomRunInfoOsMap(atomRecord: TAtomRecord): Map<String, List<String>> {
+        return AtomOsMapUtil.getAllOs(
+            osValue = atomRecord.os,
+            osMapValue = atomRecord.osMap,
+            jobTypeValue = atomRecord.jobType
+        )
+    }
+
+    private fun resolveAtomRunInfoServiceScope(
+        serviceScope: List<String>?,
+        serviceScopeJson: String?
+    ): List<String>? {
+        val scopes = if (serviceScope != null) {
+            ServiceScopeUtil.normalizeList(serviceScope)
+        } else {
+            ServiceScopeUtil.parseServiceScopes(serviceScopeJson)
+        }
+        return scopes.ifEmpty { null }
     }
 
     @Suppress("UNCHECKED_CAST")

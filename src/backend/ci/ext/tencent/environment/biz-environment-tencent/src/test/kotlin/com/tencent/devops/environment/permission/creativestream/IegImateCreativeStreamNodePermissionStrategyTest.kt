@@ -25,13 +25,12 @@ class IegImateCreativeStreamNodePermissionStrategyTest {
         )
         every { nodeTypeService.getNodeType(PROJECT_ID, NODE_ID) } returns CreativeStreamNodeType.IEG_IMATE
         every { nodeTypeService.getWorkspaceName(PROJECT_ID, NODE_ID) } returns WORKSPACE_NAME
-        every { nodeTypeService.getCreatedUser(PROJECT_ID, NODE_ID) } returns "other"
     }
 
     @Test
     fun `admin role grants edit and delete`() {
         every {
-            shareAccessService.getRole(USER_ID, WORKSPACE_NAME, "other")
+            shareAccessService.getRole(USER_ID, WORKSPACE_NAME)
         } returns IegImateShareAccessService.ADMIN_ROLE
 
         assertTrue(check(AuthPermission.VIEW))
@@ -42,7 +41,7 @@ class IegImateCreativeStreamNodePermissionStrategyTest {
 
     @Test
     fun `member role grants view use list only`() {
-        every { shareAccessService.getRole(USER_ID, WORKSPACE_NAME, "other") } returns "user"
+        every { shareAccessService.getRole(USER_ID, WORKSPACE_NAME) } returns "user"
 
         assertTrue(check(AuthPermission.VIEW))
         assertTrue(check(AuthPermission.USE))
@@ -53,7 +52,7 @@ class IegImateCreativeStreamNodePermissionStrategyTest {
 
     @Test
     fun `null role denies permission`() {
-        every { shareAccessService.getRole(USER_ID, WORKSPACE_NAME, "other") } returns null
+        every { shareAccessService.getRole(USER_ID, WORKSPACE_NAME) } returns null
 
         assertFalse(check(AuthPermission.USE))
     }
@@ -63,22 +62,26 @@ class IegImateCreativeStreamNodePermissionStrategyTest {
         every { nodeTypeService.getWorkspaceName(PROJECT_ID, NODE_ID) } returns null
 
         assertFalse(check(AuthPermission.USE))
-        verify(exactly = 0) { shareAccessService.getRole(any(), any(), any()) }
+        verify(exactly = 0) { shareAccessService.getRole(any(), any()) }
     }
 
     @Test
-    fun `prefetch only queries ieg imate non-owner nodes`() {
+    fun `prefetch only queries ieg imate nodes`() {
         every { nodeTypeService.getNodeType(PROJECT_ID, 1L) } returns CreativeStreamNodeType.IEG_IMATE
         every { nodeTypeService.getNodeType(PROJECT_ID, 2L) } returns CreativeStreamNodeType.CLOUD_DESKTOP
-        every { nodeTypeService.getCreatedUser(PROJECT_ID, 1L) } returns "other"
+        every { nodeTypeService.getNodeType(PROJECT_ID, 3L) } returns CreativeStreamNodeType.IEG_IMATE
         every { nodeTypeService.getWorkspaceName(PROJECT_ID, 1L) } returns "ws-1"
+        every { nodeTypeService.getWorkspaceName(PROJECT_ID, 3L) } returns "ws-3"
         every { shareAccessService.prefetchRoles(any()) } returns Unit
 
-        strategy.prefetch(userId = USER_ID, projectId = PROJECT_ID, nodeIds = listOf(1L, 2L))
+        strategy.prefetch(userId = USER_ID, projectId = PROJECT_ID, nodeIds = listOf(1L, 2L, 3L))
 
         verify {
             shareAccessService.prefetchRoles(
-                listOf(WorkspaceShareRoleQueryItem(userId = USER_ID, workspaceName = "ws-1"))
+                listOf(
+                    WorkspaceShareRoleQueryItem(userId = USER_ID, workspaceName = "ws-1"),
+                    WorkspaceShareRoleQueryItem(userId = USER_ID, workspaceName = "ws-3")
+                )
             )
         }
     }

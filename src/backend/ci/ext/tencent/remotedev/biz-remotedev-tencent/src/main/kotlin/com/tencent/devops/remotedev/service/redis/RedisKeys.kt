@@ -3,6 +3,9 @@ package com.tencent.devops.remotedev.service.redis
 object RedisKeys {
     const val REDIS_CALL_LIMIT_KEY_PREFIX = "remotedev:callLimit"
 
+    // 软件安装回调一次性 token 前缀，value 绑定 workspaceName，短期有效
+    const val SOFTWARE_CALLBACK_TOKEN_PREFIX = "remotedev:sw_cb:"
+
     // 基础配置
     const val CLIENT_VERSION_LIMIT = "remotedev:clientVersionLimit" // 客户端版本限制
     const val CLIENT_VERSION_LIMIT_PROJECT_PREFIX = "remotedev:clientVersionLimit:" // 项目级客户端版本限制前缀

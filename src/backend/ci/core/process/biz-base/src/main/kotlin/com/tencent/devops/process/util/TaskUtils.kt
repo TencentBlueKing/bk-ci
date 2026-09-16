@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import java.util.concurrent.TimeUnit
 
 object TaskUtils {
 
@@ -172,6 +173,12 @@ object TaskUtils {
     fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
 
     /**
+     * Job 级取消标记。不能用具体插件 taskId：插件执行很快时，取消瞬间可能没有 RUNNING 插件，
+     * 但 Agent 仍会继续认领后续插件，导致 Job 取消不掉。
+     */
+    const val JOB_CANCEL_FLAG = "JOB_CANCEL_FLAG"
+
+    /**
      * 获取当前构建取消任务ID集合的redis键
      */
     fun getCancelTaskIdRedisKey(
@@ -184,6 +191,31 @@ object TaskUtils {
         } else {
             "CANCEL_TASK_IDS_${buildId}_${containerId}_set"
         }
+    }
+
+    /**
+     * 给指定 Job 写入取消标记，供 Agent 认领/完成插件时判断是否需要停止。
+     * 标记按 Job 维度隔离，避免误伤尚未启动的 finally Stage。
+     */
+    fun markJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ) {
+        val key = getCancelTaskIdRedisKey(buildId, containerId, false)
+        redisOperation.addSetValue(key, JOB_CANCEL_FLAG)
+        redisOperation.expire(key, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+    }
+
+    /**
+     * 当前 Job 是否处于取消中。只要取消集合还在（含 Job 标记或被记录的插件 ID），即视为取消中。
+     */
+    fun isJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ): Boolean {
+        return redisOperation.hasKey(getCancelTaskIdRedisKey(buildId, containerId, false))
     }
 
     /**
