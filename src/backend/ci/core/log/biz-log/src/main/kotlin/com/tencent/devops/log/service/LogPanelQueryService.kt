@@ -48,7 +48,9 @@ class LogPanelQueryService(
                 levels = levels,
                 pageSize = pageSize,
                 direction = LogPanelEsDao.Direction.LATEST,
-                cursorLineNo = null
+                cursorLineNo = null,
+                sinceTimestamp = null,
+                lookbackMs = null
             )
         )
     }
@@ -78,7 +80,9 @@ class LogPanelQueryService(
                 levels = levels,
                 pageSize = pageSize,
                 direction = LogPanelEsDao.Direction.BEFORE,
-                cursorLineNo = endLineNo
+                cursorLineNo = endLineNo,
+                sinceTimestamp = null,
+                lookbackMs = null
             )
         )
     }
@@ -95,7 +99,9 @@ class LogPanelQueryService(
         executeCount: Int?,
         levels: String?,
         pageSize: Int?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        sinceTimestamp: Long? = null,
+        lookbackMs: Long? = null
     ): Result<QueryLogPanel> {
         authorize(userId, projectId, pipelineId, buildId, archiveFlag)
         return Result(
@@ -108,7 +114,9 @@ class LogPanelQueryService(
                 levels = levels,
                 pageSize = pageSize,
                 direction = LogPanelEsDao.Direction.AFTER,
-                cursorLineNo = startLineNo
+                cursorLineNo = startLineNo,
+                sinceTimestamp = sinceTimestamp,
+                lookbackMs = lookbackMs
             )
         )
     }
@@ -138,7 +146,9 @@ class LogPanelQueryService(
         levels: String?,
         pageSize: Int?,
         direction: LogPanelEsDao.Direction,
-        cursorLineNo: Long?
+        cursorLineNo: Long?,
+        sinceTimestamp: Long?,
+        lookbackMs: Long?
     ): QueryLogPanel {
         val parsedLevels = LogPanelLevel.parseList(levels)
         val size = LogPanelQueryBuilder.normalizePageSize(pageSize)
@@ -153,10 +163,15 @@ class LogPanelQueryService(
                 levels = parsedLevels,
                 pageSize = size,
                 direction = direction,
-                cursorLineNo = cursorLineNo
+                cursorLineNo = cursorLineNo,
+                sinceTimestamp = sinceTimestamp,
+                lookbackMs = lookbackMs
             )
         } else {
-            fallback(buildId, tag, subTag, jobId, executeCount, parsedLevels, size, direction, cursorLineNo)
+            fallback(
+                buildId, tag, subTag, jobId, executeCount, parsedLevels, size, direction,
+                cursorLineNo, sinceTimestamp, lookbackMs
+            )
         }
     }
 
@@ -173,7 +188,9 @@ class LogPanelQueryService(
         levels: List<LogPanelLevel>,
         pageSize: Int,
         direction: LogPanelEsDao.Direction,
-        cursorLineNo: Long?
+        cursorLineNo: Long?,
+        sinceTimestamp: Long?,
+        lookbackMs: Long?
     ): QueryLogPanel {
         val debug = LogPanelLevel.DEBUG in levels
         val singleType = levels.singleOrNull()?.toEsLogType()

@@ -85,7 +85,9 @@ class UserLogPanelResourceImpl(
         executeCount: Int?,
         levels: String?,
         pageSize: Int?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        sinceTimestamp: Long?,
+        lookbackMs: Long?
     ): Result<QueryLogPanel> = logPanelQueryService.after(
         userId = userId,
         projectId = projectId,
@@ -98,6 +100,8 @@ class UserLogPanelResourceImpl(
         executeCount = executeCount,
         levels = levels,
         pageSize = pageSize,
-        archiveFlag = archiveFlag
+        archiveFlag = archiveFlag,
+        sinceTimestamp = sinceTimestamp,
+        lookbackMs = lookbackMs
     )
 }

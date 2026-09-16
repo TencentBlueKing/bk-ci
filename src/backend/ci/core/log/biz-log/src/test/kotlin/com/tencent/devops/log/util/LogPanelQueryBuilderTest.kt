@@ -36,7 +36,42 @@ class LogPanelQueryBuilderTest {
         assertEquals(1, LogPanelQueryBuilder.normalizePageSize(0))
         assertEquals(1000, LogPanelQueryBuilder.normalizePageSize(9999))
         assertEquals(3000, LogPanelQueryBuilder.BACKFILL_MAX)
+        assertEquals(15_000L, LogPanelQueryBuilder.normalizeLookbackMs(null))
+        assertEquals(0L, LogPanelQueryBuilder.normalizeLookbackMs(-1))
+        assertEquals(60_000L, LogPanelQueryBuilder.normalizeLookbackMs(999_000))
     }
+
+    @Test
+    fun afterLookbackDisabledWithoutSinceTimestamp() {
+        val window = LogPanelQueryBuilder.resolveAfterLookback(100, null, null)
+        assertEquals(100, window.cursorLineNo)
+        assertEquals(null, window.backfillFromTimestamp)
+        assertEquals(false, window.enabled)
+    }
+
+    @Test
+    fun afterLookbackUsesSinceTimestampMinusWindow() {
+        val window = LogPanelQueryBuilder.resolveAfterLookback(11834, 1_789_113_675_000L, 15_000L)
+        assertEquals(true, window.enabled)
+        assertEquals(1_789_113_660_000L, window.backfillFromTimestamp)
+    }
+
+    @Test
+    fun mergeByLineNoInsertsLateVisibleRowsInOrder() {
+        val shown = line(11834, 2000, "fetch-764")
+        val late = line(11831, 1500, "finish-dist")
+        val newer = line(11835, 2100, "fetch-765")
+        val merged = LogPanelQueryBuilder.mergeByLineNo(listOf(shown, newer, late, shown))
+        assertEquals(listOf(11831L, 11834L, 11835L), merged.map { it.lineNo })
+        assertEquals("finish-dist", merged.first().message)
+    }
+
+    private fun line(no: Long, ts: Long, msg: String) = com.tencent.devops.common.log.pojo.LogPanelLine(
+        lineNo = no,
+        timestamp = ts,
+        message = msg,
+        level = "INFO"
+    )
 
     @Test
     fun includeAllTypesOnlyWhenFourLevels() {

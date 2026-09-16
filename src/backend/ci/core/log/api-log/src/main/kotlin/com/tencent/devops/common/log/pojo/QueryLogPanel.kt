@@ -29,7 +29,7 @@ data class QueryLogPanel(
     val logs: List<LogPanelLine> = emptyList(),
     @get:Schema(title = "本页首行号（存储行号，仅作游标）", required = false)
     val startLineNo: Long? = null,
-    @get:Schema(title = "本页末行号（存储行号，仅作游标）", required = false)
+    @get:Schema(title = "本页末行号；after 跟随应用 max(lineNo)，不要用列表最后一项（排序是 timestamp）", required = false)
     val endLineNo: Long? = null,
     @get:Schema(title = "当前过滤条件下的命中总数，latest 精确；before/after 可为 0 由前端累加", required = true)
     val matchedTotal: Long = 0,

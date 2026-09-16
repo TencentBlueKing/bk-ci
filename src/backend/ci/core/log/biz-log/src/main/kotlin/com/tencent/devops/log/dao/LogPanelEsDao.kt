@@ -24,6 +24,7 @@ import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.core.TimeValue
+import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.builder.SearchSourceBuilder
@@ -52,7 +53,9 @@ class LogPanelEsDao(
         levels: List<LogPanelLevel>,
         pageSize: Int,
         direction: Direction,
-        cursorLineNo: Long?
+        cursorLineNo: Long?,
+        sinceTimestamp: Long? = null,
+        lookbackMs: Long? = null
     ): QueryLogPanel {
         val finished = logStatusService.isFinish(
             buildId = buildId,
@@ -90,6 +93,8 @@ class LogPanelEsDao(
                 pageSize = pageSize,
                 direction = direction,
                 cursorLineNo = cursorLineNo,
+                sinceTimestamp = sinceTimestamp,
+                lookbackMs = lookbackMs,
                 finished = finished,
                 subTags = subTags
             )
@@ -120,9 +125,72 @@ class LogPanelEsDao(
         pageSize: Int,
         direction: Direction,
         cursorLineNo: Long?,
+        sinceTimestamp: Long?,
+        lookbackMs: Long?,
         finished: Boolean,
         subTags: List<String>?
     ): QueryLogPanel {
+        val filter = baseFilter(buildId, tag, subTag, containerHashId, executeCount, levels)
+        when (direction) {
+            Direction.BEFORE -> filter.must(QueryBuilders.rangeQuery("lineNo").lt(cursorLineNo ?: 0))
+            Direction.AFTER -> filter.must(QueryBuilders.rangeQuery("lineNo").gt(cursorLineNo ?: 0))
+            Direction.LATEST -> Unit
+        }
+        val desc = direction != Direction.AFTER
+        val (lines, total) = executeSearch(buildId, indexName, filter, pageSize, desc)
+        var merged = lines
+        if (direction == Direction.AFTER) {
+            val lookback = LogPanelQueryBuilder.resolveAfterLookback(
+                cursorLineNo = cursorLineNo ?: 0L,
+                sinceTimestamp = sinceTimestamp,
+                lookbackMs = lookbackMs
+            )
+            if (lookback.enabled) {
+                val backfillQuery = baseFilter(buildId, tag, subTag, containerHashId, executeCount, levels)
+                backfillQuery.must(QueryBuilders.rangeQuery("lineNo").lte(lookback.cursorLineNo))
+                backfillQuery.must(QueryBuilders.rangeQuery("timestamp").gte(lookback.backfillFromTimestamp))
+                val (backfill, _) = executeSearch(buildId, indexName, backfillQuery, pageSize, desc = false)
+                merged = LogPanelQueryBuilder.mergeByLineNo(backfill + lines)
+            }
+        }
+        val moreInDir = total > lines.size
+        val startLineNo = merged.firstOrNull()?.lineNo
+        val endLineNo = merged.maxOfOrNull { it.lineNo }
+        val hasBefore = when (direction) {
+            Direction.AFTER -> true
+            Direction.BEFORE, Direction.LATEST -> moreInDir
+        } && merged.isNotEmpty()
+        val hasAfter = when (direction) {
+            Direction.BEFORE -> true
+            Direction.AFTER -> moreInDir || !finished
+            Direction.LATEST -> !finished
+        }
+        val empty = merged.isEmpty() && direction == Direction.LATEST
+        val matchedTotal = if (direction == Direction.LATEST) total else 0L
+        return QueryLogPanel(
+            buildId = buildId,
+            finished = finished,
+            cleaned = false,
+            status = if (empty) LogStatus.EMPTY.status else LogStatus.SUCCEED.status,
+            subTags = subTags,
+            logs = merged,
+            startLineNo = startLineNo,
+            endLineNo = endLineNo,
+            matchedTotal = matchedTotal,
+            hasBefore = hasBefore && startLineNo != null,
+            hasAfter = hasAfter,
+            levels = levels.map { it.name }
+        )
+    }
+
+    private fun baseFilter(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        levels: List<LogPanelLevel>
+    ): BoolQueryBuilder {
         val boolQuery = QueryBuilders.boolQuery()
             .must(QueryBuilders.matchQuery("buildId", buildId).operator(Operator.AND))
             .must(QueryBuilders.matchQuery("executeCount", executeCount ?: 1).operator(Operator.AND))
@@ -138,21 +206,26 @@ class LogPanelEsDao(
         if (!LogPanelQueryBuilder.includeAllTypes(levels)) {
             boolQuery.must(QueryBuilders.termsQuery("logType", LogPanelQueryBuilder.esLogTypeNames(levels)))
         }
-        when (direction) {
-            Direction.BEFORE -> boolQuery.must(QueryBuilders.rangeQuery("lineNo").lt(cursorLineNo ?: 0))
-            Direction.AFTER -> boolQuery.must(QueryBuilders.rangeQuery("lineNo").gt(cursorLineNo ?: 0))
-            Direction.LATEST -> Unit
-        }
-        val desc = direction != Direction.AFTER
+        return boolQuery
+    }
+
+    private fun executeSearch(
+        buildId: String,
+        indexName: String,
+        query: BoolQueryBuilder,
+        pageSize: Int,
+        desc: Boolean
+    ): Pair<List<LogPanelLine>, Long> {
+        val order = if (desc) SortOrder.DESC else SortOrder.ASC
         val source = SearchSourceBuilder()
-            .query(boolQuery)
+            .query(query)
             .docValueField("lineNo")
             .docValueField("timestamp")
             .size(pageSize)
             .trackTotalHits(true)
             .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
-            .sort("timestamp", if (desc) SortOrder.DESC else SortOrder.ASC)
-            .sort("lineNo", if (desc) SortOrder.DESC else SortOrder.ASC)
+            .sort("timestamp", order)
+            .sort("lineNo", order)
         val request = SearchRequest(indexName).preference(routingPreference(buildId)).source(source)
         val client = logClient.hashClient(buildId)
         val response = try {
@@ -174,35 +247,7 @@ class LogPanelEsDao(
         }.toMutableList()
         if (desc) lines.reverse()
         val total = response.hits.totalHits?.value ?: lines.size.toLong()
-        val moreInDir = total > lines.size
-        val startLineNo = lines.firstOrNull()?.lineNo
-        val endLineNo = lines.lastOrNull()?.lineNo
-        val hasBefore = when (direction) {
-            Direction.AFTER -> true
-            Direction.BEFORE, Direction.LATEST -> moreInDir
-        } && lines.isNotEmpty()
-        val hasAfter = when (direction) {
-            Direction.BEFORE -> true
-            Direction.AFTER -> moreInDir || !finished
-            Direction.LATEST -> !finished
-        }
-        val empty = lines.isEmpty() && direction == Direction.LATEST
-        // latest 无 lineNo 范围，totalHits 即过滤后全集；before/after 带范围，交由前端累加
-        val matchedTotal = if (direction == Direction.LATEST) total else 0L
-        return QueryLogPanel(
-            buildId = buildId,
-            finished = finished,
-            cleaned = false,
-            status = if (empty) LogStatus.EMPTY.status else LogStatus.SUCCEED.status,
-            subTags = subTags,
-            logs = lines,
-            startLineNo = startLineNo,
-            endLineNo = endLineNo,
-            matchedTotal = matchedTotal,
-            hasBefore = hasBefore && startLineNo != null,
-            hasAfter = hasAfter,
-            levels = levels.map { it.name }
-        )
+        return lines to total
     }
 
     private fun handleEsStatus(

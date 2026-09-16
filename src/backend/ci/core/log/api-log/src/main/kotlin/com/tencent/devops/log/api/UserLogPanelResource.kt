@@ -72,7 +72,7 @@ interface UserLogPanelResource {
         @QueryParam("archiveFlag") archiveFlag: Boolean? = false
     ): Result<QueryLogPanel>
 
-    @Operation(summary = "停留底部时跟随：加载比 startLineNo 更新的日志")
+    @Operation(summary = "停留底部时跟随：加载比 startLineNo 更新的日志；运行中需带 sinceTimestamp，服务端会按时间窗回填 ES 尚未及时可见的行")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterPage(
@@ -82,13 +82,19 @@ interface UserLogPanelResource {
         @PathParam("projectId") projectId: String,
         @PathParam("pipelineId") pipelineId: String,
         @PathParam("buildId") buildId: String,
-        @Parameter(description = "当前页末行号（不含）", required = true) @QueryParam("startLineNo") startLineNo: Long,
+        @Parameter(description = "当前已展示的最大存储行号（不含）", required = true) @QueryParam("startLineNo") startLineNo: Long,
         @QueryParam("tag") tag: String?,
         @QueryParam("subTag") subTag: String?,
         @QueryParam("jobId") jobId: String?,
         @QueryParam("executeCount") executeCount: Int?,
         @QueryParam("levels") levels: String?,
         @QueryParam("pageSize") pageSize: Int?,
-        @QueryParam("archiveFlag") archiveFlag: Boolean? = false
+        @QueryParam("archiveFlag") archiveFlag: Boolean? = false,
+        @Parameter(description = "当前末行 timestamp，运行中必传；用于回填 ES 延迟可见的更早 lineNo")
+        @QueryParam("sinceTimestamp")
+        sinceTimestamp: Long? = null,
+        @Parameter(description = "回看窗口毫秒，默认 15000，最大 60000")
+        @QueryParam("lookbackMs")
+        lookbackMs: Long? = null
     ): Result<QueryLogPanel>
 }
