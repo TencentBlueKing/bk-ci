@@ -56,6 +56,7 @@ class TaskDaemon(
     private val buildVariables: BuildVariables,
     private val workspace: File
 ) : Callable<Map<String, String>> {
+    // 每个 TaskDaemon 对应一次执行；缓存移除后 Runner 仍用这个 ID 清理，不能改用可复用的 taskId。
     private val execution = TaskExecutorCache.Execution(Executors.newSingleThreadExecutor())
     val executionId: String get() = execution.id
 
@@ -79,6 +80,7 @@ class TaskDaemon(
         )
         TaskExecutorCache.currentExecution.set(execution)
         return try {
+            // 中断必须传播给等待方，不能捕获后返回 getAllEnv，否则取消会被当成执行成功。
             task.run(buildTask, buildVariables, workspace)
             task.getAllEnv()
         } finally {
@@ -96,6 +98,7 @@ class TaskDaemon(
         }
         var f1: Future<Map<String, String>>? = null
         try {
+            // 注册缓存到提交之间也可能收到心跳取消；Execution 会拒绝或取消这次提交。
             f1 = execution.submit(this)
             f1.get(timeout, TimeUnit.MINUTES)
                 ?: throw TimeoutException("Task[${buildTask.elementName}] timeout: $timeout minutes")
@@ -114,6 +117,7 @@ class TaskDaemon(
                 errorMsg = ignore.message ?: "Task[${buildTask.elementName}] timeout: $timeout minutes"
             )
         } finally {
+            // 覆盖超时和等待方异常退出；这里只结束任务等待，外部进程清理由 Runner 统一负责。
             f1?.cancel(true)
             executor.shutdownNow()
             if (taskId != null) {

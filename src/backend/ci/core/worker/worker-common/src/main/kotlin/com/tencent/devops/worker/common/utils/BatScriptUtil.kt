@@ -125,6 +125,7 @@ object BatScriptUtil {
                 taskId = taskId
             )
         } catch (interrupted: InterruptedException) {
+            // 取消不属于脚本启动失败，不能进入 checkFlag 自动重试，否则会在清理期间再次启动进程。
             Thread.currentThread().interrupt()
             throw interrupted
         } catch (ignore: Throwable) {

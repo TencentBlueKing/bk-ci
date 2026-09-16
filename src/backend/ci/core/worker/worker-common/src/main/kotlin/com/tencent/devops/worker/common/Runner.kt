@@ -249,9 +249,12 @@ object Runner {
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
+                    // 成功、异常和上报失败可能依次进入同一收尾路径；每次执行最多发起一次进程树清理。
                     var cleanupAttempted = false
                     var cleanupFailure: Throwable? = null
                     fun cleanup(force: Boolean) {
+                        // 成功时遵循插件 finishKillFlag；失败/超时/取消必须尝试清理本次执行。
+                        // force 不覆盖 DEVOPS_DONT_KILL_PROCESS_TREE 的既有保留语义。
                         if (cleanupAttempted || (!force && task.getFinishKillFlag() != true)) return
                         cleanupAttempted = true
                         cleanupFailure = handleTaskProcess(buildVariables.projectId, buildTask, taskDaemon.executionId)
@@ -285,9 +288,10 @@ object Runner {
                     } catch (ignore: Throwable) {
                         failed = true
                         cleanup(force = true)
+                        // 保留脚本/执行原始异常用于上报；清理失败作为附加信息，不能掩盖首个故障。
                         cleanupFailure?.let { if (it !== ignore) ignore.addSuppressed(it) }
                         dealException(ignore, buildTask, taskDaemon)
-                        // Do not start another task while a previous cleanup is still unresolved.
+                        // 超时只结束等待，后台清理可能仍在运行；上报后退出领取循环，避免旧进程影响下一任务。
                         cleanupFailure?.let { throw IllegalStateException("Worker process cleanup incomplete", it) }
                     } finally {
                         LoggerService.finishTask()
@@ -316,6 +320,7 @@ object Runner {
         return failed
     }
 
+    /** 此处使用本次执行 ID；即使有期限的等待已返回，迟到清理也不能按 taskId 匹配到后续重试。 */
     private fun handleTaskProcess(projectId: String, buildTask: BuildTask, executionId: String): Throwable? =
         TaskProcessCleanup.run {
             KillBuildProcessTree.killProcessTree(

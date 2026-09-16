@@ -188,6 +188,7 @@ open class MarketAtomTask : ITask() {
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
 
+        // 元数据到手后立即保存清理策略；不能延后到 output 之后，后续安装/执行/解析都可能抛异常。
         atomData.finishKillFlag?.let { addFinishKillFlag(it) }
 
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
@@ -313,6 +314,7 @@ open class MarketAtomTask : ITask() {
 
             // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
             systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
+            // 执行 ID 是 worker 的进程归属标识，必须覆盖同名入参/运行环境配置，不能沿用 putIfAbsent。
             TaskExecutorCache.currentExecution.get()?.let {
                 runtimeVariables[TaskExecutorCache.EXECUTION_ID_ENV] = it.id
             }
@@ -428,6 +430,7 @@ open class MarketAtomTask : ITask() {
             try {
                 output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
             } catch (outputFailure: Throwable) {
+                // 原始执行失败优先；结果解析异常只作附加信息。此前执行成功时，解析失败仍必须使任务失败。
                 if (error == null) error = outputFailure else error.addSuppressed(outputFailure)
             }
             if (error != null) {
@@ -810,6 +813,8 @@ open class MarketAtomTask : ITask() {
         atomCode: String
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
+        // run 必须通过 SDK 写出结果，单靠进程退出 0 不能判定成功；无结果可能是提前退出或异常中止。
+        // 此要求只针对 run，避免改变其他历史插件允许无 output.json 的兼容行为。
         if (atomCode == "run" && atomResult == null) {
             throw TaskExecuteException(
                 errorType = ErrorType.PLUGIN,

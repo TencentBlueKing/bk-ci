@@ -71,7 +71,7 @@ object KillBuildProcessTree {
         try {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
-                    // A timed-out task cleanup must not become an unbounded JVM shutdown wait.
+                    // 任务清理超时后不能在 shutdown hook 再无限等待同一类原生操作；此处另有独立等待期限。
                     TaskProcessCleanup.run {
                         ErrorMsgLogUtil.flushErrorMsgToFile()
                         logger.info("start kill process tree")
@@ -86,6 +86,13 @@ object KillBuildProcessTree {
         }
     }
 
+    /**
+     * 按环境标识定位进程；仅凭父子关系无法覆盖已脱离原父进程的后台任务。
+     *
+     * executionId 非空时额外限定执行批次，并将枚举/清理异常上抛，供 Runner 决定停止领取任务；
+     * 为空时保留整个构建退出清理的兼容行为。forceFlag 不覆盖显式的进程保留标记。
+     * 环境不可读的进程仍会跳过，返回的 PID 表示已发起清理，不是所有后代都已退出的证明。
+     */
     fun killProcessTree(
         projectId: String,
         buildId: String,
@@ -161,6 +168,7 @@ object KillBuildProcessTree {
                     val envTaskId = envVars[PIPELINE_ELEMENT_ID]
                     flag = flag && taskIds.contains(envTaskId)
                 }
+                // taskId 在重试间不变；必须额外匹配执行 ID，防止旧清理线程误杀新一次执行的进程。
                 if (executionId != null) {
                     flag = flag && envVars[TaskExecutorCache.EXECUTION_ID_ENV] == executionId
                 }
@@ -175,6 +183,7 @@ object KillBuildProcessTree {
                 logger.warn("kill process ${osProcess.pid} failed: ${e.message}")
             }
         }
+        // 任务级清理不能只记日志后假装成功，否则 Runner 会在残留进程状态不明时继续运行下一任务。
         if (executionId != null && failures.isNotEmpty()) {
             throw java.io.IOException("Task process cleanup failed", failures.first()).apply {
                 failures.drop(1).forEach { addSuppressed(it) }

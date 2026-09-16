@@ -69,7 +69,8 @@ object Heartbeat {
                     )
                     val cancelTaskIds = heartBeatInfo.cancelTaskIds
                     if (!cancelTaskIds.isNullOrEmpty()) {
-                        // Wake the task waiter first; Runner owns scoped process cleanup.
+                        // 先取消 Future 唤醒 TaskDaemon 的等待方，由 Runner 统一执行有期限的进程树清理。
+                        // 不能先同步 kill 再中断，否则 native kill 卡住时取消无法生效；也不为重复心跳新建清理线程。
                         cancelTaskIds.forEach { TaskExecutorCache.cancel(it) }
                     }
                     failCnt = 0
