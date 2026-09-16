@@ -98,6 +98,9 @@ object WindowsCommandLineUtils {
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
             val exitCode = executor.execute(cmdLine)
+            executor.streamCleanupFailure?.let {
+                logger.warn("Command stream cleanup incomplete: ${it.javaClass.simpleName}")
+            }
             if (exitCode != 0) {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -105,6 +108,9 @@ object WindowsCommandLineUtils {
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
                 )
             }
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw interrupted
         } catch (ignored: Throwable) {
             logger.warn("Fail to execute the command($command)", ignored)
             if (print2Logger) {

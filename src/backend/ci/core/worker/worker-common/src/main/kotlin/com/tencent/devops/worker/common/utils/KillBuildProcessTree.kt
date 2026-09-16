@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 import com.tencent.process.BkProcessTree
 import com.tencent.process.EnvVars
 import org.slf4j.LoggerFactory
@@ -70,11 +71,14 @@ object KillBuildProcessTree {
         try {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
-                    ErrorMsgLogUtil.flushErrorMsgToFile()
-                    logger.info("start kill process tree")
-                    val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +
-                        "pid(s): $killedProcessIds")
+                    // A timed-out task cleanup must not become an unbounded JVM shutdown wait.
+                    TaskProcessCleanup.run {
+                        ErrorMsgLogUtil.flushErrorMsgToFile()
+                        logger.info("start kill process tree")
+                        val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
+                        logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +
+                            "pid(s): $killedProcessIds")
+                    }
                 }
             })
         } catch (t: Throwable) {
@@ -87,7 +91,8 @@ object KillBuildProcessTree {
         buildId: String,
         vmSeqId: String,
         taskIds: Set<String>? = null,
-        forceFlag: Boolean = false
+        forceFlag: Boolean = false,
+        executionId: String? = null
     ): List<Int> {
         val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
             getCurrentPID()
@@ -95,6 +100,7 @@ object KillBuildProcessTree {
             getUnixPID()
         }
         if (currentProcessId <= 0) {
+            if (executionId != null) throw java.io.IOException("Cannot identify worker process for cleanup")
             logger.warn("get current pid failed")
             return listOf()
         }
@@ -102,11 +108,13 @@ object KillBuildProcessTree {
         val processTree = try {
             BkProcessTree.get()
         } catch (e: Exception) {
+            if (executionId != null) throw java.io.IOException("Cannot enumerate task process tree", e)
             logger.error("killProcessTree get error: ", e)
             return listOf()
         }
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
+        val failures = mutableListOf<Exception>()
         val keepAlivePids = mutableSetOf(currentProcessId)
         while (processTreeIterator.hasNext()) {
             val osProcess = processTreeIterator.next()
@@ -153,6 +161,9 @@ object KillBuildProcessTree {
                     val envTaskId = envVars[PIPELINE_ELEMENT_ID]
                     flag = flag && taskIds.contains(envTaskId)
                 }
+                if (executionId != null) {
+                    flag = flag && envVars[TaskExecutorCache.EXECUTION_ID_ENV] == executionId
+                }
                 if (flag) {
                     osProcess.addKeepAlivePids(keepAlivePids)
                     osProcess.killRecursively(forceFlag)
@@ -160,7 +171,13 @@ object KillBuildProcessTree {
                     killedProcessIds.add(osProcess.pid)
                 }
             } catch (e: Exception) {
+                failures.add(e)
                 logger.warn("kill process ${osProcess.pid} failed: ${e.message}")
+            }
+        }
+        if (executionId != null && failures.isNotEmpty()) {
+            throw java.io.IOException("Task process cleanup failed", failures.first()).apply {
+                failures.drop(1).forEach { addSuppressed(it) }
             }
         }
         return killedProcessIds

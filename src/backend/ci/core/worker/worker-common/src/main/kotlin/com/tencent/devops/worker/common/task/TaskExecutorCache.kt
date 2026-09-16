@@ -30,28 +30,49 @@ package com.tencent.devops.worker.common.task
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.process.engine.common.Timeout
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
+import java.util.concurrent.Future
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 object TaskExecutorCache {
+    val currentExecution = InheritableThreadLocal<Execution>()
+    const val EXECUTION_ID_ENV = "BK_CI_EXECUTION_ID"
+
+    class Execution(val executor: ExecutorService, val id: String = UUID.randomUUID().toString()) {
+        @Volatile var cancelled = false
+            private set
+        private var future: Future<*>? = null
+
+        @Synchronized
+        fun <T> submit(task: Callable<T>): Future<T> {
+            if (cancelled) throw CancellationException("Task cancelled before execution")
+            return executor.submit(task).also { attach(it) }
+        }
+
+        @Synchronized
+        fun attach(future: Future<*>) {
+            this.future = future
+            if (cancelled) future.cancel(true)
+        }
+
+        @Synchronized
+        fun cancel() {
+            if (cancelled) return
+            cancelled = true
+            future?.cancel(true)
+            executor.shutdownNow()
+        }
+    }
 
     private val taskExecutorCache = Caffeine.newBuilder()
         .maximumSize(50)
         .expireAfterWrite(Timeout.MAX_JOB_RUN_DAYS, TimeUnit.DAYS)
-        .build<String, ExecutorService>()
+        .build<String, Execution>()
 
-    fun invalidate(taskId: String) {
-        taskExecutorCache.invalidate(taskId)
-    }
-
-    fun put(taskId: String, executor: ExecutorService) {
-        taskExecutorCache.put(taskId, executor)
-    }
-
-    fun getIfPresent(taskId: String): ExecutorService? {
-        return taskExecutorCache.getIfPresent(taskId)
-    }
-
-    fun getAllPresent(taskIds: Set<String>): Map<String, ExecutorService>? {
-        return taskExecutorCache.getAllPresent(taskIds)
-    }
+    fun invalidate(taskId: String) { taskExecutorCache.invalidate(taskId) }
+    fun put(taskId: String, execution: Execution) { taskExecutorCache.put(taskId, execution) }
+    fun getExecution(taskId: String): Execution? = taskExecutorCache.getIfPresent(taskId)
+    fun cancel(taskId: String) { getExecution(taskId)?.cancel() }
 }

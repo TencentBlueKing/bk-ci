@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import java.util.concurrent.TimeUnit
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 
 object TaskUtil {
 
@@ -91,6 +92,9 @@ object TaskUtil {
         )
         if (!taskId.isNullOrBlank()) {
             taskEnvVariables[PIPELINE_ELEMENT_ID] = taskId
+            TaskExecutorCache.currentExecution.get()?.let {
+                taskEnvVariables[TaskExecutorCache.EXECUTION_ID_ENV] = it.id
+            }
         }
         return taskEnvVariables
     }

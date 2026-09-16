@@ -112,6 +112,7 @@ import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.service.SensitiveValueService
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -186,6 +187,8 @@ open class MarketAtomTask : ITask() {
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
+
+        atomData.finishKillFlag?.let { addFinishKillFlag(it) }
 
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
@@ -310,6 +313,9 @@ open class MarketAtomTask : ITask() {
 
             // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
             systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
+            TaskExecutorCache.currentExecution.get()?.let {
+                runtimeVariables[TaskExecutorCache.EXECUTION_ID_ENV] = it.id
+            }
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
             LoggerService.addFoldEndLine("-----")
@@ -419,8 +425,11 @@ open class MarketAtomTask : ITask() {
         } catch (e: Throwable) {
             error = TaskExecuteExceptionDecorator.decorate(e)
         } finally {
-            output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
-            atomData.finishKillFlag?.let { addFinishKillFlag(it) }
+            try {
+                output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
+            } catch (outputFailure: Throwable) {
+                if (error == null) error = outputFailure else error.addSuppressed(outputFailure)
+            }
             if (error != null) {
                 throw if (error is TaskExecuteException) {
                     error
@@ -801,6 +810,13 @@ open class MarketAtomTask : ITask() {
         atomCode: String
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
+        if (atomCode == "run" && atomResult == null) {
+            throw TaskExecuteException(
+                errorType = ErrorType.PLUGIN,
+                errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
+                errorMsg = "run plugin finished without a valid output.json"
+            )
+        }
         logger.info("the atomResult from Market is :\n$atomResult")
         deletePluginFile(atomTmpSpace)
         // 添加插件监控数据

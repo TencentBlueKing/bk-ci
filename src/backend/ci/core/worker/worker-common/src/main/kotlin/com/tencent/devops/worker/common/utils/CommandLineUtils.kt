@@ -162,6 +162,9 @@ object CommandLineUtils {
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
             val exitCode = executor.execute(cmdLine)
+            executor.streamCleanupFailure?.let {
+                logger.warn("Command stream cleanup incomplete: ${it.javaClass.simpleName}")
+            }
             if (exitCode != 0) {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -171,6 +174,9 @@ object CommandLineUtils {
                         errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw interrupted
         } catch (ignored: Throwable) {
             val errorMessage = executeErrorMessage ?: "Fail to execute the command($command)"
             logger.warn(errorMessage, ignored)

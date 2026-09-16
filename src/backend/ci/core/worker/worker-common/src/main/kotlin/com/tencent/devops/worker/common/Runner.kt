@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -66,6 +67,7 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.TaskProcessCleanup
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -247,6 +249,13 @@ object Runner {
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
+                    var cleanupAttempted = false
+                    var cleanupFailure: Throwable? = null
+                    fun cleanup(force: Boolean) {
+                        if (cleanupAttempted || (!force && task.getFinishKillFlag() != true)) return
+                        cleanupAttempted = true
+                        cleanupFailure = handleTaskProcess(buildVariables.projectId, buildTask, taskDaemon.executionId)
+                    }
                     try {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.stepId = buildTask.stepId ?: ""
@@ -262,14 +271,24 @@ object Runner {
                         logger.info("Complete the task (${buildTask.elementName})")
                         // 获取执行结果
                         val buildTaskRst = taskDaemon.getBuildResult()
-                        val finishKillFlag = task.getFinishKillFlag()
-                        val projectId = buildVariables.projectId
-                        handleTaskProcess(finishKillFlag, projectId, buildTask)
+                        cleanup(force = false)
+                        cleanupFailure?.let {
+                            throw TaskExecuteException(
+                                errorType = ErrorType.SYSTEM,
+                                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR,
+                                errorMsg = "Task process cleanup failed: ${it.message}",
+                                cause = it
+                            )
+                        }
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
                     } catch (ignore: Throwable) {
                         failed = true
+                        cleanup(force = true)
+                        cleanupFailure?.let { if (it !== ignore) ignore.addSuppressed(it) }
                         dealException(ignore, buildTask, taskDaemon)
+                        // Do not start another task while a previous cleanup is still unresolved.
+                        cleanupFailure?.let { throw IllegalStateException("Worker process cleanup incomplete", it) }
                     } finally {
                         LoggerService.finishTask()
                         LoggerService.elementId = ""
@@ -297,19 +316,17 @@ object Runner {
         return failed
     }
 
-    private fun handleTaskProcess(finishKillFlag: Boolean?, projectId: String, buildTask: BuildTask) {
-        if (finishKillFlag == true) {
-            // 杀掉task对应的进程（配置DEVOPS_DONT_KILL_PROCESS_TREE标识的插件除外）
+    private fun handleTaskProcess(projectId: String, buildTask: BuildTask, executionId: String): Throwable? =
+        TaskProcessCleanup.run {
             KillBuildProcessTree.killProcessTree(
                 projectId = projectId,
                 buildId = buildTask.buildId,
                 vmSeqId = buildTask.vmSeqId,
                 taskIds = setOf(buildTask.taskId!!),
-                forceFlag = true
+                forceFlag = true,
+                executionId = executionId
             )
         }
-    }
-
     private fun finally(workspacePathFile: File?, failed: Boolean) {
 
         if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {

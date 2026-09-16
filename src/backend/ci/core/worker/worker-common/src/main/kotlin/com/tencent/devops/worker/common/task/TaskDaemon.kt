@@ -44,7 +44,9 @@ import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -54,6 +56,9 @@ class TaskDaemon(
     private val buildVariables: BuildVariables,
     private val workspace: File
 ) : Callable<Map<String, String>> {
+    private val execution = TaskExecutorCache.Execution(Executors.newSingleThreadExecutor())
+    val executionId: String get() = execution.id
+
     override fun call(): Map<String, String> {
         // 绑定本插件的日志上下文到当前线程：
         // 1) 让插件执行线程内的所有日志归属到正确的elementId；
@@ -72,27 +77,36 @@ class TaskDaemon(
                 executeCount = buildTask.executeCount ?: LoggerService.executeCount
             )
         )
+        TaskExecutorCache.currentExecution.set(execution)
         return try {
             task.run(buildTask, buildVariables, workspace)
             task.getAllEnv()
-        } catch (e: InterruptedException) {
-            task.getAllEnv()
         } finally {
+            TaskExecutorCache.currentExecution.remove()
             LoggerService.clearTaskContext()
         }
     }
 
     fun runWithTimeout() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        val executor = Executors.newCachedThreadPool()
+        val executor = execution.executor
         val taskId = buildTask.taskId
         if (taskId != null) {
-            TaskExecutorCache.put(taskId, executor)
+            TaskExecutorCache.put(taskId, execution)
         }
-        val f1 = executor.submit(this)
+        var f1: Future<Map<String, String>>? = null
         try {
+            f1 = execution.submit(this)
             f1.get(timeout, TimeUnit.MINUTES)
                 ?: throw TimeoutException("Task[${buildTask.elementName}] timeout: $timeout minutes")
+            if (execution.cancelled) throw CancellationException("Task cancelled")
+        } catch (cancelled: CancellationException) {
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "Task[${buildTask.elementName}] cancelled",
+                cause = cancelled
+            )
         } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
@@ -100,6 +114,7 @@ class TaskDaemon(
                 errorMsg = ignore.message ?: "Task[${buildTask.elementName}] timeout: $timeout minutes"
             )
         } finally {
+            f1?.cancel(true)
             executor.shutdownNow()
             if (taskId != null) {
                 TaskExecutorCache.invalidate(taskId)

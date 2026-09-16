@@ -124,6 +124,9 @@ object BatScriptUtil {
                 charsetType = charsetType,
                 taskId = taskId
             )
+        } catch (interrupted: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw interrupted
         } catch (ignore: Throwable) {
             return checkFlag(
                 script = script,
