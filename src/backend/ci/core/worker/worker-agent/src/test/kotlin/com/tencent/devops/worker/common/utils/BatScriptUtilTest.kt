@@ -391,6 +391,44 @@ class BatScriptUtilTest {
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
+    fun formatMultipleLinesOversizeSourceFileFailsLoudlyTest() {
+        /* 契约：源文件超过上限须在读取内容之前显式失败 */
+        val buildId = "bat_e2e_oversize"
+        val workspace = File(tmpDir, "bat_e2e_oversize_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val sourceFile = File(workspace, "oversize.txt")
+        sourceFile.writeText(
+            "a".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt() + 1),
+            Charsets.UTF_8
+        )
+
+        val bat = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call:format_multiple_lines RESULT \"${sourceFile.absolutePath}\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runBat(bat, workspace)
+        Assertions.assertTrue(exitCode != 0, "expected non-zero exit code, got $exitCode. console: $console")
+        Assertions.assertTrue(
+            console.contains("source file too large"),
+            "expected a clear reason in console: $console"
+        )
+        Assertions.assertEquals(
+            emptyList<String>(),
+            ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            "超限时不应产出多行变量"
+        )
+
+        bat.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
     fun formatMultipleLinesWindowsPathEndToEndTest() {
         /* 验收 A-3：字面 \n / \N / \r 属于路径内容，不得被解释为换行 */
         val buildId = "bat_e2e_win_path"
@@ -584,6 +622,84 @@ class BatScriptUtilTest {
 
         file.delete()
         deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun preprocessMultilineBlockIndentedQuoteIsContentTest() {
+        /*结束引号必须顶格：带前导空白的引号行按普通内容处理，不得提前收束*/
+        val buildId = "bat_indent_quote_test"
+        val workspace = File(tmpDir, "bat_indent_quote_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call:format_multiple_lines CONFIG \"\nline1\n  \"\nline2\n\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        Assertions.assertFalse(content.contains("line2"), "line2 应作为块内容保留: $content")
+        val blockFile = File(
+            Regex("""call:format_multiple_lines CONFIG "([^"]+)"""").find(content)!!.groupValues[1]
+        )
+        Assertions.assertEquals("line1\r\n  \"\r\nline2", blockFile.readText(Charsets.UTF_8))
+
+        file.delete()
+        deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun preprocessMultilineBlockTrailingSpaceQuoteIsContentTest() {
+        /*结束行行尾不得有空白：带尾随空格的引号行按普通内容处理，不得提前收束*/
+        val buildId = "bat_trailing_space_quote_test"
+        val workspace = File(tmpDir, "bat_trailing_space_quote_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = BatScriptUtil.getCommandFile(
+            buildId = buildId,
+            script = "call:format_multiple_lines CONFIG \"\nline1\n\"  \nline2\n\"",
+            runtimeVariables = emptyMap(),
+            dir = workspace,
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        Assertions.assertFalse(content.contains("line2"), "line2 应作为块内容保留: $content")
+        val blockFile = File(
+            Regex("""call:format_multiple_lines CONFIG "([^"]+)"""").find(content)!!.groupValues[1]
+        )
+        Assertions.assertEquals("line1\r\n\"  \r\nline2", blockFile.readText(Charsets.UTF_8))
+
+        file.delete()
+        deleteBlockFiles(buildId)
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    fun preprocessMultilineBlockIndentedQuoteOnlyUnterminatedTest() {
+        /*仅存在带前导空白的引号行时，块视为未闭合*/
+        val buildId = "bat_indent_unterminated_test"
+        val workspace = File(tmpDir, "bat_indent_unterminated_test_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
+            BatScriptUtil.getCommandFile(
+                buildId = buildId,
+                script = "call:format_multiple_lines CONFIG \"\nline1\n  \"",
+                runtimeVariables = emptyMap(),
+                dir = workspace,
+                workspace = workspace
+            )
+        }
+        Assertions.assertTrue(exception.message!!.contains("CONFIG"))
+
         workspace.deleteRecursively()
     }
 

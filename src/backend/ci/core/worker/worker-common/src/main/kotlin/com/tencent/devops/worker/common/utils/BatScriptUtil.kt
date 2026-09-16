@@ -71,13 +71,16 @@ object BatScriptUtil {
         "    echo %~1 >>%file_save_dir%\r\n" +
         "    goto:eof\r\n"
 
-    private const val formatMultipleLines = ":format_multiple_lines\r\n" +
+    private val formatMultipleLines = ":format_multiple_lines\r\n" +
         "    setlocal\r\n" +
         "    set \"BK_ML_KEY=%~1\"\r\n" +
         "    set \"BK_ML_FILE=%~2\"\r\n" +
         "    set \"BK_ML_OUT=##multiLineFile##\"\r\n" +
         "    powershell -NoProfile -Command ^\r\n" +
-        "        \"try{\$c=[System.IO.File]::ReadAllText(\$env:BK_ML_FILE);\" ^\r\n" +
+        "        \"try{\$fi=[System.IO.FileInfo]\$env:BK_ML_FILE;\" ^\r\n" +
+        "        \"if(\$fi.Length -gt ${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH})" +
+        "{throw ('source file too large: '+\$fi.Length+' bytes')};\" ^\r\n" +
+        "        \"\$c=[System.IO.File]::ReadAllText(\$env:BK_ML_FILE);\" ^\r\n" +
         "        \"\$c=\$c -replace '%%','%%25' -replace ([char]13),'%%0D' -replace ([char]10),'%%0A';\" ^\r\n" +
         "        \"\$line='::set-output name='+\$env:BK_ML_KEY+'::'+\$c;\" ^\r\n" +
         "        \"\$enc=New-Object System.Text.UTF8Encoding(\$false);\" ^\r\n" +
@@ -300,6 +303,7 @@ object BatScriptUtil {
 
     /**
      * 从 call 行之后提取内联块内容，返回内容与块结束后的下一行索引。
+     * 结束行必须严格等于单个引号：无前导空白、无行尾空白，其余形态一律按普通内容处理。
      * 缺少结束引号时抛用户输入错误。
      */
     private fun extractMultilineBlock(lines: List<String>, callLineIndex: Int, key: String): MultilineBlock {
@@ -307,7 +311,7 @@ object BatScriptUtil {
         var i = callLineIndex + 1
         while (i < lines.size) {
             val cur = lines[i]
-            if (cur.trim() == "\"") {
+            if (cur == "\"") {
                 return MultilineBlock(content.toString(), i + 1)
             }
             // 保留原始内容（含行尾空格），统一 CRLF 拼接

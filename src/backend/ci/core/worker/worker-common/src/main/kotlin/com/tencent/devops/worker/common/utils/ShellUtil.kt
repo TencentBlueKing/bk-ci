@@ -79,8 +79,12 @@ object ShellUtil {
         "        echo \$key=\$val  >> ##gateValueFile##\n" +
         "    }\n"
 
-    private const val formatMultipleLines = "format_multiple_lines() {\n" +
+    private val formatMultipleLines = "format_multiple_lines() {\n" +
         "    local content=\"\$1\"\n" +
+        "    if [ \"\${#content}\" -gt ${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH} ]; then\n" +
+        "        echo \"format_multiple_lines: content too large\" >&2\n" +
+        "        return 1\n" +
+        "    fi\n" +
         "    content=\"\${content//%/%25}\"\n" +
         "    content=\"\${content//\$'\\r'/%0D}\"\n" +
         "    content=\"\${content//\$'\\n'/%0A}\"\n" +

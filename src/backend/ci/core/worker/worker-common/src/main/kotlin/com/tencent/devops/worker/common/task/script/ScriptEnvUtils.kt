@@ -44,8 +44,8 @@ object ScriptEnvUtils {
     private const val ERROR_FILE = "setError.log"
     private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
-    /** 多行输出文件的大小上限（字节） */
-    private const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
+    /** 多行输出文件的大小上限（字节），由 BatScriptUtil / ShellUtil 注入脚本侧预检 */
+    const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
 
     /** 合法变量名的正则片段：字母或下划线开头，仅含字母、数字、下划线 */
     const val VAR_NAME_SEGMENT = "[a-zA-Z_][a-zA-Z0-9_]*"
@@ -180,14 +180,18 @@ object ScriptEnvUtils {
     }
 
     /**
-     * 删除内联多行块临时文件：序号由 0 连续递增，遇到第一个不存在的文件即结束
+     * 删除内联多行块临时文件：序号由 0 连续递增，遇到第一个不存在的文件即结束。
+     * 单个文件删除失败不终止循环，避免后续序号的文件残留
      */
     private fun cleanMultilineBlockFiles(buildId: String) {
         val tmpDir = System.getProperty("java.io.tmpdir") ?: return
         var index = 0
         while (true) {
             val blockFile = File(tmpDir, getMultipleLineBlockFileName(buildId, index))
-            if (!blockFile.exists() || !blockFile.delete()) return
+            if (!blockFile.exists()) return
+            if (!blockFile.delete()) {
+                logger.warn("Fail to delete the multiline block file - (${blockFile.absolutePath})")
+            }
             index++
         }
     }

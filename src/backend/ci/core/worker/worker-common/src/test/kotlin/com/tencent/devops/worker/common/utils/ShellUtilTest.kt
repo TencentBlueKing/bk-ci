@@ -290,6 +290,77 @@ class ShellUtilTest {
         }
     }
 
+    @Test
+    @DisplayName("bash 分支注入内容超限预检且位于编码之前")
+    fun formatMultipleLinesOversizeGuardInjectedTest() {
+        val buildId = "sh_oversize_guard"
+        val workspace = File(tmpDir, "sh_oversize_guard_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = "format_multiple_lines \"::set-output name=RESULT::value\"",
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val content = file.readText()
+        /* 转义后形态：预检语句须与 shell 语法逐字符一致，避免多转义/少转义 */
+        Assertions.assertTrue(
+            content.contains(
+                "    if [ \"\${#content}\" -gt " +
+                    "${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH} ]; then\n"
+            ),
+            "预检语句的转义后形态不符: $content"
+        )
+        /* 残留未展开的转义（如 \$ 未还原）不得出现 */
+        Assertions.assertFalse(content.contains("\\\${#content}"), "存在未展开的转义: $content")
+        val guardIndex = content.indexOf("content too large")
+        val encodeIndex = content.indexOf("content//%/%25")
+        Assertions.assertTrue(guardIndex > 0, "应注入内容超限预检: $content")
+        Assertions.assertTrue(guardIndex < encodeIndex, "预检须位于编码之前: $content")
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("bash 分支内容超限时显式失败且不产出多行变量")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesOversizeFailsLoudlyTest() {
+        /* 构造刚好超过 10 MB 的内容，须在编码之前被拒绝 */
+        val buildId = "sh_e2e_oversize"
+        val workspace = File(tmpDir, "sh_e2e_oversize_workspace")
+        workspace.deleteRecursively()
+        workspace.mkdirs()
+        val oversize = "a".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt() + 1)
+        val script = "format_multiple_lines \"::set-output name=RESULT::$oversize\""
+
+        val file = ShellUtil.getCommandFile(
+            buildId = buildId,
+            script = script,
+            dir = workspace,
+            buildEnvs = emptyList(),
+            runtimeVariables = emptyMap(),
+            workspace = workspace
+        )
+
+        val (exitCode, console) = runSh(file, workspace)
+        Assertions.assertNotEquals(0, exitCode, "超限内容须显式失败: ${console.take(500)}")
+        Assertions.assertTrue(console.contains("content too large"), "须给出明确原因: ${console.take(500)}")
+        Assertions.assertEquals(
+            emptyList<String>(),
+            ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            "超限时不应产出多行变量"
+        )
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
     /**
      * 用 bash 真实执行生成的 .sh。
      * 输出重定向到文件后再 waitFor(timeout)：避免管道读阻塞导致超时保护失效。
