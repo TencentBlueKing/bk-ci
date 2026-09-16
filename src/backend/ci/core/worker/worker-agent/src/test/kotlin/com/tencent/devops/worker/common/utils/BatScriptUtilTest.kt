@@ -20,20 +20,29 @@ class BatScriptUtilTest {
     private val jobId = "job_xx"
     private val stepId = "step_xx"
 
-    @Test
-    fun formatMultipleLinesInjectedTest() {
-        val buildId = "bat_multi_line_test"
-        val script = "call:format_multiple_lines TEST \"test_value.txt\""
-        val workspace = File(tmpDir, "bat_multi_line_test_workspace")
-        workspace.mkdirs()
+    /** 每个用例独占的干净 workspace：先清理，避免读到上次运行的残留 */
+    private fun newWorkspace(name: String) = File(tmpDir, name).apply {
+        deleteRecursively()
+        mkdirs()
+    }
 
-        val file = BatScriptUtil.getCommandFile(
+    /** 生成 bat 命令脚本：用例只需关心 script 与 buildId，其余参数固定 */
+    private fun generateScript(buildId: String, script: String, workspace: File) =
+        BatScriptUtil.getCommandFile(
             buildId = buildId,
             script = script,
             runtimeVariables = emptyMap(),
             dir = workspace,
             workspace = workspace
         )
+
+    @Test
+    fun formatMultipleLinesInjectedTest() {
+        val buildId = "bat_multi_line_test"
+        val script = "call:format_multiple_lines TEST \"test_value.txt\""
+        val workspace = newWorkspace("bat_multi_line_test_workspace")
+
+        val file = generateScript(buildId, script, workspace)
 
         val content = file.readText()
         /*标签函数被注入*/
@@ -64,16 +73,9 @@ class BatScriptUtilTest {
     @Test
     fun formatMultipleLinesPlaceholderReplacedTest() {
         val buildId = "bat_placeholder_test"
-        val workspace = File(tmpDir, "bat_placeholder_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_placeholder_test_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "echo done",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "echo done", workspace)
 
         val content = file.readText()
         val expectedFileName = ScriptEnvUtils.getMultipleLineFile(buildId)
@@ -94,16 +96,9 @@ class BatScriptUtilTest {
     @Test
     fun formatMultipleLinesWithoutCallTest() {
         val buildId = "bat_no_call_test"
-        val workspace = File(tmpDir, "bat_no_call_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_no_call_test_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "echo hello",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "echo hello", workspace)
 
         val content = file.readText()
         /*即使脚本不调用,标签函数也存在*/
@@ -119,16 +114,9 @@ class BatScriptUtilTest {
     fun formatMultipleLinesLiteralBackslashSafetyTest() {
         /* 验证文件版中不含任何对字面 \n/\r 的正则替换，确保路径安全 */
         val buildId = "bat_literal_safety_test"
-        val workspace = File(tmpDir, "bat_literal_safety_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_literal_safety_test_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "echo done",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "echo done", workspace)
 
         val content = file.readText()
         /* 不应包含任何对字面 \n 或 \r 的正则替换（arg 版曾用 \\\\n / \\\\r） */
@@ -146,8 +134,7 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockBasicTest() {
         /* 内联多行块：三行内容应被写入临时文件并替换为文件版调用 */
         val buildId = "bat_inline_test"
-        val workspace = File(tmpDir, "bat_inline_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_inline_test_workspace")
 
         val script = "call:format_multiple_lines CONFIG \"\n" +
             "[server]\n" +
@@ -155,13 +142,7 @@ class BatScriptUtilTest {
             "port=8080\n" +
             "\""
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val content = file.readText()
         /* 内联内容不应出现在生成的 bat 中（已写入临时文件） */
@@ -186,18 +167,11 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockFileVersionUntouchedTest() {
         /* 文件版单行调用不应被预处理拦截，原样保留 */
         val buildId = "bat_inline_file_test"
-        val workspace = File(tmpDir, "bat_inline_file_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_inline_file_test_workspace")
 
         val script = "call:format_multiple_lines RESULT \"result.txt\""
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val content = file.readText()
         Assertions.assertTrue(content.contains(script))
@@ -210,8 +184,7 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockMixedTest() {
         /* 文件版 + 内联块 + 普通命令混用，各自正确 */
         val buildId = "bat_inline_mixed_test"
-        val workspace = File(tmpDir, "bat_inline_mixed_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_inline_mixed_test_workspace")
 
         val script = "echo hello\n" +
             "call:format_multiple_lines RESULT \"result.txt\"\n" +
@@ -221,13 +194,7 @@ class BatScriptUtilTest {
             "\"\n" +
             "echo done"
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val content = file.readText()
         Assertions.assertTrue(content.contains("echo hello"))
@@ -244,21 +211,14 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockUnterminatedTest() {
         /* 缺少结束引号应抛出明确异常 */
         val buildId = "bat_inline_unterminated_test"
-        val workspace = File(tmpDir, "bat_inline_unterminated_test_workspace")
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_inline_unterminated_test_workspace")
 
         val script = "call:format_multiple_lines CONFIG \"\n" +
             "line1\n" +
             "line2"
 
         val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
-            BatScriptUtil.getCommandFile(
-                buildId = buildId,
-                script = script,
-                runtimeVariables = emptyMap(),
-                dir = workspace,
-                workspace = workspace
-            )
+            generateScript(buildId, script, workspace)
         }
         /* 错误信息经 i18n 渲染，跨语言统一断言：含变量名与起始行号（起始行号为 1） */
         Assertions.assertTrue(exception.message!!.contains("CONFIG"))
@@ -298,20 +258,12 @@ class BatScriptUtilTest {
     fun formatMultipleLinesFileEndToEndTest() {
         val buildId = "bat_e2e_file"
         /* 上一次断言失败会跳过清理留下旧 multiLine.log，先重建 workspace 避免读到陈旧值 */
-        val workspace = File(tmpDir, "bat_e2e_file_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_file_workspace")
         /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CRLF / 叹号 */
         val content = "line1\r\n100% done\r\nliteral %0A here\r\n中文\r\nhello!world"
         val blockFile = File(workspace, "result.txt").apply { writeText(content, Charsets.UTF_8) }
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call:format_multiple_lines RESULT \"${blockFile.absolutePath}\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, "call:format_multiple_lines RESULT \"${blockFile.absolutePath}\"", workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertEquals(0, exitCode, console)
@@ -332,19 +284,11 @@ class BatScriptUtilTest {
     @EnabledOnOs(OS.WINDOWS)
     fun formatMultipleLinesInlineBlockEndToEndTest() {
         val buildId = "bat_e2e_inline"
-        val workspace = File(tmpDir, "bat_e2e_inline_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_inline_workspace")
         /* script 用 \n（ScriptTask 传参前会 replace("\r","")），块内容由后端拼接为 CRLF */
         val script = "call:format_multiple_lines CONFIG \"\n[server]\nhost=0.0.0.0\nport=8080\n\""
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertEquals(0, exitCode, console)
@@ -368,18 +312,10 @@ class BatScriptUtilTest {
     @EnabledOnOs(OS.WINDOWS)
     fun formatMultipleLinesMissingFileFailsLoudlyTest() {
         val buildId = "bat_e2e_missing"
-        val workspace = File(tmpDir, "bat_e2e_missing_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_missing_workspace")
         val missing = File(workspace, "does_not_exist.txt").canonicalPath
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call:format_multiple_lines RESULT \"$missing\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, "call:format_multiple_lines RESULT \"$missing\"", workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         /* 契约：目标文件不存在必须让进程非 0 退出（响亮失败），不能静默丢弃 */
@@ -394,22 +330,14 @@ class BatScriptUtilTest {
     fun formatMultipleLinesOversizeSourceFileFailsLoudlyTest() {
         /* 契约：源文件超过上限须在读取内容之前显式失败 */
         val buildId = "bat_e2e_oversize"
-        val workspace = File(tmpDir, "bat_e2e_oversize_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_oversize_workspace")
         val sourceFile = File(workspace, "oversize.txt")
         sourceFile.writeText(
             "a".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt() + 1),
             Charsets.UTF_8
         )
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call:format_multiple_lines RESULT \"${sourceFile.absolutePath}\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, "call:format_multiple_lines RESULT \"${sourceFile.absolutePath}\"", workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertTrue(exitCode != 0, "expected non-zero exit code, got $exitCode. console: $console")
@@ -432,9 +360,7 @@ class BatScriptUtilTest {
     fun formatMultipleLinesWindowsPathEndToEndTest() {
         /* 验收 A-3：字面 \n / \N / \r 属于路径内容，不得被解释为换行 */
         val buildId = "bat_e2e_win_path"
-        val workspace = File(tmpDir, "bat_e2e_win_path_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_win_path_workspace")
         val cases = linkedMapOf(
             "WTC03" to """C:\newlogs\report.txt""",
             "WTC04" to """C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common""",
@@ -445,13 +371,7 @@ class BatScriptUtilTest {
             """call:format_multiple_lines $key "${file.absolutePath}""""
         }
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertEquals(0, exitCode, console)
@@ -473,18 +393,10 @@ class BatScriptUtilTest {
     @EnabledOnOs(OS.WINDOWS)
     fun formatMultipleLinesEmptyFileEndToEndTest() {
         val buildId = "bat_e2e_empty_file"
-        val workspace = File(tmpDir, "bat_e2e_empty_file_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_empty_file_workspace")
         val emptyFile = File(workspace, "empty.txt").apply { writeText("", Charsets.UTF_8) }
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = """call:format_multiple_lines EMPTY "${emptyFile.absolutePath}"""",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, """call:format_multiple_lines EMPTY "${emptyFile.absolutePath}"""", workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertEquals(0, exitCode, console)
@@ -505,20 +417,12 @@ class BatScriptUtilTest {
     fun formatMultipleLinesNonUtf8FileEndToEndTest() {
         /*约束 2：非 UTF-8 输入当前按 UTF-8 解码会乱码；钉住"不失败、变量仍产出"的底线行为*/
         val buildId = "bat_e2e_gbk"
-        val workspace = File(tmpDir, "bat_e2e_gbk_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_e2e_gbk_workspace")
         val gbkFile = File(workspace, "gbk.txt").apply {
             writeText("中文内容", Charset.forName("GBK"))
         }
 
-        val bat = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = """call:format_multiple_lines GBK "${gbkFile.absolutePath}"""",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val bat = generateScript(buildId, """call:format_multiple_lines GBK "${gbkFile.absolutePath}"""", workspace)
 
         val (exitCode, console) = runBat(bat, workspace)
         Assertions.assertEquals(0, exitCode, console)
@@ -537,9 +441,7 @@ class BatScriptUtilTest {
     @Test
     fun executeUnterminatedBlockThrowsUserInputErrorTest() {
         val buildId = "bat_exec_unterminated"
-        val workspace = File(tmpDir, "bat_exec_unterminated_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_exec_unterminated_workspace")
 
         val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
             BatScriptUtil.execute(
@@ -559,9 +461,7 @@ class BatScriptUtilTest {
     fun executeUnterminatedBlockDoesNotRetryTest() {
         /*验收 A-9：未闭合内联块属确定性用户输入错误，不得触发 checkFlag 自动重试*/
         val buildId = "bat_exec_no_retry"
-        val workspace = File(tmpDir, "bat_exec_no_retry_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_exec_no_retry_workspace")
         BatScriptUtil.retryClean()
         try {
             Assertions.assertThrows(TaskExecuteException::class.java) {
@@ -580,66 +480,31 @@ class BatScriptUtilTest {
     }
 
     @Test
-    fun preprocessMultilineBlockCallWithSpaceTest() {
-        /*`call :label` 与 `call:label` 同为合法 batch 写法，内联块须同样被预处理*/
-        val buildId = "bat_call_space_test"
-        val workspace = File(tmpDir, "bat_call_space_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+    fun preprocessMultilineBlockCallVariantTest() {
+        /*标签与命令大小写不敏感、`call :label` 与 `call:label` 同为合法写法，内联块均须被预处理*/
+        mapOf(
+            "bat_call_space" to "call :format_multiple_lines CONFIG \"",
+            "bat_call_upper" to "CALL:FORMAT_MULTIPLE_LINES CONFIG \""
+        ).forEach { (buildId, callLine) ->
+            val workspace = newWorkspace("${buildId}_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call :format_multiple_lines CONFIG \"\n[server]\n\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+            val file = generateScript(buildId, "$callLine\n[server]\n\"", workspace)
 
-        assertInlineBlockPreprocessed(file)
+            assertInlineBlockPreprocessed(file)
 
-        file.delete()
-        deleteBlockFiles(buildId)
-        workspace.deleteRecursively()
-    }
-
-    @Test
-    fun preprocessMultilineBlockUpperCaseTest() {
-        /*batch 标签与命令大小写不敏感，大写写法须同样被预处理*/
-        val buildId = "bat_call_upper_test"
-        val workspace = File(tmpDir, "bat_call_upper_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
-
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "CALL:FORMAT_MULTIPLE_LINES CONFIG \"\n[server]\n\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
-
-        assertInlineBlockPreprocessed(file)
-
-        file.delete()
-        deleteBlockFiles(buildId)
-        workspace.deleteRecursively()
+            file.delete()
+            deleteBlockFiles(buildId)
+            workspace.deleteRecursively()
+        }
     }
 
     @Test
     fun preprocessMultilineBlockIndentedQuoteIsContentTest() {
         /*结束引号必须顶格：带前导空白的引号行按普通内容处理，不得提前收束*/
         val buildId = "bat_indent_quote_test"
-        val workspace = File(tmpDir, "bat_indent_quote_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_indent_quote_test_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call:format_multiple_lines CONFIG \"\nline1\n  \"\nline2\n\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "call:format_multiple_lines CONFIG \"\nline1\n  \"\nline2\n\"", workspace)
 
         val content = file.readText()
         Assertions.assertFalse(content.contains("line2"), "line2 应作为块内容保留: $content")
@@ -657,17 +522,9 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockTrailingSpaceQuoteIsContentTest() {
         /*结束行行尾不得有空白：带尾随空格的引号行按普通内容处理，不得提前收束*/
         val buildId = "bat_trailing_space_quote_test"
-        val workspace = File(tmpDir, "bat_trailing_space_quote_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_trailing_space_quote_test_workspace")
 
-        val file = BatScriptUtil.getCommandFile(
-            buildId = buildId,
-            script = "call:format_multiple_lines CONFIG \"\nline1\n\"  \nline2\n\"",
-            runtimeVariables = emptyMap(),
-            dir = workspace,
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "call:format_multiple_lines CONFIG \"\nline1\n\"  \nline2\n\"", workspace)
 
         val content = file.readText()
         Assertions.assertFalse(content.contains("line2"), "line2 应作为块内容保留: $content")
@@ -685,18 +542,10 @@ class BatScriptUtilTest {
     fun preprocessMultilineBlockIndentedQuoteOnlyUnterminatedTest() {
         /*仅存在带前导空白的引号行时，块视为未闭合*/
         val buildId = "bat_indent_unterminated_test"
-        val workspace = File(tmpDir, "bat_indent_unterminated_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("bat_indent_unterminated_test_workspace")
 
         val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
-            BatScriptUtil.getCommandFile(
-                buildId = buildId,
-                script = "call:format_multiple_lines CONFIG \"\nline1\n  \"",
-                runtimeVariables = emptyMap(),
-                dir = workspace,
-                workspace = workspace
-            )
+            generateScript(buildId, "call:format_multiple_lines CONFIG \"\nline1\n  \"", workspace)
         }
         Assertions.assertTrue(exception.message!!.contains("CONFIG"))
 
@@ -721,17 +570,9 @@ class BatScriptUtilTest {
             "bat_e2e_call_space" to "call :format_multiple_lines CONFIG \"",
             "bat_e2e_call_upper" to "CALL:FORMAT_MULTIPLE_LINES CONFIG \""
         ).forEach { (buildId, callLine) ->
-            val workspace = File(tmpDir, "${buildId}_workspace")
-            workspace.deleteRecursively()
-            workspace.mkdirs()
+            val workspace = newWorkspace("${buildId}_workspace")
 
-            val bat = BatScriptUtil.getCommandFile(
-                buildId = buildId,
-                script = "$callLine\n[server]\nhost=0.0.0.0\n\"",
-                runtimeVariables = emptyMap(),
-                dir = workspace,
-                workspace = workspace
-            )
+            val bat = generateScript(buildId, "$callLine\n[server]\nhost=0.0.0.0\n\"", workspace)
 
             val (exitCode, console) = runBat(bat, workspace)
             Assertions.assertEquals(0, exitCode, "variant=$callLine console=$console")

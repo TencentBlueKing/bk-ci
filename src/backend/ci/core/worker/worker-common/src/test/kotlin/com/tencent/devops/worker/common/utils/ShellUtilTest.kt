@@ -16,16 +16,15 @@ class ShellUtilTest {
     private val jobId = "job_xx"
     private val stepId = "step_xx"
 
-    @Test
-    @DisplayName("bash 版函数注入与编码目标正确")
-    fun formatMultipleLinesInjectedTest() {
-        val buildId = "sh_multi_line_test"
-        val script = "format_multiple_lines \"::set-output name=TEST::test_value\""
-        val workspace = File(tmpDir, "sh_multi_line_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+    /** 每个用例独占的干净 workspace：先清理，避免读到上次运行的残留 */
+    private fun newWorkspace(name: String) = File(tmpDir, name).apply {
+        deleteRecursively()
+        mkdirs()
+    }
 
-        val file = ShellUtil.getCommandFile(
+    /** 生成注入脚本：用例只需关心 script 与 buildId，其余参数固定 */
+    private fun generateScript(buildId: String, script: String, workspace: File) =
+        ShellUtil.getCommandFile(
             buildId = buildId,
             script = script,
             dir = workspace,
@@ -33,6 +32,15 @@ class ShellUtilTest {
             runtimeVariables = emptyMap(),
             workspace = workspace
         )
+
+    @Test
+    @DisplayName("bash 版函数注入与编码目标正确")
+    fun formatMultipleLinesInjectedTest() {
+        val buildId = "sh_multi_line_test"
+        val script = "format_multiple_lines \"::set-output name=TEST::test_value\""
+        val workspace = newWorkspace("sh_multi_line_test_workspace")
+
+        val file = generateScript(buildId, script, workspace)
 
         val content = file.readText()
         /* bash 函数被注入 */
@@ -66,18 +74,9 @@ class ShellUtilTest {
     @DisplayName("不调用时仍注入函数且占位符已替换")
     fun formatMultipleLinesWithoutCallTest() {
         val buildId = "sh_no_call_test"
-        val workspace = File(tmpDir, "sh_no_call_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_no_call_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "echo hello",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "echo hello", workspace)
 
         val content = file.readText()
         /* 即使脚本不调用，函数定义也存在 */
@@ -92,18 +91,9 @@ class ShellUtilTest {
     @DisplayName("#!/bin/sh 命中 POSIX 分支")
     fun formatMultipleLinesPosixInjectedTest() {
         val buildId = "sh_posix_inject_test"
-        val workspace = File(tmpDir, "sh_posix_inject_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_posix_inject_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/bin/sh\necho hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "#!/bin/sh\necho hi", workspace)
 
         val content = file.readText()
         /* 保留用户 shebang */
@@ -121,18 +111,9 @@ class ShellUtilTest {
     @DisplayName("#!/usr/bin/env sh 命中 POSIX 分支")
     fun formatMultipleLinesEnvShShebangInjectedTest() {
         val buildId = "sh_env_posix_inject_test"
-        val workspace = File(tmpDir, "sh_env_posix_inject_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_env_posix_inject_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/usr/bin/env sh\necho hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "#!/usr/bin/env sh\necho hi", workspace)
 
         val content = file.readText()
         Assertions.assertTrue(content.contains("bash -c"))
@@ -146,18 +127,9 @@ class ShellUtilTest {
     @DisplayName("#!/bin/bash 保持 bash 分支")
     fun formatMultipleLinesBashShebangInjectedTest() {
         val buildId = "sh_bash_inject_test"
-        val workspace = File(tmpDir, "sh_bash_inject_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_bash_inject_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/bin/bash\necho hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "#!/bin/bash\necho hi", workspace)
 
         val content = file.readText()
         /* bash 系维持既有实现 */
@@ -172,18 +144,9 @@ class ShellUtilTest {
     @DisplayName("无 shebang 保持 bash 分支（既有行为）")
     fun formatMultipleLinesNoShebangKeepsBashTest() {
         val buildId = "sh_no_shebang_test"
-        val workspace = File(tmpDir, "sh_no_shebang_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_no_shebang_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "echo hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "echo hi", workspace)
 
         val content = file.readText()
         Assertions.assertTrue(content.contains("local content="))
@@ -211,18 +174,9 @@ class ShellUtilTest {
             "#!/bin/sh\t-e"
         ).forEachIndexed { index, shebang ->
             val buildId = "sh_shebang_posix_test_$index"
-            val workspace = File(tmpDir, "${buildId}_workspace")
-            workspace.deleteRecursively()
-            workspace.mkdirs()
+            val workspace = newWorkspace("${buildId}_workspace")
 
-            val content = ShellUtil.getCommandFile(
-                buildId = buildId,
-                script = "$shebang\necho hi",
-                dir = workspace,
-                buildEnvs = emptyList(),
-                runtimeVariables = emptyMap(),
-                workspace = workspace
-            ).readText()
+            val content = generateScript(buildId, "$shebang\necho hi", workspace).readText()
 
             Assertions.assertTrue(content.contains("bash -c"), "should use POSIX branch: $shebang")
             Assertions.assertFalse(content.contains("local content="), "should not use bash branch: $shebang")
@@ -237,18 +191,9 @@ class ShellUtilTest {
         /* 与 OS 无关的契约测试：内层脚本体中的 $ 必须全部被反斜杠转义，
            否则会被外层 sh 提前展开——表现为变量值丢失，且内容可逃逸为命令 */
         val buildId = "sh_escape_contract_test"
-        val workspace = File(tmpDir, "sh_escape_contract_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_escape_contract_test_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/bin/sh\necho hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "#!/bin/sh\necho hi", workspace)
 
         val content = file.readText()
         /*取 `bash -c "…" _ ` 之间的内层脚本体*/
@@ -268,18 +213,9 @@ class ShellUtilTest {
         /* 注入的函数定义与后续 source 用户脚本的命令之间必须有换行 */
         listOf("#!/bin/sh", "#!/bin/bash", "").forEachIndexed { index, shebang ->
             val buildId = "sh_fn_newline_test_$index"
-            val workspace = File(tmpDir, "${buildId}_workspace")
-            workspace.deleteRecursively()
-            workspace.mkdirs()
+            val workspace = newWorkspace("${buildId}_workspace")
 
-            val content = ShellUtil.getCommandFile(
-                buildId = buildId,
-                script = shebang + "\necho hi",
-                dir = workspace,
-                buildEnvs = emptyList(),
-                runtimeVariables = emptyMap(),
-                workspace = workspace
-            ).readText()
+            val content = generateScript(buildId, shebang + "\necho hi", workspace).readText()
 
             Assertions.assertTrue(
                 content.contains("}\n. "),
@@ -294,18 +230,9 @@ class ShellUtilTest {
     @DisplayName("bash 分支注入内容超限预检且位于编码之前")
     fun formatMultipleLinesOversizeGuardInjectedTest() {
         val buildId = "sh_oversize_guard"
-        val workspace = File(tmpDir, "sh_oversize_guard_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_oversize_guard_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "format_multiple_lines \"::set-output name=RESULT::value\"",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "format_multiple_lines \"::set-output name=RESULT::value\"", workspace)
 
         val content = file.readText()
         /* 转义后形态：预检语句须与 shell 语法逐字符一致，避免多转义/少转义 */
@@ -333,20 +260,11 @@ class ShellUtilTest {
     fun formatMultipleLinesOversizeFailsLoudlyTest() {
         /* 构造刚好超过 10 MB 的内容，须在编码之前被拒绝 */
         val buildId = "sh_e2e_oversize"
-        val workspace = File(tmpDir, "sh_e2e_oversize_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_e2e_oversize_workspace")
         val oversize = "a".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt() + 1)
         val script = "format_multiple_lines \"::set-output name=RESULT::$oversize\""
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runSh(file, workspace)
         Assertions.assertNotEquals(0, exitCode, "超限内容须显式失败: ${console.take(500)}")
@@ -401,22 +319,13 @@ class ShellUtilTest {
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesEndToEndTest() {
         val buildId = "sh_e2e_multi"
-        val workspace = File(tmpDir, "sh_e2e_multi_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_e2e_multi_workspace")
         /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CR / 多变量追加 */
         val result = "line1\n100% done\nliteral %0A here\n中文\r"
         val script = "format_multiple_lines \"::set-output name=RESULT::$result\"\n" +
             "format_multiple_lines \"::set-output name=COUNT::42\""
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runSh(file, workspace)
         assertShellOk("bash", file, exitCode, console)
@@ -436,38 +345,44 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("重定向目标引号形态与 setEnv/setGateValue 一致")
+    fun formatMultipleLinesRedirectionQuotingTest() {
+        val buildId = "sh_quote_target"
+        val workspace = newWorkspace("sh_quote_target_workspace")
+
+        val file = generateScript(buildId, "format_multiple_lines \"::set-output name=RESULT::v\"", workspace)
+
+        val content = file.readText()
+        val target = File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath
+        /* 占位符不自带引号、替换值带引号，与 setEnv/setGateValue 保持同一配对方式 */
+        Assertions.assertTrue(
+            content.contains(">> \"$target\""),
+            "重定向目标应为单层引号: $content"
+        )
+        Assertions.assertFalse(
+            content.contains(">> \"\"$target\"\""),
+            "重定向目标不得出现双层引号: $content"
+        )
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
     @DisplayName("POSIX 与 bash 两实现产物逐字节一致")
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesPosixMatchesBashTest() {
         /* 同一输入分别经 bash 分支与 POSIX(sh) 分支编码，产物应逐字节相同 */
         val bashBuildId = "sh_impl_compare_bash"
         val posixBuildId = "sh_impl_compare_posix"
-        val bashWorkspace = File(tmpDir, "sh_impl_compare_bash_workspace")
-        val posixWorkspace = File(tmpDir, "sh_impl_compare_posix_workspace")
-        listOf(bashWorkspace, posixWorkspace).forEach {
-            it.deleteRecursively()
-            it.mkdirs()
-        }
+        val bashWorkspace = newWorkspace("sh_impl_compare_bash_workspace")
+        val posixWorkspace = newWorkspace("sh_impl_compare_posix_workspace")
         /* 覆盖：多行 / 百分号 / 字面 %0A / 中文 / CR / 尾换行 / 叹号 */
         val value = "line1\n100% done\nliteral %0A here\n中文\r\nhello!world\n"
         val call = "format_multiple_lines \"::set-output name=RESULT::$value\""
 
-        val bashFile = ShellUtil.getCommandFile(
-            buildId = bashBuildId,
-            script = "#!/bin/bash\n$call",
-            dir = bashWorkspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = bashWorkspace
-        )
-        val posixFile = ShellUtil.getCommandFile(
-            buildId = posixBuildId,
-            script = "#!/bin/sh\n$call",
-            dir = posixWorkspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = posixWorkspace
-        )
+        val bashFile = generateScript(bashBuildId, "#!/bin/bash\n$call", bashWorkspace)
+        val posixFile = generateScript(posixBuildId, "#!/bin/sh\n$call", posixWorkspace)
 
         val (bashExit, bashConsole) = runShWith("bash", bashFile, bashWorkspace)
         assertShellOk("bash", bashFile, bashExit, bashConsole)
@@ -494,9 +409,7 @@ class ShellUtilTest {
     fun formatMultipleLinesPosixInjectionResistanceTest() {
         /* 内容经变量传入（而非内联进调用字面量），以便构造含引号的用例 */
         val buildId = "sh_inject_test"
-        val workspace = File(tmpDir, "sh_inject_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_inject_test_workspace")
 
         val sideEffect = File(workspace, "PWNED")
         val marker = sideEffect.absolutePath
@@ -504,14 +417,7 @@ class ShellUtilTest {
         val script = "#!/bin/sh\n__v=" + shellSingleQuote(value) +
             "\nformat_multiple_lines \"::set-output name=K::\$__v\""
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runSh(file, workspace)
         assertShellOk("bash", file, exitCode, console)
@@ -534,9 +440,7 @@ class ShellUtilTest {
     fun getMultipleLinesTooLargeReturnsEmptyTest() {
         /* 文件超限时跳过读取并返回空列表（不进内存），不抛异常 */
         val buildId = "ml_too_large_test"
-        val workspace = File(tmpDir, "ml_too_large_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("ml_too_large_test_workspace")
 
         val file = File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId))
         file.outputStream().use { it.write(ByteArray(10 * 1024 * 1024 + 1)) }
@@ -550,9 +454,7 @@ class ShellUtilTest {
     @DisplayName("多行文件不存在时返回空列表")
     fun getMultipleLinesMissingFileReturnsEmptyTest() {
         val buildId = "ml_missing_test"
-        val workspace = File(tmpDir, "ml_missing_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("ml_missing_test_workspace")
 
         Assertions.assertEquals(emptyList<String>(), ScriptEnvUtils.getMultipleLines(buildId, workspace))
 
@@ -565,9 +467,7 @@ class ShellUtilTest {
     fun formatMultipleLinesLiteralBackslashEndToEndTest() {
         /* 验收 A-3：Windows 路径与 JSON 转义中的字面 \n \N \\ 不得被解释为换行 */
         val buildId = "sh_e2e_literal"
-        val workspace = File(tmpDir, "sh_e2e_literal_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_e2e_literal_workspace")
         val cases = linkedMapOf(
             "LITERAL_N" to """C:\newlogs\report.txt""",
             "LITERAL_NU" to """C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common""",
@@ -577,14 +477,7 @@ class ShellUtilTest {
             "format_multiple_lines '::set-output name=$key::$value'"
         }
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = script,
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runSh(file, workspace)
         assertShellOk("bash", file, exitCode, console)
@@ -607,18 +500,9 @@ class ShellUtilTest {
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesEmptyValueEndToEndTest() {
         val buildId = "sh_e2e_empty"
-        val workspace = File(tmpDir, "sh_e2e_empty_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_e2e_empty_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "format_multiple_lines \"::set-output name=EMPTY::\"",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "format_multiple_lines \"::set-output name=EMPTY::\"", workspace)
 
         val (exitCode, console) = runSh(file, workspace)
         assertShellOk("bash", file, exitCode, console)
@@ -639,18 +523,13 @@ class ShellUtilTest {
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesSameKeyTwiceEndToEndTest() {
         val buildId = "sh_e2e_same_key"
-        val workspace = File(tmpDir, "sh_e2e_same_key_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_e2e_same_key_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "format_multiple_lines \"::set-output name=DUP::first\"\n" +
+        val file = generateScript(
+            buildId,
+            "format_multiple_lines \"::set-output name=DUP::first\"\n" +
                 "format_multiple_lines \"::set-output name=DUP::second\"",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
+            workspace
         )
 
         val (exitCode, console) = runSh(file, workspace)
@@ -671,18 +550,9 @@ class ShellUtilTest {
     @DisplayName("POSIX 分支注入 bash 存在性检查")
     fun formatMultipleLinesPosixBashCheckInjectedTest() {
         val buildId = "sh_bash_check_test"
-        val workspace = File(tmpDir, "sh_bash_check_test_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_bash_check_test_workspace")
 
-        val content = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/bin/sh\necho hi",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        ).readText()
+        val content = generateScript(buildId, "#!/bin/sh\necho hi", workspace).readText()
         Assertions.assertTrue(content.contains("command -v bash"))
         Assertions.assertTrue(content.contains("bash not found"))
 
@@ -694,18 +564,9 @@ class ShellUtilTest {
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesNoBashFailsLoudlyTest() {
         val buildId = "sh_no_bash"
-        val workspace = File(tmpDir, "sh_no_bash_workspace")
-        workspace.deleteRecursively()
-        workspace.mkdirs()
+        val workspace = newWorkspace("sh_no_bash_workspace")
 
-        val file = ShellUtil.getCommandFile(
-            buildId = buildId,
-            script = "#!/bin/sh\nformat_multiple_lines \"::set-output name=K::v\"",
-            dir = workspace,
-            buildEnvs = emptyList(),
-            runtimeVariables = emptyMap(),
-            workspace = workspace
-        )
+        val file = generateScript(buildId, "#!/bin/sh\nformat_multiple_lines \"::set-output name=K::v\"", workspace)
         val consoleFile = File.createTempFile("sh_nobash_console_", ".log")
         consoleFile.deleteOnExit()
         val process = ProcessBuilder("/bin/sh", file.absolutePath)
