@@ -32,10 +32,12 @@
                             :key="index"
                             class="popover-item"
                         >
-                            <span
+                            <!-- <span
                                 v-if="getSeq(job)"
                                 class="job-seq"
-                            >{{ getSeq(job) }}</span><span class="job-name">{{ getName(job) }}</span><span
+                            >{{ getSeq(job) }}</span> -->
+                            <span class="job-name">{{ getName(job) }}</span>
+                            <span
                                 v-if="index < restJobs.length - 1"
                                 class="split"
                             >；</span>
