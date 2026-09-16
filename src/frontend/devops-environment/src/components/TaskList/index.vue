@@ -449,10 +449,10 @@
                             >
                                 <template #default="{ row }">
                                     <span class="job-cell">
-                                        <span
+                                        <!-- <span
                                             v-if="row.seq"
                                             class="job-seq"
-                                        >{{ row.seq }}</span>
+                                        >{{ row.seq }}</span> -->
                                         <span
                                             class="job-name"
                                             v-bk-overflow-tips

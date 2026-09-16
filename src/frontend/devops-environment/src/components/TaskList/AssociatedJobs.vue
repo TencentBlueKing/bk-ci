@@ -6,13 +6,15 @@
                 :key="index"
                 class="job-tag"
             >
-                <span
+                <!-- <span
                     v-if="getSeq(job)"
                     class="job-seq"
-                >{{ getSeq(job) }}</span><span
+                >{{ getSeq(job) }}</span> -->
+                <span
                     class="job-name"
                     v-bk-overflow-tips
-                >{{ getName(job) }}</span><span
+                >{{ getName(job) }}</span>
+                <span
                     v-if="index < visibleJobs.length - 1 || restCount > 0"
                     class="split"
                 >；</span>
