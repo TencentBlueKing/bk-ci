@@ -242,7 +242,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     ) ?: throw NotFoundException("j($vmSeqId)|vmName($vmName) is not exist")
                     // 如果取消等操作已经发出关机消息了，则不允许构建机认领任务
                     if (container.status.isFinish()) {
-                        throw OperationException("vmName($vmName) has been shutdown")
+                        // 需要带错误码返回，构建机识别到构建已结束后就不会再调结束构建接口，
+                        // 否则同 buildId 重试时，上一轮的构建机会误结束新一轮的 Job
+                        LOG.warn("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|$vmName|${container.status}|SHUTDOWN")
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.PIPELINE_BUILD_HAS_ENDED_CANNOT_BE_OPERATE
+                        )
                     }
                     val startUpVMTask = getStartUpVMTask(projectId, buildId, vmSeqId)
                     /**
@@ -1220,11 +1225,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             containerIdLock.lock()
-            val task = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
-                .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
+            val allTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, vmSeqId)
+            val task = allTasks.firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
             return if (task == null || task.status.isFinish()) {
                 LOG.warn("ENGINE|$buildId|BE_END|$projectId|$vmName|j($vmSeqId)|[${task?.taskName}] ${task?.status}")
+                false
+            } else if (staleWorkerReport(projectId, buildId, vmSeqId, allTasks, task)) {
+                LOG.warn("ENGINE|$buildId|BE_SKIP|$projectId|$vmName|j($vmSeqId)|stale worker report")
                 false
             } else {
                 pipelineRuntimeService.completeClaimBuildTask(
@@ -1245,6 +1253,40 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         } finally {
             redisOperation.delete(key = completeTaskKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
+        }
+    }
+
+    /**
+     * 是否是上一轮遗留构建机的迟到上报。
+     *
+     * 同 buildId 重试会把 Job 下的任务全部重置，而结束接口不带执行次数，
+     * 上一轮的构建机退出时调过来，就会把新一轮正在跑的 Job 结束掉。
+     * 只对重试过的构建做判断，首次执行保持原有逻辑不变。
+     *
+     * 两种情况可以确定发起方不是本次执行的构建机：
+     * 1. 本次执行的开机任务还没结束，说明还没有构建机启动成功；
+     * 2. 容器内还有构建机插件在执行，说明 Job 正由另一个构建机驱动。
+     * 引擎侧任务（开关机等 taskAtom 非空）由引擎驱动，不作为判断依据。
+     */
+    private fun staleWorkerReport(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        allTasks: List<PipelineBuildTask>,
+        endPointTask: PipelineBuildTask
+    ): Boolean {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return false
+        if (buildInfo.executeCount <= 1) {
+            return false
+        }
+        val startUpVMTask = allTasks.firstOrNull { it.taskId == VMUtils.genStartVMTaskId(vmSeqId) }
+        if (startUpVMTask != null && !startUpVMTask.status.isFinish()) {
+            return true
+        }
+        return allTasks.any {
+            it.taskId != endPointTask.taskId &&
+                it.taskAtom.isBlank() &&
+                it.status == BuildStatus.RUNNING
         }
     }
 

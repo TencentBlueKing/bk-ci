@@ -128,4 +128,22 @@ class TaskUtilsTest : TestBase() {
         every { redisOperation.hasKey(any()) } returns false
         Assertions.assertFalse(TaskUtils.isJobCancelFlag(redisOperation, "b1", "c1"))
     }
+
+    @Test
+    fun clearBuildJobCancelFlagsDeletesOriginalKeys() {
+        val redisOperation = mockk<RedisOperation>()
+        every { redisOperation.delete(any<Collection<String>>(), any()) } just runs
+
+        TaskUtils.clearBuildJobCancelFlags(redisOperation, "b1", listOf("c1"))
+
+        verify {
+            redisOperation.delete(
+                match<Collection<String>> { keys ->
+                    keys.contains(TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)) &&
+                        keys.contains(TaskUtils.getCancelTaskIdRedisKey("b1", "c1", true))
+                },
+                any()
+            )
+        }
+    }
 }
