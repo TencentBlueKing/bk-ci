@@ -1043,15 +1043,23 @@ class AtomDao : AtomBaseDao() {
         if (isExplicitNonBuildEnvJobType(param.jobType)) {
             return null
         }
+        val applyPipelineBuildLess = isPipelineBuildLessFlagApplicable(param)
         return when {
             !os.isNullOrBlank() && !os.equals(KEY_ALL, ignoreCase = true) -> {
                 val osMatch = buildJobTypeAwareOsMatch(tAtom, os, param.jobType, param.serviceScope)
                 if (param.fitOsFlag == false) {
-                    osMatch.not()
-                        .and(tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull))
+                    var condition = osMatch.not()
                         .and(tAtom.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
-                } else {
+                    if (applyPipelineBuildLess) {
+                        condition = condition.and(
+                            tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull)
+                        )
+                    }
+                    condition
+                } else if (applyPipelineBuildLess) {
                     osMatch.or(tAtom.BUILD_LESS_RUN_FLAG.eq(true))
+                } else {
+                    osMatch
                 }
             }
             os.equals(KEY_ALL, ignoreCase = true) && param.fitOsFlag == false -> {
@@ -1064,12 +1072,23 @@ class AtomDao : AtomBaseDao() {
     }
 
     /**
+     * BUILD_LESS_RUN_FLAG 仅表示 PIPELINE 范围内「无编译插件也可在 AGENT 环境运行」。
+     * 创作流双环境由 JOB_TYPE_MAP 同时包含 CREATIVE_STREAM / CLOUD_TASK 表达，不能复用该字段。
+     */
+    private fun isPipelineBuildLessFlagApplicable(param: AtomQueryParam): Boolean {
+        val jobTypeEnum = JobTypeEnum.parseOrNull(param.jobType)
+        return when {
+            jobTypeEnum != null -> jobTypeEnum == JobTypeEnum.AGENT
+            else -> param.serviceScope == null || param.serviceScope == ServiceScopeEnum.PIPELINE
+        }
+    }
+
+    /**
      * 解析 jobType 字符串的编译环境标识：true=编译环境，false=无编译环境，null=为空或无法解析。
      * 供 isExplicitNonBuildEnvJobType / resolveOsMapKey 等方法复用，避免重复 valueOf + isBuildEnv 调用。
      */
     private fun parseBuildEnvFlag(jobType: String?): Boolean? {
-        if (jobType.isNullOrBlank()) return null
-        return runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrNull()
+        return JobTypeEnum.parseOrNull(jobType)?.isBuildEnv()
     }
 
     private fun isExplicitNonBuildEnvJobType(jobType: String?): Boolean {

@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -169,6 +170,16 @@ interface ProjectService {
         pageSize: Int
     ): Pagination<ProjectByConditionDTO>
 
+    /**
+     * 按权限查询用户有权限的项目
+     */
+    fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType? = null,
+        enabled: Boolean? = null
+    ): List<ProjectVO>
+
     fun list(
         userId: String,
         productIds: String? = null,
@@ -299,6 +310,16 @@ interface ProjectService {
     fun getPipelineDialect(projectId: String): String
 
     fun isHidden(englishName: String): Boolean
+
+    /**
+     * 收藏或取消收藏项目
+     */
+    fun favor(userId: String, projectId: String, favor: Boolean): Boolean
+
+    /**
+     * 回填已有个人项目的默认收藏，可重复执行
+     */
+    fun migratePersonalProjectFavor(): Int
 
     fun updateHiddenStatus(englishName: String, hidden: Boolean)
 
