@@ -97,7 +97,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_AGENT_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -183,7 +182,6 @@ import jakarta.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -2012,7 +2010,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             concurrencyGroup = buildHistory.concurrencyGroup!!,
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
-        ).indexOfFirst { it.second == buildHistory.id } + 1
+        ).indexOfFirst { it.buildId == buildHistory.id } + 1
     } else {
         pipelineRuntimeService.getTotalBuildHistoryCount(
             projectId = projectId,
@@ -2683,9 +2681,12 @@ class PipelineBuildFacadeService(
                 val status = task["status"] ?: ""
                 val executeCount = task["executeCount"] as? Int ?: 1
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
-                redisOperation.addSetValue(cancelTaskSetKey, taskId)
-                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+                TaskUtils.recordCancelTaskId(
+                    redisOperation = redisOperation,
+                    buildId = buildId,
+                    containerId = containerId,
+                    taskId = taskId
+                )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "Cancelled by $userId",

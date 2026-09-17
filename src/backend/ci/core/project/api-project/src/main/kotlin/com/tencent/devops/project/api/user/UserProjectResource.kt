@@ -351,6 +351,21 @@ interface UserProjectResource {
         projectId: String
     ): Result<String>
 
+    @PUT
+    @Path("/{projectId}/favor")
+    @Operation(summary = "收藏或取消收藏项目")
+    fun favor(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID英文名标识", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否收藏", required = true)
+        @QueryParam("favor")
+        favor: Boolean
+    ): Result<Boolean>
+
     @GET
     @Path("/{english_name}/isHidden")
     @Operation(summary = "判断项目是否隐藏")

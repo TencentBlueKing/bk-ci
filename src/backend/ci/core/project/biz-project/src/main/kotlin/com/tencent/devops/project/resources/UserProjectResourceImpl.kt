@@ -37,6 +37,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_FAVOR_CANCEL_SUCC
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_FAVOR_SUCC
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
@@ -265,5 +267,21 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun isHidden(userId: String, projectId: String): Result<Boolean> {
         return Result(projectService.isHidden(englishName = projectId))
+    }
+
+    override fun favor(userId: String, projectId: String, favor: Boolean): Result<Boolean> {
+        val success = projectService.favor(
+            userId = userId,
+            projectId = projectId,
+            favor = favor
+        )
+        val messageCode = if (favor) PROJECT_FAVOR_SUCC else PROJECT_FAVOR_CANCEL_SUCC
+        return Result(
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = messageCode,
+                language = I18nUtil.getLanguage(userId)
+            ),
+            data = success
+        )
     }
 }

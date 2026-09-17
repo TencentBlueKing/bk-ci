@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"time"
 
 	"github.com/pkg/errors"
@@ -23,7 +24,7 @@ import (
 //     不需要存根
 //   - linuxExtraFn 注入点方便单测 fake /proc 数据，避免真实环境依赖
 type Kernel struct {
-	bootTimeFn func() (uint64, error)
+	bootTimeFn func(ctx context.Context) (uint64, error)
 	nowFn      func() time.Time
 	// linuxExtraFn 读取 Linux 专属字段（/proc/stat + entropy_avail）。
 	// 非 Linux 平台为 nil。Linux build tag 下由 input_kernel_linux.go
@@ -34,7 +35,7 @@ type Kernel struct {
 // NewKernel 返回默认采集器。
 func NewKernel() *Kernel {
 	k := &Kernel{
-		bootTimeFn: host.BootTime,
+		bootTimeFn: host.BootTimeWithContext,
 		nowFn:      time.Now,
 	}
 	// Linux build tag 下通过 input_kernel_linux.go 注入。
@@ -48,8 +49,8 @@ func (k *Kernel) Name() string { return RenamedEnv }
 // Gather 至少返回 uptime（规范名；由 kernel.boot_time 改名而来）；
 // 在 Linux 平台额外返回 interrupts / context_switches / procs / entropy_avail。
 // Linux 专属字段读取失败不会阻断其他字段上报，仅记为 warn（调用方可按需处理）。
-func (k *Kernel) Gather() ([]Metric, error) {
-	bt, err := k.bootTimeFn()
+func (k *Kernel) Gather(ctx context.Context) ([]Metric, error) {
+	bt, err := k.bootTimeFn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "kernel: BootTime failed")
 	}

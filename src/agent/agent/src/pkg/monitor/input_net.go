@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -17,14 +18,14 @@ import (
 //
 // gopsutil IOCounters(true) 返回 pernic=true。
 type Net struct {
-	ioCountersFn func(pernic bool) ([]net.IOCountersStat, error)
+	ioCountersFn func(ctx context.Context, pernic bool) ([]net.IOCountersStat, error)
 	nowFn        func() time.Time
 }
 
 // NewNet 返回默认 net 采集器。
 func NewNet() *Net {
 	return &Net{
-		ioCountersFn: net.IOCounters,
+		ioCountersFn: net.IOCountersWithContext,
 		nowFn:        time.Now,
 	}
 }
@@ -34,8 +35,8 @@ func (n *Net) Name() string { return MeasurementNet }
 
 // Gather 遍历所有 NIC，过滤掉 all 伪接口（gopsutil 在 pernic=true 时也会
 // 返回一个 "all" 汇总条目，telegraf 源码中也会过滤）。
-func (n *Net) Gather() ([]Metric, error) {
-	stats, err := n.ioCountersFn(true)
+func (n *Net) Gather(ctx context.Context) ([]Metric, error) {
+	stats, err := n.ioCountersFn(ctx, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "net: IOCounters failed")
 	}
