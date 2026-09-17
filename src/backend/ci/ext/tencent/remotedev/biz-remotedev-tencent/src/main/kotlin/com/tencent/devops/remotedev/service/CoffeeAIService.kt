@@ -217,9 +217,10 @@ class CoffeeAIService @Autowired constructor(
     fun inspectUserWorkspace(
         userId: String,
         workspaceName: String?,
-        digitalAvatarId: String? = null
+        digitalAvatarId: String? = null,
+        projectId: String? = null
     ): ImateWorkspaceInspect {
-        val inspect = inspectResolvedWorkspace(userId, workspaceName, digitalAvatarId)
+        val inspect = inspectResolvedWorkspace(userId, workspaceName, digitalAvatarId, projectId)
         logger.info(
             "用户态imate分身归属检查：digitalAvatarId={} workspaceName={} displayName={} exists={} owner={} " +
                 "identityUser={} status={} imateEnabled={} belongsToUser={} usable={} reason={}",
@@ -265,10 +266,27 @@ class CoffeeAIService @Autowired constructor(
         return getAiWorkspaceList(username)
     }
 
-    fun listImateAvatars(userId: String): List<ImateAvatar> {
-        logger.info("查询用户可见CDS数字分身：userId={}", userId)
-        return workspaceStartCloudClient.listCoffeeDigitalAvatars(userId).map { avatar ->
+    fun listImateAvatars(userId: String, projectId: String? = null): List<ImateAvatar> {
+        logger.info("查询用户可见CDS数字分身：userId={} projectId={}", userId, projectId)
+        val avatars = workspaceStartCloudClient.listCoffeeDigitalAvatars(userId).map { avatar ->
             avatar.copy(displayName = CoffeeAIAvatarSupport.displayNameOf(avatar))
+        }
+        if (projectId.isNullOrBlank()) {
+            return avatars
+        }
+        val records = workspaceDao.fetchWorkspacesByNames(
+            dslContext,
+            avatars.map { it.workspaceName }.distinct()
+        ).associateBy { it.workspaceName }
+        return avatars.filter { avatar ->
+            val record = records[avatar.workspaceName]
+            CoffeeAIProjectScope.matchesProject(
+                avatar = avatar,
+                userId = userId,
+                pipelineProjectId = projectId,
+                workspaceProjectId = record?.projectId,
+                workspaceOwnerType = record?.ownerType?.name
+            )
         }
     }
 
@@ -278,7 +296,7 @@ class CoffeeAIService @Autowired constructor(
         username: String
     ): List<ImateAvatar> {
         assertAllowedBuildIdentity(projectId, buildId, username)
-        return listImateAvatars(username)
+        return listImateAvatars(username, projectId)
     }
 
     /**
@@ -293,7 +311,7 @@ class CoffeeAIService @Autowired constructor(
         digitalAvatarId: String? = null
     ): ImateWorkspaceInspect {
         assertAllowedBuildIdentity(projectId, buildId, username)
-        val inspect = inspectResolvedWorkspace(username, workspaceName, digitalAvatarId)
+        val inspect = inspectResolvedWorkspace(username, workspaceName, digitalAvatarId, projectId)
         logger.info(
             "imate分身归属检查：digitalAvatarId={} workspaceName={} displayName={} exists={} owner={} " +
                 "createUserId={} identityUser={} status={} imateEnabled={} belongsToUser={} usable={} " +
@@ -319,7 +337,8 @@ class CoffeeAIService @Autowired constructor(
     private fun inspectResolvedWorkspace(
         username: String,
         workspaceName: String?,
-        digitalAvatarId: String?
+        digitalAvatarId: String?,
+        pipelineProjectId: String? = null
     ): ImateWorkspaceInspect {
         val explicitAvatar = resolveDigitalAvatar(username, digitalAvatarId)
         val listed = if (explicitAvatar == null) {
@@ -343,11 +362,62 @@ class CoffeeAIService @Autowired constructor(
                 displayName = inspect.displayName ?: CoffeeAIAvatarSupport.displayNameOf(avatar)
             )
         }
-        return if (explicitAvatar == null && listed.listed && avatar == null) {
-            CoffeeAIAvatarSupport.markMissingAvatar(enriched)
+        val listedMissing = explicitAvatar == null && listed.listed && avatar == null
+        val scoped = applyAccessAndProjectScope(
+            inspect = enriched,
+            username = username,
+            avatar = avatar,
+            pipelineProjectId = pipelineProjectId,
+            listedMissingAvatar = listedMissing
+        )
+        return if (listedMissing) {
+            CoffeeAIAvatarSupport.markMissingAvatar(scoped)
         } else {
-            enriched
+            scoped
         }
+    }
+
+    private fun applyAccessAndProjectScope(
+        inspect: ImateWorkspaceInspect,
+        username: String,
+        avatar: ImateAvatar?,
+        pipelineProjectId: String?,
+        listedMissingAvatar: Boolean
+    ): ImateWorkspaceInspect {
+        val cdsResolved = avatar != null
+        val ownerMatch = inspect.belongsToUser
+        val authorized = ownerMatch || cdsResolved
+        val shared = avatar?.let { CoffeeAIProjectScope.isSharedWithViewer(it, username) }
+        val boundProjectId = CoffeeAIProjectScope.boundProjectId(avatar, inspect.projectId)
+        val scopeReason = CoffeeAIProjectScope.mismatchReason(
+            avatar = avatar,
+            userId = username,
+            pipelineProjectId = pipelineProjectId,
+            workspaceProjectId = inspect.projectId,
+            workspaceOwnerType = inspect.ownerType
+        )
+        val running = inspect.status == WorkspaceStatus.RUNNING.name
+        val reason = when {
+            !inspect.exists -> inspect.reason
+            listedMissingAvatar -> CoffeeAIAvatarSupport.REASON_NO_DIGITAL_AVATAR
+            !authorized -> "OWNER_MISMATCH"
+            scopeReason != null -> scopeReason
+            !inspect.imateEnabled -> "IMATE_DISABLED"
+            !running -> "NOT_RUNNING"
+            else -> null
+        }
+        val usable = inspect.exists &&
+            authorized &&
+            inspect.imateEnabled &&
+            running &&
+            scopeReason == null &&
+            !listedMissingAvatar
+        return inspect.copy(
+            usable = usable,
+            reason = reason,
+            shared = shared,
+            selectedBoundProjectId = boundProjectId ?: avatar?.selectedBoundProjectId
+        )
     }
 
     private data class WorkspaceAvatarLookup(
@@ -532,20 +602,12 @@ class CoffeeAIService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         }
-        if (!inspect.belongsToUser) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf(
-                    "workspace $workspaceName owner is ${inspect.owner ?: "unknown"}, not $username"
-                )
-            )
-        }
         if (!inspect.usable) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf(
-                    "workspace $workspaceName owner=${inspect.owner} status=${inspect.status} " +
-                        "imateEnabled=${inspect.imateEnabled} reason=${inspect.reason}"
+                    "workspace $workspaceName owner=${inspect.owner} identity=$username " +
+                        "status=${inspect.status} imateEnabled=${inspect.imateEnabled} reason=${inspect.reason}"
                 )
             )
         }
