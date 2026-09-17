@@ -72,6 +72,7 @@ import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
+import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -644,6 +645,7 @@ class ThirdPartyAgentService @Autowired constructor(
             vmSeqId = buildInfo.vmSeqId,
             nodeHashId = agentResult.data!!.nodeId,
             executeCount = buildInfo.executeCount,
+            createMode = agentResult.data?.agentType == AgentType.CREATE,
             simpleResult = SimpleResult(
                 success = buildInfo.success,
                 message = buildInfo.message,

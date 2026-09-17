@@ -835,6 +835,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         vmSeqId: String,
         nodeHashId: String?,
         executeCount: Int?,
+        createMode: Boolean?,
         simpleResult: SimpleResult
     ): Result<Pair<String?, Boolean>> {
         val starter = pipelineBuildFacadeService.workerBuildFinish(
@@ -844,6 +845,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             vmSeqId = vmSeqId,
             nodeHashId = nodeHashId,
             executeCount = executeCount,
+            createMode = createMode,
             simpleResult = simpleResult
         )
         return Result(starter)

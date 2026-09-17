@@ -10,7 +10,7 @@ data class AgentPipelineContainerBuild(
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
+    val pipelineId: String?,
     @get:Schema(title = "作业容器ID", required = true)
     val containerId: String,
     @get:Schema(title = "执行次数", required = true)

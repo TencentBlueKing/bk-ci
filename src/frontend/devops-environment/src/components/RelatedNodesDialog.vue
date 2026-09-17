@@ -26,7 +26,12 @@
                         >
                             {{ $t('environment.staticRelated') }}
                         </bk-radio>
-                        <bk-radio value="dynamic">{{ $t('environment.dynamicRelated') }}</bk-radio>
+                        <bk-radio
+                            v-if="isCreateResType || isBuildEnv"
+                            value="dynamic"
+                        >
+                            {{ $t('environment.dynamicRelated') }}
+                        </bk-radio>
                     </bk-radio-group>
                 </div>
                 <template v-if="relatedType === RELATED_TYPE.NODE">
@@ -328,6 +333,7 @@
     import Logo from '@/components/Logo'
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useEnvAside from '@/hooks/useEnvAside'
     import usePagination from '@/hooks/usePagination'
     import useInstance from '@/hooks/useInstance'
     import { OS_LABEL_MAP } from '@/store/constants'
@@ -355,8 +361,13 @@
 
             const {
                 currentEnv,
-                fetchEnvNodeList
+                fetchEnvNodeList,
+                isBuildEnv
             } = useEnvDetail()
+
+            const {
+                isCreateResType
+            } = useEnvAside()
 
             const osDisplayName = computed(() => {
                 const os = currentEnv.value?.os
@@ -789,6 +800,8 @@
                 searchKeyword,
                 currentEnv,
                 osDisplayName,
+                isCreateResType,
+                isBuildEnv,
                 selectedNodesList,
                 nodeList,
                 pagination,
