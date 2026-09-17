@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,16 +42,19 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
-import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import kotlin.math.max
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
@@ -70,6 +74,18 @@ class QueueInterceptor @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(QueueInterceptor::class.java)
+
+        /**
+         * 单次满员判定最多淘汰的排队构建数量。
+         * 存量队列可能远超 maxQueueSize，分批淘汰避免一次产生过多取消事件、长时间占用并发组锁。
+         */
+        private const val MAX_OUT_QUEUE_SIZE_PER_CHECK = 50
+
+        /**
+         * 排队中的构建状态：QUEUE 为等待被领取，QUEUE_CACHE 为已被领取、等待启动的中间态，
+         * 两者都还未开始执行，都应计入排队数量。与 PipelineBuildDao.getOneConcurrencyQueueBuild 的查询口径保持一致。
+         */
+        private val QUEUE_STATUS_LIST = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
     }
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
@@ -106,8 +122,7 @@ class QueueInterceptor @Autowired constructor(
                 checkRunLockWithGroupType(
                     task = task,
                     latestBuildId = buildSummaryRecord.latestBuildId,
-                    latestStartUser = buildSummaryRecord.latestStartUser,
-                    runningCount = buildSummaryRecord.runningCount
+                    latestStartUser = buildSummaryRecord.latestStartUser
                 )
 
             (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
@@ -154,12 +169,17 @@ class QueueInterceptor @Autowired constructor(
                 )
 
             queueCount >= task.maxQueueSize -> {
+                // 满员时挤掉最早排队的构建并放行当前构建，maxQueueSize是排队队列的容量而非新构建的准入门槛。
+                // 淘汰数量按超出量计算：队列未超限时与历史行为一致(淘汰1个)；
+                // 若队列已经超限(如并发触发时多个构建同时通过了满员判定)，则多淘汰几个使排队数量回落，避免只进不出。
+                val outQueueSize = min(queueCount - task.maxQueueSize + 1, MAX_OUT_QUEUE_SIZE_PER_CHECK)
                 if (groupName == null) {
                     outQueueCancelBySingle(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         latestStartUser = latestStartUser,
-                        task = task
+                        task = task,
+                        outQueueSize = outQueueSize
                     )
                 } else {
                     outQueueCancelByGroup(
@@ -167,7 +187,8 @@ class QueueInterceptor @Autowired constructor(
                         pipelineId = pipelineId,
                         groupName = groupName,
                         latestStartUser = latestStartUser,
-                        task = task
+                        task = task,
+                        outQueueSize = outQueueSize
                     )
                 }
                 Response(data = BuildStatus.RUNNING)
@@ -182,18 +203,31 @@ class QueueInterceptor @Autowired constructor(
         projectId: String,
         pipelineId: String,
         latestStartUser: String?,
-        task: InterceptData
+        task: InterceptData,
+        outQueueSize: Int
     ) {
         if (!task.cancelAllowed) {
             return
         }
         // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"
-        val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildStatus = BuildStatus.UNEXEC
-        )
-        if (buildInfo != null) {
+        val outQueueBuilds = mutableListOf<BuildInfo>()
+        while (outQueueBuilds.size < outQueueSize) {
+            val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildStatus = BuildStatus.UNEXEC
+            ) ?: break // 队列已空，无需继续淘汰
+            // 出队状态更新失败时会重复取到同一个构建，此时终止淘汰，避免重复发送取消事件
+            if (outQueueBuilds.any { it.buildId == buildInfo.buildId }) {
+                break
+            }
+            outQueueBuilds.add(buildInfo)
+        }
+        if (outQueueBuilds.isEmpty()) {
+            return
+        }
+        logger.info("[$pipelineId]|${task.buildId}|QUEUE_OUT_SIZE|single|out=${outQueueBuilds.size}")
+        outQueueBuilds.forEach { buildInfo ->
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = "[$pipelineId] queue outSize,cancel first Queue build",
@@ -225,30 +259,44 @@ class QueueInterceptor @Autowired constructor(
         pipelineId: String,
         groupName: String,
         latestStartUser: String?,
-        task: InterceptData
+        task: InterceptData,
+        outQueueSize: Int
     ) {
         if (!task.cancelAllowed) {
             return
         }
         // 因为排队队列是流水线级别，所以是取消当前流水线下同一并发组最早排队的构建，不一定是项目级别下同一并发组最早的构建。
-        val buildInfo = ConcurrencyGroupLock(redisOperation, projectId, groupName).use { pipelineLock ->
+        // 锁内只做出队，日志与取消事件放到锁外处理，避免批量淘汰时长时间占用并发组锁阻塞构建启动。
+        val outQueueBuilds = mutableListOf<BuildInfo>()
+        ConcurrencyGroupLock(redisOperation, projectId, groupName).use { pipelineLock ->
             pipelineLock.lock()
-            pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
-                projectId = projectId,
-                concurrencyGroup = groupName,
-                pipelineId = pipelineId,
-                buildStatus = BuildStatus.UNEXEC
-            )
+            while (outQueueBuilds.size < outQueueSize) {
+                val buildInfo = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
+                    projectId = projectId,
+                    concurrencyGroup = groupName,
+                    pipelineId = pipelineId,
+                    buildStatus = BuildStatus.UNEXEC
+                ) ?: break // 队列已空，无需继续淘汰
+                // 出队状态更新失败时会重复取到同一个构建，此时终止淘汰，避免重复发送取消事件
+                if (outQueueBuilds.any { it.buildId == buildInfo.buildId }) {
+                    break
+                }
+                outQueueBuilds.add(buildInfo)
+            }
         }
-        if (buildInfo != null) {
-            val detailUrl = pipelineUrlBean.genBuildDetailUrl(
-                projectCode = projectId,
-                pipelineId = task.pipelineInfo.pipelineId,
-                buildId = task.buildId,
-                position = null,
-                stageId = null,
-                needShortUrl = false
-            )
+        if (outQueueBuilds.isEmpty()) {
+            return
+        }
+        logger.info("[$pipelineId]|${task.buildId}|QUEUE_OUT_SIZE|$groupName|out=${outQueueBuilds.size}")
+        val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = task.pipelineInfo.pipelineId,
+            buildId = task.buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
+        outQueueBuilds.forEach { buildInfo ->
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(
@@ -285,8 +333,7 @@ class QueueInterceptor @Autowired constructor(
     private fun checkRunLockWithGroupType(
         task: InterceptData,
         latestBuildId: String?,
-        latestStartUser: String?,
-        runningCount: Int
+        latestStartUser: String?
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
@@ -302,11 +349,13 @@ class QueueInterceptor @Autowired constructor(
                 )
                 // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
                 // status 取所有没有完成的状态
-                val status = BuildStatus.values().filterNot { it.isFinish() }
+                val status = BuildStatus.entries.filterNot { it.isFinish() }
+                // #13450 重试复用当前 buildId，查询时排除自己，避免把当前构建误取消
                 val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = concurrencyGroup,
-                    status = status
+                    status = status,
+                    excludeBuildId = task.buildId
                 ).toMutableList()
                 // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
                 if (concurrencyGroup == task.pipelineInfo.pipelineId) {
@@ -315,15 +364,24 @@ class QueueInterceptor @Autowired constructor(
                         pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                             projectId = projectId,
                             pipelineId = task.pipelineInfo.pipelineId,
-                            status = status
+                            status = status,
+                            excludeBuildId = task.buildId
                         )
                     )
                 }
-                builds.forEach { (pipelineId, buildId) ->
+                val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
+                    candidateBuilds = builds,
+                    currentContext = ConcurrencyCancelContext.of(
+                        pipelineId = task.pipelineInfo.pipelineId,
+                        buildId = task.buildId,
+                        isRetry = task.retry == true
+                    ) { pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum }
+                )
+                cancelTargets.forEach { target ->
                     pipelineRuntimeService.concurrencyCancelBuildPipeline(
                         projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
+                        pipelineId = target.pipelineId,
+                        buildId = target.buildId,
                         userId = latestStartUser ?: task.pipelineInfo.creator,
                         groupName = concurrencyGroup,
                         detailUrl = detailUrl
@@ -338,22 +396,46 @@ class QueueInterceptor @Autowired constructor(
                     task = task,
                     latestBuildId = latestBuildId,
                     latestStartUser = latestStartUser,
-                    runningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                        projectId = projectId,
+                    runningCount = countGroupBuild(
+                        task = task,
                         concurrencyGroup = concurrencyGroup,
                         status = listOf(BuildStatus.RUNNING)
-                    ).count { it.first == task.pipelineInfo.pipelineId },
+                    ),
                     // #7681 在history表中取出当前流水线下相同并发组排队的数量。
-                    queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                        projectId = projectId,
+                    // #13499 排队数量必须同时统计 QUEUE 与 QUEUE_CACHE，否则头部构建在"领取-回退"
+                    // 循环中处于 QUEUE_CACHE 时会被漏统计，导致满员判定偏小、淘汰时机被推迟。
+                    queueCount = countGroupBuild(
+                        task = task,
                         concurrencyGroup = concurrencyGroup,
-                        status = listOf(BuildStatus.QUEUE)
-                    ).count { it.first == task.pipelineInfo.pipelineId },
+                        status = QUEUE_STATUS_LIST
+                    ),
                     groupName = concurrencyGroup
                 )
             }
             // 满足条件
             else -> Response(data = BuildStatus.RUNNING)
         }
+    }
+
+    /**
+     * 统计当前流水线下处于[status]的、属于并发组[concurrencyGroup]的构建数量。
+     *
+     * 排队队列是流水线级别的，所以项目级并发组的查询结果需要再按当前流水线过滤。
+     *
+     * 注意：这里不能像其他分支那样叠加 #8143 的空并发组兼容统计。
+     * 满员淘汰依赖 getOneConcurrencyQueueBuild，其条件为 CONCURRENCY_GROUP = 并发组，取不到并发组为空的旧构建。
+     * 若把这类构建计入排队数量，会出现"判定为满员但一个都淘汰不掉"从而只进不出，
+     * 因此统计口径必须与淘汰口径保持一致。
+     */
+    private fun countGroupBuild(
+        task: InterceptData,
+        concurrencyGroup: String,
+        status: List<BuildStatus>
+    ): Int {
+        return pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = task.pipelineInfo.projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = status
+        ).count { it.pipelineId == task.pipelineInfo.pipelineId }
     }
 }

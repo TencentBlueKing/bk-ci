@@ -108,10 +108,12 @@ export default {
             return [lackParam ? '' : newUrl, queryKey]
         },
         getValidaVar (value) {
+            if (value === null || value === undefined || value === '') return false
+            const str = String(value)
             if (this.pipelineDialect === 'CLASSIC') {
-                return value.isBkVar()
+                return str.isBkVar()
             } else {
-                return value.isBKConstraintVar()
+                return str.isBKConstraintVar()
             }
         }
     }

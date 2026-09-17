@@ -314,6 +314,26 @@ class ProjectDao {
         }
     }
 
+    fun listPersonalProjectIds(dslContext: DSLContext): List<Pair<String, String>> {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME, CREATOR)
+                .from(this)
+                .where(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(IS_OFFLINED.eq(false))
+                .fetch()
+                .mapNotNull { record ->
+                    val projectId = record.get(ENGLISH_NAME)
+                    val creator = record.get(CREATOR)
+                    if (projectId.isNullOrBlank() || creator.isNullOrBlank()) {
+                        null
+                    } else {
+                        projectId to creator
+                    }
+                }
+        }
+    }
+
     fun getFirstPersonalProjectByCreator(dslContext: DSLContext, creator: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)

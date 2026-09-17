@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sort"
 	"strconv"
@@ -29,6 +30,11 @@ import (
 //
 // 认证 Header 与现有 api 包统一走 config.GAgentConfig.GetAuthHeaderMap()，
 // 保证 agent 所有上报路径的鉴权一致。
+
+const (
+	reportTimeout              = 30 * time.Second
+	maxReportResponseBodyBytes = 64 << 10
+)
 
 // metricJSON 是发给 /agents/metrics 的 JSON 条目。字段名和 telegraf 默认
 // serializer（data_format = "json"）输出对齐：name / timestamp / tags / fields。
@@ -107,7 +113,12 @@ func (r *Reporter) Report(ctx context.Context, metrics []Metric) error {
 
 	headers := r.buildHeaders(contentType)
 
-	status, respBody, err := r.doPost(ctx, url, headers, body)
+	// 上报使用独立的 30 秒总超时。即使 Collect 使用的是长生命周期
+	// context，后端无响应或响应体迟迟不结束也不会永久占住本轮采集。
+	reportCtx, cancel := context.WithTimeout(ctx, reportTimeout)
+	defer cancel()
+
+	status, respBody, err := r.doPost(reportCtx, url, headers, body)
 	if err != nil {
 		return errors.Wrap(err, "reporter: POST failed")
 	}
@@ -243,10 +254,10 @@ func defaultDoPost(ctx context.Context, url string, headers map[string]string, b
 	}
 	defer resp.Body.Close()
 
-	// 读一小段响应即可，避免后端异常时回传大 body 浪费内存
-	var respBuf bytes.Buffer
-	_, _ = respBuf.ReadFrom(resp.Body)
-	return resp.StatusCode, respBuf.Bytes(), nil
+	// 响应只用于非 2xx 错误日志，硬限制读取量，避免异常后端在 30 秒
+	// deadline 内快速回传大量数据而占满 Agent 堆内存。
+	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, maxReportResponseBodyBytes))
+	return resp.StatusCode, respBody, nil
 }
 
 // --- global tag 注入 ---
