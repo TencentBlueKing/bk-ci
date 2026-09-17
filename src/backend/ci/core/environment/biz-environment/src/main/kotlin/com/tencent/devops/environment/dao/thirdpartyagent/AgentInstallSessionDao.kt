@@ -1,6 +1,8 @@
 package com.tencent.devops.environment.dao.thirdpartyagent
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.environment.model.AgentInstallSession
+import com.tencent.devops.environment.model.AgentInstallSessionConfig
 import com.tencent.devops.environment.model.AgentInstallSessionMode
 import com.tencent.devops.environment.model.AgentInstallSessionNode
 import com.tencent.devops.environment.model.AgentInstallSessionNodeStatus
@@ -80,7 +82,10 @@ class AgentInstallSessionDao {
         session: AgentInstallSession,
         tags: Collection<AgentInstallSessionTag>
     ) {
-        require(session.parallelTaskCount >= 0) { "parallelTaskCount must not be negative" }
+        require(session.config.parallelTaskCount >= 0) { "parallelTaskCount must not be negative" }
+        require((session.config.dockerParallelTaskCount ?: 0) >= 0) {
+            "dockerParallelTaskCount must not be negative"
+        }
         require(tags.all { it.sessionId == session.id }) { "tag sessionId must match session id" }
 
         dslContext.transaction { configuration ->
@@ -255,14 +260,7 @@ class AgentInstallSessionDao {
             SessionTable.MODE,
             SessionTable.CREATED_BY,
             SessionTable.OS,
-            SessionTable.ZONE,
-            SessionTable.GATEWAY,
-            SessionTable.FILE_GATEWAY,
-            SessionTable.INSTALL_TYPE,
-            SessionTable.AGENT_TYPE,
-            SessionTable.LOGIN_NAME,
-            SessionTable.LOGIN_PASSWORD_CIPHER,
-            SessionTable.PARALLEL_TASK_COUNT,
+            SessionTable.AGENT_CONFIG,
             SessionTable.TARGET_AGENT_ID,
             SessionTable.TARGET_NODE_ID,
             SessionTable.CONFIG_FINGERPRINT,
@@ -279,14 +277,7 @@ class AgentInstallSessionDao {
             session.mode.name,
             session.createdBy,
             session.os,
-            session.zone,
-            session.gateway,
-            session.fileGateway,
-            session.installType,
-            session.agentType,
-            session.loginName,
-            session.loginPasswordCipher,
-            session.parallelTaskCount,
+            JsonUtil.toJson(session.config, false),
             session.targetAgentId,
             session.targetNodeId,
             session.configFingerprint,
@@ -323,14 +314,7 @@ class AgentInstallSessionDao {
         mode = AgentInstallSessionMode.valueOf(record.get(SessionTable.MODE)!!),
         createdBy = record.get(SessionTable.CREATED_BY)!!,
         os = record.get(SessionTable.OS)!!,
-        zone = record.get(SessionTable.ZONE),
-        gateway = record.get(SessionTable.GATEWAY)!!,
-        fileGateway = record.get(SessionTable.FILE_GATEWAY),
-        installType = record.get(SessionTable.INSTALL_TYPE)!!,
-        agentType = record.get(SessionTable.AGENT_TYPE)!!,
-        loginName = record.get(SessionTable.LOGIN_NAME),
-        loginPasswordCipher = record.get(SessionTable.LOGIN_PASSWORD_CIPHER),
-        parallelTaskCount = record.get(SessionTable.PARALLEL_TASK_COUNT)!!,
+        config = JsonUtil.to(record.get(SessionTable.AGENT_CONFIG)!!, AgentInstallSessionConfig::class.java),
         targetAgentId = record.get(SessionTable.TARGET_AGENT_ID),
         targetNodeId = record.get(SessionTable.TARGET_NODE_ID),
         configFingerprint = record.get(SessionTable.CONFIG_FINGERPRINT)!!,
@@ -383,14 +367,7 @@ private object SessionTable {
     val MODE = field("MODE", String::class.java)
     val CREATED_BY = field("CREATED_BY", String::class.java)
     val OS = field("OS", String::class.java)
-    val ZONE = field("ZONE", String::class.java)
-    val GATEWAY = field("GATEWAY", String::class.java)
-    val FILE_GATEWAY = field("FILE_GATEWAY", String::class.java)
-    val INSTALL_TYPE = field("INSTALL_TYPE", String::class.java)
-    val AGENT_TYPE = field("AGENT_TYPE", String::class.java)
-    val LOGIN_NAME = field("LOGIN_NAME", String::class.java)
-    val LOGIN_PASSWORD_CIPHER = field("LOGIN_PASSWORD_CIPHER", String::class.java)
-    val PARALLEL_TASK_COUNT = field("PARALLEL_TASK_COUNT", Int::class.java)
+    val AGENT_CONFIG = field("AGENT_CONFIG", String::class.java)
     val TARGET_AGENT_ID = field("TARGET_AGENT_ID", Long::class.java)
     val TARGET_NODE_ID = field("TARGET_NODE_ID", Long::class.java)
     val CONFIG_FINGERPRINT = field("CONFIG_FINGERPRINT", String::class.java)
@@ -402,8 +379,7 @@ private object SessionTable {
     val CREATED_TIME = field("CREATED_TIME", LocalDateTime::class.java)
     val UPDATED_TIME = field("UPDATED_TIME", LocalDateTime::class.java)
     val ALL_FIELDS = arrayOf<Field<*>>(
-        ID, PROJECT_ID, MODE, CREATED_BY, OS, ZONE, GATEWAY, FILE_GATEWAY, INSTALL_TYPE, AGENT_TYPE,
-        LOGIN_NAME, LOGIN_PASSWORD_CIPHER, PARALLEL_TASK_COUNT, TARGET_AGENT_ID, TARGET_NODE_ID,
+        ID, PROJECT_ID, MODE, CREATED_BY, OS, AGENT_CONFIG, TARGET_AGENT_ID, TARGET_NODE_ID,
         CONFIG_FINGERPRINT, TOKEN_HASH, TOKEN_CIPHER,
         STATUS, EXPIRED_TIME, PREVIOUS_SESSION_ID, CREATED_TIME, UPDATED_TIME
     )

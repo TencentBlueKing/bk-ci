@@ -19,6 +19,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentInstallSessionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentInstallSession
+import com.tencent.devops.environment.model.AgentInstallSessionConfig
 import com.tencent.devops.environment.model.AgentInstallSessionMode
 import com.tencent.devops.environment.model.AgentInstallSessionNode
 import com.tencent.devops.environment.model.AgentInstallSessionNodeStatus
@@ -156,14 +157,15 @@ class AgentInstallSessionService(
         val normalized = NormalizedConfig(
             mode = source.mode,
             os = OS.valueOf(source.os),
-            zone = source.zone,
-            gateway = source.gateway,
-            fileGateway = source.fileGateway,
-            loginName = source.loginName,
-            loginPasswordCipher = source.loginPasswordCipher,
-            installType = TPAInstallType.valueOf(source.installType),
-            agentType = AgentType.valueOf(source.agentType),
-            parallelTaskCount = source.parallelTaskCount,
+            zone = source.config.zone,
+            gateway = source.config.gateway,
+            fileGateway = source.config.fileGateway,
+            loginName = source.config.loginName,
+            loginPasswordCipher = source.config.loginPasswordCipher,
+            installType = TPAInstallType.valueOf(source.config.installType),
+            agentType = AgentType.valueOf(source.config.agentType),
+            parallelTaskCount = source.config.parallelTaskCount,
+            dockerParallelTaskCount = source.config.dockerParallelTaskCount,
             targetAgentId = source.targetAgentId,
             targetNodeId = source.targetNodeId,
             tags = tags,
@@ -226,6 +228,7 @@ class AgentInstallSessionService(
             installType = null,
             agentType = target.agentType,
             parallelTaskCount = target.parallelTaskCount,
+            dockerParallelTaskCount = target.dockerParallelTaskCount,
             tags = tags,
             preview = AgentInstallEnvironmentPreview(associated = matched.matchedEnvironments.toApi()),
             canReinstall = canEdit && isAbnormal,
@@ -245,6 +248,9 @@ class AgentInstallSessionService(
     ): NormalizedConfig {
         if (request.parallelTaskCount < 0) {
             invalidParam("parallelTaskCount")
+        }
+        if ((request.dockerParallelTaskCount ?: 0) < 0) {
+            invalidParam("dockerParallelTaskCount")
         }
         val mode = AgentInstallSessionMode.valueOf(request.mode.name)
         val tags = resolveTags(projectId, request)
@@ -266,6 +272,7 @@ class AgentInstallSessionService(
                 installType = installType,
                 agentType = agentType,
                 parallelTaskCount = request.parallelTaskCount,
+                dockerParallelTaskCount = request.dockerParallelTaskCount,
                 tags = tags,
                 targetAgentId = null,
                 environments = AgentInstallEnvironmentPreview(
@@ -284,6 +291,7 @@ class AgentInstallSessionService(
                 installType = installType,
                 agentType = agentType,
                 parallelTaskCount = request.parallelTaskCount,
+                dockerParallelTaskCount = request.dockerParallelTaskCount,
                 targetAgentId = null,
                 targetNodeId = null,
                 tags = tags,
@@ -309,6 +317,7 @@ class AgentInstallSessionService(
                 installType = installType,
                 agentType = target.agentType,
                 parallelTaskCount = request.parallelTaskCount,
+                dockerParallelTaskCount = request.dockerParallelTaskCount,
                 tags = tags,
                 targetAgentId = request.targetAgentId,
                 environments = AgentInstallEnvironmentPreview(
@@ -328,6 +337,7 @@ class AgentInstallSessionService(
                 installType = installType,
                 agentType = target.agentType,
                 parallelTaskCount = request.parallelTaskCount,
+                dockerParallelTaskCount = request.dockerParallelTaskCount,
                 targetAgentId = target.agentId,
                 targetNodeId = target.nodeId,
                 tags = tags,
@@ -347,6 +357,7 @@ class AgentInstallSessionService(
         installType: TPAInstallType,
         agentType: AgentType,
         parallelTaskCount: Int,
+        dockerParallelTaskCount: Int?,
         targetAgentId: Long?,
         targetNodeId: Long?,
         tags: List<AgentInstallTagSnapshot>,
@@ -365,6 +376,7 @@ class AgentInstallSessionService(
             appendCanonical(installType.name)
             appendCanonical(agentType.name)
             appendCanonical(parallelTaskCount.toString())
+            appendCanonical(dockerParallelTaskCount?.toString())
             appendCanonical(targetAgentId?.toString())
             appendCanonical(targetNodeId?.toString())
             tags.sortedWith(compareBy(AgentInstallTagSnapshot::tagKeyId, AgentInstallTagSnapshot::tagValueId)).forEach {
@@ -385,6 +397,7 @@ class AgentInstallSessionService(
             installType = installType,
             agentType = agentType,
             parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = dockerParallelTaskCount,
             targetAgentId = targetAgentId,
             targetNodeId = targetNodeId,
             tags = tags,
@@ -447,14 +460,17 @@ class AgentInstallSessionService(
             mode = normalized.mode,
             createdBy = userId,
             os = normalized.os.name,
-            zone = normalized.zone,
-            gateway = normalized.gateway,
-            fileGateway = normalized.fileGateway,
-            loginName = normalized.loginName,
-            loginPasswordCipher = normalized.loginPasswordCipher,
-            installType = normalized.installType.name,
-            agentType = normalized.agentType.name,
-            parallelTaskCount = normalized.parallelTaskCount,
+            config = AgentInstallSessionConfig(
+                zone = normalized.zone,
+                gateway = normalized.gateway,
+                fileGateway = normalized.fileGateway,
+                installType = normalized.installType.name,
+                agentType = normalized.agentType.name,
+                loginName = normalized.loginName,
+                loginPasswordCipher = normalized.loginPasswordCipher,
+                parallelTaskCount = normalized.parallelTaskCount,
+                dockerParallelTaskCount = normalized.dockerParallelTaskCount
+            ),
             targetAgentId = normalized.targetAgentId,
             targetNodeId = normalized.targetNodeId,
             configFingerprint = normalized.fingerprint,
@@ -481,7 +497,7 @@ class AgentInstallSessionService(
         )
         return AgentInstallSessionCreateResponse(
             sessionId = session.id,
-            command = agentUrlService.genAgentSessionInstallScript(normalized.os, session.gateway, token),
+            command = agentUrlService.genAgentSessionInstallScript(normalized.os, session.config.gateway, token),
             expiredAt = session.expiredTime,
             reused = false,
             preview = normalized.preview,
@@ -544,12 +560,13 @@ class AgentInstallSessionService(
         return AgentInstallSessionPreview(
             mode = AgentInstallMode.valueOf(session.mode.name),
             os = OS.valueOf(session.os),
-            zone = session.zone,
-            loginName = session.loginName,
-            loginPasswordConfigured = !session.loginPasswordCipher.isNullOrBlank(),
-            installType = TPAInstallType.valueOf(session.installType),
-            agentType = AgentType.valueOf(session.agentType),
-            parallelTaskCount = session.parallelTaskCount,
+            zone = session.config.zone,
+            loginName = session.config.loginName,
+            loginPasswordConfigured = !session.config.loginPasswordCipher.isNullOrBlank(),
+            installType = TPAInstallType.valueOf(session.config.installType),
+            agentType = AgentType.valueOf(session.config.agentType),
+            parallelTaskCount = session.config.parallelTaskCount,
+            dockerParallelTaskCount = session.config.dockerParallelTaskCount,
             tags = tags,
             targetAgentId = session.targetAgentId?.let(HashUtil::encodeLongId),
             environments = environments
@@ -558,7 +575,7 @@ class AgentInstallSessionService(
 
     private fun command(session: AgentInstallSession): String = agentUrlService.genAgentSessionInstallScript(
         os = OS.valueOf(session.os),
-        gateway = session.gateway,
+        gateway = session.config.gateway,
         token = SecurityUtil.decrypt(session.tokenCipher)
     )
 
@@ -637,7 +654,8 @@ class AgentInstallSessionService(
             gateway = agent.gateway,
             fileGateway = agent.fileGateway,
             agentType = AgentType.valueOf(agent.agentType ?: AgentType.BUILD.name),
-            parallelTaskCount = agent.parallelTaskCount ?: 0
+            parallelTaskCount = agent.parallelTaskCount ?: 0,
+            dockerParallelTaskCount = agent.dockerParallelTaskCount
         )
     }
 
@@ -689,6 +707,7 @@ class AgentInstallSessionService(
         val installType: TPAInstallType,
         val agentType: AgentType,
         val parallelTaskCount: Int,
+        val dockerParallelTaskCount: Int?,
         val targetAgentId: Long?,
         val targetNodeId: Long?,
         val tags: List<AgentInstallTagSnapshot>,
@@ -706,7 +725,8 @@ class AgentInstallSessionService(
         val gateway: String,
         val fileGateway: String?,
         val agentType: AgentType,
-        val parallelTaskCount: Int
+        val parallelTaskCount: Int,
+        val dockerParallelTaskCount: Int?
     )
 
     private companion object {

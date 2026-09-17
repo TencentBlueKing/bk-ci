@@ -85,11 +85,11 @@ class AgentInstallSessionRuntimeService(
         )
         return downloadAgentInstallService.downloadInstallScript(
             agentId = HashUtil.encodeLongId(agentId),
-            loginName = session.loginName,
-            loginPassword = session.loginPasswordCipher?.takeIf { it.isNotBlank() }?.let {
+            loginName = session.config.loginName,
+            loginPassword = session.config.loginPasswordCipher?.takeIf { it.isNotBlank() }?.let {
                 AESUtil.decrypt(batchInstallAesKey, it)
             },
-            installType = TPAInstallType.valueOf(session.installType),
+            installType = TPAInstallType.valueOf(session.config.installType),
             allowInstalledAgent = session.mode == AgentInstallSessionMode.REINSTALL
         )
     }
@@ -148,7 +148,8 @@ class AgentInstallSessionRuntimeService(
                 ) {
                     throw OperationException("The reinstall session target does not match")
                 }
-                agent.parallelTaskCount = session.parallelTaskCount
+                agent.parallelTaskCount = session.config.parallelTaskCount
+                session.config.dockerParallelTaskCount?.let { agent.dockerParallelTaskCount = it }
                 thirdPartyAgentDao.saveAgent(dslContext, agent)
                 val tags = sessionDao.listTags(dslContext, session.id).map {
                     NodeTagAddOrDeleteTagItem(tagKeyId = it.tagKeyId, tagValueId = it.tagValueId)
@@ -206,12 +207,13 @@ class AgentInstallSessionRuntimeService(
             projectId = session.projectId,
             os = os,
             secretKey = SecurityUtil.encrypt(secretKey),
-            gateway = session.gateway,
-            fileGateway = session.fileGateway,
-            agentType = AgentType.valueOf(session.agentType),
+            gateway = session.config.gateway,
+            fileGateway = session.config.fileGateway,
+            agentType = AgentType.valueOf(session.config.agentType),
             createWorkspaceName = null,
             agentProps = null,
-            parallelTaskCount = session.parallelTaskCount
+            parallelTaskCount = session.config.parallelTaskCount,
+            dockerParallelTaskCount = session.config.dockerParallelTaskCount
         )
     }
 

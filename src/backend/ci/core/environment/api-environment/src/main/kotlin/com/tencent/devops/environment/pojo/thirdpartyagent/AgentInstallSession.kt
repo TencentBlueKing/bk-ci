@@ -32,6 +32,8 @@ class AgentInstallSessionRequest(
     val agentType: AgentType? = null,
     @get:Schema(title = "构建并发数，0表示无限制", required = true, minimum = "0")
     val parallelTaskCount: Int,
+    @get:Schema(title = "Docker构建并发数，不传表示不指定", minimum = "0")
+    val dockerParallelTaskCount: Int? = null,
     @get:Schema(title = "初始节点标签")
     val tags: List<NodeTagAddOrDeleteTagItem> = emptyList(),
     @get:Schema(title = "重装目标Agent Hash ID")
@@ -40,7 +42,8 @@ class AgentInstallSessionRequest(
     override fun toString(): String =
         "AgentInstallSessionRequest(mode=$mode, os=$os, zone=$zone, loginName=$loginName, " +
             "loginPassword=***, installType=$installType, agentType=$agentType, " +
-            "parallelTaskCount=$parallelTaskCount, tags=$tags, targetAgentId=$targetAgentId)"
+            "parallelTaskCount=$parallelTaskCount, dockerParallelTaskCount=$dockerParallelTaskCount, " +
+            "tags=$tags, targetAgentId=$targetAgentId)"
 }
 
 @Schema(title = "安装会话标签快照")
@@ -93,6 +96,8 @@ data class AgentInstallSessionPreview(
     val agentType: AgentType,
     @get:Schema(title = "构建并发数，0表示无限制", required = true)
     val parallelTaskCount: Int,
+    @get:Schema(title = "Docker构建并发数，为空表示不指定")
+    val dockerParallelTaskCount: Int?,
     @get:Schema(title = "标签快照")
     val tags: List<AgentInstallTagSnapshot>,
     @get:Schema(title = "重装目标Agent Hash ID")
@@ -199,6 +204,8 @@ data class AgentReinstallContext(
     val agentType: AgentType,
     @get:Schema(title = "当前构建并发数，0表示无限制", required = true)
     val parallelTaskCount: Int,
+    @get:Schema(title = "当前Docker构建并发数，为空表示未设置")
+    val dockerParallelTaskCount: Int?,
     @get:Schema(title = "当前节点标签")
     val tags: List<AgentInstallTagSnapshot>,
     @get:Schema(title = "当前配置的环境预览", required = true)
