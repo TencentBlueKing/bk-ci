@@ -39,7 +39,7 @@ interface UserImateResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线所在项目 ID；个人项目只返回个人分身，团队项目只返回已绑定本项目的分身")
+        @Parameter(description = "流水线所在项目 ID；个人项目只返回未共享的个人分身，团队项目返回当前用户可见的全部共享分身")
         @QueryParam("projectId")
         projectId: String?,
         @Parameter(description = "蓝盾控制台项目头，query 为空时作为 projectId 回退")
@@ -83,6 +83,12 @@ interface UserImateResource {
         expirationMinutes: Long?,
         @Parameter(description = "数字分身 ID，优先于 workspaceName")
         @QueryParam("digitalAvatarId")
-        digitalAvatarId: String?
+        digitalAvatarId: String?,
+        @Parameter(description = "流水线所在项目 ID，用于个人/团队分身范围校验")
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "蓝盾控制台项目头，query 为空时作为 projectId 回退")
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        devopsProjectId: String?
     ): Result<String>
 }

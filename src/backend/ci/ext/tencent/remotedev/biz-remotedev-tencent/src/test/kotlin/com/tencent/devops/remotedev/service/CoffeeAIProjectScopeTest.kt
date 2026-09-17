@@ -13,74 +13,55 @@ class CoffeeAIProjectScopeTest {
     fun `personal project id starts with underscore`() {
         assertTrue(CoffeeAIProjectScope.isPersonalProject("_alice"))
         assertTrue(CoffeeAIProjectScope.isPersonalProject("_alice_personal"))
-        assertFalse(CoffeeAIProjectScope.isPersonalProject("landunplugins"))
+        assertFalse(CoffeeAIProjectScope.isPersonalProject("team-proj"))
         assertFalse(CoffeeAIProjectScope.isPersonalProject(""))
         assertFalse(CoffeeAIProjectScope.isPersonalProject(null))
     }
 
     @Test
-    fun `shared flag or other owner counts as shared with viewer`() {
-        assertTrue(CoffeeAIProjectScope.isSharedWithViewer(avatar(owner = "bob", shared = true), "alice"))
-        assertTrue(CoffeeAIProjectScope.isSharedWithViewer(avatar(owner = "bob", shared = false), "alice"))
-        assertFalse(CoffeeAIProjectScope.isSharedWithViewer(avatar(owner = "alice", shared = false), "alice"))
+    fun `cds shared flag or other owner counts as shared avatar`() {
+        assertTrue(CoffeeAIProjectScope.isSharedAvatar(avatar(owner = "alice", shared = true), "alice"))
+        assertTrue(CoffeeAIProjectScope.isSharedAvatar(avatar(owner = "bob", shared = false), "alice"))
+        assertFalse(CoffeeAIProjectScope.isSharedAvatar(avatar(owner = "alice", shared = false), "alice"))
     }
 
     @Test
-    fun `personal pipeline only keeps own unbound avatars`() {
-        val own = avatar(owner = "alice", shared = false)
+    fun `personal pipeline only keeps own unshared avatars`() {
         assertTrue(
             CoffeeAIProjectScope.matchesProject(
-                avatar = own,
+                avatar = avatar(owner = "alice", shared = false),
                 userId = "alice",
-                pipelineProjectId = "_alice",
-                workspaceOwnerType = "PERSONAL"
+                pipelineProjectId = "_alice"
             )
         )
         assertFalse(
             CoffeeAIProjectScope.matchesProject(
                 avatar = avatar(owner = "bob", shared = true),
                 userId = "alice",
-                pipelineProjectId = "_alice",
-                workspaceOwnerType = "PERSONAL"
+                pipelineProjectId = "_alice"
             )
         )
         assertFalse(
             CoffeeAIProjectScope.matchesProject(
-                avatar = avatar(owner = "alice", bound = "team-proj"),
+                avatar = avatar(owner = "alice", shared = true),
                 userId = "alice",
-                pipelineProjectId = "_alice",
-                workspaceOwnerType = "PROJECT"
+                pipelineProjectId = "_alice"
             )
         )
     }
 
     @Test
-    fun `team pipeline only keeps avatars bound to that project`() {
-        val boundOwn = avatar(owner = "alice", bound = "team-proj")
-        val boundShared = avatar(owner = "bob", shared = true, bound = "team-proj")
-        val otherBound = avatar(owner = "alice", bound = "other-proj")
-        val personal = avatar(owner = "alice")
+    fun `team pipeline keeps shared avatars regardless of bound project`() {
         assertTrue(
             CoffeeAIProjectScope.matchesProject(
-                avatar = boundOwn,
+                avatar = avatar(owner = "bob", shared = true, bound = "other-proj"),
                 userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "team-proj",
-                workspaceOwnerType = "PROJECT"
+                pipelineProjectId = "team-proj"
             )
         )
         assertTrue(
             CoffeeAIProjectScope.matchesProject(
-                avatar = boundShared,
-                userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "team-proj",
-                workspaceOwnerType = "PROJECT"
-            )
-        )
-        assertFalse(
-            CoffeeAIProjectScope.matchesProject(
-                avatar = otherBound,
+                avatar = avatar(owner = "alice", shared = true),
                 userId = "alice",
                 pipelineProjectId = "team-proj"
             )
@@ -88,44 +69,16 @@ class CoffeeAIProjectScopeTest {
         assertEquals(
             CoffeeAIProjectScope.REASON_PERSONAL_AVATAR_IN_TEAM_PROJECT,
             CoffeeAIProjectScope.mismatchReason(
-                avatar = personal,
+                avatar = avatar(owner = "alice", shared = false),
                 userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "_alice",
-                workspaceOwnerType = "PERSONAL"
-            )
-        )
-        assertEquals(
-            CoffeeAIProjectScope.REASON_AVATAR_BOUND_TO_OTHER_PROJECT,
-            CoffeeAIProjectScope.mismatchReason(
-                avatar = otherBound,
-                userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "other-proj",
-                workspaceOwnerType = "PROJECT"
+                pipelineProjectId = "team-proj"
             )
         )
         assertNull(
             CoffeeAIProjectScope.mismatchReason(
-                avatar = boundOwn,
+                avatar = avatar(owner = "bob", shared = true),
                 userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "team-proj",
-                workspaceOwnerType = "PROJECT"
-            )
-        )
-    }
-
-    @Test
-    fun `workspace projectId fills missing selectedBoundProjectId`() {
-        val shared = avatar(owner = "bob", shared = true)
-        assertTrue(
-            CoffeeAIProjectScope.matchesProject(
-                avatar = shared,
-                userId = "alice",
-                pipelineProjectId = "team-proj",
-                workspaceProjectId = "team-proj",
-                workspaceOwnerType = "PROJECT"
+                pipelineProjectId = "team-proj"
             )
         )
     }

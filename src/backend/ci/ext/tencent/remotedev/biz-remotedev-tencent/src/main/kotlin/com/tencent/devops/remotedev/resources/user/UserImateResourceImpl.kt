@@ -65,14 +65,18 @@ class UserImateResourceImpl @Autowired constructor(
         userId: String,
         workspaceName: String?,
         expirationMinutes: Long?,
-        digitalAvatarId: String?
+        digitalAvatarId: String?,
+        projectId: String?,
+        devopsProjectId: String?
     ): Result<String> {
         requireWorkspaceOrAvatar(workspaceName, digitalAvatarId)
+        val resolvedProjectId = firstNonBlank(projectId, devopsProjectId)
         logger.info(
-            "用户请求imate令牌：userId={} workspaceName={} digitalAvatarId={} expirationMinutes={}",
+            "用户请求imate令牌：userId={} workspaceName={} digitalAvatarId={} projectId={} expirationMinutes={}",
             userId,
             workspaceName,
             digitalAvatarId,
+            resolvedProjectId,
             expirationMinutes
         )
         return Result(
@@ -80,7 +84,8 @@ class UserImateResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 expirationMinutes = expirationMinutes,
-                digitalAvatarId = digitalAvatarId
+                digitalAvatarId = digitalAvatarId,
+                projectId = resolvedProjectId
             )
         )
     }

@@ -20,7 +20,7 @@ data class ImateAvatar(
     val owner: String? = null,
     @get:Schema(title = "头像 URL，供前端直接渲染")
     val avatarUrl: String? = null,
-    @get:Schema(title = "当前用户是否以被共享人身份可见")
+    @get:Schema(title = "分身是否已开启团队共享（含所属者自己的共享分身）")
     val shared: Boolean? = null,
     @get:Schema(title = "已绑定的创作流/蓝盾项目 ID")
     val selectedBoundProjectId: String? = null

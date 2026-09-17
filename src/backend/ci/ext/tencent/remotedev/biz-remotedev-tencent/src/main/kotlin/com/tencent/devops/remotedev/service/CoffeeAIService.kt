@@ -32,9 +32,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.process.api.service.ServiceVarResource
-import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -243,9 +242,10 @@ class CoffeeAIService @Autowired constructor(
         userId: String,
         workspaceName: String?,
         expirationMinutes: Long? = null,
-        digitalAvatarId: String? = null
+        digitalAvatarId: String? = null,
+        projectId: String? = null
     ): String {
-        val inspect = inspectUserWorkspace(userId, workspaceName, digitalAvatarId)
+        val inspect = inspectUserWorkspace(userId, workspaceName, digitalAvatarId, projectId)
         assertWorkspaceUsable(inspect, userId, inspect.workspaceName)
         val minutes = normalizeExpirationMinutes(expirationMinutes)
         val token = signUserJwt(userId, minutes)
@@ -274,18 +274,11 @@ class CoffeeAIService @Autowired constructor(
         if (projectId.isNullOrBlank()) {
             return avatars
         }
-        val records = workspaceDao.fetchWorkspacesByNames(
-            dslContext,
-            avatars.map { it.workspaceName }.distinct()
-        ).associateBy { it.workspaceName }
         return avatars.filter { avatar ->
-            val record = records[avatar.workspaceName]
             CoffeeAIProjectScope.matchesProject(
                 avatar = avatar,
                 userId = userId,
-                pipelineProjectId = projectId,
-                workspaceProjectId = record?.projectId,
-                workspaceOwnerType = record?.ownerType?.name
+                pipelineProjectId = projectId
             )
         }
     }
@@ -386,15 +379,12 @@ class CoffeeAIService @Autowired constructor(
     ): ImateWorkspaceInspect {
         val cdsResolved = avatar != null
         val ownerMatch = inspect.belongsToUser
-        val authorized = ownerMatch || cdsResolved
-        val shared = avatar?.let { CoffeeAIProjectScope.isSharedWithViewer(it, username) }
-        val boundProjectId = CoffeeAIProjectScope.boundProjectId(avatar, inspect.projectId)
+        val authorized = cdsResolved || ownerMatch
+        val shared = avatar?.let { CoffeeAIProjectScope.isSharedAvatar(it, username) }
         val scopeReason = CoffeeAIProjectScope.mismatchReason(
             avatar = avatar,
             userId = username,
-            pipelineProjectId = pipelineProjectId,
-            workspaceProjectId = inspect.projectId,
-            workspaceOwnerType = inspect.ownerType
+            pipelineProjectId = pipelineProjectId
         )
         val running = inspect.status == WorkspaceStatus.RUNNING.name
         val reason = when {
@@ -416,7 +406,7 @@ class CoffeeAIService @Autowired constructor(
             usable = usable,
             reason = reason,
             shared = shared,
-            selectedBoundProjectId = boundProjectId ?: avatar?.selectedBoundProjectId
+            selectedBoundProjectId = avatar?.selectedBoundProjectId
         )
     }
 
@@ -488,8 +478,7 @@ class CoffeeAIService @Autowired constructor(
         ).data ?: emptyMap()
         val allowed = setOfNotNull(
             vars[PIPELINE_START_USER_ID]?.takeIf { it.isNotBlank() },
-            vars[PIPELINE_UPDATE_USER]?.takeIf { it.isNotBlank() },
-            vars[BK_CI_AUTHORIZER]?.takeIf { it.isNotBlank() }
+            vars[PIPELINE_START_USER_NAME]?.takeIf { it.isNotBlank() }
         )
         if (username !in allowed) {
             logger.warn(
@@ -501,7 +490,7 @@ class CoffeeAIService @Autowired constructor(
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("username $username is not starter/last-modifier/authorizer of this build")
+                params = arrayOf("username $username is not the trigger user of this build")
             )
         }
     }
