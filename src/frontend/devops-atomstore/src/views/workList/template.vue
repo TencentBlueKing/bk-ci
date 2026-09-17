@@ -183,7 +183,7 @@
                             <a
                                 target="_blank"
                                 style="color:#3c96ff;"
-                                :href="`${window.getRoutePrefix()}/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/instanceList`"
+                                :href="getTemplateInstanceListUrl(props.row)"
                             > {{ $t('store.源模板') }} </a>
                         </span>
                         <span
@@ -477,6 +477,9 @@
                 'deleteTemplate',
                 'requestTemplateList'
             ]),
+            getTemplateInstanceListUrl (row) {
+                return `${window.getRoutePrefix()}/pipeline/${row.projectCode}/template/${row.templateCode}/instanceList`
+            },
             async requestList () {
                 this.isLoading = true
                 const page = this.pagination.current

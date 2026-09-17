@@ -73,7 +73,7 @@
                                     >
                                         <a
                                             target="_blank"
-                                            :href="`${window.getRoutePrefix()}/pipeline/${versionDetail.projectCode}`"
+                                            :href="pipelineTestUrl"
                                         > {{ $t('store.测试') }} </a>
                                     </span>
                                 </div>
@@ -344,6 +344,9 @@
                     { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
+            },
+            pipelineTestUrl () {
+                return `${window.getRoutePrefix()}/pipeline/${this.versionDetail.projectCode}`
             },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale

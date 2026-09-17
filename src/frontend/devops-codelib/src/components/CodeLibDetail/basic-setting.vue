@@ -648,6 +648,14 @@
             ]),
             prettyDateTimeFormat,
 
+            getTicketEditUrl (projectId, credentialId) {
+                return `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`
+            },
+
+            getPipelineHistoryUrl (projectId, pipelineId) {
+                return `${window.getRoutePrefix()}/pipeline/${projectId}/${pipelineId}/history/history`
+            },
+
             /**
              * 开启通用设置编辑状态
              */
