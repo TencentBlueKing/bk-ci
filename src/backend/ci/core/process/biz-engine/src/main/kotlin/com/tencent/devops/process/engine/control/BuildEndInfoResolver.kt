@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildEndCategory
@@ -152,20 +153,25 @@ class BuildEndInfoResolver @Autowired constructor(
 
     /**
      * 失败/超时态：归纳每个受影响位置的子类型，再汇总为构建级子类型。
+     *
+     * 一个位置都收集不到时仍要给出终态详情：前端整张详情卡片以 buildEndInfo 是否存在为开关，
+     * 返回 null 会让「构建已失败但详情打不开」，如 Job 互斥组抢锁失败这种没有任何插件错误的构建。
      */
-    private fun resolveAbnormal(context: BuildEndContext): BuildEndInfo? {
-        // 既无错误信息也无审核驳回时无位置可记录，提前返回避免无谓的 Model 遍历
-        val hasReviewAbort = context.buildTasks.any { it.status == BuildStatus.REVIEW_ABORT }
-        if (context.errorInfoList.isNullOrEmpty() && !hasReviewAbort) return null
-
+    private fun resolveAbnormal(context: BuildEndContext): BuildEndInfo {
         val index = EndPositionUtils.buildPositionIndex(context.model)
         val collected = collectAbnormalPositions(context, index)
-        if (collected.isEmpty()) return null
+        if (collected.isEmpty()) return BuildEndInfo.of(endType = fallbackEndType(context.buildStatus))
 
         val positions = fillFailPositionReasons(context, index, collected)
         val endType = aggregateEndType(positions, context.buildStatus)
         return buildAbnormalEndInfo(endType, positions).withPositions(positions)
     }
+
+    /**
+     * 无位置可归因时的构建级子类型：构建自身以超时收尾的只有排队超时，其余一律归执行失败。
+     */
+    private fun fallbackEndType(status: BuildStatus): BuildEndType =
+        if (status.isTimeout()) BuildEndType.TIMEOUT_QUEUE else BuildEndType.FAIL_EXEC
 
     /**
      * 汇总构建级终态子类型：位置子类型先按构建最终状态归类（见 [alignToBuildStatus]），
@@ -235,7 +241,7 @@ class BuildEndInfoResolver @Autowired constructor(
             emptyList()
         }
         val fastKillCauseJobs = if (positions.any { it.endType == BuildEndType.FAIL_FAST_KILL }) {
-            resolveFastKillCauseJobs(context, index)
+            resolveFastKillCauseJobs(positions, index)
         } else {
             emptyMap()
         }
@@ -336,11 +342,17 @@ class BuildEndInfoResolver @Autowired constructor(
     /**
      * FastKill 连带终止的位置一律以「因失败即停被终止」示人，不展示插件自身的错误信息——
      * 被强制终止时插件给不出真实原因，那里只有「Force Terminate!」这类引擎占位文案。
-     * 找不到引发终止的Job时不给原因，页面只展示类型标签。
+     *
+     * 定位不到引发终止的Job（如引发终止的是Stage级质量红线，错误信息里没有容器）时不能不给原因：
+     * 页面按「类型：原因」整行渲染位置，原因缺位会连「因失败即停被终止」这个类型标签一起丢掉，
+     * 位置退化成只剩一个错误码，用户看不出这里是被连带终止的。因此退化为不带Job名的文案。
      */
     private fun EndPosition.withFastKillReason(causeJobName: String?): EndPosition {
-        if (causeJobName.isNullOrBlank()) return copy(reason = null)
+        if (causeJobName.isNullOrBlank()) {
+            return copy(reason = null, reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_FAST_KILL_STAGE)
+        }
         return copy(
+            reason = null,
             reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_FAST_KILL,
             reasonParams = listOf(causeJobName)
         )
@@ -348,20 +360,23 @@ class BuildEndInfoResolver @Autowired constructor(
 
     /**
      * 按阶段找出引发 FastKill 的 Job 名称：FastKill 只终止同一阶段内的其他 Job，
-     * 因此取同阶段第一个非 FastKill 的失败位置所在 Job。
+     * 因此取同阶段第一个非 FastKill 位置所在的 Job。
+     *
+     * 以已收集的位置而非 errorInfoList 为输入：人工审核驳回、互斥组终止这类成因不写错误信息，
+     * 只在位置列表里，按错误信息找会漏掉它们，FastKill 位置便拿不到引发终止的Job名。
+     * Stage 级位置没有容器（containerId 为空），定位不到 Job，由上面的兜底文案处理。
      */
     private fun resolveFastKillCauseJobs(
-        context: BuildEndContext,
+        positions: List<EndPosition>,
         index: ModelPositionIndex
     ): Map<String, String> {
         val causeJobs = mutableMapOf<String, String>()
-        context.errorInfoList?.forEach { errorInfo ->
-            if (classifyError(errorInfo) == BuildEndType.FAIL_FAST_KILL) return@forEach
-            val stageId = errorInfo.stageId?.takeIf { it.isNotBlank() } ?: return@forEach
-            if (causeJobs.containsKey(stageId)) return@forEach
-            index.locateContainer(errorInfo.containerId)?.container?.name
+        positions.forEach { position ->
+            if (position.endType == BuildEndType.FAIL_FAST_KILL) return@forEach
+            if (causeJobs.containsKey(position.stageId)) return@forEach
+            index.locateContainer(position.containerId)?.container?.name
                 ?.takeIf { it.isNotBlank() }
-                ?.let { causeJobs[stageId] = it }
+                ?.let { causeJobs[position.stageId] = it }
         }
         return causeJobs
     }
@@ -385,8 +400,96 @@ class BuildEndInfoResolver @Autowired constructor(
         }
         // 人工审核驳回的插件不会写 errorType，因此不在 errorInfoList 中，需单独补齐
         positions.addAll(collectReviewAbortPositions(context, index, coveredTaskIds))
+        // 再补齐整个 Job 都没有任务错误信息的位置
+        val coveredContainerIds = positions.filter { it.containerId.isNotBlank() }.mapTo(mutableSetOf()) {
+            it.containerId
+        }
+        positions.addAll(collectJobLevelPositions(context, index, coveredContainerIds))
 
         return positions.take(POSITION_MAX_SIZE)
+    }
+
+    /**
+     * 补齐没有任何任务错误信息的 Job 级位置。
+     *
+     * 位置以 errorInfoList 为主，但有两类 Job 级终止从不写任务错误信息：
+     * - 互斥组抢锁失败（未开启排队 / 排队超时 / 队列已满）：容器被直接置为失败，其下任务从未启动
+     * - FastKill 或终止事件波及到任务还停在领取队列中的 Job：任务被置为取消态且不带错误码
+     *   （见 [com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd]）
+     * 不补齐则页面上这些 Job 完全不出现在失败位置里，互斥组场景连终态详情都取不到。
+     *
+     * 取消态容器只在 FastKill 真正生效过的阶段才算失败位置：FastKill 中断后尚未启动的后续阶段
+     * 同样是取消态，若这些阶段也开了 FastKill，把它们列进来会让失败位置塞满与本次失败无关的 Job。
+     * 因此要求所在阶段本身以失败收尾——FastKill 生效的阶段必定被置为失败，未启动的后续阶段则是取消态。
+     */
+    private fun collectJobLevelPositions(
+        context: BuildEndContext,
+        index: ModelPositionIndex,
+        coveredContainerIds: Set<String>
+    ): List<EndPosition> {
+        val fastKillStageIds = context.buildStages
+            .filter { it.controlOption?.fastKill == true && it.status.isFailure() }
+            .mapTo(mutableSetOf()) { it.stageId }
+        val startedContainerIds = context.buildTasks
+            .filter { it.startTime != null }
+            .mapTo(mutableSetOf()) { it.containerId }
+        return index.allContainers().mapNotNull { location ->
+            val container = location.container
+            if (location.containerId in coveredContainerIds) return@mapNotNull null
+            // 矩阵组容器本身不执行插件，位置一律落到其下的子容器上，否则同一次失败会重复出现
+            if (container.matrixGroupFlag == true) return@mapNotNull null
+            val status = BuildStatus.parse(container.status)
+            val endType = when {
+                // Job 超时/心跳超时的容器，成因由位置级超时子类型表达，构建级再按最终状态归类
+                status.isTimeout() -> BuildEndType.TIMEOUT_JOB
+                status.isFailure() -> BuildEndType.FAIL_EXEC
+                status.isCancel() && location.stagePosition.stageId in fastKillStageIds ->
+                    BuildEndType.FAIL_FAST_KILL
+                else -> return@mapNotNull null
+            }
+            // 超时与 FastKill 的原因在 fillFailPositionReasons 里统一补齐，此处只给执行失败定原因
+            val abortReason = if (endType == BuildEndType.FAIL_EXEC) {
+                container.resolveJobAbortReason(started = location.containerId in startedContainerIds)
+            } else {
+                null
+            }
+            EndPosition(
+                position = location.position,
+                componentPath = location.componentPath,
+                statusAtEnd = status.name,
+                endType = endType,
+                reasonCode = abortReason?.first,
+                reasonParams = abortReason?.second,
+                stageId = location.stagePosition.stageId,
+                containerId = location.containerId,
+                matrixFlag = location.matrixFlag.takeIf { it },
+                containerHashId = container.containerHashId
+            )
+        }
+    }
+
+    /**
+     * 一个插件都没启动过就失败的 Job，唯一可枚举的成因是互斥组抢锁失败：未开启排队时被其他构建占用即刻终止，
+     * 开启排队时则是排队超时或队列已满，具体是哪一种要看排队配置——三种情况引擎都只留下一条容器失败记录，
+     * 无从区分超时与队列已满。
+     *
+     * [started] 为真说明插件已经跑过，失败另有成因（如构建结束时容器仍在运行而被强制置为失败），
+     * 此时不能按互斥组下结论，只给不带成因的兜底文案。
+     */
+    private fun Container.resolveJobAbortReason(started: Boolean): Pair<String, List<String>?> {
+        val fallback = ProcessMessageCode.BK_BUILD_END_FAIL_JOB_ABORTED to null
+        if (started) return fallback
+        val mutexGroup = when (this) {
+            is VMBuildContainer -> mutexGroup
+            is NormalContainer -> mutexGroup
+            else -> null
+        }?.takeIf { it.enable }
+        val groupName = mutexGroup?.fetchRuntimeMutexGroup()?.takeIf { it.isNotBlank() } ?: return fallback
+        return if (mutexGroup.queueEnable) {
+            ProcessMessageCode.BK_BUILD_END_FAIL_MUTEX_QUEUE to listOf(groupName)
+        } else {
+            ProcessMessageCode.BK_BUILD_END_FAIL_MUTEX_QUEUE_DISABLED to listOf(groupName)
+        }
     }
 
     /**
@@ -416,7 +519,7 @@ class BuildEndInfoResolver @Autowired constructor(
             statusAtEnd = resolveStatusAtEnd(element, buildTask, errorInfo),
             endType = endType,
             stageId = containerLocation.stagePosition.stageId,
-            containerId = containerLocation.container.containerId ?: errorInfo.containerId.orEmpty(),
+            containerId = containerLocation.containerId,
             taskId = taskId.takeIf { element != null },
             matrixFlag = (errorInfo.matrixFlag == true || containerLocation.matrixFlag).takeIf { it },
             errorType = errorInfo.errorType,
@@ -483,7 +586,7 @@ class BuildEndInfoResolver @Autowired constructor(
             statusAtEnd = BuildStatus.REVIEW_ABORT.name,
             endType = BuildEndType.FAIL_REVIEW,
             stageId = containerLocation.stagePosition.stageId,
-            containerId = containerLocation.container.containerId ?: task.containerId,
+            containerId = containerLocation.containerId,
             taskId = task.taskId,
             matrixFlag = containerLocation.matrixFlag.takeIf { it },
             operator = task.taskParams[BS_MANUAL_ACTION_USERID] as? String,

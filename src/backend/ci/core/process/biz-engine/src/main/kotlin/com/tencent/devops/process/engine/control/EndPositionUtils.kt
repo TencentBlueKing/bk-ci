@@ -53,7 +53,9 @@ data class ContainerLocation(
     val stagePosition: StagePosition,
     val containerSeq: Int,
     val container: Container,
-    val matrixFlag: Boolean
+    val matrixFlag: Boolean,
+    /** 容器真实ID，与索引键一致：优先 containerId，兜底 id（兼容历史数据） */
+    val containerId: String
 ) {
     val position: String get() = "${stagePosition.stageIndex}-$containerSeq"
     val componentPath: String get() = "${stagePosition.stageName}/${container.name}"
@@ -78,6 +80,12 @@ class ModelPositionIndex internal constructor(
     fun locateStage(stageId: String?): StagePosition? = stageId?.let { stageMap[it] }
 
     fun locateContainer(containerId: String?): ContainerLocation? = containerId?.let { containerMap[it] }
+
+    /**
+     * 按 Model 的编排顺序返回全部已索引容器（含矩阵子容器），
+     * 供需要反向扫描容器状态的场景使用（如补齐没有任务错误信息的 Job 级失败位置）。
+     */
+    fun allContainers(): Collection<ContainerLocation> = containerMap.values
 }
 
 /**
@@ -171,7 +179,8 @@ object EndPositionUtils {
      */
     fun buildPositionIndex(model: Model): ModelPositionIndex {
         val stageMap = LinkedHashMap<String, StagePosition>()
-        val containerMap = HashMap<String, ContainerLocation>()
+        // 反向扫描容器时要按编排顺序输出位置，因此保持插入序
+        val containerMap = LinkedHashMap<String, ContainerLocation>()
         model.stages.forEachIndexed { stageIndex, stage ->
             if (stageIndex == 0) return@forEachIndexed
             val stageId = stage.id ?: return@forEachIndexed
@@ -197,8 +206,15 @@ object EndPositionUtils {
         matrixFlag: Boolean
     ) {
         // 容器真实ID：优先 containerId，兜底 id（兼容历史数据）
-        val containerId = container.containerId ?: container.id ?: return
-        containerMap[containerId] = ContainerLocation(stagePosition, containerSeq, container, matrixFlag)
+        val containerId = container.containerId?.takeIf { it.isNotBlank() }
+            ?: container.id?.takeIf { it.isNotBlank() } ?: return
+        containerMap[containerId] = ContainerLocation(
+            stagePosition = stagePosition,
+            containerSeq = containerSeq,
+            container = container,
+            matrixFlag = matrixFlag,
+            containerId = containerId
+        )
     }
 
     /**

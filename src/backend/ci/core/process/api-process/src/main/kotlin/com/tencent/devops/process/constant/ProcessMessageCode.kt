@@ -971,6 +971,14 @@ object ProcessMessageCode {
     const val BK_BUILD_END_FAIL_SUB_PIPELINE = "bkBuildEndFailSubPipeline"
     // 已启用 Fastkill，因「{0}」失败被终止
     const val BK_BUILD_END_FAIL_FAST_KILL = "bkBuildEndFailFastKill"
+    // 已启用 Fastkill，因同阶段其他 Job 失败被终止(定位不到引发终止的Job时使用)
+    const val BK_BUILD_END_FAIL_FAST_KILL_STAGE = "bkBuildEndFailFastKillStage"
+    // Job 互斥组[{0}]未开启排队，被其他构建占用后直接终止
+    const val BK_BUILD_END_FAIL_MUTEX_QUEUE_DISABLED = "bkBuildEndFailMutexQueueDisabled"
+    // Job 互斥组[{0}]排队失败(排队超时或队列已满)，已被终止
+    const val BK_BUILD_END_FAIL_MUTEX_QUEUE = "bkBuildEndFailMutexQueue"
+    // Job 异常结束，未产生插件错误信息（Job 失败但归不出具体成因时的兜底文案）
+    const val BK_BUILD_END_FAIL_JOB_ABORTED = "bkBuildEndFailJobAborted"
     // 质量红线未达标(无指标详情时的兜底文案)
     const val BK_BUILD_END_FAIL_QUALITY = "bkBuildEndFailQuality"
     // {0} 超过阈值 {1}（阈值为上限的指标，如代码坏味道数）
