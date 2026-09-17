@@ -6,7 +6,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.dispatch.windows.client.WindowsDevCloudRequestFactory
+import com.tencent.devops.dispatch.windows.client.WindowsDevCloudRoute
 import com.tencent.devops.dispatch.windows.enums.DevCloudCreateWindowsStatus
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreate
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreateEnv
@@ -19,37 +20,19 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.pojo.QueryTaskStatusResponse
 import com.tencent.devops.dispatch.windows.pojo.WindowsMachineGetResponse
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Service
-class DevCloudWindowsService @Autowired constructor() {
+class DevCloudWindowsService(
+    private val requestFactory: WindowsDevCloudRequestFactory
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudWindowsService::class.java)
         private const val retryCount = 200
     }
-
-    @Value("\${windows.devCloud.appId:}")
-    private lateinit var devCloudAppId: String
-
-    @Value("\${windows.devCloud.token:}")
-    private lateinit var devCloudToken: String
-
-    @Value("\${windows.devCloud.url:}")
-    private lateinit var devCloudUrl: String
-
-    @Value("\${windows.devCloud.smartProxyToken:}")
-    private lateinit var smartProxyToken: String
-
-    @Value("\${devopsGateway.idcProxy:}")
-    private lateinit var devopsIdcProxyGateway: String
 
     // 获取windows构建机
     fun getWindowsMachine(
@@ -61,9 +44,8 @@ class DevCloudWindowsService @Autowired constructor() {
         creator: String,
         env: Map<String, Any>
     ): DevCloudWindowsCreateInfo? {
-
-        val url = "$devCloudUrl/api/v2.1/windows/get"
-
+        val route = requestFactory.resolveRoute()
+        val apiPath = "/api/v2.1/windows/get"
         val windowsCreateEnv = DevCloudWindowsCreateEnv(
             project = projectId,
             pipelineId = pipelineId,
@@ -81,12 +63,17 @@ class DevCloudWindowsService @Autowired constructor() {
         )
         var taskId = ""
         val body = JsonUtil.toJson(windowsCreate, false)
-        logger.info("getWindowsMachine|url=$url|body=$body")
-        val request = Request.Builder()
-            .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
-            .build()
+        logger.info(
+            "getWindowsMachine|route=$route|projectId=$projectId|pipelineId=$pipelineId|" +
+                "buildId=$buildId|vmSeqId=$vmSeqId"
+        )
+        val request = requestFactory.newRequestBuilder(
+            apiPath = apiPath,
+            creator = creator,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            route = route
+        ).post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())).build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             logger.info(
@@ -115,7 +102,13 @@ class DevCloudWindowsService @Autowired constructor() {
         var times = 0
         logger.info("DevCloudWindowsService|getWindowsMachine|start query")
         while (times < retryCount) {
-            val temp = queryTaskStatus(taskId = taskId, creator = creator)
+            val temp = queryTaskStatus(
+                taskId = taskId,
+                creator = creator,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                route = route
+            )
             when (temp.first) {
                 DevCloudCreateWindowsStatus.Failed.title -> {
                     logger.info(
@@ -145,14 +138,21 @@ class DevCloudWindowsService @Autowired constructor() {
     }
 
     // 返回值为三元组,分别代表devcloud构建状态,构建成功时返回的数据,构建失败时的错误信息
-    fun queryTaskStatus(taskId: String, creator: String): Triple<String, DevCloudWindowsCreateInfo?, String> {
-        val url = "$devCloudUrl/api/v2.1/windows/task?id=$taskId"
-        logger.debug("queryTaskStatus|url=$url")
-        val request = Request.Builder()
-            .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
-            .get()
-            .build()
+    fun queryTaskStatus(
+        taskId: String,
+        creator: String,
+        projectId: String,
+        pipelineId: String,
+        route: WindowsDevCloudRoute
+    ): Triple<String, DevCloudWindowsCreateInfo?, String> {
+        val apiPath = "/api/v2.1/windows/task?id=$taskId"
+        val request = requestFactory.newRequestBuilder(
+            apiPath = apiPath,
+            creator = creator,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            route = route
+        ).get().build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             logger.info("DevCloudWindowsService|queryTaskStatus|request|$request|response|$responseContent")
@@ -214,20 +214,22 @@ class DevCloudWindowsService @Autowired constructor() {
     // 释放windows构建机资源
     fun deleteWindowsMachine(
         creator: String,
-        taskGuid: String
+        taskGuid: String,
+        projectId: String,
+        pipelineId: String
     ): Boolean {
-        val url = "$devCloudUrl/api/v2.1/windows/delete"
-        val macosVmDelete = DevCloudWindowsDelete(
-            taskGuid = taskGuid
-        )
-        val body = ObjectMapper().writeValueAsString(macosVmDelete)
-        logger.info("DevCloudWindowsService|deleteWindowsMachine|deleteVM|$url|$body")
-        val request = Request.Builder()
-            .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
-            .build()
-        var result: Boolean = true
+        val route = requestFactory.resolveRoute()
+        val apiPath = "/api/v2.1/windows/delete"
+        val windowsVmDelete = DevCloudWindowsDelete(taskGuid = taskGuid)
+        val body = ObjectMapper().writeValueAsString(windowsVmDelete)
+        logger.info("DevCloudWindowsService|deleteWindowsMachine|route=$route|taskGuid=$taskGuid")
+        val request = requestFactory.newRequestBuilder(
+            apiPath = apiPath,
+            creator = creator,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            route = route
+        ).post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())).build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             logger.info(
@@ -239,15 +241,10 @@ class DevCloudWindowsService @Autowired constructor() {
                     "DevCloudWindowsService|deleteWindowsMachine" +
                         "|Fail|code|${response.code}|msg|$responseContent"
                 )
-                result = false
+                return false
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            val code = responseData["code"] as Int
-            result = (0 == code)
+            return responseData["code"] == 0
         }
-        return result
     }
-
-    fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
-        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 }
