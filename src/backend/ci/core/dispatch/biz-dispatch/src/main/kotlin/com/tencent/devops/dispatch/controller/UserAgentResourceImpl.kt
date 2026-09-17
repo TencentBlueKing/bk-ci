@@ -15,7 +15,8 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentPipelineContainerBu
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
-import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
+import com.tencent.devops.dispatch.service.ThirdPartyAgentBuildService
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.AllCreateNodeEnv
@@ -24,9 +25,26 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserAgentResourceImpl @Autowired constructor(
     private val client: Client,
-    private val thirdPartyAgentService: ThirdPartyAgentService,
+    private val thirdPartyAgentBuildService: ThirdPartyAgentBuildService,
     private val checkTokenService: ClientTokenService
 ) : UserAgentResource {
+    override fun listAgentPipeline(
+        userId: String,
+        projectId: String,
+        data: TPAPipelineReq
+    ): Result<TPAPipelineBuildCountResp> {
+        val envRId = AllCreateNodeEnv.hashIdToId(data.envId)
+        checkEnvOrAgentPermission(userId, projectId, data.agentId, envRId)
+        return Result(
+            thirdPartyAgentBuildService.fetchBuildPipelineView(
+                userId = userId,
+                envId = envRId,
+                data = data
+            )
+        )
+    }
+
+    @Deprecated("listAgentPipeline")
     override fun listAgentPipelineJobs(
         userId: String,
         projectId: String,
@@ -44,7 +62,7 @@ class UserAgentResourceImpl @Autowired constructor(
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(
-            thirdPartyAgentService.fetchBuildPipeline(
+            thirdPartyAgentBuildService.fetchBuildPipeline(
                 projectId = projectId,
                 agentId = agentId,
                 envId = envRId,
@@ -69,7 +87,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<PipelineIdAndName>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentService.fetchPipelineIdAndName(projectId, agentId, envRId, pipelineName))
+        return Result(thirdPartyAgentBuildService.fetchPipelineIdAndName(agentId, envRId, pipelineName))
     }
 
     override fun listAgentPipelineJobsByJobName(
@@ -81,7 +99,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<JobIdAndName>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentService.fetchJobIdAndName(projectId, agentId, envRId, jobName))
+        return Result(thirdPartyAgentBuildService.fetchJobIdAndName(agentId, envRId, jobName))
     }
 
     override fun listAgentPipelineJobsByCreator(
@@ -93,7 +111,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentService.fetchCreator(projectId, agentId, envRId, creator))
+        return Result(thirdPartyAgentBuildService.fetchCreator(agentId, envRId, creator))
     }
 
     override fun fetchAgentBuildsByJob(
@@ -109,13 +127,63 @@ class UserAgentResourceImpl @Autowired constructor(
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
         return Result(
-            thirdPartyAgentService.fetchAgentBuildsByJob(
+            thirdPartyAgentBuildService.fetchAgentBuildsByJob(
                 userId = userId,
                 projectId = projectId,
                 agentId = agentId,
                 envId = envRId,
                 pipelineId = pipelineId,
                 jobId = jobId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun fetchAgentBuildsByPipeline(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: String?,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>> {
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
+        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        return Result(
+            thirdPartyAgentBuildService.fetchAgentBuildsByPipeline(
+                userId = userId,
+                projectId = projectId,
+                agentId = agentId,
+                envId = envRId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun fetchAgentBuildsByBuild(
+        userId: String,
+        projectId: String,
+        agentId: String?,
+        envId: String?,
+        buildId: String,
+        executeCount: Int?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentPipelineContainerBuild>> {
+        val envRId = AllCreateNodeEnv.hashIdToId(envId)
+        checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
+        return Result(
+            thirdPartyAgentBuildService.fetchAgentBuildsByBuild(
+                userId = userId,
+                projectId = projectId,
+                agentId = agentId,
+                envId = envRId,
+                buildId = buildId,
+                executeCount = executeCount,
                 page = page,
                 pageSize = pageSize
             )
