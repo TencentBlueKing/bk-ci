@@ -63,10 +63,6 @@ class DevCloudWindowsService(
         )
         var taskId = ""
         val body = JsonUtil.toJson(windowsCreate, false)
-        logger.info(
-            "getWindowsMachine|route=$route|projectId=$projectId|pipelineId=$pipelineId|" +
-                "buildId=$buildId|vmSeqId=$vmSeqId"
-        )
         val request = requestFactory.newRequestBuilder(
             apiPath = apiPath,
             creator = creator,
@@ -74,6 +70,13 @@ class DevCloudWindowsService(
             pipelineId = pipelineId,
             route = route
         ).post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())).build()
+        val logBody = JsonUtil.toJson(
+            windowsCreate.copy(
+                env = windowsCreateEnv.copy(devops_agent_secret_key = "******")
+            ),
+            false
+        )
+        logger.info("getWindowsMachine|route=$route|url=${request.url}|body=$logBody")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             logger.info(
