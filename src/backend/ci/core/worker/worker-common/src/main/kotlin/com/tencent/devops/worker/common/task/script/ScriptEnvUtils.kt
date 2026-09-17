@@ -44,14 +44,13 @@ object ScriptEnvUtils {
     private const val ERROR_FILE = "setError.log"
     private const val MULTILINE_FILE = "multiLine.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
-    /** 多行输出文件的大小上限（字节），由 BatScriptUtil / ShellUtil 注入脚本侧预检 */
+    /** 多行输出的单次内容上限与读取预算（UTF-8 字节）：脚本侧注入预检与 Kotlin 侧读取共用 */
     const val MULTILINE_FILE_MAX_LENGTH = 10 * 1024 * 1024L
 
     const val VAR_NAME_SEGMENT = "[a-zA-Z_][a-zA-Z0-9_]*"
 
     /** 合法变量名的完整匹配正则 */
     val varNameRegex = Regex("^$VAR_NAME_SEGMENT$")
-    private val lineSplitRegex = Regex("\\r\\n|\\r|\\n")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
     fun cleanEnv(buildId: String, workspace: File) {
@@ -116,20 +115,26 @@ object ScriptEnvUtils {
     private fun readMultipleLines(buildId: String, workspace: File): List<String> {
         val f = File(workspace, getMultipleLineFile(buildId))
         if (!f.exists() || f.isDirectory) return emptyList()
-        if (f.length() > MULTILINE_FILE_MAX_LENGTH) {
-            LoggerService.addWarnLine(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_MULTILINE_FILE_TOO_LARGE,
-                    language = AgentEnv.getLocaleLanguage(),
-                    params = arrayOf(f.length().toString(), MULTILINE_FILE_MAX_LENGTH.toString())
-                )
-            )
-            return emptyList()
+        val result = mutableListOf<String>()
+        var consumed = 0L
+        f.bufferedReader(Charsets.UTF_8).useLines { lines ->
+            for (line in lines) {
+                val lineBytes = line.toByteArray(Charsets.UTF_8).size + 1
+                if (consumed + lineBytes > MULTILINE_FILE_MAX_LENGTH) {
+                    LoggerService.addWarnLine(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_MULTILINE_FILE_TOO_LARGE,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf(consumed.toString(), MULTILINE_FILE_MAX_LENGTH.toString())
+                        )
+                    )
+                    break
+                }
+                consumed += lineBytes
+                result.add(if (result.isEmpty()) line.removePrefix("\uFEFF") else line)
+            }
         }
-        return f.readText(Charsets.UTF_8)
-            .removePrefix("\uFEFF")
-            .split(lineSplitRegex)
-            .let { if (it.isNotEmpty() && it.last().isEmpty()) it.dropLast(1) else it }
+        return result
     }
     /*限定文件名*/
     fun getFlagFile(buildId: String): String {

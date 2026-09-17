@@ -178,7 +178,7 @@ object WorkerMessageCode {
     const val BK_MULTILINE_OUTPUT_KEY_INVALID = "bkMultilineOutputKeyInvalid"
     // [format_multiple_lines] 输出行 [{0}] 缺少 ::set-output name=KEY:: 前缀，该条输出将被忽略
     const val BK_MULTILINE_OUTPUT_LINE_INVALID = "bkMultilineOutputLineInvalid"
-    // [format_multiple_lines] 多行输出文件过大（{0} 字节，上限 {1} 字节），本次多行输出全部忽略
+    // [format_multiple_lines] 多行输出已达读取上限（{0} 字节，上限 {1} 字节），后续多行变量已忽略（可能包含同名变量的更新值）
     const val BK_MULTILINE_FILE_TOO_LARGE = "bkMultilineFileTooLarge"
     // [format_multiple_lines] 读取多行输出文件失败（{0}），本次多行输出全部忽略
     const val BK_MULTILINE_READ_FAILED = "bkMultilineReadFailed"

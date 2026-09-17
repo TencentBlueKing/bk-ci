@@ -81,6 +81,7 @@ object ShellUtil {
 
     private val formatMultipleLines = "format_multiple_lines() {\n" +
         "    local content=\"\$1\"\n" +
+        "    local LC_ALL=C\n" +
         "    if [ \"\${#content}\" -gt ${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH} ]; then\n" +
         "        echo \"format_multiple_lines: content too large\" >&2\n" +
         "        return 1\n" +
@@ -92,14 +93,19 @@ object ShellUtil {
         "}\n"
 
     /**
-     * 多行输出函数（POSIX shell：sh / dash / ash）：整段编码逻辑经 `bash -c` 执行。
+     * 多行输出函数（POSIX shell：sh / dash / ash）：内容以 `\001` 结尾、经管道传入内层 `bash -c` 编码，
+     * 内层校验尾字节后再剥离，尾字节缺失视为读取不完整。
      * 脚本体中的 `$` 以 `\$` 传入，由外层 shell 还原为字面 `$` 后交给内层 bash；
-     * 尾部的 `"$1"` 不加转义，由外层展开为取值内容。
+     * 管道左侧的 `"$1"` 不加转义，由外层展开为取值内容。
      */
     private val formatMultipleLinesPosix = """
         format_multiple_lines() {
             command -v bash >/dev/null 2>&1 || { echo "format_multiple_lines: bash not found" >&2; return 1; }
-            bash -c "content=\"\${'$'}1\"; content=\"\${'$'}{content//%/%25}\"; content=\"\${'$'}{content//\${'$'}'\r'/%0D}\"; content=\"\${'$'}{content//\${'$'}'\n'/%0A}\"; printf '%s\n' \"\${'$'}content\"" _ "${'$'}1" >> ##multiLineFile##
+            if ! (LC_ALL=C; [ "${'$'}{#1}" -le ${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH} ]); then
+                echo "format_multiple_lines: content too large" >&2
+                return 1
+            fi
+            printf '%s\001' "${'$'}1" | bash -c "LC_ALL=C; IFS= read -r -d '' content || true; case \"\${'$'}content\" in *\${'$'}'\001') content=\"\${'$'}{content%?}\" ;; *) echo 'format_multiple_lines: content read failed' >&2; exit 1 ;; esac; content=\"\${'$'}{content//%/%25}\"; content=\"\${'$'}{content//\${'$'}'\r'/%0D}\"; content=\"\${'$'}{content//\${'$'}'\n'/%0A}\"; printf '%s\n' \"\${'$'}content\"" >> ##multiLineFile##
         }
     """.trimIndent() + "\n"
 

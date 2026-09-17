@@ -196,8 +196,8 @@ class ShellUtilTest {
         val file = generateScript(buildId, "#!/bin/sh\necho hi", workspace)
 
         val content = file.readText()
-        /*取 `bash -c "…" _ ` 之间的内层脚本体*/
-        val body = Regex("""bash -c "(.*?)" _ """).find(content)!!.groupValues[1]
+        /*取 `bash -c "…" >> ` 之间的内层脚本体*/
+        val body = Regex("""bash -c "(.*?)" >> """).find(content)!!.groupValues[1]
         Assertions.assertFalse(
             Regex("""(?<!\\)\$""").containsMatchIn(body),
             "inner script body contains unescaped \$: $body"
@@ -255,6 +255,57 @@ class ShellUtilTest {
     }
 
     @Test
+    @DisplayName("bash 分支按字节计数且 locale 设置先于预检")
+    fun formatMultipleLinesByteCountGuardInjectedTest() {
+        val buildId = "sh_byte_guard"
+        val workspace = newWorkspace("sh_byte_guard_workspace")
+
+        val content = generateScript(buildId, "format_multiple_lines \"::set-output name=RESULT::v\"", workspace).readText()
+
+        Assertions.assertTrue(content.contains("local LC_ALL=C"), "预检须按字节计数: $content")
+        Assertions.assertTrue(
+            content.indexOf("local LC_ALL=C") < content.indexOf("content too large"),
+            "locale 设置须先于预检: $content"
+        )
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("POSIX 分支以尾字节校验传输并校验内容完整")
+    fun formatMultipleLinesPosixTrailerCheckTest() {
+        val buildId = "sh_posix_delimiter"
+        val workspace = newWorkspace("sh_posix_delimiter_workspace")
+
+        val content = generateScript(buildId, "#!/bin/sh\necho hi", workspace).readText()
+
+        Assertions.assertTrue(
+            content.contains(
+                "if ! (LC_ALL=C; [ \"\${#1}\" -le ${ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH} ])"
+            ),
+            "外层须在管道之前按字节预检: $content"
+        )
+        Assertions.assertTrue(
+            content.contains("printf '%s\\001' \"\$1\""),
+            "内容须以 `\\001` 结尾后送入管道: $content"
+        )
+        Assertions.assertTrue(
+            content.contains("read -r -d '' content || true"),
+            "内层须读到流末尾: $content"
+        )
+        Assertions.assertTrue(
+            content.contains("content%?"),
+            "内层须校验并剥离尾字节: $content"
+        )
+        Assertions.assertTrue(
+            content.contains("content read failed"),
+            "尾字节缺失须显式失败: $content"
+        )
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
     @DisplayName("bash 分支内容超限时显式失败且不产出多行变量")
     @EnabledOnOs(OS.LINUX)
     fun formatMultipleLinesOversizeFailsLoudlyTest() {
@@ -267,6 +318,31 @@ class ShellUtilTest {
         val file = generateScript(buildId, script, workspace)
 
         val (exitCode, console) = runSh(file, workspace)
+        Assertions.assertNotEquals(0, exitCode, "超限内容须显式失败: ${console.take(500)}")
+        Assertions.assertTrue(console.contains("content too large"), "须给出明确原因: ${console.take(500)}")
+        Assertions.assertEquals(
+            emptyList<String>(),
+            ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            "超限时不应产出多行变量"
+        )
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("POSIX 分支内容超限时在管道之前显式失败")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesPosixOversizeFailsLoudlyTest() {
+        /* 构造刚好超过 10 MB 的内容，须在进入管道之前被拒绝 */
+        val buildId = "sh_posix_oversize"
+        val workspace = newWorkspace("sh_posix_oversize_workspace")
+        val oversize = "a".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt() + 1)
+        val script = "#!/bin/sh\nformat_multiple_lines \"::set-output name=RESULT::$oversize\""
+
+        val file = generateScript(buildId, script, workspace)
+
+        val (exitCode, console) = runShWith("sh", file, workspace)
         Assertions.assertNotEquals(0, exitCode, "超限内容须显式失败: ${console.take(500)}")
         Assertions.assertTrue(console.contains("content too large"), "须给出明确原因: ${console.take(500)}")
         Assertions.assertEquals(
@@ -436,11 +512,57 @@ class ShellUtilTest {
     }
 
     @Test
-    @DisplayName("多行文件超限时返回空列表且不抛异常")
-    fun getMultipleLinesTooLargeReturnsEmptyTest() {
-        /* 文件超限时跳过读取并返回空列表（不进内存），不抛异常 */
-        val buildId = "ml_too_large_test"
-        val workspace = newWorkspace("ml_too_large_test_workspace")
+    @DisplayName("POSIX 分支超长内容经管道传输且往返一致")
+    @EnabledOnOs(OS.LINUX)
+    fun formatMultipleLinesPosixLargeContentTest() {
+        /* 单条内容超过 128KB（原单参数上限），经管道传输后须完整落盘并可往返解码 */
+        val buildId = "sh_posix_large_content"
+        val workspace = newWorkspace("sh_posix_large_content_workspace")
+        val value = "a".repeat(200 * 1024)
+        val script = "#!/bin/sh\n__v=" + shellSingleQuote(value) +
+            "\nformat_multiple_lines \"::set-output name=BIG::\$__v\""
+
+        val file = generateScript(buildId, script, workspace)
+
+        val (exitCode, console) = runShWith("sh", file, workspace)
+        assertShellOk("sh", file, exitCode, console)
+
+        val decoded = ScriptTask.decodeMultipleLines(
+            lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+            jobId = jobId,
+            stepId = stepId
+        )
+        Assertions.assertEquals(value, decoded["jobs.$jobId.steps.$stepId.outputs.BIG"])
+
+        file.delete()
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("多行文件超限时保留已读记录并丢弃超出部分")
+    fun getMultipleLinesOverLimitKeepsReadRecordsTest() {
+        /* 读取预算按已读字节累计：装得下的记录保留，放不下的记录及其后续一律丢弃 */
+        val buildId = "ml_partial_test"
+        val workspace = newWorkspace("ml_partial_test_workspace")
+
+        val head = "::set-output name=HEAD::" + "a".repeat(100)
+        val tail = "::set-output name=TAIL::" + "b".repeat(ScriptEnvUtils.MULTILINE_FILE_MAX_LENGTH.toInt())
+        File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId))
+            .writeText("$head\n$tail\n")
+
+        val lines = ScriptEnvUtils.getMultipleLines(buildId, workspace)
+
+        Assertions.assertEquals(1, lines.size)
+        Assertions.assertEquals(head, lines[0])
+
+        workspace.deleteRecursively()
+    }
+
+    @Test
+    @DisplayName("单行超预算时该行整体丢弃且不抛异常")
+    fun getMultipleLinesSingleOversizeLineDroppedTest() {
+        val buildId = "ml_single_oversize_test"
+        val workspace = newWorkspace("ml_single_oversize_test_workspace")
 
         val file = File(workspace, ScriptEnvUtils.getMultipleLineFile(buildId))
         file.outputStream().use { it.write(ByteArray(10 * 1024 * 1024 + 1)) }
