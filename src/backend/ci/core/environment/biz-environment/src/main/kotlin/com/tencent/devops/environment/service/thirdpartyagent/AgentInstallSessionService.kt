@@ -394,7 +394,6 @@ class AgentInstallSessionService(
     }
 
     private fun resolveTags(projectId: String, request: AgentInstallSessionRequest): List<AgentInstallTagSnapshot> {
-        if (request.tags.any { it.tagKeyId <= 0 || it.tagValueId <= 0 }) invalidParam("tags")
         val availableTags = nodeTagService.fetchTagAndNodeCount(projectId, createMod = true)
         val tagLookup = availableTags.flatMap { tag ->
             tag.tagValues.map { value ->
@@ -407,10 +406,12 @@ class AgentInstallSessionService(
             }
         }.toMap()
         val requested = request.tags.distinctBy { it.tagKeyId to it.tagValueId }
-        val resolved = requested.map { tagLookup[it.tagKeyId to it.tagValueId] ?: invalidParam("tags") }
+        val resolved = requested.map { tagLookup[it.tagKeyId to it.tagValueId] ?: invalidParam("no found tags") }
         val definitions = availableTags.associateBy(NodeTag::tagKeyId)
         resolved.groupBy(AgentInstallTagSnapshot::tagKeyId).forEach { (keyId, values) ->
-            if (definitions[keyId]?.tagAllowMulValue == false && values.size > 1) invalidParam("tags")
+            if (definitions[keyId]?.tagAllowMulValue == false && values.size > 1) {
+                invalidParam("not allow mul tags")
+            }
         }
         return resolved.sortedWith(compareBy(AgentInstallTagSnapshot::tagKeyId, AgentInstallTagSnapshot::tagValueId))
     }
