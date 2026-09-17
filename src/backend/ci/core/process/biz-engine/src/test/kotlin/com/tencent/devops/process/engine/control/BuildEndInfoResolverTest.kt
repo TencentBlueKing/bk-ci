@@ -132,8 +132,7 @@ class BuildEndInfoResolverTest {
 
         val endInfo = resolver.resolve(context)!!
 
-        // FastKill 是连带影响，不参与构建级归类，构建级仍是执行失败
-        Assertions.assertEquals(BuildEndType.FAIL_EXEC, endInfo.endType)
+        Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, endInfo.endType)
         val positions = endInfo.positions!!
         Assertions.assertEquals(2, positions.size)
         val fastKillPosition = positions.single { it.endType == BuildEndType.FAIL_FAST_KILL }
@@ -155,11 +154,62 @@ class BuildEndInfoResolverTest {
             buildStages = listOf(genBuildStage(status = BuildStatus.FAILED, fastKill = true))
         )
 
-        val positions = resolver.resolve(context)!!.positions!!
+        val endInfo = resolver.resolve(context)!!
+        Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, endInfo.endType)
+        val positions = endInfo.positions!!
         val fastKillPosition = positions.single { it.endType == BuildEndType.FAIL_FAST_KILL }
 
         Assertions.assertEquals(ProcessMessageCode.BK_BUILD_END_FAIL_FAST_KILL_STAGE, fastKillPosition.reasonCode)
         Assertions.assertNull(fastKillPosition.reasonParams)
+    }
+
+    @Test
+    fun `given plugin fail and fast kill error then build type is multiple`() {
+        val context = genContext(
+            model = genModel(
+                genContainer(containerId = "1", name = "job-A", status = BuildStatus.FAILED),
+                genContainer(containerId = "2", name = "job-B", status = BuildStatus.FAILED)
+            ),
+            buildStatus = BuildStatus.FAILED,
+            errorInfoList = listOf(
+                genErrorInfo(containerId = "1", errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL),
+                genErrorInfo(containerId = "2", errorCode = ErrorCode.USER_STAGE_FASTKILL_TERMINATE)
+            ),
+            buildStages = listOf(genBuildStage(status = BuildStatus.FAILED, fastKill = true))
+        )
+
+        val endInfo = resolver.resolve(context)!!
+
+        Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, endInfo.endType)
+        val fastKillPosition = endInfo.positions!!.single { it.endType == BuildEndType.FAIL_FAST_KILL }
+        Assertions.assertEquals("1-2", fastKillPosition.position)
+        Assertions.assertEquals(ProcessMessageCode.BK_BUILD_END_FAIL_FAST_KILL, fastKillPosition.reasonCode)
+        Assertions.assertEquals(listOf("job-A"), fastKillPosition.reasonParams)
+        val execPosition = endInfo.positions!!.single { it.endType == BuildEndType.FAIL_EXEC }
+        Assertions.assertEquals("1-1", execPosition.position)
+        Assertions.assertNull(execPosition.reasonCode)
+    }
+
+    @Test
+    fun `given failed job in fast kill stage without task error then it is fast kill`() {
+        val context = genContext(
+            model = genModel(
+                genContainer(containerId = "1", name = "job-A", status = BuildStatus.FAILED),
+                genContainer(containerId = "2", name = "job-B", status = BuildStatus.FAILED)
+            ),
+            buildStatus = BuildStatus.FAILED,
+            errorInfoList = listOf(genErrorInfo(containerId = "1", errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL)),
+            buildStages = listOf(genBuildStage(status = BuildStatus.FAILED, fastKill = true))
+        )
+
+        val endInfo = resolver.resolve(context)!!
+
+        Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, endInfo.endType)
+        val fastKillPosition = endInfo.positions!!.single { it.endType == BuildEndType.FAIL_FAST_KILL }
+        Assertions.assertEquals("1-2", fastKillPosition.position)
+        Assertions.assertEquals(BuildStatus.FAILED.name, fastKillPosition.statusAtEnd)
+        Assertions.assertEquals(ProcessMessageCode.BK_BUILD_END_FAIL_FAST_KILL, fastKillPosition.reasonCode)
+        Assertions.assertEquals(listOf("job-A"), fastKillPosition.reasonParams)
     }
 
     @Test

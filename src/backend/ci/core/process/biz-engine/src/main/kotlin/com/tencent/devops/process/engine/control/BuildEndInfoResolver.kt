@@ -177,16 +177,19 @@ class BuildEndInfoResolver @Autowired constructor(
      * 汇总构建级终态子类型：位置子类型先按构建最终状态归类（见 [alignToBuildStatus]），
      * 归类后唯一时直接采用，否则视为多类失败。
      *
-     * FastKill 是连带影响而非独立失败原因（必然由同阶段其他位置的失败引发），
-     * 参与归类只会把「一个插件失败 + 若干个被 FastKill 终止」误判为多类失败，因此先剔除。
+     * FastKill 只作为位置级类型出现，不能当构建级标签（页面没有「因失败即停被终止」这种失败类型）。
+     * 但它与其它失败并存时必须归「多类失败」：页面在单一失败类型下按构建级口径渲染位置，
+     * FastKill 位置会退化成只展示错误码 2199010，设计稿里的「因失败即停被终止」整行都不会出现。
      */
     private fun aggregateEndType(positions: List<EndPosition>, status: BuildStatus): BuildEndType {
         val distinct = positions.mapNotNull { it.endType }.distinct()
-        val causes = distinct.filter { it != BuildEndType.FAIL_FAST_KILL }.ifEmpty { distinct }
+        val hasFastKill = BuildEndType.FAIL_FAST_KILL in distinct
+        val causes = distinct.filter { it != BuildEndType.FAIL_FAST_KILL }
             .map { alignToBuildStatus(it, status) }
             .distinct()
         return when {
             causes.isEmpty() -> BuildEndType.FAIL_EXEC
+            hasFastKill -> BuildEndType.FAIL_MULTIPLE
             causes.size == 1 -> causes.first()
             causes.all { it.category == BuildEndCategory.TIMEOUT } -> causes.first()
             else -> BuildEndType.FAIL_MULTIPLE
@@ -343,9 +346,9 @@ class BuildEndInfoResolver @Autowired constructor(
      * FastKill 连带终止的位置一律以「因失败即停被终止」示人，不展示插件自身的错误信息——
      * 被强制终止时插件给不出真实原因，那里只有「Force Terminate!」这类引擎占位文案。
      *
-     * 定位不到引发终止的Job（如引发终止的是Stage级质量红线，错误信息里没有容器）时不能不给原因：
-     * 页面按「类型：原因」整行渲染位置，原因缺位会连「因失败即停被终止」这个类型标签一起丢掉，
-     * 位置退化成只剩一个错误码，用户看不出这里是被连带终止的。因此退化为不带Job名的文案。
+     * 文案对齐设计稿：已启用 Fastkill，因「Job 名称」失败被终止。
+     * 定位不到引发终止的 Job（如 Stage 级质量红线，错误信息里没有容器）时退化为不带 Job 名的文案，
+     * 仍要给出原因，否则页面按「类型：原因」整行渲染时会连类型标签一起丢掉。
      */
     private fun EndPosition.withFastKillReason(causeJobName: String?): EndPosition {
         if (causeJobName.isNullOrBlank()) {
@@ -359,12 +362,10 @@ class BuildEndInfoResolver @Autowired constructor(
     }
 
     /**
-     * 按阶段找出引发 FastKill 的 Job 名称：FastKill 只终止同一阶段内的其他 Job，
-     * 因此取同阶段第一个非 FastKill 位置所在的 Job。
+     * 按阶段找出引发 FastKill 的 Job 名称：FastKill 只终止同一阶段内的其他 Job。
      *
-     * 以已收集的位置而非 errorInfoList 为输入：人工审核驳回、互斥组终止这类成因不写错误信息，
-     * 只在位置列表里，按错误信息找会漏掉它们，FastKill 位置便拿不到引发终止的Job名。
-     * Stage 级位置没有容器（containerId 为空），定位不到 Job，由上面的兜底文案处理。
+     * 先看已收集的非 FastKill 位置（含人工审核驳回、互斥组这类不写错误信息的成因），
+     * 再扫一遍同阶段里失败但未被标成 FastKill 的容器，避免成因 Job 没进位置列表时原因里缺 Job 名。
      */
     private fun resolveFastKillCauseJobs(
         positions: List<EndPosition>,
@@ -377,6 +378,20 @@ class BuildEndInfoResolver @Autowired constructor(
             index.locateContainer(position.containerId)?.container?.name
                 ?.takeIf { it.isNotBlank() }
                 ?.let { causeJobs[position.stageId] = it }
+        }
+        val fastKillStageIds = positions
+            .filter { it.endType == BuildEndType.FAIL_FAST_KILL }
+            .mapTo(mutableSetOf()) { it.stageId }
+        val fastKillContainerIds = positions
+            .filter { it.endType == BuildEndType.FAIL_FAST_KILL && it.containerId.isNotBlank() }
+            .mapTo(mutableSetOf()) { it.containerId }
+        index.allContainers().forEach { location ->
+            val stageId = location.stagePosition.stageId
+            if (stageId !in fastKillStageIds || causeJobs.containsKey(stageId)) return@forEach
+            if (location.containerId in fastKillContainerIds) return@forEach
+            if (location.container.matrixGroupFlag == true) return@forEach
+            if (!BuildStatus.parse(location.container.status).isFailure()) return@forEach
+            location.container.name.takeIf { it.isNotBlank() }?.let { causeJobs[stageId] = it }
         }
         return causeJobs
     }
@@ -404,7 +419,10 @@ class BuildEndInfoResolver @Autowired constructor(
         val coveredContainerIds = positions.filter { it.containerId.isNotBlank() }.mapTo(mutableSetOf()) {
             it.containerId
         }
-        positions.addAll(collectJobLevelPositions(context, index, coveredContainerIds))
+        val stagesWithCause = positions
+            .filter { it.endType != BuildEndType.FAIL_FAST_KILL && it.stageId.isNotBlank() }
+            .mapTo(mutableSetOf()) { it.stageId }
+        positions.addAll(collectJobLevelPositions(context, index, coveredContainerIds, stagesWithCause))
 
         return positions.take(POSITION_MAX_SIZE)
     }
@@ -414,18 +432,22 @@ class BuildEndInfoResolver @Autowired constructor(
      *
      * 位置以 errorInfoList 为主，但有两类 Job 级终止从不写任务错误信息：
      * - 互斥组抢锁失败（未开启排队 / 排队超时 / 队列已满）：容器被直接置为失败，其下任务从未启动
-     * - FastKill 或终止事件波及到任务还停在领取队列中的 Job：任务被置为取消态且不带错误码
+     * - FastKill 波及到尚未写出错误码的 Job：运行中的被强制置为失败，停在领取队列中的则是取消态
      *   （见 [com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd]）
      * 不补齐则页面上这些 Job 完全不出现在失败位置里，互斥组场景连终态详情都取不到。
      *
-     * 取消态容器只在 FastKill 真正生效过的阶段才算失败位置：FastKill 中断后尚未启动的后续阶段
-     * 同样是取消态，若这些阶段也开了 FastKill，把它们列进来会让失败位置塞满与本次失败无关的 Job。
-     * 因此要求所在阶段本身以失败收尾——FastKill 生效的阶段必定被置为失败，未启动的后续阶段则是取消态。
+     * 取消态或失败态容器只在 FastKill 真正生效过的阶段才算 FastKill 位置：引擎对运行中 Job 强制结束时
+     * 会把容器置为 FAILED（见 BuildStatusSwitcher.forceFinish(fastKill=true)），不是取消态。
+     * 若把这些 Job 当成执行失败，原因会落成「Job 异常结束」，与设计稿的 FastKill 文案不符。
+     *
+     * 同阶段里已经有非 FastKill 成因时，其余未覆盖的失败 Job 才归 FastKill；
+     * 互斥组抢锁失败也是 FAILED 且无任务错误，不能被 FastKill 抢走。
      */
     private fun collectJobLevelPositions(
         context: BuildEndContext,
         index: ModelPositionIndex,
-        coveredContainerIds: Set<String>
+        coveredContainerIds: Set<String>,
+        stagesWithCause: MutableSet<String>
     ): List<EndPosition> {
         val fastKillStageIds = context.buildStages
             .filter { it.controlOption?.fastKill == true && it.status.isFailure() }
@@ -439,32 +461,57 @@ class BuildEndInfoResolver @Autowired constructor(
             // 矩阵组容器本身不执行插件，位置一律落到其下的子容器上，否则同一次失败会重复出现
             if (container.matrixGroupFlag == true) return@mapNotNull null
             val status = BuildStatus.parse(container.status)
-            val endType = when {
-                // Job 超时/心跳超时的容器，成因由位置级超时子类型表达，构建级再按最终状态归类
-                status.isTimeout() -> BuildEndType.TIMEOUT_JOB
-                status.isFailure() -> BuildEndType.FAIL_EXEC
-                status.isCancel() && location.stagePosition.stageId in fastKillStageIds ->
-                    BuildEndType.FAIL_FAST_KILL
-                else -> return@mapNotNull null
-            }
-            // 超时与 FastKill 的原因在 fillFailPositionReasons 里统一补齐，此处只给执行失败定原因
-            val abortReason = if (endType == BuildEndType.FAIL_EXEC) {
-                container.resolveJobAbortReason(started = location.containerId in startedContainerIds)
+            val started = location.containerId in startedContainerIds
+            val abortReason = if (status.isFailure() && !status.isTimeout()) {
+                container.resolveJobAbortReason(started)
             } else {
                 null
             }
+            val endType = resolveJobLevelEndType(
+                status = status,
+                stageId = location.stagePosition.stageId,
+                fastKillStageIds = fastKillStageIds,
+                stagesWithCause = stagesWithCause,
+                abortReason = abortReason
+            ) ?: return@mapNotNull null
             EndPosition(
                 position = location.position,
                 componentPath = location.componentPath,
                 statusAtEnd = status.name,
                 endType = endType,
-                reasonCode = abortReason?.first,
-                reasonParams = abortReason?.second,
+                reasonCode = abortReason?.first.takeIf { endType == BuildEndType.FAIL_EXEC },
+                reasonParams = abortReason?.second.takeIf { endType == BuildEndType.FAIL_EXEC },
                 stageId = location.stagePosition.stageId,
                 containerId = location.containerId,
                 matrixFlag = location.matrixFlag.takeIf { it },
                 containerHashId = container.containerHashId
             )
+        }
+    }
+
+    /**
+     * Job 级位置的子类型：超时优先；互斥组保持执行失败；FastKill 阶段里其余失败/取消归连带终止。
+     */
+    private fun resolveJobLevelEndType(
+        status: BuildStatus,
+        stageId: String,
+        fastKillStageIds: Set<String>,
+        stagesWithCause: MutableSet<String>,
+        abortReason: Pair<String, List<String>?>?
+    ): BuildEndType? {
+        val inFastKillStage = stageId in fastKillStageIds
+        val mutexAbort = abortReason != null &&
+            abortReason.first != ProcessMessageCode.BK_BUILD_END_FAIL_JOB_ABORTED
+        return when {
+            status.isTimeout() -> BuildEndType.TIMEOUT_JOB
+            status.isFailure() && !mutexAbort && inFastKillStage && stageId in stagesWithCause ->
+                BuildEndType.FAIL_FAST_KILL
+            status.isFailure() -> {
+                if (!mutexAbort) stagesWithCause.add(stageId)
+                BuildEndType.FAIL_EXEC
+            }
+            status.isCancel() && inFastKillStage -> BuildEndType.FAIL_FAST_KILL
+            else -> null
         }
     }
 
