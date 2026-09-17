@@ -216,6 +216,23 @@
                                         >
                                             {{ $t("history.viewLog") }}
                                         </bk-button>
+                                        <span
+                                            v-if="!props.row.cleaned && isActiveErrorAtom(props.row)"
+                                            class="build-error-ai-divider"
+                                        />
+                                        <button
+                                            v-if="isActiveErrorAtom(props.row)"
+                                            type="button"
+                                            class="build-error-ai-analysis"
+                                            :aria-label="$t('details.aiAnalyzeError')"
+                                            v-bk-tooltips="$t('details.aiAnalyzeError')"
+                                            @click.stop="analyzeError(props.row)"
+                                        >
+                                            <img
+                                                :src="aiAvatar"
+                                                alt=""
+                                            />
+                                        </button>
                                     </div>
                                 </template>
                             </bk-table-column>
@@ -296,7 +313,13 @@
     import CheckAtomDialog from '@/components/CheckAtomDialog'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import Logo from '@/components/Logo'
+    import aiAvatar from '@/images/ai-avatar.png'
     import MiniMap from '@/components/MiniMap'
+    import {
+        formatPositionPrefix,
+        joinLabeledLine,
+        requestAiAnalysis
+    } from '@/utils/aiAnalysis'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
@@ -338,6 +361,7 @@
         },
         data () {
             return {
+                aiAvatar,
                 showRetryStageDialog: false,
                 showLog: false,
                 retryTaskId: '',
@@ -1004,6 +1028,25 @@
                 this.locateError(row, true, showLog)
                 this.activeErrorAtom = row
             },
+            analyzeError (row) {
+                const position = formatPositionPrefix(row.taskName)
+                requestAiAnalysis(
+                    row,
+                    this.$t('details.aiAnalyzeErrorPrompt', { position }),
+                    {},
+                    {
+                        attachment: {
+                            title: this.$t('details.aiAnalyzeErrorAttachmentTitle'),
+                            body: [
+                                joinLabeledLine(this.$t('details.pipelineErrorPos'), row.taskName),
+                                joinLabeledLine(this.$t('details.aiAttachmentStep'), row.taskName),
+                                joinLabeledLine(this.$t('details.pipelineErrorCode'), row.errorCode),
+                                joinLabeledLine(this.$t('details.pipelineErrorInfo'), row.errorMsg)
+                            ].filter(Boolean).join('\n')
+                        }
+                    }
+                )
+            },
             handleExecuteCountChange (executeCount) {
                 this.$router.push({
                     ...this.$route,
@@ -1295,6 +1338,50 @@
       .build-error-see-more {
         flex-shrink: 0;
         margin-left: 10px;
+      }
+      .build-error-ai-divider {
+        flex-shrink: 0;
+        align-self: center;
+        width: 1px;
+        height: 16px;
+        margin: 0 12px;
+        background-color: #DCDEE5;
+      }
+      .build-error-ai-analysis {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        padding: 3px;
+        margin-left: 0;
+        border: 1px solid #EAEBF0;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: none;
+        cursor: pointer;
+        appearance: none;
+        outline: none;
+
+        img {
+          flex-shrink: 0;
+          width: 16px;
+          height: 16px;
+          object-fit: contain;
+        }
+
+        &:hover,
+        &:active,
+        &:focus {
+          border-color: #DCDEE5;
+          background: #fff;
+        }
+      }
+      .build-error-see-more + .build-error-ai-analysis,
+      .build-error-info + .build-error-ai-analysis {
+        margin-left: 8px;
       }
       .build-error-info {
         @include ellipsis();

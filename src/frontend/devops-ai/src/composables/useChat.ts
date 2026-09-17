@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, ref, shallowRef, watch } from "vue";
 import type { Ref } from "vue";
 import {
   MessageContentType,
@@ -16,6 +16,9 @@ import {
 } from "../api";
 import { CustomEventName, ServerRole } from "../constants";
 import { useParams } from "./useParams";
+import { createAutoSendGate, type AutoSendPayload } from "../utils/analysisAutoSend";
+
+type ChatContext = { description: string; value: string };
 
 const ROLE_MAP: Record<string, any> = {
   [ServerRole.User]: MessageRole.User,
@@ -106,7 +109,7 @@ export interface InterruptState {
 }
 
 export function useChat(resources: Ref<any[]>) {
-  let bootstrapGen = 0;
+  const autoSendGate = createAutoSendGate();
   const { getContext, projectId, pipelineId, buildId } = useParams();
   const sessionId = ref<string | null>(null);
   const sessionName = ref("新对话");
@@ -518,8 +521,23 @@ export function useChat(resources: Ref<any[]>) {
     };
   }
 
+  async function flushPendingAutoSend() {
+    await nextTick();
+    const payload = autoSendGate.take();
+    if (!payload) return;
+    await sendMessage(payload.prompt, {
+      extraContext: payload.extraContext,
+      sceneAttachment: payload.sceneAttachment,
+    });
+  }
+
+  function queueAutoSend(payload: AutoSendPayload) {
+    autoSendGate.queue(payload);
+    void flushPendingAutoSend();
+  }
+
   async function initSession() {
-    const gen = ++bootstrapGen;
+    const gen = autoSendGate.beginInit();
     chatLoading.value = true;
     try {
       clearStopTimeout();
@@ -534,12 +552,19 @@ export function useChat(resources: Ref<any[]>) {
       messageStatus.value = MessageStatus.Complete;
       selectedResources = [];
 
-      let session = await getLatestSession(projectId.value || undefined);
-      if (gen !== bootstrapGen) return;
+      let session = await getLatestSession(
+        projectId.value || undefined,
+        pipelineId.value || undefined,
+      );
+      if (!autoSendGate.isCurrent(gen)) return;
       if (!session) {
-        session = await createSession(projectId.value, "新对话");
+        session = await createSession(
+          projectId.value,
+          "新对话",
+          pipelineId.value || undefined,
+        );
       }
-      if (gen !== bootstrapGen) return;
+      if (!autoSendGate.isCurrent(gen)) return;
 
       sessionId.value = session.id;
       sessionName.value = session.title || "新对话";
@@ -548,7 +573,7 @@ export function useChat(resources: Ref<any[]>) {
       });
 
       const status = await getChatStatus(sessionId.value);
-      if (gen !== bootstrapGen) return;
+      if (!autoSendGate.isCurrent(gen)) return;
 
       if (status?.active) {
         const history = await getSessionMessages(sessionId.value);
@@ -559,7 +584,7 @@ export function useChat(resources: Ref<any[]>) {
         chatClient.subscribe(createStreamCallbacks());
       } else {
         const history = await getSessionMessages(sessionId.value);
-        if (gen !== bootstrapGen) return;
+        if (!autoSendGate.isCurrent(gen)) return;
         messageStatus.value = MessageStatus.Complete;
         if (!retryLastUserMessageIfNeeded(history) && history?.length) {
           messages.value = history.flatMap(mapHistoryMessage);
@@ -568,13 +593,14 @@ export function useChat(resources: Ref<any[]>) {
     } catch (err) {
       console.error("Failed to init session:", err);
     } finally {
-      if (gen === bootstrapGen) {
+      if (autoSendGate.endInit(gen)) {
         chatLoading.value = false;
+        void flushPendingAutoSend();
       }
     }
   }
 
-  watch(projectId, () => {
+  watch([projectId, pipelineId], () => {
     void initSession();
   });
 
@@ -593,12 +619,28 @@ export function useChat(resources: Ref<any[]>) {
     return true;
   }
 
-  async function sendMessage(content: any) {
-    if (!sessionId.value) {
+  async function sendMessage(
+    content: any,
+    options: {
+      extraContext?: ChatContext[];
+      sceneAttachment?: { title: string; body: string };
+    } = {},
+  ) {
+    const sendOptions = options && typeof options === "object" && !Array.isArray(options)
+      && ("extraContext" in options || "sceneAttachment" in options)
+      ? options
+      : {};
+    if (!sessionId.value || !chatClient) {
       try {
-        const session = await createSession(projectId.value, "新对话");
-        sessionId.value = session.id;
-        sessionName.value = session.title || "新对话";
+        if (!sessionId.value) {
+          const session = await createSession(
+            projectId.value,
+            "新对话",
+            pipelineId.value || undefined,
+          );
+          sessionId.value = session.id;
+          sessionName.value = session.title || "新对话";
+        }
         chatClient = createChatClient(sessionId.value, {
           getContext,
         });
@@ -610,6 +652,8 @@ export function useChat(resources: Ref<any[]>) {
 
     const textContent =
       typeof content === "string" ? content : content?.[0]?.[0]?.text || "";
+    if (!textContent.trim()) return;
+    userInput.value = "";
     const userMsgId = `user-${Date.now()}`;
     messages.value.push({
       id: userMsgId,
@@ -617,6 +661,7 @@ export function useChat(resources: Ref<any[]>) {
       role: MessageRole.User,
       content: textContent,
       status: MessageStatus.Complete,
+      ...(sendOptions.sceneAttachment ? { sceneAttachment: sendOptions.sceneAttachment } : {}),
     });
     selectedShortcut.value = null;
 
@@ -627,7 +672,10 @@ export function useChat(resources: Ref<any[]>) {
     }));
     selectedResources = [];
     messageStatus.value = MessageStatus.Fetching;
-    chatClient.send(textContent, createStreamCallbacks(), { tools });
+    chatClient.send(textContent, createStreamCallbacks(), {
+      tools,
+      extraContext: sendOptions.extraContext,
+    });
   }
 
   const stopSending = () => {
@@ -757,7 +805,11 @@ export function useChat(resources: Ref<any[]>) {
     selectedResources = [];
 
     try {
-      const session = await createSession(projectId.value, "新对话");
+      const session = await createSession(
+        projectId.value,
+        "新对话",
+        pipelineId.value || undefined,
+      );
       sessionId.value = session.id;
       sessionName.value = session.title || "新对话";
       chatClient = createChatClient(sessionId.value, {
@@ -830,6 +882,7 @@ export function useChat(resources: Ref<any[]>) {
     currentInterrupt,
     showWelcome,
     initSession,
+    queueAutoSend,
     sendMessage,
     stopSending,
     resumeInterrupt,

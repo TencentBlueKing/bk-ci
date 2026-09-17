@@ -6,6 +6,7 @@ interface ParentParams {
   projectName: string;
   pipelineId: string;
   buildId: string;
+  version: string;
 }
 
 /**
@@ -20,6 +21,7 @@ const sharedState = reactive<ParentParams>({
   projectName: "",
   pipelineId: "",
   buildId: "",
+  version: "",
 });
 
 let listenerInstalled = false;
@@ -31,7 +33,42 @@ function applyContext(ctx?: Partial<ParentParams> | null) {
   sharedState.projectName = ctx.projectName || "";
   sharedState.pipelineId = ctx.pipelineId || "";
   sharedState.buildId = ctx.buildId || "";
+  sharedState.version = ctx.version || "";
 }
+
+const PROJECT_COOKIE_NAME = "X-DEVOPS-PROJECT-ID";
+
+function getCookieValue(name: string) {
+  if (typeof document === "undefined") return "";
+  const prefix = `${encodeURIComponent(name)}=`;
+  const cookie = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(prefix));
+  if (!cookie) return "";
+  try {
+    return decodeURIComponent(cookie.slice(prefix.length));
+  } catch {
+    return cookie.slice(prefix.length);
+  }
+}
+
+function getInitialContext(): Partial<ParentParams> {
+  if (typeof window === "undefined") return {};
+  const query = new URLSearchParams(window.location.search);
+  return {
+    projectId:
+      query.get("projectId") ||
+      query.get("project_id") ||
+      getCookieValue(PROJECT_COOKIE_NAME),
+    projectName: query.get("projectName") || "",
+    pipelineId: query.get("pipelineId") || "",
+    buildId: query.get("buildId") || "",
+    version: query.get("version") || "",
+  };
+}
+
+applyContext(getInitialContext());
 
 function onMessage(e: MessageEvent) {
   const data = e?.data;
@@ -59,6 +96,10 @@ export function useParams() {
     requestFromParent();
   }
 
+  function setVersion(value?: string) {
+    sharedState.version = value || "";
+  }
+
   onMounted(() => {
     if (!listenerInstalled) {
       window.addEventListener("message", onMessage);
@@ -83,6 +124,7 @@ export function useParams() {
         "projectName",
         "pipelineId",
         "buildId",
+        "version",
       ] as const
     )
       .filter((key) => sharedState[key])
@@ -92,6 +134,7 @@ export function useParams() {
   return {
     ...toRefs(sharedState),
     refresh,
+    setVersion,
     getContext,
   };
 }

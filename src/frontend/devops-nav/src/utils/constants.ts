@@ -39,11 +39,15 @@ export const AI_IFRAME_ACTIONS = {
     UPDATE_SUB_CONTEXT: 'updateAiSubContext',
     REQUEST_CONTEXT: 'requestAiContext',
     CLOSE_PANEL: 'CLOSE_DEVOPS_AI_PANEL',
+    REQUEST_ANALYSIS: 'requestAiAnalysis',
+    REQUEST_PENDING_ANALYSIS: 'requestPendingAiAnalysis',
+    ACK_ANALYSIS: 'ackAiAnalysis',
     SYNC_CONTEXT: 'syncAiContext'
 } as const
 
 export const AI_IFRAME_EVENTS = {
     UPDATE_SUB_CONTEXT: 'update-ai-sub-context',
     REQUEST_CONTEXT: 'request-ai-context',
-    CLOSE_PANEL: 'close-devops-ai-panel'
+    CLOSE_PANEL: 'close-devops-ai-panel',
+    REQUEST_ANALYSIS: 'request-ai-analysis'
 } as const

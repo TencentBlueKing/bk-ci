@@ -1,9 +1,12 @@
 
 import { ChatContainer, MessageRole } from '@blueking/chat-x'
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent, onBeforeUnmount, onMounted, nextTick } from 'vue'
+import { ParentBridgeAction } from '../../constants'
 import { useChat, useResources } from '../../composables'
+import { useParams } from '../../composables/useParams'
 import { ActivityMessage } from '../ActivityMessage'
 import { InterruptMessage } from '../InterruptMessage'
+import { SceneAttachment } from '../SceneAttachment'
 import { StructuredMessageRender } from '../StructuredBlocks'
 import { SubAgentMessage } from '../SubAgentMessage'
 import WelcomeGuide from '../WelcomeGuide'
@@ -11,6 +14,7 @@ import WelcomeGuide from '../WelcomeGuide'
 export default defineComponent({
   name: 'ChatPanel',
   setup(_props, { expose }) {
+    const { setVersion } = useParams()
 
     const { prompts, resources, shortcuts, loadPrompts, loadResources } =
       useResources()
@@ -23,6 +27,7 @@ export default defineComponent({
       chatLoading,
       userInput,
       initSession,
+      queueAutoSend,
       sendMessage,
       stopSending,
       resumeInterrupt,
@@ -36,8 +41,24 @@ export default defineComponent({
       renameSession,
     } = useChat(resources)
 
+    let disposed = false
+    let lastAnalysisNonce = ''
+
+    function requestPendingAnalysis() {
+      if (!window.parent || window.parent === window) return
+      window.parent.postMessage({ action: ParentBridgeAction.RequestPendingAnalysis }, '*')
+    }
+
+    function ackAnalysis(nonce?: string) {
+      if (!window.parent || window.parent === window) return
+      window.parent.postMessage({
+        action: ParentBridgeAction.AckAnalysis,
+        params: { nonce },
+      }, '*')
+    }
+
     onMounted(() => {
-      initSession()
+      void initSession()
       loadPrompts()
       loadResources()
     })
@@ -49,6 +70,53 @@ export default defineComponent({
     }
 
     
+
+    function handleAnalysisRequest(event: MessageEvent) {
+      if (event.data?.action !== ParentBridgeAction.RequestAnalysis || event.source !== window.parent) return
+      const nonce = event.data?.params?.nonce
+      if (nonce && nonce === lastAnalysisNonce) {
+        ackAnalysis(nonce)
+        return
+      }
+      if (nonce) lastAnalysisNonce = String(nonce)
+      const contextVersion = event.data?.params?.context?.version
+      setVersion(contextVersion == null ? '' : String(contextVersion))
+      const prompt = event.data?.params?.prompt
+      if (!prompt) return
+      ackAnalysis(nonce)
+      const autoSend = event.data?.params?.autoSend !== false
+      const attachment = event.data?.params?.attachment
+      const sceneAttachment = attachment?.title
+        ? {
+            title: String(attachment.title),
+            body: String(attachment.body || ''),
+          }
+        : undefined
+      userInput.value = autoSend ? '' : prompt
+      if (!autoSend) {
+        void nextTick(() => {
+          const input = document.querySelector('.ai-slash-input') as HTMLElement | null
+          input?.focus()
+        })
+        return
+      }
+      if (disposed) return
+      queueAutoSend({
+        prompt,
+        extraContext: sceneAttachment
+          ? [{ description: sceneAttachment.title, value: sceneAttachment.body }]
+          : [],
+        sceneAttachment,
+      })
+    }
+
+    window.addEventListener('message', handleAnalysisRequest)
+    requestPendingAnalysis()
+
+    onBeforeUnmount(() => {
+      disposed = true
+      window.removeEventListener('message', handleAnalysisRequest)
+    })
 
     return () => (
       <ChatContainer
@@ -92,13 +160,25 @@ export default defineComponent({
             if (message.agentName) {
               return <SubAgentMessage message={message} />
             }
-            return (
+            const rendered = (
               <StructuredMessageRender
                 message={message}
                 messageToolsStatus={messageToolsStatus}
                 onSendMessage={sendMessage}
               />
             )
+            if (message.role === MessageRole.User && message.sceneAttachment) {
+              return (
+                <>
+                  {rendered}
+                  <SceneAttachment
+                    title={message.sceneAttachment.title}
+                    body={message.sceneAttachment.body}
+                  />
+                </>
+              )
+            }
+            return rendered
           },
         }}
       />
