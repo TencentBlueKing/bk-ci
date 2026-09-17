@@ -29,6 +29,7 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.CommitCheckApproval
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
@@ -179,7 +180,8 @@ class CodeSvnScmImpl constructor(
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>?
+        targetBranch: List<String>?,
+        approvals: List<CommitCheckApproval>?
     ) = Unit
 
     override fun addMRComment(mrId: Long, comment: String) = Unit

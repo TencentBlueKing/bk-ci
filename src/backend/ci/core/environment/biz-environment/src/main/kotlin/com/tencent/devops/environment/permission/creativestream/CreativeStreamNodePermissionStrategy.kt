@@ -45,4 +45,12 @@ interface CreativeStreamNodePermissionStrategy {
      * 批量场景下预热策略所需的节点数据，避免逐节点重复查询。默认不做任何事。
      */
     fun prefetch(projectId: String, nodeIds: Collection<Long>) = Unit
+
+    /**
+     * 带用户维度的批量预热，默认转调 [prefetch]。
+     * 需要按用户批量拉取外部角色的策略应覆盖此方法。
+     */
+    fun prefetch(userId: String, projectId: String, nodeIds: Collection<Long>) {
+        prefetch(projectId, nodeIds)
+    }
 }

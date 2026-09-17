@@ -32,6 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ALL")
 @Schema(title = "Agent心跳上报模型")
 data class HeartbeatResponse(
+    @get:Schema(title = "项目ID")
+    val projectId: String = "",
     @get:Schema(title = "主版本")
     val masterVersion: String = "",
     @get:Schema(title = "从属版本")

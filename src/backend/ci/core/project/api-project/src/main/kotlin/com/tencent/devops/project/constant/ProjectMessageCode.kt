@@ -106,6 +106,8 @@ object ProjectMessageCode {
     const val ERROR_KPI_PRODUCT_NOT_EXIST = "2119058" // KPI产品不存在
     const val ERROR_KPI_PRODUCT_INVALID = "2119059" // KPI产品无效
     const val ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED = "2119060" // 不允许选择公共KPI代码，请选择其他KPI代码
+    const val PROJECT_FAVOR_SUCC = "2119061" // 项目收藏成功
+    const val PROJECT_FAVOR_CANCEL_SUCC = "2119062" // 项目取消收藏成功
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

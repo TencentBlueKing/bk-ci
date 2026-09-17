@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.7](#v420-rc7)
+   - [Changelog since v4.2.0-rc.6](#changelog-since-v420-rc6)
+
 - [v4.2.0-rc.6](#v420-rc6)
    - [Changelog since v4.2.0-rc.5](#changelog-since-v420-rc5)
 
@@ -22,6 +25,82 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.7
+## 2026-09-08
+### Changelog since v4.2.0-rc.6
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 构建步骤支持展示运行进度明细
+- 流水线支持公共变量管理，并优化公共变量组的兼容性、计数统计与国际化配置
+- 插件运行条件新增「只有前面有插件运行失败时才运行（不包括失败跳过）」条件
+- 环境管理优化节点列表展示，并新增云桌面类型
+- 创作流支持跟随 manifest 复制到个人项目、新增 stage 审核锁定，创作环境支持指定 OS
+- 补充 AI 模块的后台管理能力
+
+**Bug 修复**
+- 修复重试构建时被取消的 Job 残留 CANCELED 状态，导致最终构建状态错误标记为取消
+- 修复监听 PAC 时不应提示无效配置也不应可输入内容
+- 修复 stage 审核未在重试中跳过已执行的 stage
+- 修复创作流定时触发未执行
+
+#### 新增
+
+##### 流水线
+- [新增] feat：构建步骤支持展示运行进度明细 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12805)
+- [新增] feat:流水线公共变量管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12010)
+- [新增] feat:插件运行条件新增【只有前面有插件运行失败时才运行（不包括失败跳过）】条件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13429)
+
+##### 环境管理
+- [新增] feat：环境-节点列表展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13384)
+- [新增] feat: 环境新增云桌面类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13486)
+
+##### 其他
+- [新增] feat: imate会话发起的创作流新增stage审核锁定 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13530)
+- [新增] feat: 补充AI模块的后台管理能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13535)
+- [新增] feat: 创作流支持跟随manifest复制到个人项目 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13432)
+- [新增] feat:创作环境支持指定 OS [链接](http://github.com/TencentBlueKing/bk-ci/issues/13375)
+
+#### 优化
+
+##### 流水线
+- [优化] pref：创建/编辑流水线时校验项目id [链接](http://github.com/TencentBlueKing/bk-ci/issues/13475)
+- [优化] perf:补充公共变量组发布日志国际化配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13509)
+- [优化] pref:公共变量组YAML解析环境兼容 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13467)
+- [优化] pref:公共变量计数统计优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13274)
+- [优化] pref:流水线model序列化处理变量参数逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13257)
+
+##### 日志服务
+- [优化] pref: 日志模块支持按项目聚合统计和熔断 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13379)
+- [优化] perf:流水线构建日志接口参数补充 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13525)
+
+##### 其他
+- [优化] bug: 版本体验ext代码回迁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13368)
+- [优化] perf: 优化服务配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13546)
+- [优化] perf:同步更新构建日志资源openapi接口最新参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13508)
+
+#### 修复
+
+##### 流水线
+- [修复] fix：监听 PAC 时不应该提示无效配置也不应该能输入内容 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13554)
+- [修复] bug: stage审核没有在重试中跳过已执行的stage [链接](http://github.com/TencentBlueKing/bk-ci/issues/13500)
+- [修复] bug：重试构建时被取消的Job 残留 CANCELED 状态，导致最终构建状态错误标记为取消 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13407)
+- [修复] bug: 定时任务参数复选框类型会被转换成[] [链接](http://github.com/TencentBlueKing/bk-ci/issues/13472)
+- [修复] bug: codecc渠道不限制流水线最大数量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13465)
+
+##### 环境管理
+- [修复] bug: 环境管理-节点详情页，Agent离线记录表格显示不全，无法滚动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13496)
+
+##### 日志服务
+- [修复] bug: 日志模块突发流量的异常处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13327)
+
+##### 权限中心
+- [修复] fix：权限中心默认选中的项目不正确 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13478)
+
+##### 其他
+- [修复] bug: 创作流定时触发没有执行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13490)
+
 # v4.2.0-rc.6
 ## 2026-08-18
 ### Changelog since v4.2.0-rc.5

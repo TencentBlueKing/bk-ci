@@ -99,7 +99,6 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -438,7 +437,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         } else listOf()
         val osStr = record[KEY_OS] as? String
         val osMapStr = record[KEY_OS_MAP] as? String
-        val osList: List<String> = resolveOsForScope(osStr, osMapStr, ctx.jobType, ctx.serviceScope)
+        val osList: List<String> = AtomOsMapUtil.resolveOsForListItem(
+            osValue = osStr,
+            osMapValue = osMapStr,
+            jobType = ctx.jobType,
+            serviceScope = ctx.serviceScope
+        )
 
         val classifyCode = record[KEY_CLASSIFY_CODE] as? String ?: ""
         val classifyName = record[KEY_CLASSIFY_NAME] as? String ?: ""
@@ -518,54 +522,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             indexInfos = ctx.atomIndexInfosMap[atomCode],
             hotFlag = record[KEY_HOT_FLAG] as? Boolean ?: false
         )
-    }
-
-    /**
-     * 根据 jobType 返回对应的 OS 列表（OS 与 jobType 一对一）。
-     * 优先使用请求参数中的 jobType 确定 OS_MAP key；
-     * jobType 为空时回退到 serviceScope 推导；
-     * AGENT（或均为空）直接从 OS 字段读取（向后兼容）。
-     */
-    private fun resolveOsForScope(
-        osStr: String?,
-        osMapStr: String?,
-        jobType: String?,
-        serviceScope: ServiceScopeEnum?
-    ): List<String> {
-        val osMapKey = resolveOsMapKey(jobType, serviceScope)
-        if (osMapKey == null || osMapKey == JobTypeEnum.AGENT.name || osMapStr.isNullOrBlank()) {
-            return parseOsJson(osStr)
-        }
-        return AtomOsMapUtil.getOsByJobType(
-            jobType = osMapKey,
-            osValue = osStr,
-            osMapValue = osMapStr
-        )
-    }
-
-    /**
-     * 确定 OS_MAP 中的查询 key（与 AtomDao.resolveOsMapKey 对称）。
-     * 优先 jobType，回退 serviceScope 推导，null 表示使用 OS 字段。
-     */
-    private fun resolveOsMapKey(jobType: String?, serviceScope: ServiceScopeEnum?): String? {
-        if (!jobType.isNullOrBlank()) {
-            val isBuildEnv = runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrDefault(false)
-            return if (isBuildEnv) jobType else null
-        }
-        if (serviceScope == null || serviceScope == ServiceScopeEnum.PIPELINE) return null
-        return when (serviceScope) {
-            ServiceScopeEnum.CREATIVE_STREAM -> JobTypeEnum.CREATIVE_STREAM.name
-            else -> null
-        }
-    }
-
-    private fun parseOsJson(osStr: String?): List<String> {
-        if (osStr.isNullOrBlank()) return emptyList()
-        return try {
-            JsonUtil.getObjectMapper().readValue(osStr, List::class.java) as? List<String> ?: emptyList()
-        } catch (_: Exception) {
-            emptyList()
-        }
     }
 
     override fun getProjectElements(projectCode: String): Result<Map<String, String>> {

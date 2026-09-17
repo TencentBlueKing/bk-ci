@@ -56,5 +56,9 @@ enum class EnvStatusEnum {
     cloning,
     expanding,
     created,
-    operating
+    operating,
+    allocating,
+    initializing,
+    deleting,
+    paused
 }

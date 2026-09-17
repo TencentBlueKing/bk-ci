@@ -4,9 +4,12 @@
 package monitor
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -271,6 +274,83 @@ func TestReporter_Report_TransportErrorPropagates(t *testing.T) {
 	}})
 	if err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("transport error should propagate, got %v", err)
+	}
+}
+
+func TestReporter_Report_AppliesThirtySecondTimeout(t *testing.T) {
+	setupTestGAgentConfig(t, "bkci", "http://bkci.example.com")
+
+	r := &Reporter{
+		nowFn: func() time.Time { return fixedNow },
+		doPost: func(ctx context.Context, url string, headers map[string]string, body []byte) (int, []byte, error) {
+			deadline, ok := ctx.Deadline()
+			if !ok {
+				t.Fatal("report context must have a deadline")
+			}
+			remaining := time.Until(deadline)
+			if remaining <= 0 || remaining > reportTimeout || remaining < reportTimeout-time.Second {
+				t.Fatalf("report deadline remaining = %s, want about %s", remaining, reportTimeout)
+			}
+			return 200, nil, nil
+		},
+	}
+
+	err := r.Report(context.Background(), []Metric{{
+		Name:   MeasurementCPU,
+		Fields: map[string]interface{}{RenamedFieldUser: 1.0},
+	}})
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+}
+
+func TestReporter_Report_KeepsEarlierParentDeadline(t *testing.T) {
+	setupTestGAgentConfig(t, "bkci", "http://bkci.example.com")
+
+	parentCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	parentDeadline, _ := parentCtx.Deadline()
+
+	r := &Reporter{
+		nowFn: func() time.Time { return fixedNow },
+		doPost: func(ctx context.Context, url string, headers map[string]string, body []byte) (int, []byte, error) {
+			deadline, ok := ctx.Deadline()
+			if !ok {
+				t.Fatal("report context must preserve parent deadline")
+			}
+			if !deadline.Equal(parentDeadline) {
+				t.Fatalf("deadline = %s, want parent deadline %s", deadline, parentDeadline)
+			}
+			return 200, nil, nil
+		},
+	}
+
+	err := r.Report(parentCtx, []Metric{{
+		Name:   MeasurementCPU,
+		Fields: map[string]interface{}{RenamedFieldUser: 1.0},
+	}})
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+}
+
+func TestDefaultDoPost_LimitsResponseBody(t *testing.T) {
+	payload := bytes.Repeat([]byte("x"), maxReportResponseBodyBytes+1024)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write(payload)
+	}))
+	defer server.Close()
+
+	status, body, err := defaultDoPost(context.Background(), server.URL, nil, nil)
+	if err != nil {
+		t.Fatalf("defaultDoPost: %v", err)
+	}
+	if status != http.StatusBadGateway {
+		t.Fatalf("status = %d, want %d", status, http.StatusBadGateway)
+	}
+	if len(body) != maxReportResponseBodyBytes {
+		t.Fatalf("response body bytes = %d, want cap %d", len(body), maxReportResponseBodyBytes)
 	}
 }
 

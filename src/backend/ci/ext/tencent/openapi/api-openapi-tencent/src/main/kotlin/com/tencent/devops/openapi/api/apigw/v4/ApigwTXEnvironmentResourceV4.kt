@@ -15,6 +15,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_V4_ENVIRONMENT", description = "OPENAPI-环境管理")
@@ -42,4 +43,25 @@ interface ApigwTXEnvironmentResourceV4 {
         @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
+
+    @Operation(summary = "修改创作流节点项目ID", tags = ["v4_app_node_update_create_node_project"])
+    @POST
+    @Path("/update_create_node_project")
+    fun updateCreateNodeProject(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "要修改的项目ID", required = true)
+        @QueryParam("newProjectId")
+        newProjectId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }
