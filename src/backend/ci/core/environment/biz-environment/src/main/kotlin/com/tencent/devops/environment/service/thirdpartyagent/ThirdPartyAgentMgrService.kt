@@ -370,7 +370,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 "${trans(props.exitError.errorEnum, userId)}|${props.exitError.message}"
             } else {
                 null
-            }
+            },
+            nodeType = NodeType.get(nodeRecord.nodeType)
         )
 
         if (needHeartbeatInfo) {
@@ -917,7 +918,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                masterVersion = agentRecord.masterVersion
+                masterVersion = agentRecord.masterVersion,
+                agentType = AgentType.fromValue(agentRecord.agentType)
             )
         )
     }

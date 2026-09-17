@@ -58,7 +58,12 @@ import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.service.MutexGroupQueryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
+import com.tencent.devops.process.pojo.BatchFetchBuildRecordData
+import com.tencent.devops.process.pojo.BatchFetchContainerRecordData
+import com.tencent.devops.process.pojo.BatchFetchContainerRecordResp
+import com.tencent.devops.process.pojo.BatchFetchRecordResp
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -96,6 +101,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val mutexGroupQueryService: MutexGroupQueryService,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) : ServiceBuildResource {
 
     companion object {
@@ -829,6 +835,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         vmSeqId: String,
         nodeHashId: String?,
         executeCount: Int?,
+        createMode: Boolean?,
         simpleResult: SimpleResult
     ): Result<Pair<String?, Boolean>> {
         val starter = pipelineBuildFacadeService.workerBuildFinish(
@@ -838,6 +845,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             vmSeqId = vmSeqId,
             nodeHashId = nodeHashId,
             executeCount = executeCount,
+            createMode = createMode,
             simpleResult = simpleResult
         )
         return Result(starter)
@@ -1082,6 +1090,26 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 params = arrayOf(userId, projectId),
             )
         }
+    }
+
+    override fun batchFetchBuildRecordStatus(
+        channelCode: ChannelCode,
+        data: BatchFetchBuildRecordData
+    ): Result<List<BatchFetchRecordResp>> {
+        return Result(pipelineBuildRecordService.batchFetchRecord(data.buildIds, data.executeCount))
+    }
+
+    override fun fetchContainerRecordStatus(
+        channelCode: ChannelCode,
+        data: BatchFetchContainerRecordData
+    ): Result<List<BatchFetchContainerRecordResp>> {
+        return Result(
+            containerBuildRecordService.batchFetchContainerStatus(
+                buildId = data.buildId,
+                containerIdList = data.containerIds,
+                executeCount = data.executeCount
+            )
+        )
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {
