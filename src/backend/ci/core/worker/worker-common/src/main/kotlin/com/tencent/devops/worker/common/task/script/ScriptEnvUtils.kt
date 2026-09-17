@@ -95,46 +95,74 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$MULTILINE_FILE"
     }
 
+    /**
+     * 读取本次任务的多行输出记录（每行一条 `::set-output name=KEY::VALUE`，由 `format_multiple_lines` 写入）。
+     *
+     * 达到读取预算时截断，**已读记录仍会返回**；读取过程中的异常同样不丢弃已读部分。
+     * 截断与读取失败各以一条告警写入构建日志，告警失败不影响返回值。
+     */
     fun getMultipleLines(buildId: String, workspace: File): List<String> {
-        return try {
-            readMultipleLines(buildId, workspace)
+        val result = mutableListOf<String>()
+        val truncatedAt = try {
+            readMultipleLines(buildId, workspace, result)
         } catch (ignore: Throwable) {
-            runCatching {
-                LoggerService.addWarnLine(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_MULTILINE_READ_FAILED,
-                        language = AgentEnv.getLocaleLanguage(),
-                        params = arrayOf(ignore.message ?: "")
-                    )
+            warnQuietly(BK_MULTILINE_READ_FAILED, arrayOf(ignore.message ?: ""))
+            return result
+        }
+        if (truncatedAt != null) {
+            warnQuietly(
+                BK_MULTILINE_FILE_TOO_LARGE,
+                arrayOf(truncatedAt.toString(), MULTILINE_FILE_MAX_LENGTH.toString())
+            )
+        }
+        return result
+    }
+
+    /**
+     * 按 [messageCode] 与 [params] 渲染并写出一条多行输出告警。
+     *
+     * 告警链路自身抛出的异常（含静态初始化失败等 `Error`）在此被忽略，调用方的读取结果不受其影响。
+     */
+    private fun warnQuietly(messageCode: String, params: Array<String>) {
+        try {
+            LoggerService.addWarnLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = messageCode,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = params
                 )
-            }
-            emptyList()
+            )
+        } catch (ignored: Throwable) {
         }
     }
 
-    private fun readMultipleLines(buildId: String, workspace: File): List<String> {
+    /**
+     * 逐行读取 `<buildId>-<randomNum>-multiLine.log`，已读记录追加到 [result]。
+     *
+     * 读取预算 [MULTILINE_FILE_MAX_LENGTH] 按**编码后**内容的 UTF-8 字节累计，不含行分隔符；
+     * 每行至少计 1 字节，达到预算即停止读取（已读部分不回退）。首行的 BOM 会被剥离。
+     *
+     * @param result 出参：由调用方持有，读取中途异常时其中已读记录仍然可见
+     * @return 因超预算截断时的已读字节数；未截断、文件不存在或为目录时返回 null
+     */
+    private fun readMultipleLines(buildId: String, workspace: File, result: MutableList<String>): Long? {
         val f = File(workspace, getMultipleLineFile(buildId))
-        if (!f.exists() || f.isDirectory) return emptyList()
-        val result = mutableListOf<String>()
+        if (!f.exists() || f.isDirectory) return null
         var consumed = 0L
+        var truncatedAt: Long? = null
         f.bufferedReader(Charsets.UTF_8).useLines { lines ->
             for (line in lines) {
-                val lineBytes = line.toByteArray(Charsets.UTF_8).size + 1
-                if (consumed + lineBytes > MULTILINE_FILE_MAX_LENGTH) {
-                    LoggerService.addWarnLine(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = BK_MULTILINE_FILE_TOO_LARGE,
-                            language = AgentEnv.getLocaleLanguage(),
-                            params = arrayOf(consumed.toString(), MULTILINE_FILE_MAX_LENGTH.toString())
-                        )
-                    )
+                // 空行按 1 字节计入预算，使换行密集内容同样消耗预算
+                val cost = maxOf(line.toByteArray(Charsets.UTF_8).size, 1)
+                if (consumed + cost > MULTILINE_FILE_MAX_LENGTH) {
+                    truncatedAt = consumed
                     break
                 }
-                consumed += lineBytes
+                consumed += cost
                 result.add(if (result.isEmpty()) line.removePrefix("\uFEFF") else line)
             }
         }
-        return result
+        return truncatedAt
     }
     /*限定文件名*/
     fun getFlagFile(buildId: String): String {
