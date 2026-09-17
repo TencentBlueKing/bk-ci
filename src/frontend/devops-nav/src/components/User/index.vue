@@ -66,7 +66,7 @@
         }
 
         get actionList () {
-            return [
+            const list = [
                 {
                     text: this.$t('projectManage'),
                     theme: 'primary',
@@ -85,20 +85,26 @@
                     href: addRoutePrefix('/console/permission/auth/oauth'),
                     renderIcon: renderActionIcon(oauthManageIcon)
                 },
-                {
+            ]
+
+            if (window.LOCALE_DOMAIN) {
+                list.push({
                     text: this.$t('userSetting'),
                     target: '_blank',
                     theme: 'primary',
                     href: this.userSettingUrl,
                     renderIcon: renderActionIcon(userCircleIcon)
-                },
-                {
-                    text: this.$t('logout'),
-                    theme: 'danger',
-                    handle: () => this.logout(),
-                    renderIcon: renderActionIcon(logoutIcon)
-                },
-            ]
+                })
+            }
+
+            list.push({
+                text: this.$t('logout'),
+                theme: 'danger',
+                handle: () => this.logout(),
+                renderIcon: renderActionIcon(logoutIcon)
+            })
+
+            return list
         }
         get userinfo () {
             const info: Record<string, string> = {
