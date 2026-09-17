@@ -39,5 +39,9 @@ data class ImateWorkspaceInspect(
     @get:Schema(title = "Agent ID")
     val agentId: String? = null,
     @get:Schema(title = "Agent 名称")
-    val agentName: String? = null
+    val agentName: String? = null,
+    @get:Schema(title = "当前用户是否以被共享人身份可见")
+    val shared: Boolean? = null,
+    @get:Schema(title = "已绑定的创作流/蓝盾项目 ID")
+    val selectedBoundProjectId: String? = null
 )

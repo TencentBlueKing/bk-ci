@@ -305,6 +305,20 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspacesByNames(
+        dslContext: DSLContext,
+        workspaceNames: Collection<String>
+    ): List<WorkspaceRecord> {
+        if (workspaceNames.isEmpty()) {
+            return emptyList()
+        }
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(NAME.`in`(workspaceNames))
+                .fetch(workspaceMapper)
+        }
+    }
+
     fun fetchErrorWorkspace(
         dslContext: DSLContext
     ): List<WorkspaceRecord>? {
