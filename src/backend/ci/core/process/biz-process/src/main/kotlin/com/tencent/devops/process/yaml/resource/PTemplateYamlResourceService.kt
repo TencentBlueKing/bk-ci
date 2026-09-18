@@ -33,7 +33,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.stereotype.Service
 
@@ -55,7 +55,7 @@ class PTemplateYamlResourceService(
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
-            val yamlFileName = GitActionCommon.getCiTemplateName(filePath)
+            val yamlFileName = YamlFileUtils.getCiTemplateName(filePath)
             val deployTemplateResult = pipelineTemplateFacadeService.createYamlTemplate(
                 userId = userId,
                 projectId = projectId,
@@ -90,7 +90,7 @@ class PTemplateYamlResourceService(
         with(event) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
-            val yamlFileName = GitActionCommon.getCiTemplateName(filePath)
+            val yamlFileName = YamlFileUtils.getCiTemplateName(filePath)
             val deployTemplateResult = pipelineTemplateFacadeService.updateYamlTemplate(
                 userId = userId,
                 projectId = projectId,

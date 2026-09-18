@@ -588,13 +588,20 @@ class RepositoryDao {
         }
     }
 
-    fun getPacRepositoryByIds(dslContext: DSLContext, repositoryIds: List<Long>): TRepositoryRecord? {
+    fun getPacRepositoryByIds(
+        dslContext: DSLContext,
+        repositoryIds: List<Long>,
+        type: String? = null
+    ): TRepositoryRecord? {
         with(TRepository.T_REPOSITORY) {
-            return dslContext.selectFrom(this)
+            var step = dslContext.selectFrom(this)
                 .where(REPOSITORY_ID.`in`(repositoryIds))
                 .and(ENABLE_PAC.eq(true))
                 .and(IS_DELETED.eq(false))
-                .fetchOne()
+            if (type != null) {
+                step = step.and(TYPE.eq(type))
+            }
+            return step.fetchOne()
         }
     }
 

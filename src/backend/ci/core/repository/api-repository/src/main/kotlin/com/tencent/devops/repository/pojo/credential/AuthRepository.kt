@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.pojo.credential
 
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.ScmGitRepository
@@ -47,6 +48,14 @@ data class AuthRepository(
         userName = repository.userName,
         auth = when (repository) {
             is CodeGitRepository -> {
+                if (repository.authType == RepoAuthType.OAUTH) {
+                    UserOauthTokenAuthCred(userId = repository.userName)
+                } else {
+                    CredentialIdAuthCred(credentialId = repository.credentialId, projectId = repository.projectId!!)
+                }
+            }
+
+            is CodeTGitRepository -> {
                 if (repository.authType == RepoAuthType.OAUTH) {
                     UserOauthTokenAuthCred(userId = repository.userName)
                 } else {

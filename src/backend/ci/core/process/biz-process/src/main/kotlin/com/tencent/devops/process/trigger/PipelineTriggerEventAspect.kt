@@ -41,7 +41,6 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.REMOTE_START
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -90,22 +89,6 @@ class PipelineTriggerEventAspect(
             throw e
         } finally {
             saveTriggerEvent(pjp = pjp, result = result, exception = exception)
-        }
-    }
-
-    @Around("execution(* com.tencent.devops.process.service.webhook." +
-            "PipelineBuildWebhookService.exactMatchPipelineWebhookBuild(..))")
-    fun aroundPipelineWebhookBuild(pjp: ProceedingJoinPoint): Any? {
-        var result: Any? = null
-        var exception: Throwable? = null
-        try {
-            result = pjp.proceed()
-            return result
-        } catch (e: Throwable) {
-            exception = e
-            throw e
-        } finally {
-            saveWebhookTriggerEvent(pjp = pjp, result = result, exception = exception)
         }
     }
 
@@ -172,46 +155,6 @@ class PipelineTriggerEventAspect(
         } catch (ignored: Throwable) {
             // 为了不影响业务,保存事件异常不抛出
             logger.warn("Failed to save trigger event", ignored)
-        }
-    }
-
-    private fun saveWebhookTriggerEvent(pjp: ProceedingJoinPoint, result: Any?, exception: Throwable?) {
-        try {
-            // 参数value
-            val parameterValue = pjp.args
-            // 参数key
-            val parameterNames = (pjp.signature as MethodSignature).parameterNames
-            var pipelineInfo: PipelineInfo? = null
-            var buildId: BuildId? = null
-            var eventId: Long? = null
-            var reasonDetail: PipelineTriggerReasonDetail? = null
-            for (index in parameterValue.indices) {
-                when (parameterNames[index]) {
-                    "eventId" -> eventId = parameterValue[index] as Long
-                    else -> Unit
-                }
-            }
-            if (result != null) {
-                val webhookBuildResult = result as WebhookBuildResult
-                buildId = webhookBuildResult.buildId
-                pipelineInfo = webhookBuildResult.pipelineInfo
-                reasonDetail = webhookBuildResult.reasonDetail
-            }
-            if (pipelineInfo == null || eventId == null) {
-                return
-            }
-
-            val triggerDetail = buildTriggerDetail(
-                pipeline = pipelineInfo,
-                eventId = eventId,
-                result = buildId,
-                exception = exception,
-                reasonDetail = reasonDetail
-            )
-            triggerEventService.saveTriggerDetail(triggerDetail)
-        } catch (ignored: Throwable) {
-            // 为了不影响业务,保存事件异常不抛出
-            logger.warn("Failed to save webhook trigger event", ignored)
         }
     }
 

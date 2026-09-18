@@ -201,8 +201,10 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_TGIT_TOKEN`
     `EXPIRES_IN`    bigint                             null comment '过期时间',
     `CREATE_TIME`   datetime default CURRENT_TIMESTAMP null comment 'token的创建时间',
     `OAUTH_USER_ID` varchar(64)                        not null comment '账户实际名称',
+    `OPERATOR`      varchar(64)                        null comment '操作人',
     constraint `USER_ID`
-        unique (`USER_ID`)
+        unique (`USER_ID`),
+    INDEX `IDX_REPOSITORY_TGIT_TOKEN_OPERATOR` (`OPERATOR`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';
 
 CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PIPELINE_REF`

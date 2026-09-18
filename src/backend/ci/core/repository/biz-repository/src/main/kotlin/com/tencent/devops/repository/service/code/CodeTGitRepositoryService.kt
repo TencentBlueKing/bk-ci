@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -31,8 +30,13 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.TGIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
@@ -44,11 +48,13 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType
 import com.tencent.devops.repository.service.RepoCredentialService
+import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
-import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -57,6 +63,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
 class CodeTGitRepositoryService @Autowired constructor(
@@ -66,7 +73,8 @@ class CodeTGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val tGitOAuthService: TGitOAuthService,
     private val credentialService: RepoCredentialService,
-    private val scmOauthService: IScmOauthService
+    private val scmOauthService: IScmOauthService,
+    private val repositoryAuthorizationService: RepositoryAuthorizationService
 ) : CodeRepositoryService<CodeTGitRepository> {
     override fun repositoryType(): String {
         return CodeTGitRepository::class.java.name
@@ -294,7 +302,8 @@ class CodeTGitRepositoryService @Autowired constructor(
         // 凭证信息
         return if (repository.authType == RepoAuthType.OAUTH) {
             RepoCredentialInfo(
-                token = tGitOAuthService.getAccessToken(repository.userName)?.accessToken ?: ""
+                token = tGitOAuthService.getAccessToken(repository.userName)?.accessToken ?: "",
+                credentialType = RepoCredentialType.OAUTH.name
             )
         } else {
             credentialService.getCredentialInfo(
@@ -305,34 +314,68 @@ class CodeTGitRepositoryService @Autowired constructor(
         }
     }
 
-    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+    override fun getPacProjectId(userId: String, repoUrl: String): String? {
+        val token = tGitOAuthService.getAccessToken(userId = userId)?.accessToken ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH,
+            params = arrayOf(userId)
+        )
+        val gitProjectId = getGitProjectInfo(repoUrl = repoUrl, userId = userId, token = token).id
+        return getPacRepository(externalId = gitProjectId.toString())?.projectId
+    }
 
-    override fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord,
-        retry: Boolean
-    ) = Unit
+    override fun getPacRepository(externalId: String): TRepositoryRecord? {
+        val repositoryIds = repositoryCodeGitDao.listByGitProjectId(
+            dslContext = dslContext,
+            gitProjectId = externalId.toLong()
+        ).map { it.repositoryId }
+        return repositoryDao.getPacRepositoryByIds(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            type = ScmType.CODE_TGIT.name
+        )
+    }
 
-    override fun getGitFileTree(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord
-    ) = emptyList<GitFileInfo>()
-
-    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+    private fun getGitProjectInfo(repoUrl: String, userId: String, token: String): GitProjectInfo {
+        val gitProjectName = GitUtils.getProjectName(repoUrl)
+        return scmOauthService.getProjectInfo(
+            projectName = gitProjectName,
+            url = repoUrl,
+            type = ScmType.CODE_TGIT,
+            token = token
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(repoUrl, userId)
+        )
+    }
 
     override fun listByCondition(
         repoCondition: RepoCondition,
         limit: Int,
         offset: Int
     ): List<Repository>? {
+        // TGit 与 Git 共用同一张表和 DAO,DAO 统一返回 CodeGitRepository,此处需转换为 TGit 模型
         return repositoryCodeGitDao.listByCondition(
             dslContext = dslContext,
             repoCondition = repoCondition,
             limit = limit,
             offset = offset
-        )
+        ).map {
+            CodeTGitRepository(
+                aliasName = it.aliasName,
+                url = it.url,
+                credentialId = it.credentialId,
+                projectName = it.projectName,
+                userName = it.userName,
+                authType = it.authType,
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                gitProjectId = it.gitProjectId,
+                enablePac = it.enablePac,
+                yamlSyncStatus = it.yamlSyncStatus,
+                scmCode = it.scmCode,
+                credentialType = it.credentialType
+            )
+        }
     }
 
     companion object {
@@ -344,5 +387,23 @@ class CodeTGitRepositoryService @Autowired constructor(
         userId: String,
         repositoryId: Long,
         repository: CodeTGitRepository
-    ) = Unit
+    ) {
+        with(repository) {
+            if (authType == RepoAuthType.OAUTH) {
+                repositoryAuthorizationService.addResourceAuthorization(
+                    projectId = projectId,
+                    listOf(
+                        ResourceAuthorizationDTO(
+                            projectCode = projectId,
+                            resourceType = AuthResourceType.CODE_REPERTORY.value,
+                            resourceName = repository.aliasName,
+                            resourceCode = HashUtil.encodeOtherLongId(repositoryId),
+                            handoverFrom = userId,
+                            handoverTime = LocalDateTime.now().timestampmilli()
+                        )
+                    )
+                )
+            }
+        }
+    }
 }

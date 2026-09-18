@@ -36,13 +36,11 @@ import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
@@ -57,7 +55,6 @@ class PipelineYamlService(
     private val dslContext: DSLContext,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao
@@ -66,69 +63,6 @@ class PipelineYamlService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
         private const val PIPELINE_YAML_VERSION_BIZ_ID = "T_PIPELINE_YAML_VERSION"
-    }
-
-    fun save(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        directory: String,
-        defaultBranch: String?,
-        pipelineId: String,
-        status: String,
-        userId: String,
-        blobId: String,
-        commitId: String,
-        commitTime: LocalDateTime,
-        ref: String,
-        version: Int,
-        webhooks: List<PipelineWebhookVersion>
-    ) {
-        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineYamlInfoDao.save(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                directory = directory,
-                defaultBranch = defaultBranch,
-                pipelineId = pipelineId,
-                status = status,
-                userId = userId,
-                resourceType = YamlResourceType.PIPELINE
-            )
-            pipelineYamlVersionDao.save(
-                dslContext = transactionContext,
-                id = id,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                ref = ref,
-                commitId = commitId,
-                commitTime = commitTime,
-                blobId = blobId,
-                pipelineId = pipelineId,
-                version = version,
-                userId = userId,
-                resourceType = YamlResourceType.PIPELINE
-            )
-            pipelineWebhookVersionDao.batchSave(
-                dslContext = transactionContext,
-                webhooks = webhooks
-            )
-            pipelineYamlBranchFileDao.save(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = ref,
-                filePath = filePath,
-                commitId = commitId,
-                blobId = blobId,
-                commitTime = commitTime
-            )
-        }
     }
 
     fun save(
@@ -188,71 +122,6 @@ class PipelineYamlService(
                 commitId = commitId,
                 blobId = blobId,
                 commitTime = commitTime
-            )
-        }
-    }
-
-    fun update(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        pipelineId: String,
-        userId: String,
-        blobId: String,
-        commitId: String,
-        commitTime: LocalDateTime,
-        ref: String,
-        defaultBranch: String?,
-        version: Int,
-        webhooks: List<PipelineWebhookVersion>
-    ) {
-        val id = client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_YAML_VERSION_BIZ_ID).data ?: 0
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineYamlInfoDao.update(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                defaultBranch = defaultBranch,
-                userId = userId
-            )
-            pipelineYamlVersionDao.save(
-                dslContext = transactionContext,
-                id = id,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                ref = ref,
-                commitId = commitId,
-                commitTime = commitTime,
-                blobId = blobId,
-                pipelineId = pipelineId,
-                version = version,
-                userId = userId,
-                resourceType = YamlResourceType.PIPELINE
-            )
-            pipelineWebhookVersionDao.batchSave(
-                dslContext = transactionContext,
-                webhooks = webhooks
-            )
-            pipelineYamlBranchFileDao.save(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = ref,
-                filePath = filePath,
-                commitId = commitId,
-                blobId = blobId,
-                commitTime = commitTime
-            )
-        }
-        if (!defaultBranch.isNullOrBlank()) {
-            refreshPipelineYamlStatus(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                defaultBranch = defaultBranch
             )
         }
     }

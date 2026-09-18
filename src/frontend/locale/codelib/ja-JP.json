@@ -241,6 +241,7 @@
     "bkTimingStartEventDesc": "{user} によりスケジュールトリガーされました",
     "bkEventReplayDesc": "イベント [{event}] が {user} により再実行されました",
     "bkRepoEnablePacEventDesc": "{user} PACを有効化",
+    "bkRepoDisablePacEventDesc": "{user} PACを無効化",
     "bkGitPushEventDesc": "[{branch}] コミット [{commit}] が {user} によりプッシュされました",
     "bkGitPushCreateEventDesc": "ブランチ [{branch}] が {user} により作成されました",
     "bkGitPushDeleteEventDesc": "ブランチ [{branch}] が {user} により削除されました",

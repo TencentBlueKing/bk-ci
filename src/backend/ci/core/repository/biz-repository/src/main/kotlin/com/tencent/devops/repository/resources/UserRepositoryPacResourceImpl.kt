@@ -125,10 +125,15 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
 
     override fun supportScmType(): Result<List<IdValue>> {
         // TODO 源码管理需要优化
-        return if (gitConfig.clientId.isBlank()) {
-            return Result(emptyList())
-        } else {
-            Result(listOf(ScmType.CODE_GIT).map {
+        val supportTypes = mutableListOf<ScmType>()
+        if (gitConfig.clientId.isNotBlank()) {
+            supportTypes.add(ScmType.CODE_GIT)
+        }
+        if (gitConfig.tGitClientId.isNotBlank()) {
+            supportTypes.add(ScmType.CODE_TGIT)
+        }
+        return Result(
+            supportTypes.map {
                 IdValue(
                     id = it.name,
                     value = I18nUtil.getCodeLanMessage(
@@ -136,7 +141,7 @@ class UserRepositoryPacResourceImpl @Autowired constructor(
                         defaultMessage = it.name
                     )
                 )
-            })
-        }
+            }
+        )
     }
 }
