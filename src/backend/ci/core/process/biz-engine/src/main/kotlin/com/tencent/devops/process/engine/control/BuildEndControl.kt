@@ -397,19 +397,32 @@ class BuildEndControl @Autowired constructor(
     /**
      * 解析并记录构建终态详情（失败/超时/成功）。
      *
-     * 使用 IfAbsent 语义：用户取消、Job执行超时等场景已在更早的时点写入了更精确的信息，此处不覆盖。
+     * 已有详情且大类与最终状态同类时保留（用户取消、Job 超时等更早更精确的成因）；
+     * 大类冲突则覆盖或清除，避免取消链路提前落库后构建却以失败/成功收尾。
      * 整体做异常兜底——终态详情属于展示增强，任何异常都不应影响构建结束主流程。
      */
     private fun saveBuildEndInfo(context: BuildEndContext, executeCount: Int?) {
         try {
-            val buildEndInfo = buildEndInfoResolver.resolve(context) ?: return
-            pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                executeCount = executeCount ?: 1,
-                buildEndInfo = buildEndInfo
-            )
+            val executeCountValue = executeCount ?: 1
+            val buildEndInfo = buildEndInfoResolver.resolve(context)
+            if (buildEndInfo != null) {
+                pipelineBuildRecordService.saveBuildEndInfoIfCompatible(
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    executeCount = executeCountValue,
+                    buildEndInfo = buildEndInfo,
+                    buildStatus = context.buildStatus
+                )
+            } else {
+                pipelineBuildRecordService.clearBuildEndInfoIfIncompatible(
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    executeCount = executeCountValue,
+                    buildStatus = context.buildStatus
+                )
+            }
         } catch (ignored: Exception) {
             LOG.warn("ENGINE|${context.buildId}|BUILD_END_INFO|save build end info failed", ignored)
         }

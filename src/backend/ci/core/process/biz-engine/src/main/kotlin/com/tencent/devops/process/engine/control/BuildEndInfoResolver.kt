@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.pipeline.utils.BuildEndPositionCollector
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -414,7 +415,22 @@ class BuildEndInfoResolver @Autowired constructor(
             }
         }
         // 人工审核驳回的插件不会写 errorType，因此不在 errorInfoList 中，需单独补齐
-        positions.addAll(collectReviewAbortPositions(context, index, coveredTaskIds))
+        collectReviewAbortPositions(context, index, coveredTaskIds).forEach { position ->
+            positions.add(position)
+            position.taskId?.takeIf { it.isNotBlank() }?.let { coveredTaskIds.add(it) }
+        }
+        // 暂停插件被取消后常被置为 FAILED 且不写 errorType，按模型终态补齐，避免只留下取消时的 PAUSE。
+        // FastKill 阶段仍走后面的 Job 级补齐，避免把连带终止的插件误标成独立执行失败。
+        val fastKillStageIds = context.buildStages
+            .filter { it.controlOption?.fastKill == true && it.status.isFailure() }
+            .mapTo(mutableSetOf()) { it.stageId }
+        BuildEndPositionCollector.collectFailPositions(context.model).forEach { position ->
+            val taskId = position.taskId
+            if (taskId.isNullOrBlank() || taskId in coveredTaskIds) return@forEach
+            if (position.stageId in fastKillStageIds) return@forEach
+            positions.add(position)
+            coveredTaskIds.add(taskId)
+        }
         // 再补齐整个 Job 都没有任务错误信息的位置
         val coveredContainerIds = positions.filter { it.containerId.isNotBlank() }.mapTo(mutableSetOf()) {
             it.containerId

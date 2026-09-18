@@ -103,5 +103,21 @@ enum class BuildEndCategory {
     CANCEL,
     FAIL,
     TIMEOUT,
-    SUCCESS
+    SUCCESS;
+
+    companion object {
+        /**
+         * 由构建最终状态推导卡片大类。未结束（运行中/排队/暂停等）返回 null。
+         *
+         * [BuildStatus.QUEUE_TIMEOUT] 是唯一以超时状态收尾的构建级终态；
+         * Job/步骤/心跳超时走终止链路，最终状态是失败或取消，大类跟随最终状态，不能归 TIMEOUT。
+         */
+        fun of(status: BuildStatus): BuildEndCategory? = when {
+            status.isCancel() -> CANCEL
+            status == BuildStatus.QUEUE_TIMEOUT -> TIMEOUT
+            status.isSuccess() || status == BuildStatus.STAGE_SUCCESS -> SUCCESS
+            status.isFailure() -> FAIL
+            else -> null
+        }
+    }
 }

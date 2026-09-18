@@ -29,6 +29,8 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildEndCategory
 import com.tencent.devops.common.pipeline.enums.BuildEndType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.utils.BuildEndPositionCollector
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -47,7 +49,7 @@ data class BuildEndInfo(
     @get:Schema(title = "终态子类型", required = true)
     val endType: BuildEndType,
     @get:Schema(
-        title = "终态大类(结束成因归类，恒等于endType所属大类；构建最终状态见ModelRecord.status，二者可能不同类)",
+        title = "终态大类(结束成因归类，恒等于endType所属大类，且与ModelRecord.status同类)",
         required = false
     )
     var endCategory: BuildEndCategory? = null,
@@ -95,6 +97,56 @@ data class BuildEndInfo(
         this.reasonCode = reasonCode
         this.reasonParams = reasonParams
         return this
+    }
+
+    /**
+     * 构建级大类是否与最终状态同类。运行中尚未形成终态时视为相容，不阻断提前落库的取消信息。
+     */
+    fun matchesBuildStatus(status: BuildStatus): Boolean {
+        val expected = BuildEndCategory.of(status) ?: return true
+        return endType.category == expected
+    }
+
+    /**
+     * 读取侧兜底：落库大类与最终状态不同类时（如取消链路先写了 CANCEL_USER，
+     * 暂停插件随后被收成失败），改写成与状态同类的详情，避免「状态：失败 / 卡片：用户取消」。
+     *
+     * 失败类优先采用模型里插件的当前终态（FAILED / REVIEW_ABORT 等），避免卡片仍展示取消时的 PAUSE。
+     * 成功/取消无法从错误的落库安全还原，返回 null 交给读取侧重新合成。
+     */
+    fun alignedTo(
+        status: BuildStatus,
+        modelFailPositions: List<EndPosition> = emptyList(),
+        latestStatusAtEnd: (EndPosition) -> String? = { null }
+    ): BuildEndInfo? {
+        if (matchesBuildStatus(status)) return this
+        return when (BuildEndCategory.of(status)) {
+            BuildEndCategory.FAIL -> {
+                // 用户取消文案不能出现在失败卡片上；系统取消/父流水线级联的成因（心跳失联、Job超时）仍可保留
+                val keepCause = endType == BuildEndType.CANCEL_SYSTEM ||
+                    endType == BuildEndType.CANCEL_PARENT_PIPELINE
+                val failPositions = modelFailPositions.ifEmpty {
+                    positions.orEmpty().map { pos ->
+                        val latest = latestStatusAtEnd(pos)
+                        if (latest.isNullOrBlank() || latest == pos.statusAtEnd) pos
+                        else pos.copy(statusAtEnd = latest)
+                    }
+                }
+                BuildEndInfo(
+                    endType = BuildEndPositionCollector.aggregateFailEndType(failPositions),
+                    reason = reason.takeIf { keepCause },
+                    reasonCode = reasonCode.takeIf { keepCause },
+                    reasonParams = reasonParams.takeIf { keepCause },
+                    endTime = endTime,
+                    parentPipelineInfo = parentPipelineInfo.takeIf { keepCause }
+                ).withPositions(failPositions)
+            }
+            BuildEndCategory.TIMEOUT -> BuildEndInfo(
+                endType = BuildEndType.TIMEOUT_QUEUE,
+                endTime = endTime
+            )
+            else -> null
+        }
     }
 
     companion object {
