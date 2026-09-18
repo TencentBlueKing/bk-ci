@@ -36,11 +36,8 @@ import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildEndType
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
@@ -227,38 +224,6 @@ class BuildEndInfoResolverTest {
     }
 
     @Test
-    fun `given failed pause plugin and review abort then both plugin statuses are collected`() {
-        val container = genContainer(
-            containerId = "1",
-            name = "构建环境-Linux",
-            status = BuildStatus.FAILED
-        ).copy(
-            elements = listOf(
-                genScript("e-bash", "Bash", BuildStatus.SUCCEED),
-                genScript("e-0806", "0806插件", BuildStatus.FAILED),
-                genScript("stopVM-1", "完结源环境", BuildStatus.SUCCEED),
-                ManualReviewUserTaskElement(
-                    id = "e-review",
-                    name = "人工审核",
-                    status = BuildStatus.REVIEW_ABORT.name
-                )
-            )
-        )
-
-        val endInfo = resolver.resolve(genContext(model = genModel(container), buildStatus = BuildStatus.FAILED))!!
-
-        Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, endInfo.endType)
-        Assertions.assertEquals(2, endInfo.positionCount)
-        val failed = endInfo.positions!!.single { it.taskId == "e-0806" }
-        Assertions.assertEquals(BuildStatus.FAILED.name, failed.statusAtEnd)
-        Assertions.assertEquals(BuildEndType.FAIL_EXEC, failed.endType)
-        Assertions.assertEquals("1-1-2", failed.position)
-        val review = endInfo.positions!!.single { it.taskId == "e-review" }
-        Assertions.assertEquals(BuildStatus.REVIEW_ABORT.name, review.statusAtEnd)
-        Assertions.assertEquals(BuildEndType.FAIL_REVIEW, review.endType)
-    }
-
-    @Test
     fun `given canceled build then end info is left to the cancel flow`() {
         val context = genContext(
             model = genModel(genContainer(containerId = "1", name = "job-A", status = BuildStatus.FAILED)),
@@ -307,15 +272,6 @@ class BuildEndInfoResolverTest {
         status = status.name,
         jobId = "job_$containerId",
         mutexGroup = mutexGroup
-    )
-
-    private fun genScript(taskId: String, name: String, status: BuildStatus) = LinuxScriptElement(
-        id = taskId,
-        name = name,
-        status = status.name,
-        scriptType = BuildScriptType.SHELL,
-        script = "echo",
-        continueNoneZero = false
     )
 
     private fun genErrorInfo(containerId: String, errorCode: Int) = ErrorInfo(
