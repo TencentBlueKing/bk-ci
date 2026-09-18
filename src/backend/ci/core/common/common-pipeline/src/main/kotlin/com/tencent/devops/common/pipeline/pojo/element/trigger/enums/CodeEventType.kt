@@ -67,7 +67,10 @@ enum class CodeEventType {
 
     // TAPD event
     STORY,
-    BUG
+    BUG,
+
+    // 制品到达
+    ARRIVED
     ;
 
     fun isMergeRequest() = this == MERGE_REQUEST || this == MERGE_REQUEST_ACCEPT || this == PULL_REQUEST

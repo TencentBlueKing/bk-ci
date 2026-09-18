@@ -37,12 +37,16 @@ import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
+import com.tencent.devops.process.trigger.event.ArtifactWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.ArtifactWebhookTriggerEvent
 import com.tencent.devops.process.trigger.market.MarketEventRequestService
 import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
 import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.trigger.tapd.TapdEventTriggerBuildService
 import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
+import com.tencent.devops.process.trigger.artifact.ArtifactEventTriggerBuildService
+import com.tencent.devops.process.trigger.artifact.ArtifactWebhookRequestService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -163,5 +167,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired tapdEventTriggerBuildService: TapdEventTriggerBuildService
     ) = ScsConsumerBuilder.build<TapdWebhookTriggerEvent> {
         tapdEventTriggerBuildService.tapdWebhookTrigger(it)
+    }
+
+    @EventConsumer
+    fun artifactWebhookRequestEventConsumer(
+        @Autowired artifactWebhookRequestService: ArtifactWebhookRequestService
+    ) = ScsConsumerBuilder.build<ArtifactWebhookRequestEvent> {
+        artifactWebhookRequestService.handleRequest(it)
+    }
+
+    @EventConsumer
+    fun artifactWebhookTriggerEventConsumer(
+        @Autowired artifactEventTriggerBuildService: ArtifactEventTriggerBuildService
+    ) = ScsConsumerBuilder.build<ArtifactWebhookTriggerEvent> {
+        artifactEventTriggerBuildService.artifactWebhookTrigger(it)
     }
 }

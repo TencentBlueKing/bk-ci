@@ -62,7 +62,7 @@ import org.springframework.stereotype.Service
  * webhook触发规则
  */
 @Service
-class WebhookTriggerMatcher @Autowired constructor(
+class ScmWebhookTriggerMatcher @Autowired constructor(
     private val webhookRuleManager: WebhookRuleManager
 ) {
 
@@ -79,7 +79,7 @@ class WebhookTriggerMatcher @Autowired constructor(
             element = element,
             variables = variables
         ) ?: return WebhookAtomResponse(
-            matchStatus = MatchStatus.ELEMENT_NOT_MATCH
+            matchStatus = MatchStatus.SKIP
         )
         val matchResult = with(webHookParams) {
             val repositoryMatch = when (repositoryConfig.repositoryType) {
@@ -88,7 +88,7 @@ class WebhookTriggerMatcher @Autowired constructor(
             }
             if (!repositoryMatch) {
                 return WebhookAtomResponse(
-                    matchStatus = MatchStatus.REPOSITORY_NOT_MATCH
+                    matchStatus = MatchStatus.SKIP
                 )
             }
             // 兼容V1版本触发器
@@ -97,7 +97,7 @@ class WebhookTriggerMatcher @Autowired constructor(
             }?.name
             if (eventType != webhook.eventType) {
                 return WebhookAtomResponse(
-                    matchStatus = MatchStatus.EVENT_TYPE_NOT_MATCH
+                    matchStatus = MatchStatus.SKIP
                 )
             }
             // 保存代码库关联时的url
