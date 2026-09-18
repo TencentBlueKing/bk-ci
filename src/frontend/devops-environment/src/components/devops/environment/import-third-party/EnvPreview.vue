@@ -1,10 +1,26 @@
 <template>
-    <div class="env-preview">
+    <div
+        class="env-preview"
+        v-bkloading="{ isLoading: loading, opacity: 0.9 }"
+    >
         <p class="env-preview-title">{{ $t('environment.installSession.envPreview') }}</p>
 
-        <!-- 导入态：新机，无已关联 -->
+        <!-- 导入态：新机一般无已关联，重复导入同一台机器时可能已关联环境 -->
         <template v-if="preview.mode === 'import'">
-            <template v-if="preview.matched.length || preview.pending.length">
+            <template v-if="preview.associated.length || preview.matched.length || preview.pending.length">
+                <div
+                    v-if="preview.associated.length"
+                    class="env-preview-group"
+                >
+                    <span class="env-preview-label">{{ $t('environment.installSession.envAssociated') }}</span>
+                    <span class="env-chips">
+                        <bk-tag
+                            v-for="n in preview.associated"
+                            :key="'assoc-' + n.envId"
+                            effect="stroke"
+                        >{{ n.envName }}</bk-tag>
+                    </span>
+                </div>
                 <div
                     v-if="preview.matched.length"
                     class="env-preview-group"
@@ -124,13 +140,18 @@
         name: 'EnvPreview',
         props: {
             /**
-             * { mode: 'import', matched: [], pending: [] }
+             * { mode: 'import', associated: [], matched: [], pending: [] }
              * 或 { mode: 'reinstall', associated: [], willJoin: [], willLeave: [], pending: [] }
              * 数组元素均为 { envId, envName }
              */
             preview: {
                 type: Object,
                 required: true
+            },
+            /** 加载中（防抖等待 + 请求返回前） */
+            loading: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {

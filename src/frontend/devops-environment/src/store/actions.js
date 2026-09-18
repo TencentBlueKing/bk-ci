@@ -528,6 +528,7 @@ const actions = {
      * @param {string} [params.zone] - 接入点（地区）
      * @param {string} [params.installType] - Windows 安装模式 SERVICE / TASK
      * @param {number} params.parallelTaskCount - 最大构建并发数（0 表示无限制）
+     * @param {number} [params.dockerParallelTaskCount] - Docker 最大构建并发数（0 表示无限制，仅支持 Docker 的操作系统生效）
      * @param {Array<{tagKeyId: string, tagValueId: string}>} [params.tags] - 初始标签
      * @param {string} [params.targetAgentId] - 重装目标 Agent Hash ID（REINSTALL 必填）
      * @returns {Promise<{sessionId: string, command: string, expiredAt: string, reused: boolean, preview: Object, summary: Object}>}
@@ -543,7 +544,7 @@ const actions = {
      * 导入态返回 matchedEnvironments / pendingEnvironments；
      * 重装态返回 associated / willJoin / willLeave / pending（diff 由后端计算）
      * @param {string} projectId - 项目ID
-     * @param {Object} params - AgentInstallSessionRequest（同 requestCreateInstallSession）
+     * @param {Object} params - AgentInstallSessionRequest（同 requestCreateInstallSession，含 dockerParallelTaskCount）
      * @returns {Promise<AgentInstallSessionPreview>}
      */
     requestInstallSessionPreview ({ commit }, { projectId, params }) {

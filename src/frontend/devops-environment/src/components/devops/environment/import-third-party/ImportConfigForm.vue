@@ -148,6 +148,7 @@
             </p>
             <div
                 v-else
+                ref="tagRows"
                 class="tag-rows"
             >
                 <div
@@ -161,7 +162,7 @@
                         :placeholder="$t('environment.installSession.tagKeyPlaceholder')"
                         searchable
                         :clearable="false"
-                        @change="() => (row.tagValueId = '')"
+                        @change="onTagKeyChange(row)"
                     >
                         <bk-option
                             v-for="k in customTags"
@@ -210,6 +211,7 @@
             <EnvPreview
                 v-if="showEnvPreview"
                 :preview="envPreview"
+                :loading="envPreviewLoading"
             />
         </bk-form-item>
     </bk-form>
@@ -272,6 +274,11 @@
                 type: Boolean,
                 default: false
             },
+            /** 环境预览加载中（防抖等待 + 请求返回前） */
+            envPreviewLoading: {
+                type: Boolean,
+                default: false
+            },
             /** 重装被后端拒绝的原因（reinstallContext.canReinstall=false）；非空时表单锁定 */
             denyReason: {
                 type: String,
@@ -282,12 +289,25 @@
             valuesOf (keyId) {
                 return this.customTags.find((t) => t.tagKeyId === keyId)?.tagValues || []
             },
+            /**
+             * 切换标签键：仅当原值不属于新键时才清空。
+             * 不能无条件清空——重装回显时键由空变为有效值也会触发 change，会把已回填的值抹掉。
+             */
+            onTagKeyChange (row) {
+                if (!this.valuesOf(row.tagKeyId).some((v) => v.tagValueId === row.tagValueId)) {
+                    row.tagValueId = ''
+                }
+            },
             /** 其余行已占用的标签键，用于禁用重复选择 */
             usedKeys (idx) {
                 return this.form.tags.map((r, i) => (i === idx ? '' : r.tagKeyId)).filter(Boolean)
             },
             addTag () {
                 this.form.tags.push({ tagKeyId: '', tagValueId: '' })
+                this.$nextTick(() => {
+                    const el = this.$refs.tagRows
+                    if (el) el.scrollTop = el.scrollHeight
+                })
             },
             removeTag (idx) {
                 if (this.form.tags.length <= 1) return
@@ -385,6 +405,10 @@
         flex-direction: column;
         gap: 8px;
         align-items: flex-start;
+        /* 标签行（单行 32 + 间距 8 = 40）超过 4 行时内部滚动，避免弹窗被无限撑高 */
+        max-height: 152px;
+        padding-right: 4px;
+        overflow-y: auto;
     }
     .tag-row {
         display: flex;

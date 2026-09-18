@@ -45,6 +45,9 @@ export const ENV_PREVIEW_DEBOUNCE = 500
  */
 export const DEFAULT_PARALLEL_TASK_COUNT = 4
 
+/** 后端 AgentInstallSessionRequest.dockerParallelTaskCount 默认值（仅支持 Docker 的操作系统生效，0 表示无限制） */
+export const DEFAULT_DOCKER_PARALLEL_TASK_COUNT = 4
+
 /** 安装会话状态（后端 AgentInstallSessionStatus） */
 export const SESSION_STATUS = {
     ACTIVE: 'ACTIVE',

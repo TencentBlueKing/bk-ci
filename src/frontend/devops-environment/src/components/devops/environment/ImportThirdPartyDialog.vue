@@ -3,6 +3,7 @@
         :value="isShow"
         width="1000"
         header-position="left"
+        ext-cls="import-third-party-dialog"
         :title="title"
         :mask-close="false"
         @value-change="onValueChange"
@@ -19,6 +20,7 @@
             :custom-tags="customTags"
             :env-preview="envPreview"
             :show-env-preview="showEnvPreview"
+            :env-preview-loading="envPreviewLoading"
             :deny-reason="denyReason"
         />
 
@@ -81,6 +83,7 @@
     import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref, watch } from 'vue'
     import {
         DEFAULT_PARALLEL_TASK_COUNT,
+        DEFAULT_DOCKER_PARALLEL_TASK_COUNT,
         DOCKER_SUPPORTED_OS,
         ENV_PREVIEW_DEBOUNCE,
         INSTALL_TYPE_LIST,
@@ -151,6 +154,8 @@
 
             /** 环境预览接口的返回（已换算为模板消费的结构） */
             const envPreviewData = ref(null)
+            /** 环境预览请求中（防抖等待 + 接口返回前展示 loading） */
+            const envPreviewLoading = ref(false)
 
             /** 重装上下文校验：canReinstall=false 时展示原因并禁止生成命令 */
             const canReinstall = ref(true)
@@ -179,7 +184,7 @@
 
             const defaults = {
                 parallelTaskCount: DEFAULT_PARALLEL_TASK_COUNT,
-                dockerParallelTaskCount: 2,
+                dockerParallelTaskCount: 4,
             }
 
             const tagText = computed(() => {
@@ -194,9 +199,16 @@
             })
 
             const hasPickedTag = computed(() => form.tags.some((t) => t.tagKeyId && t.tagValueId))
+            /** 有效标签（键与值都已选）签名：仅当它变化才需要重新预览，增删空行不触发请求 */
+            const pickedTagSignature = computed(() => form.tags
+                .filter((t) => t.tagKeyId && t.tagValueId)
+                .map((t) => `${t.tagKeyId}:${t.tagValueId}`)
+                .join(','))
             /**
              * 标签 → 动态环境预览：只读反馈，兑现"打标签能进哪个环境"的承诺。
-             * 后端 installSessions/preview 返回：导入态 matched/pending（pending 依赖接入后写入的内置标签）；
+             * 后端 installSessions/preview 统一返回 associated/willJoin/willLeave/pending：
+             * 导入态 associated 为该机器已关联的环境（重复导入同一台机器时存在），
+             * matched 由 willJoin 映射，pending 依赖接入后写入的内置标签；
              * 重装态直接给 associated/willJoin/willLeave（diff 由后端计算），前端不再自行 diff
              */
             const envPreview = computed(() => {
@@ -204,12 +216,17 @@
                     envPreviewData.value
                     || (isReinstall.value
                         ? { mode: 'reinstall', associated: [], willJoin: [], willLeave: [], pending: [] }
-                        : { mode: 'import', matched: [], pending: [] })
+                        : { mode: 'import', associated: [], matched: [], pending: [] })
                 )
             })
             const showEnvPreview = computed(() => {
                 const p = envPreview.value
-                if (p.mode === 'import') return hasPickedTag.value
+                if (p.mode === 'import') {
+                    return (
+                        hasPickedTag.value
+                        || p.associated.length > 0
+                    )
+                }
                 return (
                     hasPickedTag.value
                     || p.associated.length > 0
@@ -276,7 +293,8 @@
             /** 组装 AgentInstallSessionRequest（创建会话与预览共用） */
             const buildSessionRequest = () => {
                 const rows = form.tags
-                    .filter((t) => t.tagKeyId && t.tagValueId)
+                    // 系统内置标签（os/arch，负 id）由后端按 Agent 自动维护，仅用于回显，不随请求提交
+                    .filter((t) => t.tagKeyId && t.tagValueId && Number(t.tagKeyId) > 0)
                     .map(({ tagKeyId, tagValueId }) => ({ tagKeyId, tagValueId }))
                 return {
                     mode: isReinstall.value ? 'REINSTALL' : 'FIRST_IMPORT',
@@ -287,6 +305,14 @@
                     parallelTaskCount: form.parallelTaskCount === ''
                         ? DEFAULT_PARALLEL_TASK_COUNT
                         : Number(form.parallelTaskCount),
+                    // Docker 最大构建并发数：仅支持 Docker 的操作系统生效，留空沿用约定默认值
+                    ...(dockerSupported.value
+                        ? {
+                            dockerParallelTaskCount: form.dockerParallelTaskCount === ''
+                                ? DEFAULT_DOCKER_PARALLEL_TASK_COUNT
+                                : Number(form.dockerParallelTaskCount),
+                        }
+                        : {}),
                     ...(rows.length ? { tags: rows } : {}),
                     ...(isReinstall.value && targetAgentId.value ? { targetAgentId: targetAgentId.value } : {}),
                 }
@@ -309,7 +335,8 @@
                         stopPolling()
                         return
                     }
-                    accessedNodes.value = nodesRes || []
+                    // 安装中（INSTALLING）的节点不展示
+                    accessedNodes.value = (nodesRes || []).filter((n) => n.status !== 'INSTALLING')
                     accessError.value = false
                     if (accessedNodes.value.some((n) => n.status === 'SUCCEEDED')) waitedTooLong.value = false
                 } catch (err) {
@@ -360,19 +387,27 @@
                 }
             }
 
-            /** 节点标签快照 → 表单行；只回填当前项目仍存在的自定义标签 */
-            const nodeTagRows = (tags) => {
-                const rows = (tags || [])
-                    .map((t) => {
-                        const key = customTags.value.find((k) => k.tagKeyId === t.tagKeyId)
-                        if (!key) return null
-                        return key.tagValues.some((v) => v.tagValueId === t.tagValueId)
-                            ? { tagKeyId: t.tagKeyId, tagValueId: t.tagValueId }
-                            : null
-                    })
-                    .filter(Boolean)
-                return rows.length ? rows : [{ tagKeyId: '', tagValueId: '' }]
-            }
+            /** 嵌套/扁平标签 → 统一的 {tagKeyId, tagValueId}，兼容重装上下文（扁平）与原节点快照（嵌套 tagValues） */
+            const flatTagList = (tags) => (tags || [])
+                .map((t) => ({
+                    tagKeyId: t.tagKeyId,
+                    tagValueId: t.tagValueId ?? (t.tagValues && t.tagValues[0] ? t.tagValues[0].tagValueId : undefined),
+                }))
+                .filter((t) => t.tagKeyId != null && t.tagValueId != null)
+
+            /** 系统内置标签（os / arch 等，负 id 或 canUpdate=INTERNAL），由后端按 Agent 自动维护 */
+            const isBuiltInTag = (t) => t.tagKeyId < 0 || t.canUpdate === 'INTERNAL'
+
+            /** 标签快照 → 有效表单行；只保留当前项目仍存在的标签（键 + 值都能在 customTags 中匹配到） */
+            const validTagRows = (tags) => (tags || [])
+                .map((t) => {
+                    const key = customTags.value.find((k) => k.tagKeyId === t.tagKeyId)
+                    if (!key) return null
+                    return key.tagValues.some((v) => v.tagValueId === t.tagValueId)
+                        ? { tagKeyId: t.tagKeyId, tagValueId: t.tagValueId }
+                        : null
+                })
+                .filter(Boolean)
 
             /** 重装态：拉取重装上下文回填表单，并校验是否允许重装 */
             const loadReinstallContext = async () => {
@@ -389,8 +424,15 @@
                         if (res.zone) form.zone = res.zone
                         if (res.installType) form.installType = res.installType
                         form.parallelTaskCount = res.parallelTaskCount ?? ''
-                        form.dockerParallelTaskCount = ''
-                        form.tags = nodeTagRows(res.tags)
+                        form.dockerParallelTaskCount = res.dockerParallelTaskCount ?? ''
+                        // 重装上下文只回传用户标签；系统内置标签（os/arch 等）需从原节点快照补齐，否则不回显
+                        const userRows = validTagRows(flatTagList(res.tags))
+                        const builtInRows = validTagRows(flatTagList((props.node?.tags || []).filter(isBuiltInTag)))
+                        const rows = [...userRows]
+                        for (const r of builtInRows) {
+                            if (!rows.some((x) => x.tagKeyId === r.tagKeyId)) rows.push(r)
+                        }
+                        form.tags = rows.length ? rows : [{ tagKeyId: '', tagValueId: '' }]
                     }
                 } catch (err) {
                     proxy.$bkMessage({ message: err.message ? err.message : err, theme: 'error' })
@@ -400,12 +442,15 @@
             /** 标签变化 → 请求环境预览（防抖），重装态的变更差异由后端直接返回 */
             const requestEnvPreview = () => {
                 if (envPreviewTimer) clearTimeout(envPreviewTimer)
+                // 选标签/打开弹窗时立即进入 loading，避免防抖等待与请求期间展示旧数据或空态闪烁
+                envPreviewLoading.value = true
                 envPreviewTimer = setTimeout(async () => {
                     const rows = form.tags
                         .filter((t) => t.tagKeyId && t.tagValueId)
                         .map(({ tagKeyId, tagValueId }) => ({ tagKeyId, tagValueId }))
                     if (!rows.length && !isReinstall.value) {
-                        envPreviewData.value = { mode: 'import', matched: [], pending: [] }
+                        envPreviewData.value = { mode: 'import', associated: [], matched: [], pending: [] }
+                        envPreviewLoading.value = false
                         return
                     }
                     try {
@@ -413,7 +458,10 @@
                             projectId: projectId.value,
                             params: buildSessionRequest(),
                         })
-                        const envs = res?.environments || {}
+                        // 兼容个别拦截器未解包 data 层的情形（正常解包时 res.data 为 undefined）
+                        const payload = res?.data ?? res
+                        const envs = payload?.environments || {}
+                        console.log('[ImportThirdPartyDialog] preview res:', res, '=> envs:', envs)
                         if (isReinstall.value) {
                             envPreviewData.value = {
                                 mode: 'reinstall',
@@ -423,14 +471,23 @@
                                 pending: envs.pending || [],
                             }
                         } else {
+                            // 后端 FIRST_IMPORT 也统一返回 associated/willJoin/willLeave/pending 结构
+                            // （联调确认；对接文档写的 matchedEnvironments/pendingEnvironments 未落地，
+                            //  保留 ?? 回退兼容；重复导入同一台机器时 associated 可能有值）
                             envPreviewData.value = {
                                 mode: 'import',
-                                matched: envs.matchedEnvironments || [],
-                                pending: envs.pendingEnvironments || [],
+                                associated: envs.associated || [],
+                                matched: envs.matchedEnvironments ?? envs.willJoin ?? [],
+                                pending: envs.pendingEnvironments ?? envs.pending ?? [],
                             }
                         }
+                        console.log('[ImportThirdPartyDialog] preview mapped:', envPreviewData.value)
                     } catch (err) {
+                        // 保留现场便于联调：环境预览失败不阻断表单，但需在控制台可见
+                        console.warn('[ImportThirdPartyDialog] env preview failed:', err)
                         envPreviewData.value = null
+                    } finally {
+                        envPreviewLoading.value = false
                     }
                 }, ENV_PREVIEW_DEBOUNCE)
             }
@@ -513,11 +570,8 @@
                 }
             )
 
-            watch(
-                () => form.tags,
-                () => requestEnvPreview(),
-                { deep: true }
-            )
+            // 只监听「有效标签」组合：增删空行、选键未选值等不改变查询结果的操作不重新预览
+            watch(pickedTagSignature, () => requestEnvPreview())
 
             watch(
                 () => props.isShow,
@@ -540,6 +594,7 @@
                     form.dockerParallelTaskCount = ''
                     form.tags = [{ tagKeyId: '', tagValueId: '' }]
                     envPreviewData.value = null
+                    envPreviewLoading.value = false
                     commandText.value = ''
                     sessionId.value = ''
                     sessionExpiredAt.value = ''
@@ -596,6 +651,7 @@
                 customTags,
                 envPreview,
                 showEnvPreview,
+                envPreviewLoading,
                 installCommand,
                 step,
                 generating,
@@ -634,6 +690,33 @@
         line-height: 20px;
         color: #979ba5;
     }
+</style>
+
+<!-- ext-cls 挂在 .bk-dialog-wrapper 上（bk-magic-vue），所以这里用全局样式。
+     弹窗高度自适应视口：标签行不断新增、环境预览变长时超出部分由 body 内部滚动，
+     不再出现「顶部间距很大、底部没空间」的情况 -->
+<style lang="scss">
+.import-third-party-dialog {
+    .bk-dialog {
+        top: 100px !important;
+    }
+    .bk-dialog-content {
+        display: flex;
+        flex-direction: column;
+        /* 上下各留 40px，超高时内部滚动 */
+        max-height: calc(100vh - 80px);
+    }
+    .bk-dialog-tool,
+    .bk-dialog-header,
+    .bk-dialog-footer {
+        flex-shrink: 0;
+    }
+    .bk-dialog-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+}
 </style>
 
 <!-- popover 挂到 body，scoped 够不着。
