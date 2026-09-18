@@ -30,6 +30,7 @@ package com.tencent.devops.worker.common
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -66,6 +67,7 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.TaskProcessCleanup
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -247,6 +249,16 @@ object Runner {
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
+                    // 成功、异常和上报失败可能依次进入同一收尾路径；每次执行最多发起一次进程树清理。
+                    var cleanupAttempted = false
+                    var cleanupFailure: Throwable? = null
+                    fun cleanup(force: Boolean) {
+                        // 成功时遵循插件 finishKillFlag；失败/超时/取消必须尝试清理本次执行。
+                        // force 不覆盖 DEVOPS_DONT_KILL_PROCESS_TREE 的既有保留语义。
+                        if (cleanupAttempted || (!force && task.getFinishKillFlag() != true)) return
+                        cleanupAttempted = true
+                        cleanupFailure = handleTaskProcess(buildVariables.projectId, buildTask, taskDaemon.executionId)
+                    }
                     try {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.stepId = buildTask.stepId ?: ""
@@ -262,14 +274,25 @@ object Runner {
                         logger.info("Complete the task (${buildTask.elementName})")
                         // 获取执行结果
                         val buildTaskRst = taskDaemon.getBuildResult()
-                        val finishKillFlag = task.getFinishKillFlag()
-                        val projectId = buildVariables.projectId
-                        handleTaskProcess(finishKillFlag, projectId, buildTask)
+                        cleanup(force = false)
+                        cleanupFailure?.let {
+                            throw TaskExecuteException(
+                                errorType = ErrorType.SYSTEM,
+                                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR,
+                                errorMsg = "Task process cleanup failed: ${it.message}",
+                                cause = it
+                            )
+                        }
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
                     } catch (ignore: Throwable) {
                         failed = true
+                        cleanup(force = true)
+                        // 保留脚本/执行原始异常用于上报；清理失败作为附加信息，不能掩盖首个故障。
+                        cleanupFailure?.let { if (it !== ignore) ignore.addSuppressed(it) }
                         dealException(ignore, buildTask, taskDaemon)
+                        // 超时只结束等待，后台清理可能仍在运行；上报后退出领取循环，避免旧进程影响下一任务。
+                        cleanupFailure?.let { throw IllegalStateException("Worker process cleanup incomplete", it) }
                     } finally {
                         LoggerService.finishTask()
                         LoggerService.elementId = ""
@@ -297,19 +320,18 @@ object Runner {
         return failed
     }
 
-    private fun handleTaskProcess(finishKillFlag: Boolean?, projectId: String, buildTask: BuildTask) {
-        if (finishKillFlag == true) {
-            // 杀掉task对应的进程（配置DEVOPS_DONT_KILL_PROCESS_TREE标识的插件除外）
+    /** 此处使用本次执行 ID；即使有期限的等待已返回，迟到清理也不能按 taskId 匹配到后续重试。 */
+    private fun handleTaskProcess(projectId: String, buildTask: BuildTask, executionId: String): Throwable? =
+        TaskProcessCleanup.run {
             KillBuildProcessTree.killProcessTree(
                 projectId = projectId,
                 buildId = buildTask.buildId,
                 vmSeqId = buildTask.vmSeqId,
                 taskIds = setOf(buildTask.taskId!!),
-                forceFlag = true
+                forceFlag = true,
+                executionId = executionId
             )
         }
-    }
-
     private fun finally(workspacePathFile: File?, failed: Boolean) {
 
         if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {
