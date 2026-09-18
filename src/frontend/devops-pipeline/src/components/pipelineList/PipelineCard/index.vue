@@ -180,7 +180,7 @@
                     </span>
                     <span v-if="pipeline.webhookAliasName">
                         <logo
-                            name="branch"
+                            :name="pipeline.startType === 'codeArtifactWebhookTrigger' ? 'pipeline' : 'branch'"
                             size="16"
                         />
                         <span>{{ pipeline.webhookAliasName }}</span>
