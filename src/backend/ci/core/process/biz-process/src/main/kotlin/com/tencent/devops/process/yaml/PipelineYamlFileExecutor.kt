@@ -1,6 +1,10 @@
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
@@ -47,54 +51,55 @@ class PipelineYamlFileExecutor @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.handle() {
-        try {
-            when (actionType) {
-                YamlFileActionType.SYNC -> {
-                    sync()
-                }
+        when (actionType) {
+            YamlFileActionType.SYNC -> {
+                sync()
+            }
 
-                YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
-                    pipelineYamlFileManager.createOrUpdateYamlFile(this)
-                    // 只有流水线才需要触发
-                    if (!isTemplate) {
-                        scmWebhookTriggerBuildService.yamlTrigger(this)
-                    }
-                }
-
-                YamlFileActionType.DELETE -> {
-                    pipelineYamlFileManager.deleteYamlFile(event = this)
-                }
-
-                YamlFileActionType.RENAME -> {
-                    pipelineYamlFileManager.renameYamlFile(event = this)
-                    // 只有流水线才需要触发
-                    if (!isTemplate) {
-                        scmWebhookTriggerBuildService.yamlTrigger(this)
-                    }
-                }
-
-                YamlFileActionType.TRIGGER -> {
+            YamlFileActionType.CREATE, YamlFileActionType.UPDATE -> {
+                val success = pipelineYamlFileManager.createOrUpdateYamlFile(this)
+                // 只有流水线才需要触发,yaml处理失败继续触发会使用旧版本
+                if (success && !isTemplate) {
                     scmWebhookTriggerBuildService.yamlTrigger(this)
                 }
-
-                YamlFileActionType.CLOSE -> {
-                    pipelineYamlFileManager.closeYamlFile(this)
-                }
-
-                else -> Unit
             }
-        } catch (ignored: Exception) {
-            logger.error(
-                "[PAC_PIPELINE]|Failed to handle yaml file event|$eventId|" +
-                        "$projectId|${repository.repoHashId}|$filePath|$ref|$commitId|$blobId|$actionType",
-                ignored
-            )
+
+            YamlFileActionType.DELETE -> {
+                pipelineYamlFileManager.deleteYamlFile(event = this)
+            }
+
+            YamlFileActionType.RENAME -> {
+                val success = pipelineYamlFileManager.renameYamlFile(event = this)
+                // 只有流水线才需要触发,yaml处理失败继续触发会使用旧版本
+                if (success && !isTemplate) {
+                    scmWebhookTriggerBuildService.yamlTrigger(this)
+                }
+            }
+
+            YamlFileActionType.TRIGGER -> {
+                scmWebhookTriggerBuildService.yamlTrigger(this)
+            }
+
+            YamlFileActionType.CLOSE -> {
+                pipelineYamlFileManager.closeYamlFile(this)
+            }
+
+            else -> Unit
         }
     }
 
     private fun PipelineYamlFileEvent.sync() {
         try {
-            pipelineYamlFileManager.createOrUpdateYamlFile(this)
+            if (!pipelineYamlFileManager.createOrUpdateYamlFile(this)) {
+                // 失败原因已由createOrUpdateYamlFile记录到触发详情,这里只能拿到通用原因
+                syncFailed(
+                    reason = PipelineTriggerReason.TRIGGER_FAILED.name,
+                    reasonDetail = PipelineTriggerDetailMessageCode(
+                        messageCode = ProcessMessageCode.BK_YAML_PIPELINE_CREATE_FAILED
+                    )
+                )
+                return
+            }
             pipelineYamlSyncService.syncSuccess(
                 projectId = projectId,
                 repoHashId = repoHashId,
@@ -102,14 +107,21 @@ class PipelineYamlFileExecutor @Autowired constructor(
             )
         } catch (ignored: Exception) {
             val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
-            pipelineYamlSyncService.syncFailed(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                reason = reason,
-                reasonDetail = reasonDetail
-            )
+            syncFailed(reason = reason, reasonDetail = reasonDetail)
         }
+    }
+
+    private fun PipelineYamlFileEvent.syncFailed(
+        reason: String,
+        reasonDetail: PipelineTriggerReasonDetail
+    ) {
+        pipelineYamlSyncService.syncFailed(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            reason = reason,
+            reasonDetail = reasonDetail
+        )
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线信息查询条件")
@@ -8,6 +9,10 @@ data class PipelineInfoQueryCondition(
     val projectId: String,
     @get:Schema(title = "流水线ID集合", required = false)
     val pipelineIds: Set<String>? = null,
+    @get:Schema(title = "排除的流水线ID集合", required = false)
+    val excludePipelineIds: Set<String>? = null,
+    @get:Schema(title = "渠道号", required = false)
+    val channelCode: ChannelCode? = null,
     @get:Schema(title = "流水线名称(模糊匹配)", required = false)
     val pipelineName: String? = null,
     @get:Schema(title = "流水线是否禁用", required = false)

@@ -188,10 +188,9 @@ class PipelineTemplateInstanceReqConverter(
 
             // 获取版本状态
             val (versionStatus, branchName) = pipelineVersionGenerator.getInstanceStatusAndBranchName(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
-                templateId = templateId,
-                templateVersion = templateVersion,
                 enablePac = enablePac,
                 repoHashId = repoHashId,
                 targetAction = targetAction,
