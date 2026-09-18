@@ -1,0 +1,45 @@
+.metadataTigger {
+  display: grid;
+}
+
+.addParamsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.addParamsBtn:hover {
+  color: var(--color-primary-hover);
+}
+
+.paramInput {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.paramInput .inputCom :global(.bk-input) {
+  padding-right: 0 !important;
+}
+
+.inputCom {
+  flex: 1;
+}
+
+.inputOperator {
+  flex-basis: 96px;
+  margin: 0 6px;
+  background-color: #fff;
+}
+
+.minusBtn {
+  font-size: var(--font-size-sm);
+  margin-left: var(--spacing-xs);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  line-height: 30px;
+  transition: var(--transition-all);
+}
