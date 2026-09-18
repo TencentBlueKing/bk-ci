@@ -180,7 +180,9 @@
                             props: {
                                 editable: false,
                                 failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                                successSubscriptionList: this.getPipelineSubscriptions('success')
+                                successSubscriptionList: this.getPipelineSubscriptions('success'),
+                                cancelSubscriptionList: this.getPipelineSubscriptions('cancel'),
+                                publishSubscriptionList: this.getPipelineSubscriptions('publish')
                             }
                         }
                     case pipelineTabIdMap.setting:

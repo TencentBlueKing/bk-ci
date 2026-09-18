@@ -189,9 +189,9 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   })
 
   function getEnvironmentUrl(envHashId?: string) {
-    let url = `${location.origin}/console/environment/${route.params.projectId}`
+    let url = `${location.origin}/console/environment/${route.params.projectId}/creative-stream/env/ALL`
     if (envHashId) {
-      url += `/creative-stream/env/ALL/${envHashId}/node`
+      url += `/${envHashId}/node`
     }
     return url
   }
