@@ -6,6 +6,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -33,6 +34,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
@@ -503,6 +505,40 @@ class NodeTagService @Autowired constructor(
         )
         if (!records.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_HAS_NODE)
+        }
+    }
+
+    /**
+     * 安装会话在节点导入或重装成功后替换用户标签，保留 os、arch 等内置标签。
+     */
+    fun replaceUserTags(projectId: String, nodeId: Long, tags: List<NodeTagAddOrDeleteTagItem>) {
+        val keyIds = tags.map { it.tagKeyId }.toSet()
+        val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            keyIds = keyIds
+        ).associateBy { it.id }
+        if (tagKeys.size != keyIds.size) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("tags"))
+        }
+        tags.groupBy { it.tagKeyId }.forEach { (keyId, values) ->
+            if (tagKeys[keyId]?.allowMulValues == false && values.map { it.tagValueId }.distinct().size > 1) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
+                    params = arrayOf(tagKeys[keyId]?.keyName ?: "")
+                )
+            }
+        }
+        dslContext.transaction { config ->
+            val ctx = DSL.using(config)
+            nodeTagDao.deleteNodesUserTags(ctx, projectId, setOf(nodeId))
+            if (tags.isNotEmpty()) {
+                nodeTagDao.batchAddNodeTags(
+                    dslContext = ctx,
+                    projectId = projectId,
+                    nodeAndValueAndKeyIds = mapOf(nodeId to tags.associate { it.tagValueId to it.tagKeyId })
+                )
+            }
         }
     }
 
