@@ -27,8 +27,6 @@ $ helm install bkci .
 
 上述命令将使用默认配置在Kubernetes集群中部署bkci, 并输出访问指引。
 
-部署默认k8s构建机参考[kubernetes-manager部署文档.md](./kubernetes-manager部署文档.md)
-
 ## 卸载Chart
 使用以下命令卸载`bkci`:
 
