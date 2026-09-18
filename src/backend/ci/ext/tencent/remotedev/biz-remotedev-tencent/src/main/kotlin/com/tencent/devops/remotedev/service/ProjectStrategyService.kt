@@ -8,6 +8,8 @@ import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.strategy.PublicDesktopLockScreenStrategy
+import com.tencent.devops.remotedev.pojo.strategy.QuitOnExitStrategy
+import com.tencent.devops.remotedev.pojo.strategy.SilentUpgradeStrategy
 import com.tencent.devops.remotedev.pojo.strategy.StrategyType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +45,26 @@ class ProjectStrategyService @Autowired constructor(
                         info.publicDesktopLockScreenStrategy ?: PublicDesktopLockScreenStrategy.default(), false
                     )
                 )
+
+                StrategyType.SILENT_UPGRADE -> projectStrategyDao.createOrUpdateStrategy(
+                    dslContext = dslContext,
+                    projectId = info.projectId,
+                    zoneType = info.zoneType,
+                    strategyType = StrategyType.SILENT_UPGRADE,
+                    content = JsonUtil.toJson(
+                        info.silentUpgradeStrategy ?: SilentUpgradeStrategy.default(), false
+                    )
+                )
+
+                StrategyType.QUIT_ON_EXIT -> projectStrategyDao.createOrUpdateStrategy(
+                    dslContext = dslContext,
+                    projectId = info.projectId,
+                    zoneType = info.zoneType,
+                    strategyType = StrategyType.QUIT_ON_EXIT,
+                    content = JsonUtil.toJson(
+                        info.quitOnExitStrategy ?: QuitOnExitStrategy.default(), false
+                    )
+                )
             }
         }
     }
@@ -74,6 +96,22 @@ class ProjectStrategyService @Autowired constructor(
                         object : TypeReference<PublicDesktopLockScreenStrategy>() {}
                     )
                     resp.publicDesktopLockScreenStrategy = content
+                }
+
+                StrategyType.SILENT_UPGRADE -> {
+                    val content = JsonUtil.to(
+                        record.strategyContent.data(),
+                        object : TypeReference<SilentUpgradeStrategy>() {}
+                    )
+                    resp.silentUpgradeStrategy = content
+                }
+
+                StrategyType.QUIT_ON_EXIT -> {
+                    val content = JsonUtil.to(
+                        record.strategyContent.data(),
+                        object : TypeReference<QuitOnExitStrategy>() {}
+                    )
+                    resp.quitOnExitStrategy = content
                 }
             }
         }
