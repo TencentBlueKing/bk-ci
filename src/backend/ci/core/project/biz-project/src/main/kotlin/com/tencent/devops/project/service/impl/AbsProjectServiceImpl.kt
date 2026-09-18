@@ -79,6 +79,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectFavorDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
@@ -104,6 +105,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.enums.ProjectScopeType
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
@@ -114,9 +116,11 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
+import com.tencent.devops.project.service.ProjectLabelManageService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
+import com.tencent.devops.project.util.ProjectFavorHelper
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import jakarta.ws.rs.NotFoundException
@@ -125,6 +129,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
@@ -149,6 +154,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val profile: Profile,
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
+
+    @Autowired
+    @Lazy
+    private lateinit var projectFavorDao: ProjectFavorDao
+
+    @Autowired
+    @Lazy
+    private lateinit var projectLabelManageService: ProjectLabelManageService
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
@@ -318,6 +331,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
+                projectLabelManageService.replaceIfPresent(
+                    dslContext = context,
+                    projectUuid = projectId,
+                    labels = createInfo.labels
+                )
             }
             updateProjectRouterTag(createInfo.englishName)
         } catch (e: DuplicateKeyException) {
@@ -335,6 +353,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 deleteAuth(projectId)
             }
             throw ignored
+        }
+        if (createInfo.projectScope == ProjectScopeType.PERSONAL.value) {
+            projectFavorDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = createInfo.englishName
+            )
         }
         return projectId
     }
@@ -436,7 +461,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The user don't have the permission to visit the project")
             throw OperationException("The user don't have the permission to visit the project")
         }
-        return projectVO
+        return projectVO.copy(
+            favor = projectFavorDao.exist(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = englishName
+            )
+        )
     }
 
     override fun show(userId: String, englishName: String): ProjectVO? {
@@ -478,7 +509,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         return projectInfo.copy(
             tipsStatus = tipsStatus,
-            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
+            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName },
+            favor = projectFavorDao.exist(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = englishName
+            )
         )
     }
 
@@ -515,6 +551,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun diff(userId: String, englishName: String): ProjectDiffVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val approvalStatus = ProjectApproveStatus.parse(record.approvalStatus)
+        if (approvalStatus.isCreatePending() && record.creator != userId) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_PROJECT,
+                params = arrayOf(englishName),
+                defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+            )
+        }
+        if (approvalStatus.isSuccess()) {
+            val verify = validatePermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.VIEW
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.VIEW} validatePermission fail")
+                throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            }
+        }
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
         val beforeProductName = if (record.productId != null) {
@@ -646,6 +701,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             subjectScopesStr = subjectScopesStr,
                             logoAddress = logoAddress
                         )
+                        projectLabelManageService.replaceIfPresent(
+                            dslContext = context,
+                            projectUuid = projectId,
+                            labels = projectUpdateInfo.labels
+                        )
                         projectDispatcher.dispatch(
                             ProjectUpdateBroadCastEvent(
                                 userId = userId,
@@ -698,6 +758,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
                 )
+                if (finalNeedApproval) {
+                    projectLabelManageService.replaceIfPresent(
+                        dslContext = dslContext,
+                        projectUuid = projectId,
+                        labels = projectUpdateInfo.labels
+                    )
+                }
                 if (!projectUpdateInfo.secrecy) {
                     redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 } else {
@@ -973,7 +1040,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             success = true
-            return projectsResp
+            val favorProjectIds = projectFavorDao.list(
+                dslContext = dslContext,
+                userId = userId
+            ).toSet()
+            return ProjectFavorHelper.attachAndSort(
+                projects = projectsResp,
+                favorProjectIds = favorProjectIds,
+                sortType = sortType,
+                collation = collation
+            )
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
@@ -1035,6 +1111,40 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             hasNext = projectsResp.size == pageSize,
             records = projectsResp
         )
+    }
+
+    override fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType?,
+        enabled: Boolean?
+    ): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val projectCodes = getProjectFromAuth(
+                userId = userId,
+                permission = permission,
+                resourceType = resourceType?.value
+            )
+            if (projectCodes.isNullOrEmpty()) {
+                return emptyList()
+            }
+            val projectsResp = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectCodes,
+                enabled = enabled,
+                hidden = false
+            ).map { ProjectUtils.packagingBean(it) }
+            success = true
+            return projectsResp
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info(
+                "It took ${System.currentTimeMillis() - startEpoch}ms to list projects " +
+                    "by permission|$permission|$resourceType"
+            )
+        }
     }
 
     override fun list(
@@ -1702,6 +1812,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int?,
+        pageSize: Int?
+    ): Page<String> {
+        return projectLabelManageService.listProjectIdsByLabel(
+            label = label,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
     override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
         return projectDao.getProjectListByProductId(
             dslContext = dslContext,
@@ -1820,6 +1942,51 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName)
             ?: throw ProjectNotExistException("projectCode=$englishName")
         return record.hidden ?: false
+    }
+
+    override fun favor(userId: String, projectId: String, favor: Boolean): Boolean {
+        projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
+            ?: throw ErrorCodeException(
+                errorCode = PROJECT_NOT_EXIST,
+                params = arrayOf(projectId),
+                defaultMessage = "project - $projectId is not exist!"
+            )
+        val hasVisitPermission = getProjectFromAuth(userId).contains(projectId)
+        if (!hasVisitPermission) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PEM_CHECK_FAIL,
+                defaultMessage = "Do not have permission to operate this project"
+            )
+        }
+        return if (favor) {
+            projectFavorDao.create(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId
+            )
+            true
+        } else {
+            projectFavorDao.delete(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId
+            )
+            true
+        }
+    }
+
+    override fun migratePersonalProjectFavor(): Int {
+        val personalProjects = projectDao.listPersonalProjectIds(dslContext = dslContext)
+        var inserted = 0
+        personalProjects.forEach { (projectId, creator) ->
+            inserted += projectFavorDao.create(
+                dslContext = dslContext,
+                userId = creator,
+                projectId = projectId
+            )
+        }
+        logger.info("migrate personal project favor|size=${personalProjects.size}|inserted=$inserted")
+        return inserted
     }
 
     override fun updateHiddenStatus(englishName: String, hidden: Boolean) {

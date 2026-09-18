@@ -15,10 +15,29 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AI_SESSION'
+                    AND COLUMN_NAME = 'PIPELINE_ID') THEN
+        ALTER TABLE `T_AI_SESSION`
+            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL
+                COMMENT '流水线ID，空=项目级或公共会话' AFTER `PROJECT_ID`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AI_SESSION'
+                    AND INDEX_NAME = 'IDX_USER_SCOPE') THEN
+        ALTER TABLE `T_AI_SESSION`
+            ADD INDEX `IDX_USER_SCOPE` (`USER_ID`, `PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_AI_USER_LLM_CONFIG'
                     AND COLUMN_NAME = 'AES_KEY_SHA') THEN
-        ALTER TABLE `T_AI_USER_LLM_CONFIG`
-            ADD COLUMN `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹';
+    ALTER TABLE `T_AI_USER_LLM_CONFIG`
+        ADD COLUMN `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹';
     END IF;
 
     COMMIT;

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.BkShardingRoutingAlarmUtil
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -82,8 +83,13 @@ class BkAuthTableShardingAlgorithm : StandardShardingAlgorithm<String> {
                 BkShardingRoutingCacheUtil.put(key, routingRule)
             }
         }
-        if (routingRule.isNullOrBlank() || !availableTargetNames.contains(routingRule)) {
+        if (routingRule.isNullOrBlank()) {
             // 没有配置路由规则则路由到默认数据库表
+            return defaultTableName
+        }
+        if (!availableTargetNames.contains(routingRule)) {
+            // 规则已配置却不在可用分表内，降级后会导致规则记录的分表和数据实际写入的分表不一致
+            BkShardingRoutingAlarmUtil.warnUnavailableRoutingRule(key, routingRule, availableTargetNames)
             return defaultTableName
         }
         return routingRule

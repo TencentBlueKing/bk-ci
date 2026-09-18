@@ -341,7 +341,10 @@
                 this.searchValue.forEach(i => {
                     params[`${i.id}`] = (i.values && i.values[0].id) || i.name
                 })
-                
+                // 捕获本次请求的仓库 ID，用于在响应回来时校验是否仍是当前仓库，
+                // 防止快速切换代码库时旧请求覆盖新仓库数据
+                const requestRepoId = this.repoId
+
                 this.fetchTriggerEventList({
                     projectId: this.projectId,
                     repositoryHashId: this.repoId,
@@ -352,12 +355,16 @@
                     startTime: daterange[0],
                     endTime: daterange[1]
                 }).then(res => {
+                    // 仓库已切换，丢弃本次响应，避免渲染上一个代码库的数据
+                    if (this.repoId !== requestRepoId) {
+                        return
+                    }
                     if (this.page === 1) {
                         this.eventList = []
                     }
                     this.eventList = [...this.eventList, ...res.records]
                     this.timelineMap = {}
-                    
+
                     this.eventList.forEach(item => {
                         const eventDate = new Date(item.eventTime)
                         const year = eventDate.getFullYear()
@@ -368,13 +375,17 @@
                         if (!this.timelineMap[dateKey]) {
                             this.timelineMap[dateKey] = []
                         }
-                        
+
                         this.timelineMap[dateKey].push(item)
                     })
                     this.showEnd = res.count <= this.pageSize
                     this.hasLoadEnd = res.count === this.eventList.length
                     this.page += 1
                 }).finally(() => {
+                    // 若仓库已切换，loading 状态由新请求接管，本处不再清理避免闪烁
+                    if (this.repoId !== requestRepoId) {
+                        return
+                    }
                     this.pageLoading = false
                     this.isLoadingMore = false
                     // 清除 URL 中的 eventId 和 reason 参数
@@ -401,7 +412,7 @@
                 this.hasLoadEnd = false
                 this.eventList = []
                 this.timelineMap = {}
-                this.getListData()
+                return this.getListData()
             },
 
             handleClearDaterange () {

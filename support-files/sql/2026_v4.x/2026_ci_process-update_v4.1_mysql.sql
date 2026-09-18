@@ -106,6 +106,16 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND COLUMN_NAME = 'DEFAULT_BRANCH_YAML_EXIST') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD COLUMN `DEFAULT_BRANCH_YAML_EXIST` bit(1) NOT NULL DEFAULT b'1'
+            COMMENT 'yaml文件是否在默认分支存在';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_CALLBACK'
                     AND COLUMN_NAME = 'AES_KEY_SHA') THEN
         ALTER TABLE `T_PIPELINE_CALLBACK`

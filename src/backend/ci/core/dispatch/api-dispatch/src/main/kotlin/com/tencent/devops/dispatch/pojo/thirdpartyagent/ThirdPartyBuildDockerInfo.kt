@@ -56,7 +56,9 @@ data class ThirdPartyBuildDockerInfo(
             gpus = input.options?.gpus?.ifBlank { null },
             privileged = input.options?.privileged,
             network = input.options?.network?.filter { it.isNotBlank() }?.ifEmpty { null },
-            user = input.options?.user?.ifBlank { null }
+            user = input.options?.user?.ifBlank { null },
+            cpus = input.options?.cpus?.ifBlank { null },
+            memory = input.options?.memory?.ifBlank { null }
         ),
         imagePullPolicy = input.imagePullPolicy
     )
