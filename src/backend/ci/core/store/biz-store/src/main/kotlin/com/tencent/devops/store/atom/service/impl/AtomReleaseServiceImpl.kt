@@ -1727,8 +1727,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     /**
-     * 启动构建流水线：失败时把版本置为构建失败、推送状态变更消息
-     * 返回值不体现构建启动失败，由调用方按版本状态判定
+     * 启动构建流水线：失败时把版本置为构建失败、推送状态变更消息并抛出构建启动失败错误码
+     * @throws ErrorCodeException 构建启动失败
      */
     protected fun startAtomBuild(prepared: PreparedAtomVersionInfo): Result<String> {
         val userId = prepared.userId
@@ -1760,6 +1760,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_BUILD_START_FAIL)
         }
         return Result(atomId)
     }
