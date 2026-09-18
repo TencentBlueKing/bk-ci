@@ -42,7 +42,9 @@ import java.net.URLEncoder
  */
 open class TencentAgentUrlServiceImpl constructor(
     private val commonConfig: CommonConfig
-) : AgentUrlService {
+) : AgentUrlService(
+    commonConfig = commonConfig
+) {
 
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
