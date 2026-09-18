@@ -20,15 +20,31 @@ async function request(path, options = {}) {
   return json.data
 }
 
-export async function getLatestSession(projectId) {
-  const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''
-  return request(`/sessions/latest${query}`)
+function hasSessionScopeId(value) {
+  return typeof value === 'string' && value.trim() !== ''
 }
 
-export async function createSession(projectId, title) {
+function buildSessionScopeQuery(projectId, pipelineId) {
+  if (!hasSessionScopeId(projectId)) return ''
+  let query = `?projectId=${encodeURIComponent(projectId)}`
+  if (hasSessionScopeId(pipelineId)) {
+    query += `&pipelineId=${encodeURIComponent(pipelineId)}`
+  }
+  return query
+}
+
+export async function getLatestSession(projectId, pipelineId) {
+  return request(`/sessions/latest${buildSessionScopeQuery(projectId, pipelineId)}`)
+}
+
+export async function createSession(projectId, title, pipelineId) {
+  const body = { projectId, title }
+  if (hasSessionScopeId(projectId) && hasSessionScopeId(pipelineId)) {
+    body.pipelineId = pipelineId
+  }
   return request('/sessions/', {
     method: 'POST',
-    body: JSON.stringify({ projectId, title }),
+    body: JSON.stringify(body),
   })
 }
 
@@ -44,9 +60,8 @@ export async function stopChat(threadId) {
   return request(`/chat/stop/${threadId}`, { method: 'POST' })
 }
 
-export async function getSessions(projectId) {
-  const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''
-  return request(`/sessions/${query}`)
+export async function getSessions(projectId, pipelineId) {
+  return request(`/sessions/${buildSessionScopeQuery(projectId, pipelineId)}`)
 }
 
 export async function deleteSession(sessionId) {
@@ -235,10 +250,10 @@ export function createChatClient(threadId, { getContext } = {}) {
     }, callbacks)
   }
 
-  function send(content, callbacks, { tools: sendTools } = {}) {
+  function send(content, callbacks, { tools: sendTools, extraContext } = {}) {
     const runId = `run-${uuid()}`
     const msgId = `msg-${uuid()}`
-    const context = getContext?.() || []
+    const context = [...(getContext?.() || []), ...(extraContext || [])]
     const body = {
       threadId,
       runId,

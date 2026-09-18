@@ -1,0 +1,62 @@
+.root {
+  margin: 4px 0 8px;
+  padding: 6px 10px;
+  border: 1px solid #dcdee5;
+  border-radius: 6px;
+  background: #f5f7fa;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.collapsed {
+  padding-bottom: 6px;
+}
+
+.header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #63656e;
+  cursor: pointer;
+  appearance: none;
+}
+
+.header:hover .title {
+  color: #313238;
+}
+
+.header:focus-visible {
+  outline: 2px solid #3a84ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  color: #979ba5;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.arrowExpanded {
+  transform: rotate(90deg);
+}
+
+.title {
+  font-weight: 500;
+  color: #63656e;
+}
+
+.body {
+  margin: 8px 0 0;
+  color: #313238;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+}

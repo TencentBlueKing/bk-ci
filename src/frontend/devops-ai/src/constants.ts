@@ -29,4 +29,10 @@ export const ParentBridgeAction = {
   RequestContext: 'requestAiContext',
   /** 本 iframe 通知父窗口关闭 AI 面板。 */
   ClosePanel: 'CLOSE_DEVOPS_AI_PANEL',
+  /** 父窗口转发场景入口请求；默认直接发送，插件推荐等可预填不发送。 */
+  RequestAnalysis: 'requestAiAnalysis',
+  /** 本 iframe 已挂好分析监听，请父窗口下发挂起的场景入口请求。 */
+  RequestPendingAnalysis: 'requestPendingAiAnalysis',
+  /** 本 iframe 已收到场景入口请求，父窗口可丢掉挂起副本。 */
+  AckAnalysis: 'ackAiAnalysis',
 } as const

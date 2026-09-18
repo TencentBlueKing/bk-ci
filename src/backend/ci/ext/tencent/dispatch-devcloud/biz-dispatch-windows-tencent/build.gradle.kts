@@ -30,7 +30,10 @@ dependencies {
     api(project(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent"))
 
     api(project(":core:common:common-dispatch-sdk"))
+    api(project(":core:common:common-redis"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
 
     api(project(":ext:tencent:common:common-devcloud"))
+
+    testImplementation(project(":core:common:common-test"))
 }

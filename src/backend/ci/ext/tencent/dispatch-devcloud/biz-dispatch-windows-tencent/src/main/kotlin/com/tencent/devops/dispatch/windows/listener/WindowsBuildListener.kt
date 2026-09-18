@@ -256,7 +256,9 @@ class WindowsBuildListener @Autowired constructor(
                 )
                 devCloudWindowsService.deleteWindowsMachine(
                     creator = creator,
-                    taskGuid = buildHistory.taskGuid
+                    taskGuid = buildHistory.taskGuid,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId
                 )
 
                 logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")

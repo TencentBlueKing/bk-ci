@@ -31,6 +31,15 @@ BEGIN
                     COMMENT '项目组织形态：0-团队项目，1-个人项目';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_LABEL_REL'
+                    AND INDEX_NAME = 'UNI_LABEL_ID_PROJECT_ID') THEN
+    ALTER TABLE `T_PROJECT_LABEL_REL`
+        ADD UNIQUE KEY `UNI_LABEL_ID_PROJECT_ID` (`LABEL_ID`, `PROJECT_ID`);
+    END IF;
+    
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

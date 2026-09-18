@@ -61,6 +61,21 @@
 
         <header class="pipeline-config-header">
             <mode-switch read-only />
+            <button
+                v-if="showAiInterpretEntry"
+                class="pipeline-ai-interpret-entry"
+                type="button"
+                :aria-label="$t('details.aiInterpretOrchestration')"
+                @click="interpretPipeline"
+            >
+                <span class="pipeline-ai-interpret-entry-inner">
+                    <img
+                        :src="aiAvatar"
+                        alt=""
+                    />
+                    {{ $t('details.aiInterpretOrchestration') }}
+                </span>
+            </button>
         </header>
         <section class="pipeline-model-content">
             <YamlEditor
@@ -83,6 +98,12 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import aiAvatar from '@/images/ai-avatar.png'
+    import {
+        joinLabeledLine,
+        requestAiAnalysis,
+        summarizePipelineStructure
+    } from '@/utils/aiAnalysis'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { convertTime } from '@/utils/util'
 
@@ -104,6 +125,7 @@
         },
         data () {
             return {
+                aiAvatar,
                 isLoading: false,
                 yaml: ''
             }
@@ -113,21 +135,36 @@
                 'pipelineYaml',
                 'pipelineSetting',
                 'pipeline',
+                'pipelineWithoutTrigger',
                 'pipelineInfo',
                 'activePipelineVersion',
+                'switchingVersion',
                 'yamlHighlightBlockMap'
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
-                isBranchVersion: 'atom/isBranchVersion'
+                isBranchVersion: 'atom/isBranchVersion',
+                isTemplate: 'atom/isTemplate'
             }),
             canEdit () {
                 return this.pipelineInfo?.permissions?.canEdit ?? true
             },
             pipelineType () {
                 return this.$route.params.type
+            },
+            showAiInterpretEntry () {
+                return !this.isTemplate
+                    && this.pipelineType === pipelineTabIdMap.pipeline
+                    && !this.switchingVersion
+                    && !!this.pipeline
+            },
+            currentVersion () {
+                return this.$route.params.version
+                    || this.activePipelineVersion?.version
+                    || this.pipelineInfo?.releaseVersion
+                    || ''
             },
             MRGuideTooltips () {
                 return {
@@ -206,6 +243,27 @@
             showVersionSideSlider () {
                 bus.$emit(SHOW_VERSION_HISTORY_SIDESLIDER)
             },
+            interpretPipeline () {
+                const pipelineName = this.pipelineInfo?.pipelineName || this.pipeline?.name || ''
+                const composition = summarizePipelineStructure(
+                    this.pipelineWithoutTrigger || this.pipeline
+                )
+                requestAiAnalysis(
+                    {},
+                    this.$t('details.aiInterpretOrchestrationPrompt'),
+                    { version: String(this.currentVersion || '') },
+                    {
+                        attachment: {
+                            title: this.$t('details.aiInterpretOrchestrationAttachmentTitle'),
+                            body: [
+                                joinLabeledLine(this.$t('pipelineName'), pipelineName),
+                                this.$t('details.aiAttachmentComposition'),
+                                composition
+                            ].filter(Boolean).join('\n')
+                        }
+                    }
+                )
+            },
             commitMR () {
                 if (this.pipelineInfo?.yamlInfo?.webUrl) {
                     const url = new URL(`${this.pipelineInfo?.yamlInfo?.webUrl}/merge_requests/new`)
@@ -240,8 +298,58 @@
   .pipeline-config-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     flex-shrink: 0;
     grid-gap: 16px;
+    .pipeline-ai-interpret-entry {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      min-width: 64px;
+      height: 24px;
+      padding: 0 8px;
+      margin: 0;
+      border: 1px solid #3a84ff;
+      border-radius: 12px;
+      background: #e0ebff;
+      color: #3a84ff;
+      font: inherit;
+      font-size: 12px;
+      line-height: 1;
+      appearance: none;
+      cursor: pointer;
+      outline: none;
+      transition: background-color .15s ease, border-color .15s ease;
+
+      &:hover {
+        background: #d4e4ff;
+      }
+
+      &:active {
+        background: #c8dcff;
+      }
+
+      &:focus-visible {
+        outline: 2px solid rgba(58, 132, 255, .35);
+        outline-offset: 2px;
+      }
+
+      .pipeline-ai-interpret-entry-inner {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1;
+      }
+
+      img {
+        display: block;
+        flex: none;
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+      }
+    }
     .text-link {
       display: flex;
       align-items: center;

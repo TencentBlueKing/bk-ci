@@ -27,7 +27,7 @@ function iframeUtil (router: any) {
             console.warn(`Untrusted origin: ${e.origin}`)
             // return
         }
-        parseMessage(e.data)
+        parseMessage(e.data, e.source)
     }
 
     function send (target, action, params) {
@@ -157,6 +157,26 @@ function iframeUtil (router: any) {
         send(target, "backHome", "")
     }
 
+    let pendingAiAnalysis: Record<string, unknown> | null = null
+    let aiAnalysisTarget: Window | null = null
+
+    function ensureAnalysisNonce (params) {
+        const next = { ...(params || {}) }
+        if (!next.nonce) {
+            next.nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        }
+        return next
+    }
+
+    function rememberAiTarget (target) {
+        if (target && target !== window) aiAnalysisTarget = target
+    }
+
+    function rememberPendingAnalysis (params) {
+        pendingAiAnalysis = ensureAnalysisNonce(params)
+        return pendingAiAnalysis
+    }
+
     /**
    * AI 小鲸相关 —— 跨 iframe 上下文桥接。
    * - 入站：来自 devops-pipeline 子 iframe 的 `UPDATE_SUB_CONTEXT`、来自
@@ -178,12 +198,37 @@ function iframeUtil (router: any) {
         eventBus.$emit(AI_IFRAME_EVENTS.CLOSE_PANEL)
     }
 
+    utilMap[AI_IFRAME_ACTIONS.REQUEST_ANALYSIS] = function (params) {
+        eventBus.$emit(AI_IFRAME_EVENTS.REQUEST_ANALYSIS, rememberPendingAnalysis(params))
+    }
+
+    utilMap[AI_IFRAME_ACTIONS.REQUEST_PENDING_ANALYSIS] = function (_params, source) {
+        rememberAiTarget(source)
+        if (!aiAnalysisTarget || !pendingAiAnalysis) return
+        send(aiAnalysisTarget, AI_IFRAME_ACTIONS.REQUEST_ANALYSIS, pendingAiAnalysis)
+    }
+
+    utilMap[AI_IFRAME_ACTIONS.ACK_ANALYSIS] = function (params) {
+        if (!pendingAiAnalysis) return
+        if (!params?.nonce || pendingAiAnalysis.nonce === params.nonce) {
+            pendingAiAnalysis = null
+        }
+    }
+
     utilMap.syncAiContext = function (
         target: Window | null | undefined,
         ctx: Record<string, string>,
     ) {
+        rememberAiTarget(target)
         if (!target) return
         send(target, AI_IFRAME_ACTIONS.SYNC_CONTEXT, ctx)
+    }
+
+    utilMap.sendAiAnalysis = function (target, params) {
+        rememberAiTarget(target)
+        const payload = rememberPendingAnalysis(params || pendingAiAnalysis)
+        if (!target || !payload) return
+        send(target, AI_IFRAME_ACTIONS.REQUEST_ANALYSIS, payload)
     }
 
     utilMap.leaveConfirmOrder = function (target): void {
@@ -217,11 +262,11 @@ function iframeUtil (router: any) {
         })
     }
 
-    function parseMessage (data) {
+    function parseMessage (data, source) {
         try {
             const cb = utilMap[data.action]
             if (typeof cb === "function") {
-                return cb(data.params)
+                return cb(data.params, source)
             }
         } catch (e) {
             console.warn(e)

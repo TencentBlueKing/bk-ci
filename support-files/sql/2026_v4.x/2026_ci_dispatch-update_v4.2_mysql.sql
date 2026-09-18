@@ -20,6 +20,24 @@ BEGIN
     ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD` ADD INDEX `IDX_PROJECT_ENV_JOB` (PROJECT_ID, ENV_ID, JOB_ID, PIPELINE_ID);
     END IF;
 
+    IF EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                     AND INDEX_NAME = 'BUILD_ID') THEN
+    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD`
+            DROP INDEX BUILD_ID;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                     AND INDEX_NAME = 'IDX_BVE') THEN
+    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD`
+            ADD INDEX `IDX_BVE` (`BUILD_ID`, `VM_SEQ_ID`, `EXECUTE_COUNT`);
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>

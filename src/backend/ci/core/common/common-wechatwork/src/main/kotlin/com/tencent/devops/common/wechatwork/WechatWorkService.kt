@@ -426,8 +426,8 @@ class WechatWorkService @Autowired constructor(
     /**
      * 应用号向群聊发消息。
      *
-     * 通过 richtext mentioned 节点 @ [mentionUsers]（markdown 接口无 mentioned 能力，
-     * 有 @ 需求时同样走 richtext，保证与机器人 mentioned_list 行为一致）。
+     * markerDownFlag 为 true 时走 markdown 通道，为 false 时走 richtext 通道并通过 mentioned 节点 @成员。
+     * markdown 通道不支持 @，richtext 通道不支持 markdown 语法。
      * 后续可扩展（暂未实现）：
      * - @all：mentioned 列表增加 "@all" 或等价能力
      * - markdown 场景也可改为在 content 中拼接 <@userid>
@@ -440,8 +440,7 @@ class WechatWorkService @Autowired constructor(
     ) {
         logger.info("send group msg by app: $chatId")
         val normalizedContent = content.replace("\\n", "\n")
-        // 无 @ 且为 markdown 时走专用 markdown 接口；需要 @ 审核人时统一走 richtext
-        if (markerDownFlag && mentionUsers.isEmpty()) {
+        if (markerDownFlag) {
             sendMarkdownGroup(normalizedContent, chatId)
             return
         }

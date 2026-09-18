@@ -163,6 +163,14 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
+                    {
+                        name: 'buildTask',
+                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
+                            ? proxy.$t('environment.relatedCreativeFlow')
+                            : proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'schedulingStrategy',
@@ -189,14 +197,6 @@
                 //         label: proxy.$t('environment.settings')
                 //     }
                 // ] : []),
-                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
-                    {
-                        name: 'buildTask',
-                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
-                            ? proxy.$t('environment.relatedCreativeFlow')
-                            : proxy.$t('environment.nodeInfo.buildTask')
-                    }
-                ] : []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.DEVX ? [
                     {
                         name: 'advancedSetting',
@@ -228,7 +228,7 @@
                             tabName: newTab
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -255,7 +255,7 @@
                             tabName: 'node'
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -275,7 +275,7 @@
                             tabName: tabActive.value
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             })

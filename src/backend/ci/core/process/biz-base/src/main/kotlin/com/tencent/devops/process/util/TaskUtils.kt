@@ -179,7 +179,8 @@ object TaskUtils {
     const val JOB_CANCEL_FLAG = "JOB_CANCEL_FLAG"
 
     /**
-     * 获取当前构建取消任务ID集合的redis键
+     * 获取当前构建取消任务ID集合的redis键。
+     * 格式保持不变，供灰度/生产共用 Redis 时生产进程继续按原 Key 读取。
      */
     fun getCancelTaskIdRedisKey(
         buildId: String,
@@ -193,9 +194,10 @@ object TaskUtils {
         }
     }
 
+    private fun jobCancelTtlSec(): Long = TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS)
+
     /**
-     * 给指定 Job 写入取消标记，供 Agent 认领/完成插件时判断是否需要停止。
-     * 标记按 Job 维度隔离，避免误伤尚未启动的 finally Stage。
+     * 给已经在运行或即将领任务的 Job 写入取消标记。
      */
     fun markJobCancelFlag(
         redisOperation: RedisOperation,
@@ -204,7 +206,7 @@ object TaskUtils {
     ) {
         val key = getCancelTaskIdRedisKey(buildId, containerId, false)
         redisOperation.addSetValue(key, JOB_CANCEL_FLAG)
-        redisOperation.expire(key, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+        redisOperation.expire(key, jobCancelTtlSec())
     }
 
     /**
@@ -216,6 +218,58 @@ object TaskUtils {
         containerId: String
     ): Boolean {
         return redisOperation.hasKey(getCancelTaskIdRedisKey(buildId, containerId, false))
+    }
+
+    /**
+     * 把正在运行的插件 ID 记入取消集合，供完成上报识别。
+     */
+    fun recordCancelTaskId(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String,
+        taskId: String
+    ) {
+        if (containerId.isBlank() || taskId.isBlank()) {
+            return
+        }
+        val key = getCancelTaskIdRedisKey(buildId, containerId, false)
+        redisOperation.addSetValue(key, taskId)
+        redisOperation.expire(key, jobCancelTtlSec())
+    }
+
+    /**
+     * 清理指定 Job 的取消集合和杀进程队列。
+     */
+    fun clearJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ) {
+        redisOperation.delete(
+            listOf(
+                getCancelTaskIdRedisKey(buildId, containerId, false),
+                getCancelTaskIdRedisKey(buildId, containerId, true)
+            )
+        )
+    }
+
+    /**
+     * 同 buildId 重试前，清掉上一轮取消残留，避免新一轮领取误命中旧集合。
+     */
+    fun clearBuildJobCancelFlags(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerIds: Collection<String>
+    ) {
+        if (containerIds.isEmpty()) {
+            return
+        }
+        val keys = mutableListOf<String>()
+        containerIds.forEach { containerId ->
+            keys.add(getCancelTaskIdRedisKey(buildId, containerId, false))
+            keys.add(getCancelTaskIdRedisKey(buildId, containerId, true))
+        }
+        redisOperation.delete(keys)
     }
 
     /**
