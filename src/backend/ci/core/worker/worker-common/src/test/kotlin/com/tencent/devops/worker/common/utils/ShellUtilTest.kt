@@ -260,7 +260,8 @@ class ShellUtilTest {
         val buildId = "sh_byte_guard"
         val workspace = newWorkspace("sh_byte_guard_workspace")
 
-        val content = generateScript(buildId, "format_multiple_lines \"::set-output name=RESULT::v\"", workspace).readText()
+        val content =
+            generateScript(buildId, "format_multiple_lines \"::set-output name=RESULT::v\"", workspace).readText()
 
         Assertions.assertTrue(content.contains("local LC_ALL=C"), "预检须按字节计数: $content")
         Assertions.assertTrue(
