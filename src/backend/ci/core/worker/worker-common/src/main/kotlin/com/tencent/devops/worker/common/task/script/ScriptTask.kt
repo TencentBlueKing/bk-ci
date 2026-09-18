@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_OUTPUT_CONTEXT_MISSING
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_OUTPUT_KEY_INVALID
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_MULTILINE_OUTPUT_LINE_INVALID
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
@@ -181,8 +182,19 @@ open class ScriptTask : ITask() {
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
             // 读取多行输出（format_multiple_lines），合并到 context
+            val multiLineLines = ScriptEnvUtils.getMultipleLines(buildId, workspace)
+            if (multiLineLines.isNotEmpty() &&
+                (buildVariables.jobId.isNullOrBlank() || buildTask.stepId.isNullOrBlank())
+            ) {
+                LoggerService.addWarnLine(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_MULTILINE_OUTPUT_CONTEXT_MISSING,
+                        language = AgentEnv.getLocaleLanguage()
+                    )
+                )
+            }
             val multiLineContext = decodeMultipleLines(
-                lines = ScriptEnvUtils.getMultipleLines(buildId, workspace),
+                lines = multiLineLines,
                 jobId = buildVariables.jobId,
                 stepId = buildTask.stepId,
                 onInvalidKey = { key ->
