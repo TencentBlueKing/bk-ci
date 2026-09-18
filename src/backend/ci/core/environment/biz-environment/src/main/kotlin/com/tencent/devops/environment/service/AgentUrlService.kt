@@ -142,7 +142,10 @@ open class AgentUrlService @Autowired constructor(
      * 生成安装会话对应的构建机安装命令，具体配置由后台会话快照决定。
      */
     fun genAgentSessionInstallScript(os: OS, gateway: String?, token: String): String {
-        val gw = fixGateway(gateway)
+        var gw = fixGateway(gateway)
+        if (!gw.startsWith("http")) {
+            gw = "http://$gw"
+        }
         val url = "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/sessionInstall"
         return if (os == OS.WINDOWS) {
             "\$ProgressPreference = 'SilentlyContinue';" +
