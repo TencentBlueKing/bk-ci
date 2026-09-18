@@ -94,11 +94,14 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_BUILD_START_FAIL
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_FORMAL_VERSION_NOT_FOUND
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_INIT_PROJECT_NOT_FOUND
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_NO_NEW_COMMIT
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_CREATE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_END_STATUS_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_BRANCH_TEST_REPO_REQUIRED
 import com.tencent.devops.store.constant.StoreMessageCode.USER_NOT_IS_STORE_MEMBER
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
@@ -1032,7 +1035,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 params = arrayOf(userId)
             )
         }
-        // 并发控制：同一插件同一分支的创建操作串行化，避免并发重复创建/版本号冲突
+        // 仅代码库来源的插件支持分支测试版本
+        val baseAtomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
+            ?: throw ErrorCodeException(
+                errorCode = STORE_ATOM_FORMAL_VERSION_NOT_FOUND,
+                params = arrayOf(atomCode)
+            )
+        if (baseAtomRecord.repositoryHashId.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = STORE_BRANCH_TEST_REPO_REQUIRED,
+                params = arrayOf(atomCode)
+            )
+        }
         return try {
             doCreateBranchTestVersion(userId, marketAtomUpdateRequest, atomCode, branch)
         } catch (e: ErrorCodeException) {
@@ -1044,30 +1058,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     /**
-     * 在分布式锁保护下创建分支测试版本
+     * 创建分支测试版本：分支提交时间拉取、配置解析与构建启动在锁外，落点判定与写库在分支锁内
      */
     private fun doCreateBranchTestVersion(
-        userId: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest,
-        atomCode: String,
-        branch: String
-    ): Result<String> {
-        return RedisLock(
-            redisOperation,
-            branchTestLockKey(atomCode, branch),
-            60L
-        ).use { redisLock ->
-            if (!redisLock.tryLock()) {
-                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
-            }
-            createBranchTestVersionUnderLock(userId, marketAtomUpdateRequest, atomCode, branch)
-        }
-    }
-
-    /**
-     * 分支测试版本创建主流程
-     */
-    private fun createBranchTestVersionUnderLock(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         atomCode: String,
@@ -1080,29 +1073,30 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         ) ?: throw ErrorCodeException(
             errorCode = STORE_ATOM_INIT_PROJECT_NOT_FOUND
         )
+        // 读取当前分支测试版本；非构建失败态时要求分支有新提交，并保留提交时间供锁内复用
         val versionRecord = marketAtomDao.getLatestBranchTestVersion(dslContext, atomCode, branch)
-        var newVersionFlag = true
-        if (versionRecord != null) {
-            newVersionFlag = if (isBranchTestBuildFailed(versionRecord.atomStatus)) {
-                false
-            } else {
-                checkBranchHasNewCommit(versionRecord, userId, branch)
+        val recentCommitMillis = if (versionRecord != null && !isBranchTestBuildFailed(versionRecord.atomStatus)) {
+            val commitMillis = fetchBranchRecentCommitMillis(versionRecord, userId, branch)
+            if (commitMillis <= versionRecord.updateTime.timestampmilli()) {
+                throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
             }
-        }
-        val (version, atomId) = if (newVersionFlag) {
-            val branchTestVersion = generateBranchTestVersion(branch)
-            marketAtomUpdateRequest.version = branchTestVersion
-            branchTestVersion to UUIDUtil.generate()
+            commitMillis
         } else {
-            marketAtomUpdateRequest.version = versionRecord!!.version
-            versionRecord.version to versionRecord.id
+            null
         }
+        val newVersionFlag = isNeedNewVersion(versionRecord, recentCommitMillis)
+        // 复用原版本时必然存在历史版本记录
+        val reuseRecord = if (newVersionFlag) null else checkNotNull(versionRecord)
+        val version = reuseRecord?.version ?: generateBranchTestVersion(branch)
+        val atomId = reuseRecord?.id ?: UUIDUtil.generate()
+        marketAtomUpdateRequest.version = version
+
         val atomRecord = versionRecord
             ?: atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
             ?: throw ErrorCodeException(
-                errorCode = STORE_BRANCH_TEST_CREATE_FAIL
+                errorCode = STORE_ATOM_FORMAL_VERSION_NOT_FOUND,
+                params = arrayOf(atomCode)
             )
-
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
 
         val getAtomConfResult = getAtomConfig(
@@ -1126,7 +1120,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
 
-        val result = updateAtomVersionInfo(
+        val preparedResult = prepareAtomVersionInfo(
             userId = userId,
             projectCode = projectCode,
             newVersionFlag = newVersionFlag,
@@ -1139,13 +1133,36 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             convertUpdateRequest = marketAtomUpdateRequest,
             getAtomConfResult = getAtomConfResult
         )
+        val prepared = preparedResult.data
+            ?: return Result(preparedResult.status, preparedResult.message, null)
+
+        // 并发控制：同一插件同一分支的创建操作串行化
+        RedisLock(
+            redisOperation,
+            branchTestLockKey(atomCode, branch),
+            60L
+        ).use { redisLock ->
+            if (!redisLock.tryLock()) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
+            val versionRecordInLock = marketAtomDao.getLatestBranchTestVersion(dslContext, atomCode, branch)
+            // 锁外准备期间落点发生变化即报冲突，避免用错版本的准备数据写库
+            if (versionRecordInLock?.id != versionRecord?.id ||
+                isNeedNewVersion(versionRecordInLock, recentCommitMillis) != newVersionFlag
+            ) {
+                throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
+            }
+            commitAtomVersionInfo(prepared)
+        }
+        // 构建启动在锁外执行
+        val result = startAtomBuild(prepared)
         // 构建未启动时返回失败
         val createdAtomId = result.data
         if (createdAtomId != null && marketAtomDao.getAtomRecordById(dslContext, createdAtomId)
                 ?.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte()
         ) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = STORE_BRANCH_TEST_CREATE_FAIL,
+                messageCode = STORE_ATOM_BUILD_START_FAIL,
                 language = I18nUtil.getLanguage(userId)
             )
         }
@@ -1160,26 +1177,35 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomStatus == AtomStatusEnum.CODECC_FAIL.status.toByte()
 
     /**
-     * 检查分支最近一次提交是否有更新，并判断是否创建新版本
+     * 是否需要新建分支测试版本
+     * @param recentCommitMillis 分支最新提交时间（毫秒时间戳），为空表示无历史版本或处于构建失败态
      */
-    private fun checkBranchHasNewCommit(
-        versionRecord: TAtomRecord,
-        userId: String,
-        branch: String
-    ): Boolean {
+    private fun isNeedNewVersion(versionRecord: TAtomRecord?, recentCommitMillis: Long?): Boolean {
+        if (versionRecord == null) {
+            return true
+        }
+        if (isBranchTestBuildFailed(versionRecord.atomStatus)) {
+            return false
+        }
+        if (recentCommitMillis == null || recentCommitMillis <= versionRecord.updateTime.timestampmilli()) {
+            return false
+        }
+        return versionRecord.atomStatus != AtomStatusEnum.TESTING.status.toByte() &&
+            versionRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte() &&
+            versionRecord.atomStatus != AtomStatusEnum.BUILD_FAIL.status.toByte()
+    }
+
+    /**
+     * 拉取分支最新提交时间（毫秒时间戳）
+     */
+    private fun fetchBranchRecentCommitMillis(versionRecord: TAtomRecord, userId: String, branch: String): Long {
         val recentCommitInfo = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
             repoId = versionRecord.repositoryHashId,
             sha = branch,
             tokenType = TokenTypeEnum.OAUTH
         ).data ?: throw ErrorCodeException(errorCode = StoreMessageCode.GET_BRANCH_COMMIT_INFO_ERROR)
-        val recentCommitDate = DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
-        if (recentCommitDate <= versionRecord.updateTime.timestampmilli()) {
-            throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
-        }
-        return !(versionRecord.atomStatus == AtomStatusEnum.TESTING.status.toByte() ||
-            versionRecord.atomStatus == AtomStatusEnum.BUILDING.status.toByte() ||
-            versionRecord.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte())
+        return DateTimeUtil.zoneDateToTimestamp(recentCommitInfo.committed_date)
     }
 
     /**
@@ -1193,7 +1219,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun endBranchVersionTest(userId: String, atomCode: String, branch: String): Result<Boolean> {
         logger.info("endBranchVersionTest,userId:$userId | atomCode:$atomCode | branch=$branch")
         // 并发控制：同一插件同一分支的结束操作串行化
-        val result = RedisLock(
+        val finishedRecord = RedisLock(
             redisOperation,
             branchTestLockKey(atomCode, branch),
             60L
@@ -1201,7 +1227,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (!redisLock.tryLock()) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
-            val record = marketAtomDao.getLatestBranchTestVersion(
+            val latestRecord = marketAtomDao.getLatestBranchTestVersion(
                 dslContext = dslContext,
                 atomCode = atomCode,
                 branch = branch
@@ -1210,7 +1236,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 params = arrayOf("$atomCode:$branch")
             )
             // 仅测试中的分支测试版本可结束测试
-            if (record.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
+            if (latestRecord.atomStatus != AtomStatusEnum.TESTING.status.toByte()) {
                 throw ErrorCodeException(errorCode = STORE_BRANCH_TEST_END_STATUS_INVALID)
             }
             // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
@@ -1219,18 +1245,20 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     userId = userId,
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
-                ) || record.creator == userId)
+                ) || latestRecord.creator == userId)
             ) {
                 throw ErrorCodeException(
                     errorCode = NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION,
                     params = arrayOf(atomCode)
                 )
             }
-            finishBranchVersionTest(userId, atomCode, record)
-            record.id to Result(true)
+            finishBranchVersionTest(userId, atomCode, latestRecord)
+            latestRecord
         }
         // 通过websocket推送状态变更消息
-        storeWebsocketService.sendWebsocketMessage(userId, result.first)
-        return result.second
+        storeWebsocketService.sendWebsocketMessage(userId, finishedRecord.id)
+        // 取消发布总线产物、删除质量红线数据在锁外执行
+        afterBranchVersionTestEnd(userId, atomCode, finishedRecord)
+        return Result(true)
     }
 }
