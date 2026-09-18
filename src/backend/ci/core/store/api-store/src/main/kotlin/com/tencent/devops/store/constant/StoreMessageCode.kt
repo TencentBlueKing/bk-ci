@@ -186,4 +186,6 @@ object StoreMessageCode {
     const val STORE_ATOM_OPERATE_CONCURRENT = "2120948" // 研发商店：该组件版本正在被其他操作处理，请稍后重试
     const val STORE_ATOM_NOT_IN_RELEASE_PROCESS = "2120949" // 研发商店：插件版本[{0}]不属于发布流程
     const val STORE_ATOM_BUILD_START_FAIL = "2120950" // 研发商店：插件构建启动失败，请稍后重试
+    const val STORE_BRANCH_TEST_REPO_REQUIRED = "2120951" // 研发商店：仅代码库来源的插件支持分支测试版本
+    const val STORE_ATOM_FORMAL_VERSION_NOT_FOUND = "2120952" // 研发商店：插件暂无正式版本，请先发布正式版本
 }
