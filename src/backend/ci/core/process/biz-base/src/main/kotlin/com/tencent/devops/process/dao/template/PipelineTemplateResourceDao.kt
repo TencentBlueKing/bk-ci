@@ -343,10 +343,10 @@ class PipelineTemplateResourceDao {
     }
 
     /**
-     * 获取最新的版本，包含已删除，不查询 MODEL/YAML。
-     * 用于计算下一个 number
+     * 按 NUMBER 取最大值对应的版本摘要，包含已删除，不查询 MODEL/YAML。
+     * 用于计算下一个 number。
      */
-    fun getLatestVersion(
+    fun getMaxNumberVersion(
         dslContext: DSLContext,
         projectId: String,
         templateId: String

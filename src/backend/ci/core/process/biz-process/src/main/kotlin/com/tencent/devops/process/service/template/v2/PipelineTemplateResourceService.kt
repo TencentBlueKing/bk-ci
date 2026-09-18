@@ -48,16 +48,14 @@ class PipelineTemplateResourceService @Autowired constructor(
     }
 
     /**
-     * 获取模版最新版本
-     *
-     * 获取模版最新版本应该包含已经删除的,不然计算版本时会有异常,
-     * 如新建一个草稿版本,然后再删除草稿,再创建一个草稿版本,如果不包含删除的,那么版本会与删除的一样
+     * 按 NUMBER 取最大值对应的版本摘要，包含已删除，不含编排。
+     * 用于计算下一个 number。
      */
-    fun getLatestVersion(
+    fun getMaxNumberVersion(
         projectId: String,
         templateId: String
     ): PipelineTemplateVersionSimple? {
-        return pipelineTemplateResourceDao.getLatestVersion(
+        return pipelineTemplateResourceDao.getMaxNumberVersion(
             dslContext = dslContext,
             projectId = projectId,
             templateId = templateId
