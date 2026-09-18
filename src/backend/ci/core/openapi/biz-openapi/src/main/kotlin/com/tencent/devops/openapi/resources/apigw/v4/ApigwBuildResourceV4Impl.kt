@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
@@ -521,6 +522,21 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             updateTimeDesc = updateTimeDesc
+        )
+    }
+
+    override fun getMutexGroupTasks(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|get mutex group tasks|$projectId|$mutexGroupName")
+        return client.get(ServiceBuildResource::class).getMutexGroupTasks(
+            userId = userId,
+            projectId = projectId,
+            mutexGroupName = mutexGroupName
         )
     }
 

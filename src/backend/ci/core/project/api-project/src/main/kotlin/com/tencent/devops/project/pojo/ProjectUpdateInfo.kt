@@ -29,6 +29,7 @@ package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目-修改模型")
@@ -82,5 +83,7 @@ data class ProjectUpdateInfo(
     @get:Schema(title = "KPI代码")
     val kpiCode: String? = null,
     @get:Schema(title = "KPI名称")
-    val kpiName: String? = null
+    val kpiName: String? = null,
+    @get:Schema(title = "项目标签列表，不传则不修改")
+    val labels: List<ProjectLabel>? = null
 )
