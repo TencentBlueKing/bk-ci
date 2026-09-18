@@ -94,7 +94,6 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_BUILD_START_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_FORMAL_VERSION_NOT_FOUND
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_INIT_PROJECT_NOT_FOUND
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_ATOM_OPERATE_CONCURRENT
@@ -1073,18 +1072,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         ) ?: throw ErrorCodeException(
             errorCode = STORE_ATOM_INIT_PROJECT_NOT_FOUND
         )
-        // 读取当前分支测试版本；非构建失败态时要求分支有新提交，并保留提交时间供锁内复用
+        // 读取当前分支测试版本；非构建失败态时要求分支有新提交
         val versionRecord = marketAtomDao.getLatestBranchTestVersion(dslContext, atomCode, branch)
-        val recentCommitMillis = if (versionRecord != null && !isBranchTestBuildFailed(versionRecord.atomStatus)) {
+        if (versionRecord != null && !isBranchTestBuildFailed(versionRecord.atomStatus)) {
             val commitMillis = fetchBranchRecentCommitMillis(versionRecord, userId, branch)
             if (commitMillis <= versionRecord.updateTime.timestampmilli()) {
                 throw ErrorCodeException(errorCode = STORE_BRANCH_NO_NEW_COMMIT)
             }
-            commitMillis
-        } else {
-            null
         }
-        val newVersionFlag = isNeedNewVersion(versionRecord, recentCommitMillis)
+        val newVersionFlag = isNeedNewVersion(versionRecord)
         // 复用原版本时必然存在历史版本记录
         val reuseRecord = if (newVersionFlag) null else checkNotNull(versionRecord)
         val version = reuseRecord?.version ?: generateBranchTestVersion(branch)
@@ -1148,25 +1144,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val versionRecordInLock = marketAtomDao.getLatestBranchTestVersion(dslContext, atomCode, branch)
             // 锁外准备期间落点发生变化即报冲突，避免用错版本的准备数据写库
             if (versionRecordInLock?.id != versionRecord?.id ||
-                isNeedNewVersion(versionRecordInLock, recentCommitMillis) != newVersionFlag
+                isNeedNewVersion(versionRecordInLock) != newVersionFlag
             ) {
                 throw ErrorCodeException(errorCode = STORE_ATOM_OPERATE_CONCURRENT)
             }
             commitAtomVersionInfo(prepared)
         }
-        // 构建启动在锁外执行
-        val result = startAtomBuild(prepared)
-        // 构建未启动时返回失败
-        val createdAtomId = result.data
-        if (createdAtomId != null && marketAtomDao.getAtomRecordById(dslContext, createdAtomId)
-                ?.atomStatus == AtomStatusEnum.BUILD_FAIL.status.toByte()
-        ) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = STORE_ATOM_BUILD_START_FAIL,
-                language = I18nUtil.getLanguage(userId)
-            )
-        }
-        return result
+        // 构建启动在锁外执行，启动失败由 startAtomBuild 抛出
+        return startAtomBuild(prepared)
     }
 
     /**
@@ -1177,23 +1162,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomStatus == AtomStatusEnum.CODECC_FAIL.status.toByte()
 
     /**
-     * 是否需要新建分支测试版本
-     * @param recentCommitMillis 分支最新提交时间（毫秒时间戳），为空表示无历史版本或处于构建失败态
+     * 是否需要新建分支测试版本：分支下无版本记录，或已有版本已测试结束时才新建，其余状态复用现有版本
      */
-    private fun isNeedNewVersion(versionRecord: TAtomRecord?, recentCommitMillis: Long?): Boolean {
-        if (versionRecord == null) {
-            return true
-        }
-        if (isBranchTestBuildFailed(versionRecord.atomStatus)) {
-            return false
-        }
-        if (recentCommitMillis == null || recentCommitMillis <= versionRecord.updateTime.timestampmilli()) {
-            return false
-        }
-        return versionRecord.atomStatus != AtomStatusEnum.TESTING.status.toByte() &&
-            versionRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte() &&
-            versionRecord.atomStatus != AtomStatusEnum.BUILD_FAIL.status.toByte()
-    }
+    private fun isNeedNewVersion(versionRecord: TAtomRecord?): Boolean =
+        versionRecord == null || versionRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
 
     /**
      * 拉取分支最新提交时间（毫秒时间戳）
