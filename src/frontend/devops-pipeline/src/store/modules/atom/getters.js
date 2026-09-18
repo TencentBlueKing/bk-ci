@@ -22,7 +22,6 @@ import { buildPipelineSnapshot, isPipelineModified } from '@/utils/pipelineSnaps
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
-import { VAR_MAX_LENGTH } from '@/store/constants'
 
 function isSkip (status) {
     return status === 'SKIP'
@@ -70,10 +69,6 @@ export default {
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
-    },
-    failIfVariableInvalid: state => {
-        console.log(state?.pipelineSetting?.failIfVariableInvalid)
-        return state?.pipelineSetting?.failIfVariableInvalid ?? false
     },
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
@@ -248,24 +243,6 @@ export default {
             
 
             const allContainers = getters.getAllContainers(stages)
-            if (allContainers.length > 0 && pipelineSetting?.failIfVariableInvalid) {
-                const invalidList = allContainers[0].params.filter(param => typeof param.defaultValue === 'string' && param.defaultValue.length > VAR_MAX_LENGTH)
-                if (invalidList.length) {
-                    invalidList.forEach(item => {
-                        Vue.set(item, 'isInvalid', true)
-                    })
-                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.paramLengthLimitTips', [invalidList[0].id, invalidList[0].defaultValue.length, VAR_MAX_LENGTH]))
-                }
-                
-            } else if (allContainers.length > 0) {
-                allContainers[0].params.forEach(item => {
-                    if (item.isInvalid) {
-                        Vue.set(item, 'isInvalid', false)
-                    }
-                })
-            }
-
-
             // 当前所有插件element
             const elementsMap = allContainers.reduce(function (prev, cur) {
                 prev.push(...cur.elements)
