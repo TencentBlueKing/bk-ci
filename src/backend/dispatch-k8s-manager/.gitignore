@@ -1,9 +1,0 @@
-bin
-.idea
-test
-/rds
-out
-.codecc
-build.yml
-.vscode
-resources/kube*
