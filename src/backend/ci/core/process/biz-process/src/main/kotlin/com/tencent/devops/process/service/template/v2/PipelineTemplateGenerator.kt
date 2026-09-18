@@ -214,7 +214,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
+        val latestResource = pipelineTemplateResourceService.getLatestVersion(
             projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
@@ -228,7 +228,7 @@ class PipelineTemplateGenerator @Autowired constructor(
         return PTemplateResourceOnlyVersion(
             version = generateTemplateVersion(),
             number = latestResource.number + 1,
-            settingVersion = latestResource.settingVersion + 1,
+            settingVersion = (latestResource.settingVersion ?: 0) + 1,
             baseVersion = baseResource?.version ?: latestReleaseResource?.version,
             baseVersionName = baseResource?.versionName ?: latestReleaseResource?.versionName,
             draftVersion = PipelineTemplateConstant.INIT_VERSION
@@ -266,7 +266,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
+        val latestResource = pipelineTemplateResourceService.getLatestVersion(
             projectId = projectId,
             templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
@@ -281,7 +281,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             Triple(
                 generateTemplateVersion(),
                 latestResource.number + 1,
-                latestResource.settingVersion + 1
+                (latestResource.settingVersion ?: 0) + 1
             )
         } else {
             Triple(draftResource.version, draftResource.number, draftResource.settingVersion)
@@ -440,7 +440,7 @@ class PipelineTemplateGenerator @Autowired constructor(
         newSetting: PipelineSetting,
         customVersionName: String? = null
     ): PTemplateResourceOnlyVersion {
-        val latestResource = pipelineTemplateResourceService.getLatestVersionResource(
+        val latestResource = pipelineTemplateResourceService.getLatestVersion(
             projectId = projectId, templateId = templateId
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST)
         val latestReleaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
@@ -456,7 +456,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             Triple(
                 generateTemplateVersion(),
                 latestResource.number + 1,
-                latestResource.settingVersion + 1
+                (latestResource.settingVersion ?: 0) + 1
             )
         } else {
             Triple(draftResource.version, draftResource.number, draftResource.settingVersion)
