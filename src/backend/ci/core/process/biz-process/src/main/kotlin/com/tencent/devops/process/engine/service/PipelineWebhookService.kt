@@ -60,7 +60,6 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -121,11 +120,7 @@ class PipelineWebhookService @Autowired constructor(
             return
         }
         val triggerContainer = model.getTriggerContainer()
-        val variables = PipelineVarUtil.fillVariableMap(
-            triggerContainer.params.associate { param ->
-                param.id to param.defaultValue.toString()
-            }
-        ).toMutableMap()
+        val variables = pipelineRepositoryService.getTriggerParams(triggerContainer).toMutableMap()
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
