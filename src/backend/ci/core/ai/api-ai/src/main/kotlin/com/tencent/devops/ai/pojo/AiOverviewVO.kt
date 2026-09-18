@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "运营-智能体管理概览")
 data class AiOverviewVO(
     @get:Schema(title = "资源计数")
-    val counts: AiOverviewCountsVO,
-    @get:Schema(title = "已开通 AI 的项目数")
-    val projectCount: Int
+    val counts: AiOverviewCountsVO
 )
 
 @Schema(title = "运营-智能体管理资源计数")

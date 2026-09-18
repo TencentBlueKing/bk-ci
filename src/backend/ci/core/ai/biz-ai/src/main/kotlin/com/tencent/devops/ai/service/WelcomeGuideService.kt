@@ -141,7 +141,7 @@ class WelcomeGuideService @Autowired constructor(
     fun createHotQuestion(request: HotQuestionVO): HotQuestionVO {
         val questionText = request.question.trim()
         require(questionText.isNotEmpty()) { "question must not be blank" }
-        val id = request.id.trim().takeIf { it.isNotEmpty() }
+        val id = request.id?.trim()?.takeIf { it.isNotEmpty() }
             ?: "hq-${UUID.randomUUID().toString().replace("-", "")}"
         require(hotQuestionDao.getById(dslContext, id) == null) {
             "Hot question id already exists: $id"
