@@ -52,6 +52,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -288,6 +289,12 @@ interface ProjectService {
     fun fixProjectOrganization(
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
+
+    fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Page<String>
 
     fun getProjectListByProductId(
         productId: Int

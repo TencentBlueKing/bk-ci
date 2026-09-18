@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
@@ -47,6 +48,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -400,6 +402,21 @@ interface ServiceProjectResource {
         @Parameter(description = "产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/listByLabel")
+    @Operation(summary = "根据项目标签查询项目ID列表")
+    fun listProjectIdsByLabel(
+        @Parameter(description = "项目标签", required = true)
+        @QueryParam("label")
+        label: ProjectLabel,
+        @Parameter(description = "页码，从1开始", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页条数，默认100，最大10000", required = false, example = "100")
+        @QueryParam("pageSize")
+        pageSize: Int? = 100
+    ): Result<Page<String>>
 
     @GET
     @Path("/getProjectListByProductId")

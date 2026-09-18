@@ -308,6 +308,22 @@ class ProjectDao {
         }
     }
 
+    fun listIdByEnglishNames(
+        dslContext: DSLContext,
+        englishNameList: Collection<String>
+    ): Map<String, String> {
+        if (englishNameList.isEmpty()) {
+            return emptyMap()
+        }
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME, PROJECT_ID)
+                .from(this)
+                .where(ENGLISH_NAME.`in`(englishNameList))
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
     fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
