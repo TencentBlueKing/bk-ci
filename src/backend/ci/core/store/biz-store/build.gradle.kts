@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api(project(":core:common:common-auth:common-auth-provider"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-db"))
