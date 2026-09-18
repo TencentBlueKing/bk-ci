@@ -793,29 +793,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 projectCode = atomPipelineRelRecord.projectCode
                 pipelineUser = userId
             }
-            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
             // 判断插件版本最近一次的构建是否完成
-            val buildResult = if (buildInfoRecord != null) {
-                client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
-                    userId = pipelineUser,
-                    projectId = projectCode,
-                    pipelineId = buildInfoRecord.pipelineId,
-                    buildId = buildInfoRecord.buildId,
-                    channelCode = ChannelCode.AM
-                ).data
-            } else {
-                null
-            }
-            if (buildResult != null) {
-                val buildStatus = BuildStatus.parse(buildResult.status)
-                if (!buildStatus.isFinish()) {
-                    // 最近一次构建还未完全结束，给出错误提示
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                        params = arrayOf(atomRecord.name, atomRecord.version)
-                    )
-                }
-            }
+            checkLastBuildFinished(
+                atomId = atomId,
+                projectCode = projectCode,
+                pipelineUser = pipelineUser,
+                name = atomRecord.name,
+                version = atomRecord.version
+            )
         }
         // 触发执行流水线
         val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
@@ -1085,6 +1070,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val reuseRecord = if (newVersionFlag) null else checkNotNull(versionRecord)
         val version = reuseRecord?.version ?: generateBranchTestVersion(branch)
         val atomId = reuseRecord?.id ?: UUIDUtil.generate()
+        // 复用的版本最近一次构建未结束时拒绝创建，构建已结束的版本才允许复用重建
+        if (!newVersionFlag) {
+            checkBranchTestVersionBuildFinished(
+                atomId = atomId,
+                atomCode = atomCode,
+                userId = userId,
+                version = version
+            )
+        }
         marketAtomUpdateRequest.version = version
 
         val atomRecord = versionRecord
@@ -1166,6 +1160,60 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
      */
     private fun isNeedNewVersion(versionRecord: TAtomRecord?): Boolean =
         versionRecord == null || versionRecord.atomStatus == AtomStatusEnum.TESTED.status.toByte()
+
+    /**
+     * 校验分支测试版本最近一次构建是否已结束：未结束时拒绝复用，
+     * 避免提交版本后构建启动失败把状态置为构建失败并丢弃旧构建结果
+     * @throws ErrorCodeException 最近一次构建未结束
+     */
+    private fun checkBranchTestVersionBuildFinished(
+        atomId: String,
+        atomCode: String,
+        userId: String,
+        version: String
+    ) {
+        val pipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM
+        ) ?: return
+        val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
+        val useOuterProject = pipelineRelRecord.projectCode != innerPipelineProject
+        checkLastBuildFinished(
+            atomId = atomId,
+            projectCode = if (useOuterProject) pipelineRelRecord.projectCode else innerPipelineProject,
+            pipelineUser = if (useOuterProject) userId else storeInnerPipelineConfig.innerPipelineUser,
+            name = atomCode,
+            version = version
+        )
+    }
+
+    /**
+     * 校验插件版本最近一次构建是否已结束，无构建记录或状态查询为空时不校验
+     * @throws ErrorCodeException 最近一次构建未结束
+     */
+    private fun checkLastBuildFinished(
+        atomId: String,
+        projectCode: String,
+        pipelineUser: String,
+        name: String,
+        version: String
+    ) {
+        val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId) ?: return
+        val buildResult = client.get(ServiceBuildResource::class).getBuildStatusWithoutPermission(
+            userId = pipelineUser,
+            projectId = projectCode,
+            pipelineId = buildInfoRecord.pipelineId,
+            buildId = buildInfoRecord.buildId,
+            channelCode = ChannelCode.AM
+        ).data ?: return
+        if (!BuildStatus.parse(buildResult.status).isFinish()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                params = arrayOf(name, version)
+            )
+        }
+    }
 
     /**
      * 拉取分支最新提交时间（毫秒时间戳）
