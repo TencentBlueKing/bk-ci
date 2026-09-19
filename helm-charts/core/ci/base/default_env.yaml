@@ -59,7 +59,7 @@ bkCiRepositoryAesScmProps: ""
 bkCiTicketCertAesKey: ""
 bkCiTicketCredentialAesKey: ""
 bkCiProcessCallbackAesKey: ""
-bkCiAuthAesAuthKey: I4U1SzSNRaDYufbE
+bkCiAuthAesAuthKey: ""
 bkCiAiAesKey: ""
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
