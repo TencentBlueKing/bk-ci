@@ -235,7 +235,8 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId
+            credentialId = credentialId,
+            aesKeySha = certHelper.currentKeySha()
         )
     }
 
@@ -749,7 +750,8 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId
+            credentialId = credentialId,
+            aesKeySha = certHelper.currentKeySha()
         )
     }
 
