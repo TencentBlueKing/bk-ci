@@ -33,7 +33,6 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
@@ -56,6 +55,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
@@ -92,11 +92,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineCallbackDao: PipelineCallbackDao
+    private val pipelineCallbackDao: PipelineCallbackDao,
+    private val pipelineCallbackCryptoHelper: PipelineCallbackCryptoHelper
 ) {
-
-    @Value("\${project.callback.aes-key}")
-    private lateinit var aesKey: String
 
     @Value("\${project.callback.black-ports:#{null}}")
     private val blackPorts: List<Int> = listOf()
@@ -169,8 +167,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                         "PROJECT_PIPELINE_CALLBACK"
                     ).data,
                     secretParam = secretParam?.let {
-                        AESUtil.encrypt(aesKey, JsonUtil.toJson(secretParam, false))
-                    }
+                        pipelineCallbackCryptoHelper.encryptSm4ButAes(JsonUtil.toJson(secretParam, false))
+                    },
+                    aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -204,7 +203,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     secretParam = if (it.secretParam.isNullOrBlank()) {
                         null
                     } else {
-                        JsonUtil.to(AESUtil.decrypt(aesKey, it.secretParam), ISecretParam::class.java)
+                        JsonUtil.to(
+                            pipelineCallbackCryptoHelper.decryptSm4OrAes(it.secretParam),
+                            ISecretParam::class.java
+                        )
                     }
                 )
             )
@@ -596,9 +598,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 list = newEventMap.map { (_, value) ->
-                    val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
+                    val encodeToken = value.secretToken?.let { pipelineCallbackCryptoHelper.encryptSm4ButAes(it) }
                     value.copy(secretToken = encodeToken)
-                }
+                },
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
             )
         }
     }
@@ -617,7 +620,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
             projectId = it.projectId,
             callBackUrl = it.url,
             events = it.eventType,
-            secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+            secretToken = it.secretToken?.let { secretToken ->
+                pipelineCallbackCryptoHelper.decryptSm4OrAes(secretToken)
+            },
             name = it.name
         )
     }
@@ -638,7 +643,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         PipelineCallbackEvent(
             callbackEvent = CallBackEvent.valueOf(it.eventType),
             callbackUrl = it.url,
-            secretToken = it.secretToken?.let { token -> AESUtil.decrypt(aesKey, token) },
+            secretToken = it.secretToken?.let { token -> pipelineCallbackCryptoHelper.decryptSm4OrAes(token) },
             callbackName = it.name,
             region = it.region?.let { region -> CallBackNetWorkRegionType.valueOf(region) }
         )

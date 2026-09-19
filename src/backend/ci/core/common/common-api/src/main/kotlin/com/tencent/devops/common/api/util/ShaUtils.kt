@@ -84,6 +84,8 @@ object ShaUtils {
         return digestBytes.toHexString()
     }
 
+    fun sha256Fingerprint(input: String) = sha256(input).take(SHA256_FINGERPRINT_LENGTH)
+
     private fun ByteArray.toHexString() = joinToString("") { String.format("%02x", it) }
 
     fun hmacSha1(key: ByteArray, data: ByteArray): String {
@@ -103,4 +105,6 @@ object ShaUtils {
     fun isEqual(shaA: ByteArray, shaB: ByteArray): Boolean {
         return MessageDigest.isEqual(shaA, shaB)
     }
+
+    private const val SHA256_FINGERPRINT_LENGTH = 16
 }
