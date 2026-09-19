@@ -1,7 +1,9 @@
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import java.io.File
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 
 class CommandLineUtilsTest {
@@ -133,5 +135,55 @@ class CommandLineUtilsTest {
         Assertions.assertEquals(func("\"::set-gate-value name=pass_rate::0.9\""), "pass_rate=0.9\n")
         /*默认*/
         Assertions.assertEquals(func("::set-gate-value name=pass_rate::0.9"), "pass_rate=0.9\n")
+    }
+
+    @Test
+    fun executeMergesStderrInWriteOrder() {
+        assumePosixShell()
+        val workspace = File(System.getProperty("java.io.tmpdir"))
+        val script = File.createTempFile("log_order_", ".sh", workspace)
+        script.deleteOnExit()
+        script.writeText("#!/bin/sh\necho out1\necho err1 >&2\necho out2\n")
+
+        val output = CommandLineUtils.execute(script, workspace, false)
+        Assertions.assertEquals(listOf("out1", "err1", "out2"), output.lines().filter { it.isNotBlank() })
+    }
+
+    @Test
+    fun executeKeepsErrorPrefixOnMergedStream() {
+        assumePosixShell()
+        val workspace = File(System.getProperty("java.io.tmpdir"))
+        val script = File.createTempFile("log_error_flag_", ".sh", workspace)
+        script.deleteOnExit()
+        script.writeText("#!/bin/sh\necho out1\necho '##[error]boom' >&2\necho out2\n")
+
+        val output = CommandLineUtils.execute(script, workspace, false)
+        Assertions.assertEquals(
+            listOf("out1", "##[error]boom", "out2"),
+            output.lines().filter { it.isNotBlank() }
+        )
+    }
+
+    @Test
+    fun executeFailureMessageUsesMergedTail() {
+        assumePosixShell()
+        val workspace = File(System.getProperty("java.io.tmpdir"))
+        val script = File.createTempFile("log_fail_", ".sh", workspace)
+        script.deleteOnExit()
+        script.writeText("#!/bin/sh\necho out1\necho err1 >&2\nexit 1\n")
+
+        val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
+            CommandLineUtils.execute(script, workspace, false)
+        }
+        Assertions.assertTrue(exception.errorMsg.contains("out1"))
+        Assertions.assertTrue(exception.errorMsg.contains("err1"))
+        Assertions.assertTrue(exception.errorMsg.contains("exit code(1)"))
+    }
+
+    private fun assumePosixShell() {
+        Assumptions.assumeFalse(
+            System.getProperty("os.name").orEmpty().lowercase().contains("windows"),
+            "合流动序依赖 POSIX shell"
+        )
     }
 }

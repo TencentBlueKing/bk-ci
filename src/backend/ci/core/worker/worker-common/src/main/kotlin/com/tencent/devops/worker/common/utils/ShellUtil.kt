@@ -241,6 +241,7 @@ object ShellUtil {
         stepId: String? = null,
         taskId: String? = null
     ): String {
+        // LinuxScript 等脚本任务入口：CommandLineUtils + CommandLineExecutor 合并采集 stdout/stderr
         try {
             return CommandLineUtils.execute(
                 command = command,

@@ -323,6 +323,8 @@ object LoggerService {
             }
             realMessage = prefix + realMessage
         }
+        // 脚本 stdout/stderr 在 CommandLineExecutor 已合并，不再按 fd 标 ERROR。
+        // 分级只认行前缀（与 java-plugin-sdk SimpleLogger 的 ##[error] 等约定一致）。
         val logType = when {
             realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
             realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
