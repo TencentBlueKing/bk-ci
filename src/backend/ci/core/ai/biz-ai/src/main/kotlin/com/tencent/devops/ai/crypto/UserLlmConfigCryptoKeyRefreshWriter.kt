@@ -16,7 +16,7 @@ class UserLlmConfigCryptoKeyRefreshWriter(
 
     private val currentKeySha = userLlmConfigCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
             dslContext.select(USER_ID, API_KEY, BK_APP_SECRET, AES_KEY_SHA)
                 .from(this)
@@ -34,28 +34,6 @@ class UserLlmConfigCryptoKeyRefreshWriter(
             dslContext.update(this)
                 .set(API_KEY, refreshIfPresent(configRow.apiKey))
                 .set(BK_APP_SECRET, refreshIfPresent(configRow.bkAppSecret))
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(USER_ID.eq(configRow.userId))
-                .execute()
-        }
-    }
-
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
-            dslContext.select(USER_ID, API_KEY, BK_APP_SECRET, AES_KEY_SHA)
-                .from(this)
-                .where(hasEncryptedSecret())
-                .and(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val configRow = row as UserLlmConfigCryptoKeyRefreshRow
-        with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
-            dslContext.update(this)
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(USER_ID.eq(configRow.userId))
                 .execute()

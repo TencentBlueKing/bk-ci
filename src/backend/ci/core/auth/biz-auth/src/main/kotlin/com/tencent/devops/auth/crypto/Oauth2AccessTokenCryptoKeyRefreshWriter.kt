@@ -16,7 +16,7 @@ class Oauth2AccessTokenCryptoKeyRefreshWriter(
 
     private val currentKeySha = oauth2AccessTokenCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.select(ACCESS_TOKEN, PASS_WORD, AES_KEY_SHA)
                 .from(this)
@@ -36,28 +36,6 @@ class Oauth2AccessTokenCryptoKeyRefreshWriter(
                     PASS_WORD,
                     tokenRow.passWord?.let(oauth2AccessTokenCryptoHelper::refreshSm4OrAes)
                 )
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(ACCESS_TOKEN.eq(tokenRow.accessToken))
-                .execute()
-        }
-    }
-
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
-            dslContext.select(ACCESS_TOKEN, PASS_WORD, AES_KEY_SHA)
-                .from(this)
-                .where(PASS_WORD.isNotNull)
-                .and(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val tokenRow = row as Oauth2AccessTokenCryptoKeyRefreshRow
-        with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
-            dslContext.update(this)
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(ACCESS_TOKEN.eq(tokenRow.accessToken))
                 .execute()

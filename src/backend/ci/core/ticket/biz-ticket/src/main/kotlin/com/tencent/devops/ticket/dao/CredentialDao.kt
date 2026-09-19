@@ -128,8 +128,7 @@ class CredentialDao {
         credentialV4: String?,
         credentialRemark: String?,
         credentialName: String?,
-        updateUser: String?,
-        aesKeySha: String
+        updateUser: String?
     ) {
         val now = LocalDateTime.now()
         with(TCredential.T_CREDENTIAL) {
@@ -142,8 +141,7 @@ class CredentialDao {
                 if (credentialV3 == null) updateMoreStep2 else updateMoreStep2.set(CREDENTIAL_V3, credentialV3)
             val updateMoreStep4 =
                 if (credentialV4 == null) updateMoreStep3 else updateMoreStep3.set(CREDENTIAL_V4, credentialV4)
-            updateMoreStep4.set(AES_KEY_SHA, aesKeySha)
-                .set(CREDENTIAL_REMARK, credentialRemark)
+            updateMoreStep4.set(CREDENTIAL_REMARK, credentialRemark)
                 .set(UPDATED_TIME, now)
                 .set(UPDATE_USER, updateUser)
                 .set(CREDENTIAL_NAME, credentialName)

@@ -232,8 +232,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         variableId = maxVersionData.id,
                         varValue = value,
                         varDesc = storeEnvVarRequest.varDesc ?: "",
-                        encryptFlag = storeEnvVarRequest.encryptFlag,
-                        aesKeySha = currentKeyShaIfEncrypted(storeEnvVarRequest.encryptFlag)
+                        encryptFlag = storeEnvVarRequest.encryptFlag
                     )
                 }
             }

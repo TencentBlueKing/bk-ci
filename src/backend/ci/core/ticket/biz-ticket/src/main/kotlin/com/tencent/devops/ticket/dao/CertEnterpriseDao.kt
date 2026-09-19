@@ -102,8 +102,7 @@ class CertEnterpriseDao {
         certDeveloperName: String?,
         certTeamName: String,
         certUUID: String,
-        certExpireDate: LocalDateTime,
-        aesKeySha: String
+        certExpireDate: LocalDateTime
     ) {
         with(TCertEnterprise.T_CERT_ENTERPRISE) {
             dslContext.update(this)
@@ -113,7 +112,6 @@ class CertEnterpriseDao {
                 .set(CERT_TEAM_NAME, certTeamName)
                 .set(CERT_UUID, certUUID)
                 .set(CERT_EXPIRE_DATE, certExpireDate)
-                .set(AES_KEY_SHA, aesKeySha)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CERT_ID.eq(certId))
                 .execute()

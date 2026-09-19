@@ -113,14 +113,12 @@ class SensitiveConfDao {
         fieldName: String,
         fieldType: String,
         fieldValue: String?,
-        fieldDesc: String?,
-        aesKeySha: String?
+        fieldDesc: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             val baseStep = dslContext.update(this)
                 .set(FIELD_NAME, fieldName)
                 .set(FIELD_TYPE, fieldType)
-                .set(AES_KEY_SHA, aesKeySha)
             if (fieldValue != null) baseStep.set(FIELD_VALUE, fieldValue)
             if (fieldDesc != null) baseStep.set(FIELD_DESC, fieldDesc)
 

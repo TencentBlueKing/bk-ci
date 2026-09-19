@@ -16,7 +16,7 @@ class StoreEnvVarCryptoKeyRefreshWriter(
 
     private val currentKeySha = storeCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TStoreEnvVar.T_STORE_ENV_VAR) {
             dslContext.select(ID, VAR_VALUE, AES_KEY_SHA)
                 .from(this)
@@ -33,28 +33,6 @@ class StoreEnvVarCryptoKeyRefreshWriter(
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             dslContext.update(this)
                 .set(VAR_VALUE, storeCryptoHelper.refreshSm4OrAes(envVarRow.varValue))
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(ID.eq(envVarRow.id))
-                .execute()
-        }
-    }
-
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            dslContext.select(ID, VAR_VALUE, AES_KEY_SHA)
-                .from(this)
-                .where(ENCRYPT_FLAG.eq(true))
-                .and(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val envVarRow = row as StoreEnvVarCryptoKeyRefreshRow
-        with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            dslContext.update(this)
                 .set(AES_KEY_SHA, currentKeySha)
                 .where(ID.eq(envVarRow.id))
                 .execute()

@@ -131,8 +131,7 @@ class CredentialServiceImpl @Autowired constructor(
             } else {
                 credential.credentialName!!
             },
-            updateUser = userId,
-            aesKeySha = credentialHelper.currentKeySha()
+            updateUser = userId
         )
     }
 

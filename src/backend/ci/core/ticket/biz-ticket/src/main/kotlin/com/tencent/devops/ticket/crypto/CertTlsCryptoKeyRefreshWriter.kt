@@ -4,6 +4,7 @@ import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.model.ticket.tables.TCertTls
 import com.tencent.devops.ticket.service.CertHelper
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -17,7 +18,9 @@ class CertTlsCryptoKeyRefreshWriter(
 
     private val currentKeySha = certHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun supportsProjectFilter() = true
+
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TCertTls.T_CERT_TLS) {
             dslContext.select(
                 PROJECT_ID,
@@ -28,7 +31,7 @@ class CertTlsCryptoKeyRefreshWriter(
                 CERT_CLIENT_KEY_FILE,
                 AES_KEY_SHA
             ).from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(projectId))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -50,32 +53,12 @@ class CertTlsCryptoKeyRefreshWriter(
         }
     }
 
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TCertTls.T_CERT_TLS) {
-            dslContext.select(
-                PROJECT_ID,
-                CERT_ID,
-                CERT_SERVER_CRT_FILE,
-                CERT_SERVER_KEY_FILE,
-                CERT_CLIENT_CRT_FILE,
-                CERT_CLIENT_KEY_FILE,
-                AES_KEY_SHA
-            ).from(this)
-                .where(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val certRow = row as CertTlsCryptoKeyRefreshRow
-        with(TCertTls.T_CERT_TLS) {
-            dslContext.update(this)
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(PROJECT_ID.eq(certRow.projectId))
-                .and(CERT_ID.eq(certRow.certId))
-                .execute()
+    private fun TCertTls.refreshCondition(projectId: String?): Condition {
+        val condition = AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        return if (projectId.isNullOrBlank()) {
+            condition
+        } else {
+            condition.and(PROJECT_ID.eq(projectId))
         }
     }
 

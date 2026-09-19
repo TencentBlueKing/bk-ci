@@ -183,15 +183,13 @@ class StoreEnvVarDao(
         variableId: String,
         varValue: String,
         varDesc: String,
-        encryptFlag: Boolean,
-        aesKeySha: String?
+        encryptFlag: Boolean
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this)
                 .set(this.VAR_VALUE, varValue)
                 .set(this.VAR_DESC, varDesc)
                 .set(this.ENCRYPT_FLAG, encryptFlag)
-                .set(this.AES_KEY_SHA, aesKeySha.takeIf { encryptFlag })
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(ID.eq(variableId)))

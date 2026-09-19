@@ -196,8 +196,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             fieldName = fieldName,
             fieldType = fieldType,
             fieldValue = finalFieldValue,
-            fieldDesc = sensitiveConfReq.fieldDesc,
-            aesKeySha = currentKeyShaIfBackend(fieldType)
+            fieldDesc = sensitiveConfReq.fieldDesc
         )
         return Result(true)
     }

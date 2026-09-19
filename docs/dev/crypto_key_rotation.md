@@ -41,18 +41,20 @@ SM4 密文带前缀，加解密走 SM4，不走 AES 密钥列表。`AES_KEY_SHA`
 ## 3. 整体架构
 
 ```
-OP POST /{service}/api/op/crypto/updateAesKeySha
-  只补 AES_KEY_SHA（IS NULL），不重加密密文，不依赖 enabled
+OP POST /{service}/api/op/crypto/refresh?writer=&projectId=
+  与启动任务同一套刷新：重加密 + 写指纹，不依赖 enabled
+  projectId 为空则全量；不支持按项目的 Writer 会被跳过
 
-启动 CryptoKeyRefreshStartup          # enabled 时密钥轮换：重加密 + 写指纹
+启动 CryptoKeyRefreshStartup          # enabled 时全量密钥轮换
         │
         ▼
-CryptoKeyRefreshExecutor
+CryptoKeyRefreshExecutor.runUntilAllDone(writers, projectId)
   RedisLock(crypto:key:refresh:{appName})  过期 600s
         │
-        ▼  for each Writer
-  fetchBatch(batchSize)
+        ▼  for each Writer（有 projectId 时跳过不支持项目过滤的 Writer）
+  fetchBatch(batchSize, projectId)
     WHERE AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha
+    AND PROJECT_ID = ?   # 仅 supportsProjectFilter 且 projectId 非空
         │
         ▼
   updateRow：refreshSm4OrAes(密文) + SET AES_KEY_SHA = current
@@ -140,7 +142,9 @@ fun refreshSm4OrAes(content: String): String          // used keys → 当前 ke
 
 `aesKeySha` 作为 DAO 参数，不要塞进 API POJO。
 
-insert 和 `onDuplicateKeyUpdate` / update **都必须** `.set(AES_KEY_SHA, aesKeySha)`。
+insert 和整行重写密文的 upsert（如 Token `onDuplicateKeyUpdate`）必须 `.set(AES_KEY_SHA, aesKeySha)`。
+
+凭证 / 证书 / 敏感配置 / 商店环境变量的**业务更新不要写 `AES_KEY_SHA`**。这些更新可能只改部分密文或提交占位符，指纹交给刷新任务统一回写。
 
 调用方一律：
 
@@ -155,9 +159,9 @@ xxxDao.saveAccessToken(..., aesKeySha = helper.currentKeySha())
 要点：
 
 - `name` 全局唯一，用于日志
-- `fetchBatch` 条件：`AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha()`（启动密钥轮换）
-- `fetchMissingKeyShaBatch` 条件：`AES_KEY_SHA IS NULL`（OP 只补指纹）
-- `updateAesKeySha` 只 `SET AES_KEY_SHA`，不要改密文
+- `fetchBatch(limit, projectId)` 条件：`AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha()`
+- 表有 `PROJECT_ID` 时：`supportsProjectFilter() = true`，`projectId` 非空则追加 `AND PROJECT_ID = ?`
+- 表无 `PROJECT_ID` 时：保持默认 `supportsProjectFilter() = false`，Executor 在按项目刷新时会跳过
 - 有业务过滤时一并写上（敏感配置只刷 `FIELD_TYPE = BACKEND`，回调只刷 `SECRET_PARAM IS NOT NULL`）
 - `updateRow` 的 WHERE 必须是表的**业务唯一键**：
   - Git Token：`USER_ID`
@@ -180,7 +184,7 @@ class XxxCryptoKeyRefreshWriter(
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-xxx"
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TXxx.T_XXX) {
             dslContext.select(PK..., CIPHER..., AES_KEY_SHA)
                 .from(this)
@@ -201,33 +205,12 @@ class XxxCryptoKeyRefreshWriter(
                 .execute()
         }
     }
-
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TXxx.T_XXX) {
-            dslContext.select(PK..., CIPHER..., AES_KEY_SHA)
-                .from(this)
-                .where(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val r = row as XxxRow
-        with(TXxx.T_XXX) {
-            dslContext.update(this)
-                .set(AES_KEY_SHA, helper.currentKeySha())
-                .where(/* 完整唯一键 */)
-                .execute()
-        }
-    }
 }
 ```
 
 ### 5.5 新服务必须加 `CryptoKeyRefreshStartup`
 
-`CryptoKeyRefreshStartup` **不会**随 `common-security` 自动装配。新微服务第一次接密钥轮换时，必须在 biz 模块加一个 Configuration，否则 `aes.refresh.enabled` 开了也不跑重加密。OP 只能补空指纹，不能替代启动任务。
+`CryptoKeyRefreshStartup` **不会**随 `common-security` 自动装配。新微服务第一次接密钥轮换时，必须在 biz 模块加一个 Configuration，否则 `aes.refresh.enabled` 开了也不跑重加密。OP `/refresh` 与启动任务走同一套 Executor，可按项目灰度，但不能替代 `enabled` 启动后的全量任务。
 
 已有 process / repository / store / ticket 时，直接照抄对应 `*CryptoKeyRefreshConfiguration`，改 Bean 名和服务名即可：
 
@@ -266,29 +249,31 @@ class XxxCryptoKeyRefreshConfiguration {
 公共 OP 挂在每个微服务上，按服务名调用（不要每个模块再写一份）：
 
 ```
-POST /{service}/api/op/crypto/updateAesKeySha?writer={name}
+POST /{service}/api/op/crypto/refresh?writer={name}&projectId={projectId}
 ```
 
 | 服务 | 示例 |
 |------|------|
-| repository | `/repository/api/op/crypto/updateAesKeySha?writer=repository-scm-token` |
-| ticket | `/ticket/api/op/crypto/updateAesKeySha` |
-| process | `/process/api/op/crypto/updateAesKeySha` |
-| store | `/store/api/op/crypto/updateAesKeySha` |
+| repository | `/repository/api/op/crypto/refresh?writer=repository-scm-token` |
+| ticket | `/ticket/api/op/crypto/refresh?projectId=demo` |
+| process | `/process/api/op/crypto/refresh` |
+| store | `/store/api/op/crypto/refresh` |
 
-OP 异步触发后立刻返回，不带业务结果。它只把 `AES_KEY_SHA IS NULL` 的存量行补上当前指纹，**不会**重加密 Token/凭证。真正轮换密钥（密文用新 key 重写）仍靠 `aes.refresh.enabled` + `CryptoKeyRefreshStartup`。
+OP 异步触发后立刻返回，不带业务结果。它与启动任务同一套刷新：**重加密密文并写入当前指纹**。`writer` 为空则刷当前服务全部 Writer；`projectId` 为空则全量。表上没有 `PROJECT_ID` 的 Writer（Git Token、OAuth、Store 等）在传入 `projectId` 时会被跳过。
+
+支持按项目：`credential`、`cert`、`cert-enterprise`、`cert-tls`、`pipeline-callback`、`project-pipeline-callback`。
 
 操作顺序：
 
 1. 先备份会被刷新任务改写的表（见 `common.yml` 注释）
-2. 新列上线后，用 OP 给存量行补 `AES_KEY_SHA`（不改密文）
-3. 轮换密钥时：把旧当前密钥追加进对应 `used-*-keys`，再改当前密钥
-4. 打开 `aes.refresh.enabled=true` 并重启对应服务，由启动任务重加密刷完
+2. 轮换密钥时：把旧当前密钥追加进对应 `used-*-keys`，再改当前密钥
+3. 可先用 OP 带 `projectId` 灰度一个项目，确认无误后再全量
+4. 打开 `aes.refresh.enabled=true` 并重启对应服务，由启动任务全量重加密刷完；也可直接调 OP `/refresh`（不带 `projectId`）
 5. 看日志 `Crypto key refresh writer done`，确认 success / failed
 6. 抽检密文能解、`AES_KEY_SHA` 已是当前指纹
 7. 确认无失败后再把 `aes.refresh.enabled` 改回 false
 
-锁 key：启动任务 `crypto:key:refresh:{spring.application.name}`，OP 补指纹 `crypto:aes-key-sha:{spring.application.name}`，多模块互不影响。
+锁 key：启动任务和 OP 共用 `crypto:key:refresh:{spring.application.name}`，同一服务同时只能跑一路刷新。
 
 ## 7. 排障与常见坑
 
@@ -316,6 +301,7 @@ OP 异步触发后立刻返回，不带业务结果。它只把 `AES_KEY_SHA IS 
 - [ ] Helper 能 decrypt（含历史密钥）和 refresh
 - [ ] 所有写密文入口都传 `currentKeySha()`
 - [ ] Writer 覆盖全部密文字段、唯一键正确
+- [ ] 有 `PROJECT_ID` 的表已实现 `supportsProjectFilter() = true`，捞数带项目条件
 - [ ] 对应 yml 有 `used-*-keys`
 - [ ] `common.yml` 备份清单已加上该表
 - [ ] 本服务已有 `XxxCryptoKeyRefreshConfiguration`，把 `CryptoKeyRefreshStartup` 注册成 Bean（新服务必须加）

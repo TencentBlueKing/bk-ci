@@ -235,8 +235,7 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId,
-            aesKeySha = certHelper.currentKeySha()
+            credentialId = credentialId
         )
     }
 
@@ -371,8 +370,7 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId,
-            aesKeySha = certHelper.currentKeySha()
+            credentialId = credentialId
         )
     }
 
@@ -598,8 +596,7 @@ class CertServiceImpl @Autowired constructor(
                 certTeamName = teamName,
                 certUUID = uuid,
                 certExpireDate = expireDate,
-                credentialId = credentialId,
-                aesKeySha = certHelper.currentKeySha()
+                credentialId = credentialId
             )
             certEnterpriseDao.update(
                 dslContext = transactionContext,
@@ -610,8 +607,7 @@ class CertServiceImpl @Autowired constructor(
                 certDeveloperName = developerName,
                 certTeamName = teamName,
                 certUUID = uuid,
-                certExpireDate = expireDate,
-                aesKeySha = certHelper.currentKeySha()
+                certExpireDate = expireDate
             )
         }
     }
@@ -753,8 +749,7 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId,
-            aesKeySha = certHelper.currentKeySha()
+            credentialId = credentialId
         )
     }
 
@@ -897,8 +892,7 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId,
-            aesKeySha = certHelper.currentKeySha()
+            credentialId = credentialId
         )
     }
 
@@ -1175,7 +1169,6 @@ class CertServiceImpl @Autowired constructor(
         val uuid = ""
         val expireDate = LocalDateTime.now().plusYears(10L)
         val credentialId = null
-        val currentKeySha = certHelper.currentKeySha()
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1197,8 +1190,7 @@ class CertServiceImpl @Autowired constructor(
                 certTeamName = teamName,
                 certUUID = uuid,
                 certExpireDate = expireDate,
-                credentialId = credentialId,
-                aesKeySha = currentKeySha
+                credentialId = credentialId
             )
             certTlsDao.update(
                 dslContext = transactionContext,
@@ -1211,8 +1203,7 @@ class CertServiceImpl @Autowired constructor(
                 clientCrtFileName = clientCrtFileName,
                 clientCrtFile = clientCrtFile,
                 clientKeyFileName = clientKeyFileName,
-                clientKeyFile = clientKeyFile,
-                aesKeySha = currentKeySha
+                clientKeyFile = clientKeyFile
             )
         }
     }

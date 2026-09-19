@@ -166,14 +166,12 @@ class CertDao {
         certTeamName: String?,
         certUUID: String?,
         certExpireDate: LocalDateTime?,
-        credentialId: String?,
-        aesKeySha: String
+        credentialId: String?
     ) {
         with(TCert.T_CERT) {
             val step = dslContext.update(this)
                 .set(CERT_USER_ID, certUserId)
                 .set(CERT_REMARK, certRemark)
-                .set(AES_KEY_SHA, aesKeySha)
 
             val step1 = if (certP12FileName != null) step.set(CERT_P12_FILE_NAME, certP12FileName) else step
             val step2 = if (certP12FileContent != null) step.set(CERT_P12_FILE_CONTENT, certP12FileContent) else step1

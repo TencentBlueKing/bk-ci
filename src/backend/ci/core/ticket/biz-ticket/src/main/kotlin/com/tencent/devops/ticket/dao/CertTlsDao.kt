@@ -109,8 +109,7 @@ class CertTlsDao {
         clientCrtFileName: String?,
         clientCrtFile: ByteArray?,
         clientKeyFileName: String?,
-        clientKeyFile: ByteArray?,
-        aesKeySha: String
+        clientKeyFile: ByteArray?
     ) {
         with(TCertTls.T_CERT_TLS) {
             dslContext.update(this)
@@ -122,7 +121,6 @@ class CertTlsDao {
                 .set(CERT_CLIENT_CRT_FILE, clientCrtFile)
                 .set(CERT_CLIENT_KEY_FILE_NAME, clientKeyFileName)
                 .set(CERT_CLIENT_KEY_FILE, clientKeyFile)
-                .set(AES_KEY_SHA, aesKeySha)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CERT_ID.eq(certId))
                 .execute()

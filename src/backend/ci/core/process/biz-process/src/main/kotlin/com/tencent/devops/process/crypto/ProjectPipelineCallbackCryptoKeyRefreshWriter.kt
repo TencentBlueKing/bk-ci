@@ -3,6 +3,7 @@ package com.tencent.devops.process.crypto
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.model.process.tables.TProjectPipelineCallback
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -16,12 +17,13 @@ class ProjectPipelineCallbackCryptoKeyRefreshWriter(
 
     private val currentKeySha = pipelineCallbackCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun supportsProjectFilter() = true
+
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             dslContext.select(ID, SECRET_PARAM, AES_KEY_SHA)
                 .from(this)
-                .where(SECRET_PARAM.isNotNull)
-                .and(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(projectId))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -42,25 +44,14 @@ class ProjectPipelineCallbackCryptoKeyRefreshWriter(
         }
     }
 
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.select(ID, SECRET_PARAM, AES_KEY_SHA)
-                .from(this)
-                .where(SECRET_PARAM.isNotNull)
-                .and(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val callbackRow = row as PipelineCallbackCryptoKeyRefreshRow
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.update(this)
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(ID.eq(callbackRow.id))
-                .execute()
+    private fun TProjectPipelineCallback.refreshCondition(projectId: String?): Condition {
+        val condition = SECRET_PARAM.isNotNull.and(
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        )
+        return if (projectId.isNullOrBlank()) {
+            condition
+        } else {
+            condition.and(PROJECT_ID.eq(projectId))
         }
     }
 

@@ -4,6 +4,7 @@ import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.model.ticket.tables.TCredential
 import com.tencent.devops.ticket.service.CredentialHelper
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -17,7 +18,9 @@ class CredentialCryptoKeyRefreshWriter(
 
     private val currentKeySha = credentialHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun supportsProjectFilter() = true
+
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TCredential.T_CREDENTIAL) {
             dslContext.select(
                 PROJECT_ID,
@@ -28,7 +31,7 @@ class CredentialCryptoKeyRefreshWriter(
                 CREDENTIAL_V4,
                 AES_KEY_SHA
             ).from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(projectId))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -50,32 +53,12 @@ class CredentialCryptoKeyRefreshWriter(
         }
     }
 
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TCredential.T_CREDENTIAL) {
-            dslContext.select(
-                PROJECT_ID,
-                CREDENTIAL_ID,
-                CREDENTIAL_V1,
-                CREDENTIAL_V2,
-                CREDENTIAL_V3,
-                CREDENTIAL_V4,
-                AES_KEY_SHA
-            ).from(this)
-                .where(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val credentialRow = row as CredentialCryptoKeyRefreshRow
-        with(TCredential.T_CREDENTIAL) {
-            dslContext.update(this)
-                .set(AES_KEY_SHA, currentKeySha)
-                .where(PROJECT_ID.eq(credentialRow.projectId))
-                .and(CREDENTIAL_ID.eq(credentialRow.credentialId))
-                .execute()
+    private fun TCredential.refreshCondition(projectId: String?): Condition {
+        val condition = AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        return if (projectId.isNullOrBlank()) {
+            condition
+        } else {
+            condition.and(PROJECT_ID.eq(projectId))
         }
     }
 

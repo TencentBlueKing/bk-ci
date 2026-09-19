@@ -14,7 +14,7 @@ class GithubTokenCryptoKeyRefreshWriter(
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-github-token"
 
-    override fun fetchBatch(limit: Int): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
         return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.select(USER_ID, TYPE, ACCESS_TOKEN, AES_KEY_SHA)
                 .from(this)
@@ -30,28 +30,6 @@ class GithubTokenCryptoKeyRefreshWriter(
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
                 .set(ACCESS_TOKEN, githubTokenCryptoHelper.refreshSm4OrAes(githubTokenRow.accessToken))
-                .set(AES_KEY_SHA, githubTokenCryptoHelper.currentKeySha())
-                .where(USER_ID.eq(githubTokenRow.userId))
-                .and(TYPE.eq(githubTokenRow.type))
-                .execute()
-        }
-    }
-
-    override fun fetchMissingKeyShaBatch(limit: Int): List<CryptoKeyRefreshRow> {
-        return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.select(USER_ID, TYPE, ACCESS_TOKEN, AES_KEY_SHA)
-                .from(this)
-                .where(AES_KEY_SHA.isNull)
-                .limit(limit)
-                .fetch()
-                .map(::toRow)
-        }
-    }
-
-    override fun updateAesKeySha(row: CryptoKeyRefreshRow) {
-        val githubTokenRow = row as GithubTokenCryptoKeyRefreshRow
-        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.update(this)
                 .set(AES_KEY_SHA, githubTokenCryptoHelper.currentKeySha())
                 .where(USER_ID.eq(githubTokenRow.userId))
                 .and(TYPE.eq(githubTokenRow.type))
