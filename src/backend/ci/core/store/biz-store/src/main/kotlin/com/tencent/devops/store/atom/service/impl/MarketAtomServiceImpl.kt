@@ -52,6 +52,7 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
@@ -245,6 +246,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    lateinit var storeRunInfoCacheManager: StoreRunInfoCacheManager
 
     @Autowired
     lateinit var client: Client
@@ -1168,11 +1172,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (!atomRunInfoJson.isNullOrEmpty()) {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
             updater(atomRunInfo)
-            redisOperation.hset(
-                key = atomRunInfoKey,
-                hashKey = atomVersion,
-                values = JsonUtil.toJson(atomRunInfo)
-            )
+            storeRunInfoCacheManager.setAtomRunInfo(atomCode, atomVersion, JsonUtil.toJson(atomRunInfo))
         }
     }
 }

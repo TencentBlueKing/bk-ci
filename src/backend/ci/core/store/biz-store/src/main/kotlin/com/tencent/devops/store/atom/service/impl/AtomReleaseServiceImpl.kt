@@ -82,7 +82,6 @@ import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.ClassifyDao
-import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.configuration.StoreNotifyProperties
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
@@ -179,8 +178,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
     lateinit var classifyDao: ClassifyDao
-    @Autowired
-    lateinit var labelDao: LabelDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
