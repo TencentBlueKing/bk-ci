@@ -188,7 +188,7 @@ class TencentAgentService @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         val ip = detail.ip.substringAfter(".")
-        val url = redisOperation.get(createAgentPipelineRedisKey, false) ?: createAgentInstallUrl
+        val url = redisOperation.get(CREATE_AGENT_INSTALL_URL_REDIS, false) ?: createAgentInstallUrl
         OkhttpUtils.doPost(
             url,
             JsonUtil.toJson(
@@ -211,6 +211,6 @@ class TencentAgentService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentAgentService::class.java)
-        private val createAgentPipelineRedisKey = "environment:create_agent_install_url"
+        private const val CREATE_AGENT_INSTALL_URL_REDIS = "environment:create_agent_install_url"
     }
 }
