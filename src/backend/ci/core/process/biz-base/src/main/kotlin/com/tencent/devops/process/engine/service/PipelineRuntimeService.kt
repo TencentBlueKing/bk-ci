@@ -727,12 +727,6 @@ class PipelineRuntimeService @Autowired constructor(
         return genBuildHistory(record, currentTimestamp)
     }
 
-    fun getBuildHistoryById(projectId: String, pipelineId: String, buildId: String): BuildHistory? {
-        val record = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId) ?: return null
-        val currentTimestamp = System.currentTimeMillis()
-        return genBuildHistory(record, currentTimestamp)
-    }
-
     fun getStartUser(projectId: String, buildId: String): String? {
         return pipelineBuildDao.getStartUser(dslContext, projectId, buildId)
     }

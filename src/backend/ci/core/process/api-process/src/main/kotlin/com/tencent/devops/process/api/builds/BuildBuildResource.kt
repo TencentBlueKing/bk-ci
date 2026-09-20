@@ -32,7 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -109,6 +112,9 @@ interface BuildBuildResource {
     @GET
     @Path("/{buildId}/status")
     fun getBuildStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -117,8 +123,11 @@ interface BuildBuildResource {
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
-    ): Result<BuildHistory>
+        buildId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<String>
 
     @Operation(summary = "获取子流水线变量")
     @GET
