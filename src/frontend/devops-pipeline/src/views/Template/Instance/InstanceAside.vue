@@ -259,6 +259,10 @@
                 return {
                     ...i,
                     ...res[i.pipelineId],
+                    // 从流水线详情的 PAC 配置推导实例是否开启 PAC，确保升级/复制 PAC 流水线时正确勾选 PAC
+                    enabledPac: res[i.pipelineId]?.repoHashId ?? false,
+                    // 同步 PAC 代码库，避免升级 PAC 流水线时 repoHashId 为空导致发布失败
+                    repoHashId: res[i.pipelineId]?.repoHashId ?? '',
                     pipelineName: proxy.$route.query.pipelineName || i.pipelineName,
                     ...(
                         triggerElements?.length ? {

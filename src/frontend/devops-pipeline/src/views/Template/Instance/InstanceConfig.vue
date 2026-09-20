@@ -331,7 +331,7 @@
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual, isParamValueEqual } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
     const props = defineProps({
         isInstanceCreateType: Boolean
@@ -684,8 +684,8 @@
                         i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
                         i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
                     } else {
-                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
-                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                        i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
                     }
                 } else {
                     // 入参参数处理
@@ -705,8 +705,8 @@
                         i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
                         i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
                     } else {
-                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
-                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                        i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
+                        i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
                     }
                 }
             }
@@ -722,7 +722,7 @@
                 const newItem = {
                     ...item,
                     isNew: true,
-                    readonlyCheck: false,
+                    readOnlyCheck: false,
                     isRequiredParam: item.required && item.asInstanceInput,
                     required: item.required
                 }
@@ -1458,7 +1458,9 @@
                                     
                                     isChange = isObject(currentValue)
                                         ? !isShallowEqual(currentValue, initialDefaultValue)
-                                        : currentValue !== initialDefaultValue
+                                        : (allVersionKeyList.includes(id)
+                                            ? currentValue !== initialDefaultValue
+                                            : !isParamValueEqual(currentValue, initialDefaultValue))
                                 }
                                 
                                 // 计算 hasChange：当前实例的值与模板默认值不同
@@ -1468,7 +1470,7 @@
                                     ? false
                                     : (allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
-                                        : initialParam?.defaultValue !== temDefaultValue)
+                                        : !isParamValueEqual(initialParam?.defaultValue, temDefaultValue))
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
                                     defaultValue: newDefaultValue

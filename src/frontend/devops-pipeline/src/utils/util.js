@@ -62,6 +62,41 @@ export function isShallowEqual (obj1, obj2) {
     return obj1Keys.every(key => obj1[key] === obj2[key])
 }
 
+/**
+ * 判断两个流水线参数值是否“语义相等”。
+ * - 布尔语义：任一端是布尔，或两端都是布尔字符串('true'/'false')时，按布尔比较；
+ *   解决布尔参数 'true'/'false'(字符串) 与 true/false(布尔) 的类型不一致比较，
+ *   以及布尔参数空值('' / undefined / null)与 false 视为等价（与 getParamsValuesMap 归一化保持一致）。
+ * - 空值互等：'' / undefined / null 视为同一“未设置”语义。
+ * - 普通对象（如 REPO_REF.defaultValue）：浅比较
+ * - 数组（如 FORM_LIST.defaultValue）：稳定序列化后比较，避免对象 key 顺序导致的误判
+ * - 其余情况：按字符串比较
+ */
+export function isParamValueEqual (a, b) {
+    if (a === b) return true
+    const isBoolType = v => typeof v === 'boolean'
+    const isBoolStr = v => v === 'true' || v === 'false'
+    // 布尔语义比较
+    if (isBoolType(a) || isBoolType(b) || (isBoolStr(a) && isBoolStr(b))) {
+        const toBool = v => v === true || v === 'true'
+        return toBool(a) === toBool(b)
+    }
+    // 空值互等
+    const isEmpty = v => v === '' || v === undefined || v === null
+    if (isEmpty(a) && isEmpty(b)) return true
+    if (isEmpty(a) || isEmpty(b)) return false
+    const normalizedA = normalizeJsonArrayValue(a)
+    const normalizedB = normalizeJsonArrayValue(b)
+    if (Array.isArray(normalizedA) && Array.isArray(normalizedB)) {
+        return stableSerialize(normalizedA) === stableSerialize(normalizedB)
+    }
+    if (isObject(a) && isObject(b)) {
+        return isShallowEqual(a, b)
+    }
+    return String(a) === String(b)
+}
+
+
 export function isInArray (ele, array) {
     for (const item of array) {
         if (item === ele) {
@@ -685,6 +720,7 @@ export function getParamsValuesMap (params = [], valueKey = 'defaultValue', init
         return values
     }, {})
 }
+
 
 /**
  * 判断两个数组是否有交集
