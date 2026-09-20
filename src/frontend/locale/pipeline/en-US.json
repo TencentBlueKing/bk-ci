@@ -816,6 +816,7 @@
   },
   "history": {
     "uploadLog": "The log is uploading, please try again later",
+    "archiveLogFailed": "Log archive failed. The full log was not saved to the artifact repository. Downloading the online log, which may be incomplete.",
     "logEmpty": "Log is empty",
     "logClear": "Log is cleared",
     "logClose": "Log is closed",

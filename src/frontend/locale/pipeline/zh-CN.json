@@ -817,6 +817,7 @@
   },
   "history": {
     "uploadLog": "日志正在上传中，请稍后再试",
+    "archiveLogFailed": "日志归档失败，完整日志未能写入制品库。将下载已上报的在线日志（可能不完整）",
     "logEmpty": "日志为空",
     "logClear": "日志被清除",
     "logClose": "日志被关闭",

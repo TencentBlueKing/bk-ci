@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.common.log.constant.Constants.BULK_BUFFER_SIZE
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -53,27 +52,39 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 import java.net.SocketTimeoutException
-import java.sql.Date
-import java.text.SimpleDateFormat
+import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Callable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
-    private const val LOG_UPLOAD_BATCH_MIN = 200
+    private const val BATCH_RECOVER_COOLDOWN_MS = 30_000L
+    private const val FINISH_FLUSH_ROUNDS = 3
+    private const val ARCHIVE_FAIL_NOTICE =
+        "日志归档到制品库失败，完整日志未能保存。下载只能获取已上报到日志服务的部分内容。"
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
@@ -81,7 +92,8 @@ object LoggerService {
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
-    private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+    private val localLogTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS")
+        .withZone(ZoneId.systemDefault())
     private val circuitBreakerRegistry = CircuitBreakerRegistry.of(
         CircuitBreakerConfig.custom()
             .enableAutomaticTransitionFromOpenToHalfOpen()
@@ -92,10 +104,9 @@ object LoggerService {
             .permittedNumberOfCallsInHalfOpenState(100)
             // 当错误率达到 10% 开启熔断
             .failureRateThreshold(10.0F)
-            // 慢请求超过 10% 开启熔断
+            // 慢请求超过 10% 开启熔断；阈值对齐读超时，避免成功但偏慢的上报被算成 slow
             .slowCallRateThreshold(10.0F)
-            // 请求超过 5s 就是慢请求（大批量上报常超过 1s，避免误伤）
-            .slowCallDurationThreshold(Duration.ofSeconds(5))
+            .slowCallDurationThreshold(Duration.ofSeconds(LoggerUploadBatch.READ_TIMEOUT_SECONDS))
             // 滑动窗口大小为 100，默认值
             .slidingWindowSize(100)
             .build()
@@ -117,9 +128,12 @@ object LoggerService {
     private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
 
     /**
-     * 单次上报批量，默认 [BULK_BUFFER_SIZE]。超时后降到 [LOG_UPLOAD_BATCH_MIN]，成功后再加倍恢复。
+     * 单次上报条数上限，默认 [LoggerUploadBatch.MAX_COUNT]。超时后降到
+     * [LoggerUploadBatch.MIN_COUNT]，冷却后再加倍恢复。发送时还会按预估字节切批。
      */
-    private val uploadBatchSize = AtomicInteger(BULK_BUFFER_SIZE)
+    private val uploadBatchSize = AtomicInteger(LoggerUploadBatch.MAX_COUNT)
+    private val lastUploadTimeoutAt = AtomicLong(0)
+    private val localLogWriters = ConcurrentHashMap<String, BufferedWriter>()
 
     /**
      * 每个插件的日志存储属性映射
@@ -198,7 +212,7 @@ object LoggerService {
             var lastSaveTime: Long = 0
             while (running.get()) {
                 val logMessage = try {
-                    uploadQueue.poll(3, TimeUnit.SECONDS)
+                    uploadQueue.poll(1, TimeUnit.SECONDS)
                 } catch (e: InterruptedException) {
                     logger.warn("Logger service poll thread interrupted", e)
                     null
@@ -213,12 +227,24 @@ object LoggerService {
                 }
 
                 val size = logMessages.size
+                if (!isUploadDisabled() && size >= LoggerUploadBatch.MAX_PENDING_IN_MEMORY) {
+                    logger.warn(
+                        "Pending logs $size exceed memory cap ${LoggerUploadBatch.MAX_PENDING_IN_MEMORY}, " +
+                            "switch to LOCAL"
+                    )
+                    disableLogUpload()
+                }
                 val now = System.currentTimeMillis()
-                // 达到当前上报批量或距上次保存超过 3 秒
-                if (size >= uploadBatchSize.get() || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
-                    flush()
+                // 达到当前上报条数或距上次保存超过刷新间隔
+                if (size > 0 && (
+                        size >= uploadBatchSize.get() ||
+                            now - lastSaveTime > LoggerUploadBatch.FLUSH_INTERVAL_MS ||
+                            isUploadDisabled()
+                        )
+                ) {
+                    val sent = flush()
                     lastSaveTime = now
-                    currentTaskLineNo += size
+                    currentTaskLineNo += sent
                 }
             }
             if (logMessages.isNotEmpty()) {
@@ -234,18 +260,29 @@ object LoggerService {
     private class FlushThread : Callable<Int> {
         override fun call(): Int {
             logger.info("Start to flush the logger")
-            lock.lock()
-            val size = logMessages.size
-            try {
-                if (size > 0) {
-                    sendMultiLog()
-                    logMessages.clear()
+            val snapshot = lock.withLock {
+                if (logMessages.isEmpty()) {
+                    emptyList()
+                } else {
+                    ArrayList(logMessages)
                 }
-            } finally {
-                logger.info("Finish flush the log - $size")
-                lock.unlock()
             }
-            return size
+            if (snapshot.isEmpty()) {
+                logger.info("Finish flush the log - size=0 sent=0")
+                return 0
+            }
+            val sent = sendMultiLog(snapshot)
+            if (sent > 0) {
+                lock.withLock {
+                    logMessages.subList(0, sent.coerceAtMost(logMessages.size)).clear()
+                }
+            }
+            if (sent < snapshot.size) {
+                logger.warn("Keep ${logMessages.size} unsent logs after flush (sent=$sent/${snapshot.size})")
+            }
+            flushAllLocalLogWriters()
+            logger.info("Finish flush the log - size=${snapshot.size} sent=$sent")
+            return sent
         }
     }
 
@@ -285,17 +322,13 @@ object LoggerService {
                 if (future != null) {
                     future!!.get()
                 }
-                // 把没完成的日志打完
-                while (uploadQueue.size != 0) {
-                    uploadQueue.drainTo(logMessages)
-                    if (logMessages.isNotEmpty()) {
-                        flush()
-                    }
-                }
+                flushUntilIdleOrLocal(tag = null, disableAllOnGiveUp = true)
             }
             logger.info("Finish stopping the log service")
         } catch (ignored: Exception) {
             logger.error("Fail to stop log service for build", ignored)
+        } finally {
+            closeAllLocalLogWriters()
         }
     }
 
@@ -347,39 +380,34 @@ object LoggerService {
             stepId = ctx.stepId
         )
         logger.info(logMessage.toString())
-
         // #3772 如果已经进入Job执行任务，则可以做日志本地落盘
         if (ctx.elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(ctx.elementId, ctx.executeCount, logMessage)
         }
 
-        try {
-            if (currentTaskLineNo <= loggingLineLimit) {
-                var offset = 0
-                // 上报前做长度等内容限制
-                while (offset < logMessage.message.length) {
-                    val chunk = logMessage.message.substring(
-                        offset, minOf(offset + LOG_MESSAGE_LENGTH_LIMIT, logMessage.message.length)
-                    )
-                    this.uploadQueue.put(logMessage.copy(message = chunk))
-                    offset += LOG_MESSAGE_LENGTH_LIMIT
-                }
-            } else if (elementId2LogProperty[ctx.elementId]?.logStorageMode != LogStorageMode.LOCAL) {
-                logger.warn(
-                    "The number of Task[${ctx.elementId}] log lines exceeds the limit, " +
-                        "the log file will be archived."
+        if (currentTaskLineNo <= loggingLineLimit) {
+            var offset = 0
+            // 上报前做长度等内容限制
+            while (offset < logMessage.message.length) {
+                val chunk = logMessage.message.substring(
+                    offset, minOf(offset + LOG_MESSAGE_LENGTH_LIMIT, logMessage.message.length)
                 )
-                this.uploadQueue.put(
-                    logMessage.copy(
-                        message = "Printed logs cannot exceed $loggingLineLimit lines. " +
-                            "Please download logs to view.",
-                        logType = LogType.WARN
-                    )
-                )
-                elementId2LogProperty[ctx.elementId]?.logStorageMode = LogStorageMode.LOCAL
+                enqueueLog(logMessage.copy(message = chunk))
+                offset += LOG_MESSAGE_LENGTH_LIMIT
             }
-        } catch (ignored: InterruptedException) {
-            logger.error("Writing to a $logType log line failed：", ignored)
+        } else if (elementId2LogProperty[ctx.elementId]?.logStorageMode != LogStorageMode.LOCAL) {
+            logger.warn(
+                "The number of Task[${ctx.elementId}] log lines exceeds the limit, " +
+                    "the log file will be archived."
+            )
+            enqueueLog(
+                logMessage.copy(
+                    message = "Printed logs cannot exceed $loggingLineLimit lines. " +
+                        "Please download logs to view.",
+                    logType = LogType.WARN
+                )
+            )
+            elementId2LogProperty[ctx.elementId]?.logStorageMode = LogStorageMode.LOCAL
         }
     }
 
@@ -433,6 +461,7 @@ object LoggerService {
 
     fun archiveLogFiles() {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
+        closeAllLocalLogWriters()
         try {
             val expireSeconds = buildVariables!!.timeoutMills / 1000
             val token = archiveApi.getRepoToken(
@@ -454,6 +483,7 @@ object LoggerService {
                         "Cancel archiving task[$elementId] build log " +
                             "file(${property.logFile.absolutePath}) which not exists"
                     )
+                    markArchiveFailed(property, "local log file does not exist")
                     return@forEach
                 }
 
@@ -463,6 +493,10 @@ object LoggerService {
                     logger.warn(
                         "Cancel archiving task[$elementId] build log " +
                             "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
+                    )
+                    markArchiveFailed(
+                        property,
+                        "zip size ${zipLog.length()} exceeds $LOG_FILE_LENGTH_LIMIT"
                     )
                     return@forEach
                 }
@@ -483,43 +517,86 @@ object LoggerService {
                     property.logStorageMode = LogStorageMode.ARCHIVED
                 } catch (ignore: Exception) {
                     logger.error("archiveLogFile| retry fail with message: ", ignore)
+                    markArchiveFailed(property, ignore.message ?: ignore.javaClass.simpleName)
                 }
                 archivedCount++
             }
             logger.info("Finished archiving log $archivedCount files")
-
-            // 同步所有存储状态到log服务端
-            doWithCircuitBreaker {
-                logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
-            }
+            syncStorageModeToLogService()
             logger.info("Finished update mode to log service.")
         } catch (ignored: Throwable) {
             logger.warn("Fail to archive log files", ignored)
+            elementId2LogProperty.values
+                .filter { it.logStorageMode == LogStorageMode.LOCAL }
+                .forEach { markArchiveFailed(it, ignored.message ?: "archive aborted") }
+            try {
+                syncStorageModeToLogService()
+            } catch (ignore: Exception) {
+                logger.warn("Fail to sync archive-failed mode after archive abort", ignore)
+            }
         } finally {
             logger.info("Remove temp log files in [$pipelineLogDir].")
             FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
         }
     }
 
-    private fun addLog(message: LogMessage) = uploadQueue.put(message)
+    private fun addLog(message: LogMessage) = enqueueLog(message)
 
-    private fun sendMultiLog() {
-        logger.info("Start to save the log - ${logMessages.size}")
+    private fun isUploadDisabled(): Boolean = LogStorageMode.LOCAL == AgentEnv.getLogMode()
 
-        // 如果agent启动时日志模式为本地保存，则不做上报
-        if (LogStorageMode.LOCAL == AgentEnv.getLogMode()) {
+    private fun shouldSkipUpload(tag: String): Boolean {
+        if (isUploadDisabled()) {
+            return true
+        }
+        val mode = elementId2LogProperty[tag]?.logStorageMode
+        return tag.isNotBlank() && (mode == LogStorageMode.LOCAL || mode == LogStorageMode.ARCHIVE_FAILED)
+    }
+
+    private fun enqueueLog(message: LogMessage) {
+        if (shouldSkipUpload(message.tag)) {
             return
         }
+        try {
+            if (uploadQueue.offer(
+                    message,
+                    LoggerUploadBatch.QUEUE_OFFER_TIMEOUT_MS,
+                    TimeUnit.MILLISECONDS
+                )
+            ) {
+                return
+            }
+        } catch (ignored: InterruptedException) {
+            logger.error("Writing to upload queue interrupted", ignored)
+            Thread.currentThread().interrupt()
+            return
+        }
+        logger.warn(
+            "Log upload queue is full (size=${uploadQueue.size}), " +
+                "keep local file only and switch Task[${message.tag}] to LOCAL"
+        )
+        if (message.tag.isNotBlank()) {
+            elementId2LogProperty[message.tag]?.logStorageMode = LogStorageMode.LOCAL
+        }
+    }
 
-        val batchSize = uploadBatchSize.get().coerceAtLeast(LOG_UPLOAD_BATCH_MIN)
+    private fun sendMultiLog(messages: List<LogMessage>): Int {
+        logger.info("Start to save the log - ${messages.size}")
+
+        // 本地模式不上报，视为已处理，避免缓冲区无限堆积
+        if (isUploadDisabled()) {
+            return messages.size
+        }
+
+        val batchSize = uploadBatchSize.get().coerceAtLeast(LoggerUploadBatch.MIN_COUNT)
         var index = 0
-        while (index < logMessages.size) {
-            val end = minOf(index + batchSize, logMessages.size)
-            if (!sendLogChunk(logMessages.subList(index, end))) {
+        while (index < messages.size) {
+            val end = LoggerUploadBatch.nextChunkEnd(messages, index, batchSize)
+            if (!sendLogChunk(messages.subList(index, end))) {
                 break
             }
             index = end
         }
+        return index
     }
 
     private fun sendLogChunk(chunk: List<LogMessage>): Boolean {
@@ -540,10 +617,15 @@ object LoggerService {
 
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
+                    return false
                 }
             }
             recoverUploadBatch()
             return true
+        } catch (ignored: CallNotPermittedException) {
+            logger.warn("Log upload circuit is open, switch to LOCAL to stop memory growth")
+            disableLogUpload()
+            return false
         } catch (ignored: Exception) {
             logger.warn("Fail to send the logs(${chunk.size})", ignored)
             if (isTimeout(ignored)) {
@@ -554,18 +636,26 @@ object LoggerService {
     }
 
     private fun shrinkUploadBatch(failedSize: Int) {
+        lastUploadTimeoutAt.set(System.currentTimeMillis())
         val current = uploadBatchSize.get()
-        if (current > LOG_UPLOAD_BATCH_MIN && uploadBatchSize.compareAndSet(current, LOG_UPLOAD_BATCH_MIN)) {
+        if (current > LoggerUploadBatch.MIN_COUNT &&
+            uploadBatchSize.compareAndSet(current, LoggerUploadBatch.MIN_COUNT)
+        ) {
             logger.warn(
-                "Log upload timed out (size=$failedSize), shrink batch $current -> $LOG_UPLOAD_BATCH_MIN"
+                "Log upload timed out (size=$failedSize), " +
+                    "shrink batch $current -> ${LoggerUploadBatch.MIN_COUNT}"
             )
         }
     }
 
     private fun recoverUploadBatch() {
+        val elapsed = System.currentTimeMillis() - lastUploadTimeoutAt.get()
+        if (lastUploadTimeoutAt.get() > 0 && elapsed < BATCH_RECOVER_COOLDOWN_MS) {
+            return
+        }
         val current = uploadBatchSize.get()
-        if (current < BULK_BUFFER_SIZE) {
-            val next = minOf(BULK_BUFFER_SIZE, current * 2)
+        if (current < LoggerUploadBatch.MAX_COUNT) {
+            val next = minOf(LoggerUploadBatch.MAX_COUNT, current * 2)
             if (uploadBatchSize.compareAndSet(current, next)) {
                 logger.info("Log upload batch recovered to $next")
             }
@@ -599,10 +689,190 @@ object LoggerService {
                 logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
                 elementId2LogProperty[taskId] = logProperty
             }
-            val dateTime = sdf.format(Date(logMessage.timestamp))
-            logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")
+            val dateTime = localLogTimeFormatter.format(Instant.ofEpochMilli(logMessage.timestamp))
+            val writer = writerFor(taskId, taskExecuteCount, logProperty.logFile)
+            synchronized(writer) {
+                writer.write("$dateTime : ${logMessage.message}\n")
+            }
         } catch (ignored: Exception) {
             logger.warn("Fail to save the logs($logMessage)", ignored)
+        }
+    }
+
+    private fun writerKey(taskId: String, taskExecuteCount: Int) = "$taskId:$taskExecuteCount"
+
+    private fun writerFor(taskId: String, taskExecuteCount: Int, logFile: File): BufferedWriter {
+        return localLogWriters.computeIfAbsent(writerKey(taskId, taskExecuteCount)) {
+            BufferedWriter(
+                OutputStreamWriter(FileOutputStream(logFile, true), StandardCharsets.UTF_8),
+                LoggerUploadBatch.LOCAL_LOG_BUFFER_BYTES
+            )
+        }
+    }
+
+    private fun flushAllLocalLogWriters() {
+        localLogWriters.values.forEach { writer ->
+            try {
+                synchronized(writer) {
+                    writer.flush()
+                }
+            } catch (ignored: Exception) {
+                logger.warn("Fail to flush local log writer", ignored)
+            }
+        }
+    }
+
+    private fun flushLocalLogWriter(taskId: String?) {
+        if (taskId.isNullOrBlank()) {
+            return
+        }
+        val prefix = "$taskId:"
+        localLogWriters.forEach { (key, writer) ->
+            if (!key.startsWith(prefix)) {
+                return@forEach
+            }
+            try {
+                synchronized(writer) {
+                    writer.flush()
+                }
+            } catch (ignored: Exception) {
+                logger.warn("Fail to flush local log writer $key", ignored)
+            }
+        }
+    }
+
+    private fun closeAllLocalLogWriters() {
+        val keys = localLogWriters.keys.toList()
+        keys.forEach { key ->
+            val writer = localLogWriters.remove(key) ?: return@forEach
+            try {
+                synchronized(writer) {
+                    writer.flush()
+                    writer.close()
+                }
+            } catch (ignored: Exception) {
+                logger.warn("Fail to close local log writer $key", ignored)
+            }
+        }
+    }
+
+    private fun discardPendingLogs() {
+        lock.withLock {
+            uploadQueue.clear()
+            logMessages.clear()
+        }
+    }
+
+    private fun flushUntilIdleOrLocal(tag: String?, disableAllOnGiveUp: Boolean) {
+        if (isUploadDisabled()) {
+            discardPendingLogs()
+            return
+        }
+        repeat(FINISH_FLUSH_ROUNDS) { round ->
+            lock.withLock {
+                uploadQueue.drainTo(logMessages)
+            }
+            if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+                return
+            }
+            if (isUploadDisabled()) {
+                discardPendingLogs()
+                return
+            }
+            val pending = logMessages.size
+            val sent = if (pending > 0) flush() else 0
+            if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+                return
+            }
+            if (sent <= 0 && logMessages.isNotEmpty()) {
+                logger.warn("Finish flush round ${round + 1} sent 0, still ${logMessages.size} pending")
+                Thread.sleep(500)
+            } else if (sent < pending) {
+                logger.warn("Finish flush round ${round + 1} sent=$sent/$pending")
+            }
+        }
+        if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+            return
+        }
+        logger.warn(
+            "Unsent logs remain after finish flush (queue=${uploadQueue.size}, " +
+                "buffer=${logMessages.size}), switch to LOCAL"
+        )
+        if (!tag.isNullOrBlank()) {
+            elementId2LogProperty[tag]?.logStorageMode = LogStorageMode.LOCAL
+        }
+        if (disableAllOnGiveUp) {
+            disableLogUpload()
+            discardPendingLogs()
+        }
+    }
+
+    private fun markArchiveFailed(property: TaskBuildLogProperty, reason: String) {
+        property.logStorageMode = LogStorageMode.ARCHIVE_FAILED
+        appendArchiveFailureNotice(property, reason)
+        reportArchiveFailureLine(property.elementId, reason)
+    }
+
+    private fun appendArchiveFailureNotice(property: TaskBuildLogProperty, reason: String) {
+        try {
+            val dateTime = localLogTimeFormatter.format(Instant.now())
+            property.logFile.appendText(
+                "$dateTime : $LOG_WARN_FLAG$ARCHIVE_FAIL_NOTICE ($reason)\n"
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Fail to append archive-failed notice to ${property.logFile}", ignored)
+        }
+    }
+
+    private fun reportArchiveFailureLine(elementId: String, reason: String) {
+        try {
+            val ctx = effectiveContext()
+            logResourceApi.addLogMultiLine(
+                buildVariables?.buildId ?: "",
+                listOf(
+                    LogMessage(
+                        message = "$LOG_WARN_FLAG$ARCHIVE_FAIL_NOTICE ($reason)",
+                        timestamp = System.currentTimeMillis(),
+                        tag = elementId,
+                        containerHashId = ctx.containerHashId,
+                        logType = LogType.WARN,
+                        executeCount = ctx.executeCount,
+                        jobId = ctx.jobId,
+                        stepId = ctx.stepId
+                    )
+                )
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Fail to report archive-failed notice for Task[$elementId]", ignored)
+        }
+    }
+
+    /**
+     * 状态回写不走熔断：内容上报熔断后仍要把 LOCAL / ARCHIVED / ARCHIVE_FAILED 同步到 log。
+     * ARCHIVE_FAILED 用 finishLog 的 query 传递，避免旧 log 反序列化 JSON 枚举失败。
+     */
+    private fun syncStorageModeToLogService() {
+        val succeeded = elementId2LogProperty.values.filter {
+            it.logStorageMode != LogStorageMode.ARCHIVE_FAILED
+        }
+        if (succeeded.isNotEmpty()) {
+            logResourceApi.updateStorageMode(succeeded.toList(), executeCount)
+        }
+        elementId2LogProperty.forEach { (elementId, property) ->
+            if (property.logStorageMode != LogStorageMode.ARCHIVE_FAILED) {
+                return@forEach
+            }
+            try {
+                logResourceApi.finishLog(
+                    tag = elementId,
+                    jobId = containerHashId.ifBlank { null },
+                    executeCount = executeCount,
+                    subTag = null,
+                    logMode = LogStorageMode.ARCHIVE_FAILED
+                )
+            } catch (ignored: Exception) {
+                logger.warn("Fail to finish archive-failed status for Task[$elementId]", ignored)
+            }
         }
     }
 
@@ -614,16 +884,16 @@ object LoggerService {
     ) {
         try {
             currentTaskLineNo = 0
+            flushUntilIdleOrLocal(tag, disableAllOnGiveUp = false)
+            flushLocalLogWriter(tag)
             logger.info("Start to finish the log, property: ${elementId2LogProperty[tag]}")
-            val result = doWithCircuitBreaker {
-                logResourceApi.finishLog(
-                    tag = tag,
-                    jobId = jobId,
-                    executeCount = executeCount,
-                    subTag = subTag,
-                    logMode = elementId2LogProperty[tag]?.logStorageMode
-                )
-            }
+            val result = logResourceApi.finishLog(
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount,
+                subTag = subTag,
+                logMode = elementId2LogProperty[tag]?.logStorageMode
+            )
             if (result.isNotOk()) {
                 logger.error("Fail to send the log status ：${result.message}")
             }
