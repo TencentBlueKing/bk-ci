@@ -58,6 +58,14 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
         return atomReleaseService.getProcessInfo(userId, atomId)
     }
 
+    override fun endBranchVersionTest(userId: String, atomId: String): Result<Boolean> {
+        return atomReleaseService.endBranchVersionTestById(userId, atomId)
+    }
+
+    override fun checkCanAddMainVersion(userId: String, atomCode: String): Result<Boolean> {
+        return atomReleaseService.checkCanAddMainVersion(userId, atomCode)
+    }
+
     override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
         return atomReleaseService.cancelRelease(userId, atomId)
     }
