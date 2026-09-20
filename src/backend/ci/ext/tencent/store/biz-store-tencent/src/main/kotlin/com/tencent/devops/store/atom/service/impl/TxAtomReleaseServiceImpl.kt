@@ -1189,8 +1189,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     /**
-     * 校验插件版本最近一次构建是否已结束，无构建记录或状态查询为空时不校验
-     * @throws ErrorCodeException 最近一次构建未结束
+     * 校验插件版本最近一次构建是否已结束，无构建记录时不校验
+     * @throws ErrorCodeException 最近一次构建未结束，或构建状态查询为空
      */
     private fun checkLastBuildFinished(
         atomId: String,
@@ -1206,8 +1206,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             pipelineId = buildInfoRecord.pipelineId,
             buildId = buildInfoRecord.buildId,
             channelCode = ChannelCode.AM
-        ).data ?: return
-        if (!BuildStatus.parse(buildResult.status).isFinish()) {
+        ).data
+        // 查不到构建状态时按未结束处理，避免放行后启动构建失败把版本置为构建失败
+        if (buildResult == null || !BuildStatus.parse(buildResult.status).isFinish()) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
                 params = arrayOf(name, version)
