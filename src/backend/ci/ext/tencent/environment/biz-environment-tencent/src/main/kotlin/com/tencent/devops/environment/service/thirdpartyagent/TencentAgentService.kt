@@ -171,10 +171,7 @@ class TencentAgentService @Autowired constructor(
         return true
     }
 
-    @Value(
-        "\${environment.createAgentInstallUrl:#{\"https://devops.woa.com/ms/process/api/external/pipelines" +
-                "/2ea6ec08cb4d4893a9fa713516367f83/build\"}}"
-    )
+    @Value("\${environment.createAgentInstallUrl}")
     private val createAgentInstallUrl: String = ""
 
     private fun createNewAgent(
