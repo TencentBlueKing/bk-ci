@@ -1067,7 +1067,8 @@ class WorkspaceService @Autowired constructor(
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
                     zoneConfig = zone,
                     currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
-                    os = it.os
+                    os = it.os,
+                    coffeeAi = it.coffeeAi
                 )
             }
         )

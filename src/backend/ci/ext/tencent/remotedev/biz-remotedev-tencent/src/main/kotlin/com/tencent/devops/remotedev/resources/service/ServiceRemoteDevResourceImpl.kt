@@ -1084,13 +1084,7 @@ class ServiceRemoteDevResourceImpl(
             pageSize = pageSizeNotNull,
             search = search
         )
-        return Result(
-            if (search.coffeeAi == true) {
-                coffeeAIService.enrichAgentMode(result)
-            } else {
-                result
-            }
-        )
+        return Result(coffeeAIService.enrichAgentMode(result))
     }
 
     override fun batchQueryThumbnailWorkspaces(
