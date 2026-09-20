@@ -118,6 +118,15 @@ class TencentAgentService @Autowired constructor(
         val record = agentDao.getAgentByWorkspaceIdGlobal(dslContext, workspaceName, null)
         // 如果没有就新安装一个
         if (record == null || record.status == AgentStatus.UN_IMPORT.status) {
+            if (record != null) {
+                agentDao.updateProjectAndProps(
+                    dslContext = dslContext,
+                    agentId = record.id,
+                    projectId = newProjectId,
+                    props = JsonUtil.to(record.agentProps, object : TypeReference<AgentProps>() {})
+                        .copy(source = AgentPropsSource.IEG_IMATE)
+                )
+            }
             createNewAgent(
                 projectId = newProjectId,
                 userId = userId,
