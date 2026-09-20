@@ -361,6 +361,9 @@ store:
     minTimeout: 1  # 最小插件超时时间
     maxRetryNum: 5  # 最大插件自动重试次数
     minRetryNum: 1
+    runInfo:
+      # 插件运行时信息 Redis 缓存过期时间（秒），默认 5 分钟
+      cacheExpireSeconds: 300
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

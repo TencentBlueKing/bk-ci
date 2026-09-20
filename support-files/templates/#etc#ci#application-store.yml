@@ -38,6 +38,10 @@ store:
   innerPipeline:
     project: demo
     user: admin
+  atom:
+    runInfo:
+      # 插件运行时信息 Redis 缓存过期时间（秒），默认 5 分钟
+      cacheExpireSeconds: 300
 
   notify:
     wework:
