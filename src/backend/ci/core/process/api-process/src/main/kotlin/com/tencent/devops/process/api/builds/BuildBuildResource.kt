@@ -107,13 +107,13 @@ interface BuildBuildResource {
 
     @Operation(summary = "获取构建状态信息")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/status")
+    @Path("/{buildId}/status")
     fun getBuildStatus(
         @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
