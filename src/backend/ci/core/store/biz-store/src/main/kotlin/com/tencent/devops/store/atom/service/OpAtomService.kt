@@ -108,4 +108,12 @@ interface OpAtomService {
         kProperty: String,
         atomCode: String?
     ): Result<Boolean>
+
+    /**
+     * 删除插件运行时缓存。传入插件集合则只删除这些插件，否则按库中插件编码全量删除。
+     */
+    fun deleteAtomRunInfoCache(
+        userId: String,
+        atomCodes: Set<String>?
+    ): Result<Boolean>
 }
