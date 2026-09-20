@@ -1727,13 +1727,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     /**
-     * 启动构建流水线：失败时把版本置为构建失败、推送状态变更消息并抛出构建启动失败错误码
-     * @throws ErrorCodeException 构建启动失败
+     * 启动构建流水线；构建启动失败时把版本置为构建失败并抛出 STORE_ATOM_BUILD_START_FAIL，
+     * 旧构建未结束时保持版本状态不变并原样抛出 USER_ATOM_VERSION_IS_NOT_FINISH
+     * @throws ErrorCodeException 构建启动失败或旧构建未结束
      */
     protected fun startAtomBuild(prepared: PreparedAtomVersionInfo): Result<String> {
         val userId = prepared.userId
         val atomId = prepared.atomId
-        val atomCode = prepared.updateRequest.atomCode
         val branch = prepared.updateRequest.branch
         try {
             asyncHandleUpdateAtom(
@@ -1744,25 +1744,40 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(prepared.atomEnvRequests),
                 validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(prepared.atomEnvRequests)
             )
+        } catch (e: ErrorCodeException) {
+            // 旧构建未结束属业务拒绝，版本状态保持原样
+            if (e.errorCode == StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH) {
+                throw e
+            }
+            markBuildFailAndRethrow(prepared, e)
         } catch (e: Throwable) {
-            // 版本数据已提交，仅构建启动失败：记录错误并将版本置为构建失败，便于用户感知与重试
-            logger.error(
-                "asyncHandleUpdateAtom failed after transaction commit" +
-                    "|atomId=$atomId|atomCode=$atomCode|userId=$userId|branch=$branch",
-                e
-            )
-            marketAtomDao.setAtomStatusById(
-                dslContext = dslContext,
-                atomId = atomId,
-                atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
-                userId = userId,
-                msg = AtomStatusEnum.BUILD_FAIL.getI18n(I18nUtil.getLanguage(userId))
-            )
-            // 通过websocket推送状态变更消息
-            storeWebsocketService.sendWebsocketMessage(userId, atomId)
-            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_BUILD_START_FAIL)
+            markBuildFailAndRethrow(prepared, e)
         }
         return Result(atomId)
+    }
+
+    /**
+     * 记录构建启动失败日志，把版本置为构建失败、推送状态变更消息并抛出构建启动失败错误码
+     */
+    private fun markBuildFailAndRethrow(prepared: PreparedAtomVersionInfo, e: Throwable): Nothing {
+        val userId = prepared.userId
+        val atomId = prepared.atomId
+        logger.error(
+            "asyncHandleUpdateAtom failed after transaction commit" +
+                "|atomId=$atomId|atomCode=${prepared.updateRequest.atomCode}" +
+                "|userId=$userId|branch=${prepared.updateRequest.branch}",
+            e
+        )
+        marketAtomDao.setAtomStatusById(
+            dslContext = dslContext,
+            atomId = atomId,
+            atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
+            userId = userId,
+            msg = AtomStatusEnum.BUILD_FAIL.getI18n(I18nUtil.getLanguage(userId))
+        )
+        // 通过websocket推送状态变更消息
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_BUILD_START_FAIL)
     }
 
     protected fun branchTestLockKey(atomCode: String, branch: String?): String =
@@ -1802,7 +1817,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String
     ) {
-        if (marketAtomDao.isAtomLatestTestVersion(context, atomId) > 0) {
+        if (marketAtomDao.isLatestTestVersion(context, atomId)) {
             marketAtomDao.resetAtomLatestTestFlagByCode(context, atomCode)
             val successorId = marketAtomDao.queryAtomLatestTestVersionId(context, atomCode, atomId)
             if (successorId != null) {
@@ -1917,25 +1932,38 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     /**
      * 结束分支版本测试的锁外副作用：取消发布总线产物、删除质量红线数据
-     * 异常记录告警日志，不向上抛出
+     * 每一步失败单独记录 error 日志，不向上抛出，也不影响其余清理步骤
      */
     protected fun afterBranchVersionTestEnd(userId: String, atomCode: String, record: TAtomRecord) {
-        try {
-            doCancelReleaseBus(userId, record.id)
+        val testFlag = "$IN_READY_TEST(${record.version})"
+        runCatching { doCancelReleaseBus(userId, record.id) }
+            .onFailure { logTestEndCleanupFailure("cancelBus", atomCode, record, it) }
+        runCatching {
             // 删除质量红线相关数据
-            client.get(ServiceQualityIndicatorMarketResource::class)
-                .deleteTestIndicator(atomCode, "$IN_READY_TEST(${record.version})")
-            client.get(ServiceQualityMetadataMarketResource::class)
-                .deleteTestMetadata(atomCode, "$IN_READY_TEST(${record.version})")
-            client.get(ServiceQualityControlPointMarketResource::class)
-                .deleteTestControlPoint(atomCode, "$IN_READY_TEST(${record.version})")
-        } catch (e: Throwable) {
-            logger.warn(
-                "afterBranchVersionTestEnd failed|atomCode=$atomCode|atomId=${record.id}" +
-                    "|version=${record.version}",
-                e
-            )
-        }
+            client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode, testFlag)
+        }.onFailure { logTestEndCleanupFailure("deleteTestIndicator", atomCode, record, it) }
+        runCatching {
+            client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode, testFlag)
+        }.onFailure { logTestEndCleanupFailure("deleteTestMetadata", atomCode, record, it) }
+        runCatching {
+            client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode, testFlag)
+        }.onFailure { logTestEndCleanupFailure("deleteTestControlPoint", atomCode, record, it) }
+    }
+
+    /**
+     * 记录结束分支测试后清理步骤的失败，带插件标识、版本ID与版本号
+     */
+    private fun logTestEndCleanupFailure(
+        step: String,
+        atomCode: String,
+        record: TAtomRecord,
+        e: Throwable
+    ) {
+        logger.error(
+            "afterBranchVersionTestEnd $step failed" +
+                "|atomCode=$atomCode|atomId=${record.id}|version=${record.version}",
+            e
+        )
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {

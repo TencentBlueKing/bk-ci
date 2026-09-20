@@ -247,6 +247,7 @@ class MarketAtomDao : AtomBaseDao() {
 
     /**
      * 统计插件发布流程中的正式版本数量（非分支测试版本且在发布流程中）
+     * 构建失败与代码检查失败同样计入，需先取消或重建失败版本才允许新增正式版本
      */
     fun countPublishingAtomByCode(dslContext: DSLContext, atomCode: String): Int {
         with(TAtom.T_ATOM) {
@@ -856,10 +857,14 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun isAtomLatestTestVersion(dslContext: DSLContext, atomId: String): Int {
+    /**
+     * 判断指定插件版本是否为所属插件的最新测试版本（LATEST_TEST_FLAG 为 true）
+     * @param atomId 插件版本ID
+     * @return 该版本带最新测试版本标记时为 true
+     */
+    fun isLatestTestVersion(dslContext: DSLContext, atomId: String): Boolean {
         with(TAtom.T_ATOM) {
-            return dslContext.select(ID).from(this)
-                .where(ID.eq(atomId).and(LATEST_TEST_FLAG.eq(true))).execute()
+            return dslContext.fetchExists(this, ID.eq(atomId).and(LATEST_TEST_FLAG.eq(true)))
         }
     }
 
