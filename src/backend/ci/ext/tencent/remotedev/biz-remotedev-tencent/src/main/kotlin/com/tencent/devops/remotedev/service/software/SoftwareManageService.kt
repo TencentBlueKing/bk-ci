@@ -108,7 +108,7 @@ class SoftwareManageService @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val CALLBACK_TOKEN_BYTES = 32
         // 软件安装回调 token 有效期（秒），需覆盖安装耗时，到期失效
-        private const val SOFTWARE_CALLBACK_TOKEN_TTL_SECONDS = 7200L
+        private const val SOFTWARE_CALLBACK_TOKEN_TTL_SECONDS = 10800L
     }
 
     /**
