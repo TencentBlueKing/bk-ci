@@ -1078,13 +1078,18 @@ class ServiceRemoteDevResourceImpl(
             pageSize ?: DEFAULT_PAGE_SIZE,
             MAX_PAGE_SIZE
         )
+        val result = workspaceService.getWorkspaceList(
+            userId = userId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = search
+        )
         return Result(
-            workspaceService.getWorkspaceList(
-                userId = userId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search
-            )
+            if (search.coffeeAi == true) {
+                coffeeAIService.enrichAgentMode(result)
+            } else {
+                result
+            }
         )
     }
 
