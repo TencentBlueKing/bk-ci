@@ -591,7 +591,7 @@ class CoffeeAIService @Autowired constructor(
         if (aiWorkspaces.isEmpty()) {
             return page
         }
-        val owners = aiWorkspaces.mapNotNull { it.owner ?: it.createUserId }.distinct()
+        val owners = aiWorkspaces.map { it.owner ?: it.createUserId }.distinct()
         val agentModeMap = owners.flatMap { owner ->
             runCatching { workspaceStartCloudClient.listAIWorkspaces(owner) }
                 .onFailure { logger.warn("列出AI云桌面agent类型失败|owner=$owner|${it.message}") }
