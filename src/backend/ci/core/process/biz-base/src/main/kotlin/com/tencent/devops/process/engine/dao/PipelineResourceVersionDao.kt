@@ -594,13 +594,11 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         versions: List<Int>,
         referCount: Int? = null,
-        referFlag: Boolean? = null
+        referFlag: Boolean
     ): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val baseStep = dslContext.update(this)
-                .set(UPDATE_TIME, LocalDateTime.now())
-            referCount?.let { baseStep.set(REFER_COUNT, referCount) }
-            referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
+            val baseStep = dslContext.update(this).set(REFER_FLAG, referFlag)
+            referCount?.let { baseStep.set(REFER_COUNT, it) }
             return baseStep
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.`in`(versions)))
                 .execute()
