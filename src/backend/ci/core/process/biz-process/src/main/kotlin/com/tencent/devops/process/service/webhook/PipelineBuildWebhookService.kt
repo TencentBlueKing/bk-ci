@@ -45,10 +45,8 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.trace.TraceTag
@@ -353,8 +351,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
             ?: pipelineInfo.lastModifyUser
         val container = model.getTriggerContainer()
-        // 解析变量
-        val variables = getDefaultParam(container.params)
+        // 解析变量，兼容代码库分支等级联参数
+        val variables = pipelineRepositoryService.getTriggerParams(container).toMutableMap()
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -368,7 +366,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return@elements
             }
             val webHookParams = WebhookElementParamsRegistrar.getService(element)
-                .getWebhookElementParams(element, PipelineVarUtil.fillVariableMap(variables)) ?: return@elements
+                .getWebhookElementParams(element, variables) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -555,8 +553,8 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         val userId = pipelineInfo.lastModifyUser
         val container = model.getTriggerContainer()
-        // 解析变量
-        val variables = getDefaultParam(container.params)
+        // 解析变量，兼容代码库分支等级联参数
+        val variables = pipelineRepositoryService.getTriggerParams(container).toMutableMap()
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -569,7 +567,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         taskIds.forEach { taskId ->
             val triggerElement = triggerElementMap[taskId] ?: return@forEach
             val webHookParams = WebhookElementParamsRegistrar.getService(triggerElement)
-                .getWebhookElementParams(triggerElement, PipelineVarUtil.fillVariableMap(variables)) ?: return@forEach
+                .getWebhookElementParams(triggerElement, variables) ?: return@forEach
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.repositoryHashId.isNullOrBlank() && repositoryConfig.repositoryName.isNullOrBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -796,19 +794,5 @@ class PipelineBuildWebhookService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.error("save auth user metrics", ignored)
         }
-    }
-
-    private fun getDefaultParam(params: List<BuildFormProperty>): MutableMap<String, String> {
-        val variables = mutableMapOf<String, String>()
-        params.forEach { param ->
-            variables[param.id] = if (CascadePropertyUtils.supportCascadeParam(param.type) &&
-                param.defaultValue is Map<*, *>
-            ) {
-                JsonUtil.toJson(param.defaultValue, false)
-            } else {
-                param.defaultValue.toString()
-            }
-        }
-        return variables
     }
 }

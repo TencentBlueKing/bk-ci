@@ -37,12 +37,12 @@ import org.springframework.stereotype.Component
 @Component
 class AiCreativeBotConfig {
 
-    @Value("\${esb.appCode:bkci}")
-    val appCode: String = "bkci"
+    @Value("\${esb.appCode:coming_soon}")
+    val appCode: String = ""
 
-    @Value("\${esb.appSecret}")
+    @Value("\${esb.appSecret:coming_soon}")
     val appSecret: String = ""
 
-    @Value("\${aiCreativeBot.url}")
+    @Value("\${aiCreativeBot.url:coming_soon}")
     val apiUrl: String = ""
 }
