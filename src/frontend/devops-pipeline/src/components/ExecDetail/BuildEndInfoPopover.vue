@@ -190,7 +190,11 @@
                             class="position-fail-detail"
                         >
                             <template v-if="buildEndInfo.endType === BUILD_END_TYPE.FAIL_EXEC">
-                                <span class="position-fail-detail-accent">{{ $t('details.errorCode', [row.item.errorCode]) }}</span>
+                                <span class="position-fail-detail-accent">{{ $t('details.errorCode', [row.item.errorCode]) }}<template v-if="row.item.reason">：</template></span>
+                                <span
+                                    v-if="row.item.reason"
+                                    class="position-fail-detail-reason"
+                                >{{ row.item.reason }}</span>
                             </template>
                             <template v-else>
                                 <span

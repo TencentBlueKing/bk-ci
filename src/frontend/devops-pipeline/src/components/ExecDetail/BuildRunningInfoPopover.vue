@@ -23,7 +23,7 @@
                     v-bk-overflow-tips
                     class="bri-subtitle"
                 >
-                    {{ $t('details.queueConcurrencyHint') }}
+                    {{ $t('details.queueConcurrencyHint', [queueDetail.maxConcurrency]) }}
                 </span>
             </div>
 

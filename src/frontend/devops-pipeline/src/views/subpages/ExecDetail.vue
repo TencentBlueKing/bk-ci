@@ -27,7 +27,7 @@
                         :build-end-info="execDetail.buildEndInfo"
                         :start-time="buildEndStartTime"
                         :trigger-user="startUser"
-                        :trigger-type-desc="execDetail.buildMsg"
+                        :trigger-type-desc="triggerType"
                         @highlight="handleBuildEndPositionHighlight"
                         @locateLog="handleBuildEndPositionLocate"
                     >
@@ -498,6 +498,11 @@
             },
             startUser () {
                 return this.recordList.find(i => i.id === this.executeCount)?.user || ''
+            },
+            triggerType () {
+                return this.execDetail?.trigger
+                    ? this.$t('details.triggerTypeDesc', [this.execDetail.trigger])
+                    : ''
             },
             buildEndStartTime () {
                 return this.execDetail?.startTime || this.execDetail?.queueTime
