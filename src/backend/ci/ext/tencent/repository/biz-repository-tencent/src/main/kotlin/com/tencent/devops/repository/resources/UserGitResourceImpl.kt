@@ -63,10 +63,6 @@ class UserGitResourceImpl @Autowired constructor(
         )
     }
 
-    override fun deleteToken(userId: String): Result<Int> {
-        return Result(gitOauthService.deleteToken(userId))
-    }
-
     override fun getProject(
         userId: String,
         projectId: String,

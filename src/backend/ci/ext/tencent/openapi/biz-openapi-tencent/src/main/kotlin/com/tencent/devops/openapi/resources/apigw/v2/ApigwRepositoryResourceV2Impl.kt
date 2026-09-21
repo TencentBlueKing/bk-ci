@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v2
 
-import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -38,7 +37,6 @@ import com.tencent.devops.openapi.api.apigw.v2.ApigwRepositoryResourceV2
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import org.apache.commons.lang3.RandomStringUtils
@@ -89,19 +87,6 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         )
         val authParamJsonStr = URLEncoder.encode(JsonUtil.toJson(authParams), "UTF-8")
         return client.get(ServiceGitRepositoryResource::class).getAuthUrl(authParamJsonStr)
-    }
-
-    override fun gitGet(
-        appCode: String?,
-        apigwType: String?,
-        userId: String
-    ): Result<String?> {
-        logger.info("gitGet userId[$userId]")
-        val gitToken = client.get(ServiceOauthResource::class).gitGet(userId)
-        if (gitToken?.data == null) {
-            return Result(HTTP_404)
-        }
-        return Result(gitToken.data!!.accessToken)
     }
 
     companion object {

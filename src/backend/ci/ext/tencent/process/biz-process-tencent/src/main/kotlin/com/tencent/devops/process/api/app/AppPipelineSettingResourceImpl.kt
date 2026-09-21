@@ -52,7 +52,7 @@ class AppPipelineSettingResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             setting = setting,
-            checkPermission = false).pipelineId
+            checkPermission = true).pipelineId
         )
     }
 }
