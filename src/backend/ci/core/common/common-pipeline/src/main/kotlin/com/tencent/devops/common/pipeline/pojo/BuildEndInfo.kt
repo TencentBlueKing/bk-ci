@@ -108,10 +108,13 @@ data class BuildEndInfo(
     }
 
     /**
-     * 读取侧兜底：落库大类与最终状态不同类时（如取消链路先写了 CANCEL_USER，
-     * 暂停插件随后被收成失败），改写成与状态同类的详情，避免「状态：失败 / 卡片：用户取消」。
+     * 读取侧兜底：
+     * 1. 大类与最终状态同类时，只刷新位置状态/补齐原因，不改写构建级标签
+     *    （Job 超时取消卡片里插件可能从 PAUSE 落到 CANCELED/FAILED）。
+     * 2. 大类错配时（取消链路先写了 CANCEL_USER，暂停插件随后被收成失败），
+     *    改写成与状态同类的详情，避免「状态：失败 / 卡片：用户取消」。
      *
-     * 失败类优先采用模型里插件的当前终态（FAILED / REVIEW_ABORT 等），避免卡片仍展示取消时的 PAUSE。
+     * 失败类优先采用模型里插件的当前终态（FAILED / REVIEW_ABORT 等）。
      * 成功/取消无法从错误的落库安全还原，返回 null 交给读取侧重新合成。
      */
     fun alignedTo(
@@ -119,18 +122,16 @@ data class BuildEndInfo(
         modelFailPositions: List<EndPosition> = emptyList(),
         latestStatusAtEnd: (EndPosition) -> String? = { null }
     ): BuildEndInfo? {
-        if (matchesBuildStatus(status)) return this
+        if (matchesBuildStatus(status)) {
+            return enrichMatched(status, modelFailPositions, latestStatusAtEnd)
+        }
         return when (BuildEndCategory.of(status)) {
             BuildEndCategory.FAIL -> {
                 // 用户取消文案不能出现在失败卡片上；系统取消/父流水线级联的成因（心跳失联、Job超时）仍可保留
                 val keepCause = endType == BuildEndType.CANCEL_SYSTEM ||
                     endType == BuildEndType.CANCEL_PARENT_PIPELINE
                 val failPositions = modelFailPositions.ifEmpty {
-                    positions.orEmpty().map { pos ->
-                        val latest = latestStatusAtEnd(pos)
-                        if (latest.isNullOrBlank() || latest == pos.statusAtEnd) pos
-                        else pos.copy(statusAtEnd = latest)
-                    }
+                    positions.orEmpty().map { it.refreshStatusAtEnd(latestStatusAtEnd) }
                 }
                 BuildEndInfo(
                     endType = BuildEndPositionCollector.aggregateFailEndType(failPositions),
@@ -147,6 +148,71 @@ data class BuildEndInfo(
             )
             else -> null
         }
+    }
+
+    /**
+     * 大类已经对上时只做位置级修正：刷新 statusAtEnd、补齐模型里能推断的原因，
+     * 并把执行前暂停被终止这类模型有、落库没有的位置补进卡片。
+     */
+    private fun enrichMatched(
+        status: BuildStatus,
+        modelFailPositions: List<EndPosition>,
+        latestStatusAtEnd: (EndPosition) -> String?
+    ): BuildEndInfo {
+        val current = positions.orEmpty()
+        val refreshed = current.map { pos ->
+            pos.refreshStatusAtEnd(latestStatusAtEnd).fillMissingReason(modelFailPositions)
+        }
+        val extras = if (BuildEndCategory.of(status) == BuildEndCategory.FAIL) {
+            val existingIds = refreshed.mapNotNull { it.identity() }.toSet()
+            modelFailPositions.filter { pos ->
+                val id = pos.identity() ?: return@filter false
+                id !in existingIds && pos.shouldAppendWhenMatched()
+            }
+        } else {
+            emptyList()
+        }
+        val merged = refreshed + extras
+        if (merged == current) return this
+        val nextType = if (extras.isEmpty() || endType.category != BuildEndCategory.FAIL) {
+            endType
+        } else {
+            BuildEndPositionCollector.aggregateFailEndType(merged)
+        }
+        return copy(endType = nextType).withPositions(merged)
+    }
+
+    private fun EndPosition.refreshStatusAtEnd(latestStatusAtEnd: (EndPosition) -> String?): EndPosition {
+        val latest = latestStatusAtEnd(this)
+        return if (latest.isNullOrBlank() || latest == statusAtEnd) this
+        else copy(statusAtEnd = latest)
+    }
+
+    private fun EndPosition.fillMissingReason(modelFailPositions: List<EndPosition>): EndPosition {
+        if (!reasonCode.isNullOrBlank() || !reason.isNullOrBlank()) return this
+        val fromModel = modelFailPositions.firstOrNull { it.identity() != null && it.identity() == identity() }
+            ?: return this
+        if (fromModel.reasonCode.isNullOrBlank() && fromModel.reason.isNullOrBlank()) return this
+        return copy(
+            endType = endType ?: fromModel.endType,
+            reason = fromModel.reason,
+            reasonCode = fromModel.reasonCode,
+            reasonParams = fromModel.reasonParams
+        )
+    }
+
+    private fun EndPosition.identity(): String? {
+        return taskId?.takeIf { it.isNotBlank() }
+            ?: containerId.takeIf { it.isNotBlank() && taskId.isNullOrBlank() }?.let { "job:$it" }
+    }
+
+    /**
+     * 已有失败卡片只补「模型能确定、落库时漏掉」的位置：
+     * 执行前暂停被终止、人工审核驳回。不把 FastKill 连带失败插件再塞进来。
+     */
+    private fun EndPosition.shouldAppendWhenMatched(): Boolean {
+        return endType == BuildEndType.FAIL_REVIEW ||
+            reasonCode == BuildEndPositionCollector.REASON_PAUSE_TERMINATED
     }
 
     companion object {

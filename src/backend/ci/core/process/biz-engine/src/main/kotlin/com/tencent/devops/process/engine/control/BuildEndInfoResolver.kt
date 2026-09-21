@@ -260,6 +260,7 @@ class BuildEndInfoResolver @Autowired constructor(
                 BuildEndType.FAIL_FAST_KILL -> position.withFastKillReason(fastKillCauseJobs[position.stageId])
                 BuildEndType.TIMEOUT_STEP -> position.withStepTimeoutReason(context)
                 BuildEndType.TIMEOUT_JOB -> position.withJobTimeoutReason(index)
+                BuildEndType.FAIL_EXEC -> position.withExecFailReason(context, index)
                 else -> position
             }
         }
@@ -320,6 +321,37 @@ class BuildEndInfoResolver @Autowired constructor(
             reasonCode = ProcessMessageCode.BK_BUILD_END_TIMEOUT_STEP,
             reasonParams = listOf(minutes.toString())
         )
+    }
+
+    /**
+     * 执行失败位置若还没有原因：优先识别执行前暂停被终止，其次复用插件错误信息，
+     * 再看所属 Job 是否超时，最后给兜底文案，避免卡片上只剩插件名。
+     */
+    private fun EndPosition.withExecFailReason(
+        context: BuildEndContext,
+        index: ModelPositionIndex
+    ): EndPosition {
+        if (!reasonCode.isNullOrBlank() || !reason.isNullOrBlank()) return this
+        val element = findModelElement(index)
+        if (element?.additionalOptions?.pauseBeforeExec == true) {
+            return copy(reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_PAUSE_TERMINATED)
+        }
+        val container = index.locateContainer(containerId)?.container
+        if (container != null && BuildStatus.parse(container.status).isTimeout()) {
+            return withJobTimeoutReason(index)
+        }
+        val message = errorMsg?.takeIf { it.isNotBlank() }
+            ?: element?.errorMsg?.takeIf { it.isNotBlank() }
+            ?: context.buildTasks.firstOrNull { it.taskId == taskId }?.errorMsg?.takeIf { it.isNotBlank() }
+        if (!message.isNullOrBlank()) {
+            return copy(reason = message.take(REASON_MAX_LENGTH))
+        }
+        return copy(reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_PLUGIN)
+    }
+
+    private fun EndPosition.findModelElement(index: ModelPositionIndex): Element? {
+        val id = taskId?.takeIf { it.isNotBlank() } ?: return null
+        return index.locateContainer(containerId)?.container?.elements?.firstOrNull { it.id == id }
     }
 
     /**
@@ -478,7 +510,7 @@ class BuildEndInfoResolver @Autowired constructor(
             if (container.matrixGroupFlag == true) return@mapNotNull null
             val status = BuildStatus.parse(container.status)
             val started = location.containerId in startedContainerIds
-            val abortReason = if (status.isFailure() && !status.isTimeout()) {
+            val abortReason = if ((status.isFailure() || status.isCancel()) && !status.isTimeout()) {
                 container.resolveJobAbortReason(started)
             } else {
                 null
@@ -526,6 +558,7 @@ class BuildEndInfoResolver @Autowired constructor(
                 if (!mutexAbort) stagesWithCause.add(stageId)
                 BuildEndType.FAIL_EXEC
             }
+            status.isCancel() && mutexAbort -> BuildEndType.FAIL_EXEC
             status.isCancel() && inFastKillStage -> BuildEndType.FAIL_FAST_KILL
             else -> null
         }

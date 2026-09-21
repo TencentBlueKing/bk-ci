@@ -28,11 +28,14 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import org.junit.jupiter.api.Assertions
@@ -102,5 +105,133 @@ class BuildEndPositionCollectorTest {
         Assertions.assertEquals(BuildStatus.REVIEW_ABORT.name, positions[1].statusAtEnd)
         Assertions.assertEquals(BuildEndType.FAIL_REVIEW, positions[1].endType)
         Assertions.assertEquals(BuildEndType.FAIL_MULTIPLE, BuildEndPositionCollector.aggregateFailEndType(positions))
+        Assertions.assertEquals(BuildEndPositionCollector.REASON_PLUGIN_FAIL, positions[0].reasonCode)
+    }
+
+    @Test
+    fun `collect pause terminated canceled plugin with reason`() {
+        val model = Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-1",
+                    containers = listOf(
+                        NormalContainer(
+                            id = "1",
+                            containerId = "1",
+                            name = "构建环境-Linux",
+                            status = BuildStatus.FAILED.name,
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    id = "e-pause",
+                                    name = "0806插件",
+                                    status = BuildStatus.CANCELED.name,
+                                    scriptType = BuildScriptType.SHELL,
+                                    script = "echo",
+                                    continueNoneZero = false,
+                                    additionalOptions = ElementAdditionalOptions(pauseBeforeExec = true)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val positions = BuildEndPositionCollector.collectFailPositions(model)
+
+        Assertions.assertEquals(1, positions.size)
+        Assertions.assertEquals(BuildStatus.CANCELED.name, positions[0].statusAtEnd)
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, positions[0].endType)
+        Assertions.assertEquals(BuildEndPositionCollector.REASON_PAUSE_TERMINATED, positions[0].reasonCode)
+    }
+
+    @Test
+    fun `collect mutex canceled job as fail position`() {
+        val model = Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-1",
+                    containers = listOf(
+                        NormalContainer(
+                            id = "1",
+                            containerId = "1",
+                            name = "1231342342",
+                            status = BuildStatus.CANCELED.name,
+                            mutexGroup = MutexGroup(
+                                enable = true,
+                                mutexGroupName = "123",
+                                queueEnable = false
+                            ),
+                            elements = emptyList()
+                        )
+                    )
+                )
+            )
+        )
+
+        val positions = BuildEndPositionCollector.collectFailPositions(model)
+
+        Assertions.assertEquals(1, positions.size)
+        Assertions.assertEquals("1-1", positions[0].position)
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, positions[0].endType)
+        Assertions.assertEquals(BuildEndPositionCollector.REASON_MUTEX_QUEUE_DISABLED, positions[0].reasonCode)
+        Assertions.assertEquals(listOf("123"), positions[0].reasonParams)
+    }
+
+    @Test
+    fun `collect cancel positions include pause plugin`() {
+        val model = Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-1",
+                    containers = listOf(
+                        NormalContainer(
+                            id = "1",
+                            containerId = "1",
+                            name = "构建环境-Linux",
+                            status = BuildStatus.CANCELED.name,
+                            jobControlOption = JobControlOption(timeout = 1),
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    id = "e-pause",
+                                    name = "0806插件",
+                                    status = BuildStatus.CANCELED.name,
+                                    scriptType = BuildScriptType.SHELL,
+                                    script = "echo",
+                                    continueNoneZero = false,
+                                    additionalOptions = ElementAdditionalOptions(pauseBeforeExec = true)
+                                ),
+                                LinuxScriptElement(
+                                    id = "e-unexec",
+                                    name = "Bash",
+                                    status = BuildStatus.UNEXEC.name,
+                                    scriptType = BuildScriptType.SHELL,
+                                    script = "echo",
+                                    continueNoneZero = false
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val positions = BuildEndPositionCollector.collectCancelPositions(model)
+
+        Assertions.assertEquals(1, positions.size)
+        Assertions.assertEquals("e-pause", positions[0].taskId)
+        Assertions.assertEquals(BuildEndPositionCollector.REASON_PAUSE_TERMINATED, positions[0].reasonCode)
     }
 }

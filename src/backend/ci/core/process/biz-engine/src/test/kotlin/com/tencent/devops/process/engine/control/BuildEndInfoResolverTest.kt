@@ -37,7 +37,11 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
@@ -213,6 +217,60 @@ class BuildEndInfoResolverTest {
     }
 
     @Test
+    fun `given mutex job canceled without queue then job level position is filled`() {
+        val context = genContext(
+            model = genModel(
+                genContainer(
+                    containerId = "1",
+                    name = "job-B",
+                    status = BuildStatus.CANCELED,
+                    mutexGroup = MutexGroup(enable = true, mutexGroupName = "lock-123", queueEnable = false)
+                )
+            ),
+            buildStatus = BuildStatus.FAILED
+        )
+
+        val position = resolver.resolve(context)!!.positions!!.single()
+
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, position.endType)
+        Assertions.assertEquals(
+            ProcessMessageCode.BK_BUILD_END_FAIL_MUTEX_QUEUE_DISABLED,
+            position.reasonCode
+        )
+        Assertions.assertEquals(listOf("lock-123"), position.reasonParams)
+    }
+
+    @Test
+    fun `given pause plugin failed without error then pause reason is filled`() {
+        val context = genContext(
+            model = genModel(
+                genContainer(
+                    containerId = "1",
+                    name = "job-A",
+                    status = BuildStatus.FAILED,
+                    elements = listOf(
+                        LinuxScriptElement(
+                            id = "e-0806",
+                            name = "0806插件",
+                            status = BuildStatus.FAILED.name,
+                            scriptType = BuildScriptType.SHELL,
+                            script = "echo",
+                            continueNoneZero = false,
+                            additionalOptions = ElementAdditionalOptions(pauseBeforeExec = true)
+                        )
+                    )
+                )
+            ),
+            buildStatus = BuildStatus.FAILED
+        )
+
+        val position = resolver.resolve(context)!!.positions!!.single()
+
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, position.endType)
+        Assertions.assertEquals(ProcessMessageCode.BK_BUILD_END_FAIL_PAUSE_TERMINATED, position.reasonCode)
+    }
+
+    @Test
     fun `given canceled job in stage without fast kill then no position is filled`() {
         val context = genContext(
             model = genModel(genContainer(containerId = "1", name = "job-A", status = BuildStatus.CANCELED)),
@@ -263,7 +321,8 @@ class BuildEndInfoResolverTest {
         containerId: String,
         name: String,
         status: BuildStatus,
-        mutexGroup: MutexGroup? = null
+        mutexGroup: MutexGroup? = null,
+        elements: List<Element> = emptyList()
     ) = NormalContainer(
         id = containerId,
         containerId = containerId,
@@ -271,7 +330,8 @@ class BuildEndInfoResolverTest {
         name = name,
         status = status.name,
         jobId = "job_$containerId",
-        mutexGroup = mutexGroup
+        mutexGroup = mutexGroup,
+        elements = elements
     )
 
     private fun genErrorInfo(containerId: String, errorCode: Int) = ErrorInfo(

@@ -979,6 +979,10 @@ object ProcessMessageCode {
     const val BK_BUILD_END_FAIL_MUTEX_QUEUE = "bkBuildEndFailMutexQueue"
     // Job 异常结束，未产生插件错误信息（Job 失败但归不出具体成因时的兜底文案）
     const val BK_BUILD_END_FAIL_JOB_ABORTED = "bkBuildEndFailJobAborted"
+    // 暂停执行期间被终止（执行前暂停后选择终止，插件常无 errorMsg）
+    const val BK_BUILD_END_FAIL_PAUSE_TERMINATED = "bkBuildEndFailPauseTerminated"
+    // 步骤执行失败（插件失败但未留下错误信息时的兜底文案）
+    const val BK_BUILD_END_FAIL_PLUGIN = "bkBuildEndFailPlugin"
     // 质量红线未达标(无指标详情时的兜底文案)
     const val BK_BUILD_END_FAIL_QUALITY = "bkBuildEndFailQuality"
     // {0} 超过阈值 {1}（阈值为上限的指标，如代码坏味道数）

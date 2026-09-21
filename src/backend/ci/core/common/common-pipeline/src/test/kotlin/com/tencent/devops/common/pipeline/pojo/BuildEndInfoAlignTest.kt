@@ -163,4 +163,75 @@ class BuildEndInfoAlignTest {
 
         Assertions.assertSame(stored, stored.alignedTo(BuildStatus.FAILED))
     }
+
+    @Test
+    fun `given matching cancel info then refresh stale pause status`() {
+        val stored = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemJobExecTimeout")
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-1-2",
+                        componentPath = "stage-1/构建环境-Linux/0806插件",
+                        statusAtEnd = BuildStatus.PAUSE.name,
+                        stageId = "stage-2",
+                        containerId = "1",
+                        taskId = "e-0806"
+                    )
+                )
+            )
+
+        val aligned = stored.alignedTo(BuildStatus.CANCELED) { BuildStatus.CANCELED.name }
+
+        Assertions.assertEquals(BuildEndType.CANCEL_SYSTEM, aligned!!.endType)
+        Assertions.assertEquals("bkBuildCancelSystemJobExecTimeout", aligned.reasonCode)
+        Assertions.assertEquals(BuildStatus.CANCELED.name, aligned.positions!!.single().statusAtEnd)
+    }
+
+    @Test
+    fun `given matching fail info then fill missing reason and pause position`() {
+        val stored = BuildEndInfo.of(endType = BuildEndType.FAIL_EXEC)
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-1-2",
+                        componentPath = "stage-1/构建环境-Linux/0806插件",
+                        statusAtEnd = BuildStatus.FAILED.name,
+                        endType = BuildEndType.FAIL_EXEC,
+                        stageId = "stage-2",
+                        containerId = "1",
+                        taskId = "e-timeout"
+                    )
+                )
+            )
+        val modelPositions = listOf(
+            EndPosition(
+                position = "1-1-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.FAILED.name,
+                endType = BuildEndType.TIMEOUT_JOB,
+                reasonCode = "bkBuildCancelSystemJobExecTimeout",
+                reasonParams = listOf("1"),
+                stageId = "stage-2",
+                containerId = "1",
+                taskId = "e-timeout"
+            ),
+            EndPosition(
+                position = "1-1-1",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                endType = BuildEndType.FAIL_EXEC,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "1",
+                taskId = "e-pause"
+            )
+        )
+
+        val aligned = stored.alignedTo(BuildStatus.FAILED, modelFailPositions = modelPositions)
+
+        Assertions.assertEquals(2, aligned!!.positionCount)
+        Assertions.assertEquals("bkBuildCancelSystemJobExecTimeout", aligned.positions!![0].reasonCode)
+        Assertions.assertEquals("e-pause", aligned.positions!![1].taskId)
+        Assertions.assertEquals("bkBuildEndFailPauseTerminated", aligned.positions!![1].reasonCode)
+    }
 }
