@@ -207,6 +207,8 @@
                             editable: !this.instanceFromTemplate,
                             failSubscriptionList: this.getPipelineSubscriptions('fail'),
                             successSubscriptionList: this.getPipelineSubscriptions('success'),
+                            cancelSubscriptionList: this.getPipelineSubscriptions('cancel'),
+                            publishSubscriptionList: this.getPipelineSubscriptions('publish'),
                             updateSubscription: (name, value) => {
                                 this.setPipelineEditing(true)
                                 this.updatePipelineSetting({

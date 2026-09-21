@@ -306,6 +306,7 @@
       "wechatGroupMarkdown": "Markdown形式を使用",
       "noticeGroupPlaceholder": "通知グループを入力（カンマ区切り）",
       "noticeGroupTip": "複数の通知グループはカンマで区切ってください",
+      "emptyNoticeGroup": "通知グループが空です",
       "noticeUserPlaceholder": "通知ユーザーを入力（カンマ区切り）",
       "noticeUserTip": "複数の通知ユーザーはカンマで区切ってください",
       "noticeContentPlaceholder": "通知内容を入力（変数を使用できます）",
