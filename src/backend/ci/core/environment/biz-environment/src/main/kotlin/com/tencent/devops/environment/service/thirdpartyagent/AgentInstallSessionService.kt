@@ -407,6 +407,7 @@ class AgentInstallSessionService(
     }
 
     private fun resolveTags(projectId: String, request: AgentInstallSessionRequest): List<AgentInstallTagSnapshot> {
+        if (request.tags.any { it.tagKeyId <= 0 || it.tagValueId <= 0 }) invalidParam("internal tags")
         val availableTags = nodeTagService.fetchTagAndNodeCount(projectId, createMod = true)
         val tagLookup = availableTags.flatMap { tag ->
             tag.tagValues.map { value ->
