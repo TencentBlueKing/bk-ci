@@ -5,6 +5,7 @@ import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
 import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.environment.pojo.enums.EnvNodeType
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvTag
 import com.tencent.devops.model.environment.tables.TNodeTagKey
@@ -109,7 +110,8 @@ class EnvTagDao {
      */
     fun fetchDynamicEnvTagRules(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        envType: EnvType
     ): List<DynamicEnvTagRule> {
         val env = TEnv.T_ENV
         val envTag = TEnvTag.T_ENV_TAG
@@ -127,6 +129,7 @@ class EnvTagDao {
             )
             .where(envTag.PROJECT_ID.eq(projectId))
             .and(env.PROJECT_ID.eq(projectId))
+            .and(env.ENV_TYPE.eq(envType.name))
             .and(env.ENV_NODE_TYPE.eq(EnvNodeType.TAG.name))
             .and(env.IS_DELETED.eq(false))
             .fetch()
