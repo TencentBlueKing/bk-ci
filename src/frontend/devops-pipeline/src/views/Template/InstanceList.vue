@@ -536,7 +536,7 @@
                 version: proxy.$route.params.version,
                 type: 'upgrade'
             }
-        })
+        }).catch(() => {})
     }
 
     function getErrorType (row) {
