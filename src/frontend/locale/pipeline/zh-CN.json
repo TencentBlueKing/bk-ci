@@ -984,7 +984,6 @@
     "runningAbout": "已运行约 {0}",
     "waitedAbout": "已等待 {0}",
     "hasRunning": "已运行",
-    "triggerMeta": "{0} {1}触发",
     "triggerTypeDesc": "{0}触发",
     "runningInfoLocateFailed": "未找到对应的位置",
     "stageGateType": "阶段准入",

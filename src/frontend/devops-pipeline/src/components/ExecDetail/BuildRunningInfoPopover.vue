@@ -310,8 +310,7 @@
             triggerMetaText () {
                 const user = this.buildRunningInfo?.triggerUser
                 const desc = this.buildRunningInfo?.triggerDesc
-                if (user && desc) return this.$t('details.triggerMeta', [user, desc])
-                return user || desc || ''
+                return [user, desc].filter(Boolean).join(' ')
             },
             showOccupyingSection () {
                 return this.isQueueCategory && this.occupyingItems.length > 0

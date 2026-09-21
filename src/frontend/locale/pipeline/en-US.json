@@ -986,7 +986,6 @@
     "runningAbout": "running for about {0}",
     "waitedAbout": "waited for about {0}",
     "hasRunning": "Running for",
-    "triggerMeta": "{0} {1} triggered",
     "triggerTypeDesc": "{0} triggered",
     "runningInfoLocateFailed": "Target position not found",
     "stageGateType": "Stage gate",

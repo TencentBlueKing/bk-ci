@@ -981,7 +981,6 @@
     "runningAbout": "約 {0} 実行中",
     "waitedAbout": "約 {0} 待機",
     "hasRunning": "実行時間",
-    "triggerMeta": "{0} {1}トリガー",
     "triggerTypeDesc": "{0}トリガー",
     "runningInfoLocateFailed": "対応する位置が見つかりません",
     "stageGateType": "ステージゲート",
