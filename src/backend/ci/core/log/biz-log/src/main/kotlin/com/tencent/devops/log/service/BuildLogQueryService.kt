@@ -27,8 +27,8 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.log.constant.LogMessageCode
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -42,7 +42,6 @@ import com.tencent.devops.common.log.pojo.QueryLogsText
 import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
@@ -700,8 +699,7 @@ class BuildLogQueryService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId,
-            permission = permission
+            buildId = buildId
         )
         val userLogPermissionCheckStrategy =
             UserLogPermissionCheckStrategyFactory.createUserLogPermissionCheckStrategy(archiveFlag)
@@ -717,8 +715,7 @@ class BuildLogQueryService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        permission: AuthPermission
+        buildId: String
     ) {
         val owner = logProjectIdResolver.find(buildId)
         if (owner == null) {
@@ -741,16 +738,7 @@ class BuildLogQueryService @Autowired constructor(
             owner.projectId,
             owner.pipelineId
         )
-        // 与无权限使用同一错误码，避免把真实归属泄露给越权调用方
-        throw ErrorCodeException(
-            errorCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-            params = arrayOf(
-                userId,
-                projectId,
-                permission.getI18n(I18nUtil.getLanguage()),
-                pipelineId
-            )
-        )
+        throw ErrorCodeException(errorCode = LogMessageCode.LOG_DATA_ABNORMAL_NO_VIEW_PERMISSION)
     }
 
     private fun logStatusSuccess(logStatus: Int): Boolean {
