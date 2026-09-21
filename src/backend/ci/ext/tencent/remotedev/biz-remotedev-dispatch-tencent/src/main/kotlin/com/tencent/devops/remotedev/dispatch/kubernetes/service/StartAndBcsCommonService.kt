@@ -113,6 +113,7 @@ class StartAndBcsCommonService @Autowired constructor(
             CREATE -> {
                 fixVm(task, taskStatus)
             }
+            CLONE_VM -> cloneCreateNewVm(task, taskStatus)
             REBUILD -> rebuildWorkspace(taskStatus, task)
             else -> {}
         }
