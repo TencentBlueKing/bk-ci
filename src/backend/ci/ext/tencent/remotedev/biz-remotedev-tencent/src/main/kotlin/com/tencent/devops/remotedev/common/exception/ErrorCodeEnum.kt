@@ -251,6 +251,11 @@ enum class ErrorCodeEnum(
         errorCode = "2132058",
         formatErrorMessage = "workspace {0} is in restricted zone {1}, this operation is not allowed"
     ),
+    WORKSPACE_HAS_DIGITAL_AVATAR(
+        errorType = ErrorType.USER,
+        errorCode = "2132059",
+        formatErrorMessage = "workspace {0} already has a registered digital avatar, owner cannot be changed"
+    ),
     ;
 
     fun getErrorMessage(): String {

@@ -48,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncUpdateHostMonitor
+import com.tencent.devops.remotedev.service.CoffeeAIService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import org.jooq.DSLContext
@@ -66,7 +67,8 @@ class DeliverControl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val gitProxyTGitService: GitProxyTGitService,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val streamBridge: StreamBridge
+    private val streamBridge: StreamBridge,
+    private val coffeeAIService: CoffeeAIService
 ) {
 
     companion object {
@@ -149,6 +151,16 @@ class DeliverControl @Autowired constructor(
             }
 
             existOwner != null && assign2Owner?.userId != existOwner.sharedUser -> {
+                if (coffeeAIService.hasActiveDigitalAvatar(workspaceName)) {
+                    logger.warn(
+                        "assignUser2Workspace blocked by digital avatar|" +
+                            "$userId|$workspaceName|${existOwner.sharedUser}|${assign2Owner?.userId}"
+                    )
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_HAS_DIGITAL_AVATAR.errorCode,
+                        params = arrayOf(workspaceName)
+                    )
+                }
                 workspaceCommon.unShareWorkspace(
                     workspaceName = workspaceName,
                     operator = userId,
