@@ -981,5 +981,6 @@
   "请选择可见范围": "Please select the visible range",
   "共X个": "Total {0}",
   "项目": "Project",
+  "删除时将清理数据，包括工蜂代码库。删除后不可恢复！": "When deleting, data will be cleaned up, including the Gitee code repository. After deletion, it cannot be recovered!",
   "组织": "Organization"
 }

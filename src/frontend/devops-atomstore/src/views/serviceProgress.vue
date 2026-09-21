@@ -244,7 +244,7 @@
                 return [
                     { name: this.$t('store.工作台') },
                     { name: this.$t('store.微扩展'), to: { name: 'serviceWork' } },
-                    { name: this.serviceDetail.serviceCode, to: { name: 'overView', params: { code: this.serviceDetail.serviceCode, type: 'service' } } },
+                    { name: this.serviceDetail.serviceCode, to: { name: 'statisticData', params: { code: this.serviceDetail.serviceCode, type: 'service' } } },
                     { name: this.$t('store.上架/升级微扩展') }
                 ]
             }
