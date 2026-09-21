@@ -236,12 +236,7 @@ object LoggerService {
                 }
                 val now = System.currentTimeMillis()
                 // 达到当前上报条数或距上次保存超过刷新间隔
-                if (size > 0 && (
-                        size >= uploadBatchSize.get() ||
-                            now - lastSaveTime > LoggerUploadBatch.FLUSH_INTERVAL_MS ||
-                            isUploadDisabled()
-                        )
-                ) {
+                if (shouldFlushPendingLogs(size = size, now = now, lastSaveTime = lastSaveTime)) {
                     val sent = flush()
                     lastSaveTime = now
                     currentTaskLineNo += sent
@@ -543,6 +538,19 @@ object LoggerService {
     private fun addLog(message: LogMessage) = enqueueLog(message)
 
     private fun isUploadDisabled(): Boolean = LogStorageMode.LOCAL == AgentEnv.getLogMode()
+
+    private fun shouldFlushPendingLogs(size: Int, now: Long, lastSaveTime: Long): Boolean {
+        if (size <= 0) {
+            return false
+        }
+        if (size >= uploadBatchSize.get()) {
+            return true
+        }
+        if (now - lastSaveTime > LoggerUploadBatch.FLUSH_INTERVAL_MS) {
+            return true
+        }
+        return isUploadDisabled()
+    }
 
     private fun shouldSkipUpload(tag: String): Boolean {
         if (isUploadDisabled()) {
