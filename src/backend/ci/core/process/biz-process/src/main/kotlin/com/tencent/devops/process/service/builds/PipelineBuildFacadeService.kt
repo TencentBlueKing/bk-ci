@@ -2835,8 +2835,8 @@ class PipelineBuildFacadeService(
                         containerHashId = startUpVMTask.containerHashId,
                         executeCount = startUpVMTask.executeCount ?: 1,
                         jobId = null, stepId = startUpVMTask.stepId,
-                        projectId = buildInfo.projectId,
-                        pipelineId = buildInfo.pipelineId
+                        projectId = projectCode,
+                        pipelineId = pipelineId
                     )
                 }
                 return Pair(startUpVMTask?.starter, false)
