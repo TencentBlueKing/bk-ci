@@ -51,7 +51,7 @@ class WorkspaceXlsxExportService @Autowired constructor(
         data: ProjectWorkspaceFetchData
     ): Response {
         val pageNotNull = data.page ?: 1
-        val pageSizeNotNull = data.pageSize ?: 6666
+        val pageSizeNotNull = data.pageSize ?: 66666
         val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null
 
         val search = with(data) {
