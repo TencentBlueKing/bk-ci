@@ -144,7 +144,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         } catch (ignored: Throwable) {
             val errorMsg = ignored.message
             logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doPreMigrationBus fail", ignored)
-            cleanupMigrationState(pipelineId)
+            cleanupMigrationState(projectId, pipelineId)
             sendMigrateProcessDataFailMsg(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -182,12 +182,17 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             )
             throw ignored
         } finally {
-            cleanupMigrationState(pipelineId)
+            cleanupMigrationState(projectId, pipelineId)
         }
     }
 
-    private fun cleanupMigrationState(pipelineId: String) {
-        // 从正在迁移的流水线集合移除该流水线
+    private fun cleanupMigrationState(projectId: String, pipelineId: String) {
+        // 从项目下正在迁移的流水线集合移除该流水线，集合被清空后项目的归档标识随之消失
+        redisOperation.removeSetMember(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name, projectId),
+            item = pipelineId
+        )
+        // 兼容灰度期读取全局集合的老实例，待全部实例升级后可移除
         redisOperation.removeSetMember(
             key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
             item = pipelineId
@@ -195,6 +200,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         // 清除该流水线的迁移状态缓存，立即生效
         ApiAccessLimitCacheManager.invalidateMigratingPipelineCache(
             moduleCode = SystemModuleEnum.PROCESS.name,
+            projectId = projectId,
             pipelineId = pipelineId
         )
         // 解锁流水线,允许用户发起新构建等操作
@@ -392,7 +398,12 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     )
                 )
             }
-        // 把流水线加入正在迁移流水线集合中
+        // 把流水线加入项目下正在迁移的流水线集合中，该集合非空即代表项目存在归档标识
+        redisOperation.addSetValue(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name, projectId),
+            item = pipelineId
+        )
+        // 兼容灰度期读取全局集合的老实例，待全部实例升级后可移除
         redisOperation.addSetValue(
             key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
             item = pipelineId
@@ -400,6 +411,7 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         // 清除该流水线的迁移状态缓存，立即生效
         ApiAccessLimitCacheManager.invalidateMigratingPipelineCache(
             moduleCode = SystemModuleEnum.PROCESS.name,
+            projectId = projectId,
             pipelineId = pipelineId
         )
         // 锁定流水线,不允许用户发起新构建等操作

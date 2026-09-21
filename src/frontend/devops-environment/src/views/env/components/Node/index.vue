@@ -169,7 +169,7 @@
                 width="200"
             />
             <bk-table-column
-                v-if="!isCreateResType"
+                v-if="!isCreateResType && isBuildEnv"
                 :label="$t('environment.enableTitle')"
                 prop="operate"
                 fixed="right"
@@ -304,7 +304,8 @@
                 fetchEnvNodeList,
                 requestRemoveNode,
                 toggleEnableNode,
-                isBuiltInEnv
+                isBuiltInEnv,
+                isBuildEnv
             } = useEnvDetail()
             const isLoading = ref(false)
             const tableSize = ref('small')
@@ -610,6 +611,7 @@
                 projectId,
                 envHashId,
                 isCreateResType,
+                isBuildEnv,
                 isBuiltInEnv,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,

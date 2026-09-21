@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func TestNetProto_Name(t *testing.T) {
 func TestNetProto_Gather_FlattensProtocols(t *testing.T) {
 	ts := time.Unix(1700000000, 0)
 	np := &NetProto{
-		protoCountersFn: func(protocols []string) ([]gopsutilnet.ProtoCountersStat, error) {
+		protoCountersFn: func(_ context.Context, protocols []string) ([]gopsutilnet.ProtoCountersStat, error) {
 			// gopsutil 按 /proc/net/snmp 头部原样给出 Protocol，首字母大写
 			return []gopsutilnet.ProtoCountersStat{
 				{Protocol: "Icmp", Stats: map[string]int64{
@@ -38,7 +39,7 @@ func TestNetProto_Gather_FlattensProtocols(t *testing.T) {
 		nowFn: func() time.Time { return ts },
 	}
 
-	metrics, err := np.Gather()
+	metrics, err := np.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("err = %v", err)
 	}
@@ -74,12 +75,12 @@ func TestNetProto_Gather_FlattensProtocols(t *testing.T) {
 // 错误不阻断 monitor 整体 gather——返回 nil, nil 让调用方跳过本条 input。
 func TestNetProto_Gather_ErrorSwallowed(t *testing.T) {
 	np := &NetProto{
-		protoCountersFn: func(_ []string) ([]gopsutilnet.ProtoCountersStat, error) {
+		protoCountersFn: func(_ context.Context, _ []string) ([]gopsutilnet.ProtoCountersStat, error) {
 			return nil, errors.New("cannot open /proc/net/snmp")
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := np.Gather()
+	metrics, err := np.Gather(context.Background())
 	if err != nil {
 		t.Errorf("err should be swallowed, got %v", err)
 	}
@@ -92,12 +93,12 @@ func TestNetProto_Gather_ErrorSwallowed(t *testing.T) {
 // （罕见：某些轻量容器或裁剪内核）——同样不上报任何 metric。
 func TestNetProto_Gather_EmptyInput(t *testing.T) {
 	np := &NetProto{
-		protoCountersFn: func(_ []string) ([]gopsutilnet.ProtoCountersStat, error) {
+		protoCountersFn: func(_ context.Context, _ []string) ([]gopsutilnet.ProtoCountersStat, error) {
 			return []gopsutilnet.ProtoCountersStat{}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := np.Gather()
+	metrics, err := np.Gather(context.Background())
 	if err != nil || metrics != nil {
 		t.Errorf("empty proto counters should yield nil,nil; got %v, %v", metrics, err)
 	}
@@ -107,14 +108,14 @@ func TestNetProto_Gather_EmptyInput(t *testing.T) {
 // udplite 在某些内核）——应该不产生任何字段，此时跳过 metric。
 func TestNetProto_Gather_ProtoWithNoStats(t *testing.T) {
 	np := &NetProto{
-		protoCountersFn: func(_ []string) ([]gopsutilnet.ProtoCountersStat, error) {
+		protoCountersFn: func(_ context.Context, _ []string) ([]gopsutilnet.ProtoCountersStat, error) {
 			return []gopsutilnet.ProtoCountersStat{
 				{Protocol: "UdpLite", Stats: map[string]int64{}},
 			}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := np.Gather()
+	metrics, err := np.Gather(context.Background())
 	if err != nil || metrics != nil {
 		t.Errorf("empty stats should yield nil,nil; got %v, %v", metrics, err)
 	}

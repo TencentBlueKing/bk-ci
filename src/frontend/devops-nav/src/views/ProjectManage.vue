@@ -47,6 +47,23 @@
                     @page-limit-change="limitChange"
                 >
                     <bk-table-column
+                        class-name="collect-column"
+                        width="30"
+                        align="center"
+                    >
+                        <template slot-scope="{ row }">
+                            <i
+                                :class="[
+                                    'devops-icon',
+                                    'collect-icon',
+                                    row.favor ? 'icon-star-shape' : 'icon-star'
+                                ]"
+                                :title="row.favor ? $t('collected') : $t('toCollect')"
+                                @click.stop.prevent="handleToggleCollect(row)"
+                            />
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
                         :label="$t('projectName')"
                         sortable="custom"
                         prop="projectName"
@@ -88,6 +105,12 @@
                                     >
                                         {{ row.projectName }}
                                     </bk-button>
+                                    <span
+                                        v-if="row.projectScope === 1"
+                                        class="personal-tag"
+                                    >
+                                        {{ $t('个人') }}
+                                    </span>
                                 </div>
                             </div>
                         </template>
@@ -350,6 +373,7 @@
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ProjectUserSelector from '@/components/ProjectUserSelector/index.vue'
     import authInfo from '@/utils/auth'
+    import { reorderProjectListByFavor } from '@/utils/util'
     
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
@@ -460,8 +484,23 @@
                 'fetchProjectList',
                 'toggleProjectEnable',
                 'checkMemberExitsProject',
-                'memberExitsProject'
+                'memberExitsProject',
+                'toggleProjectCollect'
             ]),
+            async handleToggleCollect (row) {
+                const favor = !row.favor
+                try {
+                    this.$set(row, 'favor', favor)
+                    await this.toggleProjectCollect({
+                        projectCode: row.projectCode,
+                        favor
+                    })
+                    this.projectList = reorderProjectListByFavor(this.projectList)
+                } catch (e) {
+                    console.warn(e)
+                    this.$set(row, 'favor', !favor)
+                }
+            },
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -955,9 +994,28 @@
     }
     .biz-table {
         font-weight: normal;
-        td:first-child {
-            display: flex;
-            align-items: center;
+        ::v-deep .collect-column {
+            .cell {
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        .collect-icon {
+            display: none;
+            font-size: 16px;
+            color: #abb4c3;
+            cursor: pointer;
+            &.icon-star-shape {
+                display: inline-block;
+                color: #f9ce1d;
+            }
+        }
+        ::v-deep .bk-table-row:hover {
+            .collect-icon {
+                display: inline-block;
+            }
         }
         .title {
             color: #7b7d8a;
@@ -989,6 +1047,19 @@
         .project-name-cell {
             display: flex;
             align-items: center;
+            .info {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+            }
+            .personal-tag {
+                flex-shrink: 0;
+                margin-left: 8px;
+                padding: 1px 8px;
+                font-size: 10px;
+                color: #3a84ff;
+                background: rgba(58, 132, 255, 0.1);
+            }
             .avatar {
                 display: inline-block;
                 position: relative;

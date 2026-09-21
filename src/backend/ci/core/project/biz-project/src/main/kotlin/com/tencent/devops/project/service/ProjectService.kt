@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -51,6 +52,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -169,6 +171,16 @@ interface ProjectService {
         pageSize: Int
     ): Pagination<ProjectByConditionDTO>
 
+    /**
+     * 按权限查询用户有权限的项目
+     */
+    fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType? = null,
+        enabled: Boolean? = null
+    ): List<ProjectVO>
+
     fun list(
         userId: String,
         productIds: String? = null,
@@ -278,6 +290,12 @@ interface ProjectService {
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
 
+    fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Page<String>
+
     fun getProjectListByProductId(
         productId: Int
     ): List<ProjectBaseInfo>
@@ -299,6 +317,16 @@ interface ProjectService {
     fun getPipelineDialect(projectId: String): String
 
     fun isHidden(englishName: String): Boolean
+
+    /**
+     * 收藏或取消收藏项目
+     */
+    fun favor(userId: String, projectId: String, favor: Boolean): Boolean
+
+    /**
+     * 回填已有个人项目的默认收藏，可重复执行
+     */
+    fun migratePersonalProjectFavor(): Int
 
     fun updateHiddenStatus(englishName: String, hidden: Boolean)
 

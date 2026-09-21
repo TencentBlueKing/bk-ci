@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"runtime"
 	"time"
 
@@ -19,18 +20,18 @@ import (
 // 平台省略这三个字段以避免误导（telegraf 的 system plugin 在 Windows 上
 // 行为相同）。
 type System struct {
-	loadAvgFn func() (*load.AvgStat, error)
-	uptimeFn  func() (uint64, error)
-	usersFn   func() ([]host.UserStat, error)
+	loadAvgFn func(ctx context.Context) (*load.AvgStat, error)
+	uptimeFn  func(ctx context.Context) (uint64, error)
+	usersFn   func(ctx context.Context) ([]host.UserStat, error)
 	nowFn     func() time.Time
 }
 
 // NewSystem 返回默认采集器。
 func NewSystem() *System {
 	return &System{
-		loadAvgFn: load.Avg,
-		uptimeFn:  host.Uptime,
-		usersFn:   host.Users,
+		loadAvgFn: load.AvgWithContext,
+		uptimeFn:  host.UptimeWithContext,
+		usersFn:   host.UsersWithContext,
 		nowFn:     time.Now,
 	}
 }
@@ -39,14 +40,14 @@ func NewSystem() *System {
 func (s *System) Name() string { return RenamedLoad }
 
 // Gather 采集 system metric。
-func (s *System) Gather() ([]Metric, error) {
+func (s *System) Gather(ctx context.Context) ([]Metric, error) {
 	fields := map[string]interface{}{
 		FieldNCPUs: uint64(runtime.NumCPU()),
 	}
 
 	// load 仅 Linux/Darwin 有意义
 	if runtime.GOOS != "windows" {
-		if la, err := s.loadAvgFn(); err == nil && la != nil {
+		if la, err := s.loadAvgFn(ctx); err == nil && la != nil {
 			fields[FieldLoad1] = la.Load1
 			fields[FieldLoad5] = la.Load5
 			fields[FieldLoad15] = la.Load15
@@ -54,12 +55,12 @@ func (s *System) Gather() ([]Metric, error) {
 	}
 
 	// uptime 所有平台都支持
-	if up, err := s.uptimeFn(); err == nil {
+	if up, err := s.uptimeFn(ctx); err == nil {
 		fields[FieldUptime] = up
 	}
 
 	// users 在容器内可能因 utmp 缺失而报错，捕获忽略
-	if users, err := s.usersFn(); err == nil {
+	if users, err := s.usersFn(ctx); err == nil {
 		fields[FieldNUsers] = int64(len(users))
 	}
 

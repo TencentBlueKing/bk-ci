@@ -2,5 +2,13 @@
 
 enum class AgentType {
     BUILD,
-    CREATE
+    CREATE;
+
+    companion object {
+        fun fromValue(value: String?) = when (value) {
+            "BUILD" -> BUILD
+            "CREATE" -> CREATE
+            else -> null
+        }
+    }
 }

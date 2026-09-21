@@ -29,9 +29,11 @@ package com.tencent.devops.project.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
@@ -50,6 +52,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -95,6 +98,22 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 sort = sort,
                 page = page,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listByPermission(
+        userId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType?,
+        enabled: Boolean?
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.listByPermission(
+                userId = userId,
+                permission = permission,
+                resourceType = resourceType,
+                enabled = enabled
             )
         )
     }
@@ -291,6 +310,20 @@ class ServiceProjectResourceImpl @Autowired constructor(
             projectOrganizationInfo = projectOrganizationInfo
         )
         return Result(true)
+    }
+
+    override fun listProjectIdsByLabel(
+        label: ProjectLabel,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<String>> {
+        return Result(
+            projectService.listProjectIdsByLabel(
+                label = label,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {

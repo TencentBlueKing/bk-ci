@@ -41,6 +41,7 @@ object AiMessageCode {
     const val CREATE_SESSION_FAILED = "2133011"
     const val SESSION_NOT_FOUND = "2133012"
     const val SESSION_NO_PERMISSION = "2133013"
+    const val SESSION_PIPELINE_REQUIRES_PROJECT = "2133014"
 
     // ── 提示词相关 (021-030) ──
     const val CREATE_PROMPT_FAILED = "2133021"

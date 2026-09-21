@@ -97,7 +97,7 @@
   "goApply": "去申请",
   "name": "名称",
   "emptyData": "暂无数据",
-  "newProject": "申请新建项目",
+  "newProject": "新建项目",
   "selectProjectPlaceholder": "请选择项目",
   "service": "服务",
   "collection": "我的收藏",
@@ -183,7 +183,7 @@
   "projectCreatingTitle": "项目创建中",
   "projectCreatingDesc": "{0}项目正在创建审批中，请耐心等待",
   "manageProject": "项目管理",
-  "joinProject": "申请加入项目",
+  "joinProject": "加入项目",
   "已停用": "已停用",
   "新建项目申请已拒绝": "新建项目申请已拒绝",
   "项目信息修改申请审批中": "项目信息修改申请审批中",
@@ -252,5 +252,6 @@
   "资源唯一拥有者": "资源唯一拥有者",
   "输入交接人，选中回车进行校验": "输入交接人，选中回车进行校验",
   "存在需清理或交接的权限/授权": "存在需清理或交接的权限/授权",
+  "个人": "个人",
   "personalProjectCannotExit": "个人项目不允许退出"
 }

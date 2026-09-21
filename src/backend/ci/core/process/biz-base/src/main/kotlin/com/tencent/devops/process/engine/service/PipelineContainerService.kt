@@ -177,6 +177,14 @@ class PipelineContainerService @Autowired constructor(
         return pipelineBuildContainerDao.listByBuildId(dslContext, projectId, buildId, stageId)
     }
 
+    fun listByBuildIds(projectId: String, buildIds: Collection<String>): List<PipelineBuildContainer> {
+        return pipelineBuildContainerDao.listByBuildIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildIds = buildIds,
+        )
+    }
+
     fun batchSave(transactionContext: DSLContext?, containerList: Collection<PipelineBuildContainer>) {
         return pipelineBuildContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
