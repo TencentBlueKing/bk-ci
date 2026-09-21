@@ -36,7 +36,6 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -47,8 +46,7 @@ import java.time.LocalDateTime
 @RestResource
 class UserArtifactQualityMetadataResourceImpl(
     private val bkRepoClient: BkRepoClient,
-    private val client: Client,
-    private val tokenService: ClientTokenService
+    private val client: Client
 ) : UserArtifactQualityMetadataResource {
     override fun list(
         userId: String,
@@ -160,10 +158,9 @@ class UserArtifactQualityMetadataResourceImpl(
         projectId: String,
         labelKey: String
     ): Result<Boolean> {
-        client.get(ServiceProjectAuthResource::class).checkProjectManager(
+        client.get(ServiceProjectAuthResource::class).checkProjectManagerAndMessage(
             userId = userId,
-            projectCode = projectId,
-            token = tokenService.getSystemToken()
+            projectId = projectId
         )
         bkRepoClient.deleteArtifactQualityMetadataLabel(
             userId = userId,
