@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -48,6 +49,7 @@ import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.ImateTokenSession
 import com.tencent.devops.remotedev.pojo.ImateWorkspaceInspect
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
@@ -578,6 +580,32 @@ class CoffeeAIService @Autowired constructor(
                 imateEnabled = record.coffeeAi == true
             )
         }
+    }
+
+    /**
+     * 结果中存在 AI 桌面时，按 owner 调用 CDS 补全 agentMode。
+     * 单个 owner 调用失败时 fail-open，不影响主列表返回。
+     */
+    fun enrichAgentMode(page: Page<Workspace>): Page<Workspace> {
+        val aiWorkspaces = page.records.filter { it.coffeeAi == true }
+        if (aiWorkspaces.isEmpty()) {
+            return page
+        }
+        val owners = aiWorkspaces.map { it.owner ?: it.createUserId }.distinct()
+        val agentModeMap = owners.flatMap { owner ->
+            runCatching { workspaceStartCloudClient.listAIWorkspaces(owner) }
+                .onFailure { logger.warn("列出AI云桌面agent类型失败|owner=$owner|${it.message}") }
+                .getOrDefault(emptyList())
+        }.associate { it.workspaceName to it.agentMode }
+        return page.copy(
+            records = page.records.map { workspace ->
+                if (workspace.coffeeAi == true) {
+                    workspace.copy(agentMode = agentModeMap[workspace.workspaceName])
+                } else {
+                    workspace
+                }
+            }
+        )
     }
 
     private fun assertWorkspaceUsable(

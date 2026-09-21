@@ -1078,14 +1078,13 @@ class ServiceRemoteDevResourceImpl(
             pageSize ?: DEFAULT_PAGE_SIZE,
             MAX_PAGE_SIZE
         )
-        return Result(
-            workspaceService.getWorkspaceList(
-                userId = userId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search
-            )
+        val result = workspaceService.getWorkspaceList(
+            userId = userId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = search
         )
+        return Result(coffeeAIService.enrichAgentMode(result))
     }
 
     override fun batchQueryThumbnailWorkspaces(

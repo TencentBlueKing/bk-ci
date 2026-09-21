@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.CoffeeWorkspaceAgentInfo
 import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import java.net.SocketTimeoutException
@@ -319,6 +320,43 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId list digital avatars get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "列出数字分身接口超时, url: $url"
+            )
+        }
+    }
+
+    fun listAIWorkspaces(userId: String): List<CoffeeWorkspaceAgentInfo> {
+        val url = "$apiUrlAI/openapi/coffee/workspaces"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId list coffee workspaces response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "列出AI云桌面工作空间接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<List<CoffeeWorkspaceAgentInfo>>>() {}
+                )
+                if (result.isNotOk()) {
+                    throw WorkspaceDispatchException(
+                        "列出AI云桌面工作空间接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data ?: emptyList()
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId list coffee workspaces get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "列出AI云桌面工作空间接口超时, url: $url"
             )
         }
     }
