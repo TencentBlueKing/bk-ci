@@ -28,8 +28,9 @@ object WeworkRobotReviewCardRewriter {
         fallbackTaskId: String,
         base: String
     ): WeworkTemplateCardButton {
-        if (btn.type != 0 || btn.key.isNullOrBlank()) return btn
-        val parsed = WeworkReviewCardConst.parseButtonKey(btn.key)
+        val key = btn.key
+        if (btn.type != 0 || key.isNullOrBlank()) return btn
+        val parsed = WeworkReviewCardConst.parseButtonKey(key)
         val action = parsed?.first ?: WeworkReviewCardConst.ACTION_AGREE
         val taskId = parsed?.second ?: fallbackTaskId
         val encoded = URLEncoder.encode(taskId, StandardCharsets.UTF_8)
