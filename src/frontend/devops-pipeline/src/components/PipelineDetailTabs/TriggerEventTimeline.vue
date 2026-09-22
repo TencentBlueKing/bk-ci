@@ -10,7 +10,7 @@
 </template>
 <script>
     import { computed, defineComponent } from 'vue'
-    import { formatByUserTz } from '@/utils/util'
+    import { formatByUserTz } from '../../../../common-lib/time'
     import TriggerEventChildren from './TriggerEventChildren.vue'
 
     export default defineComponent({
