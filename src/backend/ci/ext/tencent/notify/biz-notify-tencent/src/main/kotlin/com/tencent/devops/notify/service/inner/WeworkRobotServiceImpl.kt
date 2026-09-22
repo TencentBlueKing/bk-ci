@@ -57,8 +57,10 @@ import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleFileMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleImageMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotTemplateCardMessage
 import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 import com.tencent.devops.notify.service.WeworkService
 import java.io.File
 import java.io.InputStream
@@ -343,6 +345,46 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
         return uploadResponse.mediaId
             ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
+    }
+
+    /**
+     * 审核模板卡片：按接收人 chatid 走机器人 webhook。失败返回 false，由上层降级文本。
+     */
+    override fun sendTemplateCardMessage(
+        receivers: Collection<String>,
+        templateCard: WeworkTemplateCard
+    ): Boolean {
+        if (receivers.isEmpty()) {
+            logger.warn(
+                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=false|reason=emptyReceivers|" +
+                    "taskId=${templateCard.taskId}"
+            )
+            return false
+        }
+        val sendRequest = receivers.map { receiver ->
+            WeworkRobotTemplateCardMessage(
+                chatid = receiver,
+                postId = null,
+                templateCard = templateCard
+            )
+        }
+        return try {
+            doSendRequest(sendRequest)
+            logger.info(
+                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=true|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers"
+            )
+            saveResult(receivers, "template_card:${templateCard.taskId}", true, null)
+            true
+        } catch (e: Exception) {
+            logger.warn(
+                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=false|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers",
+                e
+            )
+            saveResult(receivers, "template_card:${templateCard.taskId}", false, e.message)
+            false
+        }
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
