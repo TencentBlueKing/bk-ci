@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 import com.tencent.process.BkProcessTree
 import com.tencent.process.EnvVars
 import org.slf4j.LoggerFactory
@@ -70,11 +71,14 @@ object KillBuildProcessTree {
         try {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
-                    ErrorMsgLogUtil.flushErrorMsgToFile()
-                    logger.info("start kill process tree")
-                    val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +
-                        "pid(s): $killedProcessIds")
+                    // 任务清理超时后不能在 shutdown hook 再无限等待同一类原生操作；此处另有独立等待期限。
+                    TaskProcessCleanup.run {
+                        ErrorMsgLogUtil.flushErrorMsgToFile()
+                        logger.info("start kill process tree")
+                        val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
+                        logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +
+                            "pid(s): $killedProcessIds")
+                    }
                 }
             })
         } catch (t: Throwable) {
@@ -82,12 +86,20 @@ object KillBuildProcessTree {
         }
     }
 
+    /**
+     * 按环境标识定位进程；仅凭父子关系无法覆盖已脱离原父进程的后台任务。
+     *
+     * executionId 非空时额外限定执行批次，并将枚举/清理异常上抛，供 Runner 决定停止领取任务；
+     * 为空时保留整个构建退出清理的兼容行为。forceFlag 不覆盖显式的进程保留标记。
+     * 环境不可读的进程仍会跳过，返回的 PID 表示已发起清理，不是所有后代都已退出的证明。
+     */
     fun killProcessTree(
         projectId: String,
         buildId: String,
         vmSeqId: String,
         taskIds: Set<String>? = null,
-        forceFlag: Boolean = false
+        forceFlag: Boolean = false,
+        executionId: String? = null
     ): List<Int> {
         val currentProcessId = if (AgentEnv.getOS() == OSType.WINDOWS) {
             getCurrentPID()
@@ -95,6 +107,7 @@ object KillBuildProcessTree {
             getUnixPID()
         }
         if (currentProcessId <= 0) {
+            if (executionId != null) throw java.io.IOException("Cannot identify worker process for cleanup")
             logger.warn("get current pid failed")
             return listOf()
         }
@@ -102,11 +115,13 @@ object KillBuildProcessTree {
         val processTree = try {
             BkProcessTree.get()
         } catch (e: Exception) {
+            if (executionId != null) throw java.io.IOException("Cannot enumerate task process tree", e)
             logger.error("killProcessTree get error: ", e)
             return listOf()
         }
         val processTreeIterator = processTree.iterator()
         val killedProcessIds = mutableListOf<Int>()
+        val failures = mutableListOf<Exception>()
         val keepAlivePids = mutableSetOf(currentProcessId)
         while (processTreeIterator.hasNext()) {
             val osProcess = processTreeIterator.next()
@@ -153,6 +168,10 @@ object KillBuildProcessTree {
                     val envTaskId = envVars[PIPELINE_ELEMENT_ID]
                     flag = flag && taskIds.contains(envTaskId)
                 }
+                // taskId 在重试间不变；必须额外匹配执行 ID，防止旧清理线程误杀新一次执行的进程。
+                if (executionId != null) {
+                    flag = flag && envVars[TaskExecutorCache.EXECUTION_ID_ENV] == executionId
+                }
                 if (flag) {
                     osProcess.addKeepAlivePids(keepAlivePids)
                     osProcess.killRecursively(forceFlag)
@@ -160,7 +179,14 @@ object KillBuildProcessTree {
                     killedProcessIds.add(osProcess.pid)
                 }
             } catch (e: Exception) {
+                failures.add(e)
                 logger.warn("kill process ${osProcess.pid} failed: ${e.message}")
+            }
+        }
+        // 任务级清理不能只记日志后假装成功，否则 Runner 会在残留进程状态不明时继续运行下一任务。
+        if (executionId != null && failures.isNotEmpty()) {
+            throw java.io.IOException("Task process cleanup failed", failures.first()).apply {
+                failures.drop(1).forEach { addSuppressed(it) }
             }
         }
         return killedProcessIds

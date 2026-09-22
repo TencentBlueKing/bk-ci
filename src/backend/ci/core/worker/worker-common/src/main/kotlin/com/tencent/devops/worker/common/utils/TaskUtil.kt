@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import java.util.concurrent.TimeUnit
+import com.tencent.devops.worker.common.task.TaskExecutorCache
 
 object TaskUtil {
 
@@ -91,6 +92,11 @@ object TaskUtil {
         )
         if (!taskId.isNullOrBlank()) {
             taskEnvVariables[PIPELINE_ELEMENT_ID] = taskId
+            // 从当前执行上下文取值，派生线程也保留原批次；按 taskId 查缓存会与重试或缓存移除产生竞态。
+            // 非 TaskDaemon 调用没有此上下文时保持原有环境，避免引入强制的调用依赖。
+            TaskExecutorCache.currentExecution.get()?.let {
+                taskEnvVariables[TaskExecutorCache.EXECUTION_ID_ENV] = it.id
+            }
         }
         return taskEnvVariables
     }
