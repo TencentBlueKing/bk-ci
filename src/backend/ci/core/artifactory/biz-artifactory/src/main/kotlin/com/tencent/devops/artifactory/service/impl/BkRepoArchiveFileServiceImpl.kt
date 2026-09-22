@@ -120,7 +120,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         // destPath 来自客户端 filePath，最终原样作为 bkrepo path 传给 uploadLocalFile。
         // 无规范化/前缀校验时，../、绝对路径或 %2e%2e 可把文件写到仓库任意位置。
         val destPath = PathUtil.normalizeAndValidateRepoPath(
-            filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
+            DefaultPathUtils.getUploadPathByTime(filePath, fileType?.fileType, pathSplit[pathSplit.size - 1])
         )
         val metadata = mutableMapOf<String, String>()
         metadata[KEY_SHA_CONTENT] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
