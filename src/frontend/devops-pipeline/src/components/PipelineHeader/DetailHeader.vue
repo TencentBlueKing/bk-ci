@@ -620,7 +620,8 @@
                         name: `${this.$t('reuseParamsExecute')} - #${buildNum}`,
                         params: buildParamProperties,
                         isTemp: true,
-                        sourceBuildNum: buildNum
+                        sourceBuildNum: buildNum,
+                        buildId
                     }
                     this.setTempParamSet(tempParamSet)
                     const version = this.pipelineInfo?.releaseVersion
