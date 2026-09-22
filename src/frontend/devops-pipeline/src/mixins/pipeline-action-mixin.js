@@ -202,11 +202,11 @@ export default {
             return '--'
         },
         isDisabledPipeline (pipeline) {
-            return pipeline.lock || !pipeline.canManualStartup
+            return pipeline.lock || pipeline.yamlLocked || !pipeline.canManualStartup
         },
         disabledTips (pipeline) {
             if (!this.isDisabledPipeline(pipeline)) return { disabled: true }
-            return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
+            return this.$t((pipeline.lock || pipeline.yamlLocked) ? 'pipelineLockTips' : 'pipelineManualDisable')
         },
         calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
@@ -257,7 +257,7 @@ export default {
 
             return [
                 {
-                    text: this.$t(pipeline.lock ? 'enable' : 'disable'),
+                    text: this.$t((pipeline.lock || pipeline.yamlLocked) ? 'enable' : 'disable'),
                     handler: this.lockPipelineHandler,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
