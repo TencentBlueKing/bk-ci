@@ -54,7 +54,11 @@
                     prop="updateTime"
                     width="180"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="120"
@@ -183,8 +187,13 @@
 
 <script>
     import { mapActions, mapGetters } from 'vuex'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
+
         data () {
             return {
                 privateList: [],
