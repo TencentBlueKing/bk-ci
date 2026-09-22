@@ -231,6 +231,18 @@ export function hashID(): string {
   return generateRandomId({ type: 'uuid' })
 }
 
+/**
+ * 获取蓝盾主站的 origin
+ */
+export function getConsoleOrigin(): string {
+  // 嵌套在主站 iframe 中时，referrer 为蓝盾父页面地址
+  if (window.parent !== window && document.referrer) {
+    return new URL(document.referrer).origin
+  }
+
+  return window.location.origin
+}
+
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,

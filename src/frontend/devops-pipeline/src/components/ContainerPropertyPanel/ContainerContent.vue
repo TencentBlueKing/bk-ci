@@ -351,7 +351,7 @@
                     name="workspace"
                     :value="container.dispatchType.workspace"
                     :handle-change="changeBuildResource"
-                    :placeholder="$t('editPage.workspaceTips')"
+                    :placeholder="workspacePlaceholder"
                 />
             </form-field>
 
@@ -788,6 +788,14 @@
                     return enumId[this.container.dispatchType.performanceConfigId]
                 }
                 return this.container.dispatchType.performanceConfigId
+            },
+            isEnableDocker () {
+                return this.isLinuxOsDockerImage && Object.keys(this.dockerInfo).length > 0
+            },
+            workspacePlaceholder () {
+                return this.isEnableDocker
+                    ? this.$t('editPage.dockerWorkspaceTips')
+                    : this.$t('editPage.workspaceTips')
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType

@@ -199,12 +199,12 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
-            import {
-                formatBuildNumPrefix,
-                joinFailureItems,
-                joinLabeledLine,
-                requestAiAnalysis
-            } from '@/utils/aiAnalysis'
+    import {
+        formatBuildNumPrefix,
+        joinFailureItems,
+        joinLabeledLine,
+        requestAiAnalysis
+    } from '@/utils/aiAnalysis'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'

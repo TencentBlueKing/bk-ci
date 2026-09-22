@@ -1178,6 +1178,7 @@
     "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/src",
     "useRootText": "使用root用户执行(请在使用CodeCC代码检查插件时勾选)",
     "useRootDesc": "如果勾选，将使用root启动编译，需要调整环境变量，产物属主等(su mqq; chown)，否则可能构建失败；如果选择了CodeCC代码检查，必须勾选root用户执行",
+    "dockerWorkspaceTips": "不填默认为 [Agent安装目录]/docker_workspace/data/[流水线ID]/[Job序号]",
     "envDependency": "nfs方式挂载依赖环境",
     "envDependencyTips": "不推荐使用，挂载的环境不一定能兼容所有构建场景，构建所依赖的环境建议打入镜像使用。在选择了上述依赖环境后，我们将执行如下操作",
     "abnormal": "异常",

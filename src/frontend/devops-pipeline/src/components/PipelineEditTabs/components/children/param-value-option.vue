@@ -628,8 +628,8 @@
             },
             getSubPipelineSearchUrl () {
                 const { projectId, pipelineId } = this.$route.params
-                const query = `permission=EXECUTE&excludePipelineId=${pipelineId}` +
-                    '&pipelineName={keyword}&page=1&pageSize=100'
+                const query = `permission=EXECUTE&excludePipelineId=${pipelineId}`
+                    + '&pipelineName={keyword}&page=1&pageSize=100'
                 return `/process/api/user/pipelineInfos/${projectId}/idAndNames?${query}`
             },
             getSearchBranchUrl () {
