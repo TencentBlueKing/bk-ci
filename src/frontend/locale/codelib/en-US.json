@@ -6,6 +6,7 @@
     "typeCodelib": "{0} Repositories",
     "link": "link",
     "linkRepo": "Link {0} Repositories",
+    "editRepo": "Edit {0} Repository",
     "codelibDesc": "Code Repositories service can link your existed SVN and GIT repositories to CI，which will be a pipeline's materials",
     "laodingTitle": "Loading repositories list",
     "aliasNamePlaceholder": "Enter alias name to search",
