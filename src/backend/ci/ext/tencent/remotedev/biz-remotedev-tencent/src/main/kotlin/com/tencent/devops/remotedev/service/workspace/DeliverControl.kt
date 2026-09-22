@@ -151,7 +151,9 @@ class DeliverControl @Autowired constructor(
             }
 
             existOwner != null && assign2Owner?.userId != existOwner.sharedUser -> {
-                if (coffeeAIService.hasActiveDigitalAvatar(workspaceName)) {
+                if (workspace.coffeeAi == true &&
+                    coffeeAIService.hasActiveDigitalAvatar(workspaceName)
+                ) {
                     logger.warn(
                         "assignUser2Workspace blocked by digital avatar|" +
                             "$userId|$workspaceName|${existOwner.sharedUser}|${assign2Owner?.userId}"
