@@ -157,6 +157,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams["reviewUrl"] = reviewUrl
             bodyParams["reviewAppUrl"] = reviewAppUrl
             bodyParams["projectName"] = projectName
+            fillCardDisplayParams()
             logger.info(
                 "reviewNotifyTrace|hop=process.fillUrl|" +
                     "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
@@ -185,6 +186,30 @@ class PipelineBuildNotifyListener @Autowired constructor(
             mentionReceivers = mentionReceivers,
             callbackData = filledCallback
         )
+    }
+
+    /**
+     * 给审核卡片补充展示字段。只写空缺，不覆盖 engine 已填的 buildNum / triggerUser / reviewStage。
+     */
+    private fun PipelineBuildNotifyEvent.fillCardDisplayParams() {
+        if (bodyParams["buildNum"].isNullOrBlank()) {
+            titleParams["buildNum"]?.takeIf { it.isNotBlank() }?.let { bodyParams["buildNum"] = it }
+        }
+        if (bodyParams["triggerUser"].isNullOrBlank() && userId.isNotBlank()) {
+            bodyParams["triggerUser"] = userId
+        }
+        if (bodyParams["reviewStage"].isNullOrBlank()) {
+            bodyParams["reviewStage"] = if (notifyTemplateEnum.contains("STAGE")) {
+                val stageName = bodyParams["stageName"].orEmpty()
+                if (stageSeq != null) {
+                    "[$stageSeq]${stageName.ifBlank { "Stage审核" }}"
+                } else {
+                    stageName.ifBlank { "Stage审核" }
+                }
+            } else {
+                "人工审核"
+            }
+        }
     }
 
     private fun PipelineBuildNotifyEvent.fillCallbackData(): Map<String, String> {

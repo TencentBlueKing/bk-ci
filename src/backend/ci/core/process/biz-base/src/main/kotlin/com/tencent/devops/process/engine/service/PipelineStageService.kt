@@ -739,10 +739,14 @@ class PipelineStageService @Autowired constructor(
                 bodyParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
+                    "buildNum" to buildNum,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
                     "reviewers" to reviewersText,
                     "hasRequiredParams" to hasRequiredParams.toString(),
+                    "triggerUser" to triggerUserId,
+                    "stageName" to (stage.name ?: ""),
+                    "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),

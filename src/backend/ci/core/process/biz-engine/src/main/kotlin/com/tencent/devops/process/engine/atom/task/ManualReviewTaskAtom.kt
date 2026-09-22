@@ -215,6 +215,8 @@ class ManualReviewTaskAtom(
                     "manualReviewParam" to JsonUtil.toJson(param.params),
                     "checkParams" to param.params.isNotEmpty().toString(),
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
+                    "triggerUser" to task.starter,
+                    "reviewStage" to "人工审核",
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),

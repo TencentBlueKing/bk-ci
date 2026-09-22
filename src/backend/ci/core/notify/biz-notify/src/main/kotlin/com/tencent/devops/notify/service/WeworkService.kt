@@ -46,4 +46,20 @@ interface WeworkService {
         receivers: Collection<String>,
         templateCard: WeworkTemplateCard
     ): Boolean = false
+
+    /**
+     * 按接收人发送各自的模板卡片。返回发送失败的接收人，供上层只对失败者降级文本。
+     * 默认逐人调用 [sendTemplateCardMessage]，不改变既有实现。
+     */
+    fun sendTemplateCardMessages(
+        receiverCards: Map<String, WeworkTemplateCard>
+    ): Set<String> {
+        val failed = linkedSetOf<String>()
+        receiverCards.forEach { (receiver, card) ->
+            if (!sendTemplateCardMessage(listOf(receiver), card)) {
+                failed.add(receiver)
+            }
+        }
+        return failed
+    }
 }
