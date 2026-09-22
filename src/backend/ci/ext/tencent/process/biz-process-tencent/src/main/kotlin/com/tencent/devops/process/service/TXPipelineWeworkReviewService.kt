@@ -35,6 +35,9 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -145,17 +148,11 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             return "该审核已处理，无需重复操作"
         }
 
-        if (action == WeworkReviewCardConst.ACTION_AGREE &&
-            callBackData["hasRequiredParams"].equals("true", ignoreCase = true)
-        ) {
-            val reviewUrl = callBackData["reviewUrl"].orEmpty()
-            return if (reviewUrl.isNotBlank()) {
-                "该审核含必填自定义参数，请打开详情填写后再同意：$reviewUrl"
-            } else {
-                "该审核含必填自定义参数，请打开详情填写后再同意"
-            }
+        if (action == WeworkReviewCardConst.ACTION_AGREE) {
+            blockInCardApprove(callBackData)?.let { return it }
         }
 
+        val cardParams = resolveReviewParams(callBackData)
         val params = pipelineBuildFacadeService.goToReview(
             userId = userId,
             projectId = projectId,
@@ -170,6 +167,9 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             if (action == WeworkReviewCardConst.ACTION_REJECT) {
                 suggest = WeworkReviewCardConst.DEFAULT_REJECT_SUGGEST
             }
+            if (cardParams.isNotEmpty()) {
+                this.params = cardParams.toMutableList()
+            }
         }
         // goToReview 可能返回空对象（找不到插件），兜底构造
         if (params.projectId.isBlank()) {
@@ -183,6 +183,9 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             }
             if (action == WeworkReviewCardConst.ACTION_REJECT) {
                 params.suggest = WeworkReviewCardConst.DEFAULT_REJECT_SUGGEST
+            }
+            if (cardParams.isNotEmpty()) {
+                params.params = cardParams.toMutableList()
             }
         }
 
@@ -226,19 +229,12 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             return "您不是当前审核人，无法操作"
         }
 
-        if (action == WeworkReviewCardConst.ACTION_AGREE &&
-            callBackData["hasRequiredParams"].equals("true", ignoreCase = true)
-        ) {
-            val reviewUrl = callBackData["reviewUrl"].orEmpty()
-            return if (reviewUrl.isNotBlank()) {
-                "该 Stage 审核含必填自定义参数，请打开详情填写后再同意：$reviewUrl"
-            } else {
-                "该 Stage 审核含必填自定义参数，请打开详情填写后再同意"
-            }
+        if (action == WeworkReviewCardConst.ACTION_AGREE) {
+            blockInCardApprove(callBackData)?.let { return it }
         }
 
         val reviewRequest = StageReviewRequest(
-            reviewParams = emptyList(),
+            reviewParams = resolveReviewParams(callBackData),
             id = groupId,
             suggest = if (action == WeworkReviewCardConst.ACTION_REJECT) {
                 WeworkReviewCardConst.DEFAULT_REJECT_SUGGEST
@@ -262,6 +258,63 @@ class TXPipelineWeworkReviewService @Autowired constructor(
         }
     }
 
+    private fun blockInCardApprove(callBackData: Map<String, String>): String? {
+        if (callBackData["suggestRequired"].equals("true", ignoreCase = true)) {
+            val reviewUrl = callBackData["reviewUrl"].orEmpty()
+            return if (reviewUrl.isNotBlank()) {
+                "此审核要求填写意见，请打开详情页处理：$reviewUrl"
+            } else {
+                "此审核要求填写意见，请打开详情页处理"
+            }
+        }
+        val missing = resolveReviewParams(callBackData).filter {
+            it.required && it.value?.toString().isNullOrBlank()
+        }
+        if (missing.isEmpty()) return null
+        val reviewUrl = callBackData["reviewUrl"].orEmpty()
+        return if (reviewUrl.isNotBlank()) {
+            "该审核含未填写的必填参数，请打开详情填写后再同意：$reviewUrl"
+        } else {
+            "该审核含未填写的必填参数，请打开详情填写后再同意"
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun resolveReviewParams(callBackData: Map<String, String>): List<ManualReviewParam> {
+        val raw = callBackData["reviewParams"].orEmpty()
+        if (raw.isBlank() || raw == "[]" || raw == "null") return emptyList()
+        return try {
+            JsonUtil.to<List<Map<String, Any?>>>(raw).map { item ->
+                val typeName = item["valueType"]?.toString().orEmpty().lowercase()
+                val options = (item["options"] as? List<*>)?.mapNotNull { opt ->
+                    val map = opt as? Map<*, *> ?: return@mapNotNull null
+                    val id = map["key"]?.toString().orEmpty().ifBlank { map["id"]?.toString().orEmpty() }
+                    val text = map["value"]?.toString().orEmpty().ifBlank { map["text"]?.toString().orEmpty() }
+                    if (id.isBlank()) null else ManualReviewParamPair(id, text.ifBlank { id })
+                }
+                ManualReviewParam(
+                    key = item["key"]?.toString().orEmpty(),
+                    value = item["value"],
+                    valueType = when (typeName) {
+                        "enum" -> ManualReviewParamType.ENUM
+                        "boolean" -> ManualReviewParamType.BOOLEAN
+                        "textarea" -> ManualReviewParamType.TEXTAREA
+                        "checkbox" -> ManualReviewParamType.CHECKBOX
+                        "multiple" -> ManualReviewParamType.MULTIPLE
+                        else -> ManualReviewParamType.STRING
+                    },
+                    required = item["required"]?.toString().equals("true", ignoreCase = true),
+                    desc = item["title"]?.toString() ?: item["desc"]?.toString(),
+                    options = options,
+                    chineseName = item["title"]?.toString() ?: item["chineseName"]?.toString()
+                )
+            }.filter { it.key.isNotBlank() }
+        } catch (ignored: Exception) {
+            logger.warn("parse wework reviewParams failed", ignored)
+            emptyList()
+        }
+    }
+
     private fun checkParameter(vararg args: String) {
         args.find { it.isBlank() }?.let { throw IllegalArgumentException("parameter is null or blank") }
     }
@@ -278,7 +331,9 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             val rawAction = req.action?.takeIf { it.isNotBlank() }
             val action = when {
                 rawAction != null -> {
-                    if (rawAction == WeworkReviewCardConst.ACTION_APPROVE) {
+                    if (rawAction == WeworkReviewCardConst.ACTION_APPROVE ||
+                        rawAction == WeworkReviewCardConst.ACTION_APPROVE_WITH_PARAMS
+                    ) {
                         WeworkReviewCardConst.ACTION_AGREE
                     } else {
                         rawAction

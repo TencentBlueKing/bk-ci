@@ -37,6 +37,7 @@ import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_FILE_SIZE_EXCEED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED
@@ -83,7 +84,8 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
 class WeworkRobotServiceImpl @Autowired constructor(
     private val streamBridge: StreamBridge,
-    private val weworkNotifyDao: WeworkNotifyDao
+    private val weworkNotifyDao: WeworkNotifyDao,
+    private val wechatWorkService: WechatWorkService
 ) : WeworkService {
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
         message.sendTo(streamBridge)
@@ -351,7 +353,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 审核模板卡片：按接收人 chatid 走机器人 webhook。失败返回 false，由上层降级文本。
+     * 审核模板卡片优先走官方应用 chat/send，保留 type=0「通过」会话内回调。
+     * 官方发送失败时才降级群机器人 webhook（type=0 不会推 EventKey，只能改 GET 跳转）。
      */
     override fun sendTemplateCardMessage(
         receivers: Collection<String>,
@@ -364,6 +367,13 @@ class WeworkRobotServiceImpl @Autowired constructor(
             )
             return false
         }
+        if (sendOfficialTemplateCard(receivers, templateCard)) {
+            return true
+        }
+        logger.warn(
+            "reviewNotifyTrace|hop=notify.weworkRobot.fallbackJump|" +
+                "taskId=${templateCard.taskId}|receivers=$receivers"
+        )
         val outboundCard = WeworkRobotReviewCardRewriter.rewriteCallbackButtons(
             card = templateCard,
             gatewayOuter = devopsGatewayOuter
@@ -398,6 +408,48 @@ class WeworkRobotServiceImpl @Autowired constructor(
             saveResult(receivers, "template_card:${templateCard.taskId}", false, e.message)
             false
         }
+    }
+
+    /**
+     * 官方应用发卡片：type=0 点「通过」走 template_card_event，不打开浏览器。
+     */
+    private fun sendOfficialTemplateCard(
+        receivers: Collection<String>,
+        templateCard: WeworkTemplateCard
+    ): Boolean {
+        var allOk = true
+        receivers.forEach { receiver ->
+            val payload = mapOf(
+                "receiver" to mapOf(
+                    "type" to "single",
+                    "id" to receiver
+                ),
+                "msgtype" to "template_card",
+                "template_card" to templateCard
+            )
+            val sendResult = try {
+                wechatWorkService.sendMessage(JsonUtil.toJson(payload, false))
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "reviewNotifyTrace|hop=notify.official.send|ok=false|receiver=$receiver|" +
+                        "taskId=${templateCard.taskId}",
+                    ignored
+                )
+                false
+            }
+            if (sendResult) {
+                logger.info(
+                    "reviewNotifyTrace|hop=notify.official.send|ok=true|" +
+                        "receiver=$receiver|taskId=${templateCard.taskId}"
+                )
+            } else {
+                allOk = false
+            }
+        }
+        if (allOk) {
+            saveResult(receivers, "template_card:${templateCard.taskId}", true, null)
+        }
+        return allOk && receivers.isNotEmpty()
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {

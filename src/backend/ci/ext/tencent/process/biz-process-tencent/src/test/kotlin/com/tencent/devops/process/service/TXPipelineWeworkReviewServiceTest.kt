@@ -52,6 +52,19 @@ class TXPipelineWeworkReviewServiceTest {
     }
 
     @Test
+    fun `resolve approve_with_params as agree`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "royalhuang",
+            action = "approve_with_params",
+            taskId = "task-3"
+        )
+        assertEquals(
+            Triple("royalhuang", WeworkReviewCardConst.ACTION_AGREE, "task-3"),
+            TXPipelineWeworkReviewService.resolveExternalCallBack(req)
+        )
+    }
+
+    @Test
     fun `html page escapes message`() {
         val html = TXPipelineWeworkReviewService.htmlPage(true, "已由 a<b> 同意审核")
         assertEquals(true, html.contains("已由 a&lt;b&gt; 同意审核"))
