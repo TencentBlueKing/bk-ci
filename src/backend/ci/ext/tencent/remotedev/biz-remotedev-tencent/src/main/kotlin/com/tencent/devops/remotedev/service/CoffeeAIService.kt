@@ -279,7 +279,7 @@ class CoffeeAIService @Autowired constructor(
                 e.message
             )
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
+                errorCode = ErrorCodeEnum.QUERY_ACTIVE_DIGITAL_AVATAR_FAIL.errorCode,
                 params = arrayOf(workspaceName)
             )
         }

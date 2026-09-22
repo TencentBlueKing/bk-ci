@@ -256,6 +256,11 @@ enum class ErrorCodeEnum(
         errorCode = "2132059",
         formatErrorMessage = "workspace {0} already has a registered digital avatar, owner cannot be changed"
     ),
+    QUERY_ACTIVE_DIGITAL_AVATAR_FAIL(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132060",
+        formatErrorMessage = "failed to query active digital avatar for workspace {0}, owner cannot be changed"
+    ),
     ;
 
     fun getErrorMessage(): String {
