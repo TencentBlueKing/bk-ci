@@ -35,7 +35,9 @@ class PathUtilTest {
 
     @Test
     fun normalizeAndValidateRepoPath_acceptsLegitimateRelativePaths() {
-        Assertions.assertEquals("file/20240101/uuid.zip", PathUtil.normalizeAndValidateRepoPath("file/20240101/uuid.zip"))
+        Assertions.assertEquals(
+            "file/20240101/uuid.zip", PathUtil.normalizeAndValidateRepoPath("file/20240101/uuid.zip")
+        )
         Assertions.assertEquals("store/1.0.0/pkg.tgz", PathUtil.normalizeAndValidateRepoPath("store/1.0.0/pkg.tgz"))
         Assertions.assertEquals("foo/bar", PathUtil.normalizeAndValidateRepoPath("foo/./bar"))
         Assertions.assertEquals("/bk-custom/p/file.zip", PathUtil.normalizeAndValidateRepoPath("/bk-custom/p/file.zip"))
