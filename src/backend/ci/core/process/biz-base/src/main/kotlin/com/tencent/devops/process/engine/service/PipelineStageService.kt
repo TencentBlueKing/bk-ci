@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
@@ -710,6 +711,7 @@ class PipelineStageService @Autowired constructor(
             return
         }
         val hasRequiredParams = checkIn.reviewParams?.any { it.required } == true
+        val stageReviewParams = checkIn.reviewParams ?: emptyList<ManualReviewParam>()
         val signature = ShaUtils.sha256(
             stage.projectId + stage.buildId + stage.stageId + (group.id ?: "") + (appSecret ?: "")
         )
@@ -746,7 +748,7 @@ class PipelineStageService @Autowired constructor(
                     "reviewers" to reviewersText,
                     "hasRequiredParams" to hasRequiredParams.toString(),
                     "suggestRequired" to "false",
-                    "reviewParams" to JsonUtil.toJson(checkIn.reviewParams ?: emptyList(), false),
+                    "reviewParams" to JsonUtil.toJson(stageReviewParams, false),
                     "triggerUser" to triggerUserId,
                     "stageName" to (stage.name ?: ""),
                     "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",
