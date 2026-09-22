@@ -205,11 +205,17 @@
                 </div>
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.createdTime') }}</span>
-                    <span class="value">{{ prettyDateTimeFormat(Number(curRepo.createTime + '000')) }}</span>
+                    <time-display
+                        class="value"
+                        :value="curRepo.createTime"
+                    />
                 </div>
                 <div class="history-item">
                     <span class="label">{{ $t('codelib.lastModifiedTime') }}</span>
-                    <span class="value">{{ prettyDateTimeFormat(Number(curRepo.updatedTime + '000')) }}</span>
+                    <time-display
+                        class="value"
+                        :value="curRepo.updatedTime"
+                    />
                 </div>
             </div>
         </div>
@@ -410,9 +416,6 @@
 </template>
 <script>
     import {
-        prettyDateTimeFormat
-    } from '@/utils/'
-    import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
@@ -431,11 +434,13 @@
         isTGit
     } from '../../config/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
+    import TimeDisplay from '../../../../common-lib/time-display'
  
     export default {
         name: 'basicSetting',
         components: {
-            ResetAuthDialog
+            ResetAuthDialog,
+            TimeDisplay
         },
         props: {
             type: {
@@ -646,7 +651,6 @@
                 'getPacPipelineCount',
                 'getYamlPipelines'
             ]),
-            prettyDateTimeFormat,
 
             getTicketEditUrl (projectId, credentialId) {
                 return `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`

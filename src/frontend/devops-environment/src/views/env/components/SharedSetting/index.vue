@@ -56,7 +56,11 @@
                 :label="$t('environment.operateTime')"
                 prop="updateTime"
                 min-width="160"
-            />
+            >
+                <template slot-scope="{ row }">
+                    <time-display :value="row.updateTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operation')"
                 fixed="right"
@@ -95,12 +99,14 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import SelectEnvShareDialog from './SelectEnvShareDialog'
+    import TimeDisplay from '../../../../../common-lib/time-display'
     
     export default {
         name: 'SharedSetting',
         components: {
             SearchSelect,
-            SelectEnvShareDialog
+            SelectEnvShareDialog,
+            TimeDisplay
         },
         setup () {
             const { proxy } = useInstance()

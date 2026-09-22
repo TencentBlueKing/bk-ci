@@ -87,6 +87,11 @@
                     </bk-popover>
                 </div>
 
+                <time-display
+                    v-else-if="col.id === 'updateTime'"
+                    :value="row.updateTime"
+                />
+
                 <bk-button
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
@@ -143,6 +148,7 @@
     import PacTag from '@/components/PacTag.vue'
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
+    import TimeDisplay from '../../../../../common-lib/time-display'
     import {
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'

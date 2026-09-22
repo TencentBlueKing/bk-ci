@@ -44,7 +44,11 @@
                 :label="$t('store.创建时间')"
                 prop="createTime"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template slot-scope="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.操作')"
                 width="150"
@@ -175,10 +179,12 @@
 <script>
     import { atomStatusMap } from '@/store/constants'
     import atomDetail from '../../detail/atom-detail/show.vue'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         components: {
-            atomDetail
+            atomDetail,
+            TimeDisplay
         },
 
         props: {
