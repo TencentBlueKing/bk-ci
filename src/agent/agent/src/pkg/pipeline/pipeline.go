@@ -40,6 +40,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -121,7 +122,9 @@ func runCommandPipeline(pipeline *CommandPipeline, lines []string) (err error) {
 	}
 	defer os.Remove(scriptFile)
 
-	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
+	// 命令流水线不经过 Java worker，也必须在执行用户脚本前解除 OOM 保护继承。
+	program, args := oomprotect.UserCommand(scriptFile, nil)
+	output, err := command.RunCommand(program, args, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
 		return errors.Wrap(err, "run pipeline failed")
@@ -151,7 +154,9 @@ func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error 
 	}
 	defer os.Remove(scriptFile)
 
-	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
+	// 命令流水线不经过 Java worker，也必须在执行用户脚本前解除 OOM 保护继承。
+	program, args := oomprotect.UserCommand(scriptFile, nil)
+	output, err := command.RunCommand(program, args, systemutil.GetWorkDir(), nil)
 	if err != nil {
 		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
 		return errors.Wrapf(err, "run pipeline failed")

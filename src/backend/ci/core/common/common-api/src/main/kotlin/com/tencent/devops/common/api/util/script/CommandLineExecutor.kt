@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteStreamHandler
 import org.apache.commons.exec.Executor
 import org.slf4j.LoggerFactory
@@ -41,7 +40,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
-class CommandLineExecutor : DefaultExecutor() {
+class CommandLineExecutor : OomAwareExecutor() {
 
     /** the first exception being caught to be thrown to the caller  */
     private var exceptionCaught: IOException? = null

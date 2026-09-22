@@ -31,15 +31,15 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.script.OomAwareExecutor
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import java.io.File
 
 object ExecutorUtil {
-    private val executor = DefaultExecutor()
+    private val executor = OomAwareExecutor()
 
     private val threadLocal = ThreadLocal<String>()
 
