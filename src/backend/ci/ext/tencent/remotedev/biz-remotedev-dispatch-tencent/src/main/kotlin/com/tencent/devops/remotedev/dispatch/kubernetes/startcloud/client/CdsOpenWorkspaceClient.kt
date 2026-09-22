@@ -7,43 +7,43 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CdsActiveWorkspace
 import java.net.SocketTimeoutException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.UUID
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class CdsOpenWorkspaceClient(
+class CdsOpenWorkspaceClient {
+    companion object {
+        private val logger = LoggerFactory.getLogger(CdsOpenWorkspaceClient::class.java)
+    }
+
     @Value("\${startCloud.apiUrlAI:}")
-    private val apiUrlAI: String,
+    val apiUrlAI: String = ""
+
     @Value("\${startCloud.saasAppId:}")
-    private val saasAppId: String,
+    val saasAppId: String = ""
+
     @Value("\${startCloud.saasSecret:}")
-    private val saasSecret: String
-) {
+    val saasSecret: String = ""
+
     fun getActiveWorkspace(workspaceName: String): CdsActiveWorkspace? {
-        if (workspaceName.isBlank()) {
-            throw WorkspaceDispatchException("workspaceName is blank")
-        }
-        if (apiUrlAI.isBlank() || saasAppId.isBlank()) {
-            throw WorkspaceDispatchException(
-                "查询活跃数字分身配置为空, apiUrlAI/saasAppId blank"
-            )
-        }
-        val url = buildRequestUrl(workspaceName)
+        val encodedName = URLEncoder.encode(workspaceName, StandardCharsets.UTF_8.name())
+        val url = "$apiUrlAI/ai/api/open/workspace/active?workspaceName=$encodedName"
         val id = UUID.randomUUID()
-        logger.info("$id|query active workspace url: $url")
+        logger.info("$id|query active workspace request url: $url")
         val request = Request.Builder()
             .url(url)
-            .header(APP_ID_HEADER, saasAppId)
-            .header(SECRET_HEADER, saasSecret)
+            .headers(makeHeaders().toHeaders())
             .get()
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body?.string().orEmpty()
+                val responseContent = response.body!!.string()
                 logger.info(
                     "$id|query active workspace response: ${response.code} || $responseContent"
                 )
@@ -52,49 +52,29 @@ class CdsOpenWorkspaceClient(
                         "查询活跃数字分身接口异常: ${response.code}"
                     )
                 }
-                return parseResponse(responseContent)
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<CdsActiveWorkspace>>() {}
+                )
+                if (result.isNotOk()) {
+                    throw WorkspaceDispatchException(
+                        "查询活跃数字分身接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data
             }
-        } catch (e: WorkspaceDispatchException) {
-            throw e
         } catch (e: SocketTimeoutException) {
-            logger.error("$id|query active workspace SocketTimeoutException", e)
+            logger.error("query active workspace get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "查询活跃数字分身接口超时, url: $url"
             )
-        } catch (e: Exception) {
-            logger.error("$id|query active workspace exception", e)
-            throw WorkspaceDispatchException(
-                errorMessage = "查询活跃数字分身接口异常: ${e.message}"
-            )
         }
     }
 
-    internal fun parseResponse(responseContent: String): CdsActiveWorkspace? {
-        val result = JsonUtil.to(
-            responseContent,
-            object : TypeReference<Result<CdsActiveWorkspace>>() {}
+    fun makeHeaders(): Map<String, String> {
+        return mapOf(
+            "x-app-id" to saasAppId,
+            "x-secret" to saasSecret
         )
-        if (result.isNotOk()) {
-            throw WorkspaceDispatchException(
-                "查询活跃数字分身接口返回异常: ${result.status}-${result.message}"
-            )
-        }
-        return result.data
-    }
-
-    private fun buildRequestUrl(workspaceName: String): String {
-        val builder = apiUrlAI.removeSuffix("/").toHttpUrl().newBuilder()
-        ACTIVE_PATH.trimStart('/').split("/").filter { it.isNotBlank() }.forEach { segment ->
-            builder.addPathSegment(segment)
-        }
-        builder.addQueryParameter("workspaceName", workspaceName)
-        return builder.build().toString()
-    }
-
-    companion object {
-        private const val APP_ID_HEADER = "x-app-id"
-        private const val SECRET_HEADER = "x-secret"
-        private const val ACTIVE_PATH = "/ai/api/open/workspace/active"
-        private val logger = LoggerFactory.getLogger(CdsOpenWorkspaceClient::class.java)
     }
 }
