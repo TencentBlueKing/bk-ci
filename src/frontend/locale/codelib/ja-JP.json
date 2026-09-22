@@ -285,5 +285,6 @@
     "bkYamlPipelineDeleteVersionFailed": "パイプライン [{pipeline} | {version}] のバージョン削除に失敗しました",
     "bkYamlPipelineDeleteFailed": "パイプライン [{pipeline}] の削除に失敗しました",
     "bkYamlPipelineCloseFailed": "パイプライン [{pipeline}] のインスタンス化状態の更新に失敗しました",
-    "bkYamlInstancePullRequestClosed": "MR [{mr}] がクローズされました。変更はデフォルトブランチに公開されていません"
+    "bkYamlInstancePullRequestClosed": "MR [{mr}] がクローズされました。変更はデフォルトブランチに公開されていません",
+    "oauth仅支持Tgit域名": "OAUTHはgit.tencent.comドメインのみサポートしています"
 }
