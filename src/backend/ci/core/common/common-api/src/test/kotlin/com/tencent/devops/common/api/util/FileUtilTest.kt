@@ -127,6 +127,27 @@ class FileUtilTest {
     }
 
     @Test
+    fun resolveSafeDecodedChildFile_rejectsUrlEncodedTraversal(@TempDir baseDir: File) {
+        assertThrows<ErrorCodeException> {
+            FileUtil.resolveSafeDecodedChildFile(baseDir, "%2e%2e%2fetc/passwd")
+        }
+        assertThrows<ErrorCodeException> {
+            FileUtil.resolveSafeDecodedChildFile(baseDir, "%252e%252e%252fetc/passwd")
+        }
+        assertThrows<ErrorCodeException> {
+            FileUtil.resolveSafeDecodedChildFile(baseDir, "..%2f..%2fetc/passwd")
+        }
+        val ok = FileUtil.resolveSafeDecodedChildFile(baseDir, "plugin%2F1.0.0%2Ffoo.zip")
+        Assertions.assertEquals(File(baseDir, "plugin/1.0.0/foo.zip"), ok)
+        // 历史下载路径常带前导 /，不能当成 Unix 绝对路径
+        val absStyle = FileUtil.resolveSafeDecodedChildFile(baseDir, "/plugin/foo.zip")
+        Assertions.assertEquals(File(baseDir, "plugin/foo.zip"), absStyle)
+        // + 是合法文件名，不能被 URLDecoder 收成空格
+        Assertions.assertEquals("foo+bar.zip", FileUtil.decodeUrlRepeatedly("foo+bar.zip"))
+        Assertions.assertEquals("foo+bar.zip", FileUtil.decodeUrlRepeatedly("foo%2Bbar.zip"))
+    }
+
+    @Test
     fun resolveSafeChildFile_blocksSimilarPrefixAttack(@TempDir parent: File) {
         // 防止 /srv/data 与 /srv/data_evil 这类前缀相似但元素不同的越界
         val baseDir = File(parent, "data").apply { mkdirs() }

@@ -62,6 +62,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
+import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -116,7 +117,11 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         staticFlag: Boolean?
     ): String {
         val pathSplit = file.name.split('.')
-        val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
+        // destPath 来自客户端 filePath，最终原样作为 bkrepo path 传给 uploadLocalFile。
+        // 无规范化/前缀校验时，../、绝对路径或 %2e%2e 可把文件写到仓库任意位置。
+        val destPath = PathUtil.normalizeAndValidateRepoPath(
+            filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
+        )
         val metadata = mutableMapOf<String, String>()
         metadata[KEY_SHA_CONTENT] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
@@ -409,13 +414,14 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         buildId: String?
     ): String {
         val result = if (FileTypeEnum.BK_CUSTOM == fileType) {
-            if (customFilePath.isNullOrBlank() || customFilePath.contains("..")) {
+            if (customFilePath.isNullOrBlank()) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf("customFilePath")
                 )
             }
-            customFilePath.removePrefix("/")
+            // 自定义仓库：整段 destPath 由客户端决定，解码+规范化后禁止逃出仓库虚拟根
+            PathUtil.normalizeAndValidateRepoPath(customFilePath).removePrefix("/")
         } else {
             if (pipelineId.isNullOrBlank() || buildId.isNullOrBlank()) {
                 throw ErrorCodeException(
@@ -423,12 +429,16 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                     params = arrayOf("pipelineId or buildId")
                 )
             }
-            val filePath = if (customFilePath.isNullOrBlank()) {
-                ""
+            val prefix = "$pipelineId/$buildId"
+            if (customFilePath.isNullOrBlank()) {
+                "$prefix/"
             } else {
-                customFilePath.removePrefix("/")
+                // 流水线归档：规范化后必须仍落在 pipelineId/buildId 前缀下
+                PathUtil.normalizeAndValidateRepoPath(
+                    filePath = "$prefix/${customFilePath.removePrefix("/")}",
+                    requiredPrefix = prefix
+                )
             }
-            "$pipelineId/$buildId/$filePath"
         }
         logger.info("generateDestPath, result: $result")
         return result
