@@ -14,6 +14,7 @@ import {
   watch,
   type PropType,
 } from 'vue'
+import { getConsoleOrigin } from '@/utils/util'
 import { useI18n } from 'vue-i18n'
 import styles from './LogViewer.module.css'
 
@@ -88,6 +89,13 @@ export default defineComponent({
         return styles.levelDebug || ''
       }
       return styles.levelInfo || ''
+    }
+
+    const CONSOLE_HREF_REG = /(href\s*=\s*['"])\/console/gi
+    const normalizeLogLinks = (html: string): string => {
+      if (!html) return html
+      const origin = getConsoleOrigin()
+      return html.replace(CONSOLE_HREF_REG, (_match, prefix: string) => `${prefix}${origin}/console`)
     }
 
     // 高亮搜索关键字
@@ -173,7 +181,10 @@ export default defineComponent({
           {props.showTimestamp && (
             <span class={styles.timestamp}>{formatTimestamp(log.timestamp)}</span>
           )}
-          <span class={styles.message} innerHTML={highlightKeyword(log.message)} />
+          <span
+            class={styles.message}
+            innerHTML={highlightKeyword(normalizeLogLinks(log.message))}
+          />
         </div>
       )
     }

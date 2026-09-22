@@ -25,24 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gpt.service.config
-
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+package com.tencent.devops.store.pojo.atom.enums
 
 /**
- * 蓝鲸 AI Creative Bot APIGW 配置
- * 通过 esb 配置项加载应用认证信息
+ * 插件版本列表版本类型筛选
+ * @property branchTestFlag 服务层查询标识：null-不过滤（全部） false-仅正式版本 true-仅分支测试版本
  */
-@Component
-class AiCreativeBotConfig {
+enum class VersionTypeEnum(val branchTestFlag: Boolean?) {
+    ALL(null),
+    FORMAL(false),
+    TEST(true);
 
-    @Value("\${esb.appCode:coming_soon}")
-    val appCode: String = ""
-
-    @Value("\${esb.appSecret:coming_soon}")
-    val appSecret: String = ""
-
-    @Value("\${aiCreativeBot.url:coming_soon}")
-    val apiUrl: String = ""
+    companion object {
+        /**
+         * 大小写不敏感解析；空串与 null 归一为 ALL
+         * @return 无法识别时返回 null，由调用方决定如何报错
+         */
+        fun from(value: String?): VersionTypeEnum? {
+            val normalized = value?.uppercase()?.takeIf { it.isNotEmpty() } ?: return ALL
+            return entries.firstOrNull { it.name == normalized }
+        }
+    }
 }
