@@ -431,12 +431,15 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
-        client.get(ServiceRepositoryPermissionResource::class).validatePermission(
-            userId = userId,
-            projectId = projectId,
-            repositoryHashId = triggerEvent.eventSource!!,
-            permission = AuthPermission.USE
-        )
+        // 代码库事件校验仓库权限；TAPD / 制品到达的 eventSource 不是 repoHashId
+        if (triggerType.toScmType() != null) {
+            client.get(ServiceRepositoryPermissionResource::class).validatePermission(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = triggerEvent.eventSource!!,
+                permission = AuthPermission.USE
+            )
+        }
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)
         val replayEventId = getEventId()

@@ -4,15 +4,9 @@ enum class MatchStatus {
     // 匹配成功
     SUCCESS,
 
-    // 插件不匹配
-    ELEMENT_NOT_MATCH,
+    // 跳过：本插件非该事件目标（插件类型/代码库/事件类型/制品形态等不匹配），无需记录触发事件，直接匹配下一个插件
+    SKIP,
 
-    // 代码库不匹配
-    REPOSITORY_NOT_MATCH,
-
-    // 事件类型不匹配
-    EVENT_TYPE_NOT_MATCH,
-
-    // 条件不匹配
+    // 条件不匹配：记录触发事件失败原因
     CONDITION_NOT_MATCH;
 }

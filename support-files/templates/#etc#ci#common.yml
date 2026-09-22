@@ -327,6 +327,9 @@ spring:
       - index: 88
         name: T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD
         databaseShardingStrategy: SHARDING
+      - index: 89
+        name: T_PIPELINE_EVENT_REGISTER
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:

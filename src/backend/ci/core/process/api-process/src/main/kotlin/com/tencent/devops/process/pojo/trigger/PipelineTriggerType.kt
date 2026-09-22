@@ -79,7 +79,11 @@ enum class PipelineTriggerType {
 
     // TAPD触发
     @Schema(title = "TAPD事件触发")
-    TAPD;
+    TAPD,
+
+    // 制品到达触发
+    @Schema(title = "制品到达触发")
+    ARTIFACT;
 
     fun toScmType(): ScmType? {
         return toScmType(name)

@@ -254,4 +254,52 @@ object WebhookI18nConstants {
 
     // 通用: 优先级不匹配
     const val BK_TRIGGER_PRIORITY_NOT_MATCH = "bkTriggerPriorityNotMatch"
+
+    // 制品到达触发事件描述-文件：制品 {name} {size}到达，来源 {pipeline}#{buildNo}, by {user}，{repo}
+    const val BK_ARTIFACT_FILE_ARRIVED_EVENT_DESC = "bkArtifactFileArrivedEventDesc"
+
+    // 制品到达触发事件描述-目录：制品目录 {name} {size}到达，来源 {pipeline}#{buildNo}，by {user}，{repo}
+    const val BK_ARTIFACT_FOLDER_ARRIVED_EVENT_DESC = "bkArtifactFolderArrivedEventDesc"
+
+    // 制品到达触发事件描述-镜像：镜像: {name} 到达，来源: {pipeline}#{buildNo}, by {user}
+    const val BK_ARTIFACT_IMAGE_ARRIVED_EVENT_DESC = "bkArtifactImageArrivedEventDesc"
+
+    // 制品到达构建信息：制品{0}到达
+    const val BK_ARTIFACT_ARRIVED_BUILD_MSG = "bkArtifactArrivedBuildMsg"
+
+    // 制品到达构建信息-目录：制品目录{0}到达
+    const val BK_ARTIFACT_FOLDER_ARRIVED_BUILD_MSG = "bkArtifactFolderArrivedBuildMsg"
+
+    // 制品到达构建信息-镜像：镜像{0}到达
+    const val BK_ARTIFACT_IMAGE_ARRIVED_BUILD_MSG = "bkArtifactImageArrivedBuildMsg"
+
+    // 制品触发: 自产制品跳过（防循环）
+    const val BK_ARTIFACT_SOURCE_PIPELINE_SELF = "bkArtifactSourcePipelineSelf"
+
+    // 制品触发: 来源流水线不满足触发条件
+    const val BK_ARTIFACT_WATCH_PIPELINE_NOT_MATCH = "bkArtifactWatchPipelineNotMatch"
+
+    // 制品触发: 元数据不满足触发条件
+    const val BK_ARTIFACT_METADATA_NOT_MATCH = "bkArtifactMetadataNotMatch"
+
+    // 制品触发: 镜像名不满足触发条件
+    const val BK_ARTIFACT_IMAGE_NAME_NOT_MATCH = "bkArtifactImageNameNotMatch"
+
+    // 制品触发: 仓库类型不满足触发条件
+    const val BK_ARTIFACT_REPO_TYPE_NOT_MATCH = "bkArtifactRepoTypeNotMatch"
+
+    // 制品触发: 根路径不满足触发条件
+    const val BK_ARTIFACT_WATCH_ROOT_PATH_NOT_MATCH = "bkArtifactWatchRootPathNotMatch"
+
+    // 制品触发: 制品名称不满足触发条件
+    const val BK_ARTIFACT_NAME_NOT_MATCH = "bkArtifactNameNotMatch"
+
+    // 制品触发: 制品名称被排除
+    const val BK_ARTIFACT_NAME_IGNORED = "bkArtifactNameIgnored"
+
+    // 制品触发: 镜像Tag不满足触发条件
+    const val BK_ARTIFACT_TAG_NOT_MATCH = "bkArtifactTagNotMatch"
+
+    // 制品触发: 镜像Tag被排除
+    const val BK_ARTIFACT_TAG_IGNORED = "bkArtifactTagIgnored"
 }

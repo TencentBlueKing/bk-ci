@@ -1,0 +1,23 @@
+version: v3.0
+name: combo-base-artifact-trigger-test
+on:
+  manual: enabled
+  remote: enabled
+  artifact:
+    arrived:
+      name: 制品到达触发
+      repository: pipeline
+      artifacts-name:
+        - "*.msi"
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"

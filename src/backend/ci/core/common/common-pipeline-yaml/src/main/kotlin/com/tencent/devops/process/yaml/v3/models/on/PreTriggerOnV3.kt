@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v3.models.on
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -82,7 +83,16 @@ data class PreTriggerOnV3(
     @get:Schema(title = "story")
     override val story: Any? = null,
     @get:Schema(title = "bug")
-    override val bug: Any? = null
+    override val bug: Any? = null,
+    /**
+     * 通用框架触发器（generic=true，如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
+     *
+     * 采用 [JsonAnyGetter] 在序列化时平铺到当前对象顶层（输出 `type + {事件}`），
+     * 反序列化由 [com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser] 显式填充；
+     * 新增触发器/事件类型只需实现转换器读写本 map，无需再改动本类字段。
+     */
+    @get:JsonAnyGetter
+    val events: MutableMap<String, Any?> = mutableMapOf()
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.V3_0
 }

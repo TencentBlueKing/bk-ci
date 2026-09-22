@@ -73,7 +73,7 @@ class MarketEventRequestService constructor(
                         AUTH_HEADER_USER_ID to userId,
                         AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
                     ),
-                    body = event.body ?: mapOf(),
+                    body = GenericWebhookEventBody.ofMap(event.body ?: mapOf()),
                     queryParams = mapOf()
                 )
                 val triggerEvent = PipelineTriggerEvent(

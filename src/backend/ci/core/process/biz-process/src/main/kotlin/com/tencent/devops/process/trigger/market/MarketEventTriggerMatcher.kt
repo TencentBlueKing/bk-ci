@@ -51,7 +51,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             version = version,
             status = StoreStatusEnum.RELEASED
         ).data ?: return WebhookAtomResponse(
-            matchStatus = MatchStatus.ELEMENT_NOT_MATCH,
+            matchStatus = MatchStatus.SKIP,
             failedReason = I18Variable(
                 BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC,
                 params = listOf()
@@ -69,7 +69,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             fieldMappings = eventConfig.fieldMapping,
             incomingHeaders = triggerEventBody.headers,
             incomingQueryParamMap = triggerEventBody.queryParams,
-            incomingBody = triggerEventBody.body
+            incomingBody = triggerEventBody.bodyAsMap()
         )
         // val fieldMap = eventConfig.fieldMapping.associate { it.sourcePath to it.targetField }
         // 计算匹配结果
