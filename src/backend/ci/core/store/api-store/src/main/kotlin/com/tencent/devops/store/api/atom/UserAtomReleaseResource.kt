@@ -102,6 +102,30 @@ interface UserAtomReleaseResource {
         atomId: String
     ): Result<StoreProcessInfo>
 
+    @Operation(summary = "结束插件分支测试版本测试")
+    @PUT
+    @Path("/desk/atom/{atomId}/test/version/end")
+    fun endBranchVersionTest(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "atomId", required = true)
+        @PathParam("atomId")
+        atomId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "判断插件是否能新增主版本")
+    @GET
+    @Path("/desk/atom/release/check/canAddMainVersion")
+    fun checkCanAddMainVersion(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String
+    ): Result<Boolean>
+
     @Operation(summary = "取消发布")
     @PathParam("atomId")
     @PUT

@@ -53,6 +53,7 @@ import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnv
@@ -94,7 +95,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
     private val redisOperation: RedisOperation,
-    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
+    private val storeRunInfoCacheManager: StoreRunInfoCacheManager
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -296,8 +298,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
         if (!testFlag && !historyBuildQueryFlag) {
             // 将db中的环境信息写入缓存
-            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-            redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfo))
+            storeRunInfoCacheManager.setAtomRunInfo(atomCode, version, JsonUtil.toJson(atomRunInfo))
         }
         return atomRunInfo
     }

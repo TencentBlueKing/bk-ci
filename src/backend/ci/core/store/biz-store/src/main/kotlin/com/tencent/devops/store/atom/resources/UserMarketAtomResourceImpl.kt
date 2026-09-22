@@ -148,9 +148,10 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         tenantId: String?,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String?
     ): Result<Page<AtomVersionListItem>> {
-        return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize, tenantId)
+        return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize, tenantId, versionType)
     }
 
     override fun installAtom(userId: String, tenantId: String?, installAtomReq: InstallAtomReq): Result<Boolean> {

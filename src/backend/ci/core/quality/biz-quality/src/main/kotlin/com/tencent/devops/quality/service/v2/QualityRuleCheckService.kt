@@ -458,9 +458,7 @@ class QualityRuleCheckService @Autowired constructor(
                     resultList = resultList,
                     endNotifyTypeList = ruleOp.notifyTypeList ?: listOf(),
                     endNotifyGroupList = ruleOp.notifyGroupList ?: listOf(),
-                    endNotifyUserList = (ruleOp.notifyUserList ?: listOf()).map { user ->
-                        EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                    },
+                    endNotifyUserList = parseNotifyUserList(ruleOp.notifyUserList, runtimeVariable),
                     position = buildCheckParams.position,
                     stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
@@ -474,15 +472,23 @@ class QualityRuleCheckService @Autowired constructor(
                     buildNo = buildNo,
                     createTime = createTime,
                     resultList = resultList,
-                    auditNotifyUserList = (ruleOp.auditUserList
-                        ?: listOf()).toSet().map { user ->
-                        EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
-                    },
+                    auditNotifyUserList = parseNotifyUserList(ruleOp.auditUserList, runtimeVariable),
                     position = buildCheckParams.position,
                     stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
                 )
             }
+        }
+    }
+
+    // 通知/审核人支持 ${{}} 且变量值可为 user1,user2；
+    private fun parseNotifyUserList(userList: List<String>?, runtimeVariable: Map<String, String>?): List<String> {
+        val variables = runtimeVariable ?: mapOf()
+        return (userList ?: listOf()).flatMap { user ->
+            EnvUtils.parseEnv(user, variables)
+                .split(NOTIFY_USER_SEPARATOR_REGEX)
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
         }
     }
 
@@ -739,7 +745,7 @@ class QualityRuleCheckService @Autowired constructor(
                 sb.append(I18nUtil.getCodeLanMessage(BK_BLOCKED))
             }
             val nullMsg = if (it.actualValue == null) I18nUtil.getCodeLanMessage(BK_NO_TOOL_OR_RULE_ENABLED) else ""
-            val detailMsg = getDetailMsg(it, params)
+            val detailMsg = wrapDetailMsgLink(getDetailMsg(it, params))
             Triple(
                 sb.append(
                     I18nUtil.getCodeLanMessage(
@@ -789,6 +795,19 @@ class QualityRuleCheckService @Autowired constructor(
         } else {
             record.logPrompt ?: ""
         }
+    }
+
+    // 仅整段 http(s) URL 才包装成“查看详情”；纯汉字/符号、文案混链接、已有 <a> 均原样返回。
+    private fun wrapDetailMsgLink(detailMsg: String): String {
+        val msg = detailMsg.trim()
+        if (msg.isEmpty() || HTML_ANCHOR_PREFIX_REGEX.containsMatchIn(msg)) {
+            return detailMsg
+        }
+        if (!PLAIN_HTTP_URL_REGEX.matches(msg)) {
+            return detailMsg
+        }
+        val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)
+        return "<a target='_blank' href='$msg'>$bkSeeDetails</a>"
     }
 
     /**
@@ -1108,5 +1127,13 @@ class QualityRuleCheckService @Autowired constructor(
         private const val DETAIL_NOT_RUN_VALUE = "-1"
         private const val DEFAULT_TIMEOUT_MINUTES = 15
         val DETAIL_NOT_RUN_FLOAT_VALUE = BigDecimal(-1)
+        private val NOTIFY_USER_SEPARATOR_REGEX = Regex("[,;]+")
+        // 匹配 <a> / <a href=...> / <a/>，排除 <abc>、<article> 等其它标签
+        private val HTML_ANCHOR_PREFIX_REGEX = Regex("^<a(\\s|>|/)", RegexOption.IGNORE_CASE)
+        // 整段为单一 http(s) URL；含空白或 HTML 特殊字符视为非纯链接，不包装
+        private val PLAIN_HTTP_URL_REGEX = Regex(
+            "^https?://[^/\\s<>'\"]+[^\\s<>'\"]*$",
+            RegexOption.IGNORE_CASE
+        )
     }
 }

@@ -32,7 +32,10 @@ import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.atom.BuildAtomResource
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
-    private val atomReleaseService: AtomReleaseService
+    private val atomReleaseService: AtomReleaseService,
+    private val marketAtomService: MarketAtomService
 ) : BuildAtomResource {
 
     override fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?> {
@@ -62,5 +66,18 @@ class BuildAtomResourceImpl @Autowired constructor(
 
     override fun getProcessInfo(userId: String, tenantId: String?, atomId: String): Result<StoreProcessInfo> {
         return atomReleaseService.getProcessInfo(userId, atomId, tenantId)
+    }
+
+    @SensitiveApiPermission("branch_test_version_management")
+    override fun getAtomVersionInfoById(userId: String, atomId: String): Result<PipelineAtom?> {
+        return atomService.getPipelineAtomByIdWithPermissionCheck(userId = userId, id = atomId)
+    }
+
+    @SensitiveApiPermission("branch_test_version_management")
+    override fun getAtomVersionInfoByCode(userId: String, atomCode: String): Result<AtomVersion?> {
+        return marketAtomService.getNewestAtomByCodeWithPermissionCheck(
+            userId = userId,
+            atomCode = atomCode
+        )
     }
 }

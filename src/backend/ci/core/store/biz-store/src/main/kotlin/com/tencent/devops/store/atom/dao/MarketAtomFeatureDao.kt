@@ -122,4 +122,22 @@ class MarketAtomFeatureDao {
                 .execute()
         }
     }
+
+    /**
+     * T_ATOM_FEATURE 与插件编码一一对应，直接分页取 ATOM_CODE，无需 DISTINCT。
+     */
+    fun listAtomCodes(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int
+    ): List<String> {
+        with(TAtomFeature.T_ATOM_FEATURE) {
+            return dslContext.select(ATOM_CODE)
+                .from(this)
+                .orderBy(ATOM_CODE)
+                .offset(offset)
+                .limit(limit)
+                .fetch(ATOM_CODE)
+        }
+    }
 }

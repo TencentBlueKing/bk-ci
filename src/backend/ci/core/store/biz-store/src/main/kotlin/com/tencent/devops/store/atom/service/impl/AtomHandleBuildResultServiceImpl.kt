@@ -122,12 +122,15 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
                 repositoryHashId = atomRecord.repositoryHashId,
                 branch = atomRecord.branch
             )
-            // 插件大版本内有测试版本则写入缓存
-            redisOperation.hset(
-                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(version),
-                values = "true"
-            )
+            // 分支测试版本不参与大版本测试标记缓存
+            if (atomRecord.branchTestFlag != true) {
+                // 插件大版本内有测试版本则写入缓存
+                redisOperation.hset(
+                    key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                    hashKey = VersionUtils.convertLatestVersion(version),
+                    values = "true"
+                )
+            }
         }
         return Result(true)
     }

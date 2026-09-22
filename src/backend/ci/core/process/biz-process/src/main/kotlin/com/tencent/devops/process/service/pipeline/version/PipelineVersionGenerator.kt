@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -59,6 +60,7 @@ import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.LinkedList
 
 /**
@@ -352,9 +354,9 @@ class PipelineVersionGenerator constructor(
 
     /**
      * 生成模版实例化版本
-     *
      */
     fun generateInstanceVersion(
+        userId: String,
         projectId: String,
         pipelineId: String,
         newModel: Model,
@@ -362,9 +364,7 @@ class PipelineVersionGenerator constructor(
         repoHashId: String?,
         targetAction: CodeTargetAction?,
         targetBranch: String? = null,
-        defaultBranch: String? = null,
-        templateId: String,
-        templateVersion: Long
+        defaultBranch: String? = null
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
@@ -373,7 +373,7 @@ class PipelineVersionGenerator constructor(
                     params = arrayOf("repoHashId")
                 )
             }
-            val checkoutBranch = "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$templateId-$templateVersion"
+            val checkoutBranch = generateTemplateInstanceBranch(userId)
             generateVersionWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -541,10 +541,9 @@ class PipelineVersionGenerator constructor(
      * 获取模版实例化版本状态和分支名
      */
     fun getInstanceStatusAndBranchName(
+        userId: String,
         projectId: String,
         pipelineId: String?,
-        templateId: String,
-        templateVersion: Long,
         enablePac: Boolean,
         repoHashId: String?,
         targetAction: CodeTargetAction?,
@@ -552,7 +551,7 @@ class PipelineVersionGenerator constructor(
         defaultBranch: String? = null
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
-            val checkoutBranch = "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$templateId-$templateVersion"
+            val checkoutBranch = generateTemplateInstanceBranch(userId)
             getStatusAndBranchNameWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -676,6 +675,7 @@ class PipelineVersionGenerator constructor(
     }
 
     fun batchPreFetchInstanceVersion(
+        userId: String,
         projectId: String,
         templateId: String,
         version: Long,
@@ -700,10 +700,9 @@ class PipelineVersionGenerator constructor(
                 val pipelineId = releaseInfo.pipelineId
                 val resourceOnlyVersion = if (releaseInfo.pipelineId.isEmpty() || pipelineId2Name[pipelineId] == null) {
                     val (versionStatus, branchName) = getInstanceStatusAndBranchName(
+                        userId = userId,
                         projectId = projectId,
                         pipelineId = null,
-                        templateId = templateId,
-                        templateVersion = version,
                         enablePac = enablePac,
                         repoHashId = repoHashId,
                         targetAction = targetAction,
@@ -725,6 +724,7 @@ class PipelineVersionGenerator constructor(
                         overrideTemplateField = releaseInfo.overrideTemplateField
                     )
                     generateInstanceVersion(
+                        userId = userId,
                         projectId = projectId,
                         pipelineId = releaseInfo.pipelineId,
                         newModel = instanceModel,
@@ -732,9 +732,7 @@ class PipelineVersionGenerator constructor(
                         repoHashId = repoHashId,
                         targetAction = targetAction,
                         targetBranch = targetBranch,
-                        defaultBranch = defaultBranch,
-                        templateId = templateId,
-                        templateVersion = version
+                        defaultBranch = defaultBranch
                     )
                 }
                 PrefetchReleaseResult(
@@ -840,9 +838,15 @@ class PipelineVersionGenerator constructor(
             text.substring(text.length - tailLen)
     }
 
+    private fun generateTemplateInstanceBranch(userId: String): String {
+        val time = DateTimeUtil.toDateTime(LocalDateTime.now(), PAC_TEMPLATE_INSTANCE_BRANCH_TIME_FORMAT)
+        return "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$userId-$time"
+    }
+
     companion object {
         const val INIT_VERSION = 1
         private const val PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX = "bk-ci-template-instance-"
+        private const val PAC_TEMPLATE_INSTANCE_BRANCH_TIME_FORMAT = "yyyyMMddHHmm"
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         private const val MAX_YAML_LOG_LENGTH = 8000
         private val logger = LoggerFactory.getLogger(PipelineVersionGenerator::class.java)

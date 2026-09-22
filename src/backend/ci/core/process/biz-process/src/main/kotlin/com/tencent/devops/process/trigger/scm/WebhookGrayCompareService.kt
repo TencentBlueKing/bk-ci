@@ -51,7 +51,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
@@ -251,18 +250,15 @@ class WebhookGrayCompareService @Autowired constructor(
     ) {
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
         val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
-        val variables = mutableMapOf<String, String>()
         val container = model.getTriggerContainer()
-        // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
+        // 解析变量，兼容代码库分支等级联参数
+        val variables = pipelineRepositoryService.getTriggerParams(container)
         container.elements.forEach elements@{ element ->
             if (!element.elementEnabled() || element !is WebHookTriggerElement) {
                 return@elements
             }
             val webHookParams = WebhookElementParamsRegistrar.getService(element)
-                .getWebhookElementParams(element, PipelineVarUtil.fillVariableMap(variables)) ?: return@elements
+                .getWebhookElementParams(element, variables) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 return@elements
@@ -370,14 +366,9 @@ class WebhookGrayCompareService @Autowired constructor(
             pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version) ?: return
         val model = resource.model
 
-        val variables = mutableMapOf<String, String>()
         val container = model.stages[0].containers[0] as TriggerContainer
-        // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
-        // 填充[variables.]前缀
-        variables.putAll(PipelineVarUtil.fillVariableMap(variables))
+        // 解析变量，兼容代码库分支等级联参数
+        val variables = pipelineRepositoryService.getTriggerParams(container).toMutableMap()
         if (repository.enablePac == true) {
             variables[PIPELINE_PAC_REPO_HASH_ID] = repository.repoHashId!!
         }

@@ -50,4 +50,14 @@ object ContextMarker {
         """<!-- CONTEXT_START -->.*?<!-- CONTEXT_END -->""",
         RegexOption.DOT_MATCHES_ALL
     )
+
+    /**
+     * 将上下文区间替换为 [newBlock]。
+     *
+     * 使用 transform 重载，确保上下文中的 `$` 和 `\` 按普通文本处理，
+     * 避免被正则引擎解释为捕获组引用或转义符。
+     */
+    fun replaceBlock(text: String, newBlock: String): String = PATTERN.replace(text) {
+        newBlock
+    }
 }

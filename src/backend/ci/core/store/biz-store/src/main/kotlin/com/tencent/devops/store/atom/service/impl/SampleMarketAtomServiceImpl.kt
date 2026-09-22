@@ -28,6 +28,8 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.repository.pojo.Repository
@@ -64,7 +66,10 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
             dslContext = dslContext,
             atomCode = atomCode,
             tenantId = TenantUtils.getTenantId()
-        )!!
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode)
+        )
         return client.get(ServiceArchiveAtomResource::class)
             .updateArchiveFile(
                 projectCode = projectCode,

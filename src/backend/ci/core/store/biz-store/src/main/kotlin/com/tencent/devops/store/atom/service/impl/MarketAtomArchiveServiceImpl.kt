@@ -152,7 +152,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             atomCode = atomCode,
             tenantId = tenantId
         )
-        if (atomCount < 0) {
+        if (atomCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
@@ -163,7 +163,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             dslContext = dslContext,
             atomCode = atomCode,
             tenantId = tenantId
-        )!!
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode),
+            language = I18nUtil.getLanguage(userId)
+        )
         if (atomRecord.classType != atomCode) {
             // 校验用户是否是该插件的开发成员
             val flag = storeMemberDao.isStoreMember(
@@ -186,7 +190,15 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     atomRecord
                 } else {
-                    atomDao.getMaxVersionAtomByCode(dslContext = dslContext, atomCode = atomCode, tenantId = tenantId)!!
+                    atomDao.getMaxVersionAtomByCode(
+                        dslContext = dslContext,
+                        atomCode = atomCode,
+                        tenantId = tenantId
+                    ) ?: return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = arrayOf(atomCode),
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 },
                 releaseType = releaseType,
                 osList = osList,

@@ -291,4 +291,15 @@ interface OpAtomResource {
         @QueryParam("atomCode")
         atomCode: String?
     ): Result<Boolean>
+
+    @Operation(summary = "删除插件运行时缓存")
+    @POST
+    @Path("/deleteAtomRunInfoCache")
+    fun deleteAtomRunInfoCache(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件标识集合，为空则按库中插件标识全量删除", required = false)
+        atomCodes: Set<String>?
+    ): Result<Boolean>
 }

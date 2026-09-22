@@ -1006,7 +1006,8 @@
                         this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
-                            if (this.isDraftBaseBranchVersion) {
+                            // 模板实例化发布的 targetActionOptions 不含源分支选项，不应自动赋默认值，需由用户主动选择
+                            if (this.isDraftBaseBranchVersion && !this.isTemplateInstanceMode) {
                                 this.releaseParams.targetAction = TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                             }
                         })

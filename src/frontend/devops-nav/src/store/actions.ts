@@ -1,7 +1,7 @@
 import { ActionTree, ActionContext } from 'vuex'
 import { AxiosRequestConfig } from 'axios'
 import Request from '../utils/request'
-import { transformObj } from '../utils/util'
+import { transformObj, reorderProjectListByFavor } from '../utils/util'
 import {
     SET_USER_INFO,
     SET_PROJECT_LIST,
@@ -46,6 +46,25 @@ const actions: ActionTree<RootState, any> = {
     },
     async toggleServiceCollect (_, { serviceId, isCollected }: any) {
         return Request.put(`${PROJECT_API_URL_PREFIX}/user/services/${serviceId}?collector=${isCollected}`)
+    },
+    /**
+     * 项目收藏 / 取消收藏
+     */
+    async toggleProjectCollect ({ state, dispatch }: ActionContext<RootState, any>, { projectCode, favor }: any) {
+        await Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/favor?favor=${favor}`)
+        if (!Array.isArray(state.projectList)) return
+        const nextList = state.projectList.map((project: any) => {
+            if (project.projectCode === projectCode || project.englishName === projectCode) {
+                return {
+                    ...project,
+                    favor
+                }
+            }
+            return project
+        })
+        const projectList = reorderProjectListByFavor(nextList)
+        dispatch('setProjectList', projectList)
+        window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
     },
     async fetchLinks ({ commit }, { type }) {
         try {

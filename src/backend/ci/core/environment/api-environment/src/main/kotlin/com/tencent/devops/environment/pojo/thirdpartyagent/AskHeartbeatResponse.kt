@@ -32,6 +32,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Suppress("ALL")
 @Schema(title = "Agent心跳上报模型")
 data class AskHeartbeatResponse(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
     @get:Schema(title = "主版本")
     val masterVersion: String,
     @get:Schema(title = "从属版本")
@@ -56,6 +58,7 @@ data class AskHeartbeatResponse(
     val createMod: Boolean? = false
 ) {
     constructor(resp: HeartbeatResponse) : this(
+        projectId = resp.projectId,
         masterVersion = resp.masterVersion,
         slaveVersion = resp.slaveVersion,
         agentStatus = resp.AgentStatus,

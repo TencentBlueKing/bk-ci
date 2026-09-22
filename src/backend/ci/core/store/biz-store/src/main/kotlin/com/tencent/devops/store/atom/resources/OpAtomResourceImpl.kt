@@ -182,4 +182,11 @@ class OpAtomResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return opAtomService.updateAtomConfigCache(userId, kProperty, atomCode)
     }
+
+    override fun deleteAtomRunInfoCache(
+        userId: String,
+        atomCodes: Set<String>?
+    ): Result<Boolean> {
+        return opAtomService.deleteAtomRunInfoCache(userId, atomCodes)
+    }
 }

@@ -79,9 +79,8 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   /**
    * Load authoring environment list
    * @param projectId - Project ID
-   * @param envType - Environment type (default: 'CREATE')
    */
-  async function loadEnvList(projectId: string, envType: string = 'CREATE'): Promise<void> {
+  async function loadEnvList(projectId: string, createMode: boolean = true): Promise<void> {
     if (!projectId) {
       console.warn('Project ID is required to load environment list')
       return
@@ -90,7 +89,7 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
     try {
       envListLoading.value = true
       errorMessage.value = ''
-      const result = await apiFetchEnvList({ projectId, envType })
+      const result = await apiFetchEnvList({ projectId, createMode })
       envList.value = result
     } catch (error: any) {
       console.error('Failed to load environment list:', error)
@@ -133,10 +132,9 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   /**
    * Refresh environment list
    * @param projectId - Project ID
-   * @param envType - Environment type (default: 'CREATE')
    */
-  async function refreshEnvList(projectId: string, envType: string = 'CREATE'): Promise<void> {
-    await loadEnvList(projectId, envType)
+  async function refreshEnvList(projectId: string, createMode: boolean = true): Promise<void> {
+    await loadEnvList(projectId, createMode)
   }
 
   /**

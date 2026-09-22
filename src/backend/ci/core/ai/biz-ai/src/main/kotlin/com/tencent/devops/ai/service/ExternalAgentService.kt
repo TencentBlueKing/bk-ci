@@ -81,6 +81,46 @@ class ExternalAgentService @Autowired constructor(
         return toInfo(record)
     }
 
+    fun listAllForOp(): List<ExternalAgentInfo> {
+        return dao.listAll(dslContext).map { toInfo(it) }
+    }
+
+    fun createForOp(request: ExternalAgentCreate): ExternalAgentInfo {
+        return create(OP_OWNER, request)
+    }
+
+    fun updateForOp(configId: String, request: ExternalAgentUpdate): Boolean {
+        dao.getById(dslContext, configId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.EXTERNAL_AGENT_NOT_FOUND,
+                defaultMessage = "External agent config not found",
+                params = arrayOf(configId)
+            )
+        return dao.update(
+            dslContext = dslContext,
+            id = configId,
+            agentName = request.agentName,
+            description = request.description,
+            platform = request.platform,
+            agentId = request.agentId,
+            apiUrl = request.apiUrl,
+            headers = request.headers,
+            enabled = request.enabled
+        ) > 0
+    }
+
+    fun deleteForOp(configId: String): Boolean {
+        dao.getById(dslContext, configId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.EXTERNAL_AGENT_NOT_FOUND,
+                defaultMessage = "External agent config not found",
+                params = arrayOf(configId)
+            )
+        return dao.delete(dslContext, configId) > 0
+    }
+
     fun list(userId: String): List<ExternalAgentInfo> {
         return dao.listByUser(dslContext, userId)
             .map { toInfo(it) }
@@ -147,6 +187,7 @@ class ExternalAgentService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(
             ExternalAgentService::class.java
         )
+        private const val OP_OWNER = "system"
     }
 
     private fun toInfo(

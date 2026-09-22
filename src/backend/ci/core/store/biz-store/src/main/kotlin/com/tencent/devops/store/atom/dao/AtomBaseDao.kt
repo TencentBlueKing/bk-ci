@@ -122,10 +122,39 @@ abstract class AtomBaseDao {
         return conditions
     }
 
+    /**
+     * 正式版本查询条件（排除分支测试版本），单个插件标识的查询统一走这里，避免遗漏过滤
+     */
+    protected fun formalVersionConditions(atomCode: String): MutableList<Condition> {
+        return mutableListOf(
+            TAtom.T_ATOM.ATOM_CODE.eq(atomCode),
+            formalVersionFlagCondition()
+        )
+    }
+
+    /**
+     * 正式版本查询条件（排除分支测试版本），批量插件标识的查询统一走这里
+     */
+    protected fun formalVersionConditions(atomCodes: List<String>): MutableList<Condition> {
+        return mutableListOf(
+            TAtom.T_ATOM.ATOM_CODE.`in`(atomCodes),
+            formalVersionFlagCondition()
+        )
+    }
+
+    /**
+     * 分支测试版本标识条件：BRANCH_TEST_FLAG 为 NULL 表示未标记过，按正式版本处理
+     * （与列默认值 b'0' 及 MarketAtomServiceImpl 中的 ?: false 兜底保持同一语义）
+     */
+    protected fun formalVersionFlagCondition(): Condition {
+        return TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(false)
+            .or(TAtom.T_ATOM.BRANCH_TEST_FLAG.isNull())
+    }
+
     fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String, tenantId: String? = null): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
                 .and(LATEST_FLAG.eq(true))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
@@ -137,7 +166,7 @@ abstract class AtomBaseDao {
     fun getLatestAtomListByCodes(dslContext: DSLContext, atomCodes: List<String>): Result<TAtomRecord?> {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.`in`(atomCodes))
+                .where(formalVersionConditions(atomCodes))
                 .and(LATEST_FLAG.eq(true))
                 .fetch()
         }
@@ -149,10 +178,15 @@ abstract class AtomBaseDao {
         branchTestFlag: Boolean = false,
         tenantId: String? = null
     ): TAtomRecord? {
+        // 查正式版本时与 formalVersionConditions 保持同一口径：未标记过的记录（NULL）按正式版本处理
+        val flagCondition = if (branchTestFlag) {
+            TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(true)
+        } else {
+            formalVersionFlagCondition()
+        }
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(BRANCH_TEST_FLAG.eq(branchTestFlag))
+                .where(ATOM_CODE.eq(atomCode).and(flagCondition))
                 .let {
                     if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
                 }
@@ -169,8 +203,7 @@ abstract class AtomBaseDao {
         tenantId: String? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(ATOM_CODE.eq(atomCode))
+            val conditions = formalVersionConditions(atomCode)
             if (useTenantCondition(tenantId)) {
                 conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
             }
@@ -368,7 +401,10 @@ abstract class AtomBaseDao {
      * @param ta TAtom 表
      * @param jobType 要筛选的 Job 类型名称（如 AGENT、AGENT_LESS、CREATIVE_STREAM、CLOUD_TASK）
      * @param serviceScope 服务范围，null 视为 PIPELINE
-     * @param queryFitAgentBuildLessAtomFlag 仅 PIPELINE+AGENT 时有效：true 表示同时匹配 BUILD_LESS_RUN_FLAG=true；false 表示排除无编译；null 不附加
+     * @param queryFitAgentBuildLessAtomFlag 仅编译环境 jobType 有效：
+     *   PIPELINE+AGENT 用 BUILD_LESS_RUN_FLAG 标记双环境；
+     *   CREATIVE_STREAM 用 JOB_TYPE_MAP 是否同时包含 CLOUD_TASK。
+     *   true 包含双环境插件，false 排除只保留编译环境专属插件，null 不附加。
      * @return 查询条件，若 jobType 为空则返回 null
      */
     protected fun buildJobTypeCondition(
@@ -395,14 +431,60 @@ abstract class AtomBaseDao {
             isMapValid.and(mapJsonContains)
         }
 
-        val isBuildEnvJobType = runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrDefault(false)
-        if (isBuildEnvJobType && queryFitAgentBuildLessAtomFlag != null) {
-            return when (queryFitAgentBuildLessAtomFlag) {
-                true -> jobTypeMatchCondition.or(ta.BUILD_LESS_RUN_FLAG.eq(true))
-                false -> jobTypeMatchCondition.and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull))
+        val jobTypeEnum = JobTypeEnum.parseOrNull(jobType)
+        if (jobTypeEnum?.isBuildEnv() != true || queryFitAgentBuildLessAtomFlag == null) {
+            return jobTypeMatchCondition
+        }
+        return when (queryFitAgentBuildLessAtomFlag) {
+            true -> {
+                val include = buildIncludePairedNonBuildEnvCondition(ta, jobTypeEnum)
+                if (include != null) jobTypeMatchCondition.or(include) else jobTypeMatchCondition
+            }
+            false -> {
+                val exclude = buildExcludePairedNonBuildEnvCondition(ta, jobTypeEnum, effectiveScope)
+                if (exclude != null) jobTypeMatchCondition.and(exclude) else jobTypeMatchCondition
             }
         }
-        return jobTypeMatchCondition
+    }
+
+    /**
+     * 编译环境查询时额外纳入「也可在无编译环境运行」的插件。
+     * PIPELINE 用 BUILD_LESS_RUN_FLAG；创作流双环境插件已同时写入 CREATIVE_STREAM，无需额外 OR。
+     */
+    private fun buildIncludePairedNonBuildEnvCondition(
+        ta: TAtom,
+        buildEnvJobType: JobTypeEnum
+    ): Condition? {
+        return when (buildEnvJobType) {
+            JobTypeEnum.AGENT -> ta.BUILD_LESS_RUN_FLAG.eq(true)
+            else -> null
+        }
+    }
+
+    /**
+     * 编译环境查询时排除「也可在无编译环境运行」的插件，用于选插件面板下半部分（不适用）。
+     * PIPELINE 排除 BUILD_LESS_RUN_FLAG=true；创作流排除 JOB_TYPE_MAP 中同时包含 CLOUD_TASK 的插件。
+     */
+    private fun buildExcludePairedNonBuildEnvCondition(
+        ta: TAtom,
+        buildEnvJobType: JobTypeEnum,
+        effectiveScope: String
+    ): Condition? {
+        return when (buildEnvJobType) {
+            JobTypeEnum.AGENT ->
+                ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)
+            JobTypeEnum.CREATIVE_STREAM -> {
+                val paired = buildEnvJobType.pairedNonBuildEnv() ?: return null
+                // 与 jobType 正向匹配共用 JSON_CONTAINS 写法，避免两套 SQL 漂移。
+                // 外层已要求 JOB_TYPE_MAP 含 CREATIVE_STREAM，路径存在，CONTAINS 对 CLOUD_TASK 只返回 0/1。
+                jsonContainsCondition(
+                    jsonField = ta.JOB_TYPE_MAP,
+                    value = paired.name,
+                    path = buildScopeJsonPath(effectiveScope)
+                ).not()
+            }
+            else -> null
+        }
     }
 
     /**
@@ -410,12 +492,8 @@ abstract class AtomBaseDao {
      * PIPELINE 为 AGENT_LESS；创作流（CREATIVE_STREAM）为 CLOUD_TASK；其他 scope 返回 null。
      */
     protected fun getAgentLessJobTypeForScope(serviceScope: ServiceScopeEnum?): String? {
-        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) } ?: return null
-        return when (normalizedScope) {
-            ServiceScopeEnum.PIPELINE.name -> JobTypeEnum.AGENT_LESS.name
-            ServiceScopeEnum.CREATIVE_STREAM.name -> JobTypeEnum.CLOUD_TASK.name
-            else -> null
-        }
+        val buildEnv = getBuildEnvJobTypeForScope(serviceScope) ?: return null
+        return JobTypeEnum.parseOrNull(buildEnv)?.pairedNonBuildEnv()?.name
     }
 
     /**

@@ -78,12 +78,20 @@ object StoreUtils {
     }
 
     /**
-     * 获取组件运行时信息Key前缀
+     * 获取组件运行时信息Key
      * @param typeName 类型名称
      * @param storeCode 组件代码
      */
     fun getStoreRunInfoKey(typeName: String, storeCode: String): String {
-        return "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:$typeName:$storeCode"
+        return "${getStoreRunInfoKeyPrefix(typeName)}$storeCode"
+    }
+
+    /**
+     * 获取组件运行时信息Key前缀，用于按类型扫描/全量删除
+     * @param typeName 类型名称
+     */
+    private fun getStoreRunInfoKeyPrefix(typeName: String): String {
+        return "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:$typeName:"
     }
 
     /**

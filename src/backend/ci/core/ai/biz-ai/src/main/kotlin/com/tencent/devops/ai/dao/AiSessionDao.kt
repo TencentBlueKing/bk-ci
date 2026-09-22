@@ -29,6 +29,7 @@ package com.tencent.devops.ai.dao
 
 import com.tencent.devops.model.ai.tables.TAiSession
 import com.tencent.devops.model.ai.tables.records.TAiSessionRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -43,15 +44,22 @@ class AiSessionDao {
         id: String,
         userId: String,
         projectId: String?,
+        pipelineId: String?,
         title: String
     ) {
         val now = LocalDateTime.now()
         with(TAiSession.T_AI_SESSION) {
             dslContext.insertInto(
                 this,
-                ID, USER_ID, PROJECT_ID, TITLE, CREATED_TIME, UPDATED_TIME
+                ID,
+                USER_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                TITLE,
+                CREATED_TIME,
+                UPDATED_TIME
             ).values(
-                id, userId, projectId, title, now, now
+                id, userId, projectId, pipelineId, title, now, now
             ).execute()
         }
     }
@@ -64,39 +72,53 @@ class AiSessionDao {
         }
     }
 
-    fun listByUserAndProject(
+    fun listByUserAndScope(
         dslContext: DSLContext,
         userId: String,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String?
     ): Result<TAiSessionRecord> {
         with(TAiSession.T_AI_SESSION) {
-            val query = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
-            if (projectId != null) {
-                query.and(PROJECT_ID.eq(projectId))
-            } else {
-                query.and(PROJECT_ID.isNull)
-            }
-            return query.orderBy(UPDATED_TIME.desc()).fetch()
+                .and(scopeCondition(projectId, pipelineId))
+                .orderBy(UPDATED_TIME.desc())
+                .fetch()
         }
     }
 
     fun getLatest(
         dslContext: DSLContext,
         userId: String,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String?
     ): TAiSessionRecord? {
         with(TAiSession.T_AI_SESSION) {
-            val query = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
-            if (projectId != null) {
-                query.and(PROJECT_ID.eq(projectId))
-            } else {
-                query.and(PROJECT_ID.isNull)
-            }
-            return query.orderBy(UPDATED_TIME.desc())
+                .and(scopeCondition(projectId, pipelineId))
+                .orderBy(UPDATED_TIME.desc())
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    private fun scopeCondition(
+        projectId: String?,
+        pipelineId: String?
+    ): Condition {
+        with(TAiSession.T_AI_SESSION) {
+            val projectCond = if (projectId != null) {
+                PROJECT_ID.eq(projectId)
+            } else {
+                PROJECT_ID.isNull
+            }
+            val pipelineCond = if (pipelineId != null) {
+                PIPELINE_ID.eq(pipelineId)
+            } else {
+                PIPELINE_ID.isNull
+            }
+            return projectCond.and(pipelineCond)
         }
     }
 

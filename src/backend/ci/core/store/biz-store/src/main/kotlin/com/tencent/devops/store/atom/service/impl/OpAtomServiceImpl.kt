@@ -48,6 +48,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
@@ -126,7 +127,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val marketAtomService: MarketAtomService,
-    private val atomServiceScopeUtil: AtomServiceScopeUtil
+    private val atomServiceScopeUtil: AtomServiceScopeUtil,
+    private val storeRunInfoCacheManager: StoreRunInfoCacheManager
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -682,6 +684,48 @@ class OpAtomServiceImpl @Autowired constructor(
             logger.info("end updateAtomSensitiveCacheConfig!!")
         }
         return Result(true)
+    }
+
+    override fun deleteAtomRunInfoCache(
+        userId: String,
+        atomCodes: Set<String>?
+    ): Result<Boolean> {
+        executorService.submit {
+            try {
+                logger.info("begin deleteAtomRunInfoCache, userId=$userId, atomCodes=$atomCodes")
+                val count = if (!atomCodes.isNullOrEmpty()) {
+                    storeRunInfoCacheManager.deleteAtomRunInfoCache(atomCodes)
+                } else {
+                    deleteAllAtomRunInfoCacheFromDb()
+                }
+                logger.info("end deleteAtomRunInfoCache, userId=$userId, deleted=$count")
+            } catch (ignored: Exception) {
+                logger.warn("deleteAtomRunInfoCache failed, userId=$userId, atomCodes=$atomCodes", ignored)
+            }
+        }
+        return Result(true)
+    }
+
+    /**
+     * 从 T_ATOM_FEATURE 分页取插件编码后精确删除 Redis key。
+     * 该表与插件一一对应，避免 T_ATOM 多版本 DISTINCT。
+     * 已下线残留 key 依赖写入时设置的 TTL 自动过期。
+     */
+    private fun deleteAllAtomRunInfoCacheFromDb(): Int {
+        val limit = 200
+        var offset = 0
+        var deleted = 0
+        do {
+            val codes = atomFeatureDao.listAtomCodes(dslContext, offset, limit)
+            if (codes.isNotEmpty()) {
+                deleted += storeRunInfoCacheManager.deleteAtomRunInfoCache(codes)
+            }
+            offset += limit
+            if (codes.size < limit) {
+                break
+            }
+        } while (true)
+        return deleted
     }
 
     private fun batchUpdateAtomConfigCache(

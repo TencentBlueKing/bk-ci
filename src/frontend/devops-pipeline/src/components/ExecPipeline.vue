@@ -333,7 +333,7 @@
                 retryTaskId: '',
                 skipTask: false,
                 isExpandAllMatrix: this.$route.hash.indexOf('collapsedAllJob') === -1,
-                failedContainer: false,
+                failedContainer: true,
                 activeTab: 'errors',
                 currentAtom: {},
                 showErrors: false,
@@ -743,6 +743,7 @@
                 }
             },
             handleRetry ({ taskId, skip = false }) {
+                this.failedContainer = true
                 this.showRetryStageDialog = true
                 this.retryTaskId = taskId
                 this.skipTask = skip
