@@ -89,7 +89,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useEnvAside from '@/hooks/useEnvAside'
     import { OS_LABEL_MAP } from '@/store/constants'
-    import TimeDisplay from '../../../../../common-lib/time-display'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         name: 'BasicInfo',
