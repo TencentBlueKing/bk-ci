@@ -395,9 +395,6 @@
                 }))
                 .filter((t) => t.tagKeyId != null && t.tagValueId != null)
 
-            /** 系统内置标签（os / arch 等，负 id 或 canUpdate=INTERNAL），由后端按 Agent 自动维护 */
-            const isBuiltInTag = (t) => t.tagKeyId < 0 || t.canUpdate === 'INTERNAL'
-
             /** 标签快照 → 有效表单行；只保留当前项目仍存在的标签（键 + 值都能在 customTags 中匹配到） */
             const validTagRows = (tags) => (tags || [])
                 .map((t) => {
@@ -425,14 +422,9 @@
                         if (res.installType) form.installType = res.installType
                         form.parallelTaskCount = res.parallelTaskCount ?? ''
                         form.dockerParallelTaskCount = res.dockerParallelTaskCount ?? ''
-                        // 重装上下文只回传用户标签；系统内置标签（os/arch 等）需从原节点快照补齐，否则不回显
+                        // 仅回传用户标签；系统内置标签（os/arch 等）由后端按 Agent 自动维护，不展示、不提交
                         const userRows = validTagRows(flatTagList(res.tags))
-                        const builtInRows = validTagRows(flatTagList((props.node?.tags || []).filter(isBuiltInTag)))
-                        const rows = [...userRows]
-                        for (const r of builtInRows) {
-                            if (!rows.some((x) => x.tagKeyId === r.tagKeyId)) rows.push(r)
-                        }
-                        form.tags = rows.length ? rows : [{ tagKeyId: '', tagValueId: '' }]
+                        form.tags = userRows.length ? userRows : [{ tagKeyId: '', tagValueId: '' }]
                     }
                 } catch (err) {
                     proxy.$bkMessage({ message: err.message ? err.message : err, theme: 'error' })
@@ -636,7 +628,10 @@
                     proxy.$bkMessage({ theme: 'warning', message: proxy.$t('environment.installSession.copyFailTip') })
                 }
             }
-            const openDoc = () => window.open('https://docs.example.com/bkci/agent-install', '_blank')
+            const openDoc = () => {
+                const url = proxy.BKCI_DOCS?.ENV_FAQ_DOC
+                window.open(url, '_blank')
+            }
 
             return {
                 form,
@@ -698,7 +693,7 @@
 <style lang="scss">
 .import-third-party-dialog {
     .bk-dialog {
-        top: 100px !important;
+        top: 12% !important;
     }
     .bk-dialog-content {
         display: flex;

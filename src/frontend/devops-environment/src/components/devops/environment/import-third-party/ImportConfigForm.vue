@@ -132,22 +132,7 @@
             :label="$t('environment.installSession.tagsLabel')"
             :desc="$t('environment.installSession.tagsDesc')"
         >
-            <p
-                v-if="!customTags.length"
-                class="empty-hint"
-            >
-                {{ $t('environment.installSession.noTags') }}
-                <bk-button
-                    text
-                    theme="primary"
-                    @click="openTagAdmin"
-                >
-                    {{ $t('environment.installSession.goCreate') }}
-                </bk-button>
-                {{ $t('environment.installSession.refreshAfterCreate') }}
-            </p>
             <div
-                v-else
                 ref="tagRows"
                 class="tag-rows"
             >
@@ -165,7 +150,7 @@
                         @change="onTagKeyChange(row)"
                     >
                         <bk-option
-                            v-for="k in customTags"
+                            v-for="k in selectableTags"
                             :key="k.tagKeyId"
                             :id="k.tagKeyId"
                             :name="k.tagKeyName"
@@ -285,6 +270,15 @@
                 default: ''
             }
         },
+        computed: {
+            /** 可选项：剔除系统内置标签（os/arch，负 tagKeyId 或 canUpdate=INTERNAL），用户不可选、不展示 */
+            selectableTags () {
+                return this.customTags.filter((t) => {
+                    const id = Number(t.tagKeyId)
+                    return !Number.isNaN(id) && id > 0 && t.canUpdate !== 'INTERNAL'
+                })
+            }
+        },
         methods: {
             valuesOf (keyId) {
                 return this.customTags.find((t) => t.tagKeyId === keyId)?.tagValues || []
@@ -313,10 +307,6 @@
                 if (this.form.tags.length <= 1) return
                 this.form.tags.splice(idx, 1)
             },
-            /** 新标签页打开标签维护页：此刻命令尚未生成，离开不会让任何东西失效。该页暂不在本弹窗覆盖范围内 */
-            openTagAdmin () {
-                this.$bkMessage({ theme: 'primary', message: this.$t('environment.installSession.openTagAdminTip') })
-            }
         }
     }
 </script>
@@ -409,6 +399,12 @@
         max-height: 152px;
         padding-right: 4px;
         overflow-y: auto;
+    }
+    /* 窗口高度大于 1100px 时，标签区固定为 230px，避免大屏下标签区过高 */
+    @media (min-height: 1101px) {
+        .tag-rows {
+            max-height: 280px;
+        }
     }
     .tag-row {
         display: flex;
