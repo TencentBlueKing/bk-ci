@@ -226,6 +226,12 @@ class PipelineBuildNotifyListener @Autowired constructor(
         if (cb["hasRequiredParams"].isNullOrBlank()) {
             cb["hasRequiredParams"] = bodyParams["hasRequiredParams"] ?: "false"
         }
+        if (cb["suggestRequired"].isNullOrBlank()) {
+            cb["suggestRequired"] = bodyParams["suggestRequired"] ?: "false"
+        }
+        if (cb["reviewParams"].isNullOrBlank() && !bodyParams["reviewParams"].isNullOrBlank()) {
+            cb["reviewParams"] = bodyParams["reviewParams"].orEmpty()
+        }
         if (cb["reviewType"].isNullOrBlank()) {
             cb["reviewType"] = if (notifyTemplateEnum.contains("STAGE")) "STAGE" else "ATOM"
         }

@@ -133,8 +133,10 @@ class ReviewReminderService @Autowired constructor(
                     "reviewDesc" to notifyBody,
                     "reviewers" to reviewUsers.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required }).toString(),
+                    "suggestRequired" to (param.suggestRequired == true).toString(),
+                    "reviewParams" to JsonUtil.toJson(param.params, false),
                     "triggerUser" to buildTask.starter,
-                    "reviewStage" to "人工审核",
+                    "reviewStage" to "[${buildTask.taskSeq}]${param.name.ifBlank { "人工审核" }}",
                     "reviewUrl" to pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = pipelineId,
@@ -164,6 +166,7 @@ class ReviewReminderService @Autowired constructor(
                     "elementId" to taskId,
                     "reviewUsers" to reviewUsers.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required }).toString(),
+                    "suggestRequired" to (param.suggestRequired == true).toString(),
                     "signature" to ShaUtils.sha256(projectId + buildId + taskId + (appSecret ?: ""))
                 )
             ),

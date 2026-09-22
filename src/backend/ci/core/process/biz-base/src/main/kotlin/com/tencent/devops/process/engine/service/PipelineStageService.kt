@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -744,6 +745,8 @@ class PipelineStageService @Autowired constructor(
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
                     "reviewers" to reviewersText,
                     "hasRequiredParams" to hasRequiredParams.toString(),
+                    "suggestRequired" to "false",
+                    "reviewParams" to JsonUtil.toJson(checkIn.reviewParams ?: emptyList(), false),
                     "triggerUser" to triggerUserId,
                     "stageName" to (stage.name ?: ""),
                     "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",

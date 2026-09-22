@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 企业微信模板卡片（button_interaction），用于审核通过/驳回与双端详情跳转。
+ * 企业微信模板卡片。按审核参数复杂度选择 button_interaction / multiple_interaction。
  * 文档：消息推送 template_card / 应用消息模板卡片。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,12 +25,22 @@ data class WeworkTemplateCard(
     val mainTitle: WeworkTemplateCardMainTitle,
     @JsonProperty("quote_area")
     val quoteArea: WeworkTemplateCardQuoteArea? = null,
+    @JsonProperty("sub_title_text")
+    val subTitleText: String? = null,
     @JsonProperty("horizontal_content_list")
     val horizontalContentList: List<WeworkTemplateCardHorizontalContent>? = null,
     @JsonProperty("jump_list")
     val jumpList: List<WeworkTemplateCardJump>? = null,
+    @JsonProperty("card_action")
+    val cardAction: WeworkTemplateCardAction? = null,
+    @JsonProperty("button_selection")
+    val buttonSelection: WeworkTemplateCardButtonSelection? = null,
+    @JsonProperty("select_list")
+    val selectList: List<WeworkTemplateCardSelect>? = null,
+    @JsonProperty("submit_button")
+    val submitButton: WeworkTemplateCardSubmitButton? = null,
     @JsonProperty("button_list")
-    val buttonList: List<WeworkTemplateCardButton>,
+    val buttonList: List<WeworkTemplateCardButton>? = null,
     @JsonProperty("task_id")
     val taskId: String
 )
@@ -75,7 +85,7 @@ data class WeworkTemplateCardJump(
 
 /**
  * type: 0=回调点击, 1=跳转 URL
- * style: 1=强调蓝, 2=灰, 3=红, 4=红框等（以企微实际渲染为准）
+ * style: 1=强调蓝, 2=灰, 3=蓝框, 4=红框（以企微实际渲染为准）
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class WeworkTemplateCardButton(
@@ -84,6 +94,47 @@ data class WeworkTemplateCardButton(
     val type: Int = 0,
     val key: String? = null,
     val url: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardAction(
+    val type: Int = 1,
+    val url: String,
+    val title: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardOption(
+    val id: String,
+    val text: String
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardButtonSelection(
+    @JsonProperty("question_key")
+    val questionKey: String,
+    val title: String,
+    @JsonProperty("option_list")
+    val optionList: List<WeworkTemplateCardOption>,
+    @JsonProperty("selected_id")
+    val selectedId: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardSelect(
+    @JsonProperty("question_key")
+    val questionKey: String,
+    val title: String,
+    @JsonProperty("option_list")
+    val optionList: List<WeworkTemplateCardOption>,
+    @JsonProperty("selected_id")
+    val selectedId: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardSubmitButton(
+    val text: String,
+    val key: String
 )
 
 /**
@@ -100,7 +151,13 @@ object WeworkReviewCardConst {
     const val ACTION_AGREE = "agree"
     const val ACTION_REJECT = "reject"
     const val ACTION_APPROVE = "approve"
+    const val ACTION_APPROVE_WITH_PARAMS = "approve_with_params"
     const val ACTION_MODIFY = "modify"
+    const val CARD_TYPE_BUTTON = "button_interaction"
+    const val CARD_TYPE_MULTIPLE = "multiple_interaction"
+    const val MAX_DROPDOWN = 3
+    const val MAX_OPTION = 10
+    const val MAX_HLIST = 6
     const val BUTTON_KEY_PREFIX = "BKCI_REVIEW"
     const val REDIS_KEY_PREFIX = "notify:wework:review:card:"
     const val DEFAULT_REJECT_SUGGEST = "企业微信卡片一键驳回"
@@ -113,7 +170,10 @@ object WeworkReviewCardConst {
     fun parseButtonKey(eventKey: String): Pair<String, String>? {
         val parts = eventKey.split("|")
         if (parts.size != 3 || parts[0] != BUTTON_KEY_PREFIX) return null
-        val action = if (parts[1] == ACTION_APPROVE) ACTION_AGREE else parts[1]
+        val action = when (parts[1]) {
+            ACTION_APPROVE, ACTION_APPROVE_WITH_PARAMS -> ACTION_AGREE
+            else -> parts[1]
+        }
         return action to parts[2]
     }
 
