@@ -42,6 +42,7 @@ import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.CdsOpenWorkspaceClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
@@ -71,6 +72,7 @@ import org.springframework.stereotype.Service
 class CoffeeAIService @Autowired constructor(
     private val client: Client,
     private val workspaceStartCloudClient: WorkspaceStartCloudClient,
+    private val cdsOpenWorkspaceClient: CdsOpenWorkspaceClient,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val windowsResourceZoneDao: WindowsResourceZoneDao,
@@ -266,6 +268,23 @@ class CoffeeAIService @Autowired constructor(
     ): List<WorkspaceAiInfo> {
         assertAllowedBuildIdentity(projectId, buildId, username)
         return getAiWorkspaceList(username)
+    }
+
+    fun hasActiveDigitalAvatar(workspaceName: String): Boolean {
+        logger.info("查询实例活跃数字分身：workspaceName={}", workspaceName)
+        return try {
+            cdsOpenWorkspaceClient.getActiveWorkspace(workspaceName) != null
+        } catch (e: Exception) {
+            logger.warn(
+                "查询活跃数字分身失败：workspaceName={} message={}",
+                workspaceName,
+                e.message
+            )
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.QUERY_ACTIVE_DIGITAL_AVATAR_FAIL.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        }
     }
 
     fun listImateAvatars(userId: String, projectId: String? = null): List<ImateAvatar> {
