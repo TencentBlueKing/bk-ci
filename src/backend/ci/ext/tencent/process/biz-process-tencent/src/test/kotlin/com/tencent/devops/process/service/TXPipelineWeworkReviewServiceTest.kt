@@ -50,4 +50,11 @@ class TXPipelineWeworkReviewServiceTest {
             TXPipelineWeworkReviewService.resolveExternalCallBack(req)
         )
     }
+
+    @Test
+    fun `html page escapes message`() {
+        val html = TXPipelineWeworkReviewService.htmlPage(true, "已由 a<b> 同意审核")
+        assertEquals(true, html.contains("已由 a&lt;b&gt; 同意审核"))
+        assertEquals(false, html.contains("<b>"))
+    }
 }

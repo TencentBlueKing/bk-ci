@@ -33,9 +33,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PIPELINE", description = "外部-企业微信审核卡片回调")
@@ -51,4 +53,20 @@ interface ServiceTXWeworkReviewExternalCallBackResource {
         @Parameter(description = "企业微信/TOF 回传的审批结果", required = true)
         extServiceWeworkReviewCallBackReq: ExtServiceWeworkReviewCallBackReq
     ): Result<String>
+
+    @Operation(summary = "企业微信机器人卡片跳转审核（GET，网关透传）")
+    @GET
+    @Path("/manual_review_call_back")
+    @Produces(MediaType.TEXT_HTML)
+    fun manualReviewCallBackByJump(
+        @Parameter(description = "agree|reject", required = false)
+        @QueryParam("action")
+        action: String?,
+        @Parameter(description = "卡片 taskId", required = true)
+        @QueryParam("taskId")
+        taskId: String?,
+        @Parameter(description = "操作人，缺省时用卡片缓存 receiver", required = false)
+        @QueryParam("userId")
+        userId: String?
+    ): String
 }

@@ -104,6 +104,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.supported-image-formats:jpg,png}")
     private lateinit var supportedImageFormatsConfig: String
 
+    @Value("\${devopsGateway.outer:}")
+    private var devopsGatewayOuter: String = ""
+
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         weworkNotifyMediaMessage.mediaInputStream.use {
             validateMediaMessage(weworkNotifyMediaMessage)
@@ -361,11 +364,21 @@ class WeworkRobotServiceImpl @Autowired constructor(
             )
             return false
         }
+        val outboundCard = WeworkRobotReviewCardRewriter.rewriteCallbackButtons(
+            card = templateCard,
+            gatewayOuter = devopsGatewayOuter
+        )
+        if (outboundCard !== templateCard) {
+            logger.info(
+                "reviewNotifyTrace|hop=notify.weworkRobot.rewriteJump|" +
+                    "taskId=${templateCard.taskId}|gateway=${devopsGatewayOuter.isNotBlank()}"
+            )
+        }
         val sendRequest = receivers.map { receiver ->
             WeworkRobotTemplateCardMessage(
                 chatid = receiver,
                 postId = null,
-                templateCard = templateCard
+                templateCard = outboundCard
             )
         }
         return try {

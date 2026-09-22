@@ -71,9 +71,19 @@ class TXPipelineWeworkReviewService @Autowired constructor(
         return Result(handleReviewAction(userId, action, taskId))
     }
 
+    /**
+     * 企微机器人「通过」走跳转 GET，浏览器内展示结果。
+     */
+    fun handleExternalJump(req: ExtServiceWeworkReviewCallBackReq): String {
+        val result = handleExternalCallBack(req)
+        val message = result.data ?: result.message ?: "处理完成"
+        val success = message.startsWith("已由")
+        return htmlPage(success, message)
+    }
+
     fun handleReviewAction(userId: String, action: String, taskId: String): String {
         logger.info("wework review card callback|userId=$userId|action=$action|taskId=$taskId")
-        if (userId.isBlank() || taskId.isBlank()) {
+        if (taskId.isBlank()) {
             return "无效的审核请求"
         }
         if (action != WeworkReviewCardConst.ACTION_AGREE && action != WeworkReviewCardConst.ACTION_REJECT) {
@@ -89,11 +99,18 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             logger.warn("parse wework review card cache failed|taskId=$taskId", ignored)
             return "审核数据解析失败，请打开详情页处理"
         }
+        val actualUserId = userId.ifBlank {
+            WeworkReviewCardConst.weworkUserId(callBackData["receiver"].orEmpty())
+        }
+        if (actualUserId.isBlank()) {
+            return "无效的审核请求"
+        }
+        logger.info("wework review card callback resolved|userId=$actualUserId|action=$action|taskId=$taskId")
 
         return try {
             when (callBackData["reviewType"]) {
-                WeworkReviewCardConst.REVIEW_TYPE_STAGE -> handleStageReview(userId, action, callBackData)
-                else -> handleAtomReview(userId, action, callBackData)
+                WeworkReviewCardConst.REVIEW_TYPE_STAGE -> handleStageReview(actualUserId, action, callBackData)
+                else -> handleAtomReview(actualUserId, action, callBackData)
             }
         } catch (e: ErrorCodeException) {
             logger.info("wework review rejected by business rule: ${e.errorCode}|${e.message}")
@@ -272,6 +289,15 @@ class TXPipelineWeworkReviewService @Autowired constructor(
             }
             val taskId = req.taskId?.takeIf { it.isNotBlank() } ?: parsed?.second.orEmpty()
             return Triple(userId, action, taskId)
+        }
+
+        fun htmlPage(success: Boolean, message: String): String {
+            val safe = message.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            val color = if (success) "#0b6e4f" else "#8a1c1c"
+            return "<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+                "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
+                "<title>流水线审核</title></head>" +
+                "<body style=\"font-family:sans-serif;padding:24px;color:$color\"><p>$safe</p></body></html>"
         }
     }
 }

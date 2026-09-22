@@ -38,6 +38,8 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
+import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
+import com.tencent.devops.process.api.service.ServiceTXWeworkReviewCallBackResource
 import com.tencent.devops.support.constant.SupportMessageCode.BK_GROUP_CHATID
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
@@ -80,6 +82,11 @@ class RobotService @Autowired constructor(
 
     fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
         logger.info("signature:$signature | timestamp:$timestamp | nonce:$nonce | reqData:$reqData")
+        val xmlString = getDecrypeMsg(signature, timestamp, nonce, reqData)
+        logger.info("xmlString:$xmlString")
+        if (tryHandleReviewCardEvent(xmlString)) {
+            return true
+        }
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId} | robotCallBack:$robotCallBack")
         if (robotCallBack.eventType == "enter_chat") {
@@ -129,6 +136,36 @@ class RobotService @Autowired constructor(
             }
         }
         return true
+    }
+
+    /**
+     * 机器人 template_card 若推了 EventKey（BKCI_REVIEW|agree|taskId），转发 process /service。
+     * 群机器人多数情况不会推，发送侧已改成 GET 跳转；这里兜底。
+     */
+    private fun tryHandleReviewCardEvent(xmlString: String): Boolean {
+        if (xmlString.isBlank()) return false
+        return try {
+            val document = parseXml(xmlString)
+            val eventKey = document.getElementsByTagName("EventKey").item(0)?.textContent.orEmpty()
+            val parsed = WeworkReviewCardConst.parseButtonKey(eventKey) ?: return false
+            val userId = document.getElementsByTagName("Alias").item(0)?.textContent
+                ?: document.getElementsByTagName("UserId").item(0)?.textContent
+                ?: ""
+            val (action, taskId) = parsed
+            logger.info("wework robot review card event|userId=$userId|action=$action|taskId=$taskId")
+            client.get(ServiceTXWeworkReviewCallBackResource::class)
+                .manualReviewCallBack(userId = userId, action = action, taskId = taskId)
+            true
+        } catch (ignored: Exception) {
+            logger.warn("wework robot review card event failed", ignored)
+            false
+        }
+    }
+
+    private fun parseXml(xmlString: String): Document {
+        val dbf = DocumentBuilderFactory.newInstance()
+        val db = dbf.newDocumentBuilder()
+        return db.parse(InputSource(StringReader(xmlString)))
     }
 
     @SuppressWarnings("ComplexMethod")

@@ -43,4 +43,10 @@ class ServiceTXWeworkReviewExternalCallBackResourceImpl @Autowired constructor(
     ): Result<String> {
         return txPipelineWeworkReviewService.handleExternalCallBack(extServiceWeworkReviewCallBackReq)
     }
+
+    override fun manualReviewCallBackByJump(action: String?, taskId: String?, userId: String?): String {
+        return txPipelineWeworkReviewService.handleExternalJump(
+            ExtServiceWeworkReviewCallBackReq(userId = userId, action = action, taskId = taskId)
+        )
+    }
 }
