@@ -28,8 +28,10 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -90,6 +92,11 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
     }
 
     override fun delete(userId: String, scmCode: String, username: String) {
+        if (username != userId) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+            )
+        }
         tGitTokenDao.deleteToken(dslContext = dslContext, userId = username)
     }
 

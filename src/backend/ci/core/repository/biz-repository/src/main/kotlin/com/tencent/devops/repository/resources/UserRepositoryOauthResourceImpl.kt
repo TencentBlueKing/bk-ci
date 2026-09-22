@@ -37,10 +37,11 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
         oauthUserId: String?
     ): Result<Page<RepoOauthRefVo>> {
         val resources = repositoryOauthService.listRepoOauthRef(
-            userId = if (oauthUserId.isNullOrBlank()) userId else oauthUserId,
+            userId = userId,
             scmCode = scmCode,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            oauthUserId = oauthUserId
         )
         return Result(resources)
     }
