@@ -670,6 +670,7 @@
             :node-select-conf="nodeSelectConf"
             :create-group-form="createGroupForm"
             :loading="dialogLoading"
+            :on-change="handleChange"
             :error-handler="errorHandler"
             @confirmFn="confirmFn"
             :cancel-fn="cancelFn"
@@ -824,12 +825,6 @@
             ]),
             metadataListHref () {
                 return `${window.getRoutePrefix()}/quality/${this.projectId}/metadataList`
-            },
-            goToPipelineHref (row) {
-                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/edit`
-            },
-            goToTemplateHref (row) {
-                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.templateId}/edit`
             },
             projectId () {
                 return this.$route.params.projectId
@@ -1413,6 +1408,15 @@
             closePipelineList () {
                 this.showPipelineList = false
             },
+            handleChange (name, value) {
+                if (name === 'reviewer') {
+                    this.createRuleForm.auditUserList = value
+                } else if (name === 'attacher') {
+                    this.createRuleForm.notifyUserList = value
+                } else if (name === 'innerList') {
+                    this.createGroupForm.internal_list = value
+                }
+            },
             toCreateGroup () {
                 this.createGroupForm = {
                     isEdit: false,
@@ -1500,6 +1504,12 @@
             handleRefresh () {
                 this.checkPipelineAtom(this.selectedPipelines)
                 this.checkTemplateAtom(this.selectedTemplates)
+            },
+            goToPipelineHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.pipelineId}/edit`
+            },
+            goToTemplateHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.templateId}/edit`
             },
             handleSearch () {
                 this.$refs.metadataPanel.toSearch()

@@ -26,7 +26,7 @@ import {
     isScmGit,
     isScmSvn
 } from '../config'
-import { formatByUserTz, userTzTodayRange, userTzYesterdayRange, userTzLastDaysRange } from '../../../common-lib/time'
+import { formatByUserTz, userTzTodayRange, userTzYesterdayRange, userTzLastDaysRange, recentDaysRangeInUserTz, calendarDateInUserTz, addCalendarDays, zonedDayStartEpochMilli } from '../../../common-lib/time'
 
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
@@ -153,5 +153,9 @@ export const prettyDateTimeFormat = (target) => {
 export {
     userTzTodayRange,
     userTzYesterdayRange,
-    userTzLastDaysRange
+    userTzLastDaysRange,
+    recentDaysRangeInUserTz,
+    calendarDateInUserTz,
+    addCalendarDays,
+    zonedDayStartEpochMilli
 }

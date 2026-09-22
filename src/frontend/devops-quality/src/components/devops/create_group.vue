@@ -102,7 +102,11 @@
             onInit: Function,
             confirmFn: Function,
             cancelFn: Function,
-            displayResult: Function
+            displayResult: Function,
+            onChange: {
+                type: Function,
+                default: () => () => {}
+            }
         },
         data () {
             return {
