@@ -822,7 +822,9 @@ class PipelineBuildFacadeService(
                                 timestamp = System.currentTimeMillis(),
                                 tag = parameters[PIPELINE_START_TASK_ID]?.toString() ?: ""
                             )
-                        }
+                        },
+                        projectId = projectId,
+                        pipelineId = pipelineId
                     )
                 }
             }
@@ -2694,7 +2696,9 @@ class PipelineBuildFacadeService(
                     containerHashId = containerId,
                     executeCount = executeCount,
                     jobId = null,
-                    stepId = stepId
+                    stepId = stepId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
 
@@ -2707,7 +2711,9 @@ class PipelineBuildFacadeService(
                     containerHashId = jobId,
                     executeCount = 1,
                     jobId = null,
-                    stepId = VMUtils.genStartVMTaskId(jobId)
+                    stepId = VMUtils.genStartVMTaskId(jobId),
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
 
@@ -2828,7 +2834,9 @@ class PipelineBuildFacadeService(
                         tag = startUpVMTask!!.taskId,
                         containerHashId = startUpVMTask.containerHashId,
                         executeCount = startUpVMTask.executeCount ?: 1,
-                        jobId = null, stepId = startUpVMTask.stepId
+                        jobId = null, stepId = startUpVMTask.stepId,
+                        projectId = projectCode,
+                        pipelineId = pipelineId
                     )
                 }
                 return Pair(startUpVMTask?.starter, false)

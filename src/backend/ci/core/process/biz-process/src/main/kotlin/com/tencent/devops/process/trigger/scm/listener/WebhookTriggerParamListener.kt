@@ -55,7 +55,9 @@ class WebhookTriggerParamListener(
                             timestamp = System.currentTimeMillis(),
                             tag = it[PIPELINE_START_TASK_ID]?.toString() ?: ""
                         )
-                    }
+                    },
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
             webhookBuildParameterService.save(

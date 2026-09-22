@@ -1241,7 +1241,9 @@ class PipelineContainerService @Autowired constructor(
                     containerHashId = container.id,
                     executeCount = context.executeCount,
                     jobId = container.jobId,
-                    stepId = atomElement.stepId
+                    stepId = atomElement.stepId,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId
                 )
                 return
             }

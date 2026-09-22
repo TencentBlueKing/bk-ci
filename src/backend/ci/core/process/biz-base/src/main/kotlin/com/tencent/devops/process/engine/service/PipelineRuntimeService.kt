@@ -859,7 +859,9 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = context.buildId,
             tag = null,
             containerHashId = null,
-            executeCount = context.executeCount
+            executeCount = context.executeCount,
+            projectId = context.projectId,
+            pipelineId = context.pipelineId
         )
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -1315,7 +1317,9 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
                     tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                    jobId = null, stepId = TAG
+                    jobId = null, stepId = TAG,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId
                 )
             }
         }
@@ -1519,7 +1523,9 @@ class PipelineRuntimeService @Autowired constructor(
             buildLogPrinter.addYellowLine(
                 buildId = buildInfo.buildId, message = "Approved by user($userId)",
                 tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                jobId = null, stepId = TAG
+                jobId = null, stepId = TAG,
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             StartBuildContext.init4SendBuildStartEvent(
                 userId = userId,
@@ -1578,7 +1584,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildLogPrinter.addYellowLine(
             buildId = buildId, message = "Disapproved by user($userId)",
             tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-            jobId = null, stepId = TAG
+            jobId = null, stepId = TAG,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -1663,7 +1671,9 @@ class PipelineRuntimeService @Autowired constructor(
             tag = retryStartTaskId!!,
             jobId = retryTaskInContainerId,
             executeCount = executeCount,
-            stepId = null
+            stepId = null,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -2325,7 +2335,9 @@ class PipelineRuntimeService @Autowired constructor(
                     tag = taskId,
                     containerHashId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1,
-                    jobId = null, stepId = stepId
+                    jobId = null, stepId = stepId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
             if (tasks.isEmpty()) {
@@ -2336,7 +2348,9 @@ class PipelineRuntimeService @Autowired constructor(
                     tag = "QueueInterceptor",
                     containerHashId = "",
                     executeCount = 1,
-                    jobId = null, stepId = "QueueInterceptor"
+                    jobId = null, stepId = "QueueInterceptor",
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
             try {

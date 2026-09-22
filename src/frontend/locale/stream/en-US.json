@@ -142,6 +142,8 @@
         "showLog": "show Debug Log",
         "hideLog": "Hide Debug Log",
         "downloadLog": "Download Log",
+        "archiveLogFailed": "Log archive failed. The full log was not saved to the artifact repository. Downloading the online log, which may be incomplete.",
+        "uploadLog": "The log is uploading, please try again later",
         "logEmpty": "The log is error",
         "logClosed": "The log is closed",
         "logCleared": "The Log has been cleand",
