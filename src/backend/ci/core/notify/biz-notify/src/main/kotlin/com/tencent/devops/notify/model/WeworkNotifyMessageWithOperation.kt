@@ -37,13 +37,15 @@ class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0
     var lastError: String? = null
-    /** 审核模板卡片；非空时优先按 template_card 发送，失败可降级为 body 文本 */
+    /** 兼容单卡发送；审核新链路请用 receiverTemplateCards */
     var templateCard: WeworkTemplateCard? = null
+    /** 按接收人拆分的审核卡片。非空时每人独立发送，失败只给该人降级文本 */
+    var receiverTemplateCards: Map<String, WeworkTemplateCard>? = null
 
     override fun toString(): String {
         return String.format(
-            "id(%s), retryCount(%s), hasCard(%s), message(%s) ",
-            id, retryCount, templateCard != null, super.toString()
+            "id(%s), retryCount(%s), hasCard(%s), receiverCards(%s), message(%s) ",
+            id, retryCount, templateCard != null, receiverTemplateCards?.size ?: 0, super.toString()
         )
     }
 }

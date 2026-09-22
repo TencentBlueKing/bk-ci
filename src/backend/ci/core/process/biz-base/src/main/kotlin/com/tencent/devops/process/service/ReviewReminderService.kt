@@ -133,6 +133,8 @@ class ReviewReminderService @Autowired constructor(
                     "reviewDesc" to notifyBody,
                     "reviewers" to reviewUsers.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required }).toString(),
+                    "triggerUser" to buildTask.starter,
+                    "reviewStage" to "人工审核",
                     "reviewUrl" to pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = pipelineId,

@@ -50,10 +50,15 @@ class WeworkNotifier @Autowired constructor(
             null
         }
         val body = if (reviewCard != null) {
-            reviewCard.second
+            reviewCard.fallbackText
         } else {
             "$finalTitle\n\n$finalBody"
         }
+        logger.info(
+            "reviewNotifyTrace|hop=notify.wework|" +
+                "template=${request.templateCode}|hasCard=${reviewCard != null}|" +
+                "receiverCards=${reviewCard?.receiverCards?.size ?: 0}|title=$finalTitle|sendBody=$body"
+        )
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,
@@ -61,7 +66,7 @@ class WeworkNotifier @Autowired constructor(
             sender = weworkTplRecord.sender,
             weworkService = weworkService,
             userUseDomain = userUseDomain,
-            templateCard = reviewCard?.first
+            receiverTemplateCards = reviewCard?.receiverCards
         )
     }
 

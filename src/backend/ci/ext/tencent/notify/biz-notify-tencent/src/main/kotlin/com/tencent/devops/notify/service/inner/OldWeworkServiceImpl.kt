@@ -132,6 +132,11 @@ class OldWeworkServiceImpl @Autowired constructor(
                 "msgtype" to "template_card",
                 "template_card" to templateCard
             )
+            logger.info(
+                "reviewNotifyTrace|hop=notify.oldWework.send|" +
+                    "receiver=$receiver|taskId=${templateCard.taskId}|" +
+                    "payload=${JsonUtil.toJson(payload, false)}"
+            )
             val sendResult = try {
                 wechatWorkService.sendMessage(JsonUtil.toJson(payload, false))
             } catch (ignored: Exception) {

@@ -736,10 +736,14 @@ class PipelineStageService @Autowired constructor(
                 bodyParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
+                    "buildNum" to buildNum,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
                     "reviewers" to group.reviewers.joinToString(),
                     "hasRequiredParams" to hasRequiredParams.toString(),
+                    "triggerUser" to triggerUserId,
+                    "stageName" to (stage.name ?: ""),
+                    "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
@@ -761,6 +765,13 @@ class PipelineStageService @Autowired constructor(
                     "signature" to signature
                 )
             )
+        )
+        logger.info(
+            "reviewNotifyTrace|hop=engine.dispatch|" +
+                "buildId=${stage.buildId}|projectId=${stage.projectId}|pipelineId=${stage.pipelineId}|" +
+                "stageId=${stage.stageId}|groupId=${group.id}|notifyType=$notifyType|" +
+                "receivers=${group.reviewers}|markdown=${checkIn.markdownContent}|" +
+                "hasRequiredParams=$hasRequiredParams|reviewDesc=${checkIn.reviewDesc}"
         )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
         if (triggerUserId !in group.reviewers && !checkIn.notifyType.isNullOrEmpty()) {

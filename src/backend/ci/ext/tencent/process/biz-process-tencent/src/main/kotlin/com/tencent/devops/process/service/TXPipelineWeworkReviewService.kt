@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -38,6 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.pojo.pipeline.ExtServiceWeworkReviewCallBackReq
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,6 +62,14 @@ class TXPipelineWeworkReviewService @Autowired constructor(
 
     @Value("\${esb.appSecret:}")
     private val appSecret: String = ""
+
+    /**
+     * 网关透传的 /external/review/wework 入口。兼容简易字段与企微 EventKey/FromUserName。
+     */
+    fun handleExternalCallBack(req: ExtServiceWeworkReviewCallBackReq): Result<String> {
+        val (userId, action, taskId) = resolveExternalCallBack(req)
+        return Result(handleReviewAction(userId, action, taskId))
+    }
 
     fun handleReviewAction(userId: String, action: String, taskId: String): String {
         logger.info("wework review card callback|userId=$userId|action=$action|taskId=$taskId")
@@ -237,5 +247,31 @@ class TXPipelineWeworkReviewService @Autowired constructor(
 
     private fun checkParameter(vararg args: String) {
         args.find { it.isBlank() }?.let { throw IllegalArgumentException("parameter is null or blank") }
+    }
+
+    companion object {
+        /**
+         * 解析网关透传体：优先独立字段，缺省时从 EventKey 拆 action/taskId。
+         */
+        fun resolveExternalCallBack(req: ExtServiceWeworkReviewCallBackReq): Triple<String, String, String> {
+            val userId = WeworkReviewCardConst.weworkUserId(req.userId.orEmpty())
+            val parsed = req.eventKey?.takeIf { it.isNotBlank() }?.let {
+                WeworkReviewCardConst.parseButtonKey(it)
+            }
+            val rawAction = req.action?.takeIf { it.isNotBlank() }
+            val action = when {
+                rawAction != null -> {
+                    if (rawAction == WeworkReviewCardConst.ACTION_APPROVE) {
+                        WeworkReviewCardConst.ACTION_AGREE
+                    } else {
+                        rawAction
+                    }
+                }
+                parsed != null -> parsed.first
+                else -> ""
+            }
+            val taskId = req.taskId?.takeIf { it.isNotBlank() } ?: parsed?.second.orEmpty()
+            return Triple(userId, action, taskId)
+        }
     }
 }
