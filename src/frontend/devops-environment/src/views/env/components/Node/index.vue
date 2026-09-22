@@ -276,7 +276,7 @@
     import RelatedNodesDialog from '@/components/RelatedNodesDialog.vue'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
-    import TimeDisplay from '../../../../../common-lib/time-display'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
     export default {
         name: 'Node',
         components: {

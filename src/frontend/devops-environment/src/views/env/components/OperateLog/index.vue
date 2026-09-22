@@ -82,7 +82,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
-    import TimeDisplay from '../../../../../common-lib/time-display'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         name: 'OperateLog',

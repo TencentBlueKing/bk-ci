@@ -99,7 +99,7 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import SelectEnvShareDialog from './SelectEnvShareDialog'
-    import TimeDisplay from '../../../../../common-lib/time-display'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
     
     export default {
         name: 'SharedSetting',
