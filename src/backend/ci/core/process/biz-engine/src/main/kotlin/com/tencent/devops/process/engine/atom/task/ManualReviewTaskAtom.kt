@@ -207,10 +207,12 @@ class ManualReviewTaskAtom(
                     "reviewDesc" to reviewDesc,
                     "reviewers" to reviewUsersList.joinToString(","),
                     "manualReviewParam" to JsonUtil.toJson(param.params),
+                    "reviewParams" to JsonUtil.toJson(param.params, false),
                     "checkParams" to param.params.isNotEmpty().toString(),
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
+                    "suggestRequired" to (param.suggestRequired == true).toString(),
                     "triggerUser" to task.starter,
-                    "reviewStage" to "人工审核",
+                    "reviewStage" to "[${task.taskSeq}]${param.name.ifBlank { "人工审核" }}",
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
@@ -225,6 +227,7 @@ class ManualReviewTaskAtom(
                     "elementId" to (param.id ?: ""),
                     "reviewUsers" to reviewUsers,
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
+                    "suggestRequired" to (param.suggestRequired == true).toString(),
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
                 ),
                 markdownContent = param.markdownContent,
