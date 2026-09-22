@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
@@ -45,6 +46,7 @@ import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.constant.BK_BLOCKED
 import com.tencent.devops.quality.constant.BK_CURRENT_VALUE
 import com.tencent.devops.quality.constant.BK_PASSED
+import com.tencent.devops.quality.constant.BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION
 import com.tencent.devops.quality.constant.BK_VALIDATION_INTERCEPTED
 import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.dao.HistoryDao
@@ -53,6 +55,7 @@ import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
+import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.util.QualityUrlUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import java.time.Instant
@@ -78,7 +81,8 @@ class QualityHistoryService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val qualityUrlUtils: QualityUrlUtils,
-    private val qualityRuleReviewerDao: QualityRuleReviewerDao
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao,
+    private val qualityPermissionService: QualityPermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
@@ -386,6 +390,17 @@ class QualityHistoryService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<RuleInterceptHistory>> {
+        val permission = AuthPermission.VIEW
+        qualityPermissionService.validateRulePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = permission,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
+                I18nUtil.getLanguage(userId),
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
         val ruleId = if (ruleHashId == null) null else HashUtil.decodeIdToLong(ruleHashId)
         val ruleInterceptResult = interceptResult?.name
         val startLocalDateTime = if (startTime == null) {
