@@ -48,7 +48,8 @@ class PipelineCallbackDao {
         projectId: String,
         pipelineId: String,
         userId: String,
-        list: List<PipelineCallbackEvent>
+        list: List<PipelineCallbackEvent>,
+        aesKeySha: String
     ) {
         if (list.isEmpty()) return
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
@@ -65,7 +66,8 @@ class PipelineCallbackDao {
                     SECRET_TOKEN,
                     REGION,
                     CREATE_TIME,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    AES_KEY_SHA
                 ).values(
                     projectId,
                     pipelineId,
@@ -76,11 +78,13 @@ class PipelineCallbackDao {
                     it.secretToken,
                     (it.region ?: CallBackNetWorkRegionType.IDC).name,
                     now,
-                    now
+                    now,
+                    aesKeySha
                 ).onDuplicateKeyUpdate()
                     .set(UPDATE_TIME, now)
                     .set(URL, it.callbackUrl)
                     .set(SECRET_TOKEN, it.secretToken)
+                    .set(AES_KEY_SHA, aesKeySha)
                     .execute()
             }
         }

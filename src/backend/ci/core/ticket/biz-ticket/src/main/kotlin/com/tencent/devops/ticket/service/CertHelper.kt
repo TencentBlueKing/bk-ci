@@ -28,7 +28,8 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.exception.EncryptException
-import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
@@ -47,6 +48,11 @@ class CertHelper {
 
     @Value("\${cert.aes-key}")
     private lateinit var aesKey: String
+
+    @Value("\${cert.used-aes-keys:}")
+    private var usedAesKeys: String = ""
+
+    fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
     companion object {
         private const val JKS = "JKS"
@@ -137,14 +143,32 @@ class CertHelper {
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.encrypt(aesKey, bytes)
+            BkCryptoUtil.encryptSm4ButAes(aesKey, bytes)
         } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
         return if (bytes != null) {
-            AESUtil.decrypt(aesKey, bytes)
+            BkCryptoUtil.decryptSm4OrAes(
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = bytes
+            )
         } else null
+    }
+
+    /**
+     * 密钥轮换时使用：优先用历史密钥解密旧数据，再用当前密钥重新加密。
+     */
+    fun refreshBytes(bytes: ByteArray?): ByteArray? {
+        return if (bytes != null && bytes.isNotEmpty()) {
+            val plainBytes = BkCryptoUtil.decryptSm4OrAesForRefresh(
+                aesKey,
+                BkCryptoUtil.parseAesKeys(usedAesKeys),
+                bytes
+            )
+            BkCryptoUtil.encryptSm4ButAes(aesKey, plainBytes)
+        } else bytes
     }
 
     data class JksInfo(

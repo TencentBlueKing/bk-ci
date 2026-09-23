@@ -36,10 +36,10 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
@@ -50,7 +50,6 @@ import com.tencent.devops.scm.api.pojo.Oauth2AccessToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
@@ -63,10 +62,9 @@ class ScmTokenService @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val repoAuthServiceCode: RepoAuthServiceCode,
     private val scmTokenApiService: ScmTokenApiService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) {
-    @Value("\${aes.git:#{null}}")
-    private val aesKey = ""
 
     fun getAccessToken(
         userId: String,
@@ -78,7 +76,7 @@ class ScmTokenService @Autowired constructor(
             appType = appType.name,
             scmCode = scmCode
         ) ?: return null
-        val token = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.accessToken)
+        val token = gitTokenCryptoHelper.decryptSm4OrAes(scmTokenRecord.accessToken)
         // 判断是否过期
         val finalToken = if (isTokenExpire(scmTokenRecord.updateTime.timestamp(), scmTokenRecord.expiresIn)) {
             tryRefreshToken(scmCode, userId, appType)?.accessToken ?: token
@@ -191,8 +189,8 @@ class ScmTokenService @Autowired constructor(
                     userId = userId,
                     scmCode = scmCode,
                     appType = appType.name,
-                    accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, record.accessToken),
-                    refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, record.refreshToken),
+                    accessToken = gitTokenCryptoHelper.decryptSm4OrAes(record.accessToken),
+                    refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(record.refreshToken),
                     expiresIn = record.expiresIn,
                     createTime = record.updateTime.timestamp(), // token最后刷新时间
                     operator = record.operator
@@ -210,7 +208,7 @@ class ScmTokenService @Autowired constructor(
         val accessToken = try {
             scmTokenApiService.refresh(
                 scmCode = scmCode,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, scmTokenRecord.refreshToken)
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(scmTokenRecord.refreshToken)
             )
         } catch (ignored: Exception) {
             logger.warn("failed to refresh token", ignored)
@@ -223,11 +221,12 @@ class ScmTokenService @Autowired constructor(
                     userId = scmTokenRecord.userId,
                     scmCode = scmTokenRecord.scmCode,
                     appType = scmTokenRecord.appType,
-                    accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, it.accessToken),
-                    refreshToken = BkCryptoUtil.encryptSm4ButAes(aesKey, it.refreshToken),
+                    accessToken = gitTokenCryptoHelper.encryptSm4ButAes(it.accessToken),
+                    refreshToken = gitTokenCryptoHelper.encryptSm4ButAes(it.refreshToken),
                     expiresIn = it.expiresIn,
                     operator = scmTokenRecord.operator
-                )
+                ),
+                aesKeySha = gitTokenCryptoHelper.currentKeySha()
             )
         }
         return accessToken
