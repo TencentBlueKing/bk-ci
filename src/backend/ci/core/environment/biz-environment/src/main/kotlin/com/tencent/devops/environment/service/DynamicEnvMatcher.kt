@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.dao.DynamicEnvTagRule
 import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeTagDao
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.thirdpartyagent.InstallEnvItem
 import com.tencent.devops.environment.pojo.thirdpartyagent.InstallEnvPreview
 import org.jooq.DSLContext
@@ -25,7 +26,7 @@ class DynamicEnvMatcher(
         unresolvedInternalTagKeyIds: Set<Long> = emptySet()
     ): InstallEnvPreview {
         return match(
-            rules = envTagDao.fetchDynamicEnvTagRules(dslContext, projectId),
+            rules = envTagDao.fetchDynamicEnvTagRules(dslContext, projectId, EnvType.BUILD),
             candidateTags = candidateTags,
             unresolvedInternalTagKeyIds = unresolvedInternalTagKeyIds
         )
@@ -64,7 +65,7 @@ class DynamicEnvMatcher(
         currentTags: Map<Long, Set<Long>>,
         proposedTags: Map<Long, Set<Long>>
     ): InstallEnvPreview {
-        val rules = envTagDao.fetchDynamicEnvTagRules(dslContext, projectId)
+        val rules = envTagDao.fetchDynamicEnvTagRules(dslContext, projectId, EnvType.BUILD)
         val current = matchRules(rules, currentTags).associateBy { it.envHashId }
         val proposed = matchRules(rules, proposedTags).associateBy { it.envHashId }
         return InstallEnvPreview(

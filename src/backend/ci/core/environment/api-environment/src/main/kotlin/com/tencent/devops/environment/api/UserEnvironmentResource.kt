@@ -42,6 +42,8 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
@@ -518,4 +520,24 @@ interface UserEnvironmentResource {
         @QueryParam("pageSize")
         pageSize: Int? = 10
     ): Result<Page<EnvOperateLog>>
+
+    @Operation(summary = "预览动态环境按标签匹配到的节点列表（不同标签名之间 AND，同一标签名下多个值 OR）")
+    @POST
+    @Path("/previewTagEnvNodes")
+    fun previewTagEnvNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页，-1 表示不分页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "标签列表", required = true)
+        tags: List<NodeTagAddOrDeleteTagItem>
+    ): Result<Page<NodeWithPermission>>
 }

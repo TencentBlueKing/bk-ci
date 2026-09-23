@@ -49,6 +49,8 @@ import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
@@ -58,12 +60,14 @@ import com.tencent.devops.environment.pojo.envOperate.EnvOperateLog
 import com.tencent.devops.environment.pojo.envOperate.EnvOperateOrigin
 import com.tencent.devops.environment.service.EnvOperateLogService
 import com.tencent.devops.environment.service.EnvService
+import com.tencent.devops.environment.service.EnvTagService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
 class UserEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService,
+    private val envTagService: EnvTagService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envOperateLogService: EnvOperateLogService
 ) : UserEnvironmentResource {
@@ -431,6 +435,28 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 operator = operator,
                 page = page ?: 1,
                 pageSize = pageSize ?: 10
+            )
+        )
+    }
+
+    @BkTimed(extraTags = ["operate", "getEnv"])
+    override fun previewTagEnvNodes(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        tags: List<NodeTagAddOrDeleteTagItem>
+    ): Result<Page<NodeWithPermission>> {
+        if (projectId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
+        return Result(
+            envTagService.previewTagEnvNodes(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                tags = tags
             )
         )
     }
