@@ -20,7 +20,7 @@ class SensitiveConfCryptoKeyRefreshWriter(
 
     override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
-            dslContext.select(ID, FIELD_VALUE, AES_KEY_SHA)
+            dslContext.select(ID, STORE_CODE, FIELD_VALUE, AES_KEY_SHA)
                 .from(this)
                 .where(refreshCondition(filters))
                 .limit(limit)
@@ -37,6 +37,9 @@ class SensitiveConfCryptoKeyRefreshWriter(
         filters[SensitiveConfCryptoKeyRefreshRow::id.name]
             ?.takeIf { it.isNotBlank() }
             ?.let { conditions.add(ID.eq(it)) }
+        filters[SensitiveConfCryptoKeyRefreshRow::storeCode.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(STORE_CODE.eq(it)) }
         return conditions
     }
 
@@ -55,6 +58,7 @@ class SensitiveConfCryptoKeyRefreshWriter(
         return with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             SensitiveConfCryptoKeyRefreshRow(
                 id = record.get(ID),
+                storeCode = record.get(STORE_CODE),
                 fieldValue = record.get(FIELD_VALUE),
                 aesKeySha = record.get(AES_KEY_SHA)
             )
@@ -64,10 +68,11 @@ class SensitiveConfCryptoKeyRefreshWriter(
 
 data class SensitiveConfCryptoKeyRefreshRow(
     val id: String,
+    val storeCode: String,
     val fieldValue: String,
     val aesKeySha: String?
 ) : CryptoKeyRefreshRow {
-    override fun rowKey(): String = "store-sensitive-conf:$id"
+    override fun rowKey(): String = "store-sensitive-conf:$storeCode:$id"
 
     override fun keySha(): String? = aesKeySha
 }

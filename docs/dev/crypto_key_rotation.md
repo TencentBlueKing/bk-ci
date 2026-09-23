@@ -283,7 +283,8 @@ OP 异步触发后立刻返回，不带业务结果。它与启动任务同一�
 | `repository-git-token` / `repository-tgit-token` | `userId` |
 | `repository-github-token` | `userId`、`type` |
 | `repository-scm-token` | `userId`、`scmCode`、`appType` |
-| `store-env-var` / `store-sensitive-conf` | `id` |
+| `store-env-var` | `id` |
+| `store-sensitive-conf` | `id`、`storeCode` |
 | `user-llm-config` | `userId` |
 | `oauth2-access-token` | `accessToken` |
 
