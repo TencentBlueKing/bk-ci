@@ -169,39 +169,53 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        keepSkipRuntime: Boolean = false,
+        containerStatus: BuildStatus? = null
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
+        val finished = containerStatus?.isFinish() == true
         val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
-            remove(Container::timeCost.name)
-            remove(Container::startEpoch.name)
-            remove(Container::startVMStatus.name)
+            if (!finished) {
+                remove(Container::timeCost.name)
+                remove(Container::startEpoch.name)
+                remove(Container::startVMStatus.name)
+            }
         }
+        val now = LocalDateTime.now()
         val newContainer = oldContainer.copy(
-            executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            executeCount = newExecuteCount,
+            status = containerStatus?.name,
+            startTime = if (finished) oldContainer.startTime ?: now else null,
+            endTime = if (finished) oldContainer.endTime ?: now else null,
+            timestamps = mapOf(),
+            containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
         )
         val newTasks = oldTasks.map { task ->
             val skip = skipTaskIds.contains(task.taskId)
-            val reset = skip || resetTaskIds.contains(task.taskId)
+            val clearRuntime = when {
+                keepSkipRuntime && skip -> false
+                skip || resetTaskIds.contains(task.taskId) -> true
+                else -> false
+            }
             task.copy(
                 executeCount = newExecuteCount,
                 status = when {
                     skip -> BuildStatus.SKIP.name
-                    reset -> null
+                    resetTaskIds.contains(task.taskId) -> null
                     else -> task.status
                 },
-                startTime = if (reset) null else task.startTime,
-                endTime = if (reset) null else task.endTime,
-                timestamps = if (reset) mapOf() else task.timestamps,
-                asyncStatus = if (reset) null else task.asyncStatus
+                startTime = if (clearRuntime) null else task.startTime,
+                endTime = if (clearRuntime) null else task.endTime,
+                timestamps = if (clearRuntime) mapOf() else task.timestamps,
+                asyncStatus = if (clearRuntime) null else task.asyncStatus
             )
         }
         batchSave(ctx, listOf(newContainer), newTasks)

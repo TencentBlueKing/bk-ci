@@ -1468,7 +1468,9 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
-                    matrixGroupId = build.matrixGroupId, status = null, startTime = build.startTime,
+                    matrixGroupId = build.matrixGroupId,
+                    status = build.status.takeIf { it.isFinish() }?.name,
+                    startTime = build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )

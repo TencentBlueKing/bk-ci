@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -49,11 +50,12 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
 import com.tencent.devops.process.engine.common.VMUtils
@@ -79,6 +81,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -330,10 +333,20 @@ class PipelineContainerService @Autowired constructor(
                     skipFailedTask = context.skipFailedTask,
                     wholeJob = batchRetry
                 )
+                // #13577 子 Job 只有一个用户步骤且正在失败跳过：不再重置开关机任务，子 Job 直接结束
+                val userTasks = childTasks.filter { task ->
+                    !VMUtils.isVMTask(task.taskId) && task.additionalOptions?.elementPostInfo == null
+                }
+                val closeChild = context.skipFailedTask &&
+                    !tiedToAgentReuse(matrixContainer) &&
+                    userTasks.size == 1 &&
+                    skipTaskIds.contains(userTasks.single().taskId)
+                val tasksToReset = if (closeChild) emptySet() else resetTaskIds
+                val tasksToSkip = if (closeChild) setOf(userTasks.single().taskId) else skipTaskIds
                 val updateTasks = mutableListOf<PipelineBuildTask>()
                 childTasks.forEach { task ->
                     when {
-                        skipTaskIds.contains(task.taskId) -> {
+                        tasksToSkip.contains(task.taskId) -> {
                             setRetryBuildTask(
                                 target = task, executeCount = context.executeCount,
                                 atomElement = null, initialStatus = BuildStatus.SKIP
@@ -341,7 +354,7 @@ class PipelineContainerService @Autowired constructor(
                             updateTasks.add(task)
                         }
 
-                        resetTaskIds.contains(task.taskId) -> {
+                        tasksToReset.contains(task.taskId) -> {
                             setRetryBuildTask(target = task, executeCount = context.executeCount, atomElement = null)
                             updateTasks.add(task)
                         }
@@ -350,9 +363,16 @@ class PipelineContainerService @Autowired constructor(
                 if (updateTasks.isNotEmpty()) {
                     pipelineTaskService.batchUpdate(transactionContext, updateTasks)
                 }
-                child.status = BuildStatus.QUEUE
-                child.startTime = null
-                child.endTime = null
+                if (closeChild) {
+                    child.status = BuildStatus.SUCCEED
+                    if (child.endTime == null) {
+                        child.endTime = LocalDateTime.now()
+                    }
+                } else {
+                    child.status = BuildStatus.QUEUE
+                    child.startTime = null
+                    child.endTime = null
+                }
                 child.executeCount = context.executeCount
                 child.controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
                 child.controlOption.mutexGroup?.runtimeMutexGroup = null
@@ -365,8 +385,10 @@ class PipelineContainerService @Autowired constructor(
                     childContainerId = child.containerId,
                     oldExecuteCount = oldExecuteCount,
                     newExecuteCount = context.executeCount,
-                    resetTaskIds = resetTaskIds,
-                    skipTaskIds = skipTaskIds
+                    resetTaskIds = tasksToReset,
+                    skipTaskIds = tasksToSkip,
+                    keepSkipRuntime = closeChild,
+                    containerStatus = if (closeChild) BuildStatus.SUCCEED else null
                 )
             }
         }
@@ -567,6 +589,16 @@ class PipelineContainerService @Autowired constructor(
         }
         if (!containerEnable) container.setContainerEnable(false)
 
+        // #13577 只有一个用户步骤且该步骤正在失败跳过时，直接收口，不再为了标记跳过而启动构建机
+        val userSteps = containerElements.filter { element ->
+            element.elementEnabled() && element.additionalOptions?.elementPostInfo == null
+        }
+        val closeWithoutStart = context.skipFailedTask &&
+            container.matrixGroupFlag != true &&
+            !tiedToAgentReuse(container) &&
+            userSteps.size == 1 &&
+            context.inSkipStage(stage, userSteps.single())
+
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
@@ -674,12 +706,23 @@ class PipelineContainerService @Autowired constructor(
                             setRetryBuildTask(
                                 target = pair.first,
                                 executeCount = context.executeCount,
-                                atomElement = pair.second
+                                atomElement = pair.second,
+                                initialStatus = if (closeWithoutStart) BuildStatus.SKIP else null
                             )
                             updateExistsTask.add(pair.first)
                         }
                     }
                     // #8955 针对被跳过或重试插件单独保留原状态
+                    // #13577 失败跳过保留起止时间、耗时和原始错误，详情页才能看出这一步执行过并失败了
+                    val taskVar = atomElement.initTaskVar()
+                    if (skipWhenFailed) {
+                        atomElement.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
+                        atomElement.errorType?.let { taskVar[Element::errorType.name] = it }
+                        atomElement.errorCode?.let { taskVar[Element::errorCode.name] = it }
+                        atomElement.timeCost?.let { taskVar[Element::timeCost.name] = it }
+                        atomElement.startEpoch?.let { taskVar[Element::startEpoch.name] = it }
+                        atomElement.elapsed?.let { taskVar[Element::elapsed.name] = it }
+                    }
                     taskBuildRecords.add(
                         BuildRecordTask(
                             projectId = context.projectId, pipelineId = context.pipelineId,
@@ -687,8 +730,10 @@ class PipelineContainerService @Autowired constructor(
                             containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
                             taskId = taskRecord.taskId, classType = taskRecord.taskType,
                             atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
-                            executeCount = taskRecord.executeCount ?: 1, taskVar = atomElement.initTaskVar(),
+                            executeCount = taskRecord.executeCount ?: 1, taskVar = taskVar,
                             status = recordStatus, resourceVersion = context.resourceVersion,
+                            startTime = if (skipWhenFailed) taskRecord.startTime else null,
+                            endTime = if (skipWhenFailed) taskRecord.endTime else null,
                             elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
                                 info.parentElementId != taskRecord.taskId
                             }
@@ -756,6 +801,10 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
+        // #13577 单步骤失败跳过不再准备构建机
+        if (closeWithoutStart) {
+            needStartVM = false
+        }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
@@ -780,14 +829,24 @@ class PipelineContainerService @Autowired constructor(
         )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
+            if (closeWithoutStart) {
+                container.status = BuildStatus.SUCCEED.name
+            }
             if (lastTimeBuildContainers.isNotEmpty()) {
                 run findHistoryContainer@{
                     lastTimeBuildContainers.forEach { dbRecord ->
                         if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                             dbRecord.run {
-                                status = BuildStatus.QUEUE
-                                startTime = null
-                                endTime = null
+                                if (closeWithoutStart) {
+                                    status = BuildStatus.SUCCEED
+                                    if (endTime == null) {
+                                        endTime = LocalDateTime.now()
+                                    }
+                                } else {
+                                    status = BuildStatus.QUEUE
+                                    startTime = null
+                                    endTime = null
+                                }
                                 executeCount = context.executeCount
                                 /*重试时重置构建机互斥组名称，以便变量更改时能生效*/
                                 controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
@@ -840,7 +899,9 @@ class PipelineContainerService @Autowired constructor(
                             jobId = container.jobId,
                             containerType = container.getClassType(),
                             seq = context.containerSeq,
-                            status = BuildStatus.QUEUE,
+                            status = if (closeWithoutStart) BuildStatus.SUCCEED else BuildStatus.QUEUE,
+                            startTime = if (closeWithoutStart) LocalDateTime.now() else null,
+                            endTime = if (closeWithoutStart) LocalDateTime.now() else null,
                             controlOption = controlOption,
                             containPostTaskFlag = container.containPostTaskFlag,
                             matrixGroupFlag = container.matrixGroupFlag,
@@ -1010,27 +1071,43 @@ class PipelineContainerService @Autowired constructor(
         atomElement: Element?,
         initialStatus: BuildStatus? = null
     ) {
-        target.startTime = null
-        target.endTime = null
+        val skipping = initialStatus == BuildStatus.SKIP
         target.executeCount = executeCount
         target.status = initialStatus ?: BuildStatus.QUEUE // 如未指定状态，则默认进入排队状态
-        if (target.status != BuildStatus.SKIP) { // 排队要准备执行，要清除掉上次失败状态
+        if (!skipping) { // 排队要准备执行，要清除掉上次失败状态
+            target.startTime = null
+            target.endTime = null
             target.errorMsg = null
             target.errorCode = null
             target.errorType = null
-        } else { // 跳过的需要保留下跳过的信息
-            target.errorMsg = I18nUtil.getCodeLanMessage(BK_MANUALLY_SKIPPED)
+        } else if (target.endTime == null) {
+            target.endTime = LocalDateTime.now()
         }
         if (atomElement != null) { // 将原子状态重置
-            if (initialStatus == null) { // 未指定状态的，将重新运行
+            if (!skipping) { // 未指定跳过的，将重新运行
                 atomElement.status = null
-            } else { // 指定了状态了，表示不会再运行，需要将重试与跳过关闭，因为已经跳过
+                atomElement.elapsed = null
+                atomElement.startEpoch = null
+                atomElement.errorMsg = null
+                atomElement.errorCode = null
+                atomElement.errorType = null
+                atomElement.timeCost = null
+            } else { // 失败跳过：保留本次已执行的时间和原始错误，状态记为跳过
+                atomElement.status = BuildStatus.SKIP.name
                 atomElement.additionalOptions =
                     atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
+                atomElement.errorMsg = target.errorMsg
+                atomElement.errorCode = target.errorCode
+                atomElement.errorType = target.errorType?.name
+                if (atomElement.startEpoch == null) {
+                    atomElement.startEpoch = target.startTime?.timestampmilli()
+                }
+                if (atomElement.timeCost == null && target.startTime != null && target.endTime != null) {
+                    val total = Duration.between(target.startTime, target.endTime).toMillis().coerceAtLeast(0)
+                    atomElement.timeCost = BuildRecordTimeCost(executeCost = total, totalCost = total)
+                }
             }
             atomElement.executeCount = executeCount
-            atomElement.elapsed = null
-            atomElement.startEpoch = null
             atomElement.canRetry = false
             val originVersion = JsonUtil.toMutableMap(target.taskParams)["version"] as String
             if (originVersion.contains("*")) {
@@ -1038,6 +1115,15 @@ class PipelineContainerService @Autowired constructor(
             }
             target.taskParams = atomElement.genTaskParams() // 更新参数
         }
+    }
+
+    /**
+     * 构建机复用链上的 Job 仍走原来的启动流程，避免复用方拿不到机器。
+     * 准备任务前，复用链会写上 reusedInfo。
+     */
+    private fun tiedToAgentReuse(container: Container): Boolean {
+        val dispatch = (container as? VMBuildContainer)?.dispatchType as? ThirdPartyAgentDispatch ?: return false
+        return dispatch.hasReuseMutex()
     }
 
     private fun findPostTask(
