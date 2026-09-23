@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_FILE_SIZE_EXCEED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED
@@ -58,12 +58,14 @@ import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleFileMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleImageMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
-import com.tencent.devops.notify.pojo.WeworkRobotTemplateCardMessage
 import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 import com.tencent.devops.notify.service.WeworkService
+import com.tencent.devops.notify.wework.pojo.AccessTokenResp
+import com.tencent.devops.notify.wework.pojo.SendMessageResp
 import java.io.File
+import java.util.concurrent.TimeUnit
 import java.io.InputStream
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -85,7 +87,7 @@ import org.springframework.context.annotation.Configuration
 class WeworkRobotServiceImpl @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val weworkNotifyDao: WeworkNotifyDao,
-    private val wechatWorkService: WechatWorkService
+    private val redisOperation: RedisOperation
 ) : WeworkService {
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
         message.sendTo(streamBridge)
@@ -97,6 +99,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
+    @Value("\${wework.corpId:}")
+    private var weworkCorpId: String = ""
+
+    @Value("\${wework.corpSecret:}")
+    private var weworkCorpSecret: String = ""
+
+    @Value("\${wework.agentId:}")
+    private var weworkAgentId: String = ""
+
     @Value("\${wework.image-max-size-in-mb:2}")
     private var imageMaxSizeMb: Int = 2
 
@@ -105,9 +116,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     @Value("\${wework.supported-image-formats:jpg,png}")
     private lateinit var supportedImageFormatsConfig: String
-
-    @Value("\${devopsGateway.outer:}")
-    private var devopsGatewayOuter: String = ""
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         weworkNotifyMediaMessage.mediaInputStream.use {
@@ -353,8 +361,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 审核模板卡片优先走官方应用 chat/send，保留 type=0「通过」会话内回调。
-     * 官方发送失败时才降级群机器人 webhook（type=0 不会推 EventKey，只能改 GET 跳转）。
+     * 审核卡片固定走生产同款应用号 message/send（wework.agentId，DevOps-Notice-Test）。
+     * 不降级 CI-Notice / 群机器人 webhook，避免发件账号被换掉。
      */
     override fun sendTemplateCardMessage(
         receivers: Collection<String>,
@@ -362,94 +370,91 @@ class WeworkRobotServiceImpl @Autowired constructor(
     ): Boolean {
         if (receivers.isEmpty()) {
             logger.warn(
-                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=false|reason=emptyReceivers|" +
+                "reviewNotifyTrace|hop=notify.weworkAgent.send|ok=false|reason=emptyReceivers|" +
                     "taskId=${templateCard.taskId}"
             )
             return false
         }
-        if (sendOfficialTemplateCard(receivers, templateCard)) {
-            return true
-        }
-        logger.warn(
-            "reviewNotifyTrace|hop=notify.weworkRobot.fallbackJump|" +
-                "taskId=${templateCard.taskId}|receivers=$receivers"
-        )
-        val outboundCard = WeworkRobotReviewCardRewriter.rewriteCallbackButtons(
-            card = templateCard,
-            gatewayOuter = devopsGatewayOuter
-        )
-        if (outboundCard !== templateCard) {
-            logger.info(
-                "reviewNotifyTrace|hop=notify.weworkRobot.rewriteJump|" +
-                    "taskId=${templateCard.taskId}|gateway=${devopsGatewayOuter.isNotBlank()}"
-            )
-        }
-        val sendRequest = receivers.map { receiver ->
-            WeworkRobotTemplateCardMessage(
-                chatid = receiver,
-                postId = null,
-                templateCard = outboundCard
-            )
-        }
-        return try {
-            doSendRequest(sendRequest)
-            logger.info(
-                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=true|" +
-                    "taskId=${templateCard.taskId}|receivers=$receivers"
-            )
-            saveResult(receivers, "template_card:${templateCard.taskId}", true, null)
-            true
-        } catch (e: Exception) {
-            logger.warn(
-                "reviewNotifyTrace|hop=notify.weworkRobot.send|ok=false|" +
-                    "taskId=${templateCard.taskId}|receivers=$receivers",
-                e
-            )
-            saveResult(receivers, "template_card:${templateCard.taskId}", false, e.message)
-            false
-        }
-    }
-
-    /**
-     * 官方应用发卡片：type=0 点「通过」走 template_card_event，不打开浏览器。
-     */
-    private fun sendOfficialTemplateCard(
-        receivers: Collection<String>,
-        templateCard: WeworkTemplateCard
-    ): Boolean {
-        var allOk = true
-        receivers.forEach { receiver ->
+        return kotlin.runCatching {
+            val agentId = weworkAgentId.toIntOrNull()
+                ?: throw OperationException("Wework agent id is invalid")
             val payload = mapOf(
-                "receiver" to mapOf(
-                    "type" to "single",
-                    "id" to receiver
-                ),
+                "touser" to receivers.joinToString("|"),
                 "msgtype" to "template_card",
+                "agentid" to agentId,
                 "template_card" to templateCard
             )
-            val sendResult = try {
-                wechatWorkService.sendMessage(JsonUtil.toJson(payload, false))
-            } catch (ignored: Exception) {
-                logger.warn(
-                    "reviewNotifyTrace|hop=notify.official.send|ok=false|receiver=$receiver|" +
-                        "taskId=${templateCard.taskId}",
-                    ignored
-                )
-                false
+            logger.info(
+                "reviewNotifyTrace|hop=notify.weworkAgent.send|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers|" +
+                    "payload=${JsonUtil.toJson(payload, false)}"
+            )
+            val url = buildUrl(
+                "$weworkHost/cgi-bin/message/send?access_token=${getWeworkAgentAccessToken()}"
+            )
+            OkhttpUtils.doPost(url, JsonUtil.toJson(payload, false)).use {
+                val responseBody = it.body?.string() ?: ""
+                val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<SendMessageResp>())
+                if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
+                    throw RemoteServiceException(
+                        httpStatus = it.code,
+                        responseContent = responseBody,
+                        errorMessage = "send wework template_card failed",
+                        errorCode = sendMessageResp.errCode
+                    )
+                }
             }
-            if (sendResult) {
-                logger.info(
-                    "reviewNotifyTrace|hop=notify.official.send|ok=true|" +
-                        "receiver=$receiver|taskId=${templateCard.taskId}"
-                )
-            } else {
-                allOk = false
-            }
-        }
-        if (allOk) {
             saveResult(receivers, "template_card:${templateCard.taskId}", true, null)
+            logger.info(
+                "reviewNotifyTrace|hop=notify.weworkAgent.send|ok=true|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers"
+            )
+            true
+        }.fold({ it }, {
+            logger.warn(
+                "reviewNotifyTrace|hop=notify.weworkAgent.send|ok=false|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers",
+                it
+            )
+            saveResult(receivers, "template_card:${templateCard.taskId}", false, it.message)
+            false
+        })
+    }
+
+    private fun getWeworkAgentAccessToken(): String {
+        val now = System.currentTimeMillis()
+        val cached = redisOperation.get(WEWORK_ACCESS_TOKEN_KEY)?.let { json ->
+            JsonUtil.to(json, jacksonTypeRef<AccessTokenCache>())
+                .takeIf { (TimeUnit.SECONDS.toMillis(it.expiresIn.toLong()) + now) < it.timestamp }
         }
-        return allOk && receivers.isNotEmpty()
+        if (cached != null) {
+            return cached.accessToken
+        }
+        redisOperation.delete(WEWORK_ACCESS_TOKEN_KEY)
+        OkhttpUtils.doGet(
+            buildUrl("$weworkHost/cgi-bin/gettoken?corpId=$weworkCorpId&corpSecret=$weworkCorpSecret")
+        ).use {
+            val responseBody = it.body?.string() ?: "{}"
+            val accessTokenResp = JsonUtil.to(responseBody, jacksonTypeRef<AccessTokenResp>())
+            if (!it.isSuccessful || !accessTokenResp.isOk()) {
+                throw RemoteServiceException(
+                    httpStatus = it.code,
+                    responseContent = responseBody,
+                    errorMessage = "failed to get wework access token",
+                    errorCode = accessTokenResp.errCode
+                )
+            }
+            val accessToken = accessTokenResp.accessToken!!
+            val expiresIn = accessTokenResp.expiresIn
+            if (expiresIn != null && expiresIn > TOKEN_EXPIRE_SKEW_SECONDS) {
+                redisOperation.set(
+                    key = WEWORK_ACCESS_TOKEN_KEY,
+                    value = JsonUtil.toJson(AccessTokenCache(accessToken, expiresIn, now), false),
+                    expiredInSecond = expiresIn.toLong() - TOKEN_EXPIRE_SKEW_SECONDS
+                )
+            }
+            return accessToken
+        }
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
@@ -579,6 +584,14 @@ class WeworkRobotServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
         private const val WEWORK_MAX_SIZE = 4000
         private const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
+        private const val WEWORK_ACCESS_TOKEN_KEY = "notify_wework_access_token_key"
+        private const val TOKEN_EXPIRE_SKEW_SECONDS = 600
         private val OCTET_STREAM_MEDIA_TYPE = "application/octet-stream".toMediaType()
     }
+
+    private data class AccessTokenCache(
+        val accessToken: String,
+        val expiresIn: Int,
+        val timestamp: Long
+    )
 }
