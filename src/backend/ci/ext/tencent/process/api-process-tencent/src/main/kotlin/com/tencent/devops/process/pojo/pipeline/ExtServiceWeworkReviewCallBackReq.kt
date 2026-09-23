@@ -42,5 +42,8 @@ data class ExtServiceWeworkReviewCallBackReq(
     @get:Schema(title = "卡片 taskId，可从 EventKey 解析", required = false)
     val taskId: String? = null,
     @get:Schema(title = "agree|reject，可从 EventKey 解析", required = false)
-    val action: String? = null
+    val action: String? = null,
+    @JsonAlias("SelectedItems", "selected_items")
+    @get:Schema(title = "卡片下拉选择 question_key -> option_id", required = false)
+    val selectedItems: Map<String, String>? = null
 )

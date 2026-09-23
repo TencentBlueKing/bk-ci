@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_THIS_GROUP_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -58,6 +59,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
+import com.tencent.devops.notify.pojo.wework.WeworkReviewResultCard
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTXWeworkReviewCallBackResource
@@ -219,7 +221,9 @@ class WechatWorkCallbackService @Autowired constructor(
                         eventKey = eventKey,
                         receiverType = receiverType,
                         chatId = chatId,
-                        userName = userName
+                        userName = userName,
+                        selectedItems = parseSelectedItems(callbackElement.msgElement),
+                        responseCode = elementTextOrEmpty(callbackElement.msgElement, "ResponseCode")
                     )
                 } else if (eventType == EventType.click) {
                     processClickEvent(eventKey, receiverType, chatId, userName)
@@ -322,7 +326,7 @@ class WechatWorkCallbackService @Autowired constructor(
                         "  " + MessageUtil.getMessageByLocale(
                             messageCode = BK_DOCUMENT_ENTRY,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ) + "  ", "http://docs.devops.oa.com", 1
+                        ) + "  ", HomeHostUtil.innerServerHost(), 1
                     )
                 )
             )
@@ -503,7 +507,9 @@ class WechatWorkCallbackService @Autowired constructor(
         eventKey: String,
         receiverType: ReceiverType,
         chatId: String,
-        userName: String
+        userName: String,
+        selectedItems: Map<String, String> = emptyMap(),
+        responseCode: String = ""
     ) {
         val parsed = WeworkReviewCardConst.parseButtonKey(eventKey) ?: return
         val (action, taskId) = parsed
@@ -514,13 +520,23 @@ class WechatWorkCallbackService @Autowired constructor(
         }
         wechatWorkMessageDAO.insertMassageId(dslContext, dedupId)
 
+        val selectedJson = selectedItems.takeIf { it.isNotEmpty() }?.let { JsonUtil.toJson(it, false) }
         val reply = try {
             client.get(ServiceTXWeworkReviewCallBackResource::class)
-                .manualReviewCallBack(userId = userName, action = action, taskId = taskId)
+                .manualReviewCallBack(
+                    userId = userName,
+                    action = action,
+                    taskId = taskId,
+                    selectedItems = selectedJson
+                )
                 .data ?: "审核处理完成"
         } catch (ignored: Exception) {
             logger.warn("wework review card callback failed|user=$userName|key=$eventKey", ignored)
             "审核处理失败：${ignored.message ?: "unknown"}"
+        }
+
+        if (tryUpdateReviewResultCard(responseCode, taskId, action, userName, reply)) {
+            return
         }
 
         val receiver = Receiver(receiverType, chatId)
@@ -530,6 +546,67 @@ class WechatWorkCallbackService @Autowired constructor(
         }
         richtextContentList.add(RichtextText(RichtextTextText(reply)))
         wechatWorkService.sendRichText(RichtextMessage(receiver, richtextContentList))
+    }
+
+    private fun tryUpdateReviewResultCard(
+        responseCode: String,
+        taskId: String,
+        action: String,
+        userName: String,
+        reply: String
+    ): Boolean {
+        if (responseCode.isBlank()) return false
+        val success = reply.startsWith("已由")
+        val alreadyDone = reply.contains("已处理")
+        if (!success && !alreadyDone) return false
+        val card = WeworkReviewResultCard.build(
+            taskId = taskId,
+            resultTitle = WeworkReviewResultCard.resultTitle(action, alreadyDone),
+            reviewer = userName,
+            reviewedAt = java.time.LocalDateTime.now().format(
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            ),
+            rejectReason = if (action == WeworkReviewCardConst.ACTION_REJECT) {
+                WeworkReviewCardConst.DEFAULT_REJECT_SUGGEST
+            } else {
+                null
+            }
+        )
+        val ok = wechatWorkService.updateTemplateCard(responseCode, card)
+        logger.info("reviewNotifyTrace|hop=misc.updateCard|ok=$ok|taskId=$taskId|action=$action")
+        return ok
+    }
+
+    private fun elementTextOrEmpty(parent: Element, name: String): String {
+        return try {
+            val iterator = parent.elementIterator(name)
+            if (!iterator.hasNext()) "" else (iterator.next() as Element).text.orEmpty()
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private fun parseSelectedItems(msgElement: Element): Map<String, String> {
+        val result = linkedMapOf<String, String>()
+        try {
+            val itemsNode = msgElement.elementIterator("SelectedItems")
+            if (!itemsNode.hasNext()) return emptyMap()
+            val selectedItems = itemsNode.next() as Element
+            val itemIt = selectedItems.elementIterator("SelectedItem")
+            while (itemIt.hasNext()) {
+                val item = itemIt.next() as Element
+                val key = elementTextOrEmpty(item, "QuestionKey")
+                val optionIdsIt = item.elementIterator("OptionIds")
+                if (!optionIdsIt.hasNext()) continue
+                val optionId = elementTextOrEmpty(optionIdsIt.next() as Element, "OptionId")
+                if (key.isNotBlank() && optionId.isNotBlank()) {
+                    result[key] = optionId
+                }
+            }
+        } catch (ignored: Exception) {
+            logger.info("skip parse SelectedItems: ${ignored.message}")
+        }
+        return result
     }
 
     /*

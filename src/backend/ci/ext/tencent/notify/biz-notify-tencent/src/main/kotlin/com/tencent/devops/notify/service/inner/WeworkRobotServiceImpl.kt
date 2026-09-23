@@ -441,7 +441,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
         logger.info(
             "reviewNotifyTrace|hop=notify.weworkRobot.send|" +
                 "taskId=${templateCard.taskId}|receivers=$receivers|" +
-                "rewritten=${outboundCard !== templateCard}|gateway=${devopsGatewayOuter.isNotBlank()}"
+                "keepCallbackKey=${outboundCard.buttonList?.any { it.type == 0 && !it.key.isNullOrBlank() }}|" +
+                "gateway=${devopsGatewayOuter.isNotBlank()}"
         )
         val sendRequest = receivers.map { receiver ->
             WeworkRobotTemplateCardMessage(

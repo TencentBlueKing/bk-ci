@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.TXPipelineWeworkReviewService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +38,28 @@ class ServiceTXWeworkReviewCallBackResourceImpl @Autowired constructor(
     private val txPipelineWeworkReviewService: TXPipelineWeworkReviewService
 ) : ServiceTXWeworkReviewCallBackResource {
 
-    override fun manualReviewCallBack(userId: String, action: String, taskId: String): Result<String> {
-        return Result(txPipelineWeworkReviewService.handleReviewAction(userId, action, taskId))
+    override fun manualReviewCallBack(
+        userId: String,
+        action: String,
+        taskId: String,
+        selectedItems: String?
+    ): Result<String> {
+        return Result(
+            txPipelineWeworkReviewService.handleReviewAction(
+                userId = userId,
+                action = action,
+                taskId = taskId,
+                selectedItems = parseSelectedItems(selectedItems)
+            )
+        )
+    }
+
+    private fun parseSelectedItems(raw: String?): Map<String, String> {
+        if (raw.isNullOrBlank()) return emptyMap()
+        return try {
+            JsonUtil.to<Map<String, String>>(raw)
+        } catch (_: Exception) {
+            emptyMap()
+        }
     }
 }

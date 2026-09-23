@@ -65,6 +65,34 @@ class TXPipelineWeworkReviewServiceTest {
     }
 
     @Test
+    fun `selectedItems stay optional so existing callbacks unchanged`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "royalhuang",
+            action = "agree",
+            taskId = "task-1"
+        )
+        assertEquals(null, req.selectedItems)
+        val withSelected = JsonUtil.to(
+            """
+            {
+              "userId": "royalhuang",
+              "action": "agree",
+              "taskId": "task-1",
+              "selectedItems": {"deploy_env": "prod"}
+            }
+            """.trimIndent(),
+            ExtServiceWeworkReviewCallBackReq::class.java
+        )
+        assertEquals(mapOf("deploy_env" to "prod"), withSelected.selectedItems)
+        val merged = WeworkReviewCardConst.applySelectedItems(
+            """[{"key":"deploy_env","value":"staging"}]""",
+            withSelected.selectedItems.orEmpty()
+        )
+        assertEquals(true, merged!!.contains("prod"))
+        assertEquals(false, merged.contains("staging"))
+    }
+
+    @Test
     fun `html page escapes message`() {
         val html = TXPipelineWeworkReviewService.htmlPage(true, "已由 a<b> 同意审核")
         assertEquals(true, html.contains("已由 a&lt;b&gt; 同意审核"))

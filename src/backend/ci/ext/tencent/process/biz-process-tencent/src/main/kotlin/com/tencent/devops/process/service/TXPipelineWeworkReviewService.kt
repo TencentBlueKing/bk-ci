@@ -71,7 +71,7 @@ class TXPipelineWeworkReviewService @Autowired constructor(
      */
     fun handleExternalCallBack(req: ExtServiceWeworkReviewCallBackReq): Result<String> {
         val (userId, action, taskId) = resolveExternalCallBack(req)
-        return Result(handleReviewAction(userId, action, taskId))
+        return Result(handleReviewAction(userId, action, taskId, req.selectedItems.orEmpty()))
     }
 
     /**
@@ -84,8 +84,16 @@ class TXPipelineWeworkReviewService @Autowired constructor(
         return htmlPage(success, message)
     }
 
-    fun handleReviewAction(userId: String, action: String, taskId: String): String {
-        logger.info("wework review card callback|userId=$userId|action=$action|taskId=$taskId")
+    fun handleReviewAction(
+        userId: String,
+        action: String,
+        taskId: String,
+        selectedItems: Map<String, String> = emptyMap()
+    ): String {
+        logger.info(
+            "wework review card callback|userId=$userId|action=$action|taskId=$taskId|" +
+                "selected=${selectedItems.keys}"
+        )
         if (taskId.isBlank()) {
             return "无效的审核请求"
         }
@@ -96,11 +104,14 @@ class TXPipelineWeworkReviewService @Autowired constructor(
         if (cacheJson.isNullOrBlank()) {
             return "审核卡片已过期或不存在，请打开详情页处理"
         }
-        val callBackData: Map<String, String> = try {
+        val callBackData: MutableMap<String, String> = try {
             JsonUtil.to(cacheJson, jacksonTypeRef())
         } catch (ignored: Exception) {
             logger.warn("parse wework review card cache failed|taskId=$taskId", ignored)
             return "审核数据解析失败，请打开详情页处理"
+        }
+        WeworkReviewCardConst.applySelectedItems(callBackData["reviewParams"], selectedItems)?.let {
+            callBackData["reviewParams"] = it
         }
         val actualUserId = userId.ifBlank {
             WeworkReviewCardConst.weworkUserId(callBackData["receiver"].orEmpty())

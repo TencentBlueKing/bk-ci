@@ -59,6 +59,9 @@ interface ServiceTXWeworkReviewCallBackResource {
         action: String,
         @Parameter(description = "卡片 taskId", required = true)
         @QueryParam("taskId")
-        taskId: String
+        taskId: String,
+        @Parameter(description = "下拉选择 JSON，question_key->option_id", required = false)
+        @QueryParam("selectedItems")
+        selectedItems: String? = null
     ): Result<String>
 }

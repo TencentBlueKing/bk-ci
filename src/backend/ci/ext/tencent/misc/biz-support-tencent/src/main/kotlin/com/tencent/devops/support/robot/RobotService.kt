@@ -38,7 +38,7 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.api.service.ServiceTXWeworkReviewCallBackResource
 import com.tencent.devops.support.constant.SupportMessageCode.BK_GROUP_CHATID
 import com.tencent.devops.support.robot.pojo.RobotCallback
@@ -139,33 +139,28 @@ class RobotService @Autowired constructor(
     }
 
     /**
-     * 机器人 template_card 若推了 EventKey（BKCI_REVIEW|agree|taskId），转发 process /service。
-     * 群机器人多数情况不会推，发送侧已改成 GET 跳转；这里兜底。
+     * 消息推送 template_card 点击（path/94874：event_key / task_id）转发 process 审核。
      */
     private fun tryHandleReviewCardEvent(xmlString: String): Boolean {
-        if (xmlString.isBlank()) return false
+        val click = WeworkRobotTemplateCardEventParser.parse(xmlString) ?: return false
         return try {
-            val document = parseXml(xmlString)
-            val eventKey = document.getElementsByTagName("EventKey").item(0)?.textContent.orEmpty()
-            val parsed = WeworkReviewCardConst.parseButtonKey(eventKey) ?: return false
-            val userId = document.getElementsByTagName("Alias").item(0)?.textContent
-                ?: document.getElementsByTagName("UserId").item(0)?.textContent
-                ?: ""
-            val (action, taskId) = parsed
-            logger.info("wework robot review card event|userId=$userId|action=$action|taskId=$taskId")
+            logger.info(
+                "wework robot review card event|userId=${click.userId}|action=${click.action}|" +
+                    "taskId=${click.taskId}|selected=${click.selectedItems.keys}"
+            )
             client.get(ServiceTXWeworkReviewCallBackResource::class)
-                .manualReviewCallBack(userId = userId, action = action, taskId = taskId)
+                .manualReviewCallBack(
+                    userId = click.userId,
+                    action = click.action,
+                    taskId = click.taskId,
+                    selectedItems = click.selectedItems.takeIf { it.isNotEmpty() }
+                        ?.let { JsonUtil.toJson(it, false) }
+                )
             true
         } catch (ignored: Exception) {
             logger.warn("wework robot review card event failed", ignored)
             false
         }
-    }
-
-    private fun parseXml(xmlString: String): Document {
-        val dbf = DocumentBuilderFactory.newInstance()
-        val db = dbf.newDocumentBuilder()
-        return db.parse(InputSource(StringReader(xmlString)))
     }
 
     @SuppressWarnings("ComplexMethod")
