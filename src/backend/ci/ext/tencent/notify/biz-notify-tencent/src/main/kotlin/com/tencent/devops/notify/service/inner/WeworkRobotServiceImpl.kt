@@ -87,7 +87,13 @@ import org.springframework.context.annotation.Configuration
 class WeworkRobotServiceImpl @Autowired constructor(
     private val streamBridge: StreamBridge,
     private val weworkNotifyDao: WeworkNotifyDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    @Value("\${wework.corpId:}")
+    private val weworkCorpId: String,
+    @Value("\${wework.corpSecret:}")
+    private val weworkCorpSecret: String,
+    @Value("\${wework.agentId:}")
+    private val weworkAgentId: String
 ) : WeworkService {
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
         message.sendTo(streamBridge)
@@ -98,15 +104,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
-
-    @Value("\${wework.corpId:}")
-    private var weworkCorpId: String = ""
-
-    @Value("\${wework.corpSecret:}")
-    private var weworkCorpSecret: String = ""
-
-    @Value("\${wework.agentId:}")
-    private var weworkAgentId: String = ""
 
     @Value("\${wework.image-max-size-in-mb:2}")
     private var imageMaxSizeMb: Int = 2
@@ -377,7 +374,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
         return kotlin.runCatching {
             val agentId = weworkAgentId.toIntOrNull()
-                ?: throw OperationException("Wework agent id is invalid")
+                ?: throw OperationException(
+                    "Wework agent id is invalid, agentIdBlank=${weworkAgentId.isBlank()}|" +
+                        "corpIdBlank=${weworkCorpId.isBlank()}"
+                )
             val payload = mapOf(
                 "touser" to receivers.joinToString("|"),
                 "msgtype" to "template_card",
@@ -386,7 +386,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             )
             logger.info(
                 "reviewNotifyTrace|hop=notify.weworkAgent.send|" +
-                    "taskId=${templateCard.taskId}|receivers=$receivers|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers|agentId=$agentId|" +
                     "payload=${JsonUtil.toJson(payload, false)}"
             )
             val url = buildUrl(
