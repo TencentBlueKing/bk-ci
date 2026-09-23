@@ -183,7 +183,6 @@
                                             :placeholder="$t('environment.pleaseSelectLabelValue')"
                                             :clearable="false"
                                             :disabled="!row.tagKeyId"
-                                            multiple
                                         >
                                             <bk-option
                                                 v-for="val in getLabelValues(row.tagKeyId)"
@@ -353,6 +352,7 @@
                 RELATED_TYPE,
                 relateNodes,
                 requestNodeList,
+                previewTagEnvNodes,
                 handleCloseDialog,
                 availableLabelKeys,
                 fetchTagList,
@@ -671,10 +671,17 @@
             const handlePreviewResult = async () => {
                 try {
                     isPreviewLoading.value = true
-                    const res = await requestNodeList({
-                        page: pagination.value.current,
+                    // 将标签规则摊平成 [{ tagKeyId, tagValueId }] 作为请求体
+                    const tags = labelRules.value
+                        .filter(rule => rule.tagKeyId && rule.tagValues?.length)
+                        .flatMap(rule => rule.tagValues.map(tagValueId => ({
+                            tagKeyId: rule.tagKeyId,
+                            tagValueId
+                        })))
+                    const res = await previewTagEnvNodes({
+                        page: -1,
                         pageSize: 1000
-                    }, labelRules.value)
+                    }, tags)
                     
                     // 获取预览结果的节点列表
                     const previewNodes = res.records || []
