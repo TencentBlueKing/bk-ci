@@ -80,6 +80,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref, watch } from 'vue'
     import {
         DEFAULT_PARALLEL_TASK_COUNT,
@@ -490,6 +491,18 @@
              */
             const generateCmd = async () => {
                 if (isReinstall.value && !canReinstall.value) return
+                // 生成命令前先校验标签：存在「有键无值 / 有值无键」的不完整行时，
+                // 提示用户补全并阻止后续逻辑，待检查通过才放行
+                const hasIncompleteTag = form.tags.some(
+                    (t) => (t.tagKeyId && !t.tagValueId) || (!t.tagKeyId && t.tagValueId)
+                )
+                if (hasIncompleteTag) {
+                    proxy.$bkMessage({
+                        theme: 'warning',
+                        message: proxy.$t('environment.installSession.tagIncomplete')
+                    })
+                    return
+                }
                 generating.value = true
                 try {
                     const res = await proxy.$store.dispatch('environment/requestCreateInstallSession', {
@@ -629,7 +642,9 @@
                 }
             }
             const openDoc = () => {
-                const url = proxy.BKCI_DOCS?.ENV_FAQ_DOC
+                // BKCI_DOCS 挂在 Vue.prototype 上（非 $ 前缀全局属性），
+                // composition 的 instance.proxy 不会转发，需直接读 Vue.prototype
+                const url = Vue.prototype.BKCI_DOCS?.ENV_FAQ_DOC
                 window.open(url, '_blank')
             }
 
