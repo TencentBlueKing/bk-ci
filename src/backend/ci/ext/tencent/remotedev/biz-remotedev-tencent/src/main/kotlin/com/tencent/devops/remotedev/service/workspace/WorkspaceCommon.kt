@@ -292,12 +292,18 @@ class WorkspaceCommon @Autowired constructor(
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
         when {
             workspaceInfo.status == EnvStatusEnum.readyToRun || workspaceInfo.status == EnvStatusEnum.stopped -> {
-                sleepControl.doStopWS(true, userId, workspaceName)
+                sleepControl.doStopWS(true, userId, workspaceName, notify = false)
                 return WorkspaceStatus.STOPPED
             }
 
             workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
-                deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
+                deleteControl.doDeleteWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    errorMsg = workspaceInfo.environmentIP,
+                    notify = false
+                )
                 return WorkspaceStatus.DELETED
             }
 
@@ -332,7 +338,13 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
-                return startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
+                return startControl.doStartWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    environmentHost = workspaceInfo.environmentHost,
+                    notify = false
+                )
             }
 
             workspaceInfo.status == EnvStatusEnum.startFailed -> {

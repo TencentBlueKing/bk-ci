@@ -231,7 +231,8 @@ class StartControl @Autowired constructor(
         operator: String,
         workspaceName: String,
         environmentHost: String?,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        notify: Boolean = true
     ): WorkspaceStatus {
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
@@ -277,8 +278,8 @@ class StartControl @Autowired constructor(
                         startUserId = operator,
                         lastSleepTimeCost = lastSleepTimeCost
                     )
-                    // 分发到WS
-                    notifyControl.dispatchWebsocketPushEvent(
+                    // 列表或控制台刷新修正状态时不推送
+                    if (notify) notifyControl.dispatchWebsocketPushEvent(
                         userId = operator,
                         workspaceName = workspaceName,
                         workspaceHost = environmentHost,
