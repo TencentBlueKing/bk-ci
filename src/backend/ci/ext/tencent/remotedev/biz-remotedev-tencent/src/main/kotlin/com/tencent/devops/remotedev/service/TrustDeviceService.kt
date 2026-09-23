@@ -121,7 +121,7 @@ class TrustDeviceService @Autowired constructor(
         val result = try {
             AESUtil.decrypt(secret!!, token)
         } catch (ignore: Throwable) {
-            logger.error("getTokenInfo|Access token illegal $token", ignore)
+            logger.error("getTokenInfo|Access token illegal ", ignore)
             throw ErrorCodeException(
                 errorCode = PARAMETER_ILLEGAL_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,

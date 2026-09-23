@@ -186,7 +186,6 @@ class ServiceRemoteDevResourceImpl(
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun desktopTokenCheck(token: String, dToken: String): Result<UserOnePassword> {
-        logger.info("Checking desktop token $dToken")
         return Result(permissionService.checkAndGetUser1Password(dToken))
     }
 
