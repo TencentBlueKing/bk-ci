@@ -39,5 +39,7 @@ data class PipelineTimer(
     val branchs: List<String>?,
     val noScm: Boolean?,
     val taskId: String,
-    val startParam: Map<String, String>?
+    val startParam: Map<String, String>?,
+    /** IANA 时区；空则调度侧回落 Asia/Shanghai */
+    val timeZone: String? = null
 )

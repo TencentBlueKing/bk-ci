@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
+import { addRoutePrefix, getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
 import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
@@ -25,7 +25,7 @@ for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
-    path: urlJoin('/console', r.path, ':restPath*'),
+    path: addRoutePrefix(urlJoin('/console', r.path, ':restPath*')),
     name: r.name,
     component: IFrame,
     meta: r.meta,
@@ -37,7 +37,7 @@ const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
 
 const routes = [
     {
-        path: '/console',
+        path: window.getRoutePrefix(),
         component: Index,
         children: [
             {
@@ -123,7 +123,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)
                 const dynamicRoutes = [{
-                    path: '/console/',
+                    path: window.getRoutePrefix(),
                     component: Index,
                     children: module.routes
                 }]

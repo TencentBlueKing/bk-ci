@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
   `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
   `LATEST_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新',
+  `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空',
   `JOB_TYPE_MAP` text COMMENT '多服务范围Job类型映射，JSON格式：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}',
   `CLASSIFY_ID_MAP` text COMMENT '多服务范围分类映射，JSON格式：{"PIPELINE":"classifyId1","CREATIVE_STREAM":"classifyId2"}',
   `OS_MAP` text COMMENT '多JobType操作系统映射，JSON格式：{"AGENT":["WINDOWS","LINUX","MACOS"],"CREATIVE_STREAM":["WINDOWS"]}',
@@ -100,6 +101,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   KEY `inx_tpca_default_flag` (`DEFAULT_FLAG`),
   KEY `inx_tpca_atom_classify_id` (`CLASSIFY_ID`),
   KEY `inx_ta_delete_flag` (`DELETE_FLAG`),
+  KEY `inx_ta_tenant_id` (`TENANT_ID`),
   KEY `inx_ta_latest_status_default_delete` (LATEST_FLAG, ATOM_STATUS, DEFAULT_FLAG, DELETE_FLAG)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线插件表';
 
@@ -652,13 +654,15 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE` (
   `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   `PUB_TIME` datetime DEFAULT NULL COMMENT '发布时间',
+  `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tt_code_version` (`TEMPLATE_CODE`,`VERSION`),
   KEY `inx_tt_template_name` (`TEMPLATE_NAME`),
   KEY `inx_tt_template_code` (`TEMPLATE_CODE`),
   KEY `inx_tt_template_type` (`TEMPLATE_TYPE`),
   KEY `inx_tt_template_rd_type` (`TEMPLATE_RD_TYPE`),
-  KEY `inx_tt_status` (`TEMPLATE_STATUS`)
+  KEY `inx_tt_status` (`TEMPLATE_STATUS`),
+  KEY `inx_tt_tenant_id` (`TENANT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模板信息表';
 
 -- ----------------------------
@@ -908,12 +912,14 @@ CREATE TABLE IF NOT EXISTS `T_IMAGE`
     `DELETE_FLAG`       BIT(1)       DEFAULT FALSE  COMMENT '删除标识 true：是，false：否',
     `DOCKER_FILE_TYPE` varchar(32) NOT NULL DEFAULT 'INPUT' COMMENT 'dockerFile类型（INPUT：手动输入，*_LINK：链接）',
     `DOCKER_FILE_CONTENT` text COMMENT 'dockerFile内容',
+    `TENANT_ID` varchar(32) DEFAULT NULL COMMENT '租户ID，存量单租户可为空',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_inx_ti_code_version` (`IMAGE_CODE`, `VERSION`) USING BTREE,
     KEY `inx_ti_image_name` (`IMAGE_NAME`) USING BTREE,
     KEY `inx_ti_image_code` (`IMAGE_CODE`) USING BTREE,
     KEY `inx_ti_source_type` (`IMAGE_SOURCE_TYPE`) USING BTREE,
-    KEY `inx_ti_image_status` (`IMAGE_STATUS`) USING BTREE
+    KEY `inx_ti_image_status` (`IMAGE_STATUS`) USING BTREE,
+    KEY `inx_ti_tenant_id` (`TENANT_ID`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT ='镜像信息表';

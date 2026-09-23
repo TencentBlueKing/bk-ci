@@ -42,8 +42,10 @@ data class PipelineFailInfoQueryReqVO(
     override var startTime: String? = null,
     @Parameter(description = "结束时间", required = false)
     override var endTime: String? = null,
+    @Parameter(description = "IANA 时区", required = false)
+    override var timeZone: String? = null,
     @Parameter(description = "错误类型", required = false)
     val errorTypes: List<Int>? = null,
     @Parameter(description = "插件代码", required = false)
     val atomCodes: List<String>? = null
-) : BaseQueryReqVO(projectId, pipelineIds, pipelineLabelIds, startTime, endTime)
+) : BaseQueryReqVO(projectId, pipelineIds, pipelineLabelIds, startTime, endTime, timeZone)

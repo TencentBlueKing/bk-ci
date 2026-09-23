@@ -99,11 +99,12 @@
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
     import { State, Action, Getter } from 'vuex-class'
-    import eventBus from '../../utils/eventBus'
+    import eventBus from '@/utils/eventBus'
     import {
         handleProjectNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { addRoutePrefix } from '@/utils/util'
 
     @Component
     export default class ProjectDialog extends Vue {
@@ -215,7 +216,7 @@
                         },
                         {
                             actionName: this.$t('createProject'),
-                            groupInfoList: [{ url }],
+                            groupInfoList: [{ url: addRoutePrefix(url) }],
                             resourceName: projectName,
                             resourceTypeName: this.$t('project')
                         }
@@ -264,7 +265,7 @@
                         },
                         {
                             actionName: this.$t('editProject'),
-                            groupInfoList: [{ url }],
+                            groupInfoList: [{ url: addRoutePrefix(url) }],
                             resourceName: projectName,
                             resourceTypeName: this.$t('project')
                         }

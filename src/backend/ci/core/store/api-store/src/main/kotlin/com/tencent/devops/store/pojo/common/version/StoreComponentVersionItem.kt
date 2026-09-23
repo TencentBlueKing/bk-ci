@@ -51,8 +51,8 @@ data class StoreComponentVersionItem(
     val status: String,
     @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String,
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
+    val createTime: Long,
     @get:Schema(title = "扩展字段集合", required = false)
     val extData: Map<String, Any>? = null
 )

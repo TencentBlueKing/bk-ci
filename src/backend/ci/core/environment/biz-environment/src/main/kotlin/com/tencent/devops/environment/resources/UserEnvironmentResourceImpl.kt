@@ -308,6 +308,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
 
     override fun listUserShareEnv(
         userId: String,
+        tenantId: String?,
         projectId: String,
         envHashId: String,
         search: String?,
@@ -324,7 +325,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 envHashId = envHashId,
                 search = search,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20
+                pageSize = pageSize ?: 20,
+                tenantId = tenantId
             )
         )
     }

@@ -63,18 +63,19 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupApplyRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDateTime
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionException
-import java.util.concurrent.Executors
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupSyncService @Autowired constructor(
@@ -192,7 +193,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val memberId2GroupsExpired = projectMembersOfExpired.groupBy { it.memberId }
         memberId2GroupsExpired.forEach { (memberId, groupInfos) ->
             try {
-                if (deptService.isUserDeparted(memberId)) {
+                val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+                if (deptService.isUserDeparted(memberId, tenantId)) {
                     return@forEach
                 }
                 // 获取用户加入组的有效期
@@ -201,7 +203,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 groupIds.chunked(20).forEach { batchGroupIds ->
                     val batchVerifyGroupValidMember = iamV2ManagerService.verifyGroupValidMember(
                         memberId,
-                        batchGroupIds.joinToString(",")
+                        batchGroupIds.joinToString(","),
+                        tenantId
                     )
                     verifyResults.putAll(batchVerifyGroupValidMember)
                 }
@@ -316,7 +319,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 try {
                     val isMemberJoinedToGroup = iamV2ManagerService.verifyGroupValidMember(
                         it.memberId,
-                        it.iamGroupId.toString()
+                        it.iamGroupId.toString(),
+                        TenantUtils.getTenantIdByEnglishName(it.projectCode)
                     )[it.iamGroupId]?.belong == true
                     isMemberJoinedToGroup
                 } catch (ignore: Exception) {
@@ -353,6 +357,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncGroupAndMember(projectCode: String) {
+
         SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
             if (!lock.tryLock()) {
                 logger.info("sync group and member|running:$projectCode")
@@ -376,7 +381,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     dslContext = dslContext,
                     projectCode = projectCode
                 ).filter { it.departed == true }.map { it.id }
-                userService.syncUserInfoData(departedMembers)
+                userService.syncUserInfoData(departedMembers, TenantUtils.getTenantIdByEnglishName(projectCode))
                 // 记录完成状态
                 authResourceSyncDao.updateStatus(
                     dslContext = dslContext,
@@ -462,10 +467,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 page = 1
                 pageSize = 1000
             }
+            val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             val iamGroupList = iamV2ManagerService.getGradeManagerRoleGroupV2(
                 projectInfo.relationId,
                 searchGroupDTO,
-                pageInfoDTO
+                pageInfoDTO,
+                tenantId
             ).results
 
             // 查询人员模板列表
@@ -476,7 +483,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             val templateMap = iamV2ManagerService.getGradeManagerRoleTemplate(
                 projectInfo.relationId,
                 null,
-                templatePageInfoDTO
+                templatePageInfoDTO,
+                tenantId
             ).results.associateBy { it.sourceGroupId }
 
             val iamGroupMap = iamGroupList.associateBy { it.id }
@@ -753,7 +761,10 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             it.memberType != ManagerScopesEnum.TEMPLATE.name
         }.associateBy { it.memberId }
 
-        val iamGroupMemberList = getAllRoleGroupMembersV2(iamGroupId)
+        val iamGroupMemberList = getAllRoleGroupMembersV2(
+            iamGroupId,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
         val iamGroupMemberMap = iamGroupMemberList.associateBy { it.id }
 
         toDeleteMembers.addAll(resourceGroupMemberMap.filterKeys { !iamGroupMemberMap.contains(it) }.values)
@@ -809,7 +820,11 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             page = 1
         }
         // 查询人员模板列表
-        val iamGroupTemplateList = iamV2ManagerService.listRoleGroupTemplates(iamGroupId, pageInfoDTO).results
+        val iamGroupTemplateList = iamV2ManagerService.listRoleGroupTemplates(
+            iamGroupId,
+            pageInfoDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        ).results
         val iamGroupTemplateMap = iamGroupTemplateList.associateBy { it.id }
 
         toDeleteMembers.addAll(resourceGroupMemberMap.filterKeys { !iamGroupTemplateMap.contains(it) }.values)
@@ -845,7 +860,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     private fun getAllRoleGroupMembersV2(
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String? = null
     ): List<RoleGroupMemberInfo> {
         val allMembers = mutableListOf<RoleGroupMemberInfo>()
         val pageSize = 1000
@@ -856,7 +872,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 this.page = page
             }
             val pageResult = iamV2ManagerService
-                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO)
+                .getRoleGroupMemberV2(iamGroupId, pageInfoDTO, tenantId)
             allMembers.addAll(pageResult.results)
             page++
         } while (pageResult.results.size == pageSize)

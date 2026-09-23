@@ -2,6 +2,7 @@ import {
   createRouter,
   createWebHistory,
 } from 'vue-router';
+import { getPublicUrlPrefix } from '@/common/util';
 const PlatformEntry = () => import('@/views/PlatformEntry');
 // 系统管理员
 const SystemManage = () => import('@/views/SystemManage/index');
@@ -11,7 +12,7 @@ const CodeSourceManage = () => import('@/views/RepositoryService/CodeSourceManag
 const CodeConfigForm = () => import('@/views/RepositoryService/CodeConfigForm');
 
 const router = createRouter({
-  history: createWebHistory('platform'),
+  history: createWebHistory(`${getPublicUrlPrefix()}/platform`),
   routes: [
     {
       path: '/',

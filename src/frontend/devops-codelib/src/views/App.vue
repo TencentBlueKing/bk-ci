@@ -1,6 +1,6 @@
 <template>
-    <div class="devops-codelib">
-        <header class="devops-codelib-header">
+    <div class="devops-codelib-abc">
+        <header class="devops-codelib-abc-header">
             <logo
                 size="32"
                 :name="logo"
@@ -38,7 +38,7 @@
 </script>
 
 <style lang="scss">
-    .devops-codelib {
+    .devops-codelib-abc {
         flex: 1;
         display: flex;
         flex-direction: column;

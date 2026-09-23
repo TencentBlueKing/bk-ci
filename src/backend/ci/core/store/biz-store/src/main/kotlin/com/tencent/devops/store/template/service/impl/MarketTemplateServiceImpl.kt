@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
@@ -48,6 +47,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -263,7 +263,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         excludeProjectCode: String? = null,
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String? = null
     ): Future<MarketTemplateResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<MarketTemplateResp> {
@@ -284,7 +285,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 labelCodeList = labelCodeList,
                 excludeProjectCode = excludeProjectCode,
                 score = score,
-                rdType = rdType
+                rdType = rdType,
+                tenantId = tenantId
             )
             val templates = marketTemplateDao.list(
                 dslContext = dslContext,
@@ -382,7 +384,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         buildLessRunFlag = false,
                         docsLink = "",
                         modifier = it[tTemplate.MODIFIER] as String,
-                        updateTime = DateTimeUtil.toDateTime(it[tTemplate.UPDATE_TIME] as LocalDateTime),
+                        updateTime = (it[tTemplate.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                         installed = installed,
                         honorInfos = honorInfos,
                         indexInfos = indexInfos,
@@ -413,7 +415,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<List<MarketTemplateMain>> {
         val result = mutableListOf<MarketTemplateMain>()
         // 获取用户组织架构
@@ -439,7 +442,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 installedTemplateCodes = null,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = tenantId
             )
         )
         labelInfoList.add(
@@ -462,7 +466,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 installedTemplateCodes = null,
                 desc = true,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = tenantId
             )
         )
         val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
@@ -488,7 +493,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     installedTemplateCodes = null,
                     desc = true,
                     page = page,
-                    pageSize = pageSize
+                    pageSize = pageSize,
+                    tenantId = tenantId
                 )
             )
         }
@@ -520,7 +526,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         projectCode: String?,
         excludeProjectCode: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): MarketTemplateResp {
         // 获取用户组织架构
         val userDeptList = getUserDeptList(userId)
@@ -551,13 +558,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             desc = true,
             excludeProjectCode = excludeProjectCode,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = tenantId
         ).get()
     }
 
-    override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
+    override fun getTemplateDetailByCode(userId: String, templateCode: String, tenantId: String?): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
-        val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+        val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
@@ -578,7 +586,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
     }
 
-    override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
+    override fun getTemplateDetailById(userId: String, templateId: String, tenantId: String?): Result<TemplateDetail?> {
         logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
             ?: return I18nUtil.generateResponseDataObject(
@@ -687,7 +695,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     /**
      * 删除模版关联关系
      */
-    override fun delete(userId: String, templateCode: String): Result<Boolean> {
+    override fun delete(userId: String, templateCode: String, tenantId: String?): Result<Boolean> {
         logger.info("to delete, userId: $userId | templateCode: $templateCode")
         val type = StoreTypeEnum.TEMPLATE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, type)
@@ -761,12 +769,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun installTemplate(
         userId: String,
         channelCode: ChannelCode,
-        installTemplateReq: InstallTemplateReq
+        installTemplateReq: InstallTemplateReq,
+        tenantId: String?
     ): Result<InstallTemplateResp> {
         logger.info("installTemplate userId: $userId,channelCode: $channelCode,installTemplateReq: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
-        val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
+        val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId)
         if (template == null) {
             val templateNotExistResponse = I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -796,7 +805,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = template.templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
             projectCodeList = projectCodeList,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         logger.info("validateInstallResult is: $validateInstallResult")
         if (validateInstallResult.isNotOk()) {
@@ -879,7 +889,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = StoreTypeEnum.TEMPLATE
             ),
             publicFlag = template.publicFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         val result = if (projectCodeList.isEmpty()) {
             installStoreComponentResult
@@ -912,7 +923,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         with(installTemplateReq) {
             logger.info("install Template v2 userId={}, channel={}, req={}", userId, channelCode, this)
             // 获取模板并校验存在性
-            val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode) ?: run {
+            val tenantId = TenantUtils.getTenantId()
+            val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode, tenantId) ?: run {
                 val language = I18nUtil.getLanguage(userId)
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -941,7 +953,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCode = template.templateCode,
                 storeType = StoreTypeEnum.TEMPLATE,
                 projectCodeList = projectCodeList,
-                channelCode = channelCode
+                channelCode = channelCode,
+                tenantId = tenantId
             ).takeIf { it.isNotOk() }?.let {
                 return Result(InstallTemplateResp(result = false, installProjectTemplateDTO = emptyList()))
             }
@@ -973,7 +986,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     storeType = StoreTypeEnum.TEMPLATE
                 ),
                 publicFlag = template.publicFlag,
-                channelCode = channelCode
+                channelCode = channelCode,
+                tenantId = tenantId
             )
             // 结果处理
             val templateInfos = client.get(ServicePTemplateResource::class)
@@ -1206,7 +1220,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeType = storeType
                     ),
                     publicFlag = storeBaseInfo.publicFlag,
-                    channelCode = ChannelCode.getRequestChannelCode()
+                    channelCode = ChannelCode.getRequestChannelCode(),
+                    tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                 )
             }
         }
@@ -1304,7 +1319,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         userId: String,
         templateName: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<Page<MyTemplateItem>?> {
         val records = marketTemplateDao.getMyTemplates(
             dslContext = dslContext,
@@ -1315,7 +1331,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             modifier = null,
             description = null,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = tenantId
         )
         // 获取项目代码对应的名称
         val projectCodeList = mutableListOf<String>()
@@ -1362,6 +1379,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             status = null,
             modifier = null,
             description = null,
+            tenantId = tenantId
         )
         val totalPages = PageUtil.calTotalPage(pageSize, templateCount)
         return Result(

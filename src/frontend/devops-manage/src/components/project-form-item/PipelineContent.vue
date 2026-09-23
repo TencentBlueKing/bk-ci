@@ -300,7 +300,7 @@ function pageValueChange (value) {
   fetchListViewPipelines();
 }
 function handleToPipeline (row) {
-  window.open(`/console/pipeline/${projectId.value}/${row.pipelineId}/history/pipeline`, '__blank');
+  window.open(`${window.getRoutePrefix()}/pipeline/${projectId.value}/${row.pipelineId}/history/pipeline`, '__blank');
 }
 
 </script>

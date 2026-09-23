@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import java.nio.charset.Charset
@@ -86,7 +87,7 @@ class RbacAuthTokenApi constructor(
     }
 
     private fun getRemoteToken(): String {
-        val token = tokenServiceImpl.token
+        val token = tokenServiceImpl.getToken(TenantUtils.iamTenantId())
         logger.info("get iam token: $token")
         return token
     }

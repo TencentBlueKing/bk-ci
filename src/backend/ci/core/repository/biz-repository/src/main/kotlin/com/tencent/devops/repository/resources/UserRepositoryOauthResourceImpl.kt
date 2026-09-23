@@ -1,12 +1,12 @@
 package com.tencent.devops.repository.resources
 
-import com.tencent.devops.repository.api.UserRepositoryOauthResource
-import com.tencent.devops.repository.pojo.oauth.Oauth2Url
-import com.tencent.devops.repository.pojo.oauth.OauthTokenVo
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.UserRepositoryOauthResource
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
+import com.tencent.devops.repository.pojo.oauth.Oauth2Url
+import com.tencent.devops.repository.pojo.oauth.OauthTokenVo
 import com.tencent.devops.repository.pojo.oauth.OauthUserVo
 import com.tencent.devops.repository.service.RepositoryOauthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,10 +74,11 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun oauthUserList(userId: String, scmCode: String): Result<List<OauthUserVo>> {
+    override fun oauthUserList(userId: String, tenantId: String?, scmCode: String): Result<List<OauthUserVo>> {
         return Result(
             repositoryOauthService.oauthUserList(
                 userId = userId,
+                tenantId = tenantId,
                 scmCode = scmCode
             )
         )

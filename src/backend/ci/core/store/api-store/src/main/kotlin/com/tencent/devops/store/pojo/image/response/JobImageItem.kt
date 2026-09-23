@@ -80,7 +80,7 @@ data class JobImageItem(
     @get:Schema(title = "创建人", required = true)
     val creator: String,
 
-    @get:Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
     val createTime: Long,
 
     @get:Schema(title = "是否为最新版本镜像 true：最新 false：非最新", required = true)

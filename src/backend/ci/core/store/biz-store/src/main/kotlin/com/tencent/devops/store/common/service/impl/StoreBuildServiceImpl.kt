@@ -56,7 +56,8 @@ class StoreBuildServiceImpl @Autowired constructor(
     override fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
-        storeBuildResultRequest: StoreBuildResultRequest
+        storeBuildResultRequest: StoreBuildResultRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
@@ -77,7 +78,12 @@ class StoreBuildServiceImpl @Autowired constructor(
         }
         val storeHandleBuildResultService =
             getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType!!.toInt()))
-        val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
+        val result = storeHandleBuildResultService.handleStoreBuildResult(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            storeBuildResultRequest = storeBuildResultRequest,
+            tenantId = tenantId
+        )
         logger.info("handleStoreBuildResult result is:$result")
         if (result.isNotOk() || result.data != true) {
             return result
@@ -89,7 +95,8 @@ class StoreBuildServiceImpl @Autowired constructor(
         userId: String,
         buildId: String,
         pipelineId: String,
-        status: BuildStatus
+        status: BuildStatus,
+        tenantId: String?
     ): Result<Boolean> {
         val buildInfo = storePipelineBuildRelDao.getStorePipelineBuildRelByBuildId(dslContext, buildId)
         if (buildInfo == null) {
@@ -105,7 +112,8 @@ class StoreBuildServiceImpl @Autowired constructor(
                 userId = userId,
                 buildStatus = status,
                 storeId = buildInfo.storeId
-            )
+            ),
+            tenantId = tenantId
         )
         logger.info("handleStoreBuildResult result is:$result")
         return Result(true)

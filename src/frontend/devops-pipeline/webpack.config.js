@@ -64,7 +64,8 @@ module.exports = (env, argv) => {
             },
             templateParameters: {
                 PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : '',
-                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : ''
+                BK_PAAS_PRIVATE_URL: isProd ? '__BK_PAAS_PRIVATE_URL__' : '',
+                BK_APIGW_USER_WEB_URL: isProd ? '__BK_CI_USER_WEB_APIGW_URL__' : ''
             },
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
@@ -79,7 +80,7 @@ module.exports = (env, argv) => {
     ]
     config.devServer.historyApiFallback = {
         rewrites: [
-            { from: /^\/pipeline/, to: '/pipeline/index.html' }
+            { from: /^\/bkci\/pipeline/, to: '/bkci/pipeline/index.html' }
         ]
     }
     return config

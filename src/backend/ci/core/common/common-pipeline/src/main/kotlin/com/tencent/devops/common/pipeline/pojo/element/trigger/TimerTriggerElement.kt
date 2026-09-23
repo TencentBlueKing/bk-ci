@@ -73,6 +73,11 @@ data class TimerTriggerElement(
     val repoName: String? = null,
     @get:Schema(title = "定时启动参数,格式: [{key:'id',value:1},{key:'name',value:'xxx'}]", required = false)
     val startParams: String? = null,
+    @get:Schema(
+        title = "定时触发时区（IANA）。缺省时前端默认东八区；存量无值时调度回落 Asia/Shanghai",
+        required = false
+    )
+    val timeZone: String? = null,
     @get:Schema(title = "启动节点类型（仅创作流通道使用）", required = false)
     val nodeType: TimerNodeType? = null,
     @get:Schema(title = "启动节点 agentHashId 列表（仅当 nodeType=NODE_LIST 时生效）", required = false)

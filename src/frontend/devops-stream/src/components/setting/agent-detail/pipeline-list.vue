@@ -38,12 +38,12 @@
             </bk-table-column>
             <bk-table-column :label="$t('createTime')" prop="createdTime" min-width="160">
                 <template slot-scope="props">
-                    {{ localConvertTime(props.row.createdTime) }}
+                    <time-display :value="props.row.createdTime" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('updateTime')" prop="updatedTime" min-width="160">
                 <template slot-scope="props">
-                    {{ localConvertTime(props.row.updatedTime) }}
+                    <time-display :value="props.row.updatedTime" />
                 </template>
             </bk-table-column>
         </bk-table>
@@ -51,12 +51,15 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
     import { setting } from '@/http'
     import { mapState } from 'vuex'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
             return {
                 loopTimer: '',
@@ -151,12 +154,6 @@
                         }
                     }, 5000)
                 }
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             }
         }
     }

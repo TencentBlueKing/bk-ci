@@ -15,14 +15,15 @@ class SampleAuthPermissionProjectService : PermissionProjectService {
         return emptyList()
     }
 
-    override fun getUserProjects(userId: String): List<String> {
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
         return emptyList()
     }
 
     override fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String> {
         return emptyList()
     }

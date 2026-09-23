@@ -32,13 +32,18 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.store.common.constant.DEFAULT_USER_ID
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_CODE
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_DESC
+import com.tencent.devops.store.common.constant.DEMO_PROJECT_NAME
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.image.dao.ImageDao
-import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -69,13 +74,14 @@ class SampleImageInitService @Autowired constructor(
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
-        val projectCode = imageInitRequest?.projectCode ?: "demo"
-        val userId = imageInitRequest?.userId ?: "admin"
+        val projectCode = imageInitRequest?.projectCode ?: DEMO_PROJECT_CODE
+        val userId = imageInitRequest?.userId ?: DEFAULT_USER_ID
         val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
         val ticketId = imageInitRequest?.ticketId
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         logger.info("begin init image: $imageInitRequest")
         // 判断镜像是否存在
-        val imageCount = imageDao.countByCode(dslContext, imageCode)
+        val imageCount = imageDao.countByCode(dslContext, imageCode, tenantId)
         if (imageCount != 0) {
             return Result(true)
         }
@@ -93,10 +99,11 @@ class SampleImageInitService @Autowired constructor(
                 val createDemoProjectResult = client.get(ServiceProjectResource::class).createExtSystem(
                     userId = userId,
                     projectInfo = ProjectCreateInfo(
-                        projectName = imageInitRequest?.projectCode ?: "Demo",
+                        projectName = imageInitRequest?.projectCode ?: DEMO_PROJECT_NAME,
                         englishName = projectCode,
-                        description = imageInitRequest?.projectDesc ?: "demo project",
-                        enabled = false
+                        description = imageInitRequest?.projectDesc ?: DEMO_PROJECT_DESC,
+                        enabled = false,
+                        tenantId = TenantUtils.getTenantId()
                     ),
                     needAuth = false,
                     needValidate = true,
@@ -123,7 +130,8 @@ class SampleImageInitService @Autowired constructor(
                 imageSourceType = ImageType.THIRD,
                 ticketId = ticketId
             ),
-            needAuth = false
+            needAuth = false,
+            tenantId = tenantId
         )
         if (addImageResult.isNotOk() || addImageResult.data.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -151,7 +159,7 @@ class SampleImageInitService @Autowired constructor(
                 imageSourceType = ImageType.THIRD,
                 imageRepoUrl = imageInitRequest?.imageRepoUrl ?: "",
                 imageRepoName = imageInitRequest?.imageRepoName ?: "bkci/ci",
-                imageTag = imageInitRequest?.imageTag ?: "latest",
+                imageTag = imageInitRequest?.imageTag ?: "jdk17",
                 dockerFileType = imageInitRequest?.dockerFileType ?: "INPUT",
                 dockerFileContent = imageInitRequest?.dockerFileContent
                     ?: "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
@@ -160,9 +168,9 @@ class SampleImageInitService @Autowired constructor(
                 versionContent = imageInitRequest?.versionContent ?: DEFAULT_IMAGE_CODE,
                 publisher = userId
             ),
-            checkLatest = false,
             sendCheckResultNotify = false,
-            runCheckPipeline = false
+            runCheckPipeline = false,
+            tenantId = tenantId
         )
         if (updateImageResult.isNotOk() || updateImageResult.data.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -185,7 +193,8 @@ class SampleImageInitService @Autowired constructor(
                 weight = 1,
                 result = PASS,
                 message = "ok"
-            )
+            ),
+            tenantId = tenantId
         )
         // 将改镜像设置成job选择时默认镜像
         val defaultJobImage = mapOf(

@@ -45,7 +45,8 @@ class RbacPermissionExtService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        tenantId: String?
     ): Boolean {
         logger.info("resourceCreateRelation $userId|$projectCode|$resourceCode|$resourceName|$resourceType")
         return permissionResourceService.resourceCreateRelation(
@@ -53,7 +54,8 @@ class RbacPermissionExtService(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode,
-            resourceName = resourceName
+            resourceName = resourceName,
+            tenantId = tenantId
         )
     }
 

@@ -35,8 +35,9 @@ const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.
 const val PIPELINE_START_PARENT_BUILD_NUM = "BK_CI_PARENT_BUILD_NUM"
 const val PIPELINE_START_PARENT_BUILD_TASK_ID = "BK_CI_PARENT_BUILD_TASK_ID" // "pipeline.start.parent.build.task.id"
 const val PIPELINE_START_PARENT_EXECUTE_COUNT = "BK_CI_PARENT_EXECUTE_COUNT"
-const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user.id"
-const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
+const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user.id" , 表示权限代持人
+const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name" , 表示流水线触发人
+const val PIPELINE_START_USER_DISPLAY_NAME = "BK_CI_START_USER_DISPLAY_NAME" // 表示流水线触发人展示名称
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
 const val PIPELINE_START_PIPELINE_USER_ID = "BK_CI_START_PIPELINE_USER_ID" // "pipeline.start.pipeline.user.id"
 const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pipeline.start.service.user.id"
@@ -129,7 +130,9 @@ const val JOB_RETRY_TASK_ID = "job.retry_task_id"
  * 后续新增的变量统一用“BK_CI_大写的变量名称”命名，历史的变量名称统一整改
  */
 const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
+const val PIPELINE_CREATE_USER_NAME = "BK_CI_PIPELINE_CREATE_USER_NAME" // "流水线创建用户名称"
 const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
+const val PIPELINE_UPDATE_USER_NAME = "BK_CI_PIPELINE_UPDATE_USER_NAME" // "流水线最后更新用户名称"
 const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
 const val PIPELINE_ATOM_NAME = "BK_CI_ATOM_NAME" // "流水线插件名称"
 const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"

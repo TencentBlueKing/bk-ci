@@ -27,17 +27,16 @@
 
 package com.tencent.devops.artifactory.constant
 
+import com.tencent.devops.common.service.tenant.TenantUtils
+
 const val BK_CI_ATOM_DIR = "bk-atom"
 const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
 
 const val REALM_LOCAL = "local"
 const val REALM_BK_REPO = "bkrepo"
 const val BKREPO_DEFAULT_USER = "admin"
-const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-const val BKREPO_STORE_PROJECT_ID = "bk-store"
-const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
-const val BKREPO_COMMOM_REPO = "common"
 
+const val BKREPO_COMMOM_REPO = "common"
 const val REPO_NAME_PIPELINE = "pipeline"
 const val REPO_NAME_CUSTOM = "custom"
 const val REPO_NAME_IMAGE = "image"
@@ -45,3 +44,22 @@ const val REPO_NAME_REPORT = "report"
 const val REPO_NAME_PLUGIN = "plugin"
 const val REPO_NAME_STATIC = "static"
 const val REPO_NAME_CREATIVE = "creative_stream_repo"
+
+private const val BKREPO_DEVOPS_PROJECT_ID = "devops"
+private const val BKREPO_STORE_PROJECT_ID = "bk-store"
+private const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
+
+fun bkRepoDevopsProjectId() = TenantUtils.parseEnglishName(
+    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
+    tenantEnglishName = BKREPO_DEVOPS_PROJECT_ID
+)
+
+fun bkRepoStoreProjectId() = TenantUtils.parseEnglishName(
+    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
+    tenantEnglishName = BKREPO_STORE_PROJECT_ID
+)
+
+fun bkRepoStaticProjectId() = TenantUtils.parseEnglishName(
+    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
+    tenantEnglishName = BKREPO_STATIC_PROJECT_ID
+)

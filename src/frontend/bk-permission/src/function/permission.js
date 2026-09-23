@@ -1,7 +1,7 @@
-import './permission.css';
 import ajax from '../ajax/index';
-import { version } from '../utils/vue';
 import { t } from '../utils/locale';
+import { version } from '../utils/vue';
+import './permission.css';
 /**
  * 处理无权限的情况，适用于 vue2
  * @param {*} ui 组件库
@@ -10,7 +10,9 @@ import { t } from '../utils/locale';
  * @param {*} data 弹框需要的数据，不传就通过接口获取
  * @param {*} ajaxPrefix 接口请求前缀
  */
-export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = '') => {
+
+const defaultAjaxPrefix = window.PUBLIC_URL_PREFIX || ''
+export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = defaultAjaxPrefix) => {
   let infoBoxRef = {};
   let refreshBoxRef = {};
 
@@ -236,7 +238,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
  * @param {*} data 弹框需要的数据，不传就通过接口获取
  * @param {*} ajaxPrefix 接口请求前缀
  */
-export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
+export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = defaultAjaxPrefix) => {
   let infoBoxRef = {};
   let refreshBoxRef = {};
 

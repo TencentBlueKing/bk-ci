@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth.api
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 
 @Suppress("ALL")
 interface AuthResourceApi {
@@ -48,7 +49,8 @@ interface AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        tenantId: String? = TenantUtils.getTenantIdByEnglishName(projectCode)
     )
 
     /**
@@ -60,6 +62,7 @@ interface AuthResourceApi {
      * @param resourceCode 资源Code唯一标识
      * @param resourceName 资源在权限中心的名称
      * @param authGroupList 用户组，可为空
+     * @param tenantId 租户id
      */
     fun createGrantResource(
         user: String,
@@ -68,7 +71,8 @@ interface AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String,
-        authGroupList: List<BkAuthGroup>? = null
+        authGroupList: List<BkAuthGroup>? = null,
+        tenantId: String? = TenantUtils.getTenantIdByEnglishName(projectCode)
     )
 
     /**
@@ -143,7 +147,8 @@ interface AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         user: String,
-        resourceList: List<ResourceRegisterInfo>
+        resourceList: List<ResourceRegisterInfo>,
+        tenantId: String? = TenantUtils.getTenantIdByEnglishName(projectCode)
     )
 
     fun batchCreateResource(

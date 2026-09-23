@@ -154,7 +154,7 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                     pipelineName = it.pipelineName,
                     projectCode = projectCode,
                     owner = buildInfo?.startUser ?: "",
-                    latestExecTime = buildInfo?.startTime ?: ""
+                    latestExecTime = buildInfo?.startTime
                 )
             }
             return Result(Page(pageNotNull, pageSizeNotNull, pipelineTaskRet.count, records))

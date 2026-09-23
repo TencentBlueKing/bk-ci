@@ -49,7 +49,8 @@ interface StoreApproveService {
     fun approveStoreInfo(
         userId: String,
         approveId: String,
-        storeApproveRequest: StoreApproveRequest
+        storeApproveRequest: StoreApproveRequest,
+        tenantId: String? = null
     ): Result<Boolean>
 
     fun getStoreApproveInfos(

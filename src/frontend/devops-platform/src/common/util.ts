@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import { formatByUserTz } from '../../../common-lib/time';
 
 // 获取 cookie
 export function getCookie(name: string): string {
@@ -16,6 +16,20 @@ export function getCookie(name: string): string {
     console.error('get cookie error', e);
     return '';
   }
+}
+
+/**
+ * 获取部署在域名子路径下时的路径前缀
+ * 生产环境由部署脚本将 __BK_CI_PUBLIC_PATH__ 替换为真实前缀；
+ * 开发环境占位符未被替换时按空前缀处理
+ * @returns {string} 规范化后的前缀，如 '/sub' 或 ''
+ */
+export function getPublicUrlPrefix(): string {
+  const prefix = window.PUBLIC_URL_PREFIX || '';
+  if (!prefix || prefix.startsWith('__') || prefix === '/') {
+    return '';
+  }
+  return prefix.replace(/\/+$/, '');
 }
 
 /**
@@ -51,11 +65,9 @@ export function deepMerge(...objectArray: object[]) {
 }
 
 /**
- * 时间格式化
- * @param val 待格式化时间
- * @param format 格式
- * @returns 格式化后的时间
+ * 时间格式化（按用户时区）
  */
-export function timeFormatter(val: string, format = 'YYYY-MM-DD HH:mm:ss') {
-  return val ? dayjs(val).format(format) : '--';
+export function timeFormatter(val: string | number, format = 'YYYY-MM-DD HH:mm:ss') {
+  if (val === null || val === undefined || val === '') return '--';
+  return formatByUserTz(val, undefined, format);
 }

@@ -57,5 +57,6 @@ data class PaasProject(
     val project_type: Int,
     val remark: String,
     val updated_at: Date?,
-    val use_bk: Boolean
+    val use_bk: Boolean,
+    val tenant_id: String
 )

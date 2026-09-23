@@ -31,13 +31,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreApproveResource
+import com.tencent.devops.store.common.service.StoreApproveService
 import com.tencent.devops.store.pojo.common.approval.StoreApproveDetail
 import com.tencent.devops.store.pojo.common.approval.StoreApproveInfo
 import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreApproveService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -82,11 +82,12 @@ class UserStoreApproveResourceImpl @Autowired constructor(
 
     override fun approveStoreInfo(
         userId: String,
+        tenantId: String?,
         storeType: StoreTypeEnum,
         storeCode: String,
         approveId: String,
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean> {
-        return storeApproveService.approveStoreInfo(userId, approveId, storeApproveRequest)
+        return storeApproveService.approveStoreInfo(userId, approveId, storeApproveRequest, tenantId)
     }
 }

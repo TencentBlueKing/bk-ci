@@ -5,6 +5,7 @@ import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.ticket.dao.CredentialDao
 import org.jooq.DSLContext
@@ -116,6 +117,7 @@ class CredentialCopyService @Autowired constructor(
         try {
             client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
                 userId = userId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(targetProjectId),
                 token = clientTokenService.getSystemToken() ?: "",
                 projectCode = targetProjectId,
                 resourceType = AuthResourceType.TICKET_CREDENTIAL.value,

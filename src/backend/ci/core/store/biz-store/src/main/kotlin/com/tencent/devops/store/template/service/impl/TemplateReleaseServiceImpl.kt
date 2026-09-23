@@ -142,7 +142,8 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
     override fun addMarketTemplate(
         userId: String,
         templateCode: String,
-        marketTemplateRelRequest: MarketTemplateRelRequest
+        marketTemplateRelRequest: MarketTemplateRelRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("addMarketTemplate params:[$userId|$templateCode|$marketTemplateRelRequest]")
         // 判断模板代码是否存在
@@ -225,7 +226,8 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
 
     override fun updateMarketTemplate(
         userId: String,
-        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest,
+        tenantId: String?
     ): Result<String?> {
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
@@ -773,7 +775,7 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
     /**
      * 获取发布进度
      */
-    override fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo> {
+    override fun getProcessInfo(userId: String, templateId: String, tenantId: String?): Result<StoreProcessInfo> {
         logger.info("getProcessInfo templateId: $templateId")
         val record = marketTemplateDao.getTemplate(dslContext, templateId)
         return getProcessInfo(userId, record)
@@ -843,7 +845,7 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
     /**
      * 取消发布
      */
-    override fun cancelRelease(userId: String, templateId: String): Result<Boolean> {
+    override fun cancelRelease(userId: String, templateId: String, tenantId: String?): Result<Boolean> {
         logger.info("cancelRelease userId is:$userId, templateId is:$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
             ?: return I18nUtil.generateResponseDataObject(
@@ -907,7 +909,8 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
         userId: String,
         templateCode: String,
         version: String?,
-        reason: String?
+        reason: String?,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("offlineTemplate userId is:$userId, templateCode is:$templateCode,version is:$version")
         // 判断用户是否有权限下架模板

@@ -424,7 +424,7 @@ const actions = {
     },
     // 流水线操作日志列表
     requestPipelineOperatorList (_, { projectId, pipelineId, archiveFlag, ...params }) {
-        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorListForTenant`
         if (archiveFlag !== undefined && archiveFlag !== null) {
             url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
         }

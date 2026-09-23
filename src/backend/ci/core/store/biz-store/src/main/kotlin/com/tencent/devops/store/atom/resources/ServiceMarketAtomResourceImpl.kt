@@ -30,6 +30,7 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -59,13 +60,14 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 ) : ServiceMarketAtomResource {
 
     override fun setAtomBuildStatusByAtomCode(
+        tenantId: String?,
         atomCode: String,
         version: String,
         userId: String,
         atomStatus: AtomStatusEnum,
         msg: String?
     ): Result<Boolean> {
-        return marketAtomService.setAtomBuildStatusByAtomCode(atomCode, version, userId, atomStatus, msg)
+        return marketAtomService.setAtomBuildStatusByAtomCode(atomCode, version, userId, atomStatus, msg, tenantId)
     }
 
     override fun getProjectElements(projectCode: String): Result<Map<String, String>> {
@@ -76,8 +78,8 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         return atomService.getProjectElementsInfo(projectCode)
     }
 
-    override fun getAtomByCode(atomCode: String, username: String): Result<AtomVersion?> {
-        return marketAtomService.getNewestAtomByCode(username, atomCode)
+    override fun getAtomByCode(tenantId: String?, atomCode: String, username: String): Result<AtomVersion?> {
+        return marketAtomService.getNewestAtomByCode(username, atomCode, tenantId)
     }
 
     override fun getAtomPipelinesByCode(
@@ -99,21 +101,24 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun installAtom(
         userId: String,
+        tenantId: String?,
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         return marketAtomService.installAtom(
             userId = userId,
             channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
-            installAtomReq = installAtomReq
+            installAtomReq = installAtomReq,
+            tenantId = tenantId
         )
     }
 
-    override fun getAtomYmlV2Info(atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+    override fun getAtomYmlV2Info(atomCode: String, defaultShowFlag: Boolean?, tenantId: String?): Result<String?> {
         return Result(
             marketAtomService.generateCiV2Yaml(
                 atomCode = atomCode,
-                defaultShowFlag = defaultShowFlag ?: false
+                defaultShowFlag = defaultShowFlag ?: false,
+                tenantId = TenantUtils.getTenantId(tenantId)
             )
         )
     }
@@ -134,8 +139,9 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         userId: String,
         atomName: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<MyAtomResp?> {
-        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize)
+        return marketAtomService.getMyAtoms(userId, atomName, page, pageSize, TenantUtils.getTenantId(tenantId))
     }
 }

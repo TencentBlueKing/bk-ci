@@ -54,10 +54,10 @@ import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import io.mockk.every
 import io.mockk.mockk
+import java.text.MessageFormat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.text.MessageFormat
 
 class DefaultModelCheckPluginTest : TestBase() {
 
@@ -102,8 +102,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         publisher = "publisher",
         modifier = "modifier",
         creator = "creator",
-        createTime = "2020-01-01 01:01:01",
-        updateTime = "2020-01-01 01:01:01",
+        createTime = 1577822461000L,
+        updateTime = 1577822461000L,
         flag = false,
         repositoryAuthorizer = null,
         defaultFlag = null,
@@ -125,17 +125,18 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun setUp2() {
         every { client.get(ServiceMarketAtomResource::class) } returns serviceMarketAtomResource
         every {
-            client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
+            client.get(ServiceMarketAtomResource::class)
+                .getAtomByCode(tenantId = null, atomCode = atomCode, username = "")
         } returns (
-            Result(genAtomVersion())
-            )
+                Result(genAtomVersion())
+                )
 
         every { client.get(ServiceAtomResource::class) } returns (serviceAtomResource)
         every {
             client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
         } returns (
-            Result(genInstallAtomInfo())
-            )
+                Result(genInstallAtomInfo())
+                )
         every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
         every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
@@ -156,7 +157,7 @@ class DefaultModelCheckPluginTest : TestBase() {
                     )
                 )
             )
-            )
+        )
         every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
         every { pipelineCommonSettingConfig.maxStageNum } returns (20)
         every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)
@@ -188,7 +189,7 @@ class DefaultModelCheckPluginTest : TestBase() {
                 summary = "summary",
                 publisher = "publisher",
                 installer = "installer",
-                installTime = "2020-01-01 01:01:01",
+                installTime = 1577822461000L,
                 installType = StoreProjectTypeEnum.COMMON.name,
                 pipelineCnt = 0,
                 hasPermission = true

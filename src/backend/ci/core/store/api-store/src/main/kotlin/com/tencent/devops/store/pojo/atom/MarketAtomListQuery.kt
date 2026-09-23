@@ -61,5 +61,7 @@ data class MarketAtomListQuery(
     @get:Schema(title = "是否裁剪URL协议")
     val urlProtocolTrim: Boolean = false,
     @get:Schema(title = "支持的服务范围")
-    val serviceScope: ServiceScopeEnum? = null
+    val serviceScope: ServiceScopeEnum? = null,
+    @get:Schema(title = "租户ID")
+    val tenantId: String? = null
 )

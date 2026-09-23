@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.records.TStoreMediaInfoRecord
 import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
@@ -117,8 +117,8 @@ class StoreMediaInfoDao {
                 mediaType = mediaType,
                 create = creator,
                 modifier = modifier,
-                createTime = DateTimeUtil.toDateTime(createTime),
-                updateTime = DateTimeUtil.toDateTime(updateTime)
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli()
             )
         }
     }

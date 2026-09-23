@@ -71,6 +71,7 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.util.CacheHelper
@@ -201,7 +202,11 @@ class RbacPermissionResourceGroupPermissionService(
             )
             authorizationScopes.forEach { authorizationScope ->
                 RetryUtils.retry(3) {
-                    iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+                    iamV2ManagerService.grantRoleGroupV2(
+                        iamGroupId,
+                        authorizationScope,
+                        TenantUtils.getTenantIdByEnglishName(projectCode)
+                    )
                 }
             }
         } finally {
@@ -576,23 +581,30 @@ class RbacPermissionResourceGroupPermissionService(
         }
     }
 
-    override fun getGroupPermissionDetail(iamGroupId: Int): Map<String, List<GroupPermissionDetailVo>> {
+    override fun getGroupPermissionDetail(
+        iamGroupId: Int,
+        tenantId: String?
+    ): Map<String, List<GroupPermissionDetailVo>> {
         val groupPermissionMap = mutableMapOf<String, List<GroupPermissionDetailVo>>()
         groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_DEVOPS_NAME)] =
-            getGroupPermissionDetailBySystem(systemId, iamGroupId)
+            getGroupPermissionDetailBySystem(systemId, iamGroupId, tenantId)
         if (registerMonitor) {
-            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId)
+            val monitorGroupPermissionDetail = getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId, tenantId)
             if (monitorGroupPermissionDetail.isNotEmpty()) {
                 groupPermissionMap[I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_NAME)] =
-                    getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId)
+                    getGroupPermissionDetailBySystem(monitorSystemId, iamGroupId, tenantId)
             }
         }
         return groupPermissionMap
     }
 
-    override fun getGroupPermissionDetailBySystem(iamSystemId: String, iamGroupId: Int): List<GroupPermissionDetailVo> {
+    override fun getGroupPermissionDetailBySystem(
+        iamSystemId: String,
+        iamGroupId: Int,
+        tenantId: String?
+    ): List<GroupPermissionDetailVo> {
         val iamGroupPermissionDetailList = try {
-            v2ManagerService.getGroupPermissionDetail(iamGroupId, iamSystemId)
+            v2ManagerService.getGroupPermissionDetailWithSystemId(iamGroupId, iamSystemId, tenantId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
@@ -659,7 +671,11 @@ class RbacPermissionResourceGroupPermissionService(
                 projectCode = projectCode,
                 relationId = iamGroupId.toString()
             ) ?: return true
-            val groupPermissionDetails = getGroupPermissionDetailBySystem(systemId, iamGroupId)
+            val groupPermissionDetails = getGroupPermissionDetailBySystem(
+                systemId,
+                iamGroupId,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             logger.info("sync group permissions: {}|{}|{}", projectCode, iamGroupId, groupPermissionDetails)
 
             val latestResourceGroupPermissions = groupPermissionDetails.flatMap { permissionDetail ->

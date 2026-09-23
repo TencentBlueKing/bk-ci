@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils.count
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
@@ -167,7 +168,27 @@ class AtomFailInfoDao {
                 .orderBy(START_TIME.desc())
                 .offset((queryCondition.page - 1) * queryCondition.pageSize)
                 .limit(queryCondition.pageSize)
-                .fetchInto(AtomFailDetailInfoDO::class.java)
+                .fetch()
+                .map {
+                    AtomFailDetailInfoDO(
+                        projectId = it.get(BK_PROJECT_ID, String::class.java),
+                        pipelineId = it.get(BK_PIPELINE_ID, String::class.java),
+                        pipelineName = it.get(BK_PIPELINE_NAME, String::class.java),
+                        channelCode = it.get(BK_CHANNEL_CODE, String::class.java),
+                        buildId = it.get(BK_BUILD_ID, String::class.java),
+                        buildNum = it.get(BK_BUILD_NUM, Int::class.java),
+                        atomCode = it.get(BK_ATOM_CODE, String::class.java),
+                        atomName = it.get(BK_ATOM_NAME, String::class.java),
+                        atomPosition = it.get(BK_ATOM_POSITION, String::class.java),
+                        classifyCode = it.get(BK_CLASSIFY_CODE, String::class.java),
+                        startUser = it.get(BK_START_USER, String::class.java),
+                        startTime = it.get(BK_START_TIME, java.time.LocalDateTime::class.java)?.timestampmilli(),
+                        endTime = it.get(BK_END_TIME, java.time.LocalDateTime::class.java)?.timestampmilli(),
+                        errorType = it.get(BK_ERROR_TYPE, Int::class.java),
+                        errorCode = it.get(BK_ERROR_CODE, Int::class.java),
+                        errorMsg = it.get(BK_ERROR_MSG, String::class.java)
+                    )
+                }
         }
     }
 

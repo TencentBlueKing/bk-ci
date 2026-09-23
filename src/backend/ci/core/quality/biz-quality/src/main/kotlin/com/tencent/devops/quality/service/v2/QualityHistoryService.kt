@@ -596,7 +596,7 @@ class QualityHistoryService @Autowired constructor(
                 val result = RuleInterceptResult.valueOf(interceptHistory.result)
                 val pipelineName = pipelineIdNameMap[interceptHistory.pipelineId]
                 val buildName = getBuildName(projectId, interceptHistory.buildId)
-                val time = interceptHistory.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+                val time = interceptHistory.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 if (result == RuleInterceptResult.PASS) {
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_VALIDATION_PASSED,

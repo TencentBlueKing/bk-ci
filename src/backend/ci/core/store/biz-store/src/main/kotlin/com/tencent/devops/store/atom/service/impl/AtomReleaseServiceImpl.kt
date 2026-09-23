@@ -161,52 +161,75 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+
     @Autowired
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+
     @Autowired
     lateinit var classifyDao: ClassifyDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
+
     @Autowired
     lateinit var atomNotifyService: AtomNotifyService
+
     @Autowired
     lateinit var atomQualityService: AtomQualityService
+
     @Autowired
     lateinit var atomIndexTriggerCalService: AtomIndexTriggerCalService
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var storeI18nMessageService: StoreI18nMessageService
+
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var client: Client
+
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+
     @Autowired
     lateinit var storeFileService: StoreFileService
+
     @Autowired
     lateinit var config: CommonConfig
     @Autowired
@@ -229,11 +252,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun validateAddMarketAtomReq(
-        marketAtomCreateRequest: MarketAtomCreateRequest
+        marketAtomCreateRequest: MarketAtomCreateRequest,
+        tenantId: String?
     ): Result<String>? {
         val atomCode = marketAtomCreateRequest.atomCode
         // 判断插件代码是否存在
-        val codeCount = atomDao.countByCode(dslContext, atomCode)
+        val codeCount = atomDao.countByCode(dslContext, atomCode, tenantId)
         if (codeCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -243,7 +267,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val atomName = marketAtomCreateRequest.name
         // 判断插件名称是否存在
-        val nameCount = atomDao.countByName(dslContext, atomName)
+        val nameCount = atomDao.countByName(dslContext = dslContext, name = atomName, tenantId = tenantId)
         if (nameCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -257,11 +281,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
-        marketAtomCreateRequest: MarketAtomCreateRequest
+        marketAtomCreateRequest: MarketAtomCreateRequest,
+        tenantId: String?
     ): Result<String> {
         logger.info("addMarketAtom userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
-        val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest)
+        val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest, tenantId)
         if (validateResult != null) {
             logger.info("the validateResult is :$validateResult")
             return validateResult
@@ -288,7 +313,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = handleAtomPackageMap?.get(KEY_REPOSITORY_HASH_ID) ?: "",
                 codeSrc = handleAtomPackageMap?.get(KEY_CODE_SRC) ?: "",
                 docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.ATOM, atomCode),
-                marketAtomCreateRequest = marketAtomCreateRequest
+                marketAtomCreateRequest = marketAtomCreateRequest,
+                tenantId = tenantId
             )
             // 初始化插件统计表数据
             storeStatisticTotalDao.initStatisticData(
@@ -366,13 +392,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     override fun updateMarketAtom(
         userId: String,
         projectCode: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        tenantId: String?
     ): Result<String> {
         logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
         val version = marketAtomUpdateRequest.version
         // 判断插件是不是首次创建版本
-        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        val atomCount = atomDao.countByCode(dslContext, atomCode, tenantId)
         if (atomCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -380,12 +407,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
-            )
+        val atomRecord = atomDao.getMaxVersionAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode),
+            language = I18nUtil.getLanguage(userId)
+        )
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val releaseType = marketAtomUpdateRequest.releaseType
@@ -444,7 +474,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 判断更新的插件名称是否重复
         if (validateAtomNameIsExist(
                 atomCode = atomCode,
-                atomName = convertUpdateRequest.name
+                atomName = convertUpdateRequest.name,
+                tenantId = tenantId
             )
         ) return I18nUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_EXIST,
@@ -467,12 +498,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         } else {
             osList
         }
-        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
-            )
+        val newestAtomRecord = atomDao.getNewestAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode),
+            language = I18nUtil.getLanguage(userId)
+        )
         val validateAtomVersionResult =
             marketAtomCommonService.validateAtomVersion(
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) newestAtomRecord else atomRecord,
@@ -503,7 +537,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomPackageSourceType = atomPackageSourceType
             ),
             convertUpdateRequest = convertUpdateRequest,
-            getAtomConfResult = getAtomConfResult
+            getAtomConfResult = getAtomConfResult,
+            tenantId = tenantId
         )
     }
 
@@ -528,6 +563,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         validOsArchFlag: Boolean? = null
     )
 
+    open fun asyncHandleUpdateAtom(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null,
+        tenantId: String?
+    ) {
+        asyncHandleUpdateAtom(
+            context = context,
+            atomId = atomId,
+            userId = userId,
+            branch = branch,
+            validOsNameFlag = validOsNameFlag,
+            validOsArchFlag = validOsArchFlag
+        )
+    }
+
     protected fun updateMarketAtom(
         context: DSLContext,
         userId: String,
@@ -539,6 +593,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         atomEnvRequests: List<AtomEnvRequest>,
         repositoryHashId: String?,
+        tenantId: String?,
         packageSize: String?
     ) {
         marketAtomDao.updateMarketAtom(
@@ -548,7 +603,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomStatus = atomStatus,
             classType = classType,
             props = props,
-            marketAtomUpdateRequest = marketAtomUpdateRequest
+            marketAtomUpdateRequest = marketAtomUpdateRequest,
+            tenantId = tenantId
         )
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
@@ -927,13 +983,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     private fun validateAtomNameIsExist(
         atomCode: String,
-        atomName: String
+        atomName: String,
+        tenantId: String?
     ): Boolean {
         var flag = false
-        val count = atomDao.countByName(dslContext, atomName)
+        val count = atomDao.countByName(dslContext = dslContext, name = atomName, tenantId = tenantId)
         if (count > 0) {
             // 判断插件名称是否重复（插件升级允许名称一样）
-            flag = atomDao.countByName(dslContext = dslContext, name = atomName, atomCode = atomCode) < count
+            flag = atomDao.countByName(
+                dslContext = dslContext,
+                name = atomName,
+                atomCode = atomCode,
+                tenantId = tenantId
+            ) < count
         }
         return flag
     }
@@ -948,6 +1010,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         props: String,
         atomEnvRequests: List<AtomEnvRequest>,
         atomRecord: TAtomRecord,
+        tenantId: String?,
         packageSize: String?
     ) {
         marketAtomDao.upgradeMarketAtom(
@@ -958,7 +1021,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             classType = classType,
             props = props,
             atomRecord = atomRecord,
-            atomRequest = marketAtomUpdateRequest
+            atomRequest = marketAtomUpdateRequest,
+            tenantId = tenantId
         )
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
@@ -1032,9 +1096,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 获取插件版本发布进度
      */
-    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
+    override fun getProcessInfo(userId: String, atomId: String, tenantId: String?): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
         return if (null == record) {
             I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -1063,7 +1127,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val isNormalUpgrade = if (branchTestFlag) {
                 false
             } else {
-                marketAtomCommonService.getNormalUpgradeFlag(atomCode, status)
+                marketAtomCommonService.getNormalUpgradeFlag(atomCode, status, tenantId)
             }
             val processInfo = handleProcessInfo(
                 userId = userId,
@@ -1116,12 +1180,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 取消发布
      */
-    override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
+    override fun cancelRelease(userId: String, atomId: String, tenantId: String?): Result<Boolean> {
         logger.info("cancelRelease, userId=$userId, atomId=$atomId")
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Result(true)
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId) ?: return Result(true)
         val atomCode = record.atomCode
         val status = AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        if (!doCancelReleaseLocked(userId, atomId, atomCode, status)) return Result(true)
+        if (!doCancelReleaseLocked(userId, atomId, atomCode, status, tenantId)) return Result(true)
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
             key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -1142,8 +1206,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      * 取消发布实际变更：权限与状态校验、状态变更与最新测试版本标记在同一事务内完成
      * @return 记录存在并完成变更为 true；记录不存在时为 false
      */
-    private fun doCancelReleaseLocked(userId: String, atomId: String, atomCode: String, status: Byte): Boolean {
-        val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return false
+    private fun doCancelReleaseLocked(
+        userId: String,
+        atomId: String,
+        atomCode: String,
+        status: Byte,
+        tenantId: String? = null
+    ): Boolean {
+        val latestRecord = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId) ?: return false
         // 分支测试版本不属于发布流程，取消发布属错误调用
         if (latestRecord.branchTestFlag == true) {
             throw ErrorCodeException(
@@ -1153,7 +1223,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         // 权限与状态校验在锁内执行
         withLatestTestFlagLock(atomCode) {
-            val (checkResult, code, params) = checkAtomVersionOptRight(userId, atomId, status)
+            val (checkResult, code, params) = checkAtomVersionOptRight(
+                userId = userId,
+                atomId = atomId,
+                status = status,
+                tenantId = tenantId
+            )
             if (!checkResult) {
                 throw ErrorCodeException(
                     errorCode = code,
@@ -1190,9 +1265,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      * 通过测试
      */
     @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
-    override fun passTest(userId: String, atomId: String): Result<Boolean> {
+    override fun passTest(userId: String, atomId: String, tenantId: String?): Result<Boolean> {
         logger.info("passTest, userId=$userId, atomId=$atomId")
-        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
@@ -1205,14 +1280,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return endBranchVersionTestById(userId, atomId)
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-        val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
+        val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(
+            atomCode = atomCode,
+            status = atomRecord.atomStatus.toInt(),
+            tenantId = tenantId
+        )
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val atomStatus = getPreValidatePassTestStatus(atomCode, atomId, atomRecord.atomStatus)
         val (checkResult, code, params) = checkAtomVersionOptRight(
             userId = userId,
             atomId = atomId,
             status = atomStatus,
-            isNormalUpgrade = isNormalUpgrade
+            isNormalUpgrade = isNormalUpgrade,
+            tenantId = tenantId
         )
         if (!checkResult) {
             throw ErrorCodeException(errorCode = code, params = params)
@@ -1232,7 +1312,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = atomRecord.repositoryHashId,
                 branch = atomRecord.branch,
                 atomName = atomRecord.name
-            )
+            ),
+            tenantId = tenantId
         )
     }
 
@@ -1240,7 +1321,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     override fun handleAtomRelease(
         userId: String,
         releaseFlag: Boolean,
-        atomReleaseRequest: AtomReleaseRequest
+        atomReleaseRequest: AtomReleaseRequest,
+        tenantId: String?
     ): Result<Boolean> {
         val atomId = atomReleaseRequest.atomId
         val atomCode = atomReleaseRequest.atomCode
@@ -1267,7 +1349,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         latestUpgradeTime = pubTime
                     )
                 )
-                val newestVersionFlag = atomDao.getLatestAtomByCode(context, atomCode)?.let {
+                val newestVersionFlag = atomDao.getLatestAtomByCode(context, atomCode, tenantId)?.let {
                     StoreUtils.isGreaterVersion(atomReleaseRequest.version, it.version)
                 } ?: true
                 val releaseType = atomReleaseRequest.releaseType
@@ -1276,7 +1358,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     null
                 } else {
                     // 清空旧版本LATEST_FLAG
-                    marketAtomDao.cleanLatestFlag(context, atomCode)
+                    marketAtomDao.cleanLatestFlag(context, atomCode, tenantId)
                     true
                 }
                 marketAtomDao.updateAtomInfoById(
@@ -1346,6 +1428,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         isNormalUpgrade: Boolean? = null
     ): Triple<Boolean, String, Array<String>?>
 
+    open fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean? = null,
+        tenantId: String?
+    ): Triple<Boolean, String, Array<String>?> {
+        return checkAtomVersionOptRight(
+            userId = userId,
+            atomId = atomId,
+            status = status,
+            isNormalUpgrade = isNormalUpgrade
+        )
+    }
+
     /**
      * 处理用户提交的下架插件请求
      */
@@ -1353,7 +1450,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         atomCode: String,
         atomOfflineReq: AtomOfflineReq,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        tenantId: String?
     ): Result<Boolean> {
         // 判断用户是否有权限下线
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
@@ -1368,7 +1466,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val version = atomOfflineReq.version
         val reason = atomOfflineReq.reason
         if (!version.isNullOrEmpty()) {
-            offlineAtomByVersion(atomCode = atomCode, version = version, userId = userId, reason = reason)
+            offlineAtomByVersion(
+                atomCode = atomCode,
+                version = version,
+                userId = userId,
+                reason = reason,
+                tenantId = tenantId
+            )
         } else {
             // 设置插件状态为下架
             dslContext.transaction { t ->
@@ -1380,9 +1484,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomNewStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
                     userId = userId,
                     msg = reason,
-                    latestFlag = false
+                    latestFlag = false,
+                    tenantId = tenantId
                 )
-                val newestUndercarriagedAtom = marketAtomDao.getNewestUndercarriagedAtomsByCode(dslContext, atomCode)
+                val newestUndercarriagedAtom =
+                    marketAtomDao.getNewestUndercarriagedAtomsByCode(dslContext, atomCode, tenantId)
                 if (null != newestUndercarriagedAtom) {
                     // 把发布时间最晚的下架版本latestFlag置为true
                     marketAtomDao.updateAtomInfoById(
@@ -1397,7 +1503,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             }
         }
         // 通过websocket推送状态变更消息
-        storeWebsocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId)
+        storeWebsocketService.sendWebsocketMessageByAtomCodeAndUserId(atomCode, userId, tenantId)
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)
@@ -1407,7 +1513,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         version: String,
         userId: String,
-        reason: String?
+        reason: String?,
+        tenantId: String?
     ) {
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.trim())
             ?: throw ErrorCodeException(
@@ -1424,7 +1531,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason
+                reason = reason,
+                tenantId = tenantId
             )
         }
     }
@@ -1434,12 +1542,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?
+        reason: String?,
+        tenantId: String?
     ) {
         marketAtomDao.updateAtomInfoById(
             dslContext = context,
-            atomId = atomId,
             userId = userId,
+            atomId = atomId,
             updateAtomInfo = UpdateAtomInfo(
                 atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
                 atomStatusMsg = reason,
@@ -1448,13 +1557,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
         // 获取插件已发布版本数量
-        val releaseCount = marketAtomDao.countReleaseAtomByCode(context, atomCode)
+        val releaseCount = marketAtomDao.countReleaseAtomByCode(
+            dslContext = context,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
         val tmpAtomId = if (releaseCount > 0) {
             // 获取已发布最大版本的插件记录
             val maxReleaseVersionRecord = marketAtomDao.getMaxVersionAtomByCode(
                 dslContext = context,
                 atomCode = atomCode,
-                atomStatus = AtomStatusEnum.RELEASED
+                atomStatus = AtomStatusEnum.RELEASED,
+                tenantId = tenantId
             )
             maxReleaseVersionRecord?.let {
                 // 处理插件缓存(保证用户用到当前大版本中已发布的版本)
@@ -1471,16 +1585,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val maxUndercarriagedVersionRecord = marketAtomDao.getMaxVersionAtomByCode(
                 dslContext = context,
                 atomCode = atomCode,
-                atomStatus = AtomStatusEnum.UNDERCARRIAGED
+                atomStatus = AtomStatusEnum.UNDERCARRIAGED,
+                tenantId = tenantId
             )
             maxUndercarriagedVersionRecord?.id
         }
         if (null != tmpAtomId) {
-            marketAtomDao.cleanLatestFlag(context, atomCode)
+            marketAtomDao.cleanLatestFlag(context, atomCode, tenantId)
             marketAtomDao.updateAtomInfoById(
                 dslContext = context,
-                atomId = tmpAtomId,
                 userId = userId,
+                atomId = tmpAtomId,
                 updateAtomInfo = UpdateAtomInfo(
                     latestFlag = true
                 )
@@ -1494,7 +1609,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         newVersionFlag: Boolean,
         updateAtomPackageInfo: UpdateAtomPackageInfo,
         convertUpdateRequest: MarketAtomUpdateRequest,
-        getAtomConfResult: GetAtomConfigResult
+        getAtomConfResult: GetAtomConfigResult,
+        tenantId: String? = null
     ): Result<String> {
         val preparedResult = prepareAtomVersionInfo(
             userId = userId,
@@ -1502,7 +1618,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             newVersionFlag = newVersionFlag,
             updateAtomPackageInfo = updateAtomPackageInfo,
             convertUpdateRequest = convertUpdateRequest,
-            getAtomConfResult = getAtomConfResult
+            getAtomConfResult = getAtomConfResult,
+            tenantId = tenantId
         )
         val prepared = preparedResult.data
             ?: return Result(preparedResult.status, preparedResult.message, null)
@@ -1525,7 +1642,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomStatus: AtomStatusEnum,
         val packageSize: String?,
         val qualityFlag: Boolean,
-        val serviceScopeConfigs: List<ServiceScopeConfig>
+        val serviceScopeConfigs: List<ServiceScopeConfig>,
+        val tenantId: String? = null
     )
 
     /**
@@ -1537,18 +1655,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         newVersionFlag: Boolean,
         updateAtomPackageInfo: UpdateAtomPackageInfo,
         convertUpdateRequest: MarketAtomUpdateRequest,
-        getAtomConfResult: GetAtomConfigResult
+        getAtomConfResult: GetAtomConfigResult,
+        tenantId: String? = null
     ): Result<PreparedAtomVersionInfo> {
         val atomId = updateAtomPackageInfo.atomId
         val atomCode = convertUpdateRequest.atomCode
         val version = convertUpdateRequest.version
         val branch = convertUpdateRequest.branch
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
-            )
+        val atomRecord = atomDao.getMaxVersionAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode),
+            language = I18nUtil.getLanguage(userId)
+        )
         val releaseType = convertUpdateRequest.releaseType
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
@@ -1572,7 +1694,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 version = version,
                 releaseType = releaseType,
                 taskDataMap = taskDataMap,
-                fieldCheckConfirmFlag = convertUpdateRequest.fieldCheckConfirmFlag
+                fieldCheckConfirmFlag = convertUpdateRequest.fieldCheckConfirmFlag,
+                tenantId = tenantId
             )
         }
         val validateResult = validateUpdateMarketAtomReq(userId, convertUpdateRequest, atomRecord.repositoryHashId)
@@ -1650,7 +1773,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomStatus = atomStatus,
                 packageSize = packageSize,
                 qualityFlag = getAtomQualityResult.errorCode == "0",
-                serviceScopeConfigs = serviceScopeConfigs
+                serviceScopeConfigs = serviceScopeConfigs,
+                tenantId = tenantId
             )
         )
     }
@@ -1678,6 +1802,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     marketAtomUpdateRequest = prepared.updateRequest,
                     atomEnvRequests = prepared.atomEnvRequests,
                     repositoryHashId = prepared.atomRecord.repositoryHashId,
+                    tenantId = prepared.tenantId,
                     packageSize = prepared.packageSize
                 )
             } else {
@@ -1692,6 +1817,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     props = prepared.props,
                     atomEnvRequests = prepared.atomEnvRequests,
                     atomRecord = prepared.atomRecord,
+                    tenantId = prepared.tenantId,
                     packageSize = prepared.packageSize
                 )
             }
@@ -1739,7 +1865,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 branch = branch,
                 validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(prepared.atomEnvRequests),
-                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(prepared.atomEnvRequests)
+                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(prepared.atomEnvRequests),
+                tenantId = prepared.tenantId
             )
         } catch (e: ErrorCodeException) {
             // 旧构建未结束属业务拒绝，版本状态保持原样

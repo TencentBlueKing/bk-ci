@@ -25,7 +25,7 @@ function _M:get_ticket(bk_token)
     httpc:connect(config.oauth.ip, config.oauth.port)
 
     --- 组装请求body
-    local requestBody = {grant_type = "authorization_code", id_provider = "bk_login", bk_token = bk_token}
+    local requestBody = { grant_type = "authorization_code", id_provider = "bk_login", bk_token = bk_token }
 
     --- 转换请求内容
     local requestBodyJson = json.encode(requestBody)
@@ -102,9 +102,9 @@ function _M:is_login(bk_token)
     local lang = cookieUtil:get_cookie("blueking_language")
 
     local res, err = httpc:request_uri(
-                         config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
-                             "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
-                         {method = "GET", ssl_verify = false, headers = {["blueking-language"] = lang}})
+        config.esb.host .. config.esb.path .. "?bk_app_code=" .. config.oauth.app_code ..
+        "&bk_app_secret=" .. config.oauth.app_secret .. "&bk_token=" .. bk_token,
+        { method = "GET", ssl_verify = false, headers = { ["blueking-language"] = lang } })
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
 
@@ -132,13 +132,69 @@ function _M:is_login(bk_token)
     end
     if result.code == 1302403 then
         ngx.log(ngx.ERR, "is_login code is 1302403 , need Authentication")
-        ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 417,"message": "'..result.message..'", "errorCode": 1302403 , "redirectUrl":"/esb.error.html?message='..result.message..'"}'
+        ngx.header["X-DEVOPS-ERROR-RETURN"] = '{"status": 417,"message": "' ..
+            result.message ..
+            '", "errorCode": 1302403 , "redirectUrl":"/esb.error.html?message=' .. result.message .. '"}'
         ngx.header["X-DEVOPS-ERROR-STATUS"] = 417
         ngx.exit(401)
     elseif result.code ~= 0 then
         ngx.log(ngx.ERR, "is_login code is " .. result.code .. " , return 401")
         ngx.exit(401)
     end
+end
+
+--- 调用蓝鲸登录接口（建议配置 BK_LOGIN_PATH 为 get_bk_token_userinfo）
+--- 返回 data，含 tenant_id；若为 userinfo 接口还可含 time_zone（可空）
+function _M:verify_bk_token(bk_token)
+    if bk_token == nil then
+        ngx.log(ngx.ERR, "bk_token is null")
+        ngx.exit(400)
+        return
+    end
+
+    local httpc = http.new()
+    if not httpc then
+        ngx.log(ngx.ERR, "failed to create httpc")
+        ngx.exit(500)
+        return
+    end
+
+    local res, err = httpc:request_uri(
+        config.bk_login.host .. config.bk_login.path .. "?bk_token=" .. bk_token,
+        {
+            method = "GET",
+            ssl_verify = false,
+            headers = { ["X-Bkapi-Authorization"] = '{"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}', ["X-Bk-Tenant-Id"] = 'system' }
+        }
+    )
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+
+    if not res then
+        ngx.log(ngx.ERR, "failed to request tenant info: ", err)
+        ngx.exit(500)
+        return
+    end
+
+    if res.status ~= 200 then
+        ngx.log(ngx.STDERR, "failed to request tenant info, status: ", res.status , " , responseBody:" , res.body)
+        ngx.exit(401)
+        return
+    end
+
+    --- 获取所有回复
+    local responseBody = res.body
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+
+    -- 返回 data（tenant_id / time_zone 等）
+    if result == nil then
+        ngx.log(ngx.ERR, "null is tenant result")
+        ngx.exit(401)
+        return
+    end
+
+    return result.data
 end
 
 return _M

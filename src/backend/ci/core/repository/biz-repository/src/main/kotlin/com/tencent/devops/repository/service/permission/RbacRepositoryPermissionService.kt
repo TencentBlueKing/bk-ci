@@ -33,10 +33,11 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.repository.service.RepositoryPermissionService
 
 class RbacRepositoryPermissionService(
@@ -129,6 +130,7 @@ class RbacRepositoryPermissionService(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,

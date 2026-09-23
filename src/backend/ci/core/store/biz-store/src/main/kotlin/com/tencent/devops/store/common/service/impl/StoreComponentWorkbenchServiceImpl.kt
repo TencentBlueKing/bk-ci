@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -289,8 +289,8 @@ class StoreComponentWorkbenchServiceImpl @Autowired constructor(
                     releaseFlag = releaseFlag,
                     creator = it[tStoreBase.CREATOR] as String,
                     modifier = it[tStoreBase.MODIFIER] as String,
-                    createTime = DateTimeUtil.toDateTime(it[tStoreBase.CREATE_TIME] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it[tStoreBase.UPDATE_TIME] as LocalDateTime),
+                    createTime = (it[tStoreBase.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (it[tStoreBase.UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     processingVersionInfos = processingVersionInfoMap[storeCode]
                 )
             )

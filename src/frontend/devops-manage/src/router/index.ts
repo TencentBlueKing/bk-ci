@@ -15,8 +15,10 @@ const ExpandManage = () => import(/* webpackChunkName: "ExpandManage" */ '../vie
 // 授权管理
 const Permission = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/permission/permission-manage.vue');
 
+const publicUrlPrefix = window.PUBLIC_URL_PREFIX || '';
+
 const router = createRouter({
-  history: createWebHistory('manage'),
+  history: createWebHistory(`${publicUrlPrefix}/manage`),
   routes: [
     {
       path: '/userManage',

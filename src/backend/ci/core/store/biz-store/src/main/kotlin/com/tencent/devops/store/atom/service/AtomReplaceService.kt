@@ -44,7 +44,8 @@ interface AtomReplaceService {
     fun replacePipelineAtom(
         userId: String,
         projectId: String? = null,
-        atomReplaceRequest: AtomReplaceRequest
+        atomReplaceRequest: AtomReplaceRequest,
+        tenantId: String?
     ): Result<String>
 
     /**

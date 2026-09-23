@@ -46,22 +46,24 @@ class ApigwMarketTemplateResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
         logger.info("OPENAPI_MARKET_TEMPLATE_V4|$userId|install template from store|$installTemplateReq")
-        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, tenantId, installTemplateReq)
     }
 
     override fun installTemplateFromStoreNew(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         installTemplateReq: InstallTemplateReq
     ): Result<List<PipelineTemplateInfo>> {
         logger.info("OPENAPI_MARKET_TEMPLATE_V4|$userId|install template from store new|$installTemplateReq")
         val install = client.get(ServiceTemplateResource::class)
-            .installTemplate(userId, installTemplateReq).data ?: false
+            .installTemplate(userId, tenantId, installTemplateReq).data ?: false
         return if (install) {
             val templateProjectInfos = client.get(ServicePTemplateResource::class)
                 .getTemplateIdBySrcCode(installTemplateReq.templateCode, installTemplateReq.projectCodeList).data

@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -43,6 +44,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -77,6 +79,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
@@ -93,10 +96,12 @@ import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_DISPLAY_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
@@ -349,6 +354,7 @@ class PipelineBuildService(
         initNodeAgentParams(ctx)
         initImateSessionParam(ctx)
         initTraceParams(ctx.pipelineParamMap)
+        initUserDisplayNameParams(ctx)
     }
 
     /**
@@ -524,6 +530,39 @@ class PipelineBuildService(
             pipelineParamMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] =
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
+    }
+
+    /**
+     * 多租户模式下设置用户展示名称
+     */
+    private fun initUserDisplayNameParams(ctx: InitParamContext) {
+        val pipelineParamMap = ctx.pipelineParamMap
+        if (TenantUtils.isMultiTenantMode()) {
+            val tenantId = TenantUtils.getTenantIdByEnglishName(ctx.pipeline.projectId)
+            pipelineParamMap[PIPELINE_START_USER_DISPLAY_NAME] = BuildParameters(
+                PIPELINE_START_USER_DISPLAY_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_START_USER_NAME]!!.value.toString(), tenantId)
+            )
+            pipelineParamMap[PIPELINE_CREATE_USER_NAME] = BuildParameters(
+                PIPELINE_CREATE_USER_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_CREATE_USER]!!.value.toString(), tenantId)
+            )
+            pipelineParamMap[PIPELINE_UPDATE_USER_NAME] = BuildParameters(
+                PIPELINE_UPDATE_USER_NAME,
+                getUserDisplayName(pipelineParamMap[PIPELINE_UPDATE_USER]!!.value.toString(), tenantId)
+            )
+        } else {
+            pipelineParamMap[PIPELINE_START_USER_DISPLAY_NAME] = pipelineParamMap[PIPELINE_START_USER_NAME]!!
+            pipelineParamMap[PIPELINE_CREATE_USER_NAME] = pipelineParamMap[PIPELINE_CREATE_USER]!!
+            pipelineParamMap[PIPELINE_UPDATE_USER_NAME] = pipelineParamMap[PIPELINE_UPDATE_USER]!!
+        }
+    }
+
+    private fun getUserDisplayName(userId: String, tenantId: String?): String {
+        return client.get(ServiceDeptResource::class).listUserInfos(
+            memberIds = listOf(userId),
+            tenantId = tenantId
+        ).data?.getOrNull(0)?.displayName ?: userId
     }
 
     fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {

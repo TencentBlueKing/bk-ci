@@ -58,10 +58,11 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         appCode: String?,
         apigwType: String?,
         atomCode: String,
-        userId: String
+        userId: String,
+        tenantId: String?
     ): Result<AtomVersion?> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom By Code")
-        return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
+        return client.get(ServiceMarketAtomResource::class).getAtomByCode(tenantId, atomCode, userId)
     }
 
     override fun getAtomStatisticByCode(
@@ -99,11 +100,12 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|install Atom: $channelCode, $installAtomReq")
-        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
+        return client.get(ServiceMarketAtomResource::class).installAtom(userId, tenantId, channelCode, installAtomReq)
     }
 
     override fun getAtomYmlV2Info(
@@ -126,16 +128,23 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         atomCode: String,
         version: String,
         userId: String,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomDetail: $atomCode, $version")
-        return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version, serviceScope)
+        return client.get(ServiceAtomResource::class).getAtomVersionInfo(
+            tenantId = tenantId,
+            atomCode = atomCode,
+            version = version,
+            serviceScope = serviceScope
+        )
     }
 
     override fun list(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         serviceScope: ServiceScopeEnum?,
         keyword: String?,
         classifyCode: String?,
@@ -167,7 +176,8 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
             qualityFlag = qualityFlag,
             sortType = sortType,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = tenantId
         )
     }
 

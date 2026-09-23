@@ -85,7 +85,7 @@
     import { Action, Getter, State } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
     import eventBus from '../../utils/eventBus'
-    import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import { addRoutePrefix, getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
 
@@ -159,7 +159,7 @@
         }
 
         addConsole (link: string): string {
-            return urlJoin('/console/', link)
+            return addRoutePrefix(urlJoin('/console/', link))
         }
 
         serviceId (name): string {

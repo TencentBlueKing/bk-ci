@@ -254,19 +254,30 @@
                 sortable="custom"
                 :label="$t('lastExecTime')"
                 prop="latestBuildStartDate"
-            />
+            >
+                <template slot-scope="props">
+                    <time-display :value="props.row.latestBuildStartTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.createTime"
                 sortable="custom"
                 :label="$t('createTime')"
                 prop="createTime"
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else-if="isDeleteView">
             <bk-table-column
@@ -276,22 +287,32 @@
                 sortable="custom"
                 prop="createTime"
                 sort
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.deleteTime"
                 key="updateTime"
                 :label="$t('restore.deleteTime')"
                 sortable="custom"
                 prop="updateTime"
-                :formatter="formatTime"
-            />
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.updateTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="tableWidthMap.lastModifyUser"
                 key="lastModifyUser"
                 :label="$t('restore.deleter')"
                 prop="lastModifyUser"
-            ></bk-table-column>
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.lastModifyUser" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else>
             <!-- 最近执行 -->
@@ -361,7 +382,7 @@
                                         :name="props.row.startType"
                                         size="16"
                                     />
-                                    <span>{{ props.row.latestBuildUserId }}</span>
+                                    <bk-user-display-name :user-id="props.row.latestBuildUserId" />
                                 </span>
                                 <span
                                     v-if="props.row.webhookAliasName"
@@ -403,7 +424,7 @@
                     v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
-                    <p>{{ props.row.latestBuildStartDate }}</p>
+                    <p><time-display :value="props.row.latestBuildStartTime" /></p>
                     <p
                         v-if="props.row.progress"
                         class="primary"
@@ -432,8 +453,10 @@
                     v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
-                    <p>{{ props.row.updater }}</p>
-                    <p class="desc">{{ props.row.updateDate }}</p>
+                    <p><bk-user-display-name :user-id="props.row.updater" /></p>
+                    <p class="desc">
+                        <time-display :value="props.row.updateTime" />
+                    </p>
                 </div>
             </bk-table-column>
             <bk-table-column
@@ -441,7 +464,11 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template slot-scope="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.createTime"
                 :width="tableWidthMap.createTime"
@@ -450,7 +477,7 @@
                 prop="createTime"
             >
                 <template slot-scope="props">
-                    {{ prettyDateTimeFormat(props.row.createTime) }}
+                    <time-display :value="props.row.createTime" />
                 </template>
             </bk-table-column>
         </template>
@@ -608,7 +635,8 @@
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import StageSteps from '@/components/StageSteps'
-    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
+    import { isShallowEqual } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import { mapGetters, mapState } from 'vuex'
 
     export default {
@@ -617,7 +645,8 @@
             ExtMenu,
             PipelineStatusIcon,
             StageSteps,
-            PipelineListEmpty
+            PipelineListEmpty,
+            TimeDisplay
         },
         mixins: [pipelineActionMixin],
         props: {
@@ -851,7 +880,6 @@
             this.requestList()
         },
         methods: {
-            prettyDateTimeFormat,
             latestExecHeader () {
                 const h = this.$createElement
                 if (this.isArchiveView) {
@@ -998,9 +1026,6 @@
             },
             refresh () {
                 this.requestList()
-            },
-            formatTime (row, cell, value) {
-                return convertTime(value)
             },
             async handleRestore (...args) {
                 const res = await this.restore(...args)

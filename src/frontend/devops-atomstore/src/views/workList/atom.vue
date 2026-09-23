@@ -74,13 +74,21 @@
                     :label="$t('store.修改人')"
                     prop="modifier"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <bk-user-display-name :user-id="props.row.modifier" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"
                     width="150"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="240"
@@ -532,11 +540,13 @@
     import { atomStatusMap } from '@/store/constants'
     import { debounce } from '@/utils'
     import status from './status'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
             formTips,
-            status
+            status,
+            TimeDisplay
         },
 
         data () {
@@ -545,7 +555,7 @@
                 hasOauth: true,
                 searchName: '',
                 gitOAuthUrl: '',
-                itemUrl: '/console/pm',
+                itemUrl: window.getRoutePrefix() + '/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
                 specificationDocUrl: this.BKCI_DOCS.PLUGIN_SPECIFICATE_DOC,

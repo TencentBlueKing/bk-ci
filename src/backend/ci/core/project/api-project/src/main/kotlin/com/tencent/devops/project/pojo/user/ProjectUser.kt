@@ -33,5 +33,9 @@ data class ProjectUser(
 //    @JsonProperty("avatar_url")
     val avatarUrl: String,
     val username: String,
-    val permissions: List<String> = emptyList()
+    val permissions: List<String> = emptyList(),
+    /**
+     * IANA 时区，来自蓝鲸用户管理；前端据此格式化毫秒时间戳。
+     */
+    val timeZone: String? = null
 )

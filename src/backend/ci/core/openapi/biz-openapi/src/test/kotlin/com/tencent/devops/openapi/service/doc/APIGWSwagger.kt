@@ -13,6 +13,7 @@ import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.integration.SwaggerConfiguration
 import io.swagger.v3.oas.models.OpenAPI
+import java.io.File
 import java.lang.reflect.Method
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -20,6 +21,7 @@ import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -164,19 +166,21 @@ class APIGWSwagger @Autowired constructor(
 
     @Test
     fun `init apigw resources v20 only v4`() {
+        val blacklist = loadBlacklist()
         val openAPI = loadSwagger(version = listOf("v4"))
-        initResources(openAPI, "build/apigw-only-v4")
-        initDoc(openAPI, "build/apigw-only-v4")
+        initResources(openAPI, "build/apigw-only-v4", blacklist)
+        initDoc(openAPI, "build/apigw-only-v4", blacklist)
     }
 
     @Test
     fun `init apigw resources v20`() {
+        val blacklist = loadBlacklist()
         val openAPI = loadSwagger()
-        initResources(openAPI, "build/apigw-v3-v4")
-        initDoc(openAPI, "build/apigw-v3-v4")
+        initResources(openAPI, "build/apigw-v3-v4", blacklist)
+        initDoc(openAPI, "build/apigw-v3-v4", blacklist)
     }
 
-    private fun initDoc(openAPI: OpenAPI, path: String) {
+    private fun initDoc(openAPI: OpenAPI, path: String, blacklist: Set<String> = emptySet()) {
         val config = ConfigurationBuilder()
         config.addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
         config.setExpandSuperTypes(true)
@@ -189,18 +193,23 @@ class APIGWSwagger @Autowired constructor(
             polymorphism = DocumentService.getAllSubType(reflections),
             swagger = openAPI,
             outputPath = "$path/bk_apigw_docs_devops/zh",
-            parametersInfo = DocumentService.getAllApiModelInfo(reflections)
+            parametersInfo = DocumentService.getAllApiModelInfo(reflections),
+            tagBlacklist = blacklist
         )
     }
 
-    private fun initResources(openAPI: OpenAPI, path: String) {
+    private fun initResources(
+        openAPI: OpenAPI,
+        path: String,
+        blacklist: Set<String> = emptySet()
+    ) {
         val resource = APIGWResourcesV20()
         openAPI.paths.forEach { (path, pathItem) ->
             val (tail, version) = extraPath(path)
             pathItem.readOperationsMap().forEach { (httpMethod, operation) ->
                 val method = httpMethod.name.lowercase()
                 val userApi = userApi(operation.tags, version)
-                if (userApi != null) {
+                if (userApi != null && userApi !in blacklist) {
                     val inPath = resource.paths.getOrPut(
                         userApigwPath(
                             version = version,
@@ -217,7 +226,7 @@ class APIGWSwagger @Autowired constructor(
                     )
                 }
                 val appApi = appApi(operation.tags, version)
-                if (appApi != null) {
+                if (appApi != null && appApi !in blacklist) {
                     val inPath = resource.paths.getOrPut(
                         appApigwPath(
                             version = version,
@@ -236,5 +245,34 @@ class APIGWSwagger @Autowired constructor(
             }
         }
         FileUtil.outFile(path, "bk_apigw_resources_devops.yaml", YamlUtil.toYaml(resource))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(APIGWSwagger::class.java)
+        private const val BLACKLIST_FILE_NAME = "apigw_operation_blacklist.txt"
+        private const val BLACKLIST_DIR_PATH = "support-files/apigw"
+
+        /**
+         * 从 support-files/apigw/apigw_operation_blacklist.txt 加载黑名单。
+         * 从当前工作目录开始向上查找项目根目录下的黑名单文件，
+         * 如果文件不存在则返回空集合（即无黑名单过滤）。
+         */
+        fun loadBlacklist(): Set<String> {
+            var dir = File(".").absoluteFile.parentFile
+            while (dir != null) {
+                val file = File(dir, "$BLACKLIST_DIR_PATH/$BLACKLIST_FILE_NAME")
+                if (file.exists()) {
+                    val entries = file.readLines()
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() && !it.startsWith("#") }
+                        .toSet()
+                    logger.info("Loaded ${entries.size} blacklisted operations from ${file.absolutePath}")
+                    return entries
+                }
+                dir = dir.parentFile
+            }
+            logger.info("No blacklist file found ($BLACKLIST_FILE_NAME), all operations will be included")
+            return emptySet()
+        }
     }
 }
