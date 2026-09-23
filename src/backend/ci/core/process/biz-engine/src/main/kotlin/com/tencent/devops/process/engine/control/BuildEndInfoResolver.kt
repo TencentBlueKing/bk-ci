@@ -344,7 +344,7 @@ class BuildEndInfoResolver @Autowired constructor(
             ?: element?.errorMsg?.takeIf { it.isNotBlank() }
             ?: context.buildTasks.firstOrNull { it.taskId == taskId }?.errorMsg?.takeIf { it.isNotBlank() }
         if (!message.isNullOrBlank()) {
-            return copy(reason = message.take(REASON_MAX_LENGTH))
+            return copy(reason = BuildEndPositionCollector.toDisplayReason(message))
         }
         return copy(reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_PLUGIN)
     }

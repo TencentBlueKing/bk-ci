@@ -981,6 +981,8 @@ object ProcessMessageCode {
     const val BK_BUILD_END_FAIL_JOB_ABORTED = "bkBuildEndFailJobAborted"
     // 暂停执行期间被终止（执行前暂停后选择终止，插件常无 errorMsg）
     const val BK_BUILD_END_FAIL_PAUSE_TERMINATED = "bkBuildEndFailPauseTerminated"
+    // 执行前暂停被终止后的位置状态文案，对齐编排图「暂停/终止」
+    const val BK_BUILD_END_STATUS_PAUSE_TERMINATED = "bkBuildEndStatusPauseTerminated"
     // 步骤执行失败（插件失败但未留下错误信息时的兜底文案）
     const val BK_BUILD_END_FAIL_PLUGIN = "bkBuildEndFailPlugin"
     // 质量红线未达标(无指标详情时的兜底文案)

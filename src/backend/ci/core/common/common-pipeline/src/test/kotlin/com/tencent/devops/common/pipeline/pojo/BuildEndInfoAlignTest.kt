@@ -234,4 +234,205 @@ class BuildEndInfoAlignTest {
         Assertions.assertEquals("e-pause", aligned.positions!![1].taskId)
         Assertions.assertEquals("bkBuildEndFailPauseTerminated", aligned.positions!![1].reasonCode)
     }
+
+    @Test
+    fun `given matching cancel info then merge missing cancel plugins`() {
+        val stored = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemJobExecTimeout")
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-3-2",
+                        componentPath = "stage-1/构建环境-Linux/0806插件",
+                        statusAtEnd = BuildStatus.PAUSE.name,
+                        stageId = "stage-2",
+                        containerId = "3",
+                        taskId = "e-0806-a"
+                    )
+                )
+            )
+        val modelCancelPositions = listOf(
+            EndPosition(
+                position = "1-3-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "3",
+                taskId = "e-0806-a"
+            ),
+            EndPosition(
+                position = "1-4-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "4",
+                taskId = "e-0806-b"
+            )
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.CANCELED,
+            modelCancelPositions = modelCancelPositions
+        ) { BuildStatus.CANCELED.name }
+
+        Assertions.assertEquals(BuildEndType.CANCEL_SYSTEM, aligned!!.endType)
+        Assertions.assertEquals("bkBuildCancelSystemJobExecTimeout", aligned.reasonCode)
+        Assertions.assertEquals(2, aligned.positionCount)
+        Assertions.assertEquals("e-0806-a", aligned.positions!![0].taskId)
+        Assertions.assertEquals(BuildStatus.CANCELED.name, aligned.positions!![0].statusAtEnd)
+        Assertions.assertEquals("bkBuildEndFailPauseTerminated", aligned.positions!![0].reasonCode)
+        Assertions.assertEquals("e-0806-b", aligned.positions!![1].taskId)
+    }
+
+    @Test
+    fun `given matching user cancel then merge later canceled plugins`() {
+        val stored = BuildEndInfo.ofCancelUser(operator = "ccc", reasonCode = "bkBuildCancelUserInFlightStopped")
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-1-2",
+                        componentPath = "stage-1/构建环境-Linux/0806插件",
+                        statusAtEnd = BuildStatus.PAUSE.name,
+                        stageId = "stage-2",
+                        containerId = "1",
+                        taskId = "e-0806-a"
+                    )
+                )
+            )
+        val modelCancelPositions = listOf(
+            EndPosition(
+                position = "1-1-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                stageId = "stage-2",
+                containerId = "1",
+                taskId = "e-0806-a"
+            ),
+            EndPosition(
+                position = "1-2-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                stageId = "stage-2",
+                containerId = "2",
+                taskId = "e-0806-b"
+            )
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.CANCELED,
+            modelCancelPositions = modelCancelPositions
+        ) { BuildStatus.CANCELED.name }
+
+        Assertions.assertEquals(BuildEndType.CANCEL_USER, aligned!!.endType)
+        Assertions.assertEquals(2, aligned.positionCount)
+        Assertions.assertEquals("ccc", aligned.operator)
+    }
+
+    @Test
+    fun `given matching fail info then do not merge cancel extras`() {
+        val stored = BuildEndInfo.of(endType = BuildEndType.FAIL_EXEC)
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-1-1",
+                        componentPath = "stage-1/构建环境-Linux/Bash",
+                        statusAtEnd = BuildStatus.FAILED.name,
+                        endType = BuildEndType.FAIL_EXEC,
+                        stageId = "stage-2",
+                        containerId = "1",
+                        taskId = "e-fail"
+                    )
+                )
+            )
+        val modelCancelPositions = listOf(
+            EndPosition(
+                position = "1-2-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                stageId = "stage-2",
+                containerId = "2",
+                taskId = "e-cancel"
+            )
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.FAILED,
+            modelCancelPositions = modelCancelPositions
+        )
+
+        Assertions.assertSame(stored, aligned)
+        Assertions.assertEquals(1, aligned!!.positionCount)
+    }
+
+    @Test
+    fun `given job level cancel then drop job row after merging tasks of same container`() {
+        val stored = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemJobExecTimeout")
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-3",
+                        componentPath = "stage-1/构建环境-Linux",
+                        statusAtEnd = BuildStatus.PREPARE_ENV.name,
+                        stageId = "stage-2",
+                        containerId = "3"
+                    )
+                )
+            )
+        val modelCancelPositions = listOf(
+            EndPosition(
+                position = "1-3-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "3",
+                taskId = "e-0806-a"
+            ),
+            EndPosition(
+                position = "1-4-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.CANCELED.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "4",
+                taskId = "e-0806-b"
+            )
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.CANCELED,
+            modelCancelPositions = modelCancelPositions
+        )
+
+        Assertions.assertEquals(2, aligned!!.positionCount)
+        Assertions.assertTrue(aligned.positions!!.none { it.taskId.isNullOrBlank() })
+        Assertions.assertEquals(listOf("e-0806-a", "e-0806-b"), aligned.positions!!.map { it.taskId })
+    }
+
+    @Test
+    fun `preserve system cause when fail card has no reason`() {
+        val existing = BuildEndInfo.ofCancelSystem(
+            reasonCode = "bkBuildCancelSystemHeartbeat",
+            reasonParams = listOf("agent-1")
+        )
+        val incoming = BuildEndInfo.of(endType = BuildEndType.FAIL_EXEC)
+
+        val merged = incoming.preserveSystemCause(existing)
+
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, merged.endType)
+        Assertions.assertEquals("bkBuildCancelSystemHeartbeat", merged.reasonCode)
+        Assertions.assertEquals(listOf("agent-1"), merged.reasonParams)
+    }
+
+    @Test
+    fun `preserve system cause does not override incoming fail reason`() {
+        val existing = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemHeartbeat")
+        val incoming = BuildEndInfo.of(endType = BuildEndType.FAIL_QUALITY, reason = "指标超标")
+
+        val merged = incoming.preserveSystemCause(existing)
+
+        Assertions.assertEquals("指标超标", merged.reason)
+        Assertions.assertNull(merged.reasonCode)
+    }
 }

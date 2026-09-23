@@ -234,4 +234,109 @@ class BuildEndPositionCollectorTest {
         Assertions.assertEquals("e-pause", positions[0].taskId)
         Assertions.assertEquals(BuildEndPositionCollector.REASON_PAUSE_TERMINATED, positions[0].reasonCode)
     }
+
+    @Test
+    fun `collect cancel positions from two timeout jobs`() {
+        val model = Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-1",
+                    containers = listOf(
+                        pauseJob("1", "e-0806-a"),
+                        pauseJob("2", "e-0806-b")
+                    )
+                )
+            )
+        )
+
+        val positions = BuildEndPositionCollector.collectCancelPositions(model)
+
+        Assertions.assertEquals(2, positions.size)
+        Assertions.assertEquals("e-0806-a", positions[0].taskId)
+        Assertions.assertEquals("e-0806-b", positions[1].taskId)
+        Assertions.assertEquals("1-1-1", positions[0].position)
+        Assertions.assertEquals("1-2-1", positions[1].position)
+    }
+
+    @Test
+    fun `collect cancel positions include job timeout plugin status`() {
+        val model = Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-1",
+                    containers = listOf(
+                        NormalContainer(
+                            id = "1",
+                            containerId = "1",
+                            name = "构建环境-Linux",
+                            status = BuildStatus.CANCELED.name,
+                            elements = listOf(
+                                LinuxScriptElement(
+                                    id = "e-timeout",
+                                    name = "0806插件",
+                                    status = BuildStatus.EXEC_TIMEOUT.name,
+                                    scriptType = BuildScriptType.SHELL,
+                                    script = "echo",
+                                    continueNoneZero = false
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val positions = BuildEndPositionCollector.collectCancelPositions(model)
+
+        Assertions.assertEquals(1, positions.size)
+        Assertions.assertEquals("e-timeout", positions[0].taskId)
+        Assertions.assertEquals(BuildStatus.EXEC_TIMEOUT.name, positions[0].statusAtEnd)
+    }
+
+    @Test
+    fun `display reason collapses whitespace and truncates`() {
+        val raw = "Script command execution failed with exit code(127)\n\n" +
+            "Error message:tracking-tmp/devops_script_user_${"x".repeat(300)}"
+        val display = BuildEndPositionCollector.toDisplayReason(raw)
+
+        Assertions.assertNotNull(display)
+        Assertions.assertTrue(display!!.endsWith("..."))
+        Assertions.assertTrue(display.length <= BuildEndPositionCollector.REASON_DISPLAY_MAX + 3)
+        Assertions.assertFalse(display.contains("\n"))
+    }
+
+    private fun pauseJob(containerId: String, taskId: String) = NormalContainer(
+        id = containerId,
+        containerId = containerId,
+        name = "构建环境-Linux",
+        status = BuildStatus.CANCELED.name,
+        jobControlOption = JobControlOption(timeout = 1),
+        elements = listOf(
+            LinuxScriptElement(
+                id = taskId,
+                name = "0806插件",
+                status = BuildStatus.PAUSE.name,
+                scriptType = BuildScriptType.SHELL,
+                script = "echo",
+                continueNoneZero = false,
+                additionalOptions = ElementAdditionalOptions(pauseBeforeExec = true)
+            ),
+            LinuxScriptElement(
+                id = "e-unexec-$containerId",
+                name = "Bash",
+                status = BuildStatus.UNEXEC.name,
+                scriptType = BuildScriptType.SHELL,
+                script = "echo",
+                continueNoneZero = false
+            )
+        )
+    )
 }

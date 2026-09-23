@@ -74,7 +74,7 @@ data class EndPosition(
     @get:Schema(title = "错误码", required = false)
     val errorCode: Int? = null,
     @get:Schema(title = "错误信息", required = false)
-    val errorMsg: String? = null,
+    var errorMsg: String? = null,
     @get:Schema(title = "操作人(人工审核驳回等场景的处理人)", required = false)
     val operator: String? = null,
     @get:Schema(title = "审核意见(人工审核驳回原因)", required = false)

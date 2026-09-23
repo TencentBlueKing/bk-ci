@@ -52,7 +52,22 @@ object BuildEndPositionCollector {
     const val REASON_JOB_ABORTED = "bkBuildEndFailJobAborted"
     const val REASON_JOB_EXEC_TIMEOUT = "bkBuildCancelSystemJobExecTimeout"
 
-    private const val POSITION_MAX_SIZE = 50
+    /** 卡片展示用原因上限：脚本错误原文可能数千字，铺在位置列表里会把整张卡片撑开 */
+    const val REASON_DISPLAY_MAX = 200
+    const val ERROR_MSG_MAX = 512
+    const val POSITION_MAX_SIZE = 50
+
+    private val WHITESPACE = Regex("\\s+")
+
+    /**
+     * 压缩空白并截断，供卡片 [EndPosition.reason] 展示。
+     * 完整错误仍可走日志，不要把脚本堆到终态卡片上。
+     */
+    fun toDisplayReason(raw: String?, maxLength: Int = REASON_DISPLAY_MAX): String? {
+        val normalized = raw?.replace(WHITESPACE, " ")?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (normalized.length <= maxLength) return normalized
+        return normalized.take(maxLength) + "..."
+    }
 
     /**
      * 失败/超时类位置：失败插件、审核驳回、执行前暂停被终止、Job 超时插件，
@@ -243,7 +258,7 @@ object BuildEndPositionCollector {
                 reasonParams = listOf(timeoutMinutes.toString())
             )
             status.isFailure() -> {
-                val errorMsg = element.errorMsg?.takeIf { it.isNotBlank() }
+                val errorMsg = toDisplayReason(element.errorMsg)
                 ClassifiedEnd(
                     endType = BuildEndType.FAIL_EXEC,
                     reason = errorMsg,
@@ -279,7 +294,7 @@ object BuildEndPositionCollector {
             containerId = containerId,
             taskId = element.id,
             matrixFlag = walk.matrixFlag.takeIf { it },
-            errorMsg = element.errorMsg,
+            errorMsg = toDisplayReason(element.errorMsg, ERROR_MSG_MAX),
             operator = review?.actualReviewUsers?.firstOrNull(),
             reviewSuggest = review?.suggest?.takeIf { it.isNotBlank() },
             containerHashId = walk.container.containerHashId,
@@ -313,7 +328,11 @@ object BuildEndPositionCollector {
     }
 
     private fun isCancelVisible(status: BuildStatus): Boolean {
-        return status.isCancel() || status == BuildStatus.TERMINATE || status.isPause()
+        return status.isCancel() ||
+            status == BuildStatus.TERMINATE ||
+            status.isPause() ||
+            status == BuildStatus.EXEC_TIMEOUT ||
+            status == BuildStatus.HEARTBEAT_TIMEOUT
     }
 
     private fun isControlElement(element: Element): Boolean {
