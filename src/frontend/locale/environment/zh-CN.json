@@ -589,6 +589,7 @@
         "parallelLabel": "并发",
         "dockerParallelLabel": "Docker 并发",
         "tagsLabel": "标签",
+        "tagIncomplete": "标签未填写完整，请先选择标签键与标签值",
         "basicConfig": "基础配置",
         "zoneDesc": "请选择离构建机最近的接入点。接入点越近，构建产物的上传与下载越快，连接也越稳定。",
         "agentInstallMode": "Agent 安装模式",

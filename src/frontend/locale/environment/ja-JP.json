@@ -587,6 +587,7 @@
         "parallelLabel": "並列数",
         "dockerParallelLabel": "Docker 並列数",
         "tagsLabel": "タグ",
+        "tagIncomplete": "タグが不完全です。タグのキーと値を選択してください。",
         "basicConfig": "基本設定",
         "zoneDesc": "ビルドマシンに最も近いアクセスポイントを選択してください。アクセスポイントが近いほど、ビルド成果物のアップロードとダウンロードが速くなり、接続も安定します。",
         "agentInstallMode": "Agent インストールモード",

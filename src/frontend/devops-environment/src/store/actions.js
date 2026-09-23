@@ -593,7 +593,7 @@ const actions = {
      * 获取安装会话下节点结果（状态机：PENDING / INSTALLING / IMPORTING / SUCCEEDED / FAILED）
      * @param {string} projectId - 项目ID
      * @param {string} sessionId - 会话ID
-     * @returns {Promise<Array<{agentId: string, nodeId: string, status: string, hostname: string, ip: string, errorMessage: string, startedAt: string, finishedAt: string, agentVersion: string}>>}
+     * @returns {Promise<Array<{agentId: string, nodeId: string, status: string, displayName: string, hostname: string, ip: string, errorMessage: string, startedAt: string, finishedAt: string, agentVersion: string}>>}
      */
     requestInstallSessionNodes ({ commit }, { projectId, sessionId }) {
         return request.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions/${sessionId}/nodes`).then(response => {

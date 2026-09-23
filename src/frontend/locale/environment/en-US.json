@@ -592,6 +592,7 @@
         "parallelLabel": "Concurrency",
         "dockerParallelLabel": "Docker Concurrency",
         "tagsLabel": "Tags",
+        "tagIncomplete": "Incomplete tag. Please select both the tag key and value.",
         "basicConfig": "Basic Configuration",
         "zoneDesc": "Select the access point closest to the build machine. The closer the access point, the faster the upload and download of build artifacts, and the more stable the connection.",
         "agentInstallMode": "Agent Install Mode",

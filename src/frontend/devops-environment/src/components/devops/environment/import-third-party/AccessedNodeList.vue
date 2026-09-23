@@ -64,7 +64,7 @@
                     :class="dotClass(n.status)"
                 />
                 <span class="access-name">
-                    {{ n.hostname || n.agentId }}
+                    {{ n.displayName || n.hostname || n.agentId }}
                     <span
                         v-if="n.ip"
                         class="access-ip"
@@ -154,7 +154,7 @@
     export default {
         name: 'AccessedNodeList',
         props: {
-            /** AgentInstallSessionNodeInfo[]：{ agentId, nodeId, status, hostname, ip, errorMessage, startedAt, finishedAt, agentVersion } */
+            /** AgentInstallSessionNodeInfo[]：{ agentId, nodeId, status, displayName, hostname, ip, errorMessage, startedAt, finishedAt, agentVersion } */
             nodes: {
                 type: Array,
                 default: () => []
