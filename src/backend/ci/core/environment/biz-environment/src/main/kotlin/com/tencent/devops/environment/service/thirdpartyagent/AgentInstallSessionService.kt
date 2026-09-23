@@ -125,7 +125,14 @@ class AgentInstallSessionService(
     fun listNodes(userId: String, projectId: String, sessionId: String): List<AgentInstallSessionNodeInfo> {
         checkViewPermission(userId, projectId)
         getSession(projectId, sessionId)
-        return sessionDao.listNodes(dslContext, sessionId).map { node ->
+        val sessionNodes = sessionDao.listNodes(dslContext, sessionId)
+        val nodeIds = sessionNodes.mapNotNull { it.nodeId }
+        val displayNameMap = if (nodeIds.isEmpty()) {
+            emptyMap()
+        } else {
+            nodeDao.listThirdpartyNodes(dslContext, projectId, nodeIds).associate { it.nodeId to it.displayName }
+        }
+        return sessionNodes.map { node ->
             AgentInstallSessionNodeInfo(
                 agentId = HashUtil.encodeLongId(node.agentId),
                 nodeId = node.nodeId?.let(HashUtil::encodeLongId),
@@ -135,7 +142,8 @@ class AgentInstallSessionService(
                 errorMessage = node.errorMessage,
                 startedAt = node.startedTime,
                 finishedAt = node.finishedTime,
-                agentVersion = node.agentVersion
+                agentVersion = node.agentVersion,
+                displayName = node.nodeId?.let { displayNameMap[it] }
             )
         }
     }

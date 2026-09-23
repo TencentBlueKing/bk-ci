@@ -185,7 +185,9 @@ data class AgentInstallSessionNodeInfo(
     @get:Schema(title = "结束时间")
     val finishedAt: LocalDateTime?,
     @get:Schema(title = "Agent版本")
-    val agentVersion: String?
+    val agentVersion: String?,
+    @get:Schema(title = "别名")
+    val displayName: String?,
 )
 
 @Schema(title = "构建机重装上下文")
