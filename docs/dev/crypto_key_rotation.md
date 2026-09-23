@@ -41,9 +41,10 @@ SM4 密文带前缀，加解密走 SM4，不走 AES 密钥列表。`AES_KEY_SHA`
 ## 3. 整体架构
 
 ```
-OP POST /{service}/api/op/crypto/refresh?writer=&{field}={value}
+OP POST /{service}/api/op/crypto/refresh
+  body: { "writer": "", "filters": { "field": "value" } }
   与启动任务同一套刷新：重加密 + 写指纹，不依赖 enabled
-  writer 之外的 query 收成 Map；值为空则忽略
+  filters 是 Map；值为空则忽略
   Writer 只读取自己认识的字段，非空才追加等值条件，不认识的字段忽略
 
 启动 CryptoKeyRefreshStartup          # enabled 时全量密钥轮换
@@ -259,18 +260,19 @@ class XxxCryptoKeyRefreshConfiguration {
 公共 OP 挂在每个微服务上，按服务名调用（不要每个模块再写一份）：
 
 ```
-POST /{service}/api/op/crypto/refresh?writer={name}&{field}={value}
+POST /{service}/api/op/crypto/refresh
+{"writer":"{name}","filters":{"field":"value"}}
 ```
 
-| 服务 | 示例 |
-|------|------|
-| repository | `/repository/api/op/crypto/refresh?writer=repository-git-token&userId=zhangsan` |
-| ticket | `/ticket/api/op/crypto/refresh?writer=credential&projectId=demo` |
-| ticket | `/ticket/api/op/crypto/refresh?writer=credential&projectId=demo&credentialId=xxx` |
-| process | `/process/api/op/crypto/refresh` |
-| store | `/store/api/op/crypto/refresh?writer=store-env-var&id=xxx` |
+| 服务 | body 示例 |
+|------|-----------|
+| repository | `{"writer":"repository-git-token","filters":{"userId":"zhangsan"}}` |
+| ticket | `{"writer":"credential","filters":{"projectId":"demo"}}` |
+| ticket | `{"writer":"credential","filters":{"projectId":"demo","credentialId":"xxx"}}` |
+| process | `{"writer":"pipeline-callback","filters":{"projectId":"demo","pipelineId":"p-xxx","name":"callback"}}` |
+| store | `{"writer":"store-env-var","filters":{"id":"xxx"}}` |
 
-OP 异步触发后立刻返回，不带业务结果。它与启动任务同一套刷新：**重加密密文并写入当前指纹**。`writer` 为空则刷当前服务全部 Writer。`writer` 之外的 query 会原样传给 Writer，字段值非空时用固定列追加等值条件，可以只传一部分字段，例如只传 `projectId`。Writer 不认识的字段会被忽略。不指定 `writer` 时，不读取该字段的 Writer 仍按全量刷。
+OP 异步触发后立刻返回，不带业务结果。它与启动任务同一套刷新：**重加密密文并写入当前指纹**。`writer` 为空则刷当前服务全部 Writer。`filters` 原样传给 Writer，字段值非空时用固定列追加等值条件，可以只传一部分字段，例如只传 `projectId`。Writer 不认识的字段会被忽略。不指定 `writer` 时，不读取该字段的 Writer 仍按全量刷。
 
 | Writer | 过滤字段 |
 |--------|----------|
