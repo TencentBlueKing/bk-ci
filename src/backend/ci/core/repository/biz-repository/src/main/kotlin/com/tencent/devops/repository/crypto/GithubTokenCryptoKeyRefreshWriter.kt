@@ -46,7 +46,7 @@ class GithubTokenCryptoKeyRefreshWriter(
                 .set(ACCESS_TOKEN, githubTokenCryptoHelper.refreshSm4OrAes(githubTokenRow.accessToken))
                 .set(AES_KEY_SHA, githubTokenCryptoHelper.currentKeySha())
                 .where(USER_ID.eq(githubTokenRow.userId))
-                .and(TYPE.eq(githubTokenRow.type))
+                .and(githubTokenRow.type?.let { TYPE.eq(it) } ?: TYPE.isNull)
                 .execute()
         }
     }
@@ -65,7 +65,7 @@ class GithubTokenCryptoKeyRefreshWriter(
 
 data class GithubTokenCryptoKeyRefreshRow(
     val userId: String,
-    val type: String,
+    val type: String?,
     val accessToken: String,
     val aesKeySha: String?
 ) : CryptoKeyRefreshRow {
