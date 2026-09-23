@@ -364,7 +364,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun userDelete(userId: String, projectId: String, id: Long): Boolean {
-        validateRulePermission(userId, projectId, AuthPermission.DELETE)
+        validateProjectRuleOperatePermission(userId, projectId, AuthPermission.DELETE)
         delete(userId, id)
         return true
     }
@@ -406,13 +406,26 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun userUpdate(userId: String, projectId: String, indicatorId: String, indicatorCreate: IndicatorCreate): Boolean {
-        validateRulePermission(userId, projectId, AuthPermission.EDIT)
+        validateProjectRuleOperatePermission(userId, projectId, AuthPermission.EDIT)
         val id = HashUtil.decodeIdToLong(indicatorId)
         checkCustomIndicatorExcludeExist(id, projectId, indicatorCreate.name, indicatorCreate.cnName)
         val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         indicatorDao.update(userId = userId, id = id, indicatorUpdate = indicatorUpdate, dslContext = dslContext)
         return true
+    }
+
+    private fun validateProjectRuleOperatePermission(userId: String, projectId: String, permission: AuthPermission) {
+        qualityPermissionService.validateProjectRuleOperatePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = permission,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
+                I18nUtil.getLanguage(userId),
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
     }
 
     private fun validateRulePermission(userId: String, projectId: String, permission: AuthPermission) {

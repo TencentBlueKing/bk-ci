@@ -390,8 +390,8 @@ class QualityHistoryService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<RuleInterceptHistory>> {
-        val permission = AuthPermission.VIEW
-        qualityPermissionService.validateRulePermission(
+        val permission = AuthPermission.LIST
+        qualityPermissionService.validateProjectRuleOperatePermission(
             userId = userId,
             projectId = projectId,
             authPermission = permission,
