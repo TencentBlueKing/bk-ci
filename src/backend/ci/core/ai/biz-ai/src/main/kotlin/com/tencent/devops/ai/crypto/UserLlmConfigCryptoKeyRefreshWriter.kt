@@ -3,6 +3,7 @@ package com.tencent.devops.ai.crypto
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.model.ai.tables.TAiUserLlmConfig
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -16,16 +17,26 @@ class UserLlmConfigCryptoKeyRefreshWriter(
 
     private val currentKeySha = userLlmConfigCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
             dslContext.select(USER_ID, API_KEY, BK_APP_SECRET, AES_KEY_SHA)
                 .from(this)
-                .where(hasEncryptedSecret())
-                .and(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
         }
+    }
+
+    private fun TAiUserLlmConfig.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            hasEncryptedSecret(),
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        )
+        filters[UserLlmConfigCryptoKeyRefreshRow::userId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(USER_ID.eq(it)) }
+        return conditions
     }
 
     override fun updateRow(row: CryptoKeyRefreshRow) {

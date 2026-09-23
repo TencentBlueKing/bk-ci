@@ -4,6 +4,7 @@ import com.tencent.bk.sdk.crypto.cryptor.SymmetricCryptorFactory
 import com.tencent.bk.sdk.crypto.cryptor.consts.CryptorNames
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import org.slf4j.LoggerFactory
 
 /**
  * 加解密算法工具
@@ -12,6 +13,8 @@ object BkCryptoUtil {
 
     private val UTF8 = charset("UTF-8")
     private val SM4_CRYPTO = SymmetricCryptorFactory.getCryptor(CryptorNames.SM4)
+    private val logger = LoggerFactory.getLogger(BkCryptoUtil::class.java)
+    private const val VISIBLE_KEY_LENGTH = 4
 
     /**
      * 加密SM4(没有开启则使用AES)
@@ -158,6 +161,7 @@ object BkCryptoUtil {
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
+                logDecryptFailure(key, ignored)
                 lastError = ignored
             }
         }
@@ -176,10 +180,22 @@ object BkCryptoUtil {
             try {
                 return AESUtil.decrypt(key, content)
             } catch (ignored: Throwable) {
+                logDecryptFailure(key, ignored)
                 lastError = ignored
             }
         }
         throw lastError ?: IllegalArgumentException("No available aes key")
+    }
+
+    private fun logDecryptFailure(key: String, error: Throwable) {
+        logger.warn("AES decrypt failed|key=${maskAesKey(key)}|error=${error.message}")
+    }
+
+    private fun maskAesKey(key: String): String {
+        if (key.length <= VISIBLE_KEY_LENGTH) {
+            return "*".repeat(key.length)
+        }
+        return key.take(VISIBLE_KEY_LENGTH) + "*".repeat(key.length - VISIBLE_KEY_LENGTH)
     }
 
     private fun isSm4Enabled() = SpringContextUtil.getValue("sm4.enabled") == "true"

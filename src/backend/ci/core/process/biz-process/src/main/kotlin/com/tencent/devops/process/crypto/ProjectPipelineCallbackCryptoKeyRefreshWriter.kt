@@ -17,13 +17,11 @@ class ProjectPipelineCallbackCryptoKeyRefreshWriter(
 
     private val currentKeySha = pipelineCallbackCryptoHelper.currentKeySha()
 
-    override fun supportsProjectFilter() = true
-
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.select(ID, SECRET_PARAM, AES_KEY_SHA)
+            dslContext.select(ID, PROJECT_ID, SECRET_PARAM, AES_KEY_SHA)
                 .from(this)
-                .where(refreshCondition(projectId))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -44,21 +42,26 @@ class ProjectPipelineCallbackCryptoKeyRefreshWriter(
         }
     }
 
-    private fun TProjectPipelineCallback.refreshCondition(projectId: String?): Condition {
-        val condition = SECRET_PARAM.isNotNull.and(
+    private fun TProjectPipelineCallback.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            SECRET_PARAM.isNotNull,
             AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
         )
-        return if (projectId.isNullOrBlank()) {
-            condition
-        } else {
-            condition.and(PROJECT_ID.eq(projectId))
-        }
+        filters[PipelineCallbackCryptoKeyRefreshRow::projectId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(PROJECT_ID.eq(it)) }
+        filters[PipelineCallbackCryptoKeyRefreshRow::id.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.toLongOrNull()
+            ?.let { conditions.add(ID.eq(it)) }
+        return conditions
     }
 
     private fun toRow(record: Record): PipelineCallbackCryptoKeyRefreshRow {
         return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             PipelineCallbackCryptoKeyRefreshRow(
                 id = record.get(ID),
+                projectId = record.get(PROJECT_ID),
                 secretParam = record.get(SECRET_PARAM),
                 aesKeySha = record.get(AES_KEY_SHA)
             )
@@ -68,6 +71,7 @@ class ProjectPipelineCallbackCryptoKeyRefreshWriter(
 
 data class PipelineCallbackCryptoKeyRefreshRow(
     val id: Long,
+    val projectId: String,
     val secretParam: String,
     val aesKeySha: String?
 ) : CryptoKeyRefreshRow {

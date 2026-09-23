@@ -41,20 +41,21 @@ SM4 密文带前缀，加解密走 SM4，不走 AES 密钥列表。`AES_KEY_SHA`
 ## 3. 整体架构
 
 ```
-OP POST /{service}/api/op/crypto/refresh?writer=&projectId=
+OP POST /{service}/api/op/crypto/refresh?writer=&{field}={value}
   与启动任务同一套刷新：重加密 + 写指纹，不依赖 enabled
-  projectId 为空则全量；不支持按项目的 Writer 会被跳过
+  writer 之外的 query 收成 Map；值为空则忽略
+  Writer 只读取自己认识的字段，非空才追加等值条件，不认识的字段忽略
 
 启动 CryptoKeyRefreshStartup          # enabled 时全量密钥轮换
         │
         ▼
-CryptoKeyRefreshExecutor.runUntilAllDone(writers, projectId)
+CryptoKeyRefreshExecutor.runUntilAllDone(writers, filters)
   RedisLock(crypto:key:refresh:{appName})  过期 600s
         │
-        ▼  for each Writer（有 projectId 时跳过不支持项目过滤的 Writer）
-  fetchBatch(batchSize, projectId)
+        ▼  for each Writer
+  fetchBatch(batchSize, filters)
     WHERE AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha
-    AND PROJECT_ID = ?   # 仅 supportsProjectFilter 且 projectId 非空
+    AND 字段 = ?   # filters 里该字段非空时，Writer 用固定列追加等值条件
         │
         ▼
   updateRow：refreshSm4OrAes(密文) + SET AES_KEY_SHA = current
@@ -159,9 +160,8 @@ xxxDao.saveAccessToken(..., aesKeySha = helper.currentKeySha())
 要点：
 
 - `name` 全局唯一，用于日志
-- `fetchBatch(limit, projectId)` 条件：`AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha()`
-- 表有 `PROJECT_ID` 时：`supportsProjectFilter() = true`，`projectId` 非空则追加 `AND PROJECT_ID = ?`
-- 表无 `PROJECT_ID` 时：保持默认 `supportsProjectFilter() = false`，Executor 在按项目刷新时会跳过
+- `fetchBatch(limit, filters)` 条件：`AES_KEY_SHA IS NULL OR AES_KEY_SHA <> currentKeySha()`
+- `filters` 里某个字段非空时，用代码里的固定列追加 `AND 列 = ?`，值走 jOOQ 绑定参数。不认识的字段忽略
 - 有业务过滤时一并写上（敏感配置只刷 `FIELD_TYPE = BACKEND`，回调只刷 `SECRET_PARAM IS NOT NULL`）
 - `updateRow` 的 WHERE 必须是表的**业务唯一键**：
   - Git Token：`USER_ID`
@@ -184,15 +184,25 @@ class XxxCryptoKeyRefreshWriter(
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-xxx"
 
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TXxx.T_XXX) {
             dslContext.select(PK..., CIPHER..., AES_KEY_SHA)
                 .from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(helper.currentKeySha())))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
         }
+    }
+
+    private fun TXxx.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(helper.currentKeySha()))
+        )
+        filters[XxxRow::userId.name]?.takeIf { it.isNotBlank() }?.let {
+            conditions.add(USER_ID.eq(it))
+        }
+        return conditions
     }
 
     override fun updateRow(row: CryptoKeyRefreshRow) {
@@ -210,7 +220,7 @@ class XxxCryptoKeyRefreshWriter(
 
 ### 5.5 新服务必须加 `CryptoKeyRefreshStartup`
 
-`CryptoKeyRefreshStartup` **不会**随 `common-security` 自动装配。新微服务第一次接密钥轮换时，必须在 biz 模块加一个 Configuration，否则 `aes.refresh.enabled` 开了也不跑重加密。OP `/refresh` 与启动任务走同一套 Executor，可按项目灰度，但不能替代 `enabled` 启动后的全量任务。
+`CryptoKeyRefreshStartup` **不会**随 `common-security` 自动装配。新微服务第一次接密钥轮换时，必须在 biz 模块加一个 Configuration，否则 `aes.refresh.enabled` 开了也不跑重加密。OP `/refresh` 与启动任务走同一套 Executor，可按 query 字段过滤，但不能替代 `enabled` 启动后的全量任务。
 
 已有 process / repository / store / ticket 时，直接照抄对应 `*CryptoKeyRefreshConfiguration`，改 Bean 名和服务名即可：
 
@@ -249,26 +259,38 @@ class XxxCryptoKeyRefreshConfiguration {
 公共 OP 挂在每个微服务上，按服务名调用（不要每个模块再写一份）：
 
 ```
-POST /{service}/api/op/crypto/refresh?writer={name}&projectId={projectId}
+POST /{service}/api/op/crypto/refresh?writer={name}&{field}={value}
 ```
 
 | 服务 | 示例 |
 |------|------|
-| repository | `/repository/api/op/crypto/refresh?writer=repository-scm-token` |
-| ticket | `/ticket/api/op/crypto/refresh?projectId=demo` |
+| repository | `/repository/api/op/crypto/refresh?writer=repository-git-token&userId=zhangsan` |
+| ticket | `/ticket/api/op/crypto/refresh?writer=credential&projectId=demo` |
+| ticket | `/ticket/api/op/crypto/refresh?writer=credential&projectId=demo&credentialId=xxx` |
 | process | `/process/api/op/crypto/refresh` |
-| store | `/store/api/op/crypto/refresh` |
+| store | `/store/api/op/crypto/refresh?writer=store-env-var&id=xxx` |
 
-OP 异步触发后立刻返回，不带业务结果。它与启动任务同一套刷新：**重加密密文并写入当前指纹**。`writer` 为空则刷当前服务全部 Writer；`projectId` 为空则全量。表上没有 `PROJECT_ID` 的 Writer（Git Token、OAuth、Store 等）在传入 `projectId` 时会被跳过。
+OP 异步触发后立刻返回，不带业务结果。它与启动任务同一套刷新：**重加密密文并写入当前指纹**。`writer` 为空则刷当前服务全部 Writer。`writer` 之外的 query 会原样传给 Writer，字段值非空时用固定列追加等值条件，可以只传一部分字段，例如只传 `projectId`。Writer 不认识的字段会被忽略。不指定 `writer` 时，不读取该字段的 Writer 仍按全量刷。
 
-支持按项目：`credential`、`cert`、`cert-enterprise`、`cert-tls`、`pipeline-callback`、`project-pipeline-callback`。
+| Writer | 过滤字段 |
+|--------|----------|
+| `credential` | `projectId`、`credentialId` |
+| `cert` / `cert-enterprise` / `cert-tls` | `projectId`、`certId` |
+| `pipeline-callback` | `projectId`、`pipelineId`、`name` |
+| `project-pipeline-callback` | `projectId`、`id` |
+| `repository-git-token` / `repository-tgit-token` | `userId` |
+| `repository-github-token` | `userId`、`type` |
+| `repository-scm-token` | `userId`、`scmCode`、`appType` |
+| `store-env-var` / `store-sensitive-conf` | `id` |
+| `user-llm-config` | `userId` |
+| `oauth2-access-token` | `accessToken` |
 
 操作顺序：
 
 1. 先备份会被刷新任务改写的表（见 `common.yml` 注释）
 2. 轮换密钥时：把旧当前密钥追加进对应 `used-*-keys`，再改当前密钥
-3. 可先用 OP 带 `projectId` 灰度一个项目，确认无误后再全量
-4. 打开 `aes.refresh.enabled=true` 并重启对应服务，由启动任务全量重加密刷完；也可直接调 OP `/refresh`（不带 `projectId`）
+3. 可先用 OP 带 `writer` 和部分字段灰度，确认无误后再全量
+4. 打开 `aes.refresh.enabled=true` 并重启对应服务，由启动任务全量重加密刷完；也可直接调 OP `/refresh`（不带过滤字段）
 5. 看日志 `Crypto key refresh writer done`，确认 success / failed
 6. 抽检密文能解、`AES_KEY_SHA` 已是当前指纹
 7. 确认无失败后再把 `aes.refresh.enabled` 改回 false
@@ -301,7 +323,7 @@ OP 异步触发后立刻返回，不带业务结果。它与启动任务同一�
 - [ ] Helper 能 decrypt（含历史密钥）和 refresh
 - [ ] 所有写密文入口都传 `currentKeySha()`
 - [ ] Writer 覆盖全部密文字段、唯一键正确
-- [ ] 有 `PROJECT_ID` 的表已实现 `supportsProjectFilter() = true`，捞数带项目条件
+- [ ] Writer 对需要的过滤字段做了非空判断，并用固定列追加等值条件
 - [ ] 对应 yml 有 `used-*-keys`
 - [ ] `common.yml` 备份清单已加上该表
 - [ ] 本服务已有 `XxxCryptoKeyRefreshConfiguration`，把 `CryptoKeyRefreshStartup` 注册成 Bean（新服务必须加）

@@ -17,13 +17,11 @@ class PipelineCallbackCryptoKeyRefreshWriter(
 
     private val currentKeySha = pipelineCallbackCryptoHelper.currentKeySha()
 
-    override fun supportsProjectFilter() = true
-
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             dslContext.select(PROJECT_ID, PIPELINE_ID, NAME, SECRET_TOKEN, AES_KEY_SHA)
                 .from(this)
-                .where(refreshCondition(projectId))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -46,15 +44,21 @@ class PipelineCallbackCryptoKeyRefreshWriter(
         }
     }
 
-    private fun TPipelineCallback.refreshCondition(projectId: String?): Condition {
-        val condition = SECRET_TOKEN.isNotNull.and(
+    private fun TPipelineCallback.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            SECRET_TOKEN.isNotNull,
             AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
         )
-        return if (projectId.isNullOrBlank()) {
-            condition
-        } else {
-            condition.and(PROJECT_ID.eq(projectId))
-        }
+        filters[PipelineCallbackTokenCryptoKeyRefreshRow::projectId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(PROJECT_ID.eq(it)) }
+        filters[PipelineCallbackTokenCryptoKeyRefreshRow::pipelineId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(PIPELINE_ID.eq(it)) }
+        filters[PipelineCallbackTokenCryptoKeyRefreshRow::name.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(NAME.eq(it)) }
+        return conditions
     }
 
     private fun toRow(record: Record): PipelineCallbackTokenCryptoKeyRefreshRow {

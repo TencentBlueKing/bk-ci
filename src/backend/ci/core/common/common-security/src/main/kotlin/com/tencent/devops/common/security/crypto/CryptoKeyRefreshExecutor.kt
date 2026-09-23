@@ -16,12 +16,12 @@ class CryptoKeyRefreshExecutor(
      *
      * @param applicationName 当前应用名称，用于生成分布式锁 key。
      * @param writers 当前应用注册的加密密钥刷新器列表。
-     * @param projectId 按项目过滤；为空则全量。不支持项目过滤的 Writer 会被跳过。
+     * @param filters 过滤条件。为空则全量。字段由各 Writer 自行解释。
      */
     fun runUntilAllDone(
         applicationName: String,
         writers: List<CryptoKeyRefreshWriter>,
-        projectId: String? = null
+        filters: Map<String, String> = emptyMap()
     ) {
         RedisLock(
             redisOperation = redisOperation,
@@ -32,15 +32,15 @@ class CryptoKeyRefreshExecutor(
                 logger.info("Crypto key refresh is already running|applicationName=$applicationName")
                 return
             }
-            resolveWriters(writers, projectId).forEach { writer ->
+            writers.forEach { writer ->
                 logger.info(
                     "Crypto key refresh writer started|applicationName=$applicationName|" +
-                        "writer=${writer.name}|projectId=$projectId"
+                        "writer=${writer.name}|filters=$filters"
                 )
                 runWriterUntilDone(
                     applicationName = applicationName,
                     writer = writer,
-                    projectId = projectId
+                    filters = filters
                 )
             }
         }
@@ -52,17 +52,17 @@ class CryptoKeyRefreshExecutor(
     private fun runWriterUntilDone(
         applicationName: String,
         writer: CryptoKeyRefreshWriter,
-        projectId: String?
+        filters: Map<String, String>
     ) {
         var page = 0
         var totalSuccess = 0
         var totalFailed = 0
         while (true) {
-            val rows = writer.fetchBatch(properties.batchSize, projectId)
+            val rows = writer.fetchBatch(properties.batchSize, filters)
             if (rows.isEmpty()) {
                 logger.info(
                     "Crypto key refresh writer done|applicationName=$applicationName|writer=${writer.name}|" +
-                        "projectId=$projectId|pages=$page|success=$totalSuccess|failed=$totalFailed"
+                        "filters=$filters|pages=$page|success=$totalSuccess|failed=$totalFailed"
                 )
                 return
             }
@@ -77,7 +77,7 @@ class CryptoKeyRefreshExecutor(
                     batchFailed++
                     logger.error(
                         "Crypto key refresh row failed|applicationName=$applicationName|" +
-                            "writer=${writer.name}|projectId=$projectId|row=${row.rowKey()}",
+                            "writer=${writer.name}|filters=$filters|row=${row.rowKey()}",
                         e
                     )
                 }
@@ -86,39 +86,19 @@ class CryptoKeyRefreshExecutor(
             totalFailed += batchFailed
             logger.info(
                 "Crypto key refresh batch done|applicationName=$applicationName|writer=${writer.name}|" +
-                    "projectId=$projectId|page=$page|rows=${rows.size}|success=$batchSuccess|" +
+                    "filters=$filters|page=$page|rows=${rows.size}|success=$batchSuccess|" +
                     "failed=$batchFailed|totalSuccess=$totalSuccess|totalFailed=$totalFailed"
             )
             if (batchSuccess == 0) {
                 logger.error(
                     "Crypto key refresh writer stopped without progress|applicationName=$applicationName|" +
-                        "writer=${writer.name}|projectId=$projectId|page=$page|rows=${rows.size}|" +
+                        "writer=${writer.name}|filters=$filters|page=$page|rows=${rows.size}|" +
                         "totalFailed=$totalFailed"
                 )
                 return
             }
             if (properties.sleepMsBetweenBatch > 0) {
                 Thread.sleep(properties.sleepMsBetweenBatch)
-            }
-        }
-    }
-
-    private fun resolveWriters(
-        writers: List<CryptoKeyRefreshWriter>,
-        projectId: String?
-    ): List<CryptoKeyRefreshWriter> {
-        if (projectId.isNullOrBlank()) {
-            return writers
-        }
-        return writers.filter { writer ->
-            if (writer.supportsProjectFilter()) {
-                true
-            } else {
-                logger.warn(
-                    "Skip crypto key refresh writer without project filter|" +
-                        "writer=${writer.name}|projectId=$projectId"
-                )
-                false
             }
         }
     }

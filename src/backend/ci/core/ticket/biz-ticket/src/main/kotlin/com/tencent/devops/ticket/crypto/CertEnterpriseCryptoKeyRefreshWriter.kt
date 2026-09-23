@@ -18,9 +18,7 @@ class CertEnterpriseCryptoKeyRefreshWriter(
 
     private val currentKeySha = certHelper.currentKeySha()
 
-    override fun supportsProjectFilter() = true
-
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TCertEnterprise.T_CERT_ENTERPRISE) {
             dslContext.select(
                 PROJECT_ID,
@@ -28,7 +26,7 @@ class CertEnterpriseCryptoKeyRefreshWriter(
                 CERT_MP_FILE_CONTENT,
                 AES_KEY_SHA
             ).from(this)
-                .where(refreshCondition(projectId))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
@@ -47,13 +45,17 @@ class CertEnterpriseCryptoKeyRefreshWriter(
         }
     }
 
-    private fun TCertEnterprise.refreshCondition(projectId: String?): Condition {
-        val condition = AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
-        return if (projectId.isNullOrBlank()) {
-            condition
-        } else {
-            condition.and(PROJECT_ID.eq(projectId))
-        }
+    private fun TCertEnterprise.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        )
+        filters[CertEnterpriseCryptoKeyRefreshRow::projectId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(PROJECT_ID.eq(it)) }
+        filters[CertEnterpriseCryptoKeyRefreshRow::certId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(CERT_ID.eq(it)) }
+        return conditions
     }
 
     private fun toRow(record: Record): CertEnterpriseCryptoKeyRefreshRow {

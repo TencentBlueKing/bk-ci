@@ -10,18 +10,13 @@ interface CryptoKeyRefreshWriter {
     val name: String
 
     /**
-     * 是否支持按项目过滤。无 `PROJECT_ID` 的表保持默认 false。
-     */
-    fun supportsProjectFilter(): Boolean = false
-
-    /**
      * 拉取一批需要刷新密钥的数据。
      *
      * @param limit 本批最多拉取的数据行数。
-     * @param projectId 按项目过滤；为空则全量。不支持项目过滤的 Writer 应忽略该参数。
+     * @param filters OP 传入的过滤条件。字段值非空时，Writer 追加对应等值条件。
      * @return 待刷新数据行列表。
      */
-    fun fetchBatch(limit: Int, projectId: String? = null): List<CryptoKeyRefreshRow>
+    fun fetchBatch(limit: Int, filters: Map<String, String> = emptyMap()): List<CryptoKeyRefreshRow>
 
     /**
      * 刷新并回写单行数据（重加密密文，并写入当前密钥指纹）。

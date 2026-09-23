@@ -3,6 +3,7 @@ package com.tencent.devops.auth.crypto
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.model.auth.tables.TAuthOauth2AccessToken
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -16,16 +17,26 @@ class Oauth2AccessTokenCryptoKeyRefreshWriter(
 
     private val currentKeySha = oauth2AccessTokenCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.select(ACCESS_TOKEN, PASS_WORD, AES_KEY_SHA)
                 .from(this)
-                .where(PASS_WORD.isNotNull)
-                .and(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
         }
+    }
+
+    private fun TAuthOauth2AccessToken.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            PASS_WORD.isNotNull,
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        )
+        filters[Oauth2AccessTokenCryptoKeyRefreshRow::accessToken.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(ACCESS_TOKEN.eq(it)) }
+        return conditions
     }
 
     override fun updateRow(row: CryptoKeyRefreshRow) {

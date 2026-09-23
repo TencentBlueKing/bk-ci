@@ -4,6 +4,7 @@ import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.model.store.tables.TStoreSensitiveConf
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -17,16 +18,26 @@ class SensitiveConfCryptoKeyRefreshWriter(
 
     private val currentKeySha = storeCryptoHelper.currentKeySha()
 
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             dslContext.select(ID, FIELD_VALUE, AES_KEY_SHA)
                 .from(this)
-                .where(FIELD_TYPE.eq(FieldTypeEnum.BACKEND.name))
-                .and(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha)))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
         }
+    }
+
+    private fun TStoreSensitiveConf.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            FIELD_TYPE.eq(FieldTypeEnum.BACKEND.name),
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(currentKeySha))
+        )
+        filters[SensitiveConfCryptoKeyRefreshRow::id.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(ID.eq(it)) }
+        return conditions
     }
 
     override fun updateRow(row: CryptoKeyRefreshRow) {
