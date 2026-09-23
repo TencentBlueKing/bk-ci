@@ -9,6 +9,7 @@ package com.tencent.devops.notify.pojo.wework
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.JsonUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -23,6 +24,8 @@ data class WeworkTemplateCard(
     val source: WeworkTemplateCardSource? = WeworkTemplateCardSource(desc = "蓝盾流水线", descColor = 3),
     @JsonProperty("main_title")
     val mainTitle: WeworkTemplateCardMainTitle,
+    @JsonProperty("emphasis_content")
+    val emphasisContent: WeworkTemplateCardEmphasis? = null,
     @JsonProperty("quote_area")
     val quoteArea: WeworkTemplateCardQuoteArea? = null,
     @JsonProperty("sub_title_text")
@@ -56,6 +59,12 @@ data class WeworkTemplateCardSource(
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class WeworkTemplateCardMainTitle(
+    val title: String,
+    val desc: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardEmphasis(
     val title: String,
     val desc: String? = null
 )
@@ -155,6 +164,7 @@ object WeworkReviewCardConst {
     const val ACTION_MODIFY = "modify"
     const val CARD_TYPE_BUTTON = "button_interaction"
     const val CARD_TYPE_MULTIPLE = "multiple_interaction"
+    const val CARD_TYPE_TEXT_NOTICE = "text_notice"
     const val MAX_DROPDOWN = 3
     const val MAX_OPTION = 10
     const val MAX_HLIST = 6
@@ -197,6 +207,33 @@ object WeworkReviewCardConst {
     fun appendUrlAction(url: String, action: String): String {
         if (url.isBlank() || url.contains("action=")) return url
         return if (url.contains("?")) "$url&action=$action" else "$url?action=$action"
+    }
+
+    /**
+     * 把卡片回调 SelectedItems（question_key -> option_id）写回缓存的审核参数。
+     * selected 为空时原样返回，不影响无下拉的存量卡片。
+     */
+    fun applySelectedItems(storedParamsJson: String?, selected: Map<String, String>): String? {
+        if (selected.isEmpty() || storedParamsJson.isNullOrBlank() ||
+            storedParamsJson == "[]" || storedParamsJson == "null"
+        ) {
+            return storedParamsJson
+        }
+        return try {
+            val list = JsonUtil.to<MutableList<MutableMap<String, Any?>>>(storedParamsJson)
+            var changed = false
+            list.forEach { item ->
+                val key = item["key"]?.toString().orEmpty()
+                val picked = selected[key] ?: return@forEach
+                if (item["value"]?.toString() != picked) {
+                    item["value"] = picked
+                    changed = true
+                }
+            }
+            if (changed) JsonUtil.toJson(list, false) else storedParamsJson
+        } catch (_: Exception) {
+            storedParamsJson
+        }
     }
 
     private fun sanitizeTaskIdPart(value: String): String {

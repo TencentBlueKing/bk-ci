@@ -155,6 +155,10 @@ object WeworkReviewCardBuilder {
             )
             val perCallback = callback.toMutableMap()
             perCallback["receiver"] = receiver
+            perCallback["projectName"] = projectName
+            perCallback["pipelineName"] = pipelineName
+            perCallback["buildNum"] = buildNum
+            perCallback["reviewStage"] = reviewStage
             redisOperation?.set(
                 key = WeworkReviewCardConst.REDIS_KEY_PREFIX + taskId,
                 value = JsonUtil.toJson(perCallback, false),
