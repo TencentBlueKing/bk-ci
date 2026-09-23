@@ -27,13 +27,17 @@
     "@typescript-eslint/parser": "^1.9.0",
     "@vue/babel-preset-jsx": "^1.2.4",
     "@webpack-cli/serve": "^1.7.0",
+    "babel-helper-vue-jsx-merge-props": "^2.0.3",
+    "babel-plugin-transform-vue-jsx": "^4.0.1",
     "chalk": "^4.0.0",
     "copy-webpack-plugin": "9.0.1",
     "core-js": "3.26.0",
     "cross-env": "^7.0.3",
+    "css-minimizer-webpack-plugin": "^4.2.2",
     "del": "6.1.1",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
+    "eslint-friendly-formatter": "~4.0.1",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-vue": "6.2.2",
@@ -49,6 +53,7 @@
     "gulp-svgmin": "^4.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^10.2.11",
+    "mini-css-extract-plugin": "^2.9.0",
     "node-fetch": "^2.6.0",
     "nx": "19.5.1",
     "ora": "^3.4.0",
@@ -71,10 +76,10 @@
     "build:external": "pnpm -r run public:external",
     "changelog": "conventional-changelog -c changelog.config.js -p github -i CHANGELOG.md -s",
     "public": "gulp -d frontend",
-    "prepare": "husky"
+    "prepare": "cd ../.. && husky src/frontend/.husky"
   },
   "lint-staged": {
-    "*.{js,ts,tsx,vue}": [
+    "{locale,devops-codelib,devops-environment,devops-quality,devops-stream,devops-ticket,devops-turbo}/**/*.{js,vue}": [
       "eslint --fix"
     ]
   },
