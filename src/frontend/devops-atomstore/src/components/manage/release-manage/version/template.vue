@@ -27,7 +27,14 @@
                         v-if="col.prop === 'statusLabel'"
                         :class="['status-indicator', row.published ? 'published' : 'offline']"
                     ></span>
-                    <span :title="row[col.prop]">{{ row[col.prop] ?? '--' }}</span>
+                    <time-display
+                        v-else-if="col.prop === 'createTime'"
+                        :value="row.createTime"
+                    />
+                    <span
+                        v-else
+                        :title="row[col.prop]"
+                    >{{ row[col.prop] ?? '--' }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -125,10 +132,13 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/index'
     import { mapActions } from 'vuex'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             versionList: Array,
             hasPromission: {
@@ -175,9 +185,7 @@
             tableData () {
                 return this.versionList.map(item => ({
                     ...item,
-                    statusLabel: this.$t(`store.${item.published ? '已发布' : '已下架'}`),
-                    createTime: convertTime(item.createTime)
-                    
+                    statusLabel: this.$t(`store.${item.published ? '已发布' : '已下架'}`)
                 }))
             },
             offlineFormRules () {

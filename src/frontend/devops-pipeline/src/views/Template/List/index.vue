@@ -110,7 +110,6 @@
     import { isShallowEqual } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
-    import dayjs from 'dayjs'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
@@ -362,7 +361,6 @@
                 }
                 return {
                     ...item,
-                    updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
                     typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
                     sourceTooltip: getFlagTooltips(item),
                     overviewParams: {

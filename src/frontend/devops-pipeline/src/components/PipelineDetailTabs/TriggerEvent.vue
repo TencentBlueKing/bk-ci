@@ -125,29 +125,29 @@
             },
             shortcuts () {
                 return [{
-                    text: this.$t('今天'),
-                    value () {
-                        return userTzTodayRange()
-                    }
-                },
-                {
-                    text: this.$t('昨天'),
-                    value () {
-                        return userTzYesterdayRange()
-                    }
-                },
-                {
-                    text: this.$t('近3天'),
-                    value () {
-                        return userTzLastDaysRange(3)
-                    }
-                },
-                {
-                    text: this.$t('近7天'),
-                    value () {
-                        return userTzLastDaysRange(7)
-                    }
-                }]
+                            text: this.$t('今天'),
+                            value () {
+                                return userTzTodayRange()
+                            }
+                        },
+                        {
+                            text: this.$t('昨天'),
+                            value () {
+                                return userTzYesterdayRange()
+                            }
+                        },
+                        {
+                            text: this.$t('近3天'),
+                            value () {
+                                return userTzLastDaysRange(3)
+                            }
+                        },
+                        {
+                            text: this.$t('近7天'),
+                            value () {
+                                return userTzLastDaysRange(7)
+                            }
+                        }]
             }
         },
         watch: {
