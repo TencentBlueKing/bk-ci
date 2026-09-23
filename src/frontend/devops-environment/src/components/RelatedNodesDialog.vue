@@ -156,12 +156,12 @@
                                     prop="tagKeyId"
                                     min-width="200"
                                 >
-                                    <template #default="{ row }">
+                                    <template #default="{ $index }">
                                         <bk-select
-                                            v-model="row.tagKeyId"
+                                            v-model="labelRules[$index].tagKeyId"
                                             :placeholder="$t('environment.pleaseSelectLabelKey')"
                                             :clearable="false"
-                                            @change="handleLabelKeyChange(row)"
+                                            @change="handleLabelKeyChange($index)"
                                         >
                                             <bk-option
                                                 v-for="option in availableLabelKeys"
@@ -177,15 +177,15 @@
                                     prop="tagValues"
                                     min-width="200"
                                 >
-                                    <template #default="{ row }">
+                                    <template #default="{ $index }">
                                         <bk-select
-                                            v-model="row.tagValues"
+                                            v-model="labelRules[$index].tagValues"
                                             :placeholder="$t('environment.pleaseSelectLabelValue')"
                                             :clearable="false"
-                                            :disabled="!row.tagKeyId"
+                                            :disabled="!labelRules[$index].tagKeyId"
                                         >
                                             <bk-option
-                                                v-for="val in getLabelValues(row.tagKeyId)"
+                                                v-for="val in getLabelValues(labelRules[$index].tagKeyId)"
                                                 :key="val.id"
                                                 :id="val.id"
                                                 :name="val.name"
@@ -398,7 +398,7 @@
             
             // 动态关联相关数据
             const labelRules = ref([
-                { tagKeyId: '', tagValues: [] }
+                { tagKeyId: '', tagValues: '' }
             ])
             
             // 动态模式是否已经预览过
@@ -423,7 +423,7 @@
             
             // 判断所有标签规则是否都有效（所有规则的 key 和 value 都不为空）
             const hasValidLabelRules = computed(() => {
-                return labelRules.value.length && labelRules.value.every(rule => rule.tagKeyId && rule.tagValues?.length)
+                return labelRules.value.length && labelRules.value.every(rule => rule.tagKeyId && rule.tagValues)
             })
             
             // 判断是否应该显示选中的节点列表
@@ -625,13 +625,11 @@
                             : {
                                 // 每个标签键+值组合成一条记录
                                 tags: labelRules.value
-                                    .filter(rule => rule.tagKeyId && rule.tagValues?.length)
-                                    .flatMap(rule =>
-                                        rule.tagValues.map(tagValueId => ({
-                                            tagKeyId: rule.tagKeyId,
-                                            tagValueId
-                                        }))
-                                    )
+                                    .filter(rule => rule.tagKeyId && rule.tagValues)
+                                    .map(rule => ({
+                                        tagKeyId: rule.tagKeyId,
+                                        tagValueId: rule.tagValues
+                                    }))
                             }
                         )
                     }
@@ -653,7 +651,7 @@
             
             // 添加规则
             const handleAddRule = () => {
-                labelRules.value.push({ tagKeyId: '', tagValues: [] })
+                labelRules.value.push({ tagKeyId: '', tagValues: '' })
             }
             
             // 删除规则
@@ -662,7 +660,7 @@
                     labelRules.value.splice(index, 1)
                 } else {
                     labelRules.value[index].tagKeyId = ''
-                    labelRules.value[index].tagValues = []
+                    labelRules.value[index].tagValues = ''
                 }
             }
             
@@ -673,11 +671,11 @@
                     isPreviewLoading.value = true
                     // 将标签规则摊平成 [{ tagKeyId, tagValueId }] 作为请求体
                     const tags = labelRules.value
-                        .filter(rule => rule.tagKeyId && rule.tagValues?.length)
-                        .flatMap(rule => rule.tagValues.map(tagValueId => ({
+                        .filter(rule => rule.tagKeyId && rule.tagValues)
+                        .map(rule => ({
                             tagKeyId: rule.tagKeyId,
-                            tagValueId
-                        })))
+                            tagValueId: rule.tagValues
+                        }))
                     const res = await previewTagEnvNodes({
                         page: -1,
                         pageSize: 1000
@@ -732,9 +730,12 @@
             // 标签键改变时，仅保留仍属于新标签键的值
             // 注意：bk-select 在 value 被程序化赋值时也会触发 change（回显场景），
             // 因此这里不能无脑清空，否则复用行（如第一行）回显的值会被清掉
-            const handleLabelKeyChange = (row) => {
-                const validValueIds = new Set(getLabelValues(row.tagKeyId).map(val => val.id))
-                row.tagValues = (row.tagValues || []).filter(id => validValueIds.has(id))
+            const handleLabelKeyChange = (index) => {
+                const rule = labelRules.value[index]
+                if (!rule) return
+                const validValueIds = new Set(getLabelValues(rule.tagKeyId).map(val => val.id))
+                // 切换标签键后，若当前值不属于新标签键则清空，避免脏数据
+                rule.tagValues = rule.tagValues && validValueIds.has(rule.tagValues) ? rule.tagValues : ''
             }
 
             const initData = async () => {
@@ -769,19 +770,20 @@
                 const echoedRules = tags?.length
                     ? tags.map(tag => ({
                         tagKeyId: tag.tagKeyId,
-                        tagValues: tag.tagValues.map(v => v.tagValueId)
+                        // 单值模式下只取第一个标签值回显
+                        tagValues: tag.tagValues?.[0]?.tagValueId ?? ''
                     }))
-                    : [{ tagKeyId: '', tagValues: [] }]
+                    : [{ tagKeyId: '', tagValues: '' }]
                 // 暂存一份，供切换到动态关联模式时还原（保留用户编辑内容）
                 dynamicModeLabelRules.value = echoedRules.map(rule => ({
                     tagKeyId: rule.tagKeyId,
-                    tagValues: [...rule.tagValues]
+                    tagValues: rule.tagValues
                 }))
                 // 已在动态关联模式下打开时直接回显
                 if (relatedType.value === RELATED_TYPE.TAG) {
                     labelRules.value = echoedRules.map(rule => ({
                         tagKeyId: rule.tagKeyId,
-                        tagValues: [...rule.tagValues]
+                        tagValues: rule.tagValues
                     }))
                 }
             }
@@ -818,7 +820,7 @@
                     dynamicModeLabelRules.value = []
                     currentNodeList.value = []
                     isDynamicPreviewed.value = false
-                    labelRules.value = [{ tagKeyId: '', tagValues: [] }]
+                    labelRules.value = [{ tagKeyId: '', tagValues: '' }]
                     searchKeyword.value = ''
                     pageChange(1)
                     nodeList.value = []
@@ -834,7 +836,7 @@
                     dynamicModeSelectedNodes.value = [...selectedNodesList.value]
                     dynamicModeLabelRules.value = labelRules.value.map(rule => ({
                         tagKeyId: rule.tagKeyId,
-                        tagValues: [...rule.tagValues]
+                        tagValues: rule.tagValues
                     }))
                 } else {
                     // 切换到动态模式前，保存静态模式的选择
@@ -843,9 +845,9 @@
                     labelRules.value = dynamicModeLabelRules.value.length
                         ? dynamicModeLabelRules.value.map(rule => ({
                             tagKeyId: rule.tagKeyId,
-                            tagValues: [...rule.tagValues]
+                            tagValues: rule.tagValues
                         }))
-                        : [{ tagKeyId: '', tagValues: [] }]
+                        : [{ tagKeyId: '', tagValues: '' }]
                 }
                 initData()
             })
