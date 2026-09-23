@@ -31,15 +31,14 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubTokenRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.GithubTokenCryptoHelper
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -48,11 +47,9 @@ import org.springframework.stereotype.Service
 @Service
 class CodeGithubOauth2TokenStoreService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val githubTokenDao: GithubTokenDao
+    private val githubTokenDao: GithubTokenDao,
+    private val githubTokenCryptoHelper: GithubTokenCryptoHelper
 ) : IOauth2TokenStoreService {
-
-    @Value("\${aes.github:#{null}}")
-    private val aesKey = ""
 
     // 兼容历史数据,直接用scmType的值代替scmCode
     override fun support(scmCode: String): Boolean {
@@ -71,7 +68,8 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
 
     override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
         with(oauthTokenInfo) {
-            val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
+            val encryptedAccessToken = githubTokenCryptoHelper.encryptSm4ButAes(accessToken)
+            val currentKeySha = githubTokenCryptoHelper.currentKeySha()
             val finalOperator = operator ?: throw InvalidParamException("operator is null")
             val record = githubTokenDao.getOrNull(
                 dslContext = dslContext,
@@ -86,7 +84,8 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
                     tokenType = tokenType,
                     scope = "",
                     githubTokenType = GithubTokenType.GITHUB_APP,
-                    operator = finalOperator
+                    operator = finalOperator,
+                    aesKeySha = currentKeySha
                 )
             } else {
                 githubTokenDao.update(
@@ -96,7 +95,8 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
                     tokenType = tokenType,
                     scope = "",
                     githubTokenType = GithubTokenType.GITHUB_APP,
-                    operator = finalOperator
+                    operator = finalOperator,
+                    aesKeySha = currentKeySha
                 )
             }
         }
@@ -121,7 +121,7 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
     }
 
     private fun TRepositoryGithubTokenRecord.convertOauthTokenInfo() = OauthTokenInfo(
-        accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, this.accessToken),
+        accessToken = githubTokenCryptoHelper.decryptSm4OrAes(this.accessToken),
         tokenType = this.tokenType,
         expiresIn = null,
         refreshToken = null,
