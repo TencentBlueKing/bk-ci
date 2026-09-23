@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.config.CopilotConfig
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.CodeGitCopilotOauthResponse
 import com.tencent.devops.repository.pojo.OauthInfo
@@ -18,7 +18,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URL
 import java.time.Instant
@@ -29,14 +28,11 @@ import javax.crypto.spec.SecretKeySpec
 
 @Service
 class CopilotOpenTokenService @Autowired constructor(
-    val copilotConfig: CopilotConfig,
-    val dslContext: DSLContext,
-    val repositoryScmTokenDao: RepositoryScmTokenDao
+    private val copilotConfig: CopilotConfig,
+    private val dslContext: DSLContext,
+    private val repositoryScmTokenDao: RepositoryScmTokenDao,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) {
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
-
     fun getAccessToken(userId: String, refresh: Boolean): String {
         // 获取copilot token
         val copilotToken = if (refresh) {
@@ -56,7 +52,7 @@ class CopilotOpenTokenService @Autowired constructor(
             saveCopilotToken(userId, oauthInfo)
             oauthInfo.accessToken
         } else {
-            BkCryptoUtil.decryptSm4OrAes(aesKey, copilotToken.accessToken)
+            gitTokenCryptoHelper.decryptSm4OrAes(copilotToken.accessToken)
         }
     }
 
@@ -68,10 +64,11 @@ class CopilotOpenTokenService @Autowired constructor(
             dslContext = dslContext,
             scmToken = RepositoryScmToken(
                 userId = userId,
-                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, oauthInfo.accessToken),
+                accessToken = gitTokenCryptoHelper.encryptSm4ButAes(oauthInfo.accessToken),
                 scmCode = COPILOT_OPEN_TOKEN_SCM_CODE,
                 appType = TokenAppTypeEnum.COPILOT_OPEN_TOKEN.name
-            )
+            ),
+            aesKeySha = gitTokenCryptoHelper.currentKeySha()
         )
     }
 
