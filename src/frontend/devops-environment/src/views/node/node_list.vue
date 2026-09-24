@@ -962,9 +962,8 @@
                 // 设置标志位，避免 searchValue watcher 触发额外请求
                 this.isNodeTypeChanging = true
                 
-                // 清除搜索和标签条件
+                // 清除搜索条件
                 this.searchValue = []
-                this.tagSearchValue = []
                 this.requestParams = {}
                 
                 // 重置分页到第一页
@@ -974,9 +973,22 @@
                 // 同步当前标签和节点类型
                 await this.syncCurrentTags()
                 
+                // 与侧边栏选中标签联动：将选中标签回填到标签搜索框，并同步到 URL，
+                // 避免被 queryParams.tagSearchValue 的 watcher 重置为空
+                if (this.currentTags.length) {
+                    const syncedTag = this.resolveTagNames([{
+                        id: this.currentTags[0].tagKeyId,
+                        values: this.currentTags[0].tagValues.map(id => ({ id }))
+                    }])
+                    this.tagSearchValue = syncedTag
+                    this.updateTagSearchValue(syncedTag)
+                } else {
+                    this.tagSearchValue = []
+                    this.updateTagSearchValue(null)
+                }
+                
                 // 更新 URL 参数
                 this.updateSearchValue([])
-                this.updateTagSearchValue([])
                 
                 // 重新请求数据
                 await this.requestList()

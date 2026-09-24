@@ -168,6 +168,7 @@
                                                 :key="option.id"
                                                 :id="option.id"
                                                 :name="option.name"
+                                                :disabled="isLabelKeyDisabled($index, option.id)"
                                             />
                                         </bk-select>
                                     </template>
@@ -613,6 +614,18 @@
             }
 
             const handleSave = async () => {
+                // 动态关联模式下，校验标签规则是否填写完整：每行都必须同时选择标签键和标签值
+                if (relatedType.value === RELATED_TYPE.TAG) {
+                    const isIncomplete = labelRules.value.some(rule => !rule.tagKeyId || !rule.tagValues)
+                    console.log(isIncomplete, 'isIncomplete')
+                    if (isIncomplete) {
+                        proxy.$bkMessage({
+                            theme: 'warning',
+                            message: proxy.$t('environment.tagIncomplete')
+                        })
+                        return
+                    }
+                }
                 try {
                     isSaveLoading.value = true
                     const params = {
@@ -667,15 +680,6 @@
             const isPreviewLoading = ref(false)
             // 预览动态关联结果
             const handlePreviewResult = async () => {
-                // 校验标签规则是否填写完整：每行都必须同时选择标签键和标签值
-                const isIncomplete = labelRules.value.some(rule => !rule.tagKeyId || !rule.tagValues)
-                if (isIncomplete) {
-                    proxy.$bkMessage({
-                        theme: 'error',
-                        message: $t('environment.tagIncomplete')
-                    })
-                    return
-                }
                 try {
                     isPreviewLoading.value = true
                     // 将标签规则摊平成 [{ tagKeyId, tagValueId }] 作为请求体
@@ -747,13 +751,14 @@
                 rule.tagValues = rule.tagValues && validValueIds.has(rule.tagValues) ? rule.tagValues : ''
             }
 
-            // 当前行可选的标签键（排除其它行已选中的键，保留本行已选的键）
+            // 当前行可选的标签键（保留所有键，其它行已选中的键在选项中置为禁用）
             const getAvailableLabelKeys = (currentIndex) => {
-                const selectedIds = labelRules.value
-                    .filter((_, i) => i !== currentIndex)
-                    .map(rule => rule.tagKeyId)
-                    .filter(Boolean)
-                return availableLabelKeys.value.filter(option => !selectedIds.includes(option.id))
+                return availableLabelKeys.value
+            }
+
+            // 判断某标签键是否已被其它行选中（用于禁用，避免重复选择）
+            const isLabelKeyDisabled = (currentIndex, keyId) => {
+                return labelRules.value.some((rule, i) => i !== currentIndex && rule.tagKeyId === keyId)
             }
 
             const initData = async () => {
@@ -913,7 +918,8 @@
                 handleDeleteRule,
                 handleLabelKeyChange,
                 handlePreviewResult,
-                getAvailableLabelKeys
+                getAvailableLabelKeys,
+                isLabelKeyDisabled
             }
         }
     }
