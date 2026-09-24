@@ -96,10 +96,12 @@ class TGitMrActionGit(
                 event.object_attributes.source_branch
             },
             commit = EventCommonDataCommit(
-                commitId = event.object_attributes.last_commit.id,
-                commitMsg = event.object_attributes.last_commit.message,
-                commitAuthorName = event.object_attributes.last_commit.author.name,
-                commitTimeStamp = GitActionCommon.getCommitTimeStamp(event.object_attributes.last_commit.timestamp)
+                commitId = event.object_attributes.last_commit?.id ?: "",
+                commitMsg = event.object_attributes.last_commit?.message,
+                commitAuthorName = event.object_attributes.last_commit?.author?.name,
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(
+                    event.object_attributes.last_commit?.timestamp
+                )
             ),
             userId = event.user.username,
             projectName = GitUtils.getProjectName(event.object_attributes.target.http_url)
@@ -186,7 +188,7 @@ class TGitMrActionGit(
         val sourceBranchYamlPathList = GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = event.object_attributes.source_project_id.toString(),
-            ref = event.object_attributes.last_commit.id,
+            ref = event.object_attributes.last_commit?.id,
             cred = if (event.isMrForkEvent()) {
                 getForkGitCred()
             } else {
@@ -273,14 +275,14 @@ class TGitMrActionGit(
             },
             gitProjectId = event.object_attributes.source_project_id.toString(),
             fileName = fileName,
-            ref = event.object_attributes.last_commit.id,
+            ref = event.object_attributes.last_commit?.id,
             retry = ApiRequestRetryInfo(true)
         )
         val sourceContent = if (sourceFile?.content.isNullOrBlank()) {
             logger.warn(
                 "TGitMrActionGit|getYamlContent|no file|projectId|${data.setting.projectId}" +
                     "|file|$fileName|source_project_id|${event.object_attributes.source_project_id} " +
-                    "|commit ${event.object_attributes.last_commit.id}"
+                    "|commit ${event.object_attributes.last_commit?.id}"
             )
             // 返回回去的ref目前只用于触发器缓存的逻辑，所以是返回具体分支而不是commit
             MrYamlInfo(
@@ -295,7 +297,7 @@ class TGitMrActionGit(
                     "TGitMrActionGit|getYamlContent|git content blank" +
                         "|projectId|${data.setting.projectId}}|" +
                         "|file|$fileName|source_project_id|${event.object_attributes.source_project_id} " +
-                        "|commit ${event.object_attributes.last_commit.id}"
+                        "|commit ${event.object_attributes.last_commit?.id}"
                 )
             }
             MrYamlInfo(
