@@ -1,5 +1,8 @@
 <template>
-    <div class="list-table-container">
+    <div
+        ref="tableContainer"
+        class="list-table-container"
+    >
         <div
             v-if="isFlod"
             class="expand-btn"
@@ -19,7 +22,7 @@
             :data="nodeList"
             :pagination="pagination"
             :default-sort="defaultSort"
-            height="100%"
+            :max-height="tableMaxHeight"
             :key="`${isFlod}-${queryNodeHashId}-${isCreateResType}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
@@ -585,6 +588,7 @@
             return {
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
+                tableMaxHeight: 'auto',
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
@@ -742,13 +746,26 @@
             nodeList: function (val) {
                 if (val) {
                     setTimeout(this.calcOverPosTable, 100)
+                    this.$nextTick(this.updateTableHeight)
                 }
             }
+        },
+        mounted () {
+            this.updateTableHeight()
+            window.addEventListener('resize', this.updateTableHeight)
+        },
+        beforeDestroy () {
+            window.removeEventListener('resize', this.updateTableHeight)
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
             handleExpandList () {
                 this.$emit('toggle-fold')
+            },
+            updateTableHeight () {
+                // 用容器可用高度作为表格最大高度：行数少时表格收缩到内容高度（分页紧贴表格），
+                // 行数多时表格在可用区域内滚动，避免出现行与分页之间的大段空白
+                this.tableMaxHeight = this.$refs.tableContainer?.offsetHeight || 'auto'
             },
             calcOverPosTable () {
                 const tagMargin = 6

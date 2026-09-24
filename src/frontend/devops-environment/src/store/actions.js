@@ -131,6 +131,15 @@ const actions = {
         })
     },
     /**
+     * 预览动态环境按标签匹配到的节点列表
+     */
+    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags }) {
+        const query = new URLSearchParams({ projectId, page, pageSize }).toString()
+        return request.post(`${prefix}/user/environment/previewTagEnvNodes?${query}`, tags).then(response => {
+            return response
+        })
+    },
+    /**
      * 节点标签列表
      */
     async requestNodeTagList ({ commit }, { projectId, createMode }) {
@@ -529,6 +538,89 @@ const actions = {
      */
     requestProjectMembers (_, { projectId, page, pageSize }) {
         return request.get(`${authPrefix}/user/auth/resource/member/${projectId}/listProjectMembers?memberType=user&page=${page}&pageSize=${pageSize}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 创建或复用构建机安装会话（后端 PR #13584）
+     * 同一份配置（configFingerprint）+ 同一创建人在有效期内重复创建返回同一条命令（reused: true）
+     * @param {string} projectId - 项目ID
+     * @param {Object} params - AgentInstallSessionRequest
+     * @param {string} params.mode - 安装模式 FIRST_IMPORT / REINSTALL
+     * @param {string} params.os - 操作系统 LINUX / MACOS / WINDOWS
+     * @param {string} [params.zone] - 接入点（地区）
+     * @param {string} [params.installType] - Windows 安装模式 SERVICE / TASK
+     * @param {number} params.parallelTaskCount - 最大构建并发数（0 表示无限制）
+     * @param {number} [params.dockerParallelTaskCount] - Docker 最大构建并发数（0 表示无限制，仅支持 Docker 的操作系统生效）
+     * @param {Array<{tagKeyId: string, tagValueId: string}>} [params.tags] - 初始标签
+     * @param {string} [params.targetAgentId] - 重装目标 Agent Hash ID（REINSTALL 必填）
+     * @returns {Promise<{sessionId: string, command: string, expiredAt: string, reused: boolean, preview: Object, summary: Object}>}
+     */
+    requestCreateInstallSession ({ commit }, { projectId, params }) {
+        return request.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions`, params).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 预览构建机安装会话配置（环境匹配预览等，请求体同创建会话）
+     * 导入态返回 matchedEnvironments / pendingEnvironments；
+     * 重装态返回 associated / willJoin / willLeave / pending（diff 由后端计算）
+     * @param {string} projectId - 项目ID
+     * @param {Object} params - AgentInstallSessionRequest（同 requestCreateInstallSession，含 dockerParallelTaskCount）
+     * @returns {Promise<AgentInstallSessionPreview>}
+     */
+    requestInstallSessionPreview ({ commit }, { projectId, params }) {
+        return request.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions/preview`, params).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取安装会话详情（含 status / command / expiredAt / summary）
+     * @param {string} projectId - 项目ID
+     * @param {string} sessionId - 会话ID，由 requestCreateInstallSession 返回
+     * @returns {Promise<{sessionId: string, status: string, command: string, expiredAt: string, summary: Object}>}
+     */
+    requestInstallSessionDetail ({ commit }, { projectId, sessionId }) {
+        return request.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions/${sessionId}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取安装会话下节点结果（状态机：PENDING / INSTALLING / IMPORTING / SUCCEEDED / FAILED）
+     * @param {string} projectId - 项目ID
+     * @param {string} sessionId - 会话ID
+     * @returns {Promise<Array<{agentId: string, nodeId: string, status: string, displayName: string, hostname: string, ip: string, errorMessage: string, startedAt: string, finishedAt: string, agentVersion: string}>>}
+     */
+    requestInstallSessionNodes ({ commit }, { projectId, sessionId }) {
+        return request.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions/${sessionId}/nodes`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 重新生成已过期的安装会话（返回新 sessionId，previousSessionId 串联历史）
+     * @param {string} projectId - 项目ID
+     * @param {string} sessionId - 已过期的会话ID
+     * @returns {Promise<{sessionId: string, command: string, expiredAt: string, reused: boolean}>}
+     */
+    requestRegenerateInstallSession ({ commit }, { projectId, sessionId }) {
+        return request.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/installSessions/${sessionId}/regenerate`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取构建机重装上下文（回填当前并发数、标签快照与环境预览）
+     * @param {string} projectId - 项目ID
+     * @param {string} agentId - Agent Hash ID
+     * @returns {Promise<{agentId: string, displayName: string, os: string, zone: string, installType: string, parallelTaskCount: number, tags: Array, preview: Object, canReinstall: boolean, denyReason: string}>}
+     */
+    requestReinstallContext ({ commit }, { projectId, agentId }) {
+        return request.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/agents/${agentId}/reinstallContext`).then(response => {
             return response
         })
     }
