@@ -164,7 +164,7 @@
                                             @change="handleLabelKeyChange($index)"
                                         >
                                             <bk-option
-                                                v-for="option in availableLabelKeys"
+                                                v-for="option in getAvailableLabelKeys($index)"
                                                 :key="option.id"
                                                 :id="option.id"
                                                 :name="option.name"
@@ -738,6 +738,15 @@
                 rule.tagValues = rule.tagValues && validValueIds.has(rule.tagValues) ? rule.tagValues : ''
             }
 
+            // 当前行可选的标签键（排除其它行已选中的键，保留本行已选的键）
+            const getAvailableLabelKeys = (currentIndex) => {
+                const selectedIds = labelRules.value
+                    .filter((_, i) => i !== currentIndex)
+                    .map(rule => rule.tagKeyId)
+                    .filter(Boolean)
+                return availableLabelKeys.value.filter(option => !selectedIds.includes(option.id))
+            }
+
             const initData = async () => {
                 if (relatedType.value === RELATED_TYPE.NODE) {
                     // 静态模式：加载节点列表
@@ -894,7 +903,8 @@
                 handleAddRule,
                 handleDeleteRule,
                 handleLabelKeyChange,
-                handlePreviewResult
+                handlePreviewResult,
+                getAvailableLabelKeys
             }
         }
     }
