@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode
 class EmptyGitCommitAsNullDeserializer : JsonDeserializer<GitCommit?>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): GitCommit? {
         val node = p.codec.readTree<JsonNode>(p)
-        if (node == null || node.isNull || (node.isObject && node.size() == 0)) {
+        val isEmptyObject = node == null || node.isNull || (node.isObject && node.size() == 0)
+        if (isEmptyObject) {
             return null
         }
         return p.codec.treeToValue(node, GitCommit::class.java)
