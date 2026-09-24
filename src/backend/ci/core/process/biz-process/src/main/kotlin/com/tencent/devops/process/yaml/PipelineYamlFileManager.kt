@@ -352,7 +352,9 @@ class PipelineYamlFileManager @Autowired constructor(
             logger.info(
                 "[PAC_PIPELINE]|trigger pipeline yaml|$eventId|$projectId|$repoHashId|$filePath"
             )
-            if (pullRequestId == null || pullRequestUrl == null || pullRequestNumber == null || !merged) {
+            val notMergedPullRequest = pullRequestId == null || pullRequestUrl == null ||
+                pullRequestNumber == null || !merged
+            if (notMergedPullRequest) {
                 return
             }
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
