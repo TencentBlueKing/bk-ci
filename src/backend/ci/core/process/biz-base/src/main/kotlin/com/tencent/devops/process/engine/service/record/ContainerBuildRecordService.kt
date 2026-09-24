@@ -170,7 +170,6 @@ class ContainerBuildRecordService(
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
         skipTaskIds: Set<String>,
-        keepSkipRuntime: Boolean = false,
         containerStatus: BuildStatus? = null
     ) {
         val ctx = transactionContext ?: dslContext
@@ -178,6 +177,8 @@ class ContainerBuildRecordService(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
+        // #13577 单步骤失败跳过时子 Job 已是结束态，保留原有起止时间和耗时。
+        // 普通重试 containerStatus 为空，继续清空，避免详情在真正调度前就转圈。
         val finished = containerStatus?.isFinish() == true
         val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
             if (!finished) {
@@ -198,20 +199,16 @@ class ContainerBuildRecordService(
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
         )
-        val newTasks = oldTasks.map { task ->
-            val skip = skipTaskIds.contains(task.taskId)
-            val clearRuntime = when {
-                keepSkipRuntime && skip -> false
-                skip || resetTaskIds.contains(task.taskId) -> true
-                else -> false
+        val newTasks = oldTasks.mapNotNull { task ->
+            // #13577 失败跳过的步骤不克隆到本次执行次数。详情按 executeCount 取最新记录，
+            // 缺了这一行就会回落到上一次的失败结果，能看出它执行过并失败了，同时不参与本次执行。
+            if (skipTaskIds.contains(task.taskId)) {
+                return@mapNotNull null
             }
+            val clearRuntime = resetTaskIds.contains(task.taskId)
             task.copy(
                 executeCount = newExecuteCount,
-                status = when {
-                    skip -> BuildStatus.SKIP.name
-                    resetTaskIds.contains(task.taskId) -> null
-                    else -> task.status
-                },
+                status = if (clearRuntime) null else task.status,
                 startTime = if (clearRuntime) null else task.startTime,
                 endTime = if (clearRuntime) null else task.endTime,
                 timestamps = if (clearRuntime) mapOf() else task.timestamps,

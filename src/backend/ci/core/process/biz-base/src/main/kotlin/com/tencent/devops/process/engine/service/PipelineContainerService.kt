@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -50,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -81,7 +79,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -333,7 +330,8 @@ class PipelineContainerService @Autowired constructor(
                     skipFailedTask = context.skipFailedTask,
                     wholeJob = batchRetry
                 )
-                // #13577 子 Job 只有一个用户步骤且正在失败跳过：不再重置开关机任务，子 Job 直接结束
+                // #13577 子 Job 只有一个用户步骤且正在失败跳过：不再重置开关机任务，子 Job 直接结束。
+                // 开关机和收尾步骤不算用户步骤，否则会把“只有一个业务插件”误判成多步骤而重新拉起构建机。
                 val userTasks = childTasks.filter { task ->
                     !VMUtils.isVMTask(task.taskId) && task.additionalOptions?.elementPostInfo == null
                 }
@@ -364,6 +362,7 @@ class PipelineContainerService @Autowired constructor(
                     pipelineTaskService.batchUpdate(transactionContext, updateTasks)
                 }
                 if (closeChild) {
+                    // 子 Job 记为成功后，矩阵调度不会再把它放进待运行列表。开始时间保留，避免耗时被清空。
                     child.status = BuildStatus.SUCCEED
                     if (child.endTime == null) {
                         child.endTime = LocalDateTime.now()
@@ -387,7 +386,6 @@ class PipelineContainerService @Autowired constructor(
                     newExecuteCount = context.executeCount,
                     resetTaskIds = tasksToReset,
                     skipTaskIds = tasksToSkip,
-                    keepSkipRuntime = closeChild,
                     containerStatus = if (closeChild) BuildStatus.SUCCEED else null
                 )
             }
@@ -589,7 +587,8 @@ class PipelineContainerService @Autowired constructor(
         }
         if (!containerEnable) container.setContainerEnable(false)
 
-        // #13577 只有一个用户步骤且该步骤正在失败跳过时，直接收口，不再为了标记跳过而启动构建机
+        // #13577 只有一个启用的用户步骤，且该步骤正在失败跳过时，直接收口，不再为了标记跳过而启动构建机。
+        // 收尾步骤（elementPostInfo）不算用户步骤。矩阵父容器走 prepareMatrixGroupRetry，这里排除。
         val userSteps = containerElements.filter { element ->
             element.elementEnabled() && element.additionalOptions?.elementPostInfo == null
         }
@@ -707,38 +706,32 @@ class PipelineContainerService @Autowired constructor(
                                 target = pair.first,
                                 executeCount = context.executeCount,
                                 atomElement = pair.second,
+                                // 单步骤不再启动 Job，收尾步骤不能留在排队，否则引擎仍会去拉起容器
                                 initialStatus = if (closeWithoutStart) BuildStatus.SKIP else null
                             )
                             updateExistsTask.add(pair.first)
                         }
                     }
                     // #8955 针对被跳过或重试插件单独保留原状态
-                    // #13577 失败跳过保留起止时间、耗时和原始错误，详情页才能看出这一步执行过并失败了
-                    val taskVar = atomElement.initTaskVar()
-                    if (skipWhenFailed) {
-                        atomElement.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
-                        atomElement.errorType?.let { taskVar[Element::errorType.name] = it }
-                        atomElement.errorCode?.let { taskVar[Element::errorCode.name] = it }
-                        atomElement.timeCost?.let { taskVar[Element::timeCost.name] = it }
-                        atomElement.startEpoch?.let { taskVar[Element::startEpoch.name] = it }
-                        atomElement.elapsed?.let { taskVar[Element::elapsed.name] = it }
-                    }
-                    taskBuildRecords.add(
-                        BuildRecordTask(
-                            projectId = context.projectId, pipelineId = context.pipelineId,
-                            buildId = context.buildId, stageId = taskRecord.stageId,
-                            containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
-                            taskId = taskRecord.taskId, classType = taskRecord.taskType,
-                            atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
-                            executeCount = taskRecord.executeCount ?: 1, taskVar = taskVar,
-                            status = recordStatus, resourceVersion = context.resourceVersion,
-                            startTime = if (skipWhenFailed) taskRecord.startTime else null,
-                            endTime = if (skipWhenFailed) taskRecord.endTime else null,
-                            elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
-                                info.parentElementId != taskRecord.taskId
-                            }
+                    // #13577 手动失败跳过不写本次执行记录。详情按 executeCount 取最新记录，
+                    // 缺这一行就回落到上一次的失败结果。运行态已是 SKIP 且有结束时间，后面的插件继续执行。
+                    if (!skipWhenFailed) {
+                        taskBuildRecords.add(
+                            BuildRecordTask(
+                                projectId = context.projectId, pipelineId = context.pipelineId,
+                                buildId = context.buildId, stageId = taskRecord.stageId,
+                                containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
+                                taskId = taskRecord.taskId, classType = taskRecord.taskType,
+                                atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
+                                executeCount = taskRecord.executeCount ?: 1,
+                                taskVar = atomElement.initTaskVar(),
+                                status = recordStatus, resourceVersion = context.resourceVersion,
+                                elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
+                                    info.parentElementId != taskRecord.taskId
+                                }
+                            )
                         )
-                    )
+                    }
                     needUpdateContainer = true
                 }
             }
@@ -830,6 +823,7 @@ class PipelineContainerService @Autowired constructor(
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
             if (closeWithoutStart) {
+                // resetBuildOption 会把状态清成空。这里改回成功：Stage 只调度未结束的 Job，成功态不会再启动。
                 container.status = BuildStatus.SUCCEED.name
             }
             if (lastTimeBuildContainers.isNotEmpty()) {
@@ -838,6 +832,7 @@ class PipelineContainerService @Autowired constructor(
                         if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                             dbRecord.run {
                                 if (closeWithoutStart) {
+                                    // 保留开始时间，只补结束时间。Job 耗时停在失败那一次，不会再叠一段开机时间。
                                     status = BuildStatus.SUCCEED
                                     if (endTime == null) {
                                         endTime = LocalDateTime.now()
@@ -899,6 +894,7 @@ class PipelineContainerService @Autowired constructor(
                             jobId = container.jobId,
                             containerType = container.getClassType(),
                             seq = context.containerSeq,
+                            // 重试几乎都会命中上面的历史容器。这里是新建容器的兜底，口径与上面一致。
                             status = if (closeWithoutStart) BuildStatus.SUCCEED else BuildStatus.QUEUE,
                             startTime = if (closeWithoutStart) LocalDateTime.now() else null,
                             endTime = if (closeWithoutStart) LocalDateTime.now() else null,
@@ -1081,6 +1077,8 @@ class PipelineContainerService @Autowired constructor(
             target.errorCode = null
             target.errorType = null
         } else if (target.endTime == null) {
+            // StartActionTaskContainerCmd 只处理 endTime 为空的 SKIP。补上结束时间后，引擎直接走过这一步，
+            // 后面的插件继续执行。原始错误和开始时间保留在运行态上，不改成“未执行”。
             target.endTime = LocalDateTime.now()
         }
         if (atomElement != null) { // 将原子状态重置
@@ -1092,20 +1090,10 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.errorCode = null
                 atomElement.errorType = null
                 atomElement.timeCost = null
-            } else { // 失败跳过：保留本次已执行的时间和原始错误，状态记为跳过
-                atomElement.status = BuildStatus.SKIP.name
+            } else {
+                // 失败跳过只关掉重试/跳过按钮。步骤展示仍用上一次失败记录，不改成“未执行的跳过”
                 atomElement.additionalOptions =
                     atomElement.additionalOptions?.copy(manualSkip = false, manualRetry = false)
-                atomElement.errorMsg = target.errorMsg
-                atomElement.errorCode = target.errorCode
-                atomElement.errorType = target.errorType?.name
-                if (atomElement.startEpoch == null) {
-                    atomElement.startEpoch = target.startTime?.timestampmilli()
-                }
-                if (atomElement.timeCost == null && target.startTime != null && target.endTime != null) {
-                    val total = Duration.between(target.startTime, target.endTime).toMillis().coerceAtLeast(0)
-                    atomElement.timeCost = BuildRecordTimeCost(executeCost = total, totalCost = total)
-                }
             }
             atomElement.executeCount = executeCount
             atomElement.canRetry = false

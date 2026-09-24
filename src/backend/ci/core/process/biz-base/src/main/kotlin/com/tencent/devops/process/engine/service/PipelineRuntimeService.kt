@@ -1469,6 +1469,8 @@ class PipelineRuntimeService @Autowired constructor(
                     containerType = build.containerType, executeCount = build.executeCount,
                     containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
                     matrixGroupId = build.matrixGroupId,
+                    // #13577 未结束的重试保持 status 为空，详情不会提前转圈。
+                    // 单步骤失败跳过的 Job 已是成功态，结束状态要写进本次记录。
                     status = build.status.takeIf { it.isFinish() }?.name,
                     startTime = build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
