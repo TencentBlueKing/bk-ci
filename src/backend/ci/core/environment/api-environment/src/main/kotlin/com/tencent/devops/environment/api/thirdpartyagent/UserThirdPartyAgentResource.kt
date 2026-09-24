@@ -37,6 +37,12 @@ import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionCreateResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionNodeInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionPreview
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionRequest
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentReinstallContext
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
@@ -132,6 +138,110 @@ interface UserThirdPartyAgentResource {
         @QueryParam("agentType")
         agentType: AgentType?
     ): Result<String>
+
+    @Operation(summary = "预览构建机安装会话配置")
+    @POST
+    @Path("/projects/{projectId}/installSessions/preview")
+    fun previewInstallSession(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        request: AgentInstallSessionRequest
+    ): Result<AgentInstallSessionPreview>
+
+    @Operation(summary = "创建或复用构建机安装会话")
+    @POST
+    @Path("/projects/{projectId}/installSessions")
+    fun createInstallSession(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        request: AgentInstallSessionRequest
+    ): Result<AgentInstallSessionCreateResponse>
+
+    @Operation(summary = "获取构建机安装会话列表")
+    @GET
+    @Path("/projects/{projectId}/installSessions")
+    fun listInstallSessions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "页码")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页数量")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentInstallSessionDetail>>
+
+    @Operation(summary = "获取构建机安装会话详情")
+    @GET
+    @Path("/projects/{projectId}/installSessions/{sessionId}")
+    fun getInstallSession(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "安装会话ID", required = true)
+        @PathParam("sessionId")
+        sessionId: String
+    ): Result<AgentInstallSessionDetail>
+
+    @Operation(summary = "获取构建机安装会话节点结果")
+    @GET
+    @Path("/projects/{projectId}/installSessions/{sessionId}/nodes")
+    fun listInstallSessionNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "安装会话ID", required = true)
+        @PathParam("sessionId")
+        sessionId: String
+    ): Result<List<AgentInstallSessionNodeInfo>>
+
+    @Operation(summary = "重新生成已过期构建机安装会话")
+    @POST
+    @Path("/projects/{projectId}/installSessions/{sessionId}/regenerate")
+    fun regenerateInstallSession(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "安装会话ID", required = true)
+        @PathParam("sessionId")
+        sessionId: String
+    ): Result<AgentInstallSessionCreateResponse>
+
+    @Operation(summary = "获取构建机重装上下文")
+    @GET
+    @Path("/projects/{projectId}/agents/{agentId}/reinstallContext")
+    fun getAgentReinstallContext(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): Result<AgentReinstallContext>
 
     @Operation(summary = "生成重新安装链接")
     @GET

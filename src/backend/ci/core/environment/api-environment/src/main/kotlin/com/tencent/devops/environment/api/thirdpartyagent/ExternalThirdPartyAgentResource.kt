@@ -141,6 +141,19 @@ interface ExternalThirdPartyAgentResource {
         agentType: AgentType?
     ): Response
 
+    @Operation(summary = "根据安装会话下载Agent安装脚本")
+    @GET
+    @Path("/{os}/sessionInstall")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun downloadInstallSessionScript(
+        @Parameter(description = "安装会话TOKEN", required = true)
+        @HeaderParam(BATCH_TOKEN_HEADER)
+        token: String,
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS
+    ): Response
+
     @Operation(summary = "根据设备获取创作流节点安装脚本，给虾插件用的")
     @POST
     @Path("/genCreateNodeInstallScript")
