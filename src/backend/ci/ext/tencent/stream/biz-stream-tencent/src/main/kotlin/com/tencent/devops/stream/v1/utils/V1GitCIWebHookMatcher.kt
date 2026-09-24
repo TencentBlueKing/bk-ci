@@ -329,7 +329,7 @@ class V1GitCIWebHookMatcher(private val event: GitEvent) {
         return when (event) {
             is GitPushEvent -> event.checkout_sha ?: ""
             is GitTagPushEvent -> event.checkout_sha ?: ""
-            is GitMergeRequestEvent -> event.object_attributes.last_commit.id
+            is GitMergeRequestEvent -> event.object_attributes.last_commit?.id ?: ""
             else -> ""
         }
     }
