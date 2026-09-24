@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import io.swagger.v3.oas.annotations.Parameter
 
@@ -90,6 +91,7 @@ data class GitMRAttributes(
     val description: String?,
     val source: GitProject,
     val target: GitProject,
+    @param:JsonDeserialize(using = EmptyGitCommitAsNullDeserializer::class)
     val last_commit: GitCommit? = null,
     val url: String?,
     val action: String?,
