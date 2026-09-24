@@ -283,7 +283,7 @@
                                 </div>
                             </div>
                             <i
-                                v-if="!node.isDelete"
+                                v-if="!node.isDelete && relatedType !== RELATED_TYPE.TAG"
                                 class="bk-icon icon-delete delete-icon"
                                 @click="handleRemoveSelectedNode(node)"
                             />
@@ -667,6 +667,15 @@
             const isPreviewLoading = ref(false)
             // 预览动态关联结果
             const handlePreviewResult = async () => {
+                // 校验标签规则是否填写完整：每行都必须同时选择标签键和标签值
+                const isIncomplete = labelRules.value.some(rule => !rule.tagKeyId || !rule.tagValues)
+                if (isIncomplete) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: $t('environment.tagIncomplete')
+                    })
+                    return
+                }
                 try {
                     isPreviewLoading.value = true
                     // 将标签规则摊平成 [{ tagKeyId, tagValueId }] 作为请求体

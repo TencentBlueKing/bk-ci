@@ -658,6 +658,13 @@
                     this.syncCurrentTags()
                 }
             },
+            // 将 URL 解析得到的标签 ID 还原为可读名称
+            'queryParams.tagSearchValue': {
+                immediate: true,
+                handler (val) {
+                    this.tagSearchValue = this.resolveTagNames(val || [])
+                }
+            },
             '$route.params.nodeType' (newVal, oldVal) {
                 // 只有当 nodeType 真正发生变化时才处理
                 if (newVal !== oldVal) {
@@ -912,6 +919,27 @@
                     this.currentTags = this.findTagByValueId(nodeType)
                     this.currentNodeType = ''
                 }
+            },
+            // 将标签搜索中以 ID 表示的名称还原为 nodeTagList 中的可读名称
+            resolveTagNames (tagArr) {
+                if (!tagArr?.length) return tagArr
+                if (!this.nodeTagList?.length) return tagArr
+
+                return tagArr.map(item => {
+                    const group = this.nodeTagList.find(g => String(g.tagKeyId) === String(item.id))
+                    if (!group) return item
+
+                    const values = (item.values || []).map(v => {
+                        const found = group.tagValues?.find(t => String(t.tagValueId) === String(v.id))
+                        return found ? { id: v.id, name: found.tagValueName } : v
+                    })
+
+                    return {
+                        id: item.id,
+                        name: group.tagKeyName,
+                        values
+                    }
+                })
             },
             handleTagChange (val) {
                 if (val.length) {
