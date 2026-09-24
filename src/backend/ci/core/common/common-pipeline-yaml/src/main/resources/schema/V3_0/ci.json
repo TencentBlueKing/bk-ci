@@ -261,6 +261,9 @@
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
+                  "report-quality-results" : {
+                    "type" : "boolean"
+                  },
                   "block-mr" : {
                     "type" : "boolean"
                   },
@@ -371,6 +374,9 @@
                     }
                   },
                   "report-commit-check" : {
+                    "type" : "boolean"
+                  },
+                  "report-quality-results" : {
                     "type" : "boolean"
                   },
                   "webhook-queue" : {
@@ -1307,6 +1313,9 @@
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
+                "report-quality-results" : {
+                  "type" : "boolean"
+                },
                 "block-mr" : {
                   "type" : "boolean"
                 },
@@ -1417,6 +1426,9 @@
                   }
                 },
                 "report-commit-check" : {
+                  "type" : "boolean"
+                },
+                "report-quality-results" : {
                   "type" : "boolean"
                 },
                 "webhook-queue" : {
