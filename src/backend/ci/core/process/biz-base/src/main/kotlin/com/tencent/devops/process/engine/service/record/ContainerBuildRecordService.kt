@@ -169,39 +169,50 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        containerStatus: BuildStatus? = null
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
+        // #13577 单步骤失败跳过时子 Job 已是结束态，保留原有起止时间和耗时。
+        // 普通重试 containerStatus 为空，继续清空，避免详情在真正调度前就转圈。
+        val finished = containerStatus?.isFinish() == true
         val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
-            remove(Container::timeCost.name)
-            remove(Container::startEpoch.name)
-            remove(Container::startVMStatus.name)
+            if (!finished) {
+                remove(Container::timeCost.name)
+                remove(Container::startEpoch.name)
+                remove(Container::startVMStatus.name)
+            }
         }
+        val now = LocalDateTime.now()
         val newContainer = oldContainer.copy(
-            executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            executeCount = newExecuteCount,
+            status = containerStatus?.name,
+            startTime = if (finished) oldContainer.startTime ?: now else null,
+            endTime = if (finished) oldContainer.endTime ?: now else null,
+            timestamps = mapOf(),
+            containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
         )
-        val newTasks = oldTasks.map { task ->
-            val skip = skipTaskIds.contains(task.taskId)
-            val reset = skip || resetTaskIds.contains(task.taskId)
+        val newTasks = oldTasks.mapNotNull { task ->
+            // #13577 失败跳过的步骤不克隆到本次执行次数。详情按 executeCount 取最新记录，
+            // 缺了这一行就会回落到上一次的失败结果，能看出它执行过并失败了，同时不参与本次执行。
+            if (skipTaskIds.contains(task.taskId)) {
+                return@mapNotNull null
+            }
+            val clearRuntime = resetTaskIds.contains(task.taskId)
             task.copy(
                 executeCount = newExecuteCount,
-                status = when {
-                    skip -> BuildStatus.SKIP.name
-                    reset -> null
-                    else -> task.status
-                },
-                startTime = if (reset) null else task.startTime,
-                endTime = if (reset) null else task.endTime,
-                timestamps = if (reset) mapOf() else task.timestamps,
-                asyncStatus = if (reset) null else task.asyncStatus
+                status = if (clearRuntime) null else task.status,
+                startTime = if (clearRuntime) null else task.startTime,
+                endTime = if (clearRuntime) null else task.endTime,
+                timestamps = if (clearRuntime) mapOf() else task.timestamps,
+                asyncStatus = if (clearRuntime) null else task.asyncStatus
             )
         }
         batchSave(ctx, listOf(newContainer), newTasks)
