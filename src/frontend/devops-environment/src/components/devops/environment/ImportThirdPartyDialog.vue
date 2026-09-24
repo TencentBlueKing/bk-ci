@@ -80,8 +80,8 @@
 </template>
 
 <script>
-    import Vue from 'vue'
     import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref, watch } from 'vue'
+    import createDocs from '../../../../../common-lib/docs'
     import {
         DEFAULT_PARALLEL_TASK_COUNT,
         DEFAULT_DOCKER_PARALLEL_TASK_COUNT,
@@ -642,9 +642,9 @@
                 }
             }
             const openDoc = () => {
-                // BKCI_DOCS 挂在 Vue.prototype 上（非 $ 前缀全局属性），
-                // composition 的 instance.proxy 不会转发，需直接读 Vue.prototype
-                const url = Vue.prototype.BKCI_DOCS?.ENV_FAQ_DOC
+                // 不依赖 devops-nav 注入的全局 Vue.prototype.BKCI_DOCS（test 环境未注册会读不到），
+                // 改为直接复用 common-lib 的 createDocs 本地构造，dev/test 均可用
+                const url = createDocs(proxy.$i18n?.locale, window.BK_CI_VERSION).BkciDocs?.ENV_FAQ_DOC
                 window.open(url, '_blank')
             }
 
