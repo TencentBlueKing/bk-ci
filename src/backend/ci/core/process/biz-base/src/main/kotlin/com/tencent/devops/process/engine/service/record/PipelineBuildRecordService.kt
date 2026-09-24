@@ -448,8 +448,9 @@ class PipelineBuildRecordService @Autowired constructor(
         val modelCancelPositions = BuildEndPositionCollector.collectCancelPositions(model)
         // Job 超时、心跳会在运行中先把成因写入 modelVar，但那只结束当前 Job / 构建机，
         // 构建本身还在跑。运行中把这份取消卡片返回去，页面就会「状态：运行中 / 卡片：已取消」。
-        // 构建真正结束后再按最终状态对齐；运行中仅阶段准入审核由 synthesizeEndInfo 合成。
-        val storedEndInfo = if (recordStatus.isFinish()) {
+        // STAGE_SUCCESS 不在 isFinish() 里，但是阶段准入挂起/驳回的终态，已落库的卡片必须保留。
+        // 其余运行中状态不读这份提前落库的详情；阶段准入审核仍由 synthesizeEndInfo 合成。
+        val storedEndInfo = if (recordStatus.isFinish() || recordStatus == BuildStatus.STAGE_SUCCESS) {
             parseBuildEndInfo(buildRecordModel?.modelVar)
                 ?.alignedTo(
                     status = recordStatus,
@@ -589,9 +590,13 @@ class PipelineBuildRecordService @Autowired constructor(
         buildEndTime: Long?,
         cancelUser: String?
     ): BuildEndInfo? {
-        // 阶段准入等待审核时构建并未结束，只是挂起为阶段成功，需与真正的阶段成功区分开。
+        // 阶段准入挂起后记录状态是 STAGE_SUCCESS，它不在 isFinish() 里。
+        // 还在审核就合成审核中卡片；审核已结束且没有落库详情时，按阶段成功。
+        if (status == BuildStatus.STAGE_SUCCESS) {
+            return synthesizeStageReviewingEndInfo(model) ?: successEndInfo(buildEndTime)
+        }
         // 挂起是先写审核记录、后改构建状态（见 PipelineStageService.pauseStage），推送恰好赶在
-        // 状态改写前时状态还是运行中，因此只要构建未结束就以模型里的阶段审核态为准，不依赖状态判定
+        // 状态改写前时状态还是运行中，因此运行中也按模型里的阶段审核态合成，不依赖状态判定
         if (!status.isFinish()) {
             synthesizeStageReviewingEndInfo(model)?.let { return it }
         }
