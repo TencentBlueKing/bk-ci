@@ -446,14 +446,21 @@ class PipelineBuildRecordService @Autowired constructor(
         val recordStatus = buildRecordModel?.status?.let { BuildStatus.parse(it) } ?: buildInfo.status
         val modelFailPositions = BuildEndPositionCollector.collectFailPositions(model)
         val modelCancelPositions = BuildEndPositionCollector.collectCancelPositions(model)
-        val storedEndInfo = parseBuildEndInfo(buildRecordModel?.modelVar)
-            ?.alignedTo(
-                status = recordStatus,
-                modelFailPositions = modelFailPositions,
-                modelCancelPositions = modelCancelPositions,
-                latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
-            )
-            ?.refineUserCancelCount()
+        // Job 超时、心跳会在运行中先把成因写入 modelVar，但那只结束当前 Job / 构建机，
+        // 构建本身还在跑。运行中把这份取消卡片返回去，页面就会「状态：运行中 / 卡片：已取消」。
+        // 构建真正结束后再按最终状态对齐；运行中仅阶段准入审核由 synthesizeEndInfo 合成。
+        val storedEndInfo = if (recordStatus.isFinish()) {
+            parseBuildEndInfo(buildRecordModel?.modelVar)
+                ?.alignedTo(
+                    status = recordStatus,
+                    modelFailPositions = modelFailPositions,
+                    modelCancelPositions = modelCancelPositions,
+                    latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
+                )
+                ?.refineUserCancelCount()
+        } else {
+            null
+        }
         val buildEndInfo = (
             storedEndInfo ?: synthesizeEndInfo(
                 status = recordStatus,
@@ -1170,8 +1177,67 @@ class PipelineBuildRecordService @Autowired constructor(
     }
 
     /**
+     * Job 超时会先后打到多个容器。已有取消卡片时把模型里的暂停/取消插件并进去，
+     * 不覆盖用户取消，也不把失败卡片改回取消。
+     */
+    fun saveCancelInfoMergingPositions(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo
+    ) {
+        var startUser: String? = null
+        var saved = false
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn("ENGINE|$buildId|saveCancelInfoMergingPositions| get record failed.")
+                return@transaction
+            }
+            val existing = parseBuildEndInfo(recordModel.modelVar)
+            val beforeTasks = existing?.positions?.map { it.taskId to it.statusAtEnd }
+            val beforeReason = existing?.reasonCode
+            val toSave = when {
+                existing == null -> buildEndInfo
+                existing.endType.category != BuildEndCategory.CANCEL -> return@transaction
+                existing.endType == BuildEndType.CANCEL_USER ->
+                    existing.mergeCancelSnapshot(buildEndInfo.positions.orEmpty())
+                else -> existing.mergeCancelSnapshot(buildEndInfo.positions.orEmpty()).apply {
+                    if (reasonCode.isNullOrBlank() && !buildEndInfo.reasonCode.isNullOrBlank()) {
+                        withReason(buildEndInfo.reasonCode!!, buildEndInfo.reasonParams)
+                    }
+                }
+            }
+            if (existing != null &&
+                beforeReason == toSave.reasonCode &&
+                beforeTasks == toSave.positions?.map { it.taskId to it.statusAtEnd }
+            ) {
+                return@transaction
+            }
+            val modelVar = recordModel.modelVar.toMutableMap()
+            modelVar[BuildEndInfo.MODEL_VAR_KEY] = toSave
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = modelVar, buildStatus = null,
+                startTime = null, endTime = null, errorInfoList = null,
+                timestamps = null
+            )
+            startUser = recordModel.startUser
+            saved = true
+        }
+        if (saved) {
+            notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, startUser)
+        }
+    }
+
+    /**
      * 仅在buildEndInfo尚未存在时保存，避免覆盖用户主动取消等高优先级信息。
-     * 适用于心跳超时、Job执行超时等系统级场景。
+     * 适用于心跳超时、排队超时等系统级场景。
      */
     fun saveBuildEndInfoIfAbsent(
         projectId: String,

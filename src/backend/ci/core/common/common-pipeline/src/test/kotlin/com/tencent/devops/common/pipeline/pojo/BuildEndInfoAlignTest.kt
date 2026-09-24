@@ -366,6 +366,54 @@ class BuildEndInfoAlignTest {
     }
 
     @Test
+    fun `job timeout snapshot of one plugin is replaced by all paused plugins`() {
+        val stored = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemJobExecTimeout")
+            .withPositions(
+                listOf(
+                    EndPosition(
+                        position = "1-3-2",
+                        componentPath = "stage-1/构建环境-Linux/0806插件",
+                        statusAtEnd = BuildStatus.CANCELED.name,
+                        stageId = "stage-2",
+                        containerId = "3",
+                        taskId = "e-0806-a"
+                    )
+                )
+            )
+        val modelCancelPositions = listOf(
+            EndPosition(
+                position = "1-3-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.PAUSE.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "3",
+                taskId = "e-0806-a"
+            ),
+            EndPosition(
+                position = "1-4-2",
+                componentPath = "stage-1/构建环境-Linux/0806插件",
+                statusAtEnd = BuildStatus.PAUSE.name,
+                reasonCode = "bkBuildEndFailPauseTerminated",
+                stageId = "stage-2",
+                containerId = "4",
+                taskId = "e-0806-b"
+            )
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.CANCELED,
+            modelCancelPositions = modelCancelPositions
+        )
+
+        Assertions.assertEquals(BuildEndType.CANCEL_SYSTEM, aligned!!.endType)
+        Assertions.assertEquals(2, aligned.positionCount)
+        Assertions.assertEquals(BuildStatus.PAUSE.name, aligned.positions!![0].statusAtEnd)
+        Assertions.assertEquals(BuildStatus.PAUSE.name, aligned.positions!![1].statusAtEnd)
+        Assertions.assertEquals(listOf("e-0806-a", "e-0806-b"), aligned.positions!!.map { it.taskId })
+    }
+
+    @Test
     fun `given job level cancel then drop job row after merging tasks of same container`() {
         val stored = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemJobExecTimeout")
             .withPositions(

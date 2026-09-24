@@ -44,6 +44,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.EndPosition
+import com.tencent.devops.common.pipeline.utils.BuildEndPositionCollector
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_JOB_QUEUE_TIMEOUT
@@ -324,16 +325,17 @@ class BuildMonitorControl @Autowired constructor(
                     errorTypeName = ErrorType.USER.name
                 )
             )
-            // 保存构建级别的终态信息（含受影响容器位置，仅在尚未存在时写入）
+            // 只终止当前 Job，构建继续跑。先把超时分钟数记下来，
+            // 等构建真正结束再按最终状态展示；运行中不把这张卡片返回给页面。
             try {
-                val endPositions = resolveEndPositionsFromModel(buildInfo, this)
+                val endPositions = resolveCancelPositionsFromModel(buildInfo, this)
                 // Job执行超时派发的是TERMINATE事件，构建最终状态只会落在取消/终止/失败上，不会是超时状态，
                 // 因此终态子类型必须归入取消类（与最终状态同类），「超时」这个成因由 reason 表达
                 val endInfo = BuildEndInfo.ofCancelSystem(
                     reasonCode = BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT,
                     reasonParams = listOf("$minute")
                 ).withPositions(endPositions)
-                pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+                pipelineBuildRecordService.saveCancelInfoMergingPositions(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
@@ -568,10 +570,10 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     /**
-     * 从 Model 中定位超时容器，生成终态位置信息（支持 task 级粒度）。
+     * Job 超时要带上模型里所有已取消/仍在暂停的用户插件，而不是只定位当前容器。
      * 超时是低频事件，加载一次 model 代价可接受。
      */
-    private fun resolveEndPositionsFromModel(
+    private fun resolveCancelPositionsFromModel(
         buildInfo: BuildInfo,
         container: PipelineBuildContainer
     ): List<EndPosition> {
@@ -583,6 +585,8 @@ class BuildMonitorControl @Autowired constructor(
             executeCount = container.executeCount,
             debug = buildInfo.debug
         ) ?: return emptyList()
+        val fromModel = BuildEndPositionCollector.collectCancelPositions(model)
+        if (fromModel.isNotEmpty()) return fromModel
         return EndPositionUtils.resolveEndPositions(
             model = model,
             targetStageId = container.stageId,

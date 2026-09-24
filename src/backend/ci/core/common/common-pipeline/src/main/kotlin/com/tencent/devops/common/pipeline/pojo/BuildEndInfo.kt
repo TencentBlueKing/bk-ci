@@ -183,6 +183,11 @@ data class BuildEndInfo(
     ): BuildEndInfo {
         val current = positions.orEmpty()
         val reasonSource = modelFailPositions + modelCancelPositions
+        if (BuildEndCategory.of(status) == BuildEndCategory.CANCEL && modelCancelPositions.isNotEmpty()) {
+            // 编排图以模型里的插件状态为准。Job 超时只拍到当时一个容器，
+            // 其它仍停在暂停的插件必须进来，并且不能再沿用快照里的「取消」。
+            return mergeCancelSnapshot(modelCancelPositions)
+        }
         val refreshed = current.map { pos ->
             pos.refreshStatusAtEnd(latestStatusAtEnd).fillMissingReason(reasonSource)
         }
@@ -192,21 +197,9 @@ data class BuildEndInfo(
                 val id = pos.identity() ?: return@filter false
                 id !in existingIds && pos.shouldAppendWhenMatched()
             }
-            BuildEndCategory.CANCEL -> modelCancelPositions.filter { pos ->
-                val id = pos.identity() ?: return@filter false
-                id !in existingIds
-            }
             else -> emptyList()
         }
-        val merged = (refreshed + extras)
-            .let { rows ->
-                if (BuildEndCategory.of(status) == BuildEndCategory.CANCEL) {
-                    rows.dropJobWhenTaskPresent()
-                } else {
-                    rows
-                }
-            }
-            .take(BuildEndPositionCollector.POSITION_MAX_SIZE)
+        val merged = (refreshed + extras).take(BuildEndPositionCollector.POSITION_MAX_SIZE)
         if (merged == current) return this
         val nextType = if (extras.isEmpty() || endType.category != BuildEndCategory.FAIL) {
             endType
@@ -238,6 +231,27 @@ data class BuildEndInfo(
     private fun EndPosition.identity(): String? {
         return taskId?.takeIf { it.isNotBlank() }
             ?: containerId.takeIf { it.isNotBlank() && taskId.isNullOrBlank() }?.let { "job:$it" }
+    }
+
+    /**
+     * 取消卡片的位置以模型当前插件为准，覆盖超时瞬间拍下的单容器快照。
+     * 模型里没有的 Job 级位置（排队、依赖等待）仍保留。
+     */
+    fun mergeCancelSnapshot(modelPositions: List<EndPosition>): BuildEndInfo {
+        if (endType.category != BuildEndCategory.CANCEL || modelPositions.isEmpty()) return this
+        val modelTaskKeys = modelPositions.mapNotNull { it.identity() }.toSet()
+        val modelContainers = modelPositions.map { it.containerId }.filter { it.isNotBlank() }.toSet()
+        val keptJobs = positions.orEmpty().filter { stored ->
+            stored.taskId.isNullOrBlank() &&
+                stored.containerId.isNotBlank() &&
+                stored.containerId !in modelContainers &&
+                stored.identity() !in modelTaskKeys
+        }
+        val merged = (modelPositions + keptJobs)
+            .dropJobWhenTaskPresent()
+            .take(BuildEndPositionCollector.POSITION_MAX_SIZE)
+        if (merged == positions.orEmpty()) return this
+        return withPositions(merged)
     }
 
     /**
