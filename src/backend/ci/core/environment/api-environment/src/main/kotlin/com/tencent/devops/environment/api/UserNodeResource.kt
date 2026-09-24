@@ -242,7 +242,14 @@ interface UserNodeResource {
     @Operation(summary = "项目节点个数")
     @GET
     @Path("/{projectId}/nodesCount")
-    fun fetchNodesCount(@PathParam("projectId") projectId: String): Result<Map<NodeType, Int>>
+    fun fetchNodesCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Map<NodeType, Int>>
 
     @Operation(summary = "导出节点管理列表相关信息csv文件")
     @POST

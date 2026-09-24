@@ -411,8 +411,32 @@ class NodeService @Autowired constructor(
                 ch == '|'
     }
 
-    fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
-        return nodeDao.fetchProjectNodeCount(dslContext, projectId)
+    fun fetchNodesCount(userId: String, projectId: String): Map<NodeType, Int> {
+        // 与 listNew 保持一致：非创作流节点按 ENVIRONMENT_ENV_NODE 鉴权，创作流节点按 CREATIVE_STREAM_NODE 鉴权
+        val result = mutableMapOf<NodeType, Int>()
+        val envNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+        )
+        if (envNodeIds.isNotEmpty()) {
+            nodeDao.fetchProjectNodeCount(dslContext, projectId, envNodeIds)
+                .filterKeys { it != NodeType.CREATE }
+                .forEach { (type, count) -> result[type] = count }
+        }
+        val createNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = AuthResourceType.CREATIVE_STREAM_NODE
+        )
+        if (createNodeIds.isNotEmpty()) {
+            nodeDao.fetchProjectNodeCount(dslContext, projectId, createNodeIds)[NodeType.CREATE]?.let {
+                result[NodeType.CREATE] = it
+            }
+        }
+        return result
     }
 
     fun listNewExport(
