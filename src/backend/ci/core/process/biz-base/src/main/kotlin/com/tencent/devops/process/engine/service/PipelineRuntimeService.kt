@@ -1395,7 +1395,12 @@ class PipelineRuntimeService @Autowired constructor(
         val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
         if (updateExistsTask.isNotEmpty()) {
             pipelineTaskService.batchUpdate(transactionContext, updateExistsTask)
-            taskBuildRecordResult.addRecords(updateExistsTask, context.resourceVersion)
+            // #13577 失败跳过的步骤运行态已经更新，这里不再写本次执行记录。
+            // addRecords 会按新的执行次数落一条记录，详情就会盖住上一次的失败结果。
+            val tasksToRecord = updateExistsTask.filter { it.status != BuildStatus.SKIP }
+            if (tasksToRecord.isNotEmpty()) {
+                taskBuildRecordResult.addRecords(tasksToRecord.toMutableList(), context.resourceVersion)
+            }
         }
         if (buildTaskList.isNotEmpty()) {
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
