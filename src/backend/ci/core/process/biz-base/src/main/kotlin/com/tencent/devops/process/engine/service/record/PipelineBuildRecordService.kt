@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
@@ -39,10 +40,15 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildEndCategory
+import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.EndPosition
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -52,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.BuildEndPositionCollector
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -431,6 +438,72 @@ class PipelineBuildRecordService @Autowired constructor(
             prevBuildInfo != null && prevBuildInfo.version != buildInfo.version
         }
         LogUtils.printCostTimeWE(watcher)
+        // 构建运行总时长：从构建开始到结束，未结束时按当前时刻计算；排队中未启动的构建为空
+        // 需在apply块外计算，避免块内endTime被BuildEndInfo.endTime属性遮蔽
+        val buildRunCostTime = startTime?.let { (endTime ?: System.currentTimeMillis()) - it }
+        // 合成终态必须与页面状态标签同源取记录表状态：详情记录先落终态、构建历史表随后才更新，
+        // 若用滞后的 buildInfo.status，构建结束瞬间推送的详情会因状态还是运行中而合成不出来（#13477）
+        val recordStatus = buildRecordModel?.status?.let { BuildStatus.parse(it) } ?: buildInfo.status
+        val modelFailPositions = BuildEndPositionCollector.collectFailPositions(model)
+        val modelCancelPositions = BuildEndPositionCollector.collectCancelPositions(model)
+        // Job 超时、心跳会在运行中先把成因写入 modelVar，但那只结束当前 Job / 构建机，
+        // 构建本身还在跑。运行中把这份取消卡片返回去，页面就会「状态：运行中 / 卡片：已取消」。
+        // STAGE_SUCCESS 不在 isFinish() 里，但是阶段准入挂起/驳回的终态，已落库的卡片必须保留。
+        // 其余运行中状态不读这份提前落库的详情；阶段准入审核仍由 synthesizeEndInfo 合成。
+        val storedEndInfo = if (recordStatus.isFinish() || recordStatus == BuildStatus.STAGE_SUCCESS) {
+            parseBuildEndInfo(buildRecordModel?.modelVar)
+                ?.alignedTo(
+                    status = recordStatus,
+                    modelFailPositions = modelFailPositions,
+                    modelCancelPositions = modelCancelPositions,
+                    latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
+                )
+                ?.refineUserCancelCount()
+        } else {
+            null
+        }
+        val buildEndInfo = (
+            storedEndInfo ?: synthesizeEndInfo(
+                status = recordStatus,
+                model = model,
+                buildEndTime = endTime,
+                cancelUser = buildRecordModel?.cancelUser
+            )
+            )?.apply {
+            totalCostTime = buildRunCostTime
+            // 与 endType 恒定同类；读取侧会先按最终状态对齐，避免取消提前落库与失败终态错配
+            endCategory = endType.category
+            reasonCode?.let { code ->
+                reason = I18nUtil.getCodeLanMessage(
+                    messageCode = code,
+                    params = reasonParams?.toTypedArray(),
+                    defaultMessage = reason
+                )
+            }
+            reason = BuildEndPositionCollector.toDisplayReason(reason)
+            endTypeDesc = translateEndType(endType)
+            positions?.forEach { pos ->
+                val status = BuildStatus.parse(pos.statusAtEnd)
+                pos.statusAtEndDesc = pauseTerminatedStatusDesc(pos, model, status)
+                    ?: I18nUtil.getCodeLanMessage(
+                        messageCode = "buildStatus.${status.statusName}",
+                        defaultMessage = pos.statusAtEnd
+                    )
+                pos.endTypeDesc = pos.endType?.let { translateEndType(it) }
+                pos.reasonCode?.let { code ->
+                    pos.reason = I18nUtil.getCodeLanMessage(
+                        messageCode = code,
+                        params = pos.reasonParams?.toTypedArray(),
+                        defaultMessage = pos.reason
+                    )
+                }
+                pos.reason = BuildEndPositionCollector.toDisplayReason(pos.reason)
+                pos.errorMsg = BuildEndPositionCollector.toDisplayReason(
+                    raw = pos.errorMsg,
+                    maxLength = BuildEndPositionCollector.ERROR_MSG_MAX
+                )
+            }
+        }
         return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
@@ -478,9 +551,199 @@ class PipelineBuildRecordService @Autowired constructor(
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             ),
-            versionChange = versionChange
+            versionChange = versionChange,
+            buildEndInfo = buildEndInfo
         )
     }
+
+    private fun parseBuildEndInfo(modelVar: Map<String, Any>?): BuildEndInfo? {
+        return modelVar?.get(BuildEndInfo.MODEL_VAR_KEY)?.let {
+            JsonUtil.anyToOrNull(it, object : TypeReference<BuildEndInfo>() {})
+        }
+    }
+
+    /**
+     * 取消落库时拍下的是当时的中间态（如 PAUSE），构建真正结束后插件可能已被置为失败/终止。
+     * 读取对齐时用模型里的当前状态刷新位置，避免卡片写「暂停执行」、编排图画失败。
+     */
+    private fun latestStatusAtEnd(pos: EndPosition, model: Model): String? {
+        val stage = model.stages.firstOrNull { it.id == pos.stageId } ?: return null
+        if (pos.containerId.isBlank()) return stage.status
+        val containers = stage.containers.flatMap { container ->
+            listOf(container) + (container.fetchGroupContainers() ?: emptyList())
+        }
+        val container = containers.firstOrNull {
+            it.id == pos.containerId || it.containerId == pos.containerId
+        } ?: return null
+        if (pos.taskId.isNullOrBlank()) return container.status
+        return container.elements.firstOrNull { it.id == pos.taskId }?.status
+    }
+
+    /**
+     * 落库缺失时按最终状态从模型合成终态详情。
+     * 普通成功本来就不落库；失败/取消若写入侧漏记（执行前暂停终止、互斥组抢锁失败），
+     * 读取侧也必须给出卡片，否则前端打不开详情。
+     */
+    private fun synthesizeEndInfo(
+        status: BuildStatus,
+        model: Model,
+        buildEndTime: Long?,
+        cancelUser: String?
+    ): BuildEndInfo? {
+        // 阶段准入挂起后记录状态是 STAGE_SUCCESS，它不在 isFinish() 里。
+        // 还在审核就合成审核中卡片；审核已结束且没有落库详情时，按阶段成功。
+        if (status == BuildStatus.STAGE_SUCCESS) {
+            return synthesizeStageReviewingEndInfo(model) ?: successEndInfo(buildEndTime)
+        }
+        // 挂起是先写审核记录、后改构建状态（见 PipelineStageService.pauseStage），推送恰好赶在
+        // 状态改写前时状态还是运行中，因此运行中也按模型里的阶段审核态合成，不依赖状态判定
+        if (!status.isFinish()) {
+            synthesizeStageReviewingEndInfo(model)?.let { return it }
+        }
+        return when (BuildEndCategory.of(status)) {
+            BuildEndCategory.SUCCESS -> successEndInfo(buildEndTime)
+            BuildEndCategory.FAIL -> synthesizeFailEndInfo(model, buildEndTime)
+            BuildEndCategory.CANCEL -> synthesizeCancelEndInfo(model, buildEndTime, cancelUser)
+            BuildEndCategory.TIMEOUT -> BuildEndInfo(
+                endType = BuildEndType.TIMEOUT_QUEUE,
+                endTime = buildEndTime
+            )
+            else -> null
+        }
+    }
+
+    private fun synthesizeFailEndInfo(model: Model, buildEndTime: Long?): BuildEndInfo {
+        val positions = BuildEndPositionCollector.collectFailPositions(model)
+        return BuildEndInfo(
+            endType = BuildEndPositionCollector.aggregateFailEndType(positions),
+            endTime = buildEndTime
+        ).withPositions(positions)
+    }
+
+    /**
+     * 取消链路漏写时的兜底：有取消人按用户取消，否则按系统取消。
+     * 位置从模型里仍停在取消/终止/暂停的用户插件还原。
+     */
+    private fun synthesizeCancelEndInfo(
+        model: Model,
+        buildEndTime: Long?,
+        cancelUser: String?
+    ): BuildEndInfo {
+        val positions = BuildEndPositionCollector.collectCancelPositions(model)
+        val hasUser = !cancelUser.isNullOrBlank()
+        val info = if (hasUser) {
+            BuildEndInfo(
+                endType = BuildEndType.CANCEL_USER,
+                operator = cancelUser,
+                reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL,
+                endTime = buildEndTime
+            )
+        } else {
+            BuildEndInfo(
+                endType = BuildEndType.CANCEL_SYSTEM,
+                endTime = buildEndTime
+            )
+        }
+        if (positions.isEmpty()) return info
+        info.withPositions(positions)
+        if (hasUser) {
+            info.withReason(
+                reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_IN_FLIGHT_STOPPED,
+                reasonParams = listOf(positions.size.toString())
+            )
+        }
+        return info
+    }
+
+    /**
+     * 用户取消文案里的「N 处在途」必须跟卡片位置数一致。
+     * 读取侧可能补进了取消落库之后才置为取消的插件。
+     */
+    private fun BuildEndInfo.refineUserCancelCount(): BuildEndInfo {
+        if (endType != BuildEndType.CANCEL_USER || positionCount <= 0) return this
+        if (reasonCode != ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL &&
+            reasonCode != ProcessMessageCode.BK_BUILD_CANCEL_USER_IN_FLIGHT_STOPPED
+        ) {
+            return this
+        }
+        return withReason(
+            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_IN_FLIGHT_STOPPED,
+            reasonParams = listOf(positionCount.toString())
+        )
+    }
+
+    /**
+     * 执行前暂停被终止时，编排图展示「暂停/终止」，卡片不要只写泛化的「取消」。
+     */
+    private fun pauseTerminatedStatusDesc(pos: EndPosition, model: Model, status: BuildStatus): String? {
+        if (!status.isCancel() && !status.isPause() && !status.isTerminate()) return null
+        val pauseTerminated = pos.reasonCode == BuildEndPositionCollector.REASON_PAUSE_TERMINATED ||
+            findModelElement(pos, model)?.additionalOptions?.pauseBeforeExec == true
+        if (!pauseTerminated) return null
+        return I18nUtil.getCodeLanMessage(
+            messageCode = ProcessMessageCode.BK_BUILD_END_STATUS_PAUSE_TERMINATED
+        )
+    }
+
+    private fun findModelElement(pos: EndPosition, model: Model): Element? {
+        val taskId = pos.taskId?.takeIf { it.isNotBlank() } ?: return null
+        val stage = model.stages.firstOrNull { it.id == pos.stageId } ?: return null
+        val containers = stage.containers.flatMap { container ->
+            listOf(container) + (container.fetchGroupContainers() ?: emptyList())
+        }
+        val container = containers.firstOrNull {
+            it.id == pos.containerId || it.containerId == pos.containerId
+        } ?: return null
+        return container.elements.firstOrNull { it.id == taskId }
+    }
+
+    /**
+     * 合成而非落库，因此终态时间必须取构建自身的结束时间，
+     * 不能用工厂方法里的当前时刻——否则每次读取都会算出一个不同的「结束时间」。
+     */
+    private fun successEndInfo(buildEndTime: Long?) = BuildEndInfo(
+        endType = BuildEndType.SUCCESS,
+        endTime = buildEndTime
+    )
+
+    /**
+     * 合成「阶段准入审核中」终态详情：构建挂起在审核环节时不会走构建结束流程，
+     * 无从在写入侧落库，因此读取时按阶段的审核状态还原出审核位置与已等待时长。
+     *
+     * 详情页不展示触发器阶段（Model 中的第一个 Stage），位置编码从 1 开始，与失败位置口径一致。
+     */
+    private fun synthesizeStageReviewingEndInfo(model: Model): BuildEndInfo? {
+        model.stages.forEachIndexed { stageIndex, stage ->
+            if (stageIndex == 0) return@forEachIndexed
+            val stageId = stage.id ?: return@forEachIndexed
+            val check = listOfNotNull(stage.checkIn, stage.checkOut)
+                .firstOrNull { it.status == BuildStatus.REVIEWING.name } ?: return@forEachIndexed
+            val group = check.groupToReview() ?: return@forEachIndexed
+            val groupSeq = check.reviewGroups?.indexOf(group)?.takeIf { it >= 0 }?.plus(1)
+            val position = EndPosition(
+                position = "$stageIndex",
+                componentPath = stage.name.orEmpty(),
+                statusAtEnd = BuildStatus.REVIEWING.name,
+                endType = BuildEndType.SUCCESS_STAGE_REVIEWING,
+                stageId = stageId,
+                containerId = "",
+                reviewGroupSeq = groupSeq,
+                reviewGroupName = group.name,
+                reviewers = group.reviewers.takeIf { it.isNotEmpty() }
+            )
+            return BuildEndInfo(
+                endType = BuildEndType.SUCCESS_STAGE_REVIEWING,
+                // 构建挂起在审核环节，尚无结束时间；已等待时长自阶段暂停进入审核（stagePause 写入 startEpoch）起算
+                waitCostTime = stage.startEpoch?.let { System.currentTimeMillis() - it }
+            ).withPositions(listOf(position))
+        }
+        return null
+    }
+
+    private fun translateEndType(endType: BuildEndType): String = I18nUtil.getCodeLanMessage(
+        messageCode = "buildEndType.${endType.displayName}",
+        defaultMessage = endType.displayName
+    )
 
     fun getRecordInfo(pipelineId: String, projectId: String, buildId: String, queryDslContext: DSLContext? = null) =
         recordModelDao.getRecordInfoList(
@@ -567,9 +830,11 @@ class PipelineBuildRecordService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         cancelUser: String,
-        executeCount: Int
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo? = null
     ) {
         logger.info("[$buildId]|BUILD_CANCEL|cancelUser=$cancelUser|buildStatus=$buildStatus")
+        var startUser: String? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val recordModel = recordModelDao.getRecord(
@@ -627,16 +892,21 @@ class PipelineBuildRecordService @Autowired constructor(
 
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
+            buildEndInfo?.let { modelVar[BuildEndInfo.MODEL_VAR_KEY] = it }
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 null, cancelUser, null
             )
+            startUser = recordModel.startUser
+        }
+        // 事务提交后再推送，否则推送侧回查可能读到尚未提交的运行中状态
+        startUser?.let {
             pipelineRecordChangeEvent(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                startUser = recordModel.startUser,
+                startUser = it,
                 executeCount = executeCount
             )
         }
@@ -719,13 +989,6 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 errorInfoList, null, null
             )
-            pipelineRecordChangeEvent(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                startUser = recordModel.startUser,
-                executeCount = executeCount
-            )
             val allRecordStages = recordStageDao.getLatestRecords(
                 dslContext = context,
                 projectId = projectId,
@@ -737,6 +1000,14 @@ class PipelineBuildRecordService @Autowired constructor(
                 recordStages = allRecordStages, buildStatus = buildStatus, errorMsg = errorMsg
             )
         }
+        // 事务提交后再推送，否则推送侧回查可能读到尚未提交的运行中状态
+        pipelineRecordChangeEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startUser = recordModel.startUser,
+            executeCount = executeCount
+        )
         val model = getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -763,6 +1034,269 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount,
             cancelUser = cancelUserId
+        )
+    }
+
+    fun saveBuildEndInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo
+    ) {
+        var startUser: String? = null
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn("ENGINE|$buildId|saveBuildEndInfo| get record failed.")
+                return@transaction
+            }
+            val modelVar = recordModel.modelVar.toMutableMap()
+            modelVar[BuildEndInfo.MODEL_VAR_KEY] = buildEndInfo
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = modelVar, buildStatus = null,
+                startTime = null, endTime = null, errorInfoList = null,
+                timestamps = null
+            )
+            startUser = recordModel.startUser
+        }
+        notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, startUser)
+    }
+
+    /**
+     * 清除已落库的终态详情，供运行中重试复用同一执行次数的记录行时调用。
+     * 不派发记录变更推送——调用方在重试流程中随后就会刷新记录并推送。
+     */
+    fun clearBuildEndInfo(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ) {
+        val context = transactionContext ?: dslContext
+        val recordModel = recordModelDao.getRecord(
+            dslContext = context, projectId = projectId, pipelineId = pipelineId,
+            buildId = buildId, executeCount = executeCount
+        ) ?: return
+        if (!recordModel.modelVar.containsKey(BuildEndInfo.MODEL_VAR_KEY)) return
+        recordModelDao.updateRecord(
+            dslContext = context, projectId = projectId, pipelineId = pipelineId,
+            buildId = buildId, executeCount = executeCount, cancelUser = null,
+            modelVar = recordModel.modelVar.minus(BuildEndInfo.MODEL_VAR_KEY), buildStatus = null,
+            startTime = null, endTime = null, errorInfoList = null,
+            timestamps = null
+        )
+    }
+
+    /**
+     * 构建结束时写入终态详情：已有详情且大类与最终状态同类则保留
+     * （用户取消、Job 超时等更早更精确的成因）；大类冲突则覆盖。
+     *
+     * 典型错配：取消链路在暂停插件处提前写入 CANCEL_USER，随后 ActionType.END
+     * 把构建收成失败，IfAbsent 会让页面出现「状态：失败 / 卡片：用户取消」。
+     */
+    fun saveBuildEndInfoIfCompatible(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo,
+        buildStatus: BuildStatus
+    ) {
+        var startUser: String? = null
+        var saved = false
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn("ENGINE|$buildId|saveBuildEndInfoIfCompatible| get record failed.")
+                return@transaction
+            }
+            val existing = parseBuildEndInfo(recordModel.modelVar)
+            if (existing != null && existing.matchesBuildStatus(buildStatus)) {
+                return@transaction
+            }
+            val toSave = buildEndInfo.preserveSystemCause(existing)
+            val modelVar = recordModel.modelVar.toMutableMap()
+            modelVar[BuildEndInfo.MODEL_VAR_KEY] = toSave
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = modelVar, buildStatus = null,
+                startTime = null, endTime = null, errorInfoList = null,
+                timestamps = null
+            )
+            startUser = recordModel.startUser
+            saved = true
+            if (existing != null) {
+                logger.info(
+                    "ENGINE|$buildId|saveBuildEndInfoIfCompatible| overwrite " +
+                        "${existing.endType} by ${toSave.endType} status=$buildStatus"
+                )
+            }
+        }
+        if (saved) {
+            notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, startUser)
+        }
+    }
+
+    /**
+     * 解析器无需落库（取消/普通成功）时，清掉与最终状态不同类的残留详情。
+     * 例如运行中重试未清干净的系统取消、准入审核改道后仍留下的 CANCEL_USER。
+     */
+    fun clearBuildEndInfoIfIncompatible(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildStatus: BuildStatus
+    ) {
+        val recordModel = recordModelDao.getRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        ) ?: return
+        val existing = parseBuildEndInfo(recordModel.modelVar) ?: return
+        if (existing.matchesBuildStatus(buildStatus)) return
+        logger.info(
+            "ENGINE|$buildId|clearBuildEndInfoIfIncompatible| drop ${existing.endType} status=$buildStatus"
+        )
+        clearBuildEndInfo(
+            transactionContext = null,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+        notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, recordModel.startUser)
+    }
+
+    /**
+     * Job 超时会先后打到多个容器。已有取消卡片时把模型里的暂停/取消插件并进去，
+     * 不覆盖用户取消，也不把失败卡片改回取消。
+     */
+    fun saveCancelInfoMergingPositions(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo
+    ) {
+        var startUser: String? = null
+        var saved = false
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn("ENGINE|$buildId|saveCancelInfoMergingPositions| get record failed.")
+                return@transaction
+            }
+            val existing = parseBuildEndInfo(recordModel.modelVar)
+            val beforeTasks = existing?.positions?.map { it.taskId to it.statusAtEnd }
+            val beforeReason = existing?.reasonCode
+            val toSave = when {
+                existing == null -> buildEndInfo
+                existing.endType.category != BuildEndCategory.CANCEL -> return@transaction
+                existing.endType == BuildEndType.CANCEL_USER ->
+                    existing.mergeCancelSnapshot(buildEndInfo.positions.orEmpty())
+                else -> existing.mergeCancelSnapshot(buildEndInfo.positions.orEmpty()).apply {
+                    if (reasonCode.isNullOrBlank() && !buildEndInfo.reasonCode.isNullOrBlank()) {
+                        withReason(buildEndInfo.reasonCode!!, buildEndInfo.reasonParams)
+                    }
+                }
+            }
+            if (existing != null &&
+                beforeReason == toSave.reasonCode &&
+                beforeTasks == toSave.positions?.map { it.taskId to it.statusAtEnd }
+            ) {
+                return@transaction
+            }
+            val modelVar = recordModel.modelVar.toMutableMap()
+            modelVar[BuildEndInfo.MODEL_VAR_KEY] = toSave
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = modelVar, buildStatus = null,
+                startTime = null, endTime = null, errorInfoList = null,
+                timestamps = null
+            )
+            startUser = recordModel.startUser
+            saved = true
+        }
+        if (saved) {
+            notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, startUser)
+        }
+    }
+
+    /**
+     * 仅在buildEndInfo尚未存在时保存，避免覆盖用户主动取消等高优先级信息。
+     * 适用于心跳超时、排队超时等系统级场景。
+     */
+    fun saveBuildEndInfoIfAbsent(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildEndInfo: BuildEndInfo
+    ) {
+        var startUser: String? = null
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn("ENGINE|$buildId|saveBuildEndInfoIfAbsent| get record failed.")
+                return@transaction
+            }
+            if (recordModel.modelVar.containsKey(BuildEndInfo.MODEL_VAR_KEY)) {
+                return@transaction
+            }
+            val modelVar = recordModel.modelVar.toMutableMap()
+            modelVar[BuildEndInfo.MODEL_VAR_KEY] = buildEndInfo
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = modelVar, buildStatus = null,
+                startTime = null, endTime = null, errorInfoList = null,
+                timestamps = null
+            )
+            startUser = recordModel.startUser
+        }
+        notifyBuildEndInfoSaved(projectId, pipelineId, buildId, executeCount, startUser)
+    }
+
+    /**
+     * 终态详情是在构建结束的记录更新之后才落库的，此时前端已收到上一次记录变更推送并拉走了
+     * 不含终态详情的数据。因此保存成功后需再推送一次，否则页面要等用户手动刷新才能看到详情。
+     * 事务提交后再派发，避免推送侧回查到旧数据。
+     */
+    private fun notifyBuildEndInfoSaved(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        startUser: String?
+    ) {
+        if (startUser == null) return
+        pipelineRecordChangeEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startUser = startUser,
+            executeCount = executeCount
         )
     }
 

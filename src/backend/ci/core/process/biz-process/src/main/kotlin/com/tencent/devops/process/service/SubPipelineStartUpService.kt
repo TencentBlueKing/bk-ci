@@ -398,7 +398,11 @@ class SubPipelineStartUpService @Autowired constructor(
                         Element::subPipelineBuildInfo.name to SubPipelineBuildInfo(
                             projectId = readyToBuildPipelineInfo.projectId,
                             pipelineId = pipelineId,
-                            buildId = subBuildId.id
+                            buildId = subBuildId.id,
+                            // 子流水线失败时父构建的终态详情需展示子流水线名称与构建号，
+                            // 此处随构建信息一并记录，避免读取详情时再跨流水线查询
+                            pipelineName = readyToBuildPipelineInfo.pipelineName,
+                            buildNum = subBuildId.num
                         )
                     ),
                     buildStatus = null,
