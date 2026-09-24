@@ -1130,11 +1130,20 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
+                this.requestParams = {}
+                // 同步清空搜索/标签/时间筛选条件到 URL，否则标签筛选仍残留在 URL 中，
+                // 接口会继续按标签过滤，导致清空后列表仍然无数据返回
+                this.updateSearchValue([])
+                this.updateTagSearchValue([])
+                this.updateDateTimeRange('', '')
                 // 如果是 CreateResType，保持当前 nodeType 不变
                 if (this.isCreateResType) {
                     this.requestList()
-                } else {
+                } else if (this.$route.params.nodeType !== ALLNODE) {
+                    // 切换到全部节点会触发 handleNodeTypeChange 重新拉取列表
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                } else {
+                    this.requestList()
                 }
             },
 
