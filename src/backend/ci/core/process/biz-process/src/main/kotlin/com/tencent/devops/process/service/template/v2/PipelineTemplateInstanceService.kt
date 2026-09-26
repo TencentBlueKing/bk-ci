@@ -775,6 +775,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
         version: Long,
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            templateId = templateId
+        )
         val templateResource = pipelineTemplateResourceService.get(
             projectId = projectId,
             templateId = templateId,

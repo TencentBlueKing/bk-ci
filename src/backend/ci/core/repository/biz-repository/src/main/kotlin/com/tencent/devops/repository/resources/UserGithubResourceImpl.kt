@@ -33,15 +33,13 @@ import com.tencent.devops.repository.api.UserGithubResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGithubResourceImpl @Autowired constructor(
     private val githubService: IGithubService,
-    private val githubOAuthService: GithubOAuthService,
-    private val githubTokenService: GithubTokenService
+    private val githubOAuthService: GithubOAuthService
 ) : UserGithubResource {
     override fun getProject(
         userId: String,
@@ -57,11 +55,6 @@ class UserGithubResourceImpl @Autowired constructor(
                 oauthUserId = oauthUserId
             )
         )
-    }
-
-    override fun deleteToken(userId: String): Result<Boolean> {
-        githubTokenService.deleteAccessToken(userId)
-        return Result(true)
     }
 
     override fun getGithubAppUrl(): Result<GithubAppUrl> {
