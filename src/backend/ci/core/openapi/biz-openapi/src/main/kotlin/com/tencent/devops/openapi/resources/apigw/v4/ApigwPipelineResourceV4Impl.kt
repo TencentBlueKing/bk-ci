@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
@@ -335,14 +336,16 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        enable: Boolean
+        enable: Boolean,
+        request: PipelineLockRequest?
     ): Result<Boolean> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|lock|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).lockPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            enable = enable
+            enable = enable,
+            request = request
         )
     }
 

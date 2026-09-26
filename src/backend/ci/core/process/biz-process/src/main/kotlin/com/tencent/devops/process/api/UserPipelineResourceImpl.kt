@@ -361,7 +361,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: PipelineLockRequest
+        enable: Boolean,
+        request: PipelineLockRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId)
 
@@ -369,6 +370,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            enable = enable,
             request = request
         )
         return Result(true)

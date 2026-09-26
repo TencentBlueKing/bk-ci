@@ -1883,14 +1883,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        request: PipelineLockRequest
+        enable: Boolean,
+        request: PipelineLockRequest? = null
     ) {
         val pipelineInfo = locked(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = !request.enable,
-            lockReason = request.lockReason
+            locked = !enable,
+            request = request
         )
         auditService.createAudit(
             Audit(
@@ -1899,7 +1900,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 resourceName = pipelineInfo.pipelineName,
                 userId = userId,
                 action = "edit",
-                actionContent = if (request.enable) "UnLock Pipeline" else "Locked Pipeline",
+                actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
                 projectId = projectId
             )
         )
@@ -1910,8 +1911,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         locked: Boolean,
-        lockReason: String? = null
+        request: PipelineLockRequest? = null
     ): PipelineInfo {
+        val lockReason = request?.lockReason
         val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(

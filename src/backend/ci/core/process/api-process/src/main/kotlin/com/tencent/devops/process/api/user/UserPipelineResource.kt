@@ -264,8 +264,11 @@ interface UserPipelineResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "启用/禁用请求", required = true)
-        request: PipelineLockRequest
+        @Parameter(description = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean,
+        @Parameter(description = "启用/禁用请求体", required = false)
+        request: PipelineLockRequest? = null
     ): Result<Boolean>
 
     @Operation(summary = "获取流水线编排")

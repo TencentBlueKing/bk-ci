@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
@@ -683,7 +684,9 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "开启true/锁定false", required = true)
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        @Parameter(description = "启用/禁用请求体", required = false)
+        request: PipelineLockRequest? = null
     ): Result<Boolean>
 
     @Operation(summary = "更新流水线AI自动摘要")
