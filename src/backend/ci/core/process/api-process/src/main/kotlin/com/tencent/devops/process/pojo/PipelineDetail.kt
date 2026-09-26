@@ -96,6 +96,14 @@ data class PipelineDetail(
     var yamlExist: Boolean? = false,
     @get:Schema(title = "运行锁定", required = false)
     val locked: Boolean,
+    @get:Schema(title = "UI禁用操作人", required = false)
+    val lockUser: String? = null,
+    @get:Schema(title = "UI禁用原因", required = false)
+    val lockReason: String? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean = false,
+    @get:Schema(title = "YAML禁用操作人", required = false)
+    val yamlLockUser: String? = null,
     @get:Schema(title = "构建取消权限策略", required = false)
     var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION,
     @get:Schema(title = "草稿版本号", required = false)

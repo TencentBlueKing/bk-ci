@@ -137,5 +137,7 @@ data class Pipeline(
     @get:Schema(title = "是否处于归档中", required = false)
     var archivingFlag: Boolean? = null,
     @get:Schema(title = "最后一次构建各阶段状态", required = true)
-    var latestBuildStageStatus: List<BuildStageStatus>? = null
+    var latestBuildStageStatus: List<BuildStageStatus>? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    var yamlLock: Boolean = false
 )

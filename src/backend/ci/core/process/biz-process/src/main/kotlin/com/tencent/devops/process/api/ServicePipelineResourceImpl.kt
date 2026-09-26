@@ -64,6 +64,7 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -716,7 +717,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        enable: Boolean
+        enable: Boolean,
+        request: PipelineLockRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId)
 
@@ -724,7 +726,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            enable = enable
+            enable = enable,
+            request = request
         )
         return Result(true)
     }

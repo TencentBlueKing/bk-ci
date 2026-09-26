@@ -113,7 +113,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        if (pipelineInfo.locked == true) return@with
+        if (pipelineInfo.isDisabled()) return@with
         context.pipelineInfo = pipelineInfo
 
         // 3. 取流水线资源版本

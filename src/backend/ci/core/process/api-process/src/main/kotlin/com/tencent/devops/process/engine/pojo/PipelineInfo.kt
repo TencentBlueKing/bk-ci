@@ -92,6 +92,16 @@ data class PipelineInfo(
     var permissions: PipelinePermissions? = null,
     @get:Schema(title = "流水线被锁定，即禁用", required = false)
     var locked: Boolean? = false,
+    @get:Schema(title = "UI禁用操作人", required = false)
+    var lockUser: String? = null,
+    @get:Schema(title = "UI禁用原因", required = false)
+    var lockReason: String? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    var yamlLocked: Boolean? = false,
+    @get:Schema(title = "YAML禁用操作人", required = false)
+    var yamlLockUser: String? = null,
     @get:Schema(title = "AI自动摘要", required = false)
     var autoSummary: String? = null
-)
+) {
+    fun isDisabled(): Boolean = locked == true || yamlLocked == true
+}
