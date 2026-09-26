@@ -33,7 +33,9 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineResourceV4
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_OPENAPI_DEFAULT_LOCK_REASON
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -340,12 +342,23 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         request: PipelineLockRequest?
     ): Result<Boolean> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|lock|$projectId|$pipelineId")
+        val lockRequest = if (!enable && request?.lockReason.isNullOrBlank()) {
+            PipelineLockRequest(
+                lockReason = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_OPENAPI_DEFAULT_LOCK_REASON,
+                    params = arrayOf(userId),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        } else {
+            request
+        }
         return client.get(ServicePipelineResource::class).lockPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             enable = enable,
-            request = request
+            request = lockRequest
         )
     }
 
