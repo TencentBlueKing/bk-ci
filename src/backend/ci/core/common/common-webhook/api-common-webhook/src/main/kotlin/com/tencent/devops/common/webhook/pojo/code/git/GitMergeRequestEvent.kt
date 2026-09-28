@@ -90,7 +90,7 @@ data class GitMRAttributes(
     val description: String?,
     val source: GitProject,
     val target: GitProject,
-    val last_commit: GitCommit,
+    val last_commit: GitCommit? = null,
     val url: String?,
     val action: String?,
     val extension_action: String?,

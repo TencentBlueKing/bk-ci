@@ -331,6 +331,7 @@ class PipelineYamlFileManager @Autowired constructor(
                         "|$eventId|$projectId|$repoHashId|$oldFilePath->$filePath|$ref",
                     ignored
                 )
+                handlePullRequestOnFailed(context = context, exception = ignored)
                 webhookTriggerManager.fireChangeError(
                     context = context, exception = ignored
                 )
@@ -339,6 +340,43 @@ class PipelineYamlFileManager @Autowired constructor(
                 lock2.unlock()
                 lock1.unlock()
             }
+        }
+    }
+
+    /**
+     * yaml 文件无内容变更时的处理。
+     * 例如 MR 合入后未出现在变更列表中的文件,仍需同步合并请求状态。
+     */
+    fun triggerYamlFile(event: PipelineYamlFileEvent) {
+        with(event) {
+            logger.info(
+                "[PAC_PIPELINE]|trigger pipeline yaml|$eventId|$projectId|$repoHashId|$filePath"
+            )
+            val notMergedPullRequest = pullRequestId == null || pullRequestUrl == null ||
+                pullRequestNumber == null || !merged
+            if (notMergedPullRequest) {
+                return
+            }
+            val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                includeOldFilePath = true
+            ) ?: run {
+                logger.info("[PAC_PIPELINE]|yaml pipeline not found|$projectId|$repoHashId|$filePath")
+                return
+            }
+            // pr 合并后,通知资源更新状态
+            pipelineYamlResourceManager.completePullRequest(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineYamlInfo.pipelineId,
+                pullRequestId = pullRequestId,
+                pullRequestUrl = pullRequestUrl,
+                pullRequestNumber = pullRequestNumber,
+                merged = true,
+                isTemplate = isTemplate
+            )
         }
     }
 
