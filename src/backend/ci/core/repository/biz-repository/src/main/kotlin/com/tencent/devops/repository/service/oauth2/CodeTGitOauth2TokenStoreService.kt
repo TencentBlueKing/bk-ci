@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.TGitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -91,7 +91,7 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
             // 非OAUTH授权代持人不得删除
             if (it.operator != userId) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                    errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
                 )
             }
         }

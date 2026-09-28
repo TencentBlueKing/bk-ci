@@ -36,7 +36,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -67,15 +66,6 @@ interface UserGithubResource {
         @QueryParam("oauthUserId")
         oauthUserId: String?
     ): Result<AuthorizeResult>
-
-    @Operation(summary = "删除用户的token ID")
-    @DELETE
-    @Path("/deleteToken")
-    fun deleteToken(
-        @Parameter(description = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
-    ): Result<Boolean>
 
     @Operation(summary = "获取github触发原子配置")
     @GET
