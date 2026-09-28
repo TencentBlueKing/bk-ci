@@ -103,6 +103,7 @@ export default function useRelatedNodes () {
         return proxy.$store.dispatch('environment/previewTagEnvNodes', {
             projectId: projectId.value,
             ...params,
+            createMode: isCreateResType.value,
             tags
         })
     }

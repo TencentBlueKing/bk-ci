@@ -133,8 +133,8 @@ const actions = {
     /**
      * 预览动态环境按标签匹配到的节点列表
      */
-    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags }) {
-        const query = new URLSearchParams({ projectId, page, pageSize }).toString()
+    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags, createMode = false }) {
+        const query = new URLSearchParams({ projectId, page, pageSize, createMode }).toString()
         return request.post(`${prefix}/user/environment/previewTagEnvNodes?${query}`, tags).then(response => {
             return response
         })
