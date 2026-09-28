@@ -188,13 +188,16 @@ class PipelineTemplateInstanceReqConverter(
 
             // 获取版本状态
             val (versionStatus, branchName) = pipelineVersionGenerator.getInstanceStatusAndBranchName(
-                userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 enablePac = enablePac,
                 repoHashId = repoHashId,
                 targetAction = targetAction,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                checkoutBranch = pipelineVersionGenerator.generateTemplateInstanceBranch(
+                    userId = userId,
+                    instanceTime = instanceTime
+                )
             )
 
             val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
