@@ -621,7 +621,7 @@
                     if (isIncomplete) {
                         proxy.$bkMessage({
                             theme: 'warning',
-                            message: proxy.$t('environment.tagIncomplete')
+                            message: proxy.$t('environment.installSession.tagIncomplete')
                         })
                         return
                     }
