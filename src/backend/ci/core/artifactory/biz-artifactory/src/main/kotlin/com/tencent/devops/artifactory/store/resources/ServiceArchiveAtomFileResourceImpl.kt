@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.store.service.ArchiveAtomService
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -84,7 +85,8 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
             inputStream = inputStream,
             disposition = disposition,
             projectId = projectId,
-            filePath = path,
+            // QueryParam path 直接作为仓库目标路径，需规范化后再下传，避免 ../ 写到任意 repo 位置
+            filePath = PathUtil.normalizeAndValidateRepoPath(path),
             fileType = FileTypeEnum.valueOf(fileType),
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
