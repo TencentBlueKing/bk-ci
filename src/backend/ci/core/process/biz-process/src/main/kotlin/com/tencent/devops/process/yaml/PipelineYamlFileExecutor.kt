@@ -77,6 +77,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
             }
 
             YamlFileActionType.TRIGGER -> {
+                pipelineYamlFileManager.triggerYamlFile(this)
                 scmWebhookTriggerBuildService.yamlTrigger(this)
             }
 
