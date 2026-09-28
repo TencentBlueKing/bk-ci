@@ -568,10 +568,12 @@
 
             watch(
                 () => form.os,
-                () => {
+                async () => {
                     if (!dockerSupported.value) form.dockerParallelTaskCount = ''
                     // 网关列表与 OS 相关；重装态 OS 锁定，不重复拉取
-                    if (!isReinstall.value && props.isShow) loadGateways()
+                    if (!isReinstall.value && props.isShow) await loadGateways()
+                    // 切换操作系统后重新拉取环境预览（含关联/匹配/待加入等结果）
+                    if (props.isShow) requestEnvPreview()
                 }
             )
 
