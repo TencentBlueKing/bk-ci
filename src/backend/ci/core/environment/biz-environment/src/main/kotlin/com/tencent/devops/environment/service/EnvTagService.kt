@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_VIEW_PERMISSSION
@@ -288,13 +289,16 @@ class EnvTagService @Autowired constructor(
 
     /**
      * 预览动态环境按标签会匹配到的节点，匹配规则与动态环境节点关联完全一致，见 [batchMatchNodesByTags]。
-     * 返回结构与节点列表 fetchNodes 一致。
+     * 返回结构与节点列表 fetchNodes 一致，createMode 的区分方式也与 fetchNodes 一致：
+     * - createMode = true：只返回创作流节点（NodeType.CREATE），按 CREATIVE_STREAM_NODE 鉴权
+     * - 其他：只返回普通节点（NodeType.coreTypesName()），按 ENVIRONMENT_ENV_NODE 鉴权
      */
     fun previewTagEnvNodes(
         userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
+        createMode: Boolean?,
         tags: List<NodeTagAddOrDeleteTagItem>
     ): Page<NodeWithPermission> {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.VIEW)) {
@@ -308,11 +312,23 @@ class EnvTagService @Autowired constructor(
         if (matchedNodeIds.isEmpty()) {
             return Page(page = curPage, pageSize = curPageSize, count = 0, records = emptyList())
         }
+        val isCreateMode = createMode == true
+        val allowNodeTypes = if (isCreateMode) listOf(NodeType.CREATE.name) else NodeType.coreTypesName()
+        val nodeResourceType = if (isCreateMode) {
+            AuthResourceType.CREATIVE_STREAM_NODE
+        } else {
+            AuthResourceType.ENVIRONMENT_ENV_NODE
+        }
         val nodeRecordList = nodeDao.listAllByIds(dslContext, projectId, matchedNodeIds)
+            .filter { it.nodeType in allowNodeTypes }
+        if (nodeRecordList.isEmpty()) {
+            return Page(page = curPage, pageSize = curPageSize, count = 0, records = emptyList())
+        }
         val nodes = nodeService.formatNodeWithPermissions(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
+            resourceType = nodeResourceType,
             envId = null
         )
         // 内存分页，page = -1 表示不分页
