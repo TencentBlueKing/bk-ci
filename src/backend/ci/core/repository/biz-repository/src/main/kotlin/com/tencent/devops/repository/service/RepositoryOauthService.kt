@@ -54,7 +54,8 @@ class RepositoryOauthService @Autowired constructor(
             status = ScmConfigStatus.SUCCESS,
             oauth2Enabled = true,
             limit = limit.limit,
-            offset = limit.offset
+            offset = limit.offset,
+            checkPermission = false
         ).records.filter {
             // 新的代码源开启OAUTH授权后，才需展示OAUTH信息
             if (it.scmType == ScmType.SCM_SVN || it.scmType == ScmType.SCM_GIT) {

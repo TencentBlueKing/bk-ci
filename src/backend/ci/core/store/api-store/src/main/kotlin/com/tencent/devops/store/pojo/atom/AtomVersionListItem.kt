@@ -50,10 +50,12 @@ data class AtomVersionListItem(
     @get:Schema(title =
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
             "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
-            "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
+            "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架|TESTED：测试结束",
         required = true
     )
     val atomStatus: String,
+    @get:Schema(title = "是否为分支测试版本", required = false)
+    val branchTestFlag: Boolean = false,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "创建时间")

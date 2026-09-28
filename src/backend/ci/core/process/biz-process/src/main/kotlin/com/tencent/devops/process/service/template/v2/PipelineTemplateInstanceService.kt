@@ -145,6 +145,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         val failurePipelines = mutableListOf<String>()
         val successPipelineIds = mutableListOf<String>()
         val failureMessages = mutableMapOf<String, String>()
+        val instanceTime = System.currentTimeMillis()
 
         instances.forEach { instance ->
             try {
@@ -170,7 +171,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     repoHashId = request.repoHashId,
                     filePath = instance.filePath,
                     targetAction = request.targetAction,
-                    targetBranch = request.targetBranch
+                    targetBranch = request.targetBranch,
+                    instanceTime = instanceTime
                 )
                 val deployPipeline = pipelineVersionManager.deployPipeline(
                     userId = userId,
@@ -250,6 +252,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         val failurePipelines = mutableListOf<String>()
         val successPipelineIds = mutableListOf<String>()
         val failureMessages = mutableMapOf<String, String>()
+        val instanceTime = System.currentTimeMillis()
 
         instances.forEach { instance ->
             try {
@@ -278,7 +281,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     filePath = instance.filePath,
                     targetAction = request.targetAction,
                     targetBranch = request.targetBranch,
-                    resetBuildNo = instance.resetBuildNo
+                    resetBuildNo = instance.resetBuildNo,
+                    instanceTime = instanceTime
                 )
                 val deployPipeline = pipelineVersionManager.deployPipeline(
                     userId = userId,
@@ -1027,6 +1031,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         request: PipelineTemplateInstancesRequest
     ): List<PrefetchReleaseResult> {
         return pipelineVersionGenerator.batchPreFetchInstanceVersion(
+            userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,

@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"runtime"
 	"strconv"
 	"time"
@@ -23,7 +24,7 @@ import (
 type CPU struct {
 	// timesFn 获取当前 cpu 时间统计。percpu=true 返回每核；
 	// 额外再单独调一次 percpu=false 获取汇总。
-	timesFn func(percpu bool) ([]cpu.TimesStat, error)
+	timesFn func(ctx context.Context, percpu bool) ([]cpu.TimesStat, error)
 	nowFn   func() time.Time
 
 	// last 保存上次采样，用于计算 delta。
@@ -40,7 +41,7 @@ var winTagNormalizerFn func(measurement string, tags map[string]string) map[stri
 // NewCPU 返回默认 CPU 采集器。
 func NewCPU() *CPU {
 	return &CPU{
-		timesFn: cpu.Times,
+		timesFn: cpu.TimesWithContext,
 		nowFn:   time.Now,
 		last:    make(map[string]cpu.TimesStat),
 	}
@@ -54,12 +55,12 @@ func (c *CPU) Name() string { return RenamedCPUDetail }
 // 采样算法：对同一个 CPU id，diff 当前 total 时间与上次 total 时间，
 // 再按分类 diff 除以 total diff 得到百分比。若两次采样间 total 时间未前进
 // （可能发生于虚拟机暂停），跳过该 CPU。
-func (c *CPU) Gather() ([]Metric, error) {
-	percpu, err := c.timesFn(true)
+func (c *CPU) Gather(ctx context.Context) ([]Metric, error) {
+	percpu, err := c.timesFn(ctx, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "cpu: Times(per) failed")
 	}
-	total, err := c.timesFn(false)
+	total, err := c.timesFn(ctx, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "cpu: Times(total) failed")
 	}

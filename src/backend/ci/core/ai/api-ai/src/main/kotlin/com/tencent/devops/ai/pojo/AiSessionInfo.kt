@@ -37,6 +37,8 @@ data class AiSessionInfo(
     val userId: String,
     @get:Schema(title = "项目ID，空表示公共会话")
     val projectId: String?,
+    @get:Schema(title = "流水线ID，空表示项目级或公共会话")
+    val pipelineId: String?,
     @get:Schema(title = "会话标题")
     val title: String,
     @get:Schema(title = "创建时间")

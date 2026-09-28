@@ -194,14 +194,14 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<BuildFormValue>> {
-        val pipelineList = pipelineListFacadeService.hasPermissionList(
+        val pipelineList = pipelineListFacadeService.listPipelineIdAndName(
             userId = userId,
             projectId = projectId,
             permission = permission,
             excludePipelineId = excludePipelineId,
-            filterByPipelineName = pipelineName,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            pipelineName = pipelineName
         ).records
         return Result(
             pipelineList.map { BuildFormValue(it.pipelineName, it.pipelineName) }

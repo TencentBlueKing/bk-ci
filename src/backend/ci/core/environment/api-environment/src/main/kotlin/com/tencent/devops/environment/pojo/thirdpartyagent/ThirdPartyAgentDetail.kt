@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.pojo.thirdpartyagent
 
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
+import com.tencent.devops.environment.pojo.enums.NodeType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方构建集详情")
@@ -90,5 +91,7 @@ data class ThirdPartyAgentDetail(
     @get:Schema(title = "心跳信息", required = false)
     var heartbeatInfo: NewHeartbeatInfo? = null,
     @get:Schema(title = "错误退出信息", required = false)
-    val exitErrorMsg: String? = null
+    val exitErrorMsg: String? = null,
+    @get:Schema(title = "节点类型", required = false)
+    val nodeType: NodeType? = null
 )

@@ -145,7 +145,7 @@ class TGitMrTriggerHandler(
     }
 
     override fun getRevision(event: GitMergeRequestEvent): String {
-        return event.object_attributes.last_commit.id
+        return event.object_attributes.last_commit?.id ?: ""
     }
 
     override fun getRepoName(event: GitMergeRequestEvent): String {
@@ -257,7 +257,7 @@ class TGitMrTriggerHandler(
             val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
                 keyWord = KEYWORD_SKIP_CI,
-                triggerOnMessage = event.object_attributes.last_commit.message
+                triggerOnMessage = event.object_attributes.last_commit?.message ?: ""
             )
             val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
@@ -335,7 +335,7 @@ class TGitMrTriggerHandler(
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
-                event.object_attributes.last_commit.message,
+                event.object_attributes.last_commit?.message ?: "",
                 pipelineId
             )
             val thirdFilter = ThirdFilter(
@@ -374,9 +374,9 @@ class TGitMrTriggerHandler(
         )
         startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url ?: ""
         val lastCommit = event.object_attributes.last_commit
-        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
-        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
-        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit.message
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit?.id ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit?.message ?: ""
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = lastCommit?.message ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_TYPE] = event.object_attributes.mergeType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] = event.object_attributes.mergeCommitSha ?: ""
 
@@ -405,7 +405,7 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
         startParams[PIPELINE_WEBHOOK_SOURCE_URL] = event.object_attributes.source.http_url
         startParams[PIPELINE_WEBHOOK_TARGET_URL] = event.object_attributes.target.http_url
-        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.object_attributes.last_commit.author.name
+        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.object_attributes.last_commit?.author?.name ?: ""
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""

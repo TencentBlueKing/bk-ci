@@ -103,6 +103,16 @@ BEGIN
             ADD COLUMN `AUTO_SUMMARY` text DEFAULT NULL COMMENT 'AI自动生成的流水线摘要' AFTER `LOCKED`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
+                    AND COLUMN_NAME = 'DEFAULT_BRANCH_YAML_EXIST') THEN
+        ALTER TABLE `T_PIPELINE_YAML_INFO`
+            ADD COLUMN `DEFAULT_BRANCH_YAML_EXIST` bit(1) NOT NULL DEFAULT b'1'
+            COMMENT 'yaml文件是否在默认分支存在';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

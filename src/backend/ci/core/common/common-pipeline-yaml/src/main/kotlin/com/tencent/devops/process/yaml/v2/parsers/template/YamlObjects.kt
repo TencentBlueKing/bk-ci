@@ -266,7 +266,9 @@ object YamlObjects {
                     } else {
                         transValue<List<String>>(fromPath, "network", optionsMap["network"])
                     },
-                    user = getNullValue("user", optionsMap)
+                    user = getNullValue("user", optionsMap),
+                    cpus = getNullValue("cpus", optionsMap),
+                    memory = getNullValue("memory", optionsMap)
                 )
             },
             imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)

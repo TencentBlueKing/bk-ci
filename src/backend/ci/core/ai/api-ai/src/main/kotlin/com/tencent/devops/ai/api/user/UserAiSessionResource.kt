@@ -81,7 +81,10 @@ interface UserAiSessionResource {
         userId: String,
         @Parameter(description = "项目ID，空查公共会话", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "流水线ID，空表示项目级或公共会话", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<List<AiSessionInfo>>
 
     @Operation(summary = "获取最新会话")
@@ -97,7 +100,10 @@ interface UserAiSessionResource {
         userId: String,
         @Parameter(description = "项目ID，空查公共会话", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "流水线ID，空表示项目级或公共会话", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<AiSessionInfo?>
 
     @Operation(summary = "更新会话标题")

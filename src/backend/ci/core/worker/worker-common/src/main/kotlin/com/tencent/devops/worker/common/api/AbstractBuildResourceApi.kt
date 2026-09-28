@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.constant.HTTP_404
@@ -431,7 +432,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        val args = buildArgs.plus(headers)
+        var args = buildArgs.plus(headers)
+        // 可选上报流水线归属，供 log 查询鉴权对齐 buildId；旧 Worker 不传也能写日志
+        resolvePipelineId()?.let { args = args.plus(AUTH_HEADER_DEVOPS_PIPELINE_ID to it) }
         return if (BuildEnv.getBuildType() == BuildType.AGENT) {
             val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
             if (buildInfo == null) {
@@ -443,6 +446,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } else {
             args
         }
+    }
+
+    /**
+     * AGENT 优先取 ThirdPartyBuildInfo.pipelineId，其余构建类型取 LoggerService.buildVariables。
+     * 均可能为空（旧 Agent / 启动早期），header 可缺省。
+     */
+    private fun resolvePipelineId(): String? {
+        ThirdPartyAgentBuildInfoUtils.getBuildInfo()?.pipelineId
+            ?.takeIf { it.isNotBlank() }
+            ?.let { return it }
+        return LoggerService.buildVariables?.pipelineId?.takeIf { it.isNotBlank() }
     }
 
     fun encodeProperty(str: String): String {

@@ -495,11 +495,13 @@ object ProcessMessageCode {
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101371"
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101372" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101374" // 模板草稿版本设置[{0}]不存在
+    // 获取Fork仓库YAML失败：PR触发人[{0}]尚未完成OAUTH授权或没有仓库[{1}]读取权限
+    const val ERROR_PAC_FORK_YAML_OAUTH = "2101375"
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     // 注意: 前端执行预览页(preview.vue)依赖该错误码值展示错误页, 不要修改
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
-    const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
-    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101374" // 模板草稿版本设置[{0}]不存在
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     // 注意: 前端执行预览页(preview.vue)依赖该错误码值展示错误页, 不要修改
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
@@ -533,6 +535,18 @@ object ProcessMessageCode {
     const val ERROR_ATOM_RUN_ENV_OS_UNSUPPORTED = "2101401"
     // 编排中存在不适用于所在Job构建环境操作系统的插件，暂不能保存，不适配插件明细：{0}
     const val ERROR_ATOM_JOB_OS_INCOMPATIBLE = "2101402"
+    // 当前 IMATE 审核组须在 imate 会话点击锁定完成审核。taskId={0}
+    const val ERROR_IMATE_STAGE_REVIEW_NOT_LOCKED = "2101403"
+    // imate 会话已驳回该 Stage 审核。taskId={0}
+    const val ERROR_IMATE_STAGE_REVIEW_REJECTED = "2101404"
+    // CDS 审批会话与本次构建绑定的 imate 会话不一致。taskId={0}
+    const val ERROR_IMATE_STAGE_REVIEW_SESSION_MISMATCH = "2101405"
+    // 查询 imate 审批状态失败。taskId={0}
+    const val ERROR_IMATE_STAGE_REVIEW_QUERY_FAILED = "2101406"
+    // 未配置 CDS 审批凭证。taskId={0}
+    const val ERROR_IMATE_STAGE_REVIEW_NOT_CONFIGURED = "2101407"
+    // 无效的创作流 Stage 审核 taskId：{0}
+    const val ERROR_IMATE_STAGE_REVIEW_TASK_INVALID = "2101408"
 
     // 构建执行相关错误码（2101500-2101599）
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
@@ -768,6 +782,16 @@ object ProcessMessageCode {
     const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
     const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
     const val BK_STAGE_REVIEW_EMPTY_REVIEWER = "bkStageReviewEmptyViewer" // 由于无审核人，被系统自动驳回
+    // 当前审核组 [IMATE] 待审核，请在 imate 会话点击锁定。taskId={0}
+    const val BK_IMATE_STAGE_REVIEW_WAITING = "bkImateStageReviewWaiting"
+    // imate 锁定审批已通过，继续执行 Stage。taskId={0} approver={1}
+    const val BK_IMATE_STAGE_REVIEW_PASSED = "bkImateStageReviewPassed"
+    // 拒绝执行 Stage 审核：{0}
+    const val BK_IMATE_STAGE_REVIEW_DENIED = "bkImateStageReviewDenied"
+    // 创作流审核：{0} #{1} / {2}
+    const val BK_IMATE_STAGE_REVIEW_CARD_TITLE = "bkImateStageReviewCardTitle"
+    // CDS 锁定卡片 Markdown 正文
+    const val BK_IMATE_STAGE_REVIEW_CARD_CONTENT = "bkImateStageReviewCardContent"
 
     // [SystemLog]收到终止指令(UnExecute PostAction Task)
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
@@ -913,4 +937,7 @@ object ProcessMessageCode {
 
     // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
     const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
+
+    // 构建机容器发生重启，构建进程已中断
+    const val BK_BUILD_CONTAINER_RESTARTED = "bkBuildContainerRestarted"
 }

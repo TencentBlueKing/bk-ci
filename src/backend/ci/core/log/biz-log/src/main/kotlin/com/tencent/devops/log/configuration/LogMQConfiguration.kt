@@ -37,6 +37,7 @@ import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.service.BuildLogListenerService
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.LogProjectIdResolver
 import com.tencent.devops.log.service.LogTrafficStatsService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -58,6 +59,7 @@ class LogMQConfiguration {
         @Autowired storageProperties: StorageProperties,
         @Autowired logTrafficStatsService: LogTrafficStatsService,
         @Autowired logMetrics: LogMetrics,
+        @Autowired logProjectIdResolver: LogProjectIdResolver,
         @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(
         streamBridge = streamBridge,
@@ -65,6 +67,7 @@ class LogMQConfiguration {
         storageProperties = storageProperties,
         logTrafficStatsService = logTrafficStatsService,
         logMetrics = logMetrics,
+        logProjectIdResolver = logProjectIdResolver,
         logServiceConfig = logServiceConfig
     )
 

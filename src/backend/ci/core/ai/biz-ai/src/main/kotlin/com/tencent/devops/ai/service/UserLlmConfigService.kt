@@ -79,6 +79,10 @@ class UserLlmConfigService @Autowired constructor(
         )
     }
 
+    fun listAllForOp(): List<UserLlmConfigInfo> {
+        return dao.listAll(dslContext).map { it.toInfo() }
+    }
+
     fun delete(userId: String): Boolean {
         logger.info("[UserLlmConfig] Deleting config: userId={}", userId)
         return dao.delete(dslContext, userId) > 0

@@ -20,6 +20,9 @@ import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.Record
+import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -323,29 +326,8 @@ class PipelineTemplateResourceDao {
         commonCondition: PipelineTemplateResourceCommonCondition
     ): List<PipelineTemplateVersionSimple> {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
-            dslContext.select(
-                TEMPLATE_ID,
-                SETTING_VERSION,
-                VERSION,
-                VERSION_NAME,
-                VERSION_NUM,
-                PIPELINE_VERSION,
-                TRIGGER_VERSION,
-                BASE_VERSION,
-                BASE_VERSION_NAME,
-                SRC_TEMPLATE_PROJECT_ID,
-                SRC_TEMPLATE_ID,
-                SRC_TEMPLATE_VERSION,
-                STATUS,
-                DESCRIPTION,
-                CREATOR,
-                UPDATER,
-                CREATED_TIME,
-                UPDATE_TIME,
-                STORE_STATUS,
-                NUMBER,
-                DRAFT_VERSION
-            ).from(this)
+            dslContext.select(versionSimpleFields)
+                .from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
                 .let {
@@ -356,32 +338,27 @@ class PipelineTemplateResourceDao {
                         it
                     }
                 }
-                .fetch()
-                .map {
-                    PipelineTemplateVersionSimple(
-                        pipelineId = it.value1(),
-                        settingVersion = it.value2(),
-                        version = it.value3().toInt(),
-                        versionName = it.value4() ?: "",
-                        versionNum = it.value5(),
-                        pipelineVersion = it.value6(),
-                        triggerVersion = it.value7(),
-                        baseVersion = it.value8()?.toInt(),
-                        baseVersionName = it.value9(),
-                        srcTemplateProjectId = it.value10(),
-                        srcTemplateId = it.value11(),
-                        srcTemplateVersion = it.value12()?.toInt(),
-                        status = VersionStatus.get(it.value13()),
-                        description = it.value14(),
-                        creator = it.value15(),
-                        updater = it.value16(),
-                        createTime = it.value17().timestampmilli(),
-                        updateTime = it.value18().timestampmilli(),
-                        storeFlag = it.value19() == TemplateStatusEnum.RELEASED.name,
-                        number = it.value20(),
-                        draftVersion = it.value21()
-                    )
-                }
+                .fetch(versionSimpleMapper)
+        }
+    }
+
+    /**
+     * 按 NUMBER 取最大值对应的版本摘要，包含已删除，不查询 MODEL/YAML。
+     * 用于计算下一个 number。
+     */
+    fun getMaxNumberVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): PipelineTemplateVersionSimple? {
+        with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            return dslContext.select(versionSimpleFields)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .orderBy(NUMBER.desc())
+                .limit(1)
+                .fetchOne(versionSimpleMapper)
         }
     }
 
@@ -425,14 +402,7 @@ class PipelineTemplateResourceDao {
                 conditions.add(STORE_STATUS.`in`(storeStatusList.map { it.name }))
             }
             val query = dslContext.selectFrom(this).where(conditions)
-            // 正式版本,应该按照versionNum排序,
-            // 不然如果版本顺序是: 正式(v1)->草稿->正式(v2),
-            // 如果把草稿发布,那么草稿应是v3,如果再创建一个正式版本,如果按照仅按照version排序,正式版本的versionNum还是v3
-            if (status == VersionStatus.RELEASED) {
-                query.orderBy(VERSION_NUM.desc(), VERSION.desc())
-            } else {
-                query.orderBy(VERSION.desc())
-            }
+            query.orderBy(RELEASE_TIME.desc(), NUMBER.desc())
             return query.limit(1).fetchOne()?.convert()
         }
     }
@@ -450,52 +420,14 @@ class PipelineTemplateResourceDao {
                 .groupBy(TEMPLATE_ID)
                 .asTable("m")
             // 主查询关联获取VERSION
-            dslContext.select(
-                TEMPLATE_ID,
-                SETTING_VERSION,
-                VERSION,
-                VERSION_NAME,
-                VERSION_NUM,
-                PIPELINE_VERSION,
-                TRIGGER_VERSION,
-                BASE_VERSION,
-                BASE_VERSION_NAME,
-                SRC_TEMPLATE_VERSION,
-                STATUS,
-                DESCRIPTION,
-                CREATOR,
-                UPDATER,
-                CREATED_TIME,
-                UPDATE_TIME,
-                NUMBER
-            )
+            dslContext.select(versionSimpleFields)
                 .from(this)
                 .join(maxNumbers)
                 .on(
                     TEMPLATE_ID.eq(maxNumbers.field(TEMPLATE_ID)),
                     NUMBER.eq(maxNumbers.field("max_number", Int::class.java))
                 )
-                .fetch().map {
-                    PipelineTemplateVersionSimple(
-                        pipelineId = it.value1(),
-                        settingVersion = it.value2(),
-                        version = it.value3().toInt(),
-                        versionName = it.value4() ?: "",
-                        versionNum = it.value5(),
-                        pipelineVersion = it.value6(),
-                        triggerVersion = it.value7(),
-                        baseVersion = it.value8()?.toInt(),
-                        baseVersionName = it.value9(),
-                        srcTemplateVersion = it.value10()?.toInt(),
-                        status = VersionStatus.get(it.value11()),
-                        description = it.value12(),
-                        creator = it.value13(),
-                        updater = it.value14(),
-                        createTime = it.value15().timestampmilli(),
-                        updateTime = it.value16().timestampmilli(),
-                        number = it.value17()
-                    )
-                }
+                .fetch(versionSimpleMapper)
         }
     }
 
@@ -603,5 +535,67 @@ class PipelineTemplateResourceDao {
             storeStatus = TemplateStatusEnum.valueOf(this.storeStatus),
             draftVersion = this.draftVersion
         )
+    }
+
+    class PipelineTemplateVersionSimpleMapper : RecordMapper<Record, PipelineTemplateVersionSimple> {
+        override fun map(record: Record?): PipelineTemplateVersionSimple? {
+            if (record == null) return null
+            with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+                return PipelineTemplateVersionSimple(
+                    pipelineId = record[TEMPLATE_ID],
+                    settingVersion = record[SETTING_VERSION],
+                    version = record[VERSION].toInt(),
+                    versionName = record[VERSION_NAME] ?: "",
+                    versionNum = record[VERSION_NUM],
+                    pipelineVersion = record[PIPELINE_VERSION],
+                    triggerVersion = record[TRIGGER_VERSION],
+                    baseVersion = record[BASE_VERSION]?.toInt(),
+                    baseVersionName = record[BASE_VERSION_NAME],
+                    srcTemplateProjectId = record[SRC_TEMPLATE_PROJECT_ID],
+                    srcTemplateId = record[SRC_TEMPLATE_ID],
+                    srcTemplateVersion = record[SRC_TEMPLATE_VERSION]?.toInt(),
+                    status = VersionStatus.get(record[STATUS]),
+                    description = record[DESCRIPTION],
+                    creator = record[CREATOR],
+                    updater = record[UPDATER],
+                    createTime = record[CREATED_TIME].timestampmilli(),
+                    updateTime = record[UPDATE_TIME].timestampmilli(),
+                    storeFlag = record[STORE_STATUS] == TemplateStatusEnum.RELEASED.name,
+                    number = record[NUMBER],
+                    draftVersion = record[DRAFT_VERSION]
+                )
+            }
+        }
+    }
+
+    companion object {
+        private val versionSimpleMapper = PipelineTemplateVersionSimpleMapper()
+
+        private val versionSimpleFields: List<Field<*>> =
+            with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+                listOf(
+                    TEMPLATE_ID,
+                    SETTING_VERSION,
+                    VERSION,
+                    VERSION_NAME,
+                    VERSION_NUM,
+                    PIPELINE_VERSION,
+                    TRIGGER_VERSION,
+                    BASE_VERSION,
+                    BASE_VERSION_NAME,
+                    SRC_TEMPLATE_PROJECT_ID,
+                    SRC_TEMPLATE_ID,
+                    SRC_TEMPLATE_VERSION,
+                    STATUS,
+                    DESCRIPTION,
+                    CREATOR,
+                    UPDATER,
+                    CREATED_TIME,
+                    UPDATE_TIME,
+                    STORE_STATUS,
+                    NUMBER,
+                    DRAFT_VERSION
+                )
+            }
     }
 }

@@ -25,11 +25,11 @@
             class="input-selector"
             :is="curComponent.type"
             :name="curComponent.key"
-            v-validate.initial="Object.assign({}, { required: !!curComponent.required })"
+            v-validate.initial="Object.assign({}, { required: !!curComponent.required && !curComponent.disabled })"
             :handle-change="handleChange"
             :value="element[curComponent.key]"
             :element="element"
-            :disabled="disabled"
+            :disabled="disabled || !!curComponent.disabled"
             v-bind="curComponent"
         />
     </div>

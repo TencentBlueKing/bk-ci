@@ -239,9 +239,12 @@ class RepositoryScmConfigService @Autowired constructor(
         mergeEnabled: Boolean? = null,
         pacEnabled: Boolean? = null,
         offset: Int,
-        limit: Int
+        limit: Int,
+        checkPermission: Boolean = true
     ): SQLPage<RepositoryScmConfigVo> {
-        validateUserPlatformPermission(userId = userId)
+        if (checkPermission) {
+            validateUserPlatformPermission(userId = userId)
+        }
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val count = repositoryScmConfigDao.count(
             dslContext = dslContext,

@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"runtime"
 	"time"
 
@@ -33,7 +34,7 @@ import (
 // 100 * float64(used) / float64(total) 覆盖所有平台。
 type Mem struct {
 	// virtualMemFn 为 mem.VirtualMemory 的注入点，便于测试替换。
-	virtualMemFn func() (*mem.VirtualMemoryStat, error)
+	virtualMemFn func(ctx context.Context) (*mem.VirtualMemoryStat, error)
 	// nowFn 用于测试注入固定时间戳。
 	nowFn func() time.Time
 	// platform 控制字段分支；默认取 runtime.GOOS，测试可覆盖。
@@ -43,7 +44,7 @@ type Mem struct {
 // NewMem 构造一个 Mem 采集器，使用默认的 gopsutil 实现。
 func NewMem() *Mem {
 	return &Mem{
-		virtualMemFn: mem.VirtualMemory,
+		virtualMemFn: mem.VirtualMemoryWithContext,
 		nowFn:        time.Now,
 		platform:     runtime.GOOS,
 	}
@@ -55,8 +56,8 @@ func (m *Mem) Name() string { return "mem" }
 // Gather 采集内存信息并构造 metric 列表。
 // 失败时返回非空 error，且不返回部分 metric（mem 采集要么全成功要么失败，
 // 不像 disk 那样有多个挂载点可部分降级）。
-func (m *Mem) Gather() ([]Metric, error) {
-	vm, err := m.virtualMemFn()
+func (m *Mem) Gather(ctx context.Context) ([]Metric, error) {
+	vm, err := m.virtualMemFn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "mem: VirtualMemory failed")
 	}

@@ -21,7 +21,6 @@ LINUX
 
 ## 安全相关
 1. 如何开启 JWT? [JWT配置文档](./jwt.md)
-2. 如何独立安装 kubernetes-manager [kubernetes-manager安装文档](./kubernetes-manager.md)
 
 ## FAQ
 #### values.yaml的配置可以在哪里看到?

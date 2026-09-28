@@ -251,8 +251,7 @@ class PipelineBuildContainerDao {
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
-        statusSet: Set<BuildStatus>? = null,
-        executeCount: Int? = null
+        statusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildContainer> {
         return with(T_PIPELINE_BUILD_CONTAINER) {
             val conditionStep = dslContext.selectFrom(this)
@@ -270,10 +269,23 @@ class PipelineBuildContainerDao {
             if (containsMatrix == false) {
                 conditionStep.and(MATRIX_GROUP_ID.isNull)
             }
-            executeCount?.let {
-                conditionStep.and(EXECUTE_COUNT.eq(executeCount))
-            }
             conditionStep.orderBy(SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    fun listByBuildIds(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: Collection<String>,
+    ): List<PipelineBuildContainer> {
+        if (buildIds.isEmpty()) {
+            return emptyList()
+        }
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.`in`(buildIds))
+                .fetch(mapper)
         }
     }
 

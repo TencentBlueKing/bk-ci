@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -33,14 +34,14 @@ func TestProcesses_Gather_CountsByStatus(t *testing.T) {
 	// 让每个进程有不同状态：R, S, T, Z, I
 	statuses := [][]string{{"R"}, {"S"}, {"T"}, {"Z"}, {"I"}}
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return procs, nil },
-		statusFn: func(pr *process.Process) ([]string, error) {
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return procs, nil },
+		statusFn: func(_ context.Context, pr *process.Process) ([]string, error) {
 			return statuses[pr.Pid-1], nil
 		},
-		threadsFn: func(pr *process.Process) (int32, error) { return 2, nil },
+		threadsFn: func(_ context.Context, pr *process.Process) (int32, error) { return 2, nil },
 		nowFn:     time.Now,
 	}
-	metrics, err := p.Gather()
+	metrics, err := p.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,17 +70,17 @@ func TestProcesses_Gather_SkipsErroredProcesses(t *testing.T) {
 	// 某进程 Status() 出错（可能已退出）不应影响其他
 	procs := fakeProcs(3)
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return procs, nil },
-		statusFn: func(pr *process.Process) ([]string, error) {
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return procs, nil },
+		statusFn: func(_ context.Context, pr *process.Process) ([]string, error) {
 			if pr.Pid == 2 {
 				return nil, errors.New("no such proc")
 			}
 			return []string{"R"}, nil
 		},
-		threadsFn: func(pr *process.Process) (int32, error) { return 1, nil },
+		threadsFn: func(_ context.Context, pr *process.Process) (int32, error) { return 1, nil },
 		nowFn:     time.Now,
 	}
-	metrics, _ := p.Gather()
+	metrics, _ := p.Gather(context.Background())
 	if v, _ := metrics[0].Fields[FieldRunning].(int64); v != 2 {
 		t.Errorf("running = %v, want 2 (skipping errored)", v)
 	}
@@ -88,10 +89,59 @@ func TestProcesses_Gather_SkipsErroredProcesses(t *testing.T) {
 func TestProcesses_Gather_ListError(t *testing.T) {
 	sentinel := errors.New("boom")
 	p := &Processes{
-		processesFn: func() ([]*process.Process, error) { return nil, sentinel },
+		processesFn: func(_ context.Context) ([]*process.Process, error) { return nil, sentinel },
 		nowFn:       time.Now,
 	}
-	if _, err := p.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := p.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
+		t.Errorf("err = %v", err)
+	}
+}
+
+func TestProcesses_Gather_PSOnce(t *testing.T) {
+	calls := 0
+	p := &Processes{
+		execPSFn: func(_ context.Context) ([]byte, error) {
+			calls++
+			return []byte("STAT\nSs\nR+\nU\nI\nT\nZ\n?\n"), nil
+		},
+		nowFn: time.Now,
+	}
+
+	metrics, err := p.Gather(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Fatalf("ps calls = %d, want exactly 1", calls)
+	}
+
+	fields := metrics[0].Fields
+	checks := map[string]int64{
+		FieldRunning:  1,
+		FieldSleeping: 3,
+		FieldStopped:  1,
+		FieldZombies:  1,
+		FieldTotal:    7,
+	}
+	for field, want := range checks {
+		if got, _ := fields[field].(int64); got != want {
+			t.Errorf("%s = %v, want %d", field, fields[field], want)
+		}
+	}
+	if _, exists := fields[FieldTotalThreads]; exists {
+		t.Error("Darwin ps path should not emit Linux-only total_threads")
+	}
+}
+
+func TestProcesses_Gather_PSError(t *testing.T) {
+	sentinel := errors.New("ps failed")
+	p := &Processes{
+		execPSFn: func(_ context.Context) ([]byte, error) {
+			return nil, sentinel
+		},
+		nowFn: time.Now,
+	}
+	if _, err := p.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }

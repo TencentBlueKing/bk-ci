@@ -1240,6 +1240,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
     `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
     `RESOURCE_TYPE`  varchar(32) default 'PIPELINE'  not null comment '资源类型,流水线/模版',
     `OLD_FILE_PATH` varchar(512) DEFAULT NULL COMMENT '重命名前的文件路径，用于保留原流水线时追溯',
+    `DEFAULT_BRANCH_YAML_EXIST` bit(1) NOT NULL DEFAULT b'1' COMMENT 'yaml文件是否在默认分支存在',
     PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`),
     INDEX IDX_PIPELINE (`PROJECT_ID`, `PIPELINE_ID`),
     INDEX IDX_REPO_OLD_FILE_PATH (`PROJECT_ID`, `REPO_HASH_ID`, `OLD_FILE_PATH`)

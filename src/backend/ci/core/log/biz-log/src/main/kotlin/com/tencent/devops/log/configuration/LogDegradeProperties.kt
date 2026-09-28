@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * origin 直写 ES 失败/过慢时，降级到 storage 队列的熔断配置（#13327）。
+ * origin 直写 ES 失败/过慢时，降级到 storage 队列的熔断配置。
  *
  * 影响范围：[com.tencent.devops.log.service.LogStorageDegradeSwitcher]、
  * [com.tencent.devops.log.service.impl.LogServiceESImpl] 的直写/降级决策。
@@ -88,4 +88,11 @@ class LogDegradeProperties {
      */
     @Value("\${log.degrade.slowMs:300}")
     var slowMs: Long = 300
+
+    /**
+     * per-project 熔断最多跟踪的 key（projectId 或 b:buildId）数量上限。
+     * 超出时淘汰最冷的 key，避免无限增长。
+     */
+    @Value("\${log.degrade.maxTrackedProjects:1024}")
+    var maxTrackedProjects: Int = 1024
 }

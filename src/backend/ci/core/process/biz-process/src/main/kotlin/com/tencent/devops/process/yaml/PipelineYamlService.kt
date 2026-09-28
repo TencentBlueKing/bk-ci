@@ -96,7 +96,8 @@ class PipelineYamlService(
                 status = status,
                 userId = userId,
                 resourceType = resourceType,
-                oldFilePath = oldFilePath
+                oldFilePath = oldFilePath,
+                defaultBranchYamlExist = ref == defaultBranch
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -149,7 +150,8 @@ class PipelineYamlService(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 defaultBranch = defaultBranch,
-                userId = userId
+                userId = userId,
+                defaultBranchYamlExist = true.takeIf { ref == defaultBranch }
             )
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
@@ -287,25 +289,7 @@ class PipelineYamlService(
             pipelineIds = pipelineIds
         ).associateBy { it.pipelineId }
         return pipelineIds.associateWith { pipelineId ->
-            val yamlInfo = yamlInfoMap[pipelineId]
-            // 如果流水线没有绑定PAC,则表示yaml不存在
-            if (yamlInfo == null || yamlInfo.defaultBranch.isNullOrBlank()) {
-                false
-            } else {
-                val branchYamlFile = pipelineYamlBranchFileDao.get(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    repoHashId = yamlInfo.repoHashId,
-                    branch = yamlInfo.defaultBranch!!,
-                    filePath = yamlInfo.filePath
-                )
-                if (branchYamlFile == null) {
-                    false
-                } else {
-                    // 默认分支删除,是软删除,不会直接删除
-                    !branchYamlFile.deleted
-                }
-            }
+            yamlInfoMap[pipelineId]?.defaultBranchYamlExist == true
         }
     }
 
@@ -539,7 +523,8 @@ class PipelineYamlService(
                     status = status,
                     userId = userId,
                     resourceType = resourceType,
-                    oldFilePath = oldFilePath
+                    oldFilePath = oldFilePath,
+                    defaultBranchYamlExist = ref == defaultBranch
                 )
             }
             val id = client.get(ServiceAllocIdResource::class).generateSegmentId(

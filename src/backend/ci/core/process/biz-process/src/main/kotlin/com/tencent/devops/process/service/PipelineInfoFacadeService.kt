@@ -602,7 +602,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.start("project_v_pipeline")
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
-            if (projectVO?.pipelineLimit != null) {
+            // codecc等无需注册鉴权的渠道不受项目流水线数量上限约束
+            if (ChannelCode.isNeedAuth(channelCode) && projectVO?.pipelineLimit != null) {
                 val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
