@@ -37,7 +37,10 @@ class DefaultGitHookYamlDiffConverter @Autowired constructor(
             ref = defaultBranch,
             authRepository = AuthRepository(repository)
         )
-        return fileTrees.map { tree ->
+        return fileTrees.filter {
+            // 模版不需要执行
+            !YamlFileUtils.isTemplateFile(YamlFileUtils.getCiFilePath(it.path))
+        }.map { tree ->
             val filePath = YamlFileUtils.getCiFilePath(tree.path)
             PipelineYamlDiff(
                 projectId = projectId,

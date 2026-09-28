@@ -342,13 +342,15 @@ class PipelineYamlFileManager @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
                     )
                 }
-                pipelineYamlViewService.createYamlViewIfAbsent(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    aliasName = repository.aliasName,
-                    directoryList = setOf(YamlFileUtils.getCiDirectory(filePath))
-                )
+                if (!YamlFileUtils.isTemplateFile(filePath)) {
+                    pipelineYamlViewService.createYamlViewIfAbsent(
+                        userId = userId,
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        aliasName = repository.aliasName,
+                        directoryList = setOf(YamlFileUtils.getCiDirectory(filePath))
+                    )
+                }
                 lock.lock()
                 val defaultBranch = serverRepository.defaultBranch!!
                 val ref = when {
