@@ -35,11 +35,10 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -124,15 +123,6 @@ interface UserGitResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
-
-    @Operation(summary = "删除用户的token ID")
-    @DELETE
-    @Path("/deleteToken")
-    fun deleteToken(
-        @Parameter(description = "用户ID", required = true)
-        @QueryParam("userId")
-        userId: String
-    ): Result<Int>
 
     @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
     @GET
