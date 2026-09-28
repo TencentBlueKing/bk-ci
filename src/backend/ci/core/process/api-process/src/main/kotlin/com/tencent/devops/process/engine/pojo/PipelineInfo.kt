@@ -96,10 +96,14 @@ data class PipelineInfo(
     var lockUser: String? = null,
     @get:Schema(title = "UI禁用原因", required = false)
     var lockReason: String? = null,
+    @get:Schema(title = "UI禁用操作时间", required = false)
+    var lockTime: Long? = null,
     @get:Schema(title = "YAML是否禁用", required = false)
     var yamlLocked: Boolean? = false,
     @get:Schema(title = "YAML禁用操作人", required = false)
     var yamlLockUser: String? = null,
+    @get:Schema(title = "YAML禁用操作时间", required = false)
+    var yamlLockTime: Long? = null,
     @get:Schema(title = "AI自动摘要", required = false)
     var autoSummary: String? = null
 ) {

@@ -179,15 +179,17 @@ class PipelineInfoDao {
         lockReason: String?
     ): Boolean {
         return with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
             val update = dslContext.update(this)
                 .set(LOCKED, locked)
                 .set(LOCK_USER, lockUser)
+                .set(LOCK_TIME, now)
             if (lockReason != null) {
                 update.set(LOCK_REASON, lockReason)
             } else {
                 update.setNull(LOCK_REASON)
             }
-            update.set(UPDATE_TIME, LocalDateTime.now())
+            update.set(UPDATE_TIME, now)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute() == 1
@@ -202,10 +204,12 @@ class PipelineInfoDao {
         yamlLockUser: String
     ): Boolean {
         return with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
             dslContext.update(this)
                 .set(YAML_LOCKED, yamlLocked)
                 .set(YAML_LOCK_USER, yamlLockUser)
-                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(YAML_LOCK_TIME, now)
+                .set(UPDATE_TIME, now)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute() == 1
@@ -789,8 +793,10 @@ class PipelineInfoDao {
                     locked = t.locked,
                     lockUser = t.lockUser,
                     lockReason = t.lockReason,
+                    lockTime = t.lockTime?.timestampmilli(),
                     yamlLocked = t.yamlLocked,
                     yamlLockUser = t.yamlLockUser,
+                    yamlLockTime = t.yamlLockTime?.timestampmilli(),
                     autoSummary = t.autoSummary
                 )
             }

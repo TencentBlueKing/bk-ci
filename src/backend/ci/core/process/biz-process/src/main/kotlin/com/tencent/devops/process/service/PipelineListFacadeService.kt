@@ -2070,8 +2070,10 @@ class PipelineListFacadeService @Autowired constructor(
             locked = pipelineInfo.locked ?: false,
             lockUser = pipelineInfo.lockUser,
             lockReason = pipelineInfo.lockReason,
+            lockTime = pipelineInfo.lockTime,
             yamlLocked = pipelineInfo.yamlLocked ?: false,
-            yamlLockUser = pipelineInfo.yamlLockUser
+            yamlLockUser = pipelineInfo.yamlLockUser,
+            yamlLockTime = pipelineInfo.yamlLockTime
         )
     }
 

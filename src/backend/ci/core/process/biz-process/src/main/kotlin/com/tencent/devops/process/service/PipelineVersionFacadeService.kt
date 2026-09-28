@@ -250,8 +250,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             locked = detailInfo.locked,
             lockUser = detailInfo.lockUser,
             lockReason = detailInfo.lockReason,
+            lockTime = detailInfo.lockTime,
             yamlLocked = detailInfo.yamlLocked,
             yamlLockUser = detailInfo.yamlLockUser,
+            yamlLockTime = detailInfo.yamlLockTime,
             buildCancelPolicy = pipelineSetting?.buildCancelPolicy,
             draftVersion = draftResource?.draftVersion
         )

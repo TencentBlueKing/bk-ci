@@ -70,8 +70,12 @@ data class PipelineDetailInfo(
     val lockUser: String? = null,
     @get:Schema(title = "UI禁用原因", required = false)
     val lockReason: String? = null,
+    @get:Schema(title = "UI禁用操作时间", required = false)
+    val lockTime: Long? = null,
     @get:Schema(title = "YAML是否禁用", required = false)
     val yamlLocked: Boolean = false,
     @get:Schema(title = "YAML禁用操作人", required = false)
-    val yamlLockUser: String? = null
+    val yamlLockUser: String? = null,
+    @get:Schema(title = "YAML禁用操作时间", required = false)
+    val yamlLockTime: Long? = null
 )
