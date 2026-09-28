@@ -493,6 +493,14 @@
                     node: null,
                     defaultOs: ''
                 },
+                // CMDB弹窗配置
+                cmdbNodeSelectConf: {
+                    isShow: false,
+                    quickClose: false,
+                    hasHeader: false,
+                    unselected: true,
+                    importText: '导入'
+                },
                 searchValue: urlParams.searchValue || [],
                 importStatus: 'success',
                 importMessage: '',
