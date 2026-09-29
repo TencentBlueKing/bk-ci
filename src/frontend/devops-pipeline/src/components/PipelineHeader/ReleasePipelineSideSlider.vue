@@ -54,6 +54,7 @@
                                 >
                                     <span class="instance-name">{{ item.pipelineName }}</span>
                                     <span
+                                        v-if="!isInstanceReleaseFinished"
                                         v-bk-overflow-tips
                                         class="release-pipeline-new-version"
                                     >
@@ -100,7 +101,6 @@
                         </bk-alert>
                         
                         <div
-                            v-if="showPacSwitcherConfig"
                             class="release-pipeline-pac-conf"
                         >
                             <aside class="release-pipeline-pac-conf-leftside">
@@ -520,6 +520,7 @@
                         <release-task-status
                             :instance-num="instanceList.length"
                             @cancel="cancelRelease"
+                            @status-change="handleInstanceReleaseStatusChange"
                         />
                     </section>
                 </template>
@@ -556,6 +557,7 @@
     import ReleaseTaskStatus from '@/components/Template/ReleaseTaskStatus'
     import ReleaseConflictDialog from './ReleaseConflictDialog'
     import {
+        RELEASE_STATUS,
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
@@ -638,6 +640,7 @@
                     repoHashId: ''
                 },
                 newReleaseVersionNameList: [],
+                instanceReleaseStatus: '',
                 TARGET_ACTION_ENUM,
                 customVersionName: '',
                 currentSidesliderContentHeight: 0,
@@ -785,11 +788,8 @@
             templateInstanceEnablePac () {
                 return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
-            showPacSwitcherConfig () {
-                return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : true
-            },
             disabledPacSwitcher () {
-                return this.isTemplateInstanceMode ? false : this.pacEnabled
+                return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
             },
             disabledScmType () {
                 if (this.isTemplateInstanceMode) return this.templateInstanceEnablePac
@@ -818,10 +818,20 @@
             versionName () {
                 return this.$route.query?.versionName
             },
+            // 实例化发布任务是否已进入运行结束态（成功/失败/部分成功）
+            isInstanceReleaseFinished () {
+                return this.isInstanceReleasing && [
+                    RELEASE_STATUS.SUCCESS,
+                    RELEASE_STATUS.FAILED,
+                    RELEASE_STATUS.PARTIAL_SUCCESS
+                ].includes(this.instanceReleaseStatus)
+            },
         },
         watch: {
             value (val) {
                 if (val) {
+                    // 每次打开时重置发布任务状态，避免上一次的结束态影响本次展示
+                    this.instanceReleaseStatus = ''
                     this.init()
                     this.$nextTick()
                     const winHeight = window.innerHeight
@@ -1591,6 +1601,9 @@
             },
             resetReleasing () {
                 this.releasing = false
+            },
+            handleInstanceReleaseStatusChange (status) {
+                this.instanceReleaseStatus = status
             },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting

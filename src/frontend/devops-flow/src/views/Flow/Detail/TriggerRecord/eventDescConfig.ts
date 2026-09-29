@@ -389,3 +389,54 @@ export function safeUrl(url: unknown): string {
     return ''
   }
 }
+
+/** 解析字符串中内嵌 <a> 标签后得到的片段 */
+export interface AnchorSegment {
+  type: 'text' | 'link'
+  text: string
+  href?: string
+}
+
+const STRIP_TAG_REG = /<[^>]+>/g
+
+/** 匹配内嵌 <a> 标签，兼容 target/_blank 等任意属性顺序 */
+const ANCHOR_TAG_REG = /<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/i
+
+/**
+ * 解析字符串中可能内嵌的 <a> 标签，返回可安全渲染的片段数组。
+ * 仅保留 http/https/相对路径 的合法链接，其余降级为纯文本，避免 XSS。
+ */
+export function parseAnchors(value: unknown): AnchorSegment[] {
+  const str = toText(value)
+  if (!str) return []
+
+  const segments: AnchorSegment[] = []
+  const reg = new RegExp(ANCHOR_TAG_REG.source, 'gi')
+  let match: RegExpExecArray | null
+  let lastIndex = 0
+
+  while ((match = reg.exec(str)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', text: str.slice(lastIndex, match.index) })
+    }
+    const href = safeUrl(match[1])
+    const text = match[2].replace(STRIP_TAG_REG, '')
+    segments.push(href ? { type: 'link', href, text } : { type: 'text', text })
+    lastIndex = reg.lastIndex
+  }
+
+  if (lastIndex < str.length) {
+    segments.push({ type: 'text', text: str.slice(lastIndex) })
+  }
+
+  // 合并相邻纯文本段，避免渲染出多余空白
+  return segments.reduce<AnchorSegment[]>((acc, seg) => {
+    const prev = acc[acc.length - 1]
+    if (seg.type === 'text' && prev && prev.type === 'text') {
+      prev.text += seg.text
+    } else {
+      acc.push({ ...seg })
+    }
+    return acc
+  }, [])
+}
