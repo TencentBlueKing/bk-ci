@@ -33,14 +33,14 @@
     "eslint-loader": "^2.1.2", 
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-vue": "6.2.2",
-    "html-webpack-plugin": "^5.3.2",
+    "html-webpack-plugin": "~5.3.2",
     "mini-css-extract-plugin": "2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "~15.10.0",
-    "webpack": "~5.76.1"
+    "webpack": "~5.101.3"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",

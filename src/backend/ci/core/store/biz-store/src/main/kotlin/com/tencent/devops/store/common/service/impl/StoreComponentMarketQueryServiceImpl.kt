@@ -36,8 +36,8 @@ import com.tencent.devops.common.api.constant.NUM_ONE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
@@ -750,7 +750,7 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
             buildLessRunFlag = buildLessRunFlag,
             docsLink = record[ctx.tStoreBase.DOCS_LINK],
             modifier = record[ctx.tStoreBase.MODIFIER],
-            updateTime = DateTimeUtil.toDateTime(record[ctx.tStoreBase.UPDATE_TIME] as LocalDateTime),
+            updateTime = (record[ctx.tStoreBase.UPDATE_TIME] as LocalDateTime).timestampmilli(),
             recommendFlag = record[ctx.tStoreBaseFeature.RECOMMEND_FLAG],
             yamlFlag = featureExtData?.get(KEY_YAML_FLAG) as? Boolean,
             installed = installed,

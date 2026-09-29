@@ -30,11 +30,11 @@ package com.tencent.devops.store.atom.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.pojo.common.member.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.impl.StoreMemberServiceImpl
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -56,11 +56,12 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
         checkPermissionFlag: Boolean,
-        testProjectCode: String?
+        testProjectCode: String?,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("addAtomMember params:$userId|$storeMemberReq|$storeType|$collaborationFlag|$sendNotify")
         val atomCode = storeMemberReq.storeCode
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode)
@@ -90,7 +91,8 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
             collaborationFlag = collaborationFlag,
             sendNotify = sendNotify,
             checkPermissionFlag = checkPermissionFlag,
-            testProjectCode = testProjectCode
+            testProjectCode = testProjectCode,
+            tenantId = tenantId
         )
     }
 
@@ -108,10 +110,11 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         id: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("deleteAtomMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode)
@@ -144,13 +147,18 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
             id = id,
             storeCode = storeCode,
             storeType = storeType,
-            checkPermissionFlag = checkPermissionFlag
+            checkPermissionFlag = checkPermissionFlag,
+            tenantId = tenantId
         )
     }
 
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
-        return marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
+        return getStoreName(storeCode, storeType, null)
+    }
+
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
+        return marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)?.name ?: ""
     }
 }

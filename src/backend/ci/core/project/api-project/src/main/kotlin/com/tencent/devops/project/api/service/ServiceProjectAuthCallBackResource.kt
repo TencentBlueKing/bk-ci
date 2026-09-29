@@ -29,6 +29,7 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.project.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -53,6 +54,9 @@ interface ServiceProjectAuthCallBackResource {
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
         @Parameter(description = "token")
         token: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO
     ): Result<CallbackBaseResponseDTO>

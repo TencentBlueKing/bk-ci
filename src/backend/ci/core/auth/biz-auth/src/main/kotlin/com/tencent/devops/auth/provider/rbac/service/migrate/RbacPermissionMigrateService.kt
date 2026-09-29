@@ -105,6 +105,7 @@ class RbacPermissionMigrateService(
     private val syncDataTaskDao: AuthSyncDataTaskDao,
     private val rbacCommonService: RbacCommonService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val migrateProjectCodePrefixService: MigrateProjectCodePrefixService,
     private val authProjectResetRecordDao: AuthProjectResetRecordDao
 ) : PermissionMigrateService {
 
@@ -746,7 +747,8 @@ class RbacPermissionMigrateService(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectInfo.projectName,
-            async = false
+            async = false,
+            tenantId = projectInfo.tenantId
         )
         return authResourceService.getOrNull(
             projectCode = projectCode,
@@ -880,5 +882,16 @@ class RbacPermissionMigrateService(
             client.get(ServiceProjectResource::class).updateProjectProperties(it, properties)
         }
         return true
+    }
+
+    override fun migrateProjectCodePrefix(): Boolean {
+        return migrateProjectCodePrefixService.migrateProjectCodePrefix()
+    }
+
+    override fun migrateSingleProjectCodePrefix(
+        projectCode: String
+    ): Boolean {
+        return migrateProjectCodePrefixService
+            .migrateSingleProjectCodePrefix(projectCode)
     }
 }

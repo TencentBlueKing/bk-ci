@@ -105,6 +105,7 @@ export default defineStore('userGroupTable', () => {
    * 获取项目成员有权限的用户组数量
    */
   async function getCollapseList(memberId: string, seacrhObj: SearchParamsType) {
+    if (!projectId.value) return
     paginations.value = []
     try {
       const query = {

@@ -80,8 +80,8 @@ data class MarketItem(
     val docsLink: String?,
     @get:Schema(title = "修改人", required = true)
     val modifier: String,
-    @get:Schema(title = "修改时间", required = true)
-    val updateTime: String,
+    @get:Schema(title = "修改时间（毫秒时间戳）", required = true)
+    val updateTime: Long,
     @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @get:Schema(title = "yaml可用标识 true：是，false：否", required = false)

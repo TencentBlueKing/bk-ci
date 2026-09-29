@@ -20,7 +20,11 @@ const props = defineProps({
   data: Object,
   type: String,
   isChange: Boolean,
-  btnLoading: Boolean
+  btnLoading: Boolean,
+  editing: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const isRbac = computed(() => {
@@ -29,13 +33,15 @@ const isRbac = computed(() => {
 const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
 const projectForm = ref();
 const rules = {
-  englishName: [
-    {
-      validator: value => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
-      message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
-      trigger: 'blur',
-    },
-  ],
+  ...(!props.editing ? {
+    englishName: [
+      {
+        validator: value => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
+        message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
+        trigger: 'blur',
+      },
+    ]
+  }: {}),
   bgId: [
     {
       validator: () => !!(projectData.value.bgId && projectData.value.deptId),

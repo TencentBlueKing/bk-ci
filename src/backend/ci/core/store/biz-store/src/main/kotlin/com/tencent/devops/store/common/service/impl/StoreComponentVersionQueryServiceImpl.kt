@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseExtQueryDao
@@ -134,7 +134,7 @@ class StoreComponentVersionQueryServiceImpl @Autowired constructor(
                 versionContent = versionMap[it.id],
                 status = it.status,
                 creator = it.creator,
-                createTime = DateTimeUtil.toDateTime(it.createTime),
+                createTime = it.createTime.timestampmilli(),
                 extData = baseExtMap[it.id]
             )
         }

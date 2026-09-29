@@ -130,7 +130,10 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布者：') }} </div>
-                            <div class="info-value">{{ templateDetail.publisher }}</div>
+                            <bk-user-display-name
+                                class="info-value"
+                                :user-id="templateDetail.publisher"
+                            />
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布描述：') }} </div>

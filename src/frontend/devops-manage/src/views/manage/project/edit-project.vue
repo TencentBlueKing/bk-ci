@@ -253,6 +253,7 @@ onMounted(() => {
         v-if="!isLoading"
         class="edit-form"
         type="edit"
+        editing
         :is-change="isChange"
         :data="projectData"
         :btnLoading="btnLoading"

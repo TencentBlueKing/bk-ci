@@ -28,8 +28,10 @@ package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
@@ -83,6 +85,8 @@ import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -95,8 +99,6 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -112,14 +114,16 @@ class MarketImageDao @Autowired constructor() {
         labelCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
         score: Int?,
-        imageSourceType: ImageType?
+        imageSourceType: ImageType?,
+        tenantId: String?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
 
         val baseStep = dslContext.select(DSL.countDistinct(tImage.ID)).from(tImage)
@@ -164,12 +168,17 @@ class MarketImageDao @Autowired constructor() {
         imageSourceType: ImageType?,
         classifyCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        tenantId: String?
     ): Triple<TImage, TImageFeature, MutableList<Condition>> {
         val tImage = TImage.T_IMAGE
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE
 
         val conditions = mutableListOf<Condition>()
+        // 根据租户过滤
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+        }
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tImage.LATEST_FLAG.eq(true)) // 最新版本
@@ -225,7 +234,8 @@ class MarketImageDao @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
-        recommendFlag: Boolean? = null
+        recommendFlag: Boolean? = null,
+        tenantId: String?
     ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
             Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
         val (tImage, tImageFeature, conditions) = formatConditions(
@@ -233,7 +243,8 @@ class MarketImageDao @Autowired constructor() {
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
         if (recommendFlag != null) {
             conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
@@ -359,14 +370,17 @@ class MarketImageDao @Autowired constructor() {
         score: Int?,
         // 来源，精确匹配
         imageSourceType: ImageType?,
-        recommendFlag: Boolean? = null
+        recommendFlag: Boolean? = null,
+        // 租户ID
+        tenantId: String?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
         if (recommendFlag != null) {
             conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
@@ -418,7 +432,8 @@ class MarketImageDao @Autowired constructor() {
         userId: String,
         imageId: String,
         imageCode: String,
-        marketImageRelRequest: MarketImageRelRequest
+        marketImageRelRequest: MarketImageRelRequest,
+        tenantId: String?
     ) {
         with(TImage.T_IMAGE) {
             dslContext.insertInto(
@@ -459,6 +474,12 @@ class MarketImageDao @Autowired constructor() {
                     userId
                 )
                 .execute()
+            if (TenantUtils.isMultiTenantMode()) {
+                dslContext.update(this)
+                    .set(STORE_TENANT_ID, tenantId)
+                    .where(ID.eq(imageId))
+                    .execute()
+            }
         }
     }
 
@@ -471,8 +492,10 @@ class MarketImageDao @Autowired constructor() {
     ) {
         val tClassify = TClassify.T_CLASSIFY
         val classifyId = dslContext.select(tClassify.ID).from(tClassify)
-            .where(tClassify.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
-                .and(tClassify.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+            .where(
+                tClassify.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
+                    .and(tClassify.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            )
             .fetchOne(0, String::class.java)
             ?: throw ClassifyNotExistException("classifyCode=${marketImageUpdateRequest.classifyCode}")
         with(TImage.T_IMAGE) {
@@ -516,8 +539,10 @@ class MarketImageDao @Autowired constructor() {
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
-                .and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+            .where(
+                a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
+                    .and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            )
             .fetchOne(0, String::class.java)
         with(TImage.T_IMAGE) {
             dslContext.insertInto(
@@ -577,11 +602,16 @@ class MarketImageDao @Autowired constructor() {
         }
     }
 
-    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
+    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String, tenantId: String? = null): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(LATEST_FLAG.eq(true))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -657,10 +687,16 @@ class MarketImageDao @Autowired constructor() {
         }
     }
 
-    fun countReleaseImageByCode(dslContext: DSLContext, imageCode: String): Int {
+    fun countReleaseImageByCode(dslContext: DSLContext, imageCode: String, tenantId: String?): Int {
         with(TImage.T_IMAGE) {
             return dslContext.selectCount().from(this)
-                .where(IMAGE_CODE.eq(imageCode).and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())))
+                .where(IMAGE_CODE.eq(imageCode))
+                .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -841,11 +877,20 @@ class MarketImageDao @Autowired constructor() {
     /**
      * 根据ImageCode获取最新的已下架镜像
      */
-    fun getNewestUndercarriagedImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
+    fun getNewestUndercarriagedImageByCode(
+        dslContext: DSLContext,
+        imageCode: String,
+        tenantId: String?
+    ): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.UNDERCARRIAGED.status.toByte()))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -902,11 +947,16 @@ class MarketImageDao @Autowired constructor() {
         }
     }
 
-    fun getReleaseImagesByCode(dslContext: DSLContext, imageCode: String): Result<TImageRecord>? {
+    fun getReleaseImagesByCode(dslContext: DSLContext, imageCode: String, tenantId: String?): Result<TImageRecord>? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        tenantVisibleCondition(STORE_TENANT_ID, tenantId)
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
@@ -1178,10 +1228,12 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType
         )
         conditions.add(
-            tImage.IMAGE_STATUS.`in`(setOf(
-                ImageStatusEnum.TESTING.status.toByte(),
-                ImageStatusEnum.AUDITING.status.toByte()
-            ))
+            tImage.IMAGE_STATUS.`in`(
+                setOf(
+                    ImageStatusEnum.TESTING.status.toByte(),
+                    ImageStatusEnum.AUDITING.status.toByte()
+                )
+            )
         )
         // 隐含条件：已发布的镜像中最晚的一个
         val baseQuery = dslContext.select(
@@ -1252,10 +1304,12 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType
         )
         conditions.add(
-            tImage.IMAGE_STATUS.`in`(setOf(
-                ImageStatusEnum.TESTING.status.toByte(),
-                ImageStatusEnum.AUDITING.status.toByte()
-            ))
+            tImage.IMAGE_STATUS.`in`(
+                setOf(
+                    ImageStatusEnum.TESTING.status.toByte(),
+                    ImageStatusEnum.AUDITING.status.toByte()
+                )
+            )
         )
         // 隐含条件：已发布的镜像中最晚的一个
         val baseQuery = dslContext.select(
@@ -1483,10 +1537,18 @@ class MarketImageDao @Autowired constructor() {
             return dslContext.selectDistinct(
                 IMAGE_CODE
             ).from(this)
-                .where(IMAGE_STATUS.`in`(
-                    setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte()))
+                .where(
+                    IMAGE_STATUS.`in`(
+                        setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte())
+                    )
                 ).and(IMAGE_CODE.`in`(projectTestImageCodes))
                 .fetch()
         }
     }
+
+    private fun useTenantCondition(tenantId: String?) =
+        TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

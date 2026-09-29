@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -885,7 +886,7 @@ class ProjectGroupMigrationService(
         val users = members.filter { it.memberType == MemberType.USER.type }
         val activeUsers = mutableListOf<AuthResourceGroupMember>()
         users.forEach { member ->
-            if (deptService.isUserDeparted(member.memberId)) {
+            if (deptService.isUserDeparted(member.memberId, TenantUtils.getTenantIdByEnglishName(targetProjectCode))) {
                 skippedCount += 1
                 details.add(
                     ProjectGroupMigrationDetailDTO(

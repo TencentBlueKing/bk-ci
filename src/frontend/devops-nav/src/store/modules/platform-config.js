@@ -27,24 +27,28 @@ const mutations = {
 
 const actions = {
     async getPlatformPreData ({ state, commit }) {
-        const config = { ...state.platformInfo }
-        let resp
-        const bkRepoUrl = window.BK_SHARED_RES_URL
-        if (bkRepoUrl) {
-            resp = await getPlatformConfig(`${bkRepoUrl}/bk_ci/base.js`, config)
-        } else {
-            resp = await getPlatformConfig(config)
+        try {
+            const config = { ...state.platformInfo }
+            let resp
+            const bkRepoUrl = window.BK_SHARED_RES_URL
+            if (bkRepoUrl) {
+                resp = await getPlatformConfig(`${bkRepoUrl}/bk_ci/base.js`, config)
+            } else {
+                resp = await getPlatformConfig(config)
+            }
+            const { i18n, name, brandName } = resp
+            const currentPage = window.currentPage
+            let platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
+            if (currentPage) {
+                platformTitle = `${currentPage.name} | ${platformTitle}`
+            }
+            document.title = platformTitle
+            setShortcutIcon(resp.favicon)
+            commit('setPlatformInfo', resp)
+            return resp
+        } catch (error) {
+            console.error(error)
         }
-        const { i18n, name, brandName } = resp
-        const currentPage = window.currentPage
-        let platformTitle = `${i18n.name || name} | ${i18n.brandName || brandName}`
-        if (currentPage) {
-            platformTitle = `${currentPage.name} | ${platformTitle}`
-        }
-        document.title = platformTitle
-        setShortcutIcon(resp.favicon)
-        commit('setPlatformInfo', resp)
-        return resp
     }
 }
 

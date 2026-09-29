@@ -28,7 +28,12 @@
         },
         watch: {
             '$route.fullPath' (val) { // 同步地址到蓝盾
-                this.$syncUrl(val.replace(/^\/pipeline\//, '/'))
+                const publicUrlPrefix = window.PUBLIC_URL_PREFIX || ''
+                const pipelineBase = `${publicUrlPrefix}/pipeline`
+                const syncPath = val.startsWith(pipelineBase)
+                    ? val.slice(pipelineBase.length)
+                    : val.replace(/^\/pipeline/, '')
+                this.$syncUrl(syncPath || '/')
             },
             fetchError (error) {
                 error.message && this.$showTips({

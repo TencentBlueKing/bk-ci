@@ -22,4 +22,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ngx.header["x-devops-uid"] = "admin"
 ngx.header["x-devops-bk-token"] = "rzB9dCkGOKVYL-U8nDMDwANUG0UwYPLN82aQxk1efHg"
 ngx.header["x-devops-access-token"] = "alJXviJhTNPl2KnFP4neTIlWRh32vY"
+ngx.header["x-bk-tenant-id"] = "default"
 ngx.exit(200)

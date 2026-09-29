@@ -206,6 +206,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         always = (element.noScm != true).nullIfDefault(false),
                         enable = element.elementEnabled().nullIfDefault(true),
                         startParams = element.convertStartParams(),
+                        timezone = element.timeZone,
                         // nodes 仅创作流通道回写，且只有 NODE_LIST 指定了具体创作节点时才输出
                         // Model 侧存的是 agentHashId，转换为 yaml 侧的 workspaceName
                         nodes = element.nodes?.ifEmpty { null }?.takeIf {
@@ -217,6 +218,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                                 agentHashId = agentHashId
                             )
                         }
+
                     )
                 )
                 return@forEach

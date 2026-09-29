@@ -101,6 +101,17 @@ config = {
         special_domain = {},
         auto_prefix = ""
     },
+    tenant = {
+        enabled = __BK_TENANT_ENABLED__
+    },
+    bk_login = {
+        host = "__BK_PAAS_PRIVATE_URL__",
+        path = "__BK_LOGIN_PATH__"
+    },
+    apigw = {
+        app_code = "__BK_CI_APP_CODE__",
+        app_secret = "__BK_CI_APP_TOKEN__"
+    },
     external_auth = {
         base_url = "",
         token = ""

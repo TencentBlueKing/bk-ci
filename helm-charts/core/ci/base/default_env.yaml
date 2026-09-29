@@ -46,6 +46,9 @@ bkCiInitLocale: zh-CN
 bkCiRedisSsl: false
 bkCiEsHttps: false
 bkCiFrontendIndex: "rewrite .* /$subsystem/index.html break"
+# 子路径部署前缀 bkCiPublicPath 不在此声明，由 build_chart.py 写出默认空字符串("")。
+# 默认值即根路径部署（与历史行为一致）。
+# 如需把整个站点挂到子路径下，部署时显式传入，例如：--set config.bkCiPublicPath=/bkci
 bkCiDefaultLocale: zh_CN
 bkCiSupportLanguages: zh_CN,en_US
 bkEsbEnabled: false
@@ -55,8 +58,15 @@ bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
+bkTenantEnabled: false
+bkApigwUserUrl: http://bkapi.example.com
+bkApigwCmsiUrl: http://bkapi.example.com
+bkApigwUserWebUrl: http://bkapi.example.com
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
 bkCiPlatformManager: admin
 bkCiRabbitQuorumEnable: false
+# 旧 key，仅兼容存量 values / bkenv；取值处（helm helper / render_tpl）会回填到新 key
+bkCiSyncCronEnabled: true
+# 权限资源定时同步，实际生效 key
 bkCiAuthSyncCronEnabled: true

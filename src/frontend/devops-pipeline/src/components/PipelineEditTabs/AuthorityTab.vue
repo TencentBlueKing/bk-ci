@@ -6,6 +6,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
+        :ajax-prefix="ajaxPrefix"
         :resource-name="pipelineName"
     />
 </template>
@@ -18,6 +19,11 @@
     export default {
         name: 'auth-tab',
         mixins: [pipelineOperateMixin],
+        data () {
+            return {
+                ajaxPrefix: window.PUBLIC_URL_PREFIX
+            }
+        },
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             ...mapGetters('atom', ['isTemplate']),

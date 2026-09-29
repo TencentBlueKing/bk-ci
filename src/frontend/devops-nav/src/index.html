@@ -28,8 +28,9 @@
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js" />
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/url-prefix-interceptor.js"></script>
   <script>
-    var API_URL_PREFIX = '/ms' // api接口前缀
+    var API_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
     var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
     var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
@@ -45,7 +46,11 @@
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
     var BK_SHARED_RES_URL = '__BK_SHARED_RES_URL__' 
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
+    var BK_APIGW_USER_WEB_URL = '<%= BK_APIGW_USER_WEB_URL %>'
     var BK_CI_NO_COOKIE_PROJECT_PREFIX = '__BK_CI_NO_COOKIE_PROJECT_PREFIX__'
+    window.getRoutePrefix = function () {
+      return window.PUBLIC_URL_PREFIX + '/console'
+    }
   </script>
   <script>
     // 动态加载js
@@ -147,8 +152,9 @@
 
     function matchPathProjectId() {
       try {
-        var reg = /^\/console\/[\w\-]+\/([\w\-]+)?/
-        if (location.pathname.match(/^\/console\/perm\/([\w\-]+)?/)) {
+        var prefix = window.getRoutePrefix()
+        var reg = new RegExp('^' + prefix + '/[\\w\\-]+/([\\w\\-]+)?')
+        if (location.pathname.match(new RegExp('^' + prefix + '/perm/([\\w\\-]+)?'))) {
           var query = location.search.slice(1)
           var queryArr = query.split('&')
           for (var i = 0; i < queryArr.length; i++) {
@@ -160,10 +166,10 @@
           }
           return ''
         } else if ([
-          /^\/console\/store\/([\w\-]+)?/,
-          /^\/console\/permission\/([\w\-]+)?/,
-          /^\/console\/manage\/apply/,
-          /^\/console\/platform\/([\w\-]+)?/,
+          new RegExp('^' + prefix + '/store/([\\w\\-]+)?'),
+          new RegExp('^' + prefix + '/permission/([\\w\\-]+)?'),
+          new RegExp('^' + prefix + '/manage/apply'),
+          new RegExp('^' + prefix + '/platform/([\\w\\-]+)?'),
         ].some((reg) => location.pathname.match(reg))) {
           // TODO store、permission、apply project 没有projectId
           return ''
@@ -393,7 +399,7 @@
     }
 
     function init(projectList, allServices, userInfo) {
-      var path = location.pathname.replace('/console', '')
+      var path = location.pathname.replace(window.getRoutePrefix(), '')
       var headTag = document.head || document.getElementsByTagName('head')[0]
       var pathReg = /^\/([\w\-]+)\/?/
       var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)

@@ -53,8 +53,8 @@ class AtomPropsService @Autowired constructor(
     private val storeI18nMessageService: StoreI18nMessageService
 ) {
 
-    fun getAtomOutput(atomCode: String): List<AtomOutput> {
-        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
+    fun getAtomOutput(atomCode: String, tenantId: String? = null): List<AtomOutput> {
+        val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId) ?: return emptyList()
         val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
             jsonStr = atom.props,
             keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)

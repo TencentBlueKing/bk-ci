@@ -142,7 +142,11 @@
                         :label="$t('publicVar.lastModifiedDate')"
                         prop="updateTime"
                         show-overflow-tooltip
-                    />
+                    >
+                        <template slot-scope="{ row }">
+                            <time-display :value="row.updateTime" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('publicVar.operation')"
                         width="140"
@@ -222,7 +226,7 @@
 
 <script setup>
     import { ref, watch, computed, onMounted } from 'vue'
-    import { convertTime, randomString, navConfirm } from '@/utils/util'
+    import { randomString, navConfirm } from '@/utils/util'
     import {
         ADD_VARIABLE,
         EDIT_VARIABLE,
@@ -239,6 +243,7 @@
     import ExtMenu from '@/components/pipelineList/extMenu'
     import EmptyException from '@/components/common/exception'
     import ImportParamGroupPopup from './ImportParamGroupPopup.vue'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     const { proxy } = UseInstance()
     const isLoading = ref(false)
@@ -300,7 +305,6 @@
         return tableData.value.map((row) => {
             return {
                 ...row,
-                updateTime: convertTime(row.updateTime),
                 publicVarActions: [
                     {
                         text: proxy.$t('copy'),

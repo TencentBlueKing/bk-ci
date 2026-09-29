@@ -26,10 +26,11 @@
  */
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class StoryPageBuild : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/store/releaseProgress/shelf/${buildPageInfo.atomId}"
+        HomeHostUtil.withPublicPath("/console/store/releaseProgress/shelf/${buildPageInfo.atomId}")
 }

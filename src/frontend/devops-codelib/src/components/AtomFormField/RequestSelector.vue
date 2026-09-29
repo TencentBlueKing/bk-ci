@@ -91,7 +91,7 @@
             return {
                 isLoading: false,
                 list: [],
-                webUrl: '/console'
+                webUrl: window.getRoutePrefix()
             }
         },
         computed: {
@@ -108,10 +108,10 @@
                 const type = this.list[index].type || ''
                 const groupId = this.list[index].groupHashId || ''
                 if (hashId) {
-                    const href = `${'/console'}/codelib/${this.projectId}/${hashId}/${type}`
+                    const href = `${window.getRoutePrefix()}/codelib/${this.projectId}/${hashId}/${type}`
                     window.open(href, '_blank')
                 } else if (groupId) {
-                    const groupHref = `${'console'}/experience/${this.projectId}/setting/?groupId=${groupId}`
+                    const groupHref = `${window.getRoutePrefix()}/experience/${this.projectId}/setting/?groupId=${groupId}`
                     window.open(groupHref, '_blank')
                 }
             },

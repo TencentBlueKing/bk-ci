@@ -314,7 +314,7 @@
                     show-overflow-tooltip
                 >
                     <template slot-scope="props">
-                        {{ props.row.lastModifyTime || '-' }}
+                        <time-display :value="props.row.lastModifyTime" />
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -343,7 +343,7 @@
                     show-overflow-tooltip
                 >
                     <template slot-scope="props">
-                        {{ props.row.lastBuildTime || '--' }}
+                        <time-display :value="props.row.lastBuildTime" />
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -537,11 +537,13 @@
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE, CREATE_WORKSPACE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import TimeDisplay from '../../../../common-lib/time-display'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            TimeDisplay
         },
         props: {
             nodeList: {
@@ -884,7 +886,7 @@
             },
             handleToPipelineDetail (param) {
                 if (!param.projectId) return
-                window.open(`${window.location.origin}/console/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
+                window.open(`${window.location.origin}${window.getRoutePrefix()}/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
             },
             /**
              * 删除节点

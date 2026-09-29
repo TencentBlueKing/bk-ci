@@ -30,6 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.openapi.service.OpenapiPermissionService
@@ -62,18 +63,23 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectCreateInfo: ProjectCreateInfo
+        tenantId: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
     ): Result<Boolean> {
-        logger.info("OPENAPI_PROJECT_V3|$userId|create|$projectCreateInfo|$projectRouteTag")
+        logger.info("OPENAPI_PROJECT_V3|$userId|create|$projectCreateInfo|$accessToken|$projectRouteTag|$tenantId")
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
             bkTag.setGatewayTag(projectRouteTag)
         }
 
+        projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
+
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken
         )
     }
 
@@ -81,10 +87,12 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
-        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo")
+        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo|$tenantId")
+        projectUpdateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
@@ -107,11 +115,14 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
     override fun list(
         appCode: String?,
         apigwType: String?,
-        userId: String
+        userId: String,
+        tenantId: String?,
+        accessToken: String?
     ): Result<List<ProjectVO>> {
         logger.info("OPENAPI_PROJECT_V3|$userId|list")
         return client.get(ServiceProjectResource::class).list(
-            userId = userId
+            userId = userId,
+            tenantId = tenantId
         )
     }
 
@@ -119,6 +130,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
+        tenantId: String?,
         validateType: ProjectValidateType,
         name: String,
         projectId: String?
@@ -127,7 +139,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
-            projectId = projectId
+            projectId = projectId,
+            tenantId = tenantId
         )
     }
 

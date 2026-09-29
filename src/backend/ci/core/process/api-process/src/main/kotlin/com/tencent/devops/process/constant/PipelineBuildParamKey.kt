@@ -19,6 +19,7 @@ object PipelineBuildParamKey {
     const val CI_COMMIT_MESSAGE = "ci.commit_message"
     const val CI_ACTION = "ci.action"
     const val CI_ACTOR = "ci.actor"
+    const val CI_ACTOR_NAME = "ci.actor_name"
 
     // GIT PUSH参数
     const val CI_BEFORE_SHA = "ci.before_sha"
@@ -92,7 +93,9 @@ object PipelineBuildParamKey {
     const val CI_BUILD_NO = "ci.build_no"
     const val CI_BUILD_NUM = "ci.build_num"
     const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
+    const val CI_PIPELINE_CREATOR_NAME = "ci.pipeline_creator_name"
     const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"
+    const val CI_PIPELINE_MODIFIER_NAME = "ci.pipeline_modifier_name"
     const val CI_PIPELINE_VERSION = "ci.pipeline_version"
     const val CI_PROJECT_ID = "ci.project_id"
     const val CI_PROJECT_NAME = "ci.project_name"

@@ -68,7 +68,11 @@
                 <bk-table-column
                     :label="$t('store.最近修改时间')"
                     prop="updateTime"
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.最近执行人')"
                     prop="executor"
@@ -76,24 +80,31 @@
                 <bk-table-column
                     :label="$t('store.最近执行时间')"
                     prop="executeTime"
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.executeTime" />
+                    </template>
+                </bk-table-column>
             </bk-table>
         </main>
     </article>
 </template>
 
 <script>
-    import dayjs from 'dayjs'
+    import { recentDaysRangeInUserTz, formatByUserTz } from '../../../../../common-lib/time'
     import api from '@/api'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     function formatterTime (val) {
-        return dayjs(val).format('YYYY-MM-DD HH:mm:ss')
+        return formatByUserTz(val)
     }
 
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
-            const startTime = formatterTime(dayjs().subtract(7, 'days'))
-            const endTime = formatterTime(dayjs())
+            const { startTime, endTime } = recentDaysRangeInUserTz(7)
 
             return {
                 searchData: {

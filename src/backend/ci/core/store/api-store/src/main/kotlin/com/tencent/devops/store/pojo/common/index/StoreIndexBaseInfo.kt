@@ -68,8 +68,8 @@ data class StoreIndexBaseInfo(
     val creator: String,
     @get:Schema(title = "修改者", required = true)
     val modifier: String,
-    @get:Schema(title = "更新时间", required = true)
+    @get:Schema(title = "更新时间（毫秒时间戳）", required = true)
     val updateTime: LocalDateTime,
-    @get:Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
     val createTime: LocalDateTime
 )

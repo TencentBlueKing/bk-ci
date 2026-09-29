@@ -54,7 +54,7 @@
                         v-for="user in oauthUserList"
                         :key="user.username"
                         :id="user.username"
-                        :name="user.username"
+                        :name="user.userDisplayName"
                     >
                     </bk-option>
                 </bk-select>

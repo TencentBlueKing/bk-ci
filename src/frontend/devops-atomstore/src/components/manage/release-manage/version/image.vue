@@ -45,13 +45,20 @@
                 :label="$t('store.创建人')"
                 prop="creator"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.创建时间')"
                 prop="createTime"
-                :formatter="convertTime"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.操作')"
                 width="150"
@@ -160,12 +167,13 @@
 
 <script>
     import { imageStatusList } from '@/store/constants'
-    import { convertTime } from '@/utils/index'
     import imageDetail from '../../detail/image-detail/show.vue'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         components: {
-            imageDetail
+            imageDetail,
+            TimeDisplay
         },
 
         props: {
@@ -262,10 +270,6 @@
 
             statusFormatter (row, column, cellValue, index) {
                 return this.$t(imageStatusList[cellValue])
-            },
-
-            convertTime (row, column, cellValue, index) {
-                return convertTime(cellValue)
             }
         }
     }

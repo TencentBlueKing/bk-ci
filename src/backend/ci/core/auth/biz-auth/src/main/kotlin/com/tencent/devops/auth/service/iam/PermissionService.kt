@@ -33,7 +33,8 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 interface PermissionService {
     fun validateUserActionPermission(
         userId: String,
-        action: String
+        action: String,
+        tenantId: String? = null
     ): Boolean
 
     fun validateUserProjectPermission(
@@ -132,6 +133,7 @@ interface PermissionService {
     fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String? = null
+        resourceType: String? = null,
+        tenantId: String? = null
     ): List<String>
 }

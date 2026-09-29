@@ -30,14 +30,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.atom.BuildAtomResource
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -64,8 +64,8 @@ class BuildAtomResourceImpl @Autowired constructor(
         return atomReleaseService.endBranchVersionTest(userId, atomCode, branch)
     }
 
-    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
-        return atomReleaseService.getProcessInfo(userId, atomId)
+    override fun getProcessInfo(userId: String, tenantId: String?, atomId: String): Result<StoreProcessInfo> {
+        return atomReleaseService.getProcessInfo(userId, atomId, tenantId)
     }
 
     @SensitiveApiPermission("branch_test_version_management")

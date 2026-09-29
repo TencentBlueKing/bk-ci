@@ -38,14 +38,23 @@ class CronExpressionUtilsTest {
     @Test
     fun getRecentTriggerTime() {
         val cron = "*/5 30 11 * * ? *"
+        val timeZone = TimerTimeZoneUtils.DEFAULT_LEGACY_TIME_ZONE
         val recentTriggerTimes = CronExpressionUtils.getRecentTriggerTime(
             cron = cron,
-            numTimes = 2
+            numTimes = 2,
+            timeZone = timeZone
         )
         assertTrue(recentTriggerTimes.size == 2)
         val format = "HH:mm:ss"
-        assertEquals(DateTimeUtil.formatDate(recentTriggerTimes[0], format), "11:30:00")
-        assertEquals(DateTimeUtil.formatDate(recentTriggerTimes[1], format), "11:30:05")
+        // cron 按 IANA 墙上时间解释，断言必须用同一时区，不能依赖 runner 的 JVM 默认时区（GitHub Actions 为 UTC）
+        assertEquals(
+            "11:30:00",
+            DateTimeUtil.formatEpochMilli(recentTriggerTimes[0].time, timeZone, format)
+        )
+        assertEquals(
+            "11:30:05",
+            DateTimeUtil.formatEpochMilli(recentTriggerTimes[1].time, timeZone, format)
+        )
     }
 
     @Test

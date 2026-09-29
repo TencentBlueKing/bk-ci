@@ -774,6 +774,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             }
                             JsonUtil.toJson(params, false)
                         },
+                        timeZone = timer.timezone,
                         // nodes 仅创作流通道生效：有值即指定创作节点，否则枚举创作环境全部节点；
                         // 非创作流通道忽略该关键字
                         nodeType = when {

@@ -165,9 +165,13 @@
             />
             <bk-table-column
                 :label="$t('environment.operateTime')"
-                prop="operateTime"
+                prop="lastModifyTime"
                 width="200"
-            />
+            >
+                <template slot-scope="{ row }">
+                    <time-display :value="row.lastModifyTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 v-if="!isCreateResType && isBuildEnv"
                 :label="$t('environment.enableTitle')"
@@ -272,11 +276,13 @@
     import RelatedNodesDialog from '@/components/RelatedNodesDialog.vue'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
     export default {
         name: 'Node',
         components: {
             SearchSelect,
-            RelatedNodesDialog
+            RelatedNodesDialog,
+            TimeDisplay
         },
         setup () {
             const { proxy } = useInstance()

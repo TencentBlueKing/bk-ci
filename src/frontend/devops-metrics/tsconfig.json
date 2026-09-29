@@ -7,7 +7,6 @@
     "esModuleInterop": true,
     "noImplicitThis": true,
     "strictNullChecks": false,
-    "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "jsx": "preserve",

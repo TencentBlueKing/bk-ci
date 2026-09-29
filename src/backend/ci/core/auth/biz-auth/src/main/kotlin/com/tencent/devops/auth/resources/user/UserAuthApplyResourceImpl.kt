@@ -61,11 +61,13 @@ class UserAuthApplyResourceImpl @Autowired constructor(
 
     override fun getGroupPermissionDetail(
         userId: String,
-        groupId: Int
+        groupId: Int,
+        tenantId: String?
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
             resourceGroupPermissionService.getGroupPermissionDetail(
-                iamGroupId = groupId
+                iamGroupId = groupId,
+                tenantId = tenantId
             )
         )
     }

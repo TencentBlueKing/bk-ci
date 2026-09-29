@@ -38,20 +38,26 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpenProjectAuthCallBackResourceImpl @Autowired constructor(
     val authProjectService: AuthProjectService
 ) : OpenProjectAuthCallBackResource {
-    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun projectInfo(
+        token: String,
+        tenantId: String?,
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authProjectService.getProjectList(page, token)
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 val attribute = callBackInfo.filter.attributeList
                 return authProjectService.getProjectInfo(ids, token, attribute)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, tenantId, page, token)
             }
             else -> {}
         }

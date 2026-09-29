@@ -73,7 +73,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
-    import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
+    import { urlJoin, getServiceAliasByPath, isAbsoluteUrl, addRoutePrefix } from '../../utils/util'
     import eventBus from '../../utils/eventBus'
 
     @Component
@@ -119,7 +119,7 @@
        }
 
        addConsole (link: string): string {
-           return urlJoin('/console', link)
+           return addRoutePrefix(urlJoin('/console', link))
        }
 
        get showCollectStar (): boolean {

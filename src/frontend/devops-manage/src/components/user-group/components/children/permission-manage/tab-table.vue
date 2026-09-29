@@ -61,7 +61,7 @@
       <bk-table-column :label="t('有效期')" prop="expiredAtDisplay" />
       <bk-table-column :label="t('加入时间')" prop="joinedTime" >
         <template #default="{row}">
-          {{ timeFormatter(row.joinedTime) }}
+          <time-display :value="row.joinedTime" />
         </template>
       </bk-table-column>
       <bk-table-column :label="t('加入方式')" prop="joinedType">
@@ -158,17 +158,17 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { ref, defineProps, defineEmits, computed } from 'vue';
-import { timeFormatter } from '@/common/util.ts'
+import TimeDisplay from '../../../../../../../common-lib/time-display';
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 
 const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group', 'repertory', 'env_node'];
 const URL_TEMPLATES = {
-  pipeline: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
-  pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
-  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`,
-  repertory: (projectId, row) => `${location.origin}/console/codelib/${projectId}/?searchName=${row.resourceName}&id=${row.resourceCode}`,
-  env_node: (projectId, row) => `${location.origin}/console/environment/${projectId}/pipeline/node/allNode`,
+  pipeline: (projectId, row) => `${location.origin}${window.getRoutePrefix()}/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
+  pipeline_group: (projectId, row) => `${location.origin}${window.getRoutePrefix()}/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
+  codecc_task: (projectId, row) => `${location.origin}${window.getRoutePrefix()}/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`,
+  repertory: (projectId, row) => `${location.origin}${window.getRoutePrefix()}/codelib/${projectId}/?searchName=${row.resourceName}&id=${row.resourceCode}`,
+  env_node: (projectId, row) => `${location.origin}${window.getRoutePrefix()}/environment/${projectId}/pipeline/node/allNode`,
 };
 const props = defineProps({
   isShowOperation: {

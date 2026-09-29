@@ -27,14 +27,17 @@
 
 package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_USER_TIMEZONE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.TenantInfoForDisplay
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -65,4 +68,19 @@ interface UserProjectUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
+
+    @GET
+    @Path("/tenantInfoForDisplay")
+    @Operation(summary = "给展示用的租户信息")
+    fun tenantInfoForDisplay(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
+        @Parameter(description = "用户时区（IANA，网关从蓝鲸写入；可空，缺省后端兜底）", required = false)
+        @HeaderParam(AUTH_HEADER_BK_USER_TIMEZONE)
+        timeZone: String?
+    ): Result<TenantInfoForDisplay>
 }

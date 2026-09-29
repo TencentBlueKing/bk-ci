@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.api.apigw.v3
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -33,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -64,6 +65,9 @@ interface ApigwMarketTemplateResourceV3 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "安装研发商店模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
@@ -84,6 +88,9 @@ interface ApigwMarketTemplateResourceV3 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "安装研发商店模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<List<PipelineTemplateInfo>>

@@ -41,7 +41,13 @@
                                     class="info-value"
                                     v-bk-overflow-tips
                                 >
-                                    {{ item.value }}
+                                    <time-display
+                                        v-if="item.isTime"
+                                        :value="item.value"
+                                    />
+                                    <template v-else>
+                                        {{ item.value }}
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -137,6 +143,7 @@
     import YamlEditor from '@/components/YamlEditor'
     import ModeSwitch from '@/components/PublicVariable/ModeSwitch'
     import RenderVariableTable from '@/components/PublicVariable/RenderVariableTable'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import {
         EDIT_VARIABLE,
         VARIABLE,
@@ -229,7 +236,8 @@
             {
                 label: proxy.$t('createTime'),
                 value: props.groupData?.updateTime ?? '--',
-                key: 'createTime'
+                key: 'createTime',
+                isTime: true
             }
         ]
     })

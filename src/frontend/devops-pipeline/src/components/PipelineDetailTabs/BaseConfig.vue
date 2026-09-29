@@ -65,9 +65,18 @@
                                 </template>
                             </template>
                             <template v-else>
-                                <span>{{ row.value || '--' }}</span>
+                                <span v-if="row.value">{{ row.value }}</span>
+                                <time-display
+                                    v-else-if="row.timeValue"
+                                    :value="row.timeValue"
+                                />
+                                <span v-else>--</span>
                                 <span
-                                    v-if="row.grayDesc"
+                                    v-if="row.value && row.timeValue"
+                                    class="base-info-block-row-value-gray"
+                                > | <time-display :value="row.timeValue" /></span>
+                                <span
+                                    v-else-if="row.grayDesc"
                                     class="base-info-block-row-value-gray"
                                 >{{ row.grayDesc }}</span>
                             </template>
@@ -80,13 +89,14 @@
 </template>
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
-    import { convertTime } from '@/utils/util'
     import { BUILD_CANCEL_POLICY_DEFAULT } from '@/store/constants'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
-            NamingConventionTip
+            NamingConventionTip,
+            TimeDisplay
         },
         props: {
             basicInfo: {
@@ -150,7 +160,7 @@
                         },
                         {
                             key: 'createTime',
-                            value: basicInfo?.createTime ? convertTime(basicInfo?.createTime) : '--'
+                            timeValue: basicInfo?.createTime
                         }
                     ]
                     : [
@@ -178,12 +188,12 @@
                         {
                             key: 'modificationDetail',
                             value: basicInfo?.versionUpdater,
-                            grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                            timeValue: basicInfo?.versionUpdateTime
                         },
                         {
                             key: 'creatorDetail',
                             value: basicInfo?.creator,
-                            grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
+                            timeValue: basicInfo?.createTime
                         }
                     ]
             },

@@ -227,12 +227,12 @@
                         >
                             <img
                                 class="category-icon"
-                                :src="entry.iconUrl"
-                                v-if="entry.iconUrl"
+                                :src="entry.logoUrl"
+                                v-if="entry.logoUrl"
                             >
                             <span
                                 class="bk-checkbox-text"
-                                :style="{ 'margin-left': entry.iconUrl ? '24px' : '0' }"
+                                :style="{ 'margin-left': entry.logoUrl ? '24px' : '0' }"
                             >{{ entry.categoryName }}</span>
                         </bk-checkbox>
                     </bk-checkbox-group>

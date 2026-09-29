@@ -30,14 +30,16 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -54,7 +56,10 @@ interface ServiceDeptResource {
     fun getParentDept(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<Int>
 
     @GET
@@ -64,6 +69,9 @@ interface ServiceDeptResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null,
         @QueryParam("deptName")
         @Parameter(description = "组织名称", required = true)
         deptName: String
@@ -76,6 +84,9 @@ interface ServiceDeptResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null,
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
         name: String
@@ -87,8 +98,22 @@ interface ServiceDeptResource {
     fun checkUserDeparted(
         @QueryParam("name")
         @Parameter(description = "用户名称", required = true)
-        name: String
+        name: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<Boolean>
+
+    @POST
+    @Path("/listUserInfos")
+    @Operation(summary = "获取用户信息列表")
+    fun listUserInfos(
+        @Parameter(description = "用户ID列表", required = true)
+        memberIds: List<String>,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
+    ): Result<List<UserAndDeptInfoVo>>
 
     @GET
     @Path("/getLeader")
@@ -96,7 +121,10 @@ interface ServiceDeptResource {
     fun getLeader(
         @QueryParam("userId")
         @Parameter(description = "用户名称", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<BkUserInfo?>
 
     @GET
@@ -105,6 +133,9 @@ interface ServiceDeptResource {
     fun getUserDeptIds(
         @QueryParam("userId")
         @Parameter(description = "用户名称", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<Set<String>>
 }

@@ -25,10 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class NodePath : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/environment/${buildPageInfo.projectId}/node/allNode"
+        HomeHostUtil.withPublicPath("/console/environment/${buildPageInfo.projectId}/node/allNode")
 }

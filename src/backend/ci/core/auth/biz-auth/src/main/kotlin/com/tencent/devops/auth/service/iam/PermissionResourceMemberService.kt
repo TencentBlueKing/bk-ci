@@ -52,7 +52,8 @@ interface PermissionResourceMemberService {
     fun deleteIamGroupMembers(
         groupId: Int,
         type: String,
-        memberIds: List<String>
+        memberIds: List<String>,
+        tenantId: String?
     ): Boolean
 
     fun roleCodeToIamGroupId(
@@ -80,7 +81,8 @@ interface PermissionResourceMemberService {
     fun renewalIamGroupMembers(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean
 
     fun addGroupMember(
@@ -95,7 +97,8 @@ interface PermissionResourceMemberService {
     fun addIamGroupMember(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean
 
     fun batchAddResourceGroupMembers(

@@ -9,14 +9,10 @@
     "noImplicitThis": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "jsx": "preserve",
     "outDir": "dist",
-    "types": [
-      "node"
-    ],
     "paths": {
       "@/*": [
         "./src/*"

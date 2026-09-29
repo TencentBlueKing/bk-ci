@@ -28,17 +28,20 @@ module.exports = {
       .clear()
       .set('@', path.join(__dirname, 'src'))
 
-    config.resolve
-      .modules
-      .clear()
-      .add('node_modules')
-      .add(path.join(__dirname, 'node_modules'))
-
     config.resolveLoader
       .modules
       .clear()
       .add('node_modules')
       .add(path.join(__dirname, 'node_modules'))
+
+      
+    config.merge({
+      resolve: {
+        alias: {
+          vue$: path.join(__dirname, 'node_modules/vue/index.js'),
+        },
+      }
+    })
 
     return config
   }

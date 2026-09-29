@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -31,15 +30,25 @@ import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
+import com.tencent.devops.process.plugin.trigger.util.TimerTimeZoneUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 open class PipelineTimerDao {
+
+    companion object {
+        /**
+         * JOOQ codegen 完成前通过动态字段访问 TIME_ZONE，避免本地未跑 DDL 时编译失败。
+         */
+        val TIME_ZONE_FIELD = DSL.field(DSL.name("TIME_ZONE"), String::class.java)
+    }
 
     open fun save(
         dslContext: DSLContext,
@@ -52,35 +61,24 @@ open class PipelineTimerDao {
         branchs: String?,
         noScm: Boolean?,
         startParam: String?,
-        taskId: String
+        taskId: String,
+        timeZone: String?
     ): Int {
+        val resolvedTimeZone = TimerTimeZoneUtils.resolve(timeZone)
         return with(T_PIPELINE_TIMER) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                CREATE_TIME,
-                CREATOR,
-                CRONTAB,
-                CHANNEL,
-                REPO_HASH_ID,
-                BRANCHS,
-                NO_SCM,
-                START_PARAM,
-                TASK_ID
-            ).values(
-                projectId,
-                pipelineId,
-                LocalDateTime.now(),
-                userId,
-                crontabExpression,
-                channelCode.name,
-                repoHashId,
-                branchs,
-                noScm,
-                startParam,
-                taskId
-            )
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .set(CREATOR, userId)
+                .set(CRONTAB, crontabExpression)
+                .set(CHANNEL, channelCode.name)
+                .set(REPO_HASH_ID, repoHashId)
+                .set(BRANCHS, branchs)
+                .set(NO_SCM, noScm)
+                .set(START_PARAM, startParam)
+                .set(TASK_ID, taskId)
+                .set(TIME_ZONE_FIELD, resolvedTimeZone)
                 .onDuplicateKeyUpdate()
                 .set(TASK_ID, taskId)
                 .set(CREATE_TIME, LocalDateTime.now())
@@ -91,6 +89,7 @@ open class PipelineTimerDao {
                 .set(BRANCHS, branchs)
                 .set(NO_SCM, noScm)
                 .set(START_PARAM, startParam)
+                .set(TIME_ZONE_FIELD, resolvedTimeZone)
                 .execute()
         }
     }
@@ -194,6 +193,14 @@ open class PipelineTimerDao {
                 }
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .execute()
+        }
+    }
+
+    fun readTimeZone(record: Record): String {
+        return try {
+            TimerTimeZoneUtils.resolve(record.get(TIME_ZONE_FIELD))
+        } catch (_: Exception) {
+            TimerTimeZoneUtils.DEFAULT_LEGACY_TIME_ZONE
         }
     }
 }

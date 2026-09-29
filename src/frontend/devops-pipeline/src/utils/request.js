@@ -20,6 +20,7 @@
 import axios from 'axios'
 import Vue from 'vue'
 import { bus } from './bus'
+import TenantSingleton from '@/utils/tenant'
 
 const request = axios.create({
     baseURL: API_URL_PREFIX,

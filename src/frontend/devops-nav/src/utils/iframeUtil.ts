@@ -21,7 +21,7 @@ function iframeUtil (router: any) {
             location.origin
         ].includes(e.origin)) {
             console.warn(`Untrusted origin: ${e.origin}`)
-            return
+            // return
         }
         parseMessage(e.data)
     }
@@ -49,7 +49,9 @@ function iframeUtil (router: any) {
     }
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
-        const pathname = `${location.pathname.replace(/^\/([\w\-]+)\/([\w\-]+)\/(\S+)$/, '/$1/$2')}${url}`
+        const prefix = window.PUBLIC_URL_PREFIX || ''
+        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const pathname = `${location.pathname.replace(new RegExp(`^${escapedPrefix}/([\\w\\-]+)/([\\w\\-]+)/([\\w.-]+)/(\\S+)$`), `${prefix}/$1/$2`)}${url}`
         if (refresh) {
             location.pathname = pathname
         } else {

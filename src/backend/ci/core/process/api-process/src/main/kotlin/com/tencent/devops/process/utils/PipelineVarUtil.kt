@@ -225,6 +225,7 @@ object PipelineVarUtil {
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
         "ci.actor" to PIPELINE_START_USER_NAME,
+        "ci.actor_name" to PIPELINE_START_USER_DISPLAY_NAME,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
         "ci.pipeline_start_time" to PIPELINE_TIME_START,
@@ -306,7 +307,9 @@ object PipelineVarUtil {
         "ci.build-no" to BUILD_NO, // 旧语法，仅保留映射关系，但前端界面不展示此变量
         "ci.build_no" to BUILD_NO,
         "ci.pipeline_creator" to PIPELINE_CREATE_USER,
+        "ci.pipeline_creator_name" to PIPELINE_CREATE_USER_NAME,
         "ci.pipeline_modifier" to PIPELINE_UPDATE_USER,
+        "ci.pipeline_modifier_name" to PIPELINE_UPDATE_USER_NAME,
         "ci.pipeline_version" to PIPELINE_VERSION,
         "ci.project_id" to PROJECT_NAME,
         "ci.project_name" to PROJECT_NAME_CHINESE,

@@ -59,11 +59,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList", "TooManyFunctions")
 abstract class AbMigratePolicyService(
@@ -157,7 +158,11 @@ abstract class AbMigratePolicyService(
                 projectName = groupInfo.resourceName
             )
             authorizationScopeList.forEach { authorizationScope ->
-                v2ManagerService.grantRoleGroupV2(groupInfo.relationId, authorizationScope)
+                v2ManagerService.grantRoleGroupV2(
+                    groupInfo.relationId,
+                    authorizationScope,
+                    TenantUtils.getTenantIdByEnglishName(projectCode)
+                )
             }
         }
     }
@@ -254,7 +259,11 @@ abstract class AbMigratePolicyService(
                 .apply { addAll(additionalScopes) }
             // 用户组授权
             finalAuthorizationScopeList.forEach { authorizationScope ->
-                v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
+                v2ManagerService.grantRoleGroupV2(
+                    groupId,
+                    authorizationScope,
+                    TenantUtils.getTenantIdByEnglishName(projectCode)
+                )
             }
             // 往用户组添加成员
             batchAddGroupMember(
@@ -360,11 +369,12 @@ abstract class AbMigratePolicyService(
         managerGroupId: Int,
         results: List<MigrateTaskDataResult>
     ) {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         results.forEach { result ->
             logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
             val userId = result.subject.id
             // 离职人员,直接忽略
-            if (deptService.getUserInfo(userId) == null) {
+            if (deptService.getUserInfo(userId, tenantId) == null) {
                 logger.warn("user has resigned, skip custom policy migration|${result.projectId}|$userId")
                 return@forEach
             }
@@ -384,7 +394,7 @@ abstract class AbMigratePolicyService(
                         memberId = userId,
                         memberType = MemberType.USER.type,
                         expiredAt = System.currentTimeMillis() / MILLISECOND +
-                            TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
+                                TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
                         iamGroupId = groupId
                     )
                 }
@@ -508,7 +518,7 @@ abstract class AbMigratePolicyService(
                 )?.relationId?.toInt()
                 logger.info(
                     "user match resource group" +
-                        "|$userId|$actions|$projectCode|$resourceCode|${groupConfig.groupCode}|$groupId"
+                            "|$userId|$actions|$projectCode|$resourceCode|${groupConfig.groupCode}|$groupId"
                 )
                 return Pair(groupConfig.id, groupId)
             }
@@ -537,7 +547,11 @@ abstract class AbMigratePolicyService(
             .createAttributes(false)
             .syncSubjectTemplate(true)
             .build()
-        val groupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
+        val groupId = v2ManagerService.batchCreateRoleGroupV2(
+            gradeManagerId,
+            managerRoleGroupDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
         val groupConfig = authResourceGroupConfigDao.getByName(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -583,7 +597,11 @@ abstract class AbMigratePolicyService(
             .createAttributes(false)
             .syncSubjectTemplate(true)
             .build()
-        val iamGroupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
+        val iamGroupId = v2ManagerService.batchCreateRoleGroupV2(
+            gradeManagerId,
+            managerRoleGroupDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
 
         authResourceGroupDao.create(
             dslContext = dslContext,
