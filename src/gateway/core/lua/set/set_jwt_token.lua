@@ -24,7 +24,7 @@ if ngx.var.http_x_devops_jwt_token == nil then
     local jwt_token = ""
     if config.jwtPrivateKey ~= nil and config.jwtPrivateKey ~= "" then
       local table_of_jwt = {
-        header = { typ = "JWT", alg = "RS256" },
+        header = { typ = "JWT", alg = "RS256", kid = config.jwtKid },
         payload = { sub = "Gateway", exp = ngx.time() + 60 * 10 }
       }
       jwt_token = jwt:sign(
