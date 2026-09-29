@@ -108,6 +108,10 @@ interface UserProjectInfoResource {
     @Path("/pipeline/errorType/list")
     @GET
     fun queryProjectPipelineErrorTypes(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
+        projectId: String,
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
