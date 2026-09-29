@@ -102,10 +102,6 @@ class GithubTokenService @Autowired constructor(
         }
     }
 
-    fun deleteAccessToken(userId: String) {
-        githubTokenDao.delete(dslContext, userId)
-    }
-
     fun getAccessToken(
         userId: String,
         tokenType: GithubTokenType = GithubTokenType.GITHUB_APP

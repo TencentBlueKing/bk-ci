@@ -3,6 +3,7 @@ package com.tencent.devops.repository.crypto
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshRow
 import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
 import com.tencent.devops.model.repository.tables.TRepositoryScmToken
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.stereotype.Service
@@ -14,15 +15,31 @@ class ScmTokenCryptoKeyRefreshWriter(
 ) : CryptoKeyRefreshWriter {
     override val name = "repository-scm-token"
 
-    override fun fetchBatch(limit: Int, projectId: String?): List<CryptoKeyRefreshRow> {
+    override fun fetchBatch(limit: Int, filters: Map<String, String>): List<CryptoKeyRefreshRow> {
         return with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
             dslContext.select(USER_ID, SCM_CODE, APP_TYPE, ACCESS_TOKEN, REFRESH_TOKEN, AES_KEY_SHA)
                 .from(this)
-                .where(AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(gitTokenCryptoHelper.currentKeySha())))
+                .where(refreshCondition(filters))
                 .limit(limit)
                 .fetch()
                 .map(::toRow)
         }
+    }
+
+    private fun TRepositoryScmToken.refreshCondition(filters: Map<String, String>): List<Condition> {
+        val conditions = mutableListOf(
+            AES_KEY_SHA.isNull.or(AES_KEY_SHA.ne(gitTokenCryptoHelper.currentKeySha()))
+        )
+        filters[ScmTokenCryptoKeyRefreshRow::userId.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(USER_ID.eq(it)) }
+        filters[ScmTokenCryptoKeyRefreshRow::scmCode.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(SCM_CODE.eq(it)) }
+        filters[ScmTokenCryptoKeyRefreshRow::appType.name]
+            ?.takeIf { it.isNotBlank() }
+            ?.let { conditions.add(APP_TYPE.eq(it)) }
+        return conditions
     }
 
     override fun updateRow(row: CryptoKeyRefreshRow) {
