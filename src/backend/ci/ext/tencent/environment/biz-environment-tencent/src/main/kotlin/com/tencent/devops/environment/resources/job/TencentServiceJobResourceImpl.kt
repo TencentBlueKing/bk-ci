@@ -28,14 +28,17 @@
 package com.tencent.devops.environment.resources.job
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.ResourceNotMatchException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_BELONG_TO_PROJECT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUERY_LOG_HOST_NUM_EXCEEDED
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
@@ -48,6 +51,7 @@ import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryExecuteObjectLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -59,6 +63,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResu
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.OpOperateResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryExecuteObjectLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
@@ -73,6 +78,7 @@ import com.tencent.devops.environment.service.sync.UpdateCmdbNodeService
 import com.tencent.devops.environment.service.sync.UpdateGseAgentInfoService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import jakarta.ws.rs.core.Response
 
 @RestResource
@@ -84,7 +90,9 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val updateGseAgentInfoService: UpdateGseAgentInfoService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService,
     private val installTaskService: InstallTaskService,
-    private val apiGwAgentService: ApiGwAgentService
+    private val apiGwAgentService: ApiGwAgentService,
+    @Value("\${environment.job.maxQueryLogHostNum:10}")
+    private val maxQueryLogHostNum: Int
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
@@ -141,6 +149,17 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         checkParamBlank(userId, projectId)
         checkJobInsBelongToProj(projectId, queryJobInstanceLogsReq.jobInstanceId)
         return jobService.queryJobInstanceLogs(queryJobInstanceLogsReq)
+    }
+
+    override fun batchGetExecuteObjectLog(
+        userId: String,
+        projectId: String,
+        queryExecuteObjectLogsReq: QueryExecuteObjectLogsReq
+    ): Result<QueryExecuteObjectLogsResult> {
+        checkParamBlank(userId, projectId)
+        val effectiveReq = resolveEffectiveHosts(queryExecuteObjectLogsReq)
+        checkJobInsBelongToProj(projectId, effectiveReq.jobInstanceId)
+        return Result(jobService.batchGetExecuteObjectLog(effectiveReq))
     }
 
     override fun createAccount(
@@ -316,6 +335,30 @@ class TencentServiceJobResourceImpl @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_JOB_INSTANCE_NOT_BELONG_TO_PROJECT)
             )
         }
+    }
+
+    /**
+     * hostIdList不为空时只使用hostIdList并忽略ipList，否则使用ipList；生效列表去重后不能为空且不能超过上限
+     */
+    private fun resolveEffectiveHosts(req: QueryExecuteObjectLogsReq): QueryExecuteObjectLogsReq {
+        val hostIdList = req.hostIdList?.distinct()
+        val effectiveReq = if (!hostIdList.isNullOrEmpty()) {
+            req.copy(hostIdList = hostIdList, ipList = null)
+        } else {
+            val ipList = req.ipList?.distinct()
+            if (ipList.isNullOrEmpty()) {
+                throw ParamBlankException("hostIdList and ipList cannot both be empty.")
+            }
+            req.copy(hostIdList = null, ipList = ipList)
+        }
+        val hostNum = effectiveReq.hostIdList?.size ?: effectiveReq.ipList?.size ?: 0
+        if (hostNum > maxQueryLogHostNum) {
+            throw ErrorCodeException(
+                errorCode = ERROR_QUERY_LOG_HOST_NUM_EXCEEDED,
+                params = arrayOf(maxQueryLogHostNum.toString())
+            )
+        }
+        return effectiveReq
     }
 
     private fun recordJobInsToProj(projectId: String, jobInstanceId: Long, createUser: String) {

@@ -37,6 +37,8 @@ import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResp
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudV4ErrorResp
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudV4Resp
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -62,7 +64,9 @@ class ApigwJobCloudApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
+        private const val HEADER_BKAPI_REQUEST_ID = "X-Bkapi-Request-Id"
         private val INTERNAL_SERVER_ERROR_STATUS = jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
+        private val BAD_REQUEST_STATUS = jakarta.ws.rs.core.Response.Status.BAD_REQUEST
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -76,7 +80,8 @@ class ApigwJobCloudApi {
             "getStepInstanceDetail" to "/api/v3/get_step_instance_detail",
             "getStepInstanceStatus" to "/api/v3/get_step_instance_status",
             "queryAgentStatusFromJob" to "/api/v3/query_agent_info",
-            "operateStepInstance" to "/api/v3/operate_step_instance"
+            "operateStepInstance" to "/api/v3/operate_step_instance",
+            "batchGetExecuteObjectLog" to "/api/v4/batch_get_job_instance_execute_object_log"
         )
         private val suffix = mapOf(
             "queryJobInstanceStatus" to "/?bk_scope_type=%s&bk_scope_id=%s&job_instance_id=%s&return_ip_result=%s",
@@ -127,6 +132,69 @@ class ApigwJobCloudApi {
             OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
         }
         return getResultFromRes(resp, classOfU)
+    }
+
+    /**
+     * 请求上云版job v4接口：成功时响应体只有data，失败时HTTP状态码非2xx且响应体为error
+     */
+    fun <T : JobCloudPermission, U : Any> executeV4PostRequest(
+        jobCloud: T,
+        classOfU: Class<U>
+    ): JobCloudResult<U> {
+        val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
+        jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
+        jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
+        val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
+        val requestContent = mapper.writeValueAsString(jobCloud)
+        logger.info(
+            "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
+                "body: ${logWithLengthLimit(requestContent)}"
+        )
+        val resp = OkhttpUtils.doShortPost(
+            url = jobCloudAuthenticationReq.url,
+            jsonParam = requestContent,
+            headers = headers
+        )
+        return getResultFromV4Res(resp, classOfU)
+    }
+
+    internal fun <U> getResultFromV4Res(response: Response, classOfU: Class<U>): JobCloudResult<U> {
+        val operationName = getJobOperationName()
+        removeJobOperationName()
+        response.use {
+            val jobRequestId = it.header(HEADER_BKAPI_REQUEST_ID)
+            val responseBody = it.body?.string()
+            logger.info(
+                "[$operationName] response(v4) httpStatus: ${it.code}, requestId: $jobRequestId, " +
+                    "body: ${logWithLengthLimit(responseBody.toString())}"
+            )
+            if (!it.isSuccessful) {
+                val error = responseBody?.let { body ->
+                    try {
+                        mapper.readValue(body, JobCloudV4ErrorResp::class.java).error
+                    } catch (ignored: Exception) {
+                        null
+                    }
+                }
+                val errorMsg = "Execute failed! Req ID: $jobRequestId, HTTP status: ${it.code}, " +
+                    "Error code: ${error?.code}, " +
+                    "Error msg: ${error?.message ?: logWithLengthLimit(responseBody.toString())}"
+                logger.error("[$operationName] $errorMsg")
+                val status = if (it.code in 400..499) BAD_REQUEST_STATUS else INTERNAL_SERVER_ERROR_STATUS
+                throw CustomException(status, errorMsg)
+            }
+            if (responseBody.isNullOrEmpty()) {
+                throw CustomException(INTERNAL_SERVER_ERROR_STATUS, "[$operationName] Job response body is empty.")
+            }
+            val javaType = mapper.typeFactory.constructParametricType(JobCloudV4Resp::class.java, classOfU)
+            val jobCloudV4Resp: JobCloudV4Resp<U> = mapper.readValue(responseBody, javaType)
+            return JobCloudResult(
+                code = null,
+                result = true,
+                jobRequestId = jobRequestId,
+                data = jobCloudV4Resp.data
+            )
+        }
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, vararg args: U): JobCloudResult<T> {
