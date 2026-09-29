@@ -820,6 +820,7 @@ object ScriptYmlUtils {
             res.workspaceId = preTriggerOn.workspaceId
             // 统一框架触发器的通用事件载荷原样透传，由对应 TriggerConverter 解析
             res.events = preTriggerOn.events.ifEmpty { null }
+            res.type = preTriggerOn.type
         }
 
         return res

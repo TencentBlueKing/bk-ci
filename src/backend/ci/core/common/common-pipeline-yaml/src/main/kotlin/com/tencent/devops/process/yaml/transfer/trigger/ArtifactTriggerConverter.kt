@@ -15,7 +15,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactRep
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactTriggerEventType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
-import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.on.ArrivedMetadata
 import com.tencent.devops.process.yaml.v3.models.on.ArrivedRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
@@ -34,9 +33,10 @@ class ArtifactTriggerConverter : TriggerConverter {
     companion object {
         // 制品到达事件类型；新增其它事件类型只需在本转换器内扩展，无需改动 TriggerOn/PreTriggerOnV3
         private const val EVENT_ARRIVED = "arrived"
+        const val TYPE = "artifact"
     }
 
-    override val triggerType: TriggerType = TriggerType.ARTIFACT
+    override val type: String = TYPE
 
     override fun support(element: Element): Boolean = element is ArtifactTriggerElement
 

@@ -640,7 +640,7 @@ class ModelTransfer @Autowired constructor(
         baseTrigger: IPreTriggerOn,
         only: PreTriggerOnV3
     ): IPreTriggerOn {
-        if (TriggerType.parse(only.type)?.generic == true) {
+        if (only.events.isNotEmpty()) {
             // 嵌套式触发器（如 artifact）：事件放入 events，再加上基础类型
             (baseTrigger as PreTriggerOnV3).events[only.type!!] = only.events
             return baseTrigger

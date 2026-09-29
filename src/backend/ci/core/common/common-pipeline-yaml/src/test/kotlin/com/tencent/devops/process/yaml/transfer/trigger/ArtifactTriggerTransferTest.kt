@@ -85,7 +85,7 @@ class ArtifactTriggerTransferTest {
     fun `nested artifact yaml resource converts correctly (format 1)`() {
         val triggers = parseTriggers("trigger/artifact.yml")
 
-        val artifact = triggers.single { it.first == TriggerType.ARTIFACT }.second
+        val artifact = triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second
         val arrived = arrivedOf(artifact)
         assertEquals("制品到达触发", arrived.name)
         assertEquals("pipeline", arrived.repository)
@@ -118,7 +118,9 @@ class ArtifactTriggerTransferTest {
 
         // 基础触发器（manual）单独成条目
         assertEquals(1, triggers.count { it.first == TriggerType.BASE })
-        val artifacts = triggers.filter { it.first == TriggerType.ARTIFACT }.map { arrivedOf(it.second) }
+        val artifacts = triggers
+            .filter { it.second.type == ArtifactTriggerConverter.TYPE }
+            .map { arrivedOf(it.second) }
         assertEquals(2, artifacts.size)
 
         val msi = artifacts.single { it.repository == "pipeline" }
@@ -131,7 +133,7 @@ class ArtifactTriggerTransferTest {
         assertEquals(listOf("v*"), image.tags)
 
         // 逐个往返校验
-        triggers.filter { it.first == TriggerType.ARTIFACT }.forEach { (_, triggerOn) ->
+        triggers.filter { it.second.type == ArtifactTriggerConverter.TYPE }.forEach { (_, triggerOn) ->
             val origin = arrivedOf(triggerOn)
             val back = roundTripArrived(triggerOn)
             assertEquals(origin.repository, back.repository)

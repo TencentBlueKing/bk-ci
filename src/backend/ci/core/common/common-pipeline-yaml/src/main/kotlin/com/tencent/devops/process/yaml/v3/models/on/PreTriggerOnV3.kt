@@ -85,7 +85,7 @@ data class PreTriggerOnV3(
     @get:Schema(title = "bug")
     override val bug: Any? = null,
     /**
-     * 通用框架触发器（generic=true，如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
+     * 通用框架触发器（如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
      *
      * 采用 [JsonAnyGetter] 在序列化时平铺到当前对象顶层（输出 `type + {事件}`），
      * 反序列化由 [com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser] 显式填充；

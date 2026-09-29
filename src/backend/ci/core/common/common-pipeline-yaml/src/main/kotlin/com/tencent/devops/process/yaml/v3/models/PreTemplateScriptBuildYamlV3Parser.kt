@@ -81,6 +81,16 @@ data class PreTemplateScriptBuildYamlV3Parser(
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
+
+        // PreTriggerOnV3 已声明的 YAML 字段名（含 @JsonProperty 重命名），对象形态中不在此集合的 key 视为通用触发器
+        private val preTriggerOnV3Keys: Set<String> by lazy {
+            val mapper = JsonUtil.getObjectMapper()
+            mapper.serializationConfig
+                .introspect(mapper.constructType(PreTriggerOnV3::class.java))
+                .findProperties()
+                .map { it.name }
+                .toSet()
+        }
     }
 
     init {
@@ -152,7 +162,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
                 baseOk = true
                 return@forEach
             }
-            res.add((TriggerType.parse(it.type) ?: TriggerType.parse(default)) to ScriptYmlUtils.formatTriggerOn(it))
+            val type = if (it.type == null) {
+                TriggerType.parse(default)
+            } else {
+                TriggerType.parse(it.type) ?: TriggerType.GENERIC
+            }
+            res.add(type to ScriptYmlUtils.formatTriggerOn(it))
         }
         return res
     }
@@ -203,42 +218,41 @@ data class PreTemplateScriptBuildYamlV3Parser(
         // 对象形态
         if (triggerOn is Map<*, *>) {
             val map = triggerOn as Map<*, *>
-            // 统一（通用）触发器框架「触发器 -> 事件类型」形态：顶层 key 为触发器类型别名（generic=true）
-            val genericKeys = map.keys.filter { key ->
-                (key as? String)?.let { TriggerType.parse(it)?.generic == true } == true
-            }
-            if (genericKeys.isNotEmpty()) {
-                val res = mutableListOf<PreTriggerOnV3>()
-                // 其余 key 作为基础/代码库触发（type 为空，由 formatTriggerOn 归为 BASE/默认）
-                val rest = map.filterKeys { it !in genericKeys }
-                if (rest.isNotEmpty()) {
-                    res.add(JsonUtil.anyTo(rest, object : TypeReference<PreTriggerOnV3>() {}))
-                }
-                genericKeys.forEach { key ->
-                    res.add(genericTrigger(key as String, map[key]))
-                }
-                return res
-            }
-            // 简写方式（存量）
-            val new = JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {})
-            return listOf(PreTriggerOnV3(manual = new.manual, schedules = new.schedules, remote = new.remote), new)
+            // 统一（通用）触发器框架「触发器 -> 事件类型」形态：顶层 key 不是 PreTriggerOnV3 已有字段且值为对象时，
+            // 视为通用触发器类型名（如 artifact）
+            val genericKeys = genericKeys(map)
+            // 简写方式（存量）：其余 key 拆成基础触发 + 默认代码库触发，通用触发器追加在后
+            val rest = map.filterKeys { it !in genericKeys }
+            val repoTrigger = JsonUtil.anyTo(rest, object : TypeReference<PreTriggerOnV3>() {})
+            val baseTrigger = PreTriggerOnV3(
+                manual = repoTrigger.manual,
+                schedules = repoTrigger.schedules,
+                remote = repoTrigger.remote
+            )
+            return listOf(baseTrigger, repoTrigger) + genericKeys.map { key -> genericTrigger(key as String, map[key]) }
         }
         if (triggerOn is List<*>) {
             return (triggerOn as List<*>).map { item ->
-                val type = (item as? Map<*, *>)?.get("type") as? String
-                if (type != null && TriggerType.parse(type)?.generic == true) {
-                    // 列表形态的通用框架触发器：事件 key 与 type 平级，剥离 type 后即为事件载荷
-                    genericTrigger(type, (item as Map<*, *>).filterKeys { it != "type" })
-                } else {
-                    JsonUtil.anyTo(item, object : TypeReference<PreTriggerOnV3>() {})
+                val pre = JsonUtil.anyTo(item, object : TypeReference<PreTriggerOnV3>() {})
+                // 列表形态的通用框架触发器：事件 key 与 type 平级，非 PreTriggerOnV3 已有字段的对象即为事件载荷
+                (item as? Map<*, *>)?.let { map ->
+                    genericKeys(map).forEach { key -> pre.events[key as String] = map[key] }
                 }
+                pre
             }
         }
         return null
     }
 
     /**
-     * 构造通用框架触发器（generic=true，如 artifact）的归一化节点。
+     * 不是 PreTriggerOnV3 已有字段且值为对象的 key，视为通用触发器类型名（对象形态）或事件类型（列表形态）。
+     */
+    private fun genericKeys(map: Map<*, *>): List<Any?> = map.keys.filter { key ->
+        key is String && key !in preTriggerOnV3Keys && map[key] is Map<*, *>
+    }
+
+    /**
+     * 构造通用框架触发器（如 artifact）的归一化节点。
      *
      * 仅承载 type 与通用事件载荷 [PreTriggerOnV3.events]，本类不感知具体事件结构；
      * 事件的解析由对应 TriggerConverter 负责，新增事件类型无需改动本类与 PreTriggerOnV3。

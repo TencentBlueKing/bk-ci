@@ -131,7 +131,7 @@ class TriggerTransferTest {
     @Test
     fun `nested artifact yaml converts correctly (format 1)`() {
         val triggers = parseTriggers("trigger/artifact.yml")
-        val artifact = triggers.single { it.first == TriggerType.ARTIFACT }.second
+        val artifact = triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second
         val arrived = arrivedOf(artifact)
         assertEquals("制品到达触发", arrived.name)
         assertEquals("pipeline", arrived.repository)
@@ -162,7 +162,9 @@ class TriggerTransferTest {
     fun `list artifact yaml converts correctly (format 2)`() {
         val triggers = parseTriggers("trigger/artifact-list.yml")
         assertEquals(1, triggers.count { it.first == TriggerType.BASE })
-        val artifacts = triggers.filter { it.first == TriggerType.ARTIFACT }.map { arrivedOf(it.second) }
+        val artifacts = triggers
+            .filter { it.second.type == ArtifactTriggerConverter.TYPE }
+            .map { arrivedOf(it.second) }
         assertEquals(2, artifacts.size)
 
         val msi = artifacts.single { it.repository == "pipeline" }
@@ -174,7 +176,7 @@ class TriggerTransferTest {
         assertEquals("bk-ci/backend", image.image)
         assertEquals(listOf("v*"), image.tags)
 
-        triggers.filter { it.first == TriggerType.ARTIFACT }.forEach { (_, triggerOn) ->
+        triggers.filter { it.second.type == ArtifactTriggerConverter.TYPE }.forEach { (_, triggerOn) ->
             val origin = arrivedOf(triggerOn)
             val back = roundTripArrived(triggerOn)
             assertEquals(origin.repository, back.repository)
@@ -205,7 +207,7 @@ class TriggerTransferTest {
         val base = triggers.single { it.first == TriggerType.BASE }.second
         assertEquals("enabled", base.remote?.enable)
 
-        val arrived = arrivedOf(triggers.single { it.first == TriggerType.ARTIFACT }.second)
+        val arrived = arrivedOf(triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second)
         assertEquals("pipeline", arrived.repository)
         assertEquals(listOf("*.msi"), arrived.artifactsName)
     }
@@ -224,7 +226,9 @@ class TriggerTransferTest {
         assertEquals("12345", tapd.workspaceId)
         assertEquals(listOf("create"), tapd.story?.action)
 
-        val artifacts = triggers.filter { it.first == TriggerType.ARTIFACT }.map { arrivedOf(it.second) }
+        val artifacts = triggers
+            .filter { it.second.type == ArtifactTriggerConverter.TYPE }
+            .map { arrivedOf(it.second) }
         assertEquals(2, artifacts.size)
         assertNotNull(artifacts.single { it.repository == "pipeline" })
         val image = artifacts.single { it.repository == "image" }

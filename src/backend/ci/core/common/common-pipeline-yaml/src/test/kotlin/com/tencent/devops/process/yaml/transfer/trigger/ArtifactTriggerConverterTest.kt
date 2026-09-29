@@ -105,7 +105,7 @@ class ArtifactTriggerConverterTest {
         parser.replaceTemplate { (it as PreTemplateScriptBuildYamlV3Parser).initPreScriptBuildYamlI() }
 
         val triggers = parser.formatTriggerOn(ScmType.CODE_GIT)
-        val arrived = parseArrived(triggers.single { it.first == TriggerType.ARTIFACT }.second)
+        val arrived = parseArrived(triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second)
         assertEquals("pipeline", arrived.repository)
         assertEquals(listOf("*.msi"), arrived.artifactsName)
     }
@@ -129,7 +129,7 @@ class ArtifactTriggerConverterTest {
         parser.replaceTemplate { (it as PreTemplateScriptBuildYamlV3Parser).initPreScriptBuildYamlI() }
 
         val triggers = parser.formatTriggerOn(ScmType.CODE_GIT)
-        val arrived = parseArrived(triggers.single { it.first == TriggerType.ARTIFACT }.second)
+        val arrived = parseArrived(triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second)
         assertEquals("image", arrived.repository)
         assertEquals("bk-ci/backend", arrived.image)
         assertEquals(listOf("v*"), arrived.tags)
@@ -155,7 +155,7 @@ class ArtifactTriggerConverterTest {
         val triggers = parser.formatTriggerOn(ScmType.CODE_GIT)
         // 基础触发器与 artifact 触发器各自成条目
         assertNotNull(triggers.singleOrNull { it.first == TriggerType.BASE })
-        val arrived = parseArrived(triggers.single { it.first == TriggerType.ARTIFACT }.second)
+        val arrived = parseArrived(triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second)
         assertEquals("pipeline", arrived.repository)
         assertEquals(listOf("*.msi"), arrived.artifactsName)
     }

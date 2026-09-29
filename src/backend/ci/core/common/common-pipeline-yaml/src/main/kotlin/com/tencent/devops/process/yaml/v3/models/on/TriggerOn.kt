@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v3.models.on
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -90,10 +91,13 @@ data class TriggerOn(
     @get:Schema(title = "bug")
     var bug: TapdRule? = null,
     // ---- 统一触发器框架通用扩展位（新增触发器/事件无需再增字段）----
-    // 通用框架触发器（generic=true，如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
+    // 通用框架触发器（如 artifact）的通用事件载荷：key 为事件类型（如 arrived），value 为事件配置。
     // 由对应 TriggerConverter 负责与自身事件 POJO 的相互转换，新增事件类型无需改动本类。
     @get:Schema(title = "events")
-    var events: Map<String, Any?>? = null
+    var events: Map<String, Any?>? = null,
+    // YAML 中声明的触发器类型名（PreTriggerOnV3.type），非内置类型时按类型名路由到 TriggerConverter
+    @JsonIgnore
+    var type: String? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()

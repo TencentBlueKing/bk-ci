@@ -2,7 +2,6 @@ package com.tencent.devops.process.yaml.transfer.trigger
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
-import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 
 /**
@@ -19,9 +18,10 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 interface TriggerConverter {
 
     /**
-     * 该转换器负责的触发器类型。
+     * 该转换器负责的触发器类型名，即 YAML 中的 `on.{type}` / `on[].type`（如 artifact）。
+     * 不能与内置触发器类型名重名，内置类型优先走存量转换逻辑。
      */
-    val triggerType: TriggerType
+    val type: String
 
     /**
      * YAML -> Model：将单个触发器节点（已归一化为 [TriggerOn]）转换为流水线 [Element]，
@@ -31,7 +31,7 @@ interface TriggerConverter {
 
     /**
      * Model -> YAML：从全部触发器 [Element] 中筛选归属本转换器的元素，
-     * 聚合为一到多个 [TriggerOn] 节点（顶层不含 type，type 由调用方按 [triggerType] 回填）。
+     * 聚合为一到多个 [TriggerOn] 节点（顶层不含 type，type 由调用方按 [type] 回填）。
      */
     fun elements2Yaml(
         elements: List<Element>,

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -73,6 +74,7 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
+import com.tencent.devops.process.yaml.transfer.trigger.TriggerConverter
 import com.tencent.devops.process.yaml.transfer.trigger.TriggerConverterRegistry
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.IfField
@@ -114,24 +116,23 @@ class ElementTransfer @Autowired(required = false) constructor(
         yamlInput.yaml.formatTriggerOn(yamlInput.defaultScmType).forEach {
             yamlInput.aspectWrapper.setYamlTriggerOn(it.second, PipelineTransferAspectWrapper.AspectType.BEFORE)
             val before = elements.size
-            // 注册表优先：统一框架触发器；查不到则回落存量 when 分支
-            val converter = triggerConverterRegistry.byType(it.first)
-            if (converter != null) {
-                converter.yaml2Elements(it.second, elements)
-            } else {
-                when (it.first) {
-                    TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
-                    TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
-                    TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
-                    TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
-                    TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
-                    TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
-                    TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
-                    TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
-                    TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
-                    TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
-                    // 由注册表处理，无匹配转换器时忽略
-                    TriggerType.ARTIFACT -> Unit
+            when (it.first) {
+                TriggerType.BASE -> triggerTransfer.yaml2TriggerBase(yamlInput, it.second, elements)
+                TriggerType.CODE_GIT -> triggerTransfer.yaml2TriggerGit(it.second, elements)
+                TriggerType.CODE_TGIT -> triggerTransfer.yaml2TriggerTGit(it.second, elements)
+                TriggerType.GITHUB -> triggerTransfer.yaml2TriggerGithub(it.second, elements)
+                TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
+                TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
+                TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
+                TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
+                TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
+                TriggerType.TAPD -> triggerTransfer.yaml2TriggerTapd(it.second, elements)
+                TriggerType.GENERIC -> {
+                    val converter = triggerConverterRegistry.byType(it.second.type) ?: throw PipelineTransferException(
+                        YAML_NOT_VALID,
+                        arrayOf("trigger type(${it.second.type}) not supported")
+                    )
+                    converter.yaml2Elements(it.second, elements)
                 }
             }
             if (elements.size > before) {
@@ -153,12 +154,11 @@ class ElementTransfer @Autowired(required = false) constructor(
         aspectWrapper: PipelineTransferAspectWrapper
     ): List<IPreTriggerOn> {
         val res = mutableListOf<IPreTriggerOn>()
-        triggerConverterRegistry.supportedTypes().forEach { type ->
-            val converter = triggerConverterRegistry.byType(type) ?: return@forEach
+        triggerConverterRegistry.converters().forEach { converter ->
             converter.elements2Yaml(elements, aspectWrapper).forEach { on ->
                 res.add(
                     on.toPre(version).also { pre ->
-                        (pre as? PreTriggerOnV3)?.type = type.alis
+                        (pre as? PreTriggerOnV3)?.type = converter.type
                     }
                 )
             }
