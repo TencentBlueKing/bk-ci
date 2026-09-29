@@ -27,16 +27,15 @@
 
 package com.tencent.devops.process.service.pipeline.version.processor
 
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -44,11 +43,9 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineCallbackEventVersionPostProcessor @Autowired constructor(
-    private val pipelineCallbackDao: PipelineCallbackDao
+    private val pipelineCallbackDao: PipelineCallbackDao,
+    private val pipelineCallbackCryptoHelper: PipelineCallbackCryptoHelper
 ) : PipelineVersionCreatePostProcessor {
-
-    @Value("\${project.callback.aes-key}")
-    private lateinit var aesKey: String
 
     override fun postProcessInTransactionVersionCreate(
         transactionContext: DSLContext,
@@ -106,8 +103,13 @@ class PipelineCallbackEventVersionPostProcessor @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 list = events.map { (_, value) ->
-                    value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
-                }
+                    value.copy(
+                        secretToken = value.secretToken?.let {
+                            pipelineCallbackCryptoHelper.encryptSm4ButAes(it)
+                        }
+                    )
+                },
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
             )
         }
     }

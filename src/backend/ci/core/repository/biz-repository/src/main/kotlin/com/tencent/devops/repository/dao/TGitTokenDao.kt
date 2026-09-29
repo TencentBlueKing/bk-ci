@@ -44,7 +44,13 @@ class TGitTokenDao {
         }
     }
 
-    fun saveAccessToken(dslContext: DSLContext, userId: String, oauthUserId: String, token: GitToken): Int {
+    fun saveAccessToken(
+        dslContext: DSLContext,
+        userId: String,
+        oauthUserId: String,
+        token: GitToken,
+        aesKeySha: String
+    ): Int {
         with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
             return dslContext.insertInto(
                 this,
@@ -54,7 +60,8 @@ class TGitTokenDao {
                 REFRESH_TOKEN,
                 TOKEN_TYPE,
                 EXPIRES_IN,
-                CREATE_TIME
+                CREATE_TIME,
+                AES_KEY_SHA
             )
                 .values(
                     userId,
@@ -63,7 +70,8 @@ class TGitTokenDao {
                     token.refreshToken,
                     token.tokenType,
                     token.expiresIn,
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    aesKeySha
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
@@ -72,6 +80,7 @@ class TGitTokenDao {
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
                 .set(CREATE_TIME, LocalDateTime.now())
+                .set(AES_KEY_SHA, aesKeySha)
                 .execute()
         }
     }

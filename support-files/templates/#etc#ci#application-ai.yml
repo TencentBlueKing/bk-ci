@@ -95,3 +95,4 @@ management:
 # ai 服务敏感信息加密配置，可修改
 aes:
   ai: __BK_CI_AI_AES_KEY__
+  used-ai-keys: __BK_CI_AI_USED_AES_KEYS__
