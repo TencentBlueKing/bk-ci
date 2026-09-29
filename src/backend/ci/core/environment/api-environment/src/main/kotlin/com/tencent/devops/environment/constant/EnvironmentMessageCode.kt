@@ -126,6 +126,7 @@ object EnvironmentMessageCode {
 
     const val ERROR_ENV_ADD_NODE_OS_ERROR = "2105075" // 环境管理：环境{0}仅支持系统{1}，节点{2}不支持
     const val ERROR_IMATE_NO_ADMIN_IMPORT_PERMISSION = "2105076" // 环境管理：只有分身管理员才能导入
+    const val ERROR_QUERY_LOG_HOST_NUM_EXCEEDED = "2105077" // 环境管理: 单次查询的主机数量不可超过{0}
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器
