@@ -44,6 +44,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlResourceType
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -369,8 +370,12 @@ class PipelineYamlService(
                 return null
             }
         }
-        val homePage =
-            repository.url.replace("git@", "https://").removeSuffix(".git")
+        val homePage = try {
+            GitUtils.getHttpUrl(repository.url)
+        } catch (ignored: Exception) {
+            logger.warn("fail to get repository http url|$projectId|$repoHashId|${repository.url}", ignored)
+            repository.url
+        }.removeSuffix(".git")
         return if (pipelineYamlVersion == null) {
             PipelineYamlVo(
                 repoHashId = repoHashId,
@@ -387,7 +392,7 @@ class PipelineYamlService(
                 pathWithNamespace = repository.projectName,
                 webUrl = homePage,
                 filePath = filePath,
-                fileUrl = "$homePage/blob/${pipelineYamlVersion.commitId}/$filePath",
+                fileUrl = "$homePage/blob/${pipelineYamlVersion.commitId}/${GitUtils.urlEncodePath(filePath)}",
                 status = pipelineYamlInfo.status
             )
         }

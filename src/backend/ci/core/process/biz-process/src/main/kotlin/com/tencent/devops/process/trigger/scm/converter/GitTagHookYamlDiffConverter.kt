@@ -41,7 +41,10 @@ class GitTagHookYamlDiffConverter @Autowired constructor(
         )
         val serverRepo = webhook.repo
         val defaultBranch = serverRepo.defaultBranch!!
-        return fileTrees.map { tree ->
+        return fileTrees.filter {
+            // 模版不需要执行
+            !YamlFileUtils.isTemplateFile(YamlFileUtils.getCiFilePath(it.path))
+        }.map { tree ->
             val filePath = YamlFileUtils.getCiFilePath(tree.path)
             PipelineYamlDiff(
                 projectId = projectId,

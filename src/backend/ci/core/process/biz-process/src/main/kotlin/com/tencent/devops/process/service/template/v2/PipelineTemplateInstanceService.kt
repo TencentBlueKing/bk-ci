@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomMessageException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -819,6 +820,19 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineIds = pipelineIds.toList()
         )
         val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
+        val repoScmTypeMap = try {
+            val repoHashIds = pipelineYamlInfoList.map { it.repoHashId }.toSet()
+            if (repoHashIds.isNotEmpty()) {
+                client.get(ServiceRepositoryResource::class)
+                    .listRepoByIds(repoHashIds).data?.associate { it.repoHashId!! to it.getScmType() }
+                    ?: emptyMap()
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to get repo scm type for project [$projectId]", e)
+            emptyMap()
+        }
         // 增加缓存,防止相同的版本重复解析
         val templateResourceCache = mutableMapOf<String, PipelineTemplateResource>()
         // 解析模版的参数,主要是为了获取模版的options字段,然后填充给实例化的options
@@ -846,7 +860,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                         pipelineCurrentBuildNos = pipelineCurrentBuildNos,
                         templateParams = templateParams,
                         pipelineId2Name = pipelineId2Name,
-                        yamlPipelineMap = yamlPipelineMap
+                        yamlPipelineMap = yamlPipelineMap,
+                        repoScmTypeMap = repoScmTypeMap
                     )
                 } else {
                     listTemplateInstancesParamsByRelated(
@@ -857,7 +872,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
                         templateModel = templateModel,
                         pipelineCurrentBuildNos = pipelineCurrentBuildNos,
                         pipelineId2Name = pipelineId2Name,
-                        yamlPipelineMap = yamlPipelineMap
+                        yamlPipelineMap = yamlPipelineMap,
+                        repoScmTypeMap = repoScmTypeMap
                     )
                 }
             }.toMap()
@@ -879,7 +895,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         pipelineCurrentBuildNos: Map<String, Int>,
         templateParams: List<BuildFormProperty>,
         pipelineId2Name: Map<String, String>,
-        yamlPipelineMap: Map<String, PipelineYamlInfo>
+        yamlPipelineMap: Map<String, PipelineYamlInfo>,
+        repoScmTypeMap: Map<String, ScmType>
     ): Pair<String, TemplateInstanceParams> {
         // ID的方式,在保存的时候,存储的是完整的实例化model,所以这里可以直接使用pipelineModel,减少模版查询
         val instanceModel = if (templateDescriptor.templateRefType == TemplateRefType.ID) {
@@ -914,6 +931,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             param = instanceParams.onEach { p -> p.name = p.name ?: p.id },
             repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
             filePath = yamlPipelineMap[pipelineId]?.filePath,
+            scmType = yamlPipelineMap[pipelineId]?.repoHashId?.let { repoScmTypeMap[it] },
             triggerElements = pipelineModel.getTriggerContainer().elements,
             overrideTemplateField =
                 pipelineModel.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(model = templateModel)
@@ -928,7 +946,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         templateParams: List<BuildFormProperty>,
         pipelineCurrentBuildNos: Map<String, Int>,
         pipelineId2Name: Map<String, String>,
-        yamlPipelineMap: Map<String, PipelineYamlInfo>
+        yamlPipelineMap: Map<String, PipelineYamlInfo>,
+        repoScmTypeMap: Map<String, ScmType>
     ): Pair<String, TemplateInstanceParams> {
         val overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
         val instanceTriggerContainer = pipelineModel.getTriggerContainer()
@@ -947,6 +966,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             param = instanceParams.onEach { p -> p.name = p.name ?: p.id },
             repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
             filePath = yamlPipelineMap[pipelineId]?.filePath,
+            scmType = yamlPipelineMap[pipelineId]?.repoHashId?.let { repoScmTypeMap[it] },
             triggerElements = pipelineModel.getTriggerContainer().elements,
             overrideTemplateField = overrideTemplateField
         )
