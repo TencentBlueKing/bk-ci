@@ -1,21 +1,21 @@
 version: v3.0
 name: artifact-trigger-test
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: pipeline
-      kind: file
-      watch-pipeline: p-xxxxx
-      artifacts-name:
-        - "*.msi"
-        - "setup-*.exe"
-      artifacts-name-ignore:
-        - "*_unsigned.exe"
-      metadata:
-        - key: quality-gate
-          operator: eq
-          value: passed
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: pipeline
+    kind: file
+    watch-pipeline: p-xxxxx
+    artifacts-name:
+      - "*.msi"
+      - "setup-*.exe"
+    artifacts-name-ignore:
+      - "*_unsigned.exe"
+    metadata:
+      - key: quality-gate
+        operator: eq
+        value: passed
 stages:
   - name: stage-1
     jobs:

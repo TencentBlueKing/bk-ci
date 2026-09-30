@@ -11,8 +11,8 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
  * 无需再改动 [com.tencent.devops.process.yaml.transfer.ElementTransfer.yaml2Triggers]
  * 的分支与 [com.tencent.devops.process.yaml.transfer.ModelTransfer] 的拼接逻辑。
  *
- * 触发器在 YAML 中遵循「触发器 -> 事件类型」的统一结构：
- * - 单触发器：`on.{triggerType}.{eventType}`（嵌套形态）
+ * 触发器在 YAML 中遵循「type + 事件类型」的统一结构：
+ * - 单触发器：`on.type = {triggerType}` + `{eventType}`（对象形态）
  * - 多触发器：`on[].type = {triggerType}` + `{eventType}`（列表形态）
  */
 interface TriggerConverter {

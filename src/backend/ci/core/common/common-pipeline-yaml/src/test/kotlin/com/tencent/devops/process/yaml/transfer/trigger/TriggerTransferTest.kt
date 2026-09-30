@@ -26,8 +26,8 @@ import org.springframework.core.io.ClassPathResource
  * - 基础触发器（manual / schedules / remote）：[trigger/base-list.yml]（列表）、[trigger/base-object.yml]（对象简写）
  * - 代码库触发器（push / tag / mr）：[trigger/git-list.yml]（列表）、[trigger/git-object.yml]（对象简写）
  * - TAPD 触发器（story / bug）：[trigger/tapd.yml]
- * - 制品触发器（统一「触发器 -> 事件类型」结构）
- *   - 单触发器嵌套形态：[trigger/artifact.yml]（`on.artifact.arrived`）
+ * - 制品触发器（统一「type + 事件类型」结构）
+ *   - 单触发器对象形态：[trigger/artifact.yml]（`on.type = artifact`）
  *   - 多触发器列表形态：[trigger/artifact-list.yml]（`on[].type = artifact`）
  * - 组合：base + git（[trigger/combo-base-git.yml]）、base + artifact（[trigger/combo-base-artifact.yml]）、
  *   base + git + tapd + artifact（[trigger/combo-multi.yml]）
@@ -129,7 +129,7 @@ class TriggerTransferTest {
     }
 
     @Test
-    fun `nested artifact yaml converts correctly (format 1)`() {
+    fun `object artifact yaml converts correctly (format 1)`() {
         val triggers = parseTriggers("trigger/artifact.yml")
         val artifact = triggers.single { it.second.type == ArtifactTriggerConverter.TYPE }.second
         val arrived = arrivedOf(artifact)
@@ -201,7 +201,7 @@ class TriggerTransferTest {
     }
 
     @Test
-    fun `combo base and nested artifact yaml converts correctly (fused object form)`() {
+    fun `combo base and artifact yaml converts correctly (fused object form)`() {
         val triggers = parseTriggers("trigger/combo-base-artifact.yml")
 
         val base = triggers.single { it.first == TriggerType.BASE }.second

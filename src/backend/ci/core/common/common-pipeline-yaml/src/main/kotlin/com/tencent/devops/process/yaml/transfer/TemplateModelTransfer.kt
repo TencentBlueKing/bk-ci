@@ -389,12 +389,7 @@ class TemplateModelTransfer @Autowired constructor(
         baseTrigger: IPreTriggerOn,
         only: PreTriggerOnV3
     ): IPreTriggerOn {
-        if (only.events.isNotEmpty()) {
-            // 嵌套式触发器（如 artifact）：事件放入 events，再加上基础类型
-            (baseTrigger as PreTriggerOnV3).events[only.type!!] = only.events
-            return baseTrigger
-        }
-        // 融合唯一代码库触发器 + 基础触发器
+        // 融合唯一触发器（代码库 / TAPD / 通用框架触发器）+ 基础触发器
         return only.copy(
             manual = baseTrigger.manual,
             schedules = baseTrigger.schedules,

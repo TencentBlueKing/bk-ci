@@ -3,12 +3,12 @@ name: combo-base-artifact-trigger-test
 on:
   manual: enabled
   remote: enabled
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: pipeline
-      artifacts-name:
-        - "*.msi"
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: pipeline
+    artifacts-name:
+      - "*.msi"
 stages:
   - name: stage-1
     jobs:

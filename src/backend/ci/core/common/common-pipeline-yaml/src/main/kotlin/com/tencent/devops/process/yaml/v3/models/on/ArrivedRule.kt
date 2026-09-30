@@ -6,30 +6,30 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 制品到达触发器 YAML 规则（对应 `on.artifact.arrived`）。
+ * 制品到达触发器 YAML 规则（对应 `type: artifact` 下的 `arrived` 事件）。
  *
- * 制品触发采用统一的「触发器 -> 事件类型」结构：
- * - 单触发器（嵌套形态）：`on.artifact.arrived`
+ * 制品触发采用统一的「type + 事件类型」结构：
+ * - 单触发器（对象形态）：`on.type = artifact` + `arrived`
  * - 多触发器（列表形态）：`on[].type = artifact` + `arrived`
  *
  * 单触发器 YAML：
  * ```yaml
  * on:
- *   artifact:
- *     arrived:
- *       name: 制品到达事件触发
- *       repository: pipeline
- *       kind: file
- *       watch-pipeline: p-xxxxx
- *       artifacts-name:
- *         - "*.msi"
- *         - "setup-*.exe"
- *       artifacts-name-ignore:
- *         - "*_unsigned.exe"
- *       metadata:
- *         - key: quality-gate
- *           operator: eq
- *           value: passed
+ *   type: artifact
+ *   arrived:
+ *     name: 制品到达事件触发
+ *     repository: pipeline
+ *     kind: file
+ *     watch-pipeline: p-xxxxx
+ *     artifacts-name:
+ *       - "*.msi"
+ *       - "setup-*.exe"
+ *     artifacts-name-ignore:
+ *       - "*_unsigned.exe"
+ *     metadata:
+ *       - key: quality-gate
+ *         operator: eq
+ *         value: passed
  * ```
  *
  * 多触发器 YAML：

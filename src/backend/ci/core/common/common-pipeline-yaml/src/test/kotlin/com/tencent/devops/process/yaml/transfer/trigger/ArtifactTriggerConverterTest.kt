@@ -90,15 +90,14 @@ class ArtifactTriggerConverterTest {
     }
 
     @Test
-    fun `nested on artifact object parses to ARTIFACT trigger (format 1)`() {
+    fun `object on with type artifact parses to ARTIFACT trigger (format 1)`() {
         val parser = PreTemplateScriptBuildYamlV3Parser(
             version = "v3.0",
             triggerOn = mapOf(
-                "artifact" to mapOf(
-                    "arrived" to mapOf(
-                        "repository" to "pipeline",
-                        "artifacts-name" to listOf("*.msi")
-                    )
+                "type" to "artifact",
+                "arrived" to mapOf(
+                    "repository" to "pipeline",
+                    "artifacts-name" to listOf("*.msi")
                 )
             )
         )
@@ -136,17 +135,16 @@ class ArtifactTriggerConverterTest {
     }
 
     @Test
-    fun `object on with base and nested artifact parses to BASE plus ARTIFACT (fused object form)`() {
-        // 融合对象形态：基础触发器(manual)字段平铺到 on 顶层，artifact 作为同级 nested key
+    fun `object on with base and artifact parses to BASE plus ARTIFACT (fused object form)`() {
+        // 融合对象形态：基础触发器(manual)字段与 type、事件 key 一起平铺到 on 顶层
         val parser = PreTemplateScriptBuildYamlV3Parser(
             version = "v3.0",
             triggerOn = mapOf(
                 "manual" to true,
-                "artifact" to mapOf(
-                    "arrived" to mapOf(
-                        "repository" to "pipeline",
-                        "artifacts-name" to listOf("*.msi")
-                    )
+                "type" to "artifact",
+                "arrived" to mapOf(
+                    "repository" to "pipeline",
+                    "artifacts-name" to listOf("*.msi")
                 )
             )
         )

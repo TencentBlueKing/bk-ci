@@ -23,8 +23,8 @@ import org.springframework.stereotype.Component
 /**
  * 制品到达触发器转换器（统一框架的样板实现）。
  *
- * YAML 形态（统一「触发器 -> 事件类型」结构）：
- * - 单触发器：`on.artifact.arrived`
+ * YAML 形态（统一「type + 事件类型」结构）：
+ * - 单触发器：`on.type = artifact` + `arrived`
  * - 多触发器：`on[].type = artifact` + `arrived`
  */
 @Component

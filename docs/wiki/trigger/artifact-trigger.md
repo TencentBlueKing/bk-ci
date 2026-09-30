@@ -3,7 +3,7 @@
 当制品库中出现符合条件的**文件、目录或镜像**时，自动启动流水线。
 
 - 入口：**流水线编辑 → 触发器 → 新增「制品到达触发」**
-- 可视化配置与 PAC YAML `on.artifact.arrived` 双向同步
+- 可视化配置与 PAC YAML `on.type: artifact` + `arrived` 双向同步
 - 仅在**同一项目内**生效，暂不支持跨项目
 
 ## 能力概览
@@ -138,7 +138,7 @@
 
 ## PAC YAML 配置
 
-PAC v3.0 关键字为 `on.artifact.arrived`。字段用小写 kebab-case，匹配类字段写成列表，空值和默认值可省略。
+PAC v3.0 用 `on.type: artifact` 声明触发器类型，事件关键字 `arrived` 与 `type` 平级。字段用小写 kebab-case，匹配类字段写成列表，空值和默认值可省略。
 
 > **必填约束**：流水线仓库必填 `watch-pipeline`，自定义仓库必填 `watch-root-path`，镜像仓库必填 `image`；这三个字段不支持写成流水线变量。
 
@@ -146,97 +146,97 @@ PAC v3.0 关键字为 `on.artifact.arrived`。字段用小写 kebab-case，匹�
 
 ```yaml
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: pipeline
-      kind: file
-      watch-pipeline: p-xxxxx
-      artifacts-name:
-        - "*.msi"
-        - "setup-*.exe"
-      artifacts-name-ignore:
-        - "*_unsigned.exe"
-      metadata:
-        - key: quality-gate
-          operator: eq
-          value: passed
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: pipeline
+    kind: file
+    watch-pipeline: p-xxxxx
+    artifacts-name:
+      - "*.msi"
+      - "setup-*.exe"
+    artifacts-name-ignore:
+      - "*_unsigned.exe"
+    metadata:
+      - key: quality-gate
+        operator: eq
+        value: passed
 ```
 
 ### 流水线仓库 · 整个目录
 
 ```yaml
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: pipeline
-      kind: folder
-      watch-pipeline: p-xxxxx
-      artifacts-name:
-        - "win*"
-        - "release-*"
-      artifacts-name-ignore:
-        - "*-tmp"
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: pipeline
+    kind: folder
+    watch-pipeline: p-xxxxx
+    artifacts-name:
+      - "win*"
+      - "release-*"
+    artifacts-name-ignore:
+      - "*-tmp"
 ```
 
 ### 自定义仓库 · 单个文件
 
 ```yaml
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: custom
-      kind: file
-      watch-root-path: /release/
-      watch-pipeline: p-xxxxx      # 可省略 = 任意来源
-      paths:
-        - "**/setup.msi"
-      paths-ignore:
-        - "**/*.tmp"
-      metadata:
-        - key: quality-gate
-          operator: eq
-          value: passed
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: custom
+    kind: file
+    watch-root-path: /release/
+    watch-pipeline: p-xxxxx      # 可省略 = 任意来源
+    paths:
+      - "**/setup.msi"
+    paths-ignore:
+      - "**/*.tmp"
+    metadata:
+      - key: quality-gate
+        operator: eq
+        value: passed
 ```
 
 ### 自定义仓库 · 整个目录
 
 ```yaml
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: custom
-      kind: folder
-      watch-root-path: /release/
-      watch-pipeline: p-xxxxx      # 可省略 = 任意来源
-      paths:
-        - "win/**"
-      paths-ignore:
-        - "*-tmp/**"
-      metadata:
-        - key: quality-gate
-          operator: eq
-          value: passed
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: custom
+    kind: folder
+    watch-root-path: /release/
+    watch-pipeline: p-xxxxx      # 可省略 = 任意来源
+    paths:
+      - "win/**"
+    paths-ignore:
+      - "*-tmp/**"
+    metadata:
+      - key: quality-gate
+        operator: eq
+        value: passed
 ```
 
 ### 镜像仓库
 
 ```yaml
 on:
-  artifact:
-    arrived:
-      name: 制品到达触发
-      repository: image
-      image: bk-ci/backend
-      tags:
-        - "v*"
-        - "release-*"
-      tags-ignore:
-        - "*-dev"
-        - "*-snapshot"
+  type: artifact
+  arrived:
+    name: 制品到达触发
+    repository: image
+    image: bk-ci/backend
+    tags:
+      - "v*"
+      - "release-*"
+    tags-ignore:
+      - "*-dev"
+      - "*-snapshot"
 ```
 
 ### 多条触发器
