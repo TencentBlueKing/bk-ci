@@ -45,6 +45,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentHeartb
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.service.thirdpartyagent.AgentInstallSessionRuntimeService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
@@ -59,6 +60,7 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val importService: ImportService,
+    private val agentInstallSessionRuntimeService: AgentInstallSessionRuntimeService,
     private val redisOperation: RedisOperation,
     private val agentMetricService: AgentMetricService
 ) : BuildAgentThirdPartyAgentResource {
@@ -72,8 +74,13 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
         val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
+        val handledByInstallSession = agentInstallSessionRuntimeService.processAgentStartup(
+            projectId = projectId,
+            agentHashId = agentId,
+            startInfo = startInfo
+        )
         // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
-        if (AgentStatus.UN_IMPORT_OK == status) {
+        if (!handledByInstallSession && AgentStatus.UN_IMPORT_OK == status) {
             thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
                 importService.importAgent(
                     userId = it.createUser, projectId = projectId, agentId = agentId, masterVersion = it.masterVersion

@@ -174,8 +174,8 @@ class UserNodeResourceImpl @Autowired constructor(
         )
     }
 
-    override fun fetchNodesCount(projectId: String): Result<Map<NodeType, Int>> {
-        return Result(nodeService.fetchNodesCount(projectId))
+    override fun fetchNodesCount(userId: String, projectId: String): Result<Map<NodeType, Int>> {
+        return Result(nodeService.fetchNodesCount(userId, projectId))
     }
 
     override fun listNewExport(
