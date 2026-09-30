@@ -100,9 +100,10 @@ export default defineComponent({
     }
 
     // 悬浮提示文案：插件 os 列表包含当前环境 os（适配）则不提示，不适配时提示可用环境
+    // os 为空数组代表仅云任务编译环境可用
     const osTooltipContent = computed(() => {
       const osList = props.atom.os || []
-      if (!osList.length || osList.includes('NONE')) return ''
+      if (!osList.length) return t('flow.orchestration.envUseTips', [t('flow.orchestration.cloudTask')])
       if (props.os && osList.includes(props.os)) return ''
       return t('flow.orchestration.envUseTips', [osList.map(getEnvOsDisplayName).join('、')])
     })

@@ -548,6 +548,7 @@
       "selected": "Selected",
       "knowMore": "Know More",
       "envUseTips": "{0} Usable under compiling environment, please switch to the corresponding type of job and then try again",
+      "cloudTask": "Cloud Task",
       "noPermToInstall": "No permission to install",
       "loadConfigFailed": "Failed to load configuration, please try again",
       "noConfig": "No configuration options available for this plugin",
