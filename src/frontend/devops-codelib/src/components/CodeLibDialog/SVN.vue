@@ -12,6 +12,7 @@
         >
             <bk-radio-group
                 v-model="codelib.svnType"
+                :disabled="enablePac && isEditMode"
                 @change="svnTypeChange(codelib)"
             >
                 <bk-radio
@@ -57,6 +58,7 @@
             <bk-input
                 v-model.trim="codelib.aliasName"
                 :maxlength="60"
+                :disabled="enablePac"
                 :placeholder="$t('codelib.aliasNameEnter')"
             >
             </bk-input>

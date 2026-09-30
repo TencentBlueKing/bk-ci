@@ -13,13 +13,15 @@
         >
             <bk-radio-group
                 v-model="codelib.credentialType"
+                :disabled="enablePac && isEditMode"
                 @change="authTypeChangeAsCustom(codelib)"
             >
                 <bk-radio
-                    v-for="auth in providerConfig.credentialTypeList"
+                    v-for="auth in (providerConfig.credentialTypeList || [])"
                     :key="auth.credentialType"
                     class="mr20"
                     :value="auth.credentialType"
+                    :disabled="enablePac || (!!codelib.enablePac && !String(auth.credentialType).includes('OAUTH'))"
                 >
                     {{ auth.name }}
                 </bk-radio>
@@ -56,7 +58,7 @@
                     :clearable="false"
                 >
                     <bk-option
-                        v-for="user in oauthUserList"
+                        v-for="user in oauthUserOptions"
                         :key="user.username"
                         :id="user.username"
                         :name="user.username"
@@ -70,12 +72,19 @@
                 property="url"
                 error-display-type="normal"
             >
+                <bk-input
+                    v-if="usePacUrlInput"
+                    v-model.trim="codelib.url"
+                    :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                >
+                </bk-input>
                 <bk-select
+                    v-else
                     v-model="codelib.url"
                     v-bind="selectComBindData"
                 >
                     <bk-option
-                        v-for="option in oAuth.project"
+                        v-for="option in oauthProjectList"
                         :key="option.httpUrl"
                         :id="option.httpUrl"
                         :name="option.httpUrl"
@@ -92,13 +101,14 @@
                 <bk-input
                     v-model.trim="codelib.aliasName"
                     :maxlength="60"
+                    :disabled="enablePac"
                     :placeholder="$t('codelib.aliasNameEnter')"
                 >
                 </bk-input>
             </bk-form-item>
             
             <bk-form-item
-                v-if="providerConfig.pacEnabled"
+                v-if="!isEditMode && providerConfig.pacEnabled"
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
@@ -165,6 +175,7 @@
                 <bk-input
                     v-model.trim="codelib.aliasName"
                     :maxlength="60"
+                    :disabled="enablePac"
                     :placeholder="$t('codelib.aliasNameEnter')"
                 >
                 </bk-input>
