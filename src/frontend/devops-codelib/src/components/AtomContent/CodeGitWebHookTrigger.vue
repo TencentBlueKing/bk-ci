@@ -38,7 +38,7 @@
                     :error-msg="errors.first(key)"
                 >
                     <component
-                        :is="i.component || i.type"
+                        :is="obj.component || obj.type"
                         :name="key"
                         disabled
                         :value="element[key]"
@@ -96,7 +96,7 @@
                             :error-msg="errors.first(key)"
                         >
                             <component
-                                :is="i.component || i.type"
+                                :is="obj.component || obj.type"
                                 :name="key"
                                 :value="element[key]"
                                 v-bind="obj"
