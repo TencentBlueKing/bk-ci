@@ -218,7 +218,7 @@
     id: "930450b9edfe479e8c7504623261584d"
     sender: "DevOps"
     title: "${content}"
-    body: "審査説明: ${reviewDesc}\n\nPC端からクリック ${reviewUrl}\nスマートフォン端からクリック ${reviewAppUrl}"
+    body: "審査説明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
@@ -814,7 +814,7 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} ビルドStage審査"
-    body: "ビルド状態がstage successで、続行するにはあなたの審査が必要です\n審査説明: ${reviewDesc}\nPC端からクリック ${reviewUrl}\nスマートフォン端からクリック ${reviewAppUrl}"
+    body: "ビルド状態がstage successで、続行するにはあなたの審査が必要です\n審査説明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} ビルドStage審査"
@@ -877,7 +877,6 @@
 
       リマインド不要の場合は、人工審査プラグインの設定を変更してください
 
-      PC端審査：${reviewUrl}  モバイル端審査：${reviewAppUrl}
   creator: "system"
   modifior: "system"
 - index: 40
