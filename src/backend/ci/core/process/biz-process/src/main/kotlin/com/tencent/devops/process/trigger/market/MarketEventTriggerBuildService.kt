@@ -231,7 +231,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     triggerEventBody = GenericWebhookEventBody(
-                        body = request.eventBody
+                        body = GenericWebhookEventBody.ofMap(request.eventBody ?: mapOf())
                     ),
                     variables = variables,
                     element = element,
