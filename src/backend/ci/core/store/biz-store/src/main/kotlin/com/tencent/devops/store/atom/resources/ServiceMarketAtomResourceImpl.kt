@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -128,6 +129,12 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, Any>> {
         return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
+    }
+
+    override fun getAtomInputProps(
+        getAtomInputPropsRequest: GetAtomInputPropsRequest
+    ): Result<Map<String, Map<String, Any>>?> {
+        return Result(marketAtomService.getAtomInputProps(getAtomInputPropsRequest))
     }
 
     override fun listMyAtoms(

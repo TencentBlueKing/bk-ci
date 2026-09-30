@@ -103,6 +103,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
@@ -1128,6 +1129,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Map<String, Any> =
         atomPropsService.getAtomsDefaultValue(atom)
+
+    override fun getAtomInputProps(getAtomInputPropsRequest: GetAtomInputPropsRequest): Map<String, Map<String, Any>> =
+        atomPropsService.getAtomInputProps(getAtomInputPropsRequest)
 
     override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
         logger.info("getPostAtoms projectCode:$projectCode,atomItems:$atomItems")
