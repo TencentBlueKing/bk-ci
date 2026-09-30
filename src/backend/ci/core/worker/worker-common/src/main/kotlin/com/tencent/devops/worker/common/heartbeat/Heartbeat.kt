@@ -31,11 +31,9 @@ import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.common.pipeline.pojo.progress.BuildTaskProgressDetail
-import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.task.TaskExecutorCache
-import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -71,8 +69,9 @@ object Heartbeat {
                     )
                     val cancelTaskIds = heartBeatInfo.cancelTaskIds
                     if (!cancelTaskIds.isNullOrEmpty()) {
-                        // 启动线程杀掉取消任务对应的进程
-                        Thread(KillCancelTaskProcessRunnable(heartBeatInfo)).start()
+                        // 先取消 Future 唤醒 TaskDaemon 的等待方，由 Runner 统一执行有期限的进程树清理。
+                        // 不能先同步 kill 再中断，否则 native kill 卡住时取消无法生效；也不为重复心跳新建清理线程。
+                        cancelTaskIds.forEach { TaskExecutorCache.cancel(it) }
                     }
                     failCnt = 0
                 } catch (e: Exception) {
@@ -140,31 +139,6 @@ object Heartbeat {
     fun clearTaskProgress(taskId: String) {
         task2ProgressRate.remove(taskId)
         task2ProgressDetail.remove(taskId)
-    }
-
-    private class KillCancelTaskProcessRunnable(
-        private val heartBeatInfo: HeartBeatInfo
-    ) : Runnable {
-        override fun run() {
-            val buildId = heartBeatInfo.buildId
-            logger.info("Heartbeat cancel build:$buildId,heartBeatInfo:$heartBeatInfo")
-            val cancelTaskIds = heartBeatInfo.cancelTaskIds
-            KillBuildProcessTree.killProcessTree(
-                projectId = heartBeatInfo.projectId,
-                buildId = buildId,
-                vmSeqId = heartBeatInfo.vmSeqId,
-                taskIds = cancelTaskIds,
-                forceFlag = true
-            )
-            if (!cancelTaskIds.isNullOrEmpty()) {
-                val taskExecutorMap = TaskExecutorCache.getAllPresent(cancelTaskIds)
-                taskExecutorMap?.forEach { taskId, executor ->
-                    logger.info("Heartbeat taskId[$taskId] executor shutdownNow")
-                    executor.shutdownNow()
-                    TaskExecutorCache.invalidate(taskId)
-                }
-            }
-        }
     }
 
     @Synchronized
