@@ -89,6 +89,10 @@ data class MrRule(
     @JsonProperty("report-commit-check")
     val reportCommitCheck: Boolean? = null,
 
+    @get:Schema(title = "report-quality-results")
+    @JsonProperty("report-quality-results")
+    val reportQualityResults: Boolean? = null,
+
     @get:Schema(title = "path-filter-type")
     @JsonProperty("path-filter-type")
     val pathFilterType: String? = null,

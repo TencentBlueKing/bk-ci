@@ -48,6 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_QUALITY_REPORT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
@@ -214,6 +215,7 @@ class CodeWebhookService @Autowired constructor(
                                     triggerType = event.triggerType,
                                     startTime = event.startTime ?: 0L,
                                     mergeRequestId = mergeRequestId,
+                                    enableQualityReport = enableQualityReport,
                                     userId = event.userId,
                                     retryTime = 3,
                                     targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
@@ -425,6 +427,7 @@ class CodeWebhookService @Autowired constructor(
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
             val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
+            val enableQualityReport = variables[BK_REPO_GIT_WEBHOOK_ENABLE_QUALITY_REPORT]?.toBoolean() ?: true
             val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) }
                 ?: ChannelCode.getRequestChannelCode()
             val buildUrl = getBuildUrl(
@@ -456,6 +459,7 @@ class CodeWebhookService @Autowired constructor(
                     webhookType = webhookTypeStr,
                     webhookEventType = webhookEventTypeStr,
                     enableCheck = enableCheck,
+                    enableQualityReport = enableQualityReport,
                     targetBranch = targetBranch,
                     buildUrl = buildUrl
                 )

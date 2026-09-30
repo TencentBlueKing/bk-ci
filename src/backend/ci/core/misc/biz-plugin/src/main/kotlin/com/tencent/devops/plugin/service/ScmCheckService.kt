@@ -111,6 +111,21 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     throw OperationException("Not Git Code Repository")
             }
             logger.info("Project($projectId) add git commit($commitId) commit check for targetBranch($targetBranch)")
+            val needQualityReport = mergeRequestId != null && enableQualityReport != false
+            val reportData = if (needQualityReport) {
+                QualityUtils.getQualityGitMrResult(
+                    client = client,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    startTime = startTime,
+                    eventStatus = status,
+                    triggerType = triggerType,
+                    channelCode = channelCode
+                )
+            } else {
+                Pair(listOf<String>(), mutableMapOf<String, MutableList<List<String>>>())
+            }
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
@@ -126,18 +141,10 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 description = description,
                 block = block,
                 mrRequestId = event.mergeRequestId,
-                reportData = QualityUtils.getQualityGitMrResult(
-                    client = client,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    startTime = startTime,
-                    eventStatus = status,
-                    triggerType = triggerType,
-                    channelCode = channelCode
-                ),
+                reportData = reportData,
                 targetBranch = targetBranch,
-                approvals = event.approvals
+                approvals = event.approvals,
+                enableQualityReport = enableQualityReport
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
