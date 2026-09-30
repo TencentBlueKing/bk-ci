@@ -356,8 +356,7 @@ class ModelTransfer @Autowired constructor(
         yaml.concurrency = makeConcurrency(modelInput)
         yaml.customBuildNum = makeBuildNum(modelInput)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
-        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
-            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.disablePipeline = (modelInput.pipelineInfo?.yamlLocked == true).nullIfDefault(false)
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()

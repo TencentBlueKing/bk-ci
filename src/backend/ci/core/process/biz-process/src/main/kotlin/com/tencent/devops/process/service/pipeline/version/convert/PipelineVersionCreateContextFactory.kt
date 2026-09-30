@@ -89,9 +89,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
             pipelineDesc = pipelineSettingWithoutVersion.desc,
-            pipelineDisable = yaml?.let {
-                transferService.loadYaml(it).disablePipeline == true
-            }
+            yamlLocked = yamlLockedFromYaml(yaml, versionStatus)
         )
 
         val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
@@ -137,9 +135,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
             pipelineDesc = pipelineSettingWithoutVersion.desc,
-            pipelineDisable = yaml?.let {
-                transferService.loadYaml(it).disablePipeline == true
-            }
+            yamlLocked = yamlLockedFromYaml(yaml, versionStatus)
         )
 
         val templateInstanceBasicInfo = pipelineResourceFactory.createTemplateInstanceBasicInfo(
@@ -214,5 +210,12 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             baseDraftVersion = baseDraftVersion,
             overrideDraft = overrideDraft
         )
+    }
+
+    private fun yamlLockedFromYaml(yaml: String?, versionStatus: VersionStatus): Boolean? {
+        if (versionStatus != VersionStatus.RELEASED || yaml == null) {
+            return null
+        }
+        return transferService.loadYaml(yaml).disablePipeline == true
     }
 }
