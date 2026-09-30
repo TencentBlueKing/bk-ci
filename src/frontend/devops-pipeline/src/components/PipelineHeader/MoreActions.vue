@@ -68,6 +68,11 @@
             :pipeline-id="$route.params.pipelineId"
             :pipeline-name="pipelineName"
             :lock="isCurPipelineLocked"
+            :yaml-locked="isCurPipelineYamlLocked"
+            :locked-user="pipelineInfo?.lockedUser"
+            :locked-time="pipelineInfo?.lockedTime"
+            :locked-reason="pipelineInfo?.lockedReason"
+            :yaml-info="yamlInfo"
             :pac-enabled="pacEnabled"
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
@@ -117,7 +122,7 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
+            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked', 'isCurPipelineYamlLocked']),
             ...mapState('common', [
                 'hasProjectPermission'
             ]),
@@ -129,6 +134,9 @@
             },
             curPipelineId () {
                 return this.pipelineInfo?.pipelineId
+            },
+            yamlInfo () {
+                return this.pipelineInfo?.yamlInfo ?? {}
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
@@ -231,7 +239,7 @@
                     ],
                     [
                         {
-                            label: this.isCurPipelineLocked ? 'enable' : 'disable',
+                            label: this.isCurPipelineLocked || this.isCurPipelineYamlLocked ? 'enable' : 'disable',
                             handler: () => this.disablePipeline(),
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,

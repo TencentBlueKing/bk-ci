@@ -149,6 +149,38 @@
             :show-version-sideslider="showVersionSideslider"
             @close="closeVersionSideSlider"
         />
+        <!-- 禁用态执行按钮 tooltip 模板：三种禁用场景 -->
+        <div style="display: none;">
+            <div
+                id="pipelineDisabledTooltip"
+                class="pipeline-disabled-tooltip"
+            >
+                <p class="disabled-tooltip-title">{{ $t('pacPipelineLockTips') }}</p>
+                <p
+                    v-if="isPageAndYamlDisabled"
+                    class="disabled-tooltip-sub-title"
+                >
+                    {{ $t('resolveBothDisabledTips') }}
+                </p>
+                <template v-for="group in disabledTooltipGroups">
+                    <p
+                        v-if="group.title"
+                        :key="group.key"
+                        class="disabled-tooltip-group-title"
+                    >
+                        {{ group.title }}
+                    </p>
+                    <p
+                        v-for="item in group.items"
+                        :key="`${group.key}-${item.label}`"
+                        class="disabled-tooltip-item"
+                    >
+                        <span class="item-label">{{ item.label }}</span>
+                        <span class="item-value">{{ item.value }}</span>
+                    </p>
+                </template>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -166,6 +198,7 @@
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
     import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -203,7 +236,6 @@
                 draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
                 loading: false,
-                isPipelineIdChanged: false
             }
         },
         computed: {
@@ -216,6 +248,8 @@
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked',
+                pacEnabled: 'atom/pacEnabled',
                 isReleasePipeline: 'atom/isReleasePipeline',
                 isReleaseVersion: 'atom/isReleaseVersion',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
@@ -279,7 +313,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return (!this.isCurPipelineLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
+                return (!this.isCurPipelineLocked && !this.isCurPipelineYamlLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
@@ -315,15 +349,74 @@
             actionType () {
                 return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
+            // 仅页面（UI）禁用
+            isOnlyPageDisabled () {
+                return this.isCurPipelineLocked && !this.isCurPipelineYamlLocked
+            },
+            // 仅代码库 YAML 声明禁用
+            isOnlyYamlDisabled () {
+                return !this.isCurPipelineLocked && this.isCurPipelineYamlLocked
+            },
+            // 页面与 YAML 均禁用
+            isPageAndYamlDisabled () {
+                return this.isCurPipelineLocked && this.isCurPipelineYamlLocked
+            },
+            // 页面（UI）禁用明细
+            pageDisabledItems () {
+                return [
+                    { label: this.$t('disabledByLabel'), value: this.pipelineInfo?.lockedUser || '--' },
+                    { label: this.$t('disabledAtLabel'), value: convertTime(this.pipelineInfo?.lockedTime) },
+                    { label: this.$t('disableReasonLabel'), value: this.pipelineInfo?.lockedReason || '--' }
+                ]
+            },
+            // YAML 声明禁用明细
+            yamlDisabledItems () {
+                return [
+                    { label: this.$t('submitterLabel'), value: this.pipelineInfo?.yamlLockedUser || '--' },
+                    { label: this.$t('submitTimeLabel'), value: convertTime(this.pipelineInfo?.yamlLockedTime) }
+                ]
+            },
+            // 禁用 tooltip 分组信息：三种禁用场景
+            disabledTooltipGroups () {
+                // 场景三：页面与 YAML 均禁用，分组展示两者明细
+                if (this.isPageAndYamlDisabled) {
+                    return [
+                        { key: 'page', title: this.$t('pageDisabledLabel'), items: this.pageDisabledItems },
+                        { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: this.yamlDisabledItems }
+                    ]
+                }
+                // 场景二：仅代码库 YAML 声明禁用，额外展示禁用来源
+                if (this.isOnlyYamlDisabled) {
+                    return [{
+                        key: 'yaml',
+                        items: [
+                            { label: this.$t('disabledSourceLabel'), value: this.$t('yamlDisabledSourceDesc') },
+                            ...this.yamlDisabledItems
+                        ]
+                    }]
+                }
+                // 场景一：仅页面禁用
+                return [{ key: 'page', items: this.pageDisabledItems }]
+            },
             tooltip () {
-                return this.executable
-                    ? {
-                        disabled: true
-                    }
-                    : {
-                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                if (this.executable) {
+                    return { disabled: true }
+                }
+                // PAC 流水线禁用态：展示禁用人/时间/原因等详细信息
+                if (this.pacEnabled && (this.isCurPipelineLocked || this.isCurPipelineYamlLocked)) {
+                    return {
+                        allowHTML: true,
+                        width: 300,
+                        theme: 'dark',
+                        content: '#pipelineDisabledTooltip',
+                        placement: 'bottom-end',
                         delay: [300, 0]
                     }
+                }
+                return {
+                    content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                    delay: [300, 0]
+                }
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
@@ -550,6 +643,32 @@
         align-items: center;
         grid-gap: 10px;
         grid-auto-flow: column;
+    }
+}
+.pipeline-disabled-tooltip {
+    font-size: 12px;
+    line-height: 20px;
+    .disabled-tooltip-title {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+    .disabled-tooltip-sub-title {
+        margin-bottom: 8px;
+    }
+    .disabled-tooltip-group-title {
+        font-weight: bold;
+        margin: 8px 0 4px;
+    }
+    .disabled-tooltip-item {
+        display: flex;
+        .item-label {
+            width: 64px;
+            flex-shrink: 0;
+            color: #979ba5;
+        }
+        .item-value {
+            word-break: break-all;
+        }
     }
 }
 </style>
