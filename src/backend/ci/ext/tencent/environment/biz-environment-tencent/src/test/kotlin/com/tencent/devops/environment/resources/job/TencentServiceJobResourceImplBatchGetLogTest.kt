@@ -69,7 +69,7 @@ class TencentServiceJobResourceImplBatchGetLogTest {
             maxQueryLogHostNum = MAX_HOST_NUM
         )
         every { permissionManageService.isJobInsBelongToProj(PROJECT_ID, JOB_INSTANCE_ID) } returns true
-        every { jobService.batchGetExecuteObjectLog(capture(reqSlot)) } answers {
+        every { jobService.batchGetExecuteObjectLog(PROJECT_ID, capture(reqSlot)) } answers {
             QueryExecuteObjectLogsResult(
                 jobInstanceId = JOB_INSTANCE_ID,
                 stepInstanceId = STEP_INSTANCE_ID,
@@ -83,7 +83,7 @@ class TencentServiceJobResourceImplBatchGetLogTest {
         assertThrows<ParamBlankException> {
             resource.batchGetExecuteObjectLog(USER_ID, PROJECT_ID, buildReq(hostIdList = emptyList(), ipList = null))
         }
-        verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any()) }
+        verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any(), any()) }
     }
 
     @Test
@@ -106,7 +106,7 @@ class TencentServiceJobResourceImplBatchGetLogTest {
 
         assertThat(ex.errorCode).isEqualTo(ERROR_QUERY_LOG_HOST_NUM_EXCEEDED)
         assertThat(ex.params).containsExactly(MAX_HOST_NUM.toString())
-        verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any()) }
+        verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any(), any()) }
     }
 
     @Test
@@ -161,7 +161,7 @@ class TencentServiceJobResourceImplBatchGetLogTest {
             assertThrows<CustomException> {
                 resource.batchGetExecuteObjectLog(USER_ID, PROJECT_ID, buildReq(hostIdList = listOf(1L)))
             }
-            verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any()) }
+            verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any(), any()) }
         } finally {
             unmockkObject(I18nUtil)
         }
@@ -170,7 +170,6 @@ class TencentServiceJobResourceImplBatchGetLogTest {
     private fun buildReq(hostIdList: List<Long>? = null, ipList: List<IpInfo>? = null) =
         QueryExecuteObjectLogsReq(
             jobInstanceId = JOB_INSTANCE_ID,
-            stepInstanceId = STEP_INSTANCE_ID,
             hostIdList = hostIdList,
             ipList = ipList
         )

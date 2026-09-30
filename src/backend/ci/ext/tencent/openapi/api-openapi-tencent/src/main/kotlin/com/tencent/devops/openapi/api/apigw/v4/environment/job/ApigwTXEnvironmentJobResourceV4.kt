@@ -164,8 +164,7 @@ interface ApigwTXEnvironmentJobResourceV4 {
     ): JobResult<QueryJobInstanceLogsResult>
 
     @Operation(
-        summary = "批量查询作业执行对象（主机）日志",
-        description = "hostIdList不为空时优先使用hostIdList并忽略ipList，单次最多查询10台主机",
+        summary = "批量查询作业执行对象（主机）日志，默认单次最多查询10台主机",
         tags = [
             "v4_app_job_batch_get_job_instance_execute_object_log",
             "v4_user_job_batch_get_job_instance_execute_object_log"

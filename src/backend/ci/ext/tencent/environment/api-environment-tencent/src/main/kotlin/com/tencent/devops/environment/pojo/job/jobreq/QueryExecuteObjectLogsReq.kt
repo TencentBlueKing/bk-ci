@@ -29,20 +29,12 @@ package com.tencent.devops.environment.pojo.job.jobreq
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "批量查询执行对象日志的请求信息")
+@Schema(title = "批量查询执行对象日志的请求信息，查询作业实例中第一个步骤的执行对象日志")
 data class QueryExecuteObjectLogsReq(
     @get:Schema(title = "作业实例ID", required = true)
     val jobInstanceId: Long,
-    @get:Schema(title = "步骤实例ID", required = true)
-    val stepInstanceId: Long,
-    @get:Schema(
-        title = "主机ID列表",
-        description = "与ipList二选一，不为空时优先使用hostIdList并忽略ipList，单次最多10个"
-    )
+    @get:Schema(title = "主机ID列表，与ipList二选一，不为空时优先使用hostIdList并忽略ipList，默认单次最多10个")
     val hostIdList: List<Long>? = null,
-    @get:Schema(
-        title = "主机IP信息列表",
-        description = "仅当hostIdList为空时生效，单次最多10个"
-    )
+    @get:Schema(title = "主机IP信息列表，仅当hostIdList为空时生效，默认单次最多10个")
     val ipList: List<IpInfo>? = null
 )

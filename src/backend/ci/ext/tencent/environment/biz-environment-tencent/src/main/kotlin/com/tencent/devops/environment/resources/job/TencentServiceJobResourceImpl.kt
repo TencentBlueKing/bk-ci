@@ -159,7 +159,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         checkParamBlank(userId, projectId)
         val effectiveReq = resolveEffectiveHosts(queryExecuteObjectLogsReq)
         checkJobInsBelongToProj(projectId, effectiveReq.jobInstanceId)
-        return Result(jobService.batchGetExecuteObjectLog(effectiveReq))
+        return Result(jobService.batchGetExecuteObjectLog(projectId, effectiveReq))
     }
 
     override fun createAccount(

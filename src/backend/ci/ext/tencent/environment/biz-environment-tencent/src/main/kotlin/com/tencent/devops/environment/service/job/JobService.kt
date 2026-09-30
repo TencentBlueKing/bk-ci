@@ -29,10 +29,12 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NO_STEP
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_SCRIPT_EXECUTE_HOST_EMPTY
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
@@ -378,11 +380,13 @@ class JobService @Autowired constructor(
     }
 
     fun batchGetExecuteObjectLog(
+        projectId: String,
         queryExecuteObjectLogsReq: QueryExecuteObjectLogsReq
     ): QueryExecuteObjectLogsResult {
+        val stepInstanceId = getFirstStepInstanceId(projectId, queryExecuteObjectLogsReq.jobInstanceId)
         val jobCloudReq = JobCloudQueryExecuteObjectLogsReq(
             jobInstanceId = queryExecuteObjectLogsReq.jobInstanceId,
-            stepInstanceId = queryExecuteObjectLogsReq.stepInstanceId,
+            stepInstanceId = stepInstanceId,
             hostIdList = queryExecuteObjectLogsReq.hostIdList,
             ipList = queryExecuteObjectLogsReq.ipList?.map {
                 JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
@@ -404,7 +408,7 @@ class JobService @Autowired constructor(
         val data = jobCloudRes.data
         return QueryExecuteObjectLogsResult(
             jobInstanceId = data?.jobInstanceId ?: queryExecuteObjectLogsReq.jobInstanceId,
-            stepInstanceId = data?.stepInstanceId ?: queryExecuteObjectLogsReq.stepInstanceId,
+            stepInstanceId = data?.stepInstanceId ?: stepInstanceId,
             logType = data?.logType ?: -1,
             scriptStepExecuteObjectLogs = data?.scriptStepExecuteObjectLogs?.map {
                 ScriptStepExecuteObjectLog(
@@ -421,6 +425,19 @@ class JobService @Autowired constructor(
             },
             jobRequestId = jobCloudRes.jobRequestId
         )
+    }
+
+    private fun getFirstStepInstanceId(projectId: String, jobInstanceId: Long): Long {
+        val statusRes = queryJobInstanceStatus(
+            projectId = projectId,
+            jobInstanceId = jobInstanceId,
+            returnIpResult = false
+        )
+        return statusRes.data?.stepInstanceList?.firstOrNull()?.stepInstanceId
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_JOB_INSTANCE_NO_STEP,
+                params = arrayOf(jobInstanceId.toString())
+            )
     }
 
     private fun parseExecuteObject(executeObject: JobCloudExecuteObject?): ExecuteObjectInfo? {
