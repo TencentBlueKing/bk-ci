@@ -46,6 +46,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -59,6 +62,7 @@ import org.springframework.stereotype.Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
@@ -185,6 +189,18 @@ class PipelineTaskPauseListener @Autowired constructor(
             taskId = task.taskId,
             executeCount = task.executeCount ?: 1,
             cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
+        )
+        // 执行前暂停点终止走 ActionType.END，构建以取消收尾，但不会经过用户取消入口。
+        // 这里先落下用户取消详情，读取侧再按模型补齐位置；IfAbsent 避免覆盖 Job 超时等更早成因。
+        pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            executeCount = task.executeCount ?: 1,
+            buildEndInfo = BuildEndInfo.ofCancelUser(
+                operator = userId,
+                reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL
+            )
         )
 
         buildLogPrinter.addYellowLine(

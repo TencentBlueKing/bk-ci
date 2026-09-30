@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -255,7 +256,10 @@ class PipelineRuntimeService @Autowired constructor(
                         userId = userId,
                         buildId = build.buildId,
                         status = BuildStatus.TERMINATE,
-                        executeCount = build.executeCount
+                        executeCount = build.executeCount,
+                        buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_PIPELINE_DELETED
+                        )
                     )
                 )
             }
@@ -777,7 +781,8 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        terminateFlag: Boolean = false
+        terminateFlag: Boolean = false,
+        buildEndInfo: BuildEndInfo? = null
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
         // 心跳监控沿用历史范围，查询结果同时用于 #13581 打取消标记
@@ -825,7 +830,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 status = buildStatus,
                 actionType = actionType,
-                executeCount = executeCount
+                executeCount = executeCount,
+                buildEndInfo = buildEndInfo
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
@@ -1377,6 +1383,16 @@ class PipelineRuntimeService @Autowired constructor(
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
         val modelRecord = if (context.retryOnRunningBuild) {
+            // 运行中重试复用同一执行次数的记录行，需清掉本次执行中已落库的终态详情
+            // （Agent失联、Job超时这类入口在构建运行中就会写入），否则构建结束时的
+            // IfAbsent 写入会被残留值挡住，页面展示的详情与最终状态不符
+            pipelineBuildRecordService.clearBuildEndInfo(
+                transactionContext = transactionContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                executeCount = context.executeCount
+            )
             null
         } else {
             BuildRecordModel(
@@ -2346,7 +2362,11 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo?.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_PRIORITY,
+                            reasonParams = listOf(groupName)
+                        )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
