@@ -331,6 +331,8 @@
       "greaterThanDays": "大于{0}天",
       "total": "共计",
       "items": "条",
+      "keyPlaceholder": "键，如quality-gate",
+      "valuePlaceholder": "值，如passed",
       "perPage": "每页"
     },
     "triggerPanel": {
