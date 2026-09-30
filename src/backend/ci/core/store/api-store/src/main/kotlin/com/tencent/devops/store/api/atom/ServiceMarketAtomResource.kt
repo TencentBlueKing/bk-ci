@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -186,6 +187,14 @@ interface ServiceMarketAtomResource {
     fun getAtomsDefaultValue(
         atom: ElementThirdPartySearchParam
     ): Result<Map<String, Any>>
+
+    @Operation(summary = "批量查看插件参数定义（task.json 的 input 部分）")
+    @POST
+    @Path("/atoms/input/props")
+    fun getAtomInputProps(
+        @Parameter(description = "getAtomInputPropsRequest", required = true)
+        getAtomInputPropsRequest: GetAtomInputPropsRequest
+    ): Result<Map<String, Map<String, Any>>?>
 
     @Operation(summary = "根据用户获取插件工作台插件列表")
     @GET

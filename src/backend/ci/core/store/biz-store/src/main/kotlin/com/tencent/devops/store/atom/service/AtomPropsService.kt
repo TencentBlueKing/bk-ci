@@ -31,16 +31,21 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.OUTPUT_DESC
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,8 +55,13 @@ class AtomPropsService @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
-    private val storeI18nMessageService: StoreI18nMessageService
+    private val storeI18nMessageService: StoreI18nMessageService,
+    private val redisOperation: RedisOperation
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomPropsService::class.java)
+    }
 
     fun getAtomOutput(atomCode: String): List<AtomOutput> {
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
@@ -108,6 +118,57 @@ class AtomPropsService @Autowired constructor(
             result[it.atomCode] = itemMap
         }
         return result
+    }
+
+    /**
+     * 批量获取插件参数定义（task.json 的 input 部分）
+     *
+     * 读取路径：Redis 缓存 -> 数据库（T_ATOM.PROPS），数据库回源后回填缓存。
+     *
+     * @return key 为「插件标识@版本」，value 中 key 为参数名，value 为该参数的完整定义
+     * （含 default/type/label/options/rely 等）
+     */
+    fun getAtomInputProps(getAtomInputPropsRequest: GetAtomInputPropsRequest): Map<String, Map<String, Any>> {
+        val params = getAtomInputPropsRequest.thirdPartyElementList.filter {
+            it.atomCode.isNotBlank() && it.version.isNotBlank()
+        }
+        if (params.isEmpty()) return emptyMap()
+
+        val result = AtomPropsCacheManager.batchGetAtomInputProps(
+            redisOperation = redisOperation,
+            params = params
+        ).toMutableMap()
+        params.forEach { param ->
+            val atomCode = param.atomCode
+            val version = param.version
+            val key = "$atomCode@$version"
+            if (result.containsKey(key)) return@forEach
+            val input = loadAtomInputPropsFromDb(atomCode, version)
+            AtomPropsCacheManager.putAtomInputProps(
+                redisOperation = redisOperation,
+                atomCode = atomCode,
+                version = version,
+                input = input
+            )
+            result[key] = input
+        }
+        return result
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun loadAtomInputPropsFromDb(atomCode: String, version: String): Map<String, Any> {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atomCode, version) ?: return emptyMap()
+        if (atomInfo.props.isNullOrBlank()) return emptyMap()
+
+        // 缓存参数定义的原始内容（与 getAtomsDefaultValue 同口径，不做国际化处理），
+        // 使用方按需取 default/rely 等字段
+        return try {
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(atomInfo.props)
+            (props[KEY_INPUT] as? Map<String, Any>)?.toMutableMap() ?: emptyMap()
+        } catch (ignored: Throwable) {
+            logger.warn("parse atom props error, atomCode:$atomCode|version:$version", ignored)
+            emptyMap()
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

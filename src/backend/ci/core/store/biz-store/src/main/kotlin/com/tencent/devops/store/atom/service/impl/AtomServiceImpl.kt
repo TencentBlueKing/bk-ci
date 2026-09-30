@@ -81,6 +81,7 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -1079,6 +1080,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val classType = handleClassType(atomRequest.os, atomRequest.serviceScopeConfigs)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
+
+        // 插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomRequest.atomCode)
+
         return Result(true)
     }
 
@@ -1162,6 +1167,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 atomDao.updateAtomFromOp(context, userId, id, classType, atomUpdateRequest)
+
+                // 插件参数定义变更后，失效参数联动配置缓存。
+                AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
                 val recommendFlag = atomUpdateRequest.recommendFlag
                 if (null != recommendFlag) {
                     val atomFeatureRecord = atomFeatureDao.getAtomFeature(context, atomCode)
