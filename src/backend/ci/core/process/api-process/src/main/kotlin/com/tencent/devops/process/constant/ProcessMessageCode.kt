@@ -916,10 +916,24 @@ object ProcessMessageCode {
     // 触发事件配置不存在或已下架, 请联系管理员处理
     const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
 
-    // 字段不匹配
-    const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
-    // 字段被排除
-    const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+    // 云桌面[{0}]不匹配
+    const val BK_CDS_NODE_NAME_NOT_MATCH = "bkCdsNodeNameNotMatch"
+    // 云桌面[{0}]被排除
+    const val BK_CDS_NODE_NAME_IGNORED = "bkCdsNodeNameIgnored"
+    // 云桌面触发用户[{0}]不匹配
+    const val BK_CDS_USER_NOT_MATCH = "bkCdsUserNotMatch"
+    // 云桌面触发用户[{0}]被排除
+    const val BK_CDS_USER_IGNORED = "bkCdsUserIgnored"
+    // 云桌面变更前归属人[{0}]不匹配
+    const val BK_CDS_OLD_OWNER_NOT_MATCH = "bkCdsOldOwnerNotMatch"
+    // 云桌面变更前归属人[{0}]被排除
+    const val BK_CDS_OLD_OWNER_IGNORED = "bkCdsOldOwnerIgnored"
+    // 云桌面变更后归属人[{0}]不匹配
+    const val BK_CDS_NEW_OWNER_NOT_MATCH = "bkCdsNewOwnerNotMatch"
+    // 云桌面变更后归属人[{0}]被排除
+    const val BK_CDS_NEW_OWNER_IGNORED = "bkCdsNewOwnerIgnored"
+    // iMate消息[{0}]不匹配会话关键字
+    const val BK_IMATE_KEYWORD_NOT_MATCH = "bkImateKeywordNotMatch"
 
     // 创作流启动节点为空
     const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
