@@ -420,7 +420,7 @@ export function parseAnchors(value: unknown): AnchorSegment[] {
       segments.push({ type: 'text', text: str.slice(lastIndex, match.index) })
     }
     const href = safeUrl(match[1])
-    const text = match[2].replace(STRIP_TAG_REG, '')
+    const text = (match[2] ?? '').replace(STRIP_TAG_REG, '')
     segments.push(href ? { type: 'link', href, text } : { type: 'text', text })
     lastIndex = reg.lastIndex
   }
