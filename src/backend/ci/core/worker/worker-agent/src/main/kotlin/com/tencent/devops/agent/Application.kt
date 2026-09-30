@@ -33,6 +33,7 @@ import com.tencent.devops.agent.service.BuildLessStarter
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.script.OomProtection
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.BUILD_TYPE
@@ -49,6 +50,8 @@ import java.io.File
 import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
+    // worker 独立按环境变量开启保护，不要求 agent 同步升级；权限不足只记录警告。
+    OomProtection.protectWorker()
     // 调用 DHUtil 初始化 SecurityProvider
     DHUtil
     EnumLoader.enumModified()
