@@ -172,6 +172,18 @@ object WorkerMessageCode {
     const val BK_GET_OUTPUT_ARTIFACTVALUE_ERROR = "bkGetOutputArtifactvalueError" // 获取输出构件[artifact]值错误
     // 错误，对变量 [{0}] 赋值失败，超过 {1} 个字符（当前长度为 {2}）
     const val BK_VARIABLE_PARAM_MAX_LENGTH = "bkVariableParamMaxLength"
+    // 内联多行块未闭合：变量 [{0}] 的块起始于第 {1} 行
+    const val BK_MULTILINE_BLOCK_UNTERMINATED = "bkMultilineBlockUnterminated"
+    // [format_multiple_lines] 输出变量 [{0}] 不合法或缺少 :: 分隔符，该条输出将被忽略
+    const val BK_MULTILINE_OUTPUT_KEY_INVALID = "bkMultilineOutputKeyInvalid"
+    // [format_multiple_lines] 输出行 [{0}] 缺少 ::set-output name=KEY:: 前缀，该条输出将被忽略
+    const val BK_MULTILINE_OUTPUT_LINE_INVALID = "bkMultilineOutputLineInvalid"
+    // [format_multiple_lines] 多行输出已达读取上限（{0} 字节，上限 {1} 字节），后续多行变量已忽略（可能包含同名变量的更新值）
+    const val BK_MULTILINE_FILE_TOO_LARGE = "bkMultilineFileTooLarge"
+    // [format_multiple_lines] 读取多行输出文件失败（{0}），本次多行输出全部忽略
+    const val BK_MULTILINE_READ_FAILED = "bkMultilineReadFailed"
+    // [format_multiple_lines] 缺少 jobId 或 stepId，无法定位输出命名空间，本次多行输出全部忽略
+    const val BK_MULTILINE_OUTPUT_CONTEXT_MISSING = "bkMultilineOutputContextMissing"
     // [set-error error_code={0}]格式错误，将被忽略。要求：错误码以 8 开头、6位数字。
     const val BK_USER_SET_ERROR_FAILED = "bkUserSetErrorFailed"
     const val BK_PROGRESS_RATE_EMPTY_PAYLOAD = "bkProgressRateEmptyPayload"
