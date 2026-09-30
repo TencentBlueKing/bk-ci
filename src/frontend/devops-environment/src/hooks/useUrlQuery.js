@@ -106,8 +106,11 @@ export default function useUrlQuery (options = {}) {
         const nodeTagList = proxy.$store?.state?.environment?.nodeTagList || []
         if (!nodeTagList.length) return tagSearchValue
 
+        // 以 String(tagKeyId) 为键建索引，避免对每个标签都线性遍历 nodeTagList（O(n*m) → O(n)）
+        const tagGroupMap = new Map(nodeTagList.map(g => [String(g.tagKeyId), g]))
+
         return tagSearchValue.map(item => {
-            const group = nodeTagList.find(g => String(g.tagKeyId) === String(item.id))
+            const group = tagGroupMap.get(String(item.id))
             if (!group) return item
 
             const values = (item.values || []).map(v => {
