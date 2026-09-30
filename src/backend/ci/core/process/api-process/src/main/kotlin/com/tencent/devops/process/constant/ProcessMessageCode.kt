@@ -911,7 +911,7 @@ object ProcessMessageCode {
     const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
 
     // 云桌面触发事件描述
-    const val BK_REMOTE_DEV_TRIGGER_DESC = "bkRemoteDevTriggerDesc"
+    const val BK_CDS_TRIGGER_DESC = "bkCdsTriggerDesc"
 
     // 触发事件配置不存在或已下架, 请联系管理员处理
     const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
