@@ -158,10 +158,10 @@
             /** 重装态任一组有值即展示分组，全空走空态文案 */
             hasReinstallGroup () {
                 const p = this.preview
-                return p.associated.length > 0
-                    || p.willJoin.length > 0
-                    || p.willLeave.length > 0
-                    || p.pending.length > 0
+                return p.associated?.length > 0
+                    || p.willJoin?.length > 0
+                    || p.willLeave?.length > 0
+                    || p.pending?.length > 0
             }
         }
     }

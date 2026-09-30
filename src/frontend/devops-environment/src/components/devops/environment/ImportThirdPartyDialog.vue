@@ -261,14 +261,17 @@
                 }
                 items.push({
                     label: proxy.$t('environment.installSession.parallelLabel'),
-                    value: form.parallelTaskCount
-                        || proxy.$t('environment.installSession.defaultValueSuffix', { n: defaults.parallelTaskCount }),
+                    // 后端并行数允许为 0（=无限制）：用空串判断回退默认值，避免 0 被 || 当成假值误显示成默认值
+                    value: form.parallelTaskCount === ''
+                        ? proxy.$t('environment.installSession.defaultValueSuffix', { n: defaults.parallelTaskCount })
+                        : form.parallelTaskCount,
                 })
                 if (dockerSupported.value) {
                     items.push({
                         label: proxy.$t('environment.installSession.dockerParallelLabel'),
-                        value: form.dockerParallelTaskCount
-                            || proxy.$t('environment.installSession.defaultValueSuffix', { n: defaults.dockerParallelTaskCount }),
+                        value: form.dockerParallelTaskCount === ''
+                            ? proxy.$t('environment.installSession.defaultValueSuffix', { n: defaults.dockerParallelTaskCount })
+                            : form.dockerParallelTaskCount,
                     })
                 }
                 items.push({ label: proxy.$t('environment.installSession.tagsLabel'), value: tagText.value })
@@ -509,6 +512,7 @@
                         projectId: projectId.value,
                         params: buildSessionRequest(),
                     })
+                    if (!props.isShow) return
                     commandText.value = res?.command || ''
                     sessionId.value = res?.sessionId || ''
                     sessionStatus.value = SESSION_STATUS.ACTIVE

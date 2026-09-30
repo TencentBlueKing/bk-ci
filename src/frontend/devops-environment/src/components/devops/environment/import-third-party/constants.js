@@ -45,10 +45,11 @@ export const SESSION_NODE_STATUS_I18N = {
 }
 
 export const osOf = (node) => {
-    const name = (node?.osName || '').toLowerCase()
+    const name = String(node?.osName || '').toLowerCase()
     if (name.includes('windows')) return 'WINDOWS'
     if (name.includes('mac')) return 'MACOS'
-    return 'LINUX'
+    if (name.includes('linux')) return 'LINUX'
+    return 'UNKNOWN'
 }
 
 export const formatTime = (d) => {
