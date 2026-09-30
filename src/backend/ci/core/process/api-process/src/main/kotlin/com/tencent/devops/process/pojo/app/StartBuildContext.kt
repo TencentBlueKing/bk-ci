@@ -563,7 +563,7 @@ data class StartBuildContext(
                     params[PIPELINE_TRIGGER_EVENT_TYPE] to params[CI_NODE_ID]
                 }
 
-                params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name -> {
+                params[PIPELINE_WEBHOOK_TYPE] in setOf(CodeType.GIT.name, CodeType.TGIT.name) -> {
                     params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] to params[PIPELINE_WEBHOOK_REVISION]
                 }
 

@@ -35,21 +35,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class PipelineYamlMQConfig @Autowired constructor(
-    private val pipelineYamlTriggerListener: PipelineYamlTriggerListener,
     private val pipelineYamlFileExecutor: PipelineYamlFileExecutor
 ) {
-    @EventConsumer
-    fun pipelineYamlEnableConsumer() =
-        ScsConsumerBuilder.build<PipelineYamlEnableEvent> { pipelineYamlTriggerListener.execute(it) }
-
-    @EventConsumer
-    fun pipelineYamlDisableConsumer() =
-        ScsConsumerBuilder.build<PipelineYamlDisableEvent> { pipelineYamlTriggerListener.execute(it) }
-
-    @EventConsumer
-    fun pipelineYamlTriggerConsumer() =
-        ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
-
     @EventConsumer
     fun pipelineYamlFileConsumer() =
         ScsConsumerBuilder.build<PipelineYamlFileEvent> { pipelineYamlFileExecutor.execute(it) }

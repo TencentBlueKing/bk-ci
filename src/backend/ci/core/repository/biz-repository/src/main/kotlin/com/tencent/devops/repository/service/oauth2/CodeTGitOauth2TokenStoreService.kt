@@ -62,8 +62,8 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
                 expiresIn = it.expiresIn,
                 refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
-                userId = it.oauthUserId,
-                operator = userId,
+                userId = it.userId,
+                operator = it.operator,
                 updateTime = it.createTime.timestampmilli()
             )
         }
@@ -82,7 +82,6 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
             tGitTokenDao.saveAccessToken(
                 dslContext,
                 userId = operator ?: userId,
-                oauthUserId = userId,
                 token = gitToken,
                 aesKeySha = gitTokenCryptoHelper.currentKeySha()
             )
@@ -90,13 +89,29 @@ class CodeTGitOauth2TokenStoreService @Autowired constructor(
     }
 
     override fun delete(userId: String, scmCode: String, username: String) {
-        if (username != userId) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
-            )
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
         }
         tGitTokenDao.deleteToken(dslContext = dslContext, userId = username)
     }
 
-    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> = listOf()
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return tGitTokenDao.listToken(dslContext, userId).map {
+            OauthTokenInfo(
+                accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
+                createTime = it.createTime.timestampmilli(),
+                userId = it.userId,
+                operator = it.operator,
+                updateTime = it.createTime.timestampmilli()
+            )
+        }
+    }
 }

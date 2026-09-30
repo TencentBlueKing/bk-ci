@@ -28,68 +28,51 @@
 
 package com.tencent.devops.process.api.service
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.PipelineYamlFileManager
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacDisableReq
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacEnableReq
+import com.tencent.devops.process.yaml.PipelineYamlPacManager
+import com.tencent.devops.process.yaml.PipelineYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineYamlResourceImpl @Autowired constructor(
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineYamlFileManager: PipelineYamlFileManager
+    private val pipelineYamlPacManager: PipelineYamlPacManager,
+    private val pipelineYamlService: PipelineYamlService
 ) : ServicePipelineYamlResource {
-    override fun enable(
+    override fun enablePac(
         userId: String,
         projectId: String,
-        repoHashId: String,
-        scmType: ScmType
+        yamlPacEnableReq: PipelineYamlPacEnableReq
     ): Result<Boolean> {
-        pipelineYamlFacadeService.enablePac(
+        pipelineYamlPacManager.enablePac(
             userId = userId,
             projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
+            yamlPacEnableReq = yamlPacEnableReq
         )
         return Result(true)
     }
 
-    override fun syncYamlFile(
+    override fun disablePac(
         userId: String,
         projectId: String,
-        yamlFileSyncReq: PipelineYamlFileSyncReq
+        yamlPacDisableReq: PipelineYamlPacDisableReq
     ): Result<Boolean> {
-        pipelineYamlFileManager.syncYamlFile(
+        pipelineYamlPacManager.disablePac(
             userId = userId,
             projectId = projectId,
-            yamlFileSyncReq = yamlFileSyncReq
-        )
-        return Result(true)
-    }
-
-    override fun disable(
-        userId: String,
-        projectId: String,
-        repoHashId: String,
-        scmType: ScmType
-    ): Result<Boolean> {
-        pipelineYamlFacadeService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
+            yamlPacDisableReq = yamlPacDisableReq
         )
         return Result(true)
     }
 
     override fun yamlExistInDefaultBranch(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         return Result(
-            pipelineYamlFacadeService.yamlExistInDefaultBranch(
+            pipelineYamlService.yamlExistInDefaultBranch(
                 projectId = projectId,
-                pipelineId = pipelineId
-            )
+                pipelineIds = listOf(pipelineId)
+            )[pipelineId] ?: false
         )
     }
 }

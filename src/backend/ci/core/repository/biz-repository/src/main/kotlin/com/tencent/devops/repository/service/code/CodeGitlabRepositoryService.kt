@@ -42,7 +42,6 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -262,19 +261,6 @@ class CodeGitlabRepositoryService @Autowired constructor(
     }
 
     override fun getPacProjectId(userId: String, repoUrl: String): String? = null
-
-    override fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord,
-        retry: Boolean
-    ) = Unit
-
-    override fun getGitFileTree(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord
-    ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
