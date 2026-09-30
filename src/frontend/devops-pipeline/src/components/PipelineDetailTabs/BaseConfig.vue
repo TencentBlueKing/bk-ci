@@ -197,10 +197,6 @@
                         value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
-                        key: 'settings.whenVariableExceedsLength',
-                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'settings.errorAndHalt' : 'settings.clearTheValue')
-                    },
-                    {
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
