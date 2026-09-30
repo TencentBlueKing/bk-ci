@@ -27,12 +27,16 @@
 
 package com.tencent.devops.environment.resources.job
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.ResourceNotMatchException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
@@ -91,6 +95,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     private val tencentStockDataUpdateService: TencentStockDataUpdateService,
     private val installTaskService: InstallTaskService,
     private val apiGwAgentService: ApiGwAgentService,
+    private val client: Client,
     @Value("\${environment.job.maxQueryLogHostNum:10}")
     private val maxQueryLogHostNum: Int
 ) : TencentServiceJobResource {
@@ -158,6 +163,7 @@ class TencentServiceJobResourceImpl @Autowired constructor(
     ): Result<QueryExecuteObjectLogsResult> {
         checkParamBlank(userId, projectId)
         val effectiveReq = resolveEffectiveHosts(queryExecuteObjectLogsReq)
+        checkProjectMember(userId, projectId)
         checkJobInsBelongToProj(projectId, effectiveReq.jobInstanceId)
         return Result(jobService.batchGetExecuteObjectLog(projectId, effectiveReq))
     }
@@ -325,6 +331,21 @@ class TencentServiceJobResourceImpl @Autowired constructor(
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("projectId is blank.")
+        }
+    }
+
+    private fun checkProjectMember(userId: String, projectId: String) {
+        val isMember = client.get(ServiceProjectAuthResource::class)
+            .isProjectMember(userId = userId, projectCode = projectId)
+            .data == true
+        if (!isMember) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
+                ),
+                params = arrayOf("user[$userId]->project[$projectId]")
+            )
         }
     }
 

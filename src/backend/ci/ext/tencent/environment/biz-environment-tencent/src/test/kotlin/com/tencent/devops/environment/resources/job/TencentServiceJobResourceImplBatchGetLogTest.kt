@@ -27,9 +27,13 @@
 
 package com.tencent.devops.environment.resources.job
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUERY_LOG_HOST_NUM_EXCEEDED
 import com.tencent.devops.environment.pojo.job.jobreq.IpInfo
@@ -52,6 +56,8 @@ class TencentServiceJobResourceImplBatchGetLogTest {
 
     private val jobService: JobService = mockk()
     private val permissionManageService: PermissionManageService = mockk()
+    private val client: Client = mockk()
+    private val projectAuthResource: ServiceProjectAuthResource = mockk()
     private lateinit var resource: TencentServiceJobResourceImpl
     private val reqSlot = slot<QueryExecuteObjectLogsReq>()
 
@@ -66,8 +72,11 @@ class TencentServiceJobResourceImplBatchGetLogTest {
             tencentStockDataUpdateService = mockk(),
             installTaskService = mockk(),
             apiGwAgentService = mockk(),
+            client = client,
             maxQueryLogHostNum = MAX_HOST_NUM
         )
+        every { client.get(ServiceProjectAuthResource::class) } returns projectAuthResource
+        every { projectAuthResource.isProjectMember(USER_ID, PROJECT_ID) } returns Result(true)
         every { permissionManageService.isJobInsBelongToProj(PROJECT_ID, JOB_INSTANCE_ID) } returns true
         every { jobService.batchGetExecuteObjectLog(PROJECT_ID, capture(reqSlot)) } answers {
             QueryExecuteObjectLogsResult(
@@ -165,6 +174,41 @@ class TencentServiceJobResourceImplBatchGetLogTest {
         } finally {
             unmockkObject(I18nUtil)
         }
+    }
+
+    @Test
+    fun `user not in project throws PermissionForbiddenException`() {
+        every { projectAuthResource.isProjectMember(USER_ID, PROJECT_ID) } returns Result(false)
+        assertNotProjectMemberRejected()
+    }
+
+    @Test
+    fun `null member check result is treated as not project member`() {
+        every { projectAuthResource.isProjectMember(USER_ID, PROJECT_ID) } returns Result(status = 0, data = null)
+        assertNotProjectMemberRejected()
+    }
+
+    private fun assertNotProjectMemberRejected() {
+        mockkObject(I18nUtil)
+        try {
+            every { I18nUtil.getCodeLanMessage(messageCode = any(), params = any()) } returns "not project member"
+
+            assertThrows<PermissionForbiddenException> {
+                resource.batchGetExecuteObjectLog(USER_ID, PROJECT_ID, buildReq(hostIdList = listOf(1L)))
+            }
+            verify(exactly = 0) { permissionManageService.isJobInsBelongToProj(any(), any()) }
+            verify(exactly = 0) { jobService.batchGetExecuteObjectLog(any(), any()) }
+        } finally {
+            unmockkObject(I18nUtil)
+        }
+    }
+
+    @Test
+    fun `invalid host params are rejected before project member check`() {
+        assertThrows<ParamBlankException> {
+            resource.batchGetExecuteObjectLog(USER_ID, PROJECT_ID, buildReq(hostIdList = null, ipList = null))
+        }
+        verify(exactly = 0) { projectAuthResource.isProjectMember(any(), any()) }
     }
 
     private fun buildReq(hostIdList: List<Long>? = null, ipList: List<IpInfo>? = null) =
