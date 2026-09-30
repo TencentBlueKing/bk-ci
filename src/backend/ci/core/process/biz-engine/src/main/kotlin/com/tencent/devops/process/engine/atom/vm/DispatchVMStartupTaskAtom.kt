@@ -151,7 +151,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = task.stepId
+                stepId = task.stepId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId
             )
             logger.warn("Fail to execute the task atom", e)
             atomResponse = AtomResponse(
@@ -168,7 +170,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 executeCount = executeCount,
                 jobId = null,
-                stepId = task.stepId
+                stepId = task.stepId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId
             )
             logger.warn("Fail to execute the task atom", ignored)
             atomResponse = AtomResponse(
@@ -184,7 +188,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 executeCount = executeCount,
                 jobId = param.jobId,
-                stepId = task.stepId
+                stepId = task.stepId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId
             )
         }
         return atomResponse

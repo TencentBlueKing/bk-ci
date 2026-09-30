@@ -35,13 +35,16 @@ enum class LogStorageMode {
     @Schema(title = "本地保存")
     LOCAL,
     @Schema(title = "仓库已归档")
-    ARCHIVED;
+    ARCHIVED,
+    @Schema(title = "仓库归档失败")
+    ARCHIVE_FAILED;
 
     companion object {
         fun parse(modeName: String?): LogStorageMode {
             return when (modeName) {
                 LOCAL.name -> LOCAL
                 ARCHIVED.name -> ARCHIVED
+                ARCHIVE_FAILED.name -> ARCHIVE_FAILED
                 else -> UPLOAD
             }
         }

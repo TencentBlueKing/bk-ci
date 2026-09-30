@@ -54,6 +54,35 @@ class CommandLineExecutor : DefaultExecutor() {
     }
 
     /**
+     * 子进程启动时把 stderr 并进 stdout。
+     *
+     * commons-exec 默认 [Runtime.exec] 拆成两根管道，[org.apache.commons.exec.PumpStreamHandler]
+     * 再用两个线程分别泵流，脚本交错写出的进度/反馈会在采集侧乱序。
+     * 内核合并为同一根管道后只需读 [Process.getInputStream]，行序与本地终端一致。
+     *
+     * ERROR 不再按 fd 区分：脚本或插件打 `##[error]` / `##[warning]` / `##[debug]`，
+     * [com.tencent.devops.worker.common.logger.LoggerService.addNormalLine] 按前缀分级；
+     * agent 自身失败行仍走 addErrorLine。
+     */
+    override fun launch(command: CommandLine, env: Map<String, String>?, dir: File?): Process {
+        if (dir != null && !dir.exists()) {
+            throw IOException("$dir doesn't exist.")
+        }
+        val builder = ProcessBuilder(*command.toStrings())
+        if (dir != null) {
+            builder.directory(dir)
+        }
+        // 与 DefaultExecutor / Runtime.exec(cmd, env, dir) 对齐：env 非空则整体替换，null 则继承当前进程
+        if (env != null) {
+            val processEnv = builder.environment()
+            processEnv.clear()
+            processEnv.putAll(env)
+        }
+        builder.redirectErrorStream(true)
+        return builder.start()
+    }
+
+    /**
      * Execute an internal process. If the executing thread is interrupted while waiting for the
      * child process to return the child process will be killed.
      *
@@ -73,6 +102,7 @@ class CommandLineExecutor : DefaultExecutor() {
 
         setExceptionCaught(null)
 
+        // launch 已 redirectErrorStream，process.inputStream 含原 stdout+stderr，errorStream 为空
         val process = this.launch(command, environment, dir)
 
         try {
