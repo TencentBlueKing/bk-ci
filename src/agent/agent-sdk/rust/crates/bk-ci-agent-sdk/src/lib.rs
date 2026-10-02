@@ -4,6 +4,7 @@
 
 pub mod client;
 pub mod config;
+mod metadata;
 pub mod protocol;
 pub mod runtime;
 

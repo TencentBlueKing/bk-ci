@@ -17,11 +17,12 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync", "process", "io-util", "io-std", "fs", "signal", "net"] }
-tokio-util = { version = "0.7", features = ["rt", "codec", "io"] }
-bytes = "1"
-tokio-stream = "0.1"
-clap = { version = "4", features = ["derive", "env"] }
-config = { version = "0.15", default-features = false, features = ["json", "toml"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+clap = { version = "4", features = ["derive"] }
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+whoami = "2"
+local-ip-address = "0.6"
+semver = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tempfile = "3"

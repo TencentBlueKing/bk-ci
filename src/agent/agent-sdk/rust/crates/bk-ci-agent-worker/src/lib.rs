@@ -3,7 +3,9 @@
 
 use async_trait::async_trait;
 use base64::{engine::general_purpose::STANDARD, Engine};
-use bk_ci_agent_sdk::{BuildInfo, BuildOutcome, Error, ExecutionContext, Executor, Result};
+use bk_ci_agent_sdk::{
+    AgentMetadata, BuildInfo, BuildOutcome, Error, ExecutionContext, Executor, Result,
+};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, ffi::OsString, path::PathBuf, process::Stdio};
 use tokio::{fs, process::Command};
@@ -58,6 +60,78 @@ impl JavaWorker {
             ));
         }
         Ok(Self { options })
+    }
+
+    /// Probe the supplied worker's version with the same entry point used by the Go agent,
+    /// then collect local host identity. No JDK search, download or upgrade is performed.
+    pub async fn detect_metadata(&self, agent_version: impl Into<String>) -> Result<AgentMetadata> {
+        let worker_version = match self.detect_worker_version().await {
+            Ok(version) => version,
+            Err(_) => {
+                // As in the Go agent, a failed version probe does not prevent registration.
+                tracing::warn!("worker version detection failed; reporting an empty version");
+                String::new()
+            }
+        };
+        AgentMetadata::detect(agent_version, worker_version)
+    }
+
+    async fn detect_worker_version(&self) -> Result<String> {
+        use tokio::io::AsyncReadExt;
+        fs::create_dir_all(&self.options.data_dir).await?;
+        let tmp = tempfile::Builder::new()
+            .prefix("version-")
+            .tempdir_in(&self.options.data_dir)?;
+        let mut command = Command::new(&self.options.java_executable);
+        command
+            .arg(format!("-Djava.io.tmpdir={}", tmp.path().display()))
+            .args(["-Xmx256m", "-cp"])
+            .arg(&self.options.worker_jar)
+            .arg("com.tencent.devops.agent.AgentVersionKt")
+            .envs(&self.options.environment)
+            .current_dir(&self.options.data_dir)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .kill_on_drop(true);
+        #[cfg(windows)]
+        command.creation_flags(0x08000000);
+        let mut child = command.spawn()?;
+        let mut output = Vec::new();
+        let mut stdout = child
+            .stdout
+            .take()
+            .expect("piped worker version output")
+            .take(65537);
+        let result = tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            stdout.read_to_end(&mut output).await?;
+            if output.len() > 65536 {
+                return Err(std::io::Error::other("worker version output too large"));
+            }
+            child.wait().await
+        })
+        .await;
+        let status = match result {
+            Ok(Ok(status)) => status,
+            _ => {
+                let _ = child.kill().await;
+                return Err(Error::Protocol("worker version probe failed".into()));
+            }
+        };
+        if !status.success() {
+            return Err(Error::Protocol("worker version probe failed".into()));
+        }
+        let version = String::from_utf8_lossy(&output)
+            .lines()
+            .map(str::trim)
+            .find(|line| {
+                line.len() <= 64
+                    && line
+                        .strip_prefix('v')
+                        .is_some_and(|version| semver::Version::parse(version).is_ok())
+            })
+            .map(str::to_owned);
+        version.ok_or_else(|| Error::Protocol("worker version was not found".into()))
     }
 
     async fn prepare(&self, build: &BuildInfo, context: &ExecutionContext) -> Result<Prepared> {

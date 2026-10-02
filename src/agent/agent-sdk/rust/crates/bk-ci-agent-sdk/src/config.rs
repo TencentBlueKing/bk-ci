@@ -120,7 +120,8 @@ pub fn normalize_gateway(value: &str) -> Result<String> {
     Ok(value.trim_end_matches('/').to_owned())
 }
 
-/// Host-provided metadata; no JDK discovery or machine monitoring is performed by the SDK.
+/// Local machine identity; use AgentMetadata::detect for automatic discovery.
+/// Embedding hosts may also construct a snapshot directly for custom executors or tests.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentMetadata {

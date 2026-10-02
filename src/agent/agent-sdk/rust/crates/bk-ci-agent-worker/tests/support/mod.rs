@@ -18,13 +18,16 @@ pub fn fixture() -> &'static Fixture {
             .unwrap();
         let source = dir.path().join("WorkerProbe.java");
         std::fs::write(&source, include_str!("WorkerProbe.java")).unwrap();
+        let version_source = dir.path().join("AgentVersionKt.java");
+        std::fs::write(&version_source, include_str!("AgentVersionKt.java")).unwrap();
         let mut javac = Command::new(jdk.join("bin").join(format!("javac{suffix}")));
         javac
             .arg("-encoding")
             .arg("UTF-8")
             .arg("-d")
             .arg(dir.path())
-            .arg(&source);
+            .arg(&source)
+            .arg(&version_source);
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
@@ -43,7 +46,10 @@ pub fn fixture() -> &'static Fixture {
             .arg(&jar)
             .args(["--main-class", "WorkerProbe", "-C"])
             .arg(dir.path())
-            .arg("WorkerProbe.class");
+            .arg("WorkerProbe.class")
+            .arg("-C")
+            .arg(dir.path())
+            .arg("com");
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;

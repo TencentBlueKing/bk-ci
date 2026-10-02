@@ -110,3 +110,39 @@ async fn cancellation_kills_and_reaps_the_worker() {
     assert!(!outcome.success);
     assert!(outcome.message.contains("cancelled"));
 }
+
+#[tokio::test]
+#[ignore = "requires BK_CI_TEST_JDK (JDK 17+); exercises the 10-second version timeout"]
+async fn version_detection_failure_falls_back_and_a_stuck_probe_is_reaped() {
+    for mode in ["invalid", "hang"] {
+        let dir = tempfile::tempdir().unwrap();
+        let started = dir.path().join("version-probe-pid");
+        let environment = BTreeMap::from([
+            ("BK_CI_PROBE_VERSION".into(), mode.into()),
+            (
+                "BK_CI_PROBE_VERSION_STARTED".into(),
+                started.to_string_lossy().into_owned(),
+            ),
+        ]);
+        let worker = executor(dir.path(), "success", environment);
+        let metadata = tokio::time::timeout(
+            Duration::from_secs(15),
+            worker.detect_metadata("test-agent"),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        assert_eq!(metadata.agent_version, "test-agent");
+        assert!(metadata.worker_version.is_empty());
+        if mode == "hang" {
+            let pid =
+                sysinfo::Pid::from_u32(std::fs::read_to_string(&started).unwrap().parse().unwrap());
+            let mut system = sysinfo::System::new();
+            system.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[pid]), true);
+            assert!(
+                system.process(pid).is_none(),
+                "timed-out version probe was not reaped"
+            );
+        }
+    }
+}

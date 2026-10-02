@@ -1,5 +1,5 @@
 //! cargo run -p bk-ci-agent-worker --example embedded -- examples/initialize.json
-use bk_ci_agent_sdk::{Agent, AgentConfig, AgentMetadata, HttpBackend, RuntimeOptions, Shutdown};
+use bk_ci_agent_sdk::{Agent, AgentConfig, HttpBackend, RuntimeOptions, Shutdown};
 use bk_ci_agent_worker::{JavaWorker, JavaWorkerOptions};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -7,7 +7,6 @@ use std::sync::Arc;
 #[derive(Deserialize)]
 struct Parameters {
     config: AgentConfig,
-    metadata: AgentMetadata,
     worker: JavaWorkerOptions,
     #[serde(default)]
     runtime: RuntimeOptions,
@@ -16,25 +15,18 @@ struct Parameters {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file = std::env::args()
         .nth(1)
-        .ok_or("pass an initialization JSON file")?;
+        .ok_or("pass a configuration JSON file")?;
     let params: Parameters = serde_json::from_slice(&std::fs::read(file)?)?;
+    let worker = JavaWorker::new(params.worker)?;
+    let metadata = worker.detect_metadata(env!("CARGO_PKG_VERSION")).await?;
     let agent = Agent::new(
         params.config,
-        params.metadata,
+        metadata,
         Arc::new(HttpBackend::new()?),
-        Arc::new(JavaWorker::new(params.worker)?),
+        Arc::new(worker),
         params.runtime,
     )?;
-    let shutdown = Shutdown::new();
-    let signal = shutdown.clone();
-    let signal_task = tokio::spawn(async move {
-        if tokio::signal::ctrl_c().await.is_ok() {
-            signal.stop();
-        }
-    });
-    let result = agent.run(shutdown).await;
-    signal_task.abort();
-    // Error::Unreported carries the exact completion payloads for host-side reconciliation.
-    result?;
+    // Embedding hosts can still use the library's cooperative Shutdown API.
+    agent.run(Shutdown::new()).await?;
     Ok(())
 }

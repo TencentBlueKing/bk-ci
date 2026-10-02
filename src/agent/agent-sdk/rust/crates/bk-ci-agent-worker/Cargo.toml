@@ -15,3 +15,7 @@ serde_json.workspace = true
 tokio.workspace = true
 tempfile.workspace = true
 tracing.workspace = true
+semver.workspace = true
+
+[dev-dependencies]
+sysinfo.workspace = true

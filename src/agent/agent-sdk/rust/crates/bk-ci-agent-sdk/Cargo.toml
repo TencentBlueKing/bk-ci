@@ -16,6 +16,9 @@ thiserror.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
 tracing.workspace = true
+sysinfo.workspace = true
+whoami.workspace = true
+local-ip-address.workspace = true
 
 [dev-dependencies]
 axum.workspace = true
