@@ -1,0 +1,17 @@
+[package]
+name = "bk-ci-agent-worker"
+description = "Java worker executor for the BK-CI Agent SDK"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+bk-ci-agent-sdk = { path = "../bk-ci-agent-sdk", version = "0.1.0" }
+async-trait.workspace = true
+base64.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tempfile.workspace = true
+tracing.workspace = true

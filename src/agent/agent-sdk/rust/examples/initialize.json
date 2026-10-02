@@ -1,0 +1,47 @@
+{
+  "protocolVersion": 1,
+  "config": {
+    "gateway": "http://bk-ci.example.invalid",
+    "fileGateway": "http://bk-ci.example.invalid",
+    "projectId": "your-project",
+    "agentId": "your-agent",
+    "secretKey": "replace-with-agent-secret",
+    "parallelTaskCount": 4,
+    "dockerParallelTaskCount": 4,
+    "language": "zh_CN",
+    "requestTimeoutMs": 30000
+  },
+  "metadata": {
+    "hostName": "provided-by-aihub",
+    "hostIp": "127.0.0.1",
+    "detectOS": "WINDOWS",
+    "agentVersion": "0.1.0-rust",
+    "workerVersion": "replace-with-worker-version",
+    "agentInstallPath": "C:/aihub/agents/instance-1",
+    "startedUser": "provided-by-aihub",
+    "props": {
+      "arch": "amd64",
+      "jdkVersion": [],
+      "dockerInitFileMd5": {
+        "fileMd5": "",
+        "needUpgrade": false
+      },
+      "osVersion": "Windows"
+    }
+  },
+  "worker": {
+    "javaExecutable": "C:/aihub/runtime/jdk17/bin/java.exe",
+    "workerJar": "C:/aihub/runtime/worker-agent.jar",
+    "dataDir": "C:/aihub/agents/instance-1",
+    "maxHeap": "2g",
+    "environment": {}
+  },
+  "runtime": {
+    "pollIntervalMs": 5000,
+    "startupRetryMs": 5000,
+    "successReportDelayMs": 8000,
+    "finishAttempts": 1,
+    "finishRetryMs": 1000,
+    "recentTaskCapacity": 4096
+  }
+}

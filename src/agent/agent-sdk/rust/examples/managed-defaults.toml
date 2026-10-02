@@ -1,0 +1,11 @@
+# aihub 仍通过 agent.initialize 提供身份、主机信息及 Java/JAR/实例路径。
+[worker]
+maxHeap = "2g"
+
+[runtime]
+pollIntervalMs = 5000
+startupRetryMs = 5000
+successReportDelayMs = 8000
+finishAttempts = 1
+finishRetryMs = 1000
+recentTaskCapacity = 4096
