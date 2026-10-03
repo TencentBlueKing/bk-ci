@@ -45,7 +45,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/monitor"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 )
@@ -129,33 +128,22 @@ func doAsk() {
 		exitcode.Exit(exiterror)
 	}
 
-	if err != nil {
-		logs.WithErrorNoStack(err).Error("ask request failed")
-		return
-	}
-	if result.IsNotOk() {
-		logs.Error("ask request result failed: ", result.Message)
-		return
-	}
-	if result.AgentStatus != config.AgentStatusImportOk {
-		logs.Errorf("agent status [%s] not ok", result.AgentStatus)
-		if result.IsAgentDelete() {
+	// 将请求错误、业务错误和解析错误统一交给 ask 日志状态记录，
+	// 既保证首次/变化立即可见，也避免相同错误在每轮轮询中重复输出。
+	resp, failureKey, responseErr := parseAskResponse(result, err)
+	if responseErr != nil {
+		askStatus.failure(time.Now(), failureKey, responseErr)
+		if err == nil && result != nil && result.IsOk() && result.IsAgentDelete() {
 			logs.Warn("agent has deleted, uninstall")
 			upgrade.UninstallAgent()
-			return
 		}
 		return
 	}
+	// 只有响应通过全部校验后才记录通信成功；此记录不代表后续异步任务执行成功。
+	askStatus.success(time.Now())
 
-	resp := new(api.AskResp)
-	err = util.ParseJsonToData(result.Data, &resp)
-	if err != nil {
-		logs.WithErrorNoStack(err).Error("parse ask resp failed")
-		return
-	}
-
-	// 目前仅支持windows机器
-	if systemutil.IsWindows() && resp.Heart.CreateMod != nil {
+	// 创建模式检查目前仅支持 Windows。心跳字段可能缺省，访问 CreateMod 前先判空。
+	if systemutil.IsWindows() && resp.Heart != nil && resp.Heart.CreateMod != nil {
 		checkMutexOnce.Do(func() {
 			create.UpdateCreateModFlag(*resp.Heart.CreateMod)
 			if create.CheckCreateMod() {

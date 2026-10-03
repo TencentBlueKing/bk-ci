@@ -210,7 +210,9 @@ func (r *HttpClient) Body(body interface{}, ignoreDupLog bool) *HttpClient {
 	r.body = bytes.NewReader(data)
 
 	if ignoreDupLog {
-		logs.Info(fmt.Sprintf("%s|body repeat as before skip", r.url))
+		// 请求体相同只能说明本次上报内容未变，此时请求尚未发送，不能用作成功心跳。
+		// 重复提示仅保留 DEBUG，正常通信状态由 ask 层在实际成功后汇总。
+		logs.Debugf("%s|body repeat as before skip", r.url)
 	} else {
 		logs.Info(fmt.Sprintf("%s|request body: %s", r.url, string(data)))
 	}
@@ -252,7 +254,14 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	resp, err := r.client.Do(req)
 	if err != nil {
 		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
-			logs.Warn("http request time out, replace client")
+			if ignoreDupLogResp == nil {
+				logs.Warn("http request time out, replace client")
+			} else {
+				// 启用响应去重的轮询调用方负责限频报告失败与恢复。
+				// 此处仅保留 DEBUG，避免底层超时提示绕过上层限频；
+				// 后续替换客户端和累计超时退出次数的逻辑仍照常执行。
+				logs.Debug("http request time out, replace client")
+			}
 			newClient()
 			checkTimeOutExit(err)
 		}
@@ -271,8 +280,10 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	result.Body = body
 	result.Status = resp.StatusCode
 	if ignoreDupLogResp != nil && resp.StatusCode == ignoreDupLogResp.Status && string(body) == ignoreDupLogResp.Resp {
+		// 状态码和响应体同时相同才标记重复，但重复不等于成功：
+		// 错误响应也可能连续相同，业务校验和失败汇总仍由调用方执行。
 		result.IgnoreDupLog = true
-		logs.Info(fmt.Sprintf("%s|resp repeat as before skip", r.url))
+		logs.Debugf("%s|resp repeat as before skip", r.url)
 	} else {
 		logs.Info(fmt.Sprintf("%s|http status: %s, http respBody: %s", r.url, resp.Status, string(body)))
 	}

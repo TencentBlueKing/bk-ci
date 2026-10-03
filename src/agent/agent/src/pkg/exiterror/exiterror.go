@@ -151,13 +151,16 @@ func CheckTimeoutError(timeoutErr error, exitTimeoutTime int32) {
 	if timeoutErr == nil {
 		if timeoutSignFlag.Load() > 0 {
 			timeoutSignFlag.Add(-1)
-			logs.Warn("signtimeout err nil add -1")
+			logs.Debug("signtimeout err nil add -1")
 		}
 		return
 	}
 
 	timeoutSignFlag.Add(1)
-	logs.Warn(fmt.Sprintf("signtimeout err %s add 1", timeoutErr.Error()))
+	// 请求调用方负责报告故障，计数增减属于诊断细节，仅输出 DEBUG，
+	// 避免启用超时退出配置后每次超时仍产生一条重复 WARN。
+	// 达到阈值后的 ERROR、退出原因记录及计数逻辑保持不变。
+	logs.Debugf("signtimeout err %s add 1", timeoutErr.Error())
 	if timeoutSignFlag.Load() >= exitTimeoutTime {
 		msg := fmt.Sprintf("signtimeout err %s time %d, will exit", timeoutErr.Error(), exitTimeoutTime)
 		logs.Error(msg)

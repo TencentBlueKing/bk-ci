@@ -29,6 +29,7 @@ package httputil
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -91,8 +92,15 @@ func (r *HttpResult) IntoAgentResult() (*AgentResult, error) {
 	result := new(AgentResult)
 	err := json.Unmarshal(r.Body, result)
 	if nil != err {
-		logs.Errorf("parse agent result %s status %d error: %s", r.Body, r.Status, err.Error())
-		return nil, errors.New("parse result error")
+		// 首次或内容变化的解析错误保留完整 ERROR 详情；重复响应只记 DEBUG，
+		// 防止持续返回同一份非法 JSON 时绕过 ask 层的错误限频。
+		// 无论是否输出日志，都返回带 HTTP 状态和原始原因的错误供上层处理。
+		if r.IgnoreDupLog {
+			logs.Debugf("parse agent result %s status %d error: %s", r.Body, r.Status, err.Error())
+		} else {
+			logs.Errorf("parse agent result %s status %d error: %s", r.Body, r.Status, err.Error())
+		}
+		return nil, fmt.Errorf("parse result error (http status %d): %w", r.Status, err)
 	} else {
 		return result, nil
 	}

@@ -178,5 +178,14 @@ func Ask(info *AskInfo) (*httputil.AgentResult, error) {
 		askRequest.Resp.Resp = string(resp.Body)
 	}
 
+	// 先确认传输成功和 HTTP 状态正常，再解析业务响应。
+	// 服务端可能在 4xx/5xx 响应中返回可解析甚至含 status=0 的 JSON，
+	// 此时仍应视为请求失败，避免上层误报 ask 健康或恢复。
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	if resp.Status < 200 || resp.Status >= 300 {
+		return nil, fmt.Errorf("ask http status %d", resp.Status)
+	}
 	return resp.IntoAgentResult()
 }
