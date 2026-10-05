@@ -422,7 +422,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         commitId = matcher.getRevision(),
                         block = webHookParams.block,
                         eventType = matcher.getEventType(),
-                        codeType = matcher.getCodeType()
+                        codeType = webHookParams.codeType
                     )
                     val buildId =
                         client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data

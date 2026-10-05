@@ -112,7 +112,7 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[PIPELINE_REPO_NAME] = matcher.getRepoName()
         startParams[PIPELINE_START_WEBHOOK_USER_ID] = matcher.getUsername()
         startParams[PIPELINE_START_TASK_ID] = element.id!! // 当前触发节点为启动节点
-        startParams[PIPELINE_WEBHOOK_TYPE] = matcher.getCodeType().name
+        startParams[PIPELINE_WEBHOOK_TYPE] = params.codeType.name
         startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = matcher.getEventType().name
 
         startParams[PIPELINE_WEBHOOK_REPO] = params.repositoryConfig.getRepositoryId()
@@ -120,7 +120,7 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[PIPELINE_WEBHOOK_BLOCK] = params.block
         startParams.putAll(matcher.getEnv())
         startParams.putAll(variables)
-        if (matcher.getCodeType() in setOf(CodeType.GIT, CodeType.TGIT, CodeType.GITLAB, CodeType.GITHUB)) {
+        if (params.codeType in setOf(CodeType.GIT, CodeType.TGIT, CodeType.GITLAB, CodeType.GITHUB)) {
             startParams[PIPELINE_GIT_REPO_ID] = matcher.getExternalId()
         }
         if (!matcher.getBranchName().isNullOrBlank()) {
