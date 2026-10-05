@@ -74,6 +74,39 @@ class PipelineEventSubscriptionDao {
         }
     }
 
+    fun deleteByPipelineId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除流水线下不在 taskIds 中的订阅，taskIds 为空时删除该流水线全部订阅
+     */
+    fun deleteExcludeTaskIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskIds: Collection<String>
+    ): Int {
+        with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
+            val step = dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            if (taskIds.isNotEmpty()) {
+                step.and(TASK_ID.notIn(taskIds))
+            }
+            return step.execute()
+        }
+    }
+
     fun listSubscribedTaskIds(
         dslContext: DSLContext,
         projectId: String,
