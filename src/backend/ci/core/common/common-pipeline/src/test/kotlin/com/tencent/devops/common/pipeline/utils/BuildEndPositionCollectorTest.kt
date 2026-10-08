@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.EndPosition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -312,6 +313,43 @@ class BuildEndPositionCollectorTest {
         Assertions.assertTrue(display.length <= BuildEndPositionCollector.REASON_DISPLAY_MAX + 3)
         Assertions.assertFalse(display.contains("\n"))
     }
+
+    @Test
+    fun `fail aggregate downgrades timeout and keeps fast kill as multiple`() {
+        val stepTimeout = endPosition(BuildEndType.TIMEOUT_STEP)
+        val jobTimeout = endPosition(BuildEndType.TIMEOUT_JOB)
+        val quality = endPosition(BuildEndType.FAIL_QUALITY)
+        val fastKill = endPosition(BuildEndType.FAIL_FAST_KILL)
+
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout)))
+        Assertions.assertEquals(
+            BuildEndType.FAIL_EXEC,
+            BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout, jobTimeout))
+        )
+        Assertions.assertEquals(
+            BuildEndType.FAIL_MULTIPLE,
+            BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout, fastKill))
+        )
+        Assertions.assertEquals(
+            BuildEndType.FAIL_EXEC,
+            BuildEndPositionCollector.aggregateFailEndType(listOf(fastKill))
+        )
+        Assertions.assertEquals(
+            BuildEndType.FAIL_MULTIPLE,
+            BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout, quality))
+        )
+        Assertions.assertEquals(BuildEndType.TIMEOUT_STEP, stepTimeout.endType)
+    }
+
+    private fun endPosition(endType: BuildEndType) = EndPosition(
+        position = "1-1-1",
+        componentPath = "stage/job/task",
+        statusAtEnd = BuildStatus.FAILED.name,
+        endType = endType,
+        stageId = "stage-2",
+        containerId = "1",
+        taskId = "e-1"
+    )
 
     private fun pauseJob(containerId: String, taskId: String) = NormalContainer(
         id = containerId,

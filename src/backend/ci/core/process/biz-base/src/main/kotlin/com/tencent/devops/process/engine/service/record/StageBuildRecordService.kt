@@ -239,6 +239,25 @@ class StageBuildRecordService(
         )
     }
 
+    /**
+     * 历史表状态提交后再推一次详情。
+     * 记录表推送往往早于历史表改回 RUNNING，只推第一次时运行态会按旧的阶段挂起状态算空。
+     */
+    fun pushDetailRefresh(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ) {
+        pipelineRecordChangeEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startUser = null,
+            executeCount = executeCount
+        )
+    }
+
     fun stageCancel(
         projectId: String,
         pipelineId: String,

@@ -298,6 +298,8 @@ class PipelineStageService @Autowired constructor(
                 suggest = reviewRequest?.suggest
             )
             if (startGroup == null) return false
+            // 先落审核结果。最后一组同意后记录仍会短暂处于 STAGE_SUCCESS，
+            // 读取侧不再把这种状态合成「执行成功」，因此这里不用推迟落库。
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
@@ -361,6 +363,12 @@ class PipelineStageService @Autowired constructor(
                         )
                     }
                 }
+                stageBuildRecordService.pushDetailRefresh(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = executeCount
+                )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStageEvent(
                         source = BS_MANUAL_START_STAGE, projectId = projectId, pipelineId = pipelineId,

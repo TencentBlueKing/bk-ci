@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildEndCategory
 import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.EndPosition
@@ -85,13 +86,28 @@ object BuildEndPositionCollector {
         return traverseModel(model) { ctx -> collectCancelFromContainer(ctx) }
     }
 
+    /**
+     * 失败卡片的构建级子类型。读取兜底用：历史构建现算、取消卡片按失败重写、
+     * 失败卡片补了暂停或审核位置之后重算。口径与写入侧汇总一致。
+     *
+     * FastKill 不能单独当构建级标签。它和其它失败同时出现时必须是 [BuildEndType.FAIL_MULTIPLE]，
+     * 否则页面在单一失败类型下把该行画成错误码 2199010。只有 FastKill、没有其它成因时归 [BuildEndType.FAIL_EXEC]。
+     * 模型采集本身不会标出 FastKill，这条只在重算已落库位置时生效。
+     *
+     * Job / 步骤超时只留在位置上。构建级若直接采用 TIMEOUT_JOB / TIMEOUT_STEP，
+     * 页面会变成「状态：失败，卡片：超时」。排队超时不走这里。位置自身的 endType 不改。
+     */
     fun aggregateFailEndType(positions: List<EndPosition>): BuildEndType {
-        val types = positions.mapNotNull { it.endType }
+        val raw = positions.mapNotNull { it.endType }
+        val hasFastKill = BuildEndType.FAIL_FAST_KILL in raw
+        val causes = raw
             .filter { it != BuildEndType.FAIL_FAST_KILL }
+            .map { if (it.category == BuildEndCategory.TIMEOUT) BuildEndType.FAIL_EXEC else it }
             .distinct()
         return when {
-            types.isEmpty() -> BuildEndType.FAIL_EXEC
-            types.size == 1 -> types.first()
+            causes.isEmpty() -> BuildEndType.FAIL_EXEC
+            hasFastKill -> BuildEndType.FAIL_MULTIPLE
+            causes.size == 1 -> causes.first()
             else -> BuildEndType.FAIL_MULTIPLE
         }
     }

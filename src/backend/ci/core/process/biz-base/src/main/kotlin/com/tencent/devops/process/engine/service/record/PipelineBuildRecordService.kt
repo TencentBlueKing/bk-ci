@@ -594,12 +594,12 @@ class PipelineBuildRecordService @Autowired constructor(
         cancelUser: String?
     ): BuildEndInfo? {
         // 阶段准入挂起后记录状态是 STAGE_SUCCESS，它不在 isFinish() 里。
-        // 还在审核就合成审核中卡片；审核已结束且没有落库详情时，按阶段成功。
+        // 只有模型里仍有 REVIEWING 才合成「审核中」。最后一组同意或驳回后构建会继续跑，
+        // 这时再退化成「执行成功」，推送会闪出一张成功卡片。
         if (status == BuildStatus.STAGE_SUCCESS) {
-            return synthesizeStageReviewingEndInfo(model) ?: successEndInfo(buildEndTime)
+            return synthesizeStageReviewingEndInfo(model)
         }
-        // 挂起是先写审核记录、后改构建状态（见 PipelineStageService.pauseStage），推送恰好赶在
-        // 状态改写前时状态还是运行中，因此运行中也按模型里的阶段审核态合成，不依赖状态判定
+        // 未结束且不是阶段挂起：暂停、插件审核、红线走运行态，这里不合成终态卡片。
         if (!status.isFinish()) {
             return null
         }
@@ -633,7 +633,9 @@ class PipelineBuildRecordService @Autowired constructor(
         cancelUser: String?
     ): BuildEndInfo {
         val positions = BuildEndPositionCollector.collectCancelPositions(model)
-        val hasUser = !cancelUser.isNullOrBlank()
+        // update() 在没有取消人时会写入 System，表示系统取消，不是真实操作人。
+        // 阶段准入驳回走的就是这条路径，不能展示成「用户取消」。
+        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != "System"
         val info = if (hasUser) {
             BuildEndInfo(
                 endType = BuildEndType.CANCEL_USER,

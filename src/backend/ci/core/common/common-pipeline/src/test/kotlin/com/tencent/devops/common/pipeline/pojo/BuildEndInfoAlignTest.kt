@@ -158,6 +158,31 @@ class BuildEndInfoAlignTest {
     }
 
     @Test
+    fun `given cancel info and only timeout positions then failed card stays fail exec`() {
+        val stored = BuildEndInfo.ofCancelUser(operator = "ccc", reasonCode = "bkBuildCancelUserManual")
+        val timeoutPosition = EndPosition(
+            position = "1-1-1",
+            componentPath = "stage-1/构建环境-Linux/脚本",
+            statusAtEnd = BuildStatus.EXEC_TIMEOUT.name,
+            endType = BuildEndType.TIMEOUT_STEP,
+            reasonCode = "bkBuildEndFailPlugin",
+            stageId = "stage-2",
+            containerId = "1",
+            taskId = "e-timeout"
+        )
+
+        val aligned = stored.alignedTo(
+            status = BuildStatus.FAILED,
+            modelFailPositions = listOf(timeoutPosition)
+        )
+
+        Assertions.assertEquals(BuildEndType.FAIL_EXEC, aligned!!.endType)
+        Assertions.assertEquals(BuildEndCategory.FAIL, aligned.endType.category)
+        Assertions.assertEquals(BuildEndType.TIMEOUT_STEP, aligned.positions!!.single().endType)
+        Assertions.assertNull(aligned.operator)
+    }
+
+    @Test
     fun `given fail info and failed status then keep original`() {
         val stored = BuildEndInfo.of(endType = BuildEndType.FAIL_REVIEW, reason = "驳回")
 
