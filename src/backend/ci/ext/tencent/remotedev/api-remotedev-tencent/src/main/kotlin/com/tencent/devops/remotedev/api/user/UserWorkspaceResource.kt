@@ -312,7 +312,10 @@ interface UserWorkspaceResource {
         envHashId: String?,
         @Parameter(description = "是否是团队云桌面", required = false)
         @QueryParam("multiple")
-        multiple: Boolean?
+        multiple: Boolean?,
+        @Parameter(description = "是否校验开黑可用范围", required = false)
+        @QueryParam("live")
+        live: Boolean?
     ): Result<WorkspaceStartCloudDetail?>
 
     @Operation(summary = "校验云桌面设备管控")

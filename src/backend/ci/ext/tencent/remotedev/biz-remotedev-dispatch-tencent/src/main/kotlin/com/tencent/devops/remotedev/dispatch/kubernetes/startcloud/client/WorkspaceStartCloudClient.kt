@@ -431,6 +431,39 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun checkLiveScope(userId: String, workspaceName: String): Boolean {
+        val url = "$apiUrlAI/openapi/live/check_live_scope?workspaceName=" +
+                URLEncoder.encode(workspaceName, StandardCharsets.UTF_8.name())
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId checkLiveScope response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "校验用户是否有该环境所属分身的开黑可用范围权限 接口异常: ${response.code}"
+                    )
+                }
+                return JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<Boolean>>() {}
+                ).data ?: false
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId checkLiveScope get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "校验用户是否有该环境所属分身的开黑可用范围权限 接口超时, url: $url"
+            )
+        }
+    }
+
     fun makeHeaders(
         body: String,
         userId: String? = null

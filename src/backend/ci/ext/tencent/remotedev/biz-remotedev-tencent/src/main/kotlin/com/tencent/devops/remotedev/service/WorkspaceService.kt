@@ -1340,7 +1340,8 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         workspaceName: String?,
         envId: String?,
-        multiple: Boolean? = null
+        multiple: Boolean? = null,
+        live: Boolean? = null
     ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1376,14 +1377,14 @@ class WorkspaceService @Autowired constructor(
                         sharedUsers = listOf(userId)
                     ).isNotEmpty()
                 ) {
-                    return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+                    return startCloudWorkspaceDetail(userId, workspace, multiple ?: false, live ?: false)
                 }
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false, live ?: false)
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
@@ -1460,7 +1461,7 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, false)
+            return startCloudWorkspaceDetail(userId, workspace, false, live ?: false)
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode
@@ -1555,9 +1556,34 @@ class WorkspaceService @Autowired constructor(
     private fun startCloudWorkspaceDetail(
         userId: String,
         workspace: WorkspaceRecordWithWindows,
-        multiple: Boolean
+        multiple: Boolean,
+        live: Boolean
     ): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName ${workspace.workspaceName}")
+
+        // 开黑可用范围门禁（独立于 multiple）：校验不通过直接拒绝
+        if (live) {
+            val liveAccessible = try {
+                workspaceStartCloudClient.checkLiveScope(userId, workspace.workspaceName)
+            } catch (e: Exception) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have live access to workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+            if (!liveAccessible) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have live access to workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+        }
 
         // 审计
         if (!multiple) {
