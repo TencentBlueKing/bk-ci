@@ -37,7 +37,6 @@ import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResp
-import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudV4ErrorResp
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudV4Resp
 import okhttp3.Response
 import org.slf4j.LoggerFactory
@@ -162,38 +161,52 @@ class ApigwJobCloudApi {
         val operationName = getJobOperationName()
         removeJobOperationName()
         response.use {
-            val jobRequestId = it.header(HEADER_BKAPI_REQUEST_ID)
+            val bkapiRequestId = it.header(HEADER_BKAPI_REQUEST_ID)
             val responseBody = it.body?.string()
             logger.info(
-                "[$operationName] response(v4) httpStatus: ${it.code}, requestId: $jobRequestId, " +
+                "[$operationName] response(v4) httpStatus: ${it.code}, bkapiRequestId: $bkapiRequestId, " +
                     "body: ${logWithLengthLimit(responseBody.toString())}"
             )
+            val jobCloudV4Resp = parseV4Resp(operationName, responseBody, classOfU)
             if (!it.isSuccessful) {
-                val error = responseBody?.let { body ->
-                    try {
-                        mapper.readValue(body, JobCloudV4ErrorResp::class.java).error
-                    } catch (ignored: Exception) {
-                        null
-                    }
-                }
-                val errorMsg = "Execute failed! Req ID: $jobRequestId, HTTP status: ${it.code}, " +
+                val error = jobCloudV4Resp?.error
+                val errorMsg = "Execute failed! Job Req ID: ${jobCloudV4Resp?.jobRequestId}, " +
+                    "APIGW Req ID: $bkapiRequestId, HTTP status: ${it.code}, " +
                     "Error code: ${error?.code}, " +
                     "Error msg: ${error?.message ?: logWithLengthLimit(responseBody.toString())}"
                 logger.error("[$operationName] $errorMsg")
                 val status = if (it.code in 400..499) BAD_REQUEST_STATUS else INTERNAL_SERVER_ERROR_STATUS
                 throw CustomException(status, errorMsg)
             }
-            if (responseBody.isNullOrEmpty()) {
-                throw CustomException(INTERNAL_SERVER_ERROR_STATUS, "[$operationName] Job response body is empty.")
+            if (jobCloudV4Resp == null) {
+                throw CustomException(
+                    INTERNAL_SERVER_ERROR_STATUS,
+                    "[$operationName] Job response body is empty or invalid."
+                )
             }
-            val javaType = mapper.typeFactory.constructParametricType(JobCloudV4Resp::class.java, classOfU)
-            val jobCloudV4Resp: JobCloudV4Resp<U> = mapper.readValue(responseBody, javaType)
             return JobCloudResult(
                 code = null,
                 result = true,
-                jobRequestId = jobRequestId,
+                jobRequestId = jobCloudV4Resp.jobRequestId,
                 data = jobCloudV4Resp.data
             )
+        }
+    }
+
+    private fun <U> parseV4Resp(
+        operationName: String?,
+        responseBody: String?,
+        classOfU: Class<U>
+    ): JobCloudV4Resp<U>? {
+        if (responseBody.isNullOrEmpty()) {
+            return null
+        }
+        return try {
+            val javaType = mapper.typeFactory.constructParametricType(JobCloudV4Resp::class.java, classOfU)
+            mapper.readValue(responseBody, javaType)
+        } catch (e: Exception) {
+            logger.warn("[$operationName] Failed to parse job v4 response body: ${e.message}")
+            null
         }
     }
 

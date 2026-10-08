@@ -61,14 +61,15 @@ class ApigwJobCloudApiV4ResTest {
                     "log_content": "job_start\n"
                   }
                 ]
-              }
+              },
+              "job_request_id": "job-req-1"
             }
         """.trimIndent()
 
-        val result = parse(buildResponse(200, json, requestId = "req-1"))
+        val result = parse(buildResponse(200, json, requestId = "apigw-req-1"))
 
         assertThat(result.result).isTrue
-        assertThat(result.jobRequestId).isEqualTo("req-1")
+        assertThat(result.jobRequestId).isEqualTo("job-req-1")
         val data = result.data!!
         assertThat(data.jobInstanceId).isEqualTo(100L)
         assertThat(data.logType).isEqualTo(1)
@@ -109,8 +110,10 @@ class ApigwJobCloudApiV4ResTest {
             }
         """.trimIndent()
 
-        val data = parse(buildResponse(200, json)).data!!
+        val result = parse(buildResponse(200, json, requestId = "apigw-req-2"))
 
+        assertThat(result.jobRequestId).isNull()
+        val data = result.data!!
         val fileLog = data.fileStepExecuteObjectLogs!!.single()
         assertThat(fileLog.uploadLog).isNull()
         val download = fileLog.downloadLog!!.single()
@@ -121,12 +124,21 @@ class ApigwJobCloudApiV4ResTest {
 
     @Test
     fun `4xx response is mapped to BAD_REQUEST with job error message`() {
-        val json = """{"error": {"code": "INVALID_ARGUMENT", "message": "invalid bk_scope_type"}}"""
+        val json = """
+            {
+              "error": {"code": "INVALID_ARGUMENT", "message": "invalid bk_scope_type"},
+              "job_request_id": "job-req-400"
+            }
+        """.trimIndent()
 
-        val ex = assertThrows<CustomException> { parse(buildResponse(400, json, requestId = "req-400")) }
+        val ex = assertThrows<CustomException> { parse(buildResponse(400, json, requestId = "apigw-req-400")) }
 
         assertThat(ex.status).isEqualTo(Status.BAD_REQUEST)
-        assertThat(ex.message).contains("INVALID_ARGUMENT").contains("invalid bk_scope_type").contains("req-400")
+        assertThat(ex.message)
+            .contains("INVALID_ARGUMENT")
+            .contains("invalid bk_scope_type")
+            .contains("Job Req ID: job-req-400")
+            .contains("APIGW Req ID: apigw-req-400")
     }
 
     @Test
@@ -154,6 +166,13 @@ class ApigwJobCloudApiV4ResTest {
     @Test
     fun `empty success body throws INTERNAL_SERVER_ERROR`() {
         val ex = assertThrows<CustomException> { parse(buildResponse(200, "")) }
+
+        assertThat(ex.status).isEqualTo(Status.INTERNAL_SERVER_ERROR)
+    }
+
+    @Test
+    fun `non-json success body throws INTERNAL_SERVER_ERROR`() {
+        val ex = assertThrows<CustomException> { parse(buildResponse(200, "<html>ok</html>")) }
 
         assertThat(ex.status).isEqualTo(Status.INTERNAL_SERVER_ERROR)
     }
