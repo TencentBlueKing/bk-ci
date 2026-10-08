@@ -18,7 +18,9 @@ data class ComputerStatusRespV2(
     @Parameter(description = "登录用户列表")
     var loginUsers: List<String>,
     @Parameter(description = "机器状态信息")
-    val status: ComputerStatusEnum
+    val status: ComputerStatusEnum,
+    @Parameter(description = "是否锁屏")
+    val screenLocked: Boolean? = null
 )
 
 @Schema(title = "机器状态信息")
