@@ -1,8 +1,11 @@
 package com.tencent.devops.remotedev.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectStrategyDao
+import com.tencent.devops.remotedev.pojo.strategy.LockScreenSaverStrategy
 import com.tencent.devops.remotedev.pojo.strategy.PersonalDesktopLockScreenStrategy
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
@@ -19,7 +22,8 @@ import org.springframework.stereotype.Service
 class ProjectStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectStrategyDao: ProjectStrategyDao,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val cosLogUploadService: CosLogUploadService
 ) {
     fun createOrUpdateStrategy(
         info: ProjectStrategyInfo
@@ -65,6 +69,23 @@ class ProjectStrategyService @Autowired constructor(
                         info.quitOnExitStrategy ?: QuitOnExitStrategy.default(), false
                     )
                 )
+
+                StrategyType.LOCK_SCREEN_SAVER -> {
+                    val strategy = info.lockScreenSaverStrategy ?: LockScreenSaverStrategy.default()
+                    if (strategy.enabled && strategy.path.isNullOrBlank()) {
+                        throw ErrorCodeException(
+                            errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                            params = arrayOf("lockScreenSaverStrategy.path can not be empty when enabled")
+                        )
+                    }
+                    projectStrategyDao.createOrUpdateStrategy(
+                        dslContext = dslContext,
+                        projectId = info.projectId,
+                        zoneType = info.zoneType,
+                        strategyType = StrategyType.LOCK_SCREEN_SAVER,
+                        content = JsonUtil.toJson(strategy.copy(url = null), false)
+                    )
+                }
             }
         }
     }
@@ -112,6 +133,19 @@ class ProjectStrategyService @Autowired constructor(
                         object : TypeReference<QuitOnExitStrategy>() {}
                     )
                     resp.quitOnExitStrategy = content
+                }
+
+                StrategyType.LOCK_SCREEN_SAVER -> {
+                    val content = JsonUtil.to(
+                        record.strategyContent.data(),
+                        object : TypeReference<LockScreenSaverStrategy>() {}
+                    )
+                    val path = content.path
+                    resp.lockScreenSaverStrategy = if (path.isNullOrBlank()) {
+                        content
+                    } else {
+                        content.copy(url = cosLogUploadService.generateDownloadUrl(path))
+                    }
                 }
             }
         }
