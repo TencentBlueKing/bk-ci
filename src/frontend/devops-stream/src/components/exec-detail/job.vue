@@ -66,7 +66,7 @@
                 )
                 const jobId = this.job.containerHashId
                 const { pipelineId, buildId } = this.$route.params
-                return `/stream/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
+                return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
             },
 
             pluginList () {

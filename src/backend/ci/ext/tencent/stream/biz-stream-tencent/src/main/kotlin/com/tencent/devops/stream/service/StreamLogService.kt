@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -73,8 +72,7 @@ class StreamLogService @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        subTag: String? = null
+        executeCount: Int?
     ): QueryLogs {
         logger.info("StreamLogService|getInitLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
@@ -87,7 +85,6 @@ class StreamLogService @Autowired constructor(
             containerHashId = jobId,
             executeCount = executeCount,
             debug = debug,
-            subTag = subTag,
             jobId = null,
             stepId = null,
             checkPermissionFlag = false
@@ -103,8 +100,7 @@ class StreamLogService @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        subTag: String? = null
+        executeCount: Int?
     ): QueryLogs {
         logger.info("StreamLogService|getAfterLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
@@ -118,31 +114,9 @@ class StreamLogService @Autowired constructor(
             containerHashId = jobId,
             executeCount = executeCount,
             debug = debug,
-            subTag = subTag,
             jobId = null,
             stepId = null,
             checkPermissionFlag = false
-        ).data!!
-    }
-
-    fun getLogMode(
-        userId: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        tag: String?,
-        executeCount: Int?
-    ): QueryLogStatus {
-        logger.info("StreamLogService|getLogMode|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
-        val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
-        return client.get(ServiceLogResource::class).getLogMode(
-            userId = userId,
-            projectId = target.projectId,
-            pipelineId = target.pipelineId,
-            buildId = buildId,
-            tag = tag,
-            executeCount = executeCount,
-            stepId = null
         ).data!!
     }
 
@@ -153,8 +127,7 @@ class StreamLogService @Autowired constructor(
         buildId: String,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        fileName: String? = null
+        executeCount: Int?
     ): Response {
         logger.info("StreamLogService|downloadLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
@@ -164,7 +137,6 @@ class StreamLogService @Autowired constructor(
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
-        if (!fileName.isNullOrBlank()) path.append("&fileName=$fileName")
 
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
 
@@ -174,10 +146,9 @@ class StreamLogService @Autowired constructor(
         }
 
         val response = OkhttpUtils.doLongGet(path.toString(), headers)
-        val downloadName = fileName?.ifBlank { null } ?: "${target.pipelineId}-$buildId-log.txt"
         return Response
             .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $downloadName")
+            .header("content-disposition", "attachment; filename = ${target.pipelineId}-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
             .header("X-DEVOPS-PROJECT-ID", target.projectId)
             .build()
