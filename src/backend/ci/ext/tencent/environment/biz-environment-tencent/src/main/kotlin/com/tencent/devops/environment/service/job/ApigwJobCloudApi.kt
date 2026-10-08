@@ -33,11 +33,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudPermission
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResp
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudV4Resp
+import jakarta.ws.rs.core.Response.Status
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -64,8 +65,8 @@ class ApigwJobCloudApi {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
         private const val HEADER_BKAPI_REQUEST_ID = "X-Bkapi-Request-Id"
-        private val INTERNAL_SERVER_ERROR_STATUS = jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
-        private val BAD_REQUEST_STATUS = jakarta.ws.rs.core.Response.Status.BAD_REQUEST
+        private val INTERNAL_SERVER_ERROR_STATUS = Status.INTERNAL_SERVER_ERROR
+        private val BAD_REQUEST_STATUS = Status.BAD_REQUEST
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -255,7 +256,7 @@ class ApigwJobCloudApi {
                 if (INTERNAL_SERVER_ERROR_CODE == jobCloudResp.code) {
                     throw CustomException(INTERNAL_SERVER_ERROR_STATUS, errorMsg)
                 }
-                throw CustomException(jakarta.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
+                throw CustomException(Status.BAD_REQUEST, errorMsg)
             } else {
                 var jsonData = ""
                 val operationResult: T? =
