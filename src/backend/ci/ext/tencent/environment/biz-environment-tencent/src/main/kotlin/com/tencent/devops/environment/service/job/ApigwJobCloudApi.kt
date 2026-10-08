@@ -163,10 +163,14 @@ class ApigwJobCloudApi {
         response.use {
             val bkapiRequestId = it.header(HEADER_BKAPI_REQUEST_ID)
             val responseBody = it.body?.string()
-            logger.info(
-                "[$operationName] response(v4) httpStatus: ${it.code}, bkapiRequestId: $bkapiRequestId, " +
-                    "body: ${logWithLengthLimit(responseBody.toString())}"
-            )
+            if (it.isSuccessful) {
+                logger.info("[$operationName] response(v4) httpStatus: ${it.code}, bkapiRequestId: $bkapiRequestId")
+            } else {
+                logger.info(
+                    "[$operationName] response(v4) httpStatus: ${it.code}, bkapiRequestId: $bkapiRequestId, " +
+                        "body: ${logWithLengthLimit(responseBody.toString())}"
+                )
+            }
             val jobCloudV4Resp = parseV4Resp(operationName, responseBody, classOfU)
             if (!it.isSuccessful) {
                 val error = jobCloudV4Resp?.error
@@ -205,7 +209,10 @@ class ApigwJobCloudApi {
             val javaType = mapper.typeFactory.constructParametricType(JobCloudV4Resp::class.java, classOfU)
             mapper.readValue(responseBody, javaType)
         } catch (e: Exception) {
-            logger.warn("[$operationName] Failed to parse job v4 response body: ${e.message}")
+            logger.warn(
+                "[$operationName] Failed to parse job v4 response body: ${e.message}, " +
+                    "body: ${logWithLengthLimit(responseBody)}"
+            )
             null
         }
     }
