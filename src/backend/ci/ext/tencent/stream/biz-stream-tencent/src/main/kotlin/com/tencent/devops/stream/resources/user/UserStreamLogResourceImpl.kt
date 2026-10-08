@@ -30,7 +30,6 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamLogResource
@@ -53,8 +52,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        subTag: String?
+        executeCount: Int?
     ): Result<QueryLogs> {
         val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
@@ -66,8 +64,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
                 debug = debug,
                 tag = tag,
                 jobId = jobId,
-                executeCount = executeCount,
-                subTag = subTag
+                executeCount = executeCount
             )
         )
     }
@@ -81,8 +78,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        subTag: String?
+        executeCount: Int?
     ): Result<QueryLogs> {
         val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
@@ -95,28 +91,6 @@ class UserStreamLogResourceImpl @Autowired constructor(
                 debug = debug,
                 tag = tag,
                 jobId = jobId,
-                executeCount = executeCount,
-                subTag = subTag
-            )
-        )
-    }
-
-    override fun getLogMode(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        tag: String?,
-        executeCount: Int?
-    ): Result<QueryLogStatus> {
-        val gitProjectId = authorize(userId, projectId, buildId)
-        return Result(
-            streamLogService.getLogMode(
-                userId = userId,
-                gitProjectId = gitProjectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                tag = tag,
                 executeCount = executeCount
             )
         )
@@ -129,8 +103,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         jobId: String?,
-        executeCount: Int?,
-        fileName: String?
+        executeCount: Int?
     ): Response {
         val gitProjectId = authorize(userId, projectId, buildId)
         return streamLogService.downloadLogs(
@@ -140,8 +113,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             jobId = jobId,
-            executeCount = executeCount,
-            fileName = fileName
+            executeCount = executeCount
         )
     }
 

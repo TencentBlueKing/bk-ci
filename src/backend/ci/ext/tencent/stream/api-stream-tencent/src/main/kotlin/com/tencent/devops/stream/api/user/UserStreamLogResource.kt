@@ -30,7 +30,6 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -78,10 +77,7 @@ interface UserStreamLogResource {
         jobId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?,
-        @Parameter(description = "对应subTag", required = false)
-        @QueryParam("subTag")
-        subTag: String? = null
+        executeCount: Int?
     ): Result<QueryLogs>
 
     @Operation(summary = "获取某行后的日志")
@@ -114,35 +110,8 @@ interface UserStreamLogResource {
         jobId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?,
-        @Parameter(description = "对应subTag", required = false)
-        @QueryParam("subTag")
-        subTag: String? = null
-    ): Result<QueryLogs>
-
-    @Operation(summary = "获取插件的日志状态")
-    @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/mode")
-    fun getLogMode(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "stream 项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @Parameter(description = "对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @Parameter(description = "执行次数", required = false)
-        @QueryParam("executeCount")
         executeCount: Int?
-    ): Result<QueryLogStatus>
+    ): Result<QueryLogs>
 
     @Operation(summary = "下载日志接口")
     @GET
@@ -169,9 +138,6 @@ interface UserStreamLogResource {
         jobId: String?,
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?,
-        @Parameter(description = "下载文件名", required = false)
-        @QueryParam("fileName")
-        fileName: String? = null
+        executeCount: Int?
     ): Response
 }
