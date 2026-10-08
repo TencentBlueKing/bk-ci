@@ -1,11 +1,11 @@
 import api from './ajax'
-import { LOG_PERFIX, ARTIFACTORY_PREFIX, PROCESS_PREFIX, STREAM_PERFIX, DISPATCH_STREAM_PERFIX, QUALITY_PREFIX } from './perfix'
+import { ARTIFACTORY_PREFIX, PROCESS_PREFIX, STREAM_PERFIX, DISPATCH_STREAM_PERFIX, QUALITY_PREFIX } from './perfix'
 
 export default {
     // 第一次拉取日志
     getInitLog ({ projectId, pipelineId, buildId, tag, currentExe, subTag, debug, jobId }) {
         const queryType = jobId ? { jobId } : { tag }
-        return api.get(`${LOG_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return api.get(`${STREAM_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 executeCount: currentExe,
                 subTag,
@@ -18,7 +18,7 @@ export default {
     // 后续拉取日志
     getAfterLog ({ projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag, debug, jobId }) {
         const queryType = jobId ? { jobId } : { tag }
-        return api.get(`${LOG_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return api.get(`${STREAM_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
@@ -30,7 +30,7 @@ export default {
     },
 
     getLogStatus ({ projectId, pipelineId, buildId, tag, executeCount }) {
-        return api.get(`${LOG_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
+        return api.get(`${STREAM_PERFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ projectId, pipelineId, buildId, tag, executeCount }) {

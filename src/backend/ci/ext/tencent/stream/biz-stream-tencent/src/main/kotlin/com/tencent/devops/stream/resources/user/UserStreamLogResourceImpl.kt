@@ -30,6 +30,7 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamLogResource
@@ -52,10 +53,10 @@ class UserStreamLogResourceImpl @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String?
     ): Result<QueryLogs> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
+        val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
             streamLogService.getInitLogs(
                 userId = userId,
@@ -65,7 +66,8 @@ class UserStreamLogResourceImpl @Autowired constructor(
                 debug = debug,
                 tag = tag,
                 jobId = jobId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                subTag = subTag
             )
         )
     }
@@ -79,10 +81,10 @@ class UserStreamLogResourceImpl @Autowired constructor(
         debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String?
     ): Result<QueryLogs> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
+        val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
             streamLogService.getAfterLogs(
                 userId = userId,
@@ -93,6 +95,28 @@ class UserStreamLogResourceImpl @Autowired constructor(
                 debug = debug,
                 tag = tag,
                 jobId = jobId,
+                executeCount = executeCount,
+                subTag = subTag
+            )
+        )
+    }
+
+    override fun getLogMode(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        executeCount: Int?
+    ): Result<QueryLogStatus> {
+        val gitProjectId = authorize(userId, projectId, buildId)
+        return Result(
+            streamLogService.getLogMode(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                tag = tag,
                 executeCount = executeCount
             )
         )
@@ -105,15 +129,10 @@ class UserStreamLogResourceImpl @Autowired constructor(
         buildId: String,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        fileName: String?
     ): Response {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
-        permissionService.checkStreamPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW
-        )
+        val gitProjectId = authorize(userId, projectId, buildId)
         return streamLogService.downloadLogs(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -121,8 +140,19 @@ class UserStreamLogResourceImpl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             jobId = jobId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            fileName = fileName
         )
+    }
+
+    private fun authorize(userId: String, projectId: String, buildId: String): Long {
+        checkParam(buildId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
+        return GitCommonUtils.getGitProjectId(projectId)
     }
 
     private fun checkParam(buildId: String) {

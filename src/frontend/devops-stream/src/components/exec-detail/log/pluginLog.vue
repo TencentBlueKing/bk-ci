@@ -57,7 +57,7 @@
                 const tag = this.plugin.id
                 const containerHashId = this.plugin.containerHashId
                 const typeQuery = containerHashId ? `jobId=${containerHashId}` : `tag=${tag}`
-                return `/log/api/user/logs/${this.projectId}/${this.pipelineId}/${this.buildId}/download?${typeQuery}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                return `/stream/api/user/logs/${this.projectId}/${this.pipelineId}/${this.buildId}/download?${typeQuery}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
             }
         },
 
