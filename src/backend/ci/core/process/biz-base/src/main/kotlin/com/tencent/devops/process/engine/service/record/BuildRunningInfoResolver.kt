@@ -651,8 +651,6 @@ class BuildRunningInfoResolver @Autowired constructor(
             waitType = JobWaitType.MUTEX,
             waitReason = i18n(
                 messageCode = ProcessMessageCode.BK_BUILD_RUNNING_AGENT_REUSE_WAIT,
-                defaultMessage = "构建机复用互斥，等待被依赖的节点 $reuseJobId " +
-                    "调度到具体节点后再进行复用调度",
                 params = arrayOf(reuseJobId),
                 language = language
             )
