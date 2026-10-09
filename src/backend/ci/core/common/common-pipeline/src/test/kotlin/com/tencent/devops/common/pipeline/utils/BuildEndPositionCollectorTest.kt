@@ -321,7 +321,10 @@ class BuildEndPositionCollectorTest {
         val quality = endPosition(BuildEndType.FAIL_QUALITY)
         val fastKill = endPosition(BuildEndType.FAIL_FAST_KILL)
 
-        Assertions.assertEquals(BuildEndType.FAIL_EXEC, BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout)))
+        Assertions.assertEquals(
+            BuildEndType.FAIL_EXEC,
+            BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout))
+        )
         Assertions.assertEquals(
             BuildEndType.FAIL_EXEC,
             BuildEndPositionCollector.aggregateFailEndType(listOf(stepTimeout, jobTimeout))
