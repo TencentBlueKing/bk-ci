@@ -447,6 +447,7 @@ export interface FlowSettings {
   maxQueueSize?: number
   concurrencyGroup?: string
   concurrencyCancelInProgress?: boolean
+  concurrencySubGroup?: string
   maxConRunningQueueSize?: number
   failIfVariableInvalid?: boolean
   buildCancelPolicy?: 'EXECUTE_PERMISSION' | 'RESTRICTED'

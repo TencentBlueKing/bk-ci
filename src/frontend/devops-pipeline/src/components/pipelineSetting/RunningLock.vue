@@ -175,16 +175,48 @@
                                 />
                             </bk-form-item>
 
-                            <bk-form-item property="concurrencyCancelInProgress">
-                                <bk-checkbox
-                                    :disabled="!(editable || isOverride)"
-                                    :checked="pipelineSetting.concurrencyCancelInProgress"
-                                    @change="val => handleBaseInfoChange('concurrencyCancelInProgress', val)"
+                            <bk-form-item :label="$t('settings.arrivalPolicy')">
+                                <bk-radio-group
+                                    :value="arrivalPolicy"
+                                    @change="handleArrivalPolicyChange"
                                 >
-                                    {{ $t('settings.stopWhenNewCome') }}
-                                </bk-checkbox>
+                                    <div
+                                        v-for="item in arrivalPolicies"
+                                        :key="item.id"
+                                        class="run-lock-radio-item"
+                                    >
+                                        <bk-radio
+                                            :disabled="!(editable || isOverride)"
+                                            :value="item.id"
+                                        >
+                                            <span
+                                                :class="{ 'arrival-policy-tip': item.tip }"
+                                                v-bk-tooltips="item.tip ? { content: item.tip, placements: ['top'] } : { disabled: true }"
+                                            >{{ item.label }}</span>
+                                        </bk-radio>
+                                        <p class="arrival-policy-desc">{{ item.desc }}</p>
+                                    </div>
+                                </bk-radio-group>
                             </bk-form-item>
-                            <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                            <bk-form-item
+                                v-if="showSubGroup"
+                                :label="$t('settings.subGroup')"
+                                :desc="$t('settings.subGroupDesc')"
+                                desc-type="icon"
+                                desc-icon="bk-icon icon-question-circle-shape"
+                                property="concurrencySubGroup"
+                                error-display-type="normal"
+                            >
+                                <bk-input
+                                    :placeholder="$t('settings.subGroupPlaceholder')"
+                                    :disabled="!(editable || isOverride)"
+                                    :max-length="128"
+                                    :maxlength="128"
+                                    :value="pipelineSetting.concurrencySubGroup"
+                                    @change="val => handleBaseInfoChange('concurrencySubGroup', val)"
+                                />
+                            </bk-form-item>
+                            <template v-if="showQueueFields">
                                 <bk-form-item
                                     :label="$t('settings.largestNum')"
                                     error-display-type="normal"
@@ -288,6 +320,11 @@
             },
             handleRunningLockChange: Function
         },
+        data () {
+            return {
+                arrivalPolicy: 'QUEUE'
+            }
+        },
         computed: {
             CLASSIFY_ENUM () {
                 return CLASSIFY_ENUM
@@ -317,6 +354,39 @@
             isMultipleLock () {
                 return [this.runTypeMap.MULTIPLE].includes(this.pipelineSetting?.runLockType)
             },
+            showSubGroup () {
+                return this.arrivalPolicy === 'CANCEL_BATCH' || this.arrivalPolicy === 'KEEP_BATCH'
+            },
+            showQueueFields () {
+                return this.arrivalPolicy !== 'CANCEL_GROUP'
+            },
+            arrivalPolicies () {
+                const batchTip = this.$t('settings.arrivalBatchTip')
+                return [
+                    {
+                        id: 'CANCEL_GROUP',
+                        label: this.$t('settings.arrivalCancelGroup'),
+                        desc: this.$t('settings.arrivalCancelGroupDesc')
+                    },
+                    {
+                        id: 'QUEUE',
+                        label: this.$t('settings.arrivalQueue'),
+                        desc: this.$t('settings.arrivalQueueDesc')
+                    },
+                    {
+                        id: 'CANCEL_BATCH',
+                        label: this.$t('settings.arrivalCancelBatch'),
+                        desc: this.$t('settings.arrivalCancelBatchDesc'),
+                        tip: batchTip
+                    },
+                    {
+                        id: 'KEEP_BATCH',
+                        label: this.$t('settings.arrivalKeepBatch'),
+                        desc: this.$t('settings.arrivalKeepBatchDesc'),
+                        tip: batchTip
+                    }
+                ]
+            },
             formRule () {
                 const requiredRule = {
                     required: this.isSingleLock,
@@ -326,6 +396,16 @@
                 return {
                     concurrencyGroup: [
                         requiredRule
+                    ],
+                    concurrencySubGroup: [
+                        {
+                            validator: (val) => {
+                                if (!this.showSubGroup) return true
+                                return !!(val && String(val).trim())
+                            },
+                            message: this.$t('settings.subGroupRequired'),
+                            trigger: 'blur'
+                        }
                     ],
                     maxQueueSize: [
                         requiredRule,
@@ -369,12 +449,39 @@
                 }
             }
         },
+        watch: {
+            pipelineSetting: {
+                immediate: true,
+                handler (setting, oldSetting) {
+                    if (!setting) return
+                    if (!oldSetting || setting.pipelineId !== oldSetting.pipelineId) {
+                        this.arrivalPolicy = this.deriveArrivalPolicy(setting)
+                    }
+                }
+            }
+        },
         created () {
             if (this.pipelineSetting?.runLockType === this.runTypeMap.SINGLE) {
                 this.handleLockTypeChange(this.runTypeMap.GROUP)
             }
         },
         methods: {
+            deriveArrivalPolicy (setting) {
+                const subGroup = (setting?.concurrencySubGroup || '').trim()
+                if (subGroup) {
+                    return setting.concurrencyCancelInProgress ? 'CANCEL_BATCH' : 'KEEP_BATCH'
+                }
+                return setting?.concurrencyCancelInProgress ? 'CANCEL_GROUP' : 'QUEUE'
+            },
+            handleArrivalPolicyChange (policy) {
+                this.arrivalPolicy = policy
+                const cancel = policy === 'CANCEL_GROUP' || policy === 'CANCEL_BATCH'
+                const keepSubGroup = policy === 'CANCEL_BATCH' || policy === 'KEEP_BATCH'
+                this.handleRunningLockChange({
+                    concurrencyCancelInProgress: cancel,
+                    concurrencySubGroup: keepSubGroup ? (this.pipelineSetting?.concurrencySubGroup || '') : ''
+                })
+            },
 
             handleLockTypeChange (runLockType) {
                 this.handleRunningLockChange({
@@ -425,6 +532,16 @@
         }
         .run-lock-radio-item {
             margin: 10px 0;
+        }
+        .arrival-policy-tip {
+            border-bottom: 1px dashed #979ba5;
+            cursor: help;
+        }
+        .arrival-policy-desc {
+            margin: 4px 0 0 22px;
+            color: #979ba5;
+            font-size: 12px;
+            line-height: 18px;
         }
         .pipeline-setting-unit {
             display: flex;
