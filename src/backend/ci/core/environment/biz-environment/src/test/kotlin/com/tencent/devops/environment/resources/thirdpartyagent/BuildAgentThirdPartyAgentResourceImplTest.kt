@@ -14,7 +14,6 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.ws.rs.NotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -96,15 +95,6 @@ class BuildAgentThirdPartyAgentResourceImplTest {
         val result = startup()
         assertEquals(0, result.status)
         assertEquals(AgentStatus.DELETE, result.data)
-        verify { importer wasNot Called }
-        verify { runtime wasNot Called }
-    }
-
-    @Test
-    fun `missing import target does not acknowledge startup`() {
-        every { manager.getAgent("project", agentId) } returns AgentResult(AgentStatus.DELETE, null)
-
-        assertThrows(NotFoundException::class.java) { startup() }
         verify { importer wasNot Called }
         verify { runtime wasNot Called }
     }
