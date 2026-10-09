@@ -36,14 +36,22 @@ class WeworkReviewCardBuilderTest {
         val second = plan.receiverCards.getValue("fayewang")
         assertNotEquals(first.taskId, second.taskId)
         assertEquals("流水线人工审核（会签）", first.mainTitle.title)
-        assertEquals("#6", first.horizontalContentList!!.first { it.keyname == "构建号" }.value)
-        assertEquals("审核说明", first.quoteArea!!.title)
+        assertTrue(first.subTitleText!!.contains("项目: Royal流水线测试"))
+        assertTrue(first.subTitleText!!.contains("流水线: stage-review-notice"))
+        assertTrue(first.subTitleText!!.contains("构建号: #6"))
+        assertTrue(first.subTitleText!!.contains("审核说明: 重要审核XXX"))
+        assertEquals("触发人", first.horizontalContentList!!.single().keyname)
+        assertEquals(3, first.horizontalContentList!!.single().type)
+        assertNull(first.quoteArea)
         assertEquals("通过", first.buttonList!![0].text)
         assertEquals(0, first.buttonList!![0].type)
-        assertEquals("驳回并填写意见", first.buttonList!![1].text)
+        assertEquals("驳回", first.buttonList!![1].text)
         assertEquals(1, first.buttonList!![1].type)
         assertTrue(first.buttonList!![1].url!!.contains("action=reject"))
-        assertEquals(2, first.jumpList!!.size)
+        assertEquals("查看详情", first.buttonList!![2].text)
+        assertEquals(1, first.buttonList!![2].type)
+        assertEquals("https://example.com/pc", first.buttonList!![2].url)
+        assertNull(first.jumpList)
         assertNotNull(first.cardAction)
         assertTrue(first.subTitleText!!.contains("审批进度"))
     }
@@ -67,11 +75,12 @@ class WeworkReviewCardBuilderTest {
         )
         assertNotNull(plan)
         val card = plan!!.receiverCards.getValue("royalhuang")
-        assertEquals("通过并填写意见", card.buttonList!![0].text)
+        assertEquals("通过", card.buttonList!![0].text)
         assertEquals(1, card.buttonList!![0].type)
         assertTrue(card.buttonList!![0].url!!.contains("action=approve"))
-        assertEquals("驳回并填写意见", card.buttonList!![1].text)
+        assertEquals("驳回", card.buttonList!![1].text)
         assertEquals(1, card.buttonList!![1].type)
+        assertEquals("查看详情", card.buttonList!![2].text)
     }
 
     @Test
@@ -150,9 +159,32 @@ class WeworkReviewCardBuilderTest {
         val card = plan!!.receiverCards.getValue("royalhuang")
         assertEquals(WeworkReviewCardConst.CARD_TYPE_BUTTON, card.cardType)
         assertTrue(card.subTitleText!!.contains("发布备注"))
-        assertEquals("参数确认无误，提交", card.buttonList!![0].text)
+        assertTrue(card.subTitleText!!.contains("项目: demo"))
+        assertEquals("确认提交", card.buttonList!![0].text)
         assertEquals("修改参数", card.buttonList!![1].text)
         assertTrue(card.buttonList!![1].url!!.contains("action=modify"))
+        assertEquals("查看详情", card.buttonList!!.last().text)
+    }
+
+    @Test
+    fun `long review text keeps identity lines inside body limit`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "demo",
+                    "pipelineName" to "a-very-long-pipeline-name-that-used-to-be-clipped",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewDesc" to "说明".repeat(200)
+                )
+            ),
+            title = "",
+            redisOperation = null
+        )
+        val body = plan!!.receiverCards.getValue("royalhuang").subTitleText!!
+        assertTrue(body.length <= 256)
+        assertTrue(body.contains("流水线: a-very-long-pipeline-name-that-used-to-be-clipped"))
+        assertTrue(body.contains("审核说明:"))
     }
 
     @Test
