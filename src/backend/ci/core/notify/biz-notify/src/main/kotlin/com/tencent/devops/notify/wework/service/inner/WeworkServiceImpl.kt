@@ -156,6 +156,11 @@ class WeworkServiceImpl(
                 "enable_duplicate_check" to (weWorkConfiguration.enableDuplicateCheck?.toIntOrNull() ?: 0),
                 "duplicate_check_interval" to (weWorkConfiguration.duplicateCheckInterval?.toIntOrNull() ?: 1800)
             )
+            LOG.info(
+                "reviewNotifyTrace|hop=notify.weworkAgent.send|" +
+                    "taskId=${templateCard.taskId}|receivers=$receivers|" +
+                    "payload=${JsonUtil.toJson(payload, false)}"
+            )
             val url = buildUrl("${weWorkConfiguration.apiUrl}/cgi-bin/message/send?access_token=${getAccessToken()}")
             OkhttpUtils.doPost(url, JsonUtil.toJson(payload, false)).use {
                 val responseBody = it.body?.string() ?: ""

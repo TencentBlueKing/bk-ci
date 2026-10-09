@@ -71,6 +71,15 @@ class PipelineBuildNotifyListener @Autowired constructor(
         } catch (ignore: Exception) {
             logger.warn("NOTIFY|CHECK_PIPE|SKIP_ERROR_CHECK", ignore)
         }
+        logger.info(
+            "reviewNotifyTrace|hop=process.listener|" +
+                "buildId=${event.buildId}|projectId=${event.projectId}|pipelineId=${event.pipelineId}|" +
+                "template=${event.notifyTemplateEnum}|notifyType=${event.notifyType}|" +
+                "receivers=${event.receivers}|stageId=${event.stageId}|taskId=${event.taskId}|" +
+                "hasCallback=${event.callbackData != null}|" +
+                "callbackKeys=${event.callbackData?.keys}|" +
+                "bodyKeys=${event.bodyParams.keys}"
+        )
         val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)
         when {
             notifyTemplateEnumType.isReviewNotifyTemplate() ->
