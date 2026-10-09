@@ -54,6 +54,7 @@
                                 >
                                     <span class="instance-name">{{ item.pipelineName }}</span>
                                     <span
+                                        v-if="!isInstanceReleaseFinished"
                                         v-bk-overflow-tips
                                         class="release-pipeline-new-version"
                                     >
@@ -100,7 +101,6 @@
                         </bk-alert>
                         
                         <div
-                            v-if="showPacSwitcherConfig"
                             class="release-pipeline-pac-conf"
                         >
                             <aside class="release-pipeline-pac-conf-leftside">
@@ -126,10 +126,15 @@
                                 <label for="enablePac">
                                     {{ $t("codelibSrc") }}
                                 </label>
-                                <bk-radio-group v-model="releaseParams.scmType">
+                                <bk-radio-group
+                                    v-model="releaseParams.scmType"
+                                    @change="handleScmTypeChange"
+                                >
                                     <bk-radio
                                         v-for="item in pacSupportScmTypeList"
                                         :key="item.id"
+                                        :disabled="disabledScmType"
+                                        class="scm-type-radio"
                                         :value="item.id"
                                     >
                                         {{ $t(item.value) }}
@@ -515,6 +520,7 @@
                         <release-task-status
                             :instance-num="instanceList.length"
                             @cancel="cancelRelease"
+                            @status-change="handleInstanceReleaseStatusChange"
                         />
                     </section>
                 </template>
@@ -551,6 +557,7 @@
     import ReleaseTaskStatus from '@/components/Template/ReleaseTaskStatus'
     import ReleaseConflictDialog from './ReleaseConflictDialog'
     import {
+        RELEASE_STATUS,
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
@@ -633,6 +640,7 @@
                     repoHashId: ''
                 },
                 newReleaseVersionNameList: [],
+                instanceReleaseStatus: '',
                 TARGET_ACTION_ENUM,
                 customVersionName: '',
                 currentSidesliderContentHeight: 0,
@@ -780,11 +788,13 @@
             templateInstanceEnablePac () {
                 return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
-            showPacSwitcherConfig () {
-                return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
-            },
             disabledPacSwitcher () {
-                return this.isTemplateInstanceMode ? false : this.pacEnabled
+                return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
+            },
+            disabledScmType () {
+                if (this.isTemplateInstanceMode) return this.templateInstanceEnablePac
+                // 当前草稿开启 PAC，或历史上已绑定仓库（yamlInfo 存在），代码库源均不可修改
+                return this.pacEnabled || !!this.yamlInfo
             },
             disabledYamlCodeLib () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
@@ -808,10 +818,20 @@
             versionName () {
                 return this.$route.query?.versionName
             },
+            // 实例化发布任务是否已进入运行结束态（成功/失败/部分成功）
+            isInstanceReleaseFinished () {
+                return this.isInstanceReleasing && [
+                    RELEASE_STATUS.SUCCESS,
+                    RELEASE_STATUS.FAILED,
+                    RELEASE_STATUS.PARTIAL_SUCCESS
+                ].includes(this.instanceReleaseStatus)
+            },
         },
         watch: {
             value (val) {
                 if (val) {
+                    // 每次打开时重置发布任务状态，避免上一次的结束态影响本次展示
+                    this.instanceReleaseStatus = ''
                     this.init()
                     this.$nextTick()
                     const winHeight = window.innerHeight
@@ -1003,7 +1023,12 @@
                     ])
 
                     if (enablePac && this.hasPacSupportScmTypeList) {
-                        this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
+                        // 优先使用 yamlInfo 中的仓库类型（已通过 yamlInfo watch 写入），仅在缺失或不受支持时回退到列表第一项
+                        const scmType = this.releaseParams.scmType
+                        const scmTypeSupported = scmType && this.pacSupportScmTypeList.some(item => item.id === scmType)
+                        this.releaseParams.scmType = scmTypeSupported
+                            ? scmType
+                            : this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
                             // 模板实例化发布的 targetActionOptions 不含源分支选项，不应自动赋默认值，需由用户主动选择
@@ -1085,6 +1110,8 @@
                         page: this.scrollLoadmoreConf.page,
                         pageSize: this.scrollLoadmoreConf.pageSize
                     })
+                    // 请求期间切换了代码库源，丢弃过期响应，避免旧数据污染新列表
+                    if (scmType !== this.releaseParams.scmType) return
                     Object.assign(this.scrollLoadmoreConf, {
                         total: response.count,
                         page: response.page,
@@ -1105,6 +1132,18 @@
                 if (show) {
                     this.fetchPacEnableCodelibList(true)
                 }
+            },
+            handleScmTypeChange () {
+                // 切换代码库源后，清空已选代码库并重置分页状态，重新拉取对应类型的代码库列表
+                this.releaseParams.repoHashId = ''
+                this.pacEnableCodelibList = []
+                this.isInitPacRepo = false
+                Object.assign(this.scrollLoadmoreConf, {
+                    page: 1,
+                    total: 0,
+                    isLoading: false
+                })
+                this.fetchPacEnableCodelibList(true)
             },
             async fetchBranchList (search) {
                 try {
@@ -1564,6 +1603,9 @@
             resetReleasing () {
                 this.releasing = false
             },
+            handleInstanceReleaseStatusChange (status) {
+                this.instanceReleaseStatus = status
+            },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
             },
@@ -1832,6 +1874,10 @@
             &.release-pipeline-pac-conf-leftside {
                 width: 176px;
                 flex-shrink: 0;
+            }
+
+            .scm-type-radio {
+                margin-right: 14px;
             }
         }
     }

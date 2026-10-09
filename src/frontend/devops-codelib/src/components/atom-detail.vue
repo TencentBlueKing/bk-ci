@@ -51,7 +51,7 @@
                 return this.atom.atomCode
             },
             AtomComponent () {
-                if (this.atomCode === 'codeGitWebHookTrigger') return CodeGitWebHookTrigger
+                if (['codeGitWebHookTrigger', 'codeTGitWebHookTrigger'].includes(this.atomCode)) return CodeGitWebHookTrigger
                 return NormalAtom
             }
         },
