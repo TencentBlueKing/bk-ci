@@ -8,6 +8,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
@@ -75,7 +76,7 @@ func genAskEnable() api.AskEnable {
 		Build:       checkBuildType(),
 		Upgrade:     checkUpgrade(),
 		DockerDebug: checkDockerDebug(),
-		Pipeline:    config.GAgentConfig.EnablePipeline,
+		Pipeline:    config.GAgentConfig.EnablePipeline && oomprotect.Ready() == nil,
 	}
 }
 
@@ -84,6 +85,10 @@ func checkBuildType() api.BuildJobType {
 		return api.NoneBuildType
 	}
 	dockerCanRun, normalCanRun := job.CheckParallelTaskCount()
+	// OOM 保护仅管理普通构建；权限失败或资源恢复期间不影响 Docker 构建接单。
+	if oomprotect.Ready() != nil {
+		normalCanRun = false
+	}
 	if !dockerCanRun && !normalCanRun {
 		return api.NoneBuildType
 	}
