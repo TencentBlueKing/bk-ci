@@ -303,6 +303,55 @@ class BuildEndPositionCollectorTest {
     }
 
     @Test
+    fun `keep the first fifty fail positions and drop the rest`() {
+        val jobs = (1..51).map { index ->
+            failedPluginJob(containerId = index.toString(), taskIds = listOf("e-$index"))
+        }
+
+        val positions = BuildEndPositionCollector.collectFailPositions(stageModel(jobs))
+
+        Assertions.assertEquals(BuildEndPositionCollector.POSITION_MAX_SIZE, positions.size)
+        Assertions.assertEquals("e-1", positions.first().taskId)
+        Assertions.assertEquals("e-50", positions.last().taskId)
+        Assertions.assertTrue(positions.none { it.taskId == "e-51" })
+    }
+
+    @Test
+    fun `fiftieth position keeps the job row of the boundary container`() {
+        val jobs = (1..49).map { index ->
+            failedPluginJob(containerId = index.toString(), taskIds = listOf("e-$index"))
+        } + listOf(
+            mutexCanceledJob("boundary"),
+            failedPluginJob(containerId = "after", taskIds = listOf("e-after"))
+        )
+
+        val positions = BuildEndPositionCollector.collectFailPositions(stageModel(jobs))
+
+        Assertions.assertEquals(BuildEndPositionCollector.POSITION_MAX_SIZE, positions.size)
+        Assertions.assertEquals("e-49", positions[48].taskId)
+        Assertions.assertEquals("boundary", positions[49].containerId)
+        Assertions.assertNull(positions[49].taskId)
+        Assertions.assertEquals(
+            BuildEndPositionCollector.REASON_MUTEX_QUEUE_DISABLED,
+            positions[49].reasonCode
+        )
+        Assertions.assertTrue(positions.none { it.taskId == "e-after" })
+    }
+
+    @Test
+    fun `overflow inside the boundary container keeps the earliest plugins`() {
+        val jobs = (1..49).map { index ->
+            failedPluginJob(containerId = index.toString(), taskIds = listOf("e-$index"))
+        } + failedPluginJob(containerId = "fat", taskIds = listOf("b1", "b2", "b3"))
+
+        val positions = BuildEndPositionCollector.collectFailPositions(stageModel(jobs))
+
+        Assertions.assertEquals(BuildEndPositionCollector.POSITION_MAX_SIZE, positions.size)
+        Assertions.assertEquals("b1", positions.last().taskId)
+        Assertions.assertTrue(positions.none { it.taskId == "b2" || it.taskId == "b3" })
+    }
+
+    @Test
     fun `display reason collapses whitespace and truncates`() {
         val raw = "Script command execution failed with exit code(127)\n\n" +
             "Error message:tracking-tmp/devops_script_user_${"x".repeat(300)}"
@@ -352,6 +401,45 @@ class BuildEndPositionCollectorTest {
         stageId = "stage-2",
         containerId = "1",
         taskId = "e-1"
+    )
+
+    private fun stageModel(containers: List<NormalContainer>) = Model(
+        name = "p",
+        desc = null,
+        stages = listOf(
+            Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+            Stage(id = "stage-2", name = "stage-1", containers = containers)
+        )
+    )
+
+    private fun failedPluginJob(containerId: String, taskIds: List<String>) = NormalContainer(
+        id = containerId,
+        containerId = containerId,
+        name = "job-$containerId",
+        status = BuildStatus.FAILED.name,
+        elements = taskIds.map { taskId ->
+            LinuxScriptElement(
+                id = taskId,
+                name = taskId,
+                status = BuildStatus.FAILED.name,
+                scriptType = BuildScriptType.SHELL,
+                script = "echo",
+                continueNoneZero = false
+            )
+        }
+    )
+
+    private fun mutexCanceledJob(containerId: String) = NormalContainer(
+        id = containerId,
+        containerId = containerId,
+        name = "job-$containerId",
+        status = BuildStatus.CANCELED.name,
+        mutexGroup = MutexGroup(
+            enable = true,
+            mutexGroupName = "g",
+            queueEnable = false
+        ),
+        elements = emptyList()
     )
 
     private fun pauseJob(containerId: String, taskId: String) = NormalContainer(

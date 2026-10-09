@@ -437,31 +437,42 @@ class PipelineBuildRecordService @Autowired constructor(
 
             prevBuildInfo != null && prevBuildInfo.version != buildInfo.version
         }
-        LogUtils.printCostTimeWE(watcher)
+        watcher.start("buildEndInfo")
         // 构建运行总时长：从构建开始到结束，未结束时按当前时刻计算；排队中未启动的构建为空
         // 需在apply块外计算，避免块内endTime被BuildEndInfo.endTime属性遮蔽
         val buildRunCostTime = startTime?.let { (endTime ?: System.currentTimeMillis()) - it }
         // 合成终态必须与页面状态标签同源取记录表状态：详情记录先落终态、构建历史表随后才更新，
         // 若用滞后的 buildInfo.status，构建结束瞬间推送的详情会因状态还是运行中而合成不出来（#13477）
         val recordStatus = buildRecordModel?.status?.let { BuildStatus.parse(it) } ?: buildInfo.status
-        val modelFailPositions = BuildEndPositionCollector.collectFailPositions(model)
-        val modelCancelPositions = BuildEndPositionCollector.collectCancelPositions(model)
         // Job 超时、心跳会在运行中先把成因写入 modelVar，但那只结束当前 Job / 构建机，
         // 构建本身还在跑。运行中把这份取消卡片返回去，页面就会「状态：运行中 / 卡片：已取消」。
         // STAGE_SUCCESS 不在 isFinish() 里，但是阶段准入挂起/驳回的终态，已落库的卡片必须保留。
         // 其余运行中状态不读这份提前落库的详情；阶段准入审核仍由 synthesizeEndInfo 合成。
-        val storedEndInfo = if (recordStatus.isFinish() || recordStatus == BuildStatus.STAGE_SUCCESS) {
+        // 失败/取消位置只在要对齐已落库卡片时才扫模型。运行中详情、以及没有落库的成功构建用不上。
+        // 没有落库时的现算由 synthesize 按状态再扫，避免每次轮询都先空扫两遍。
+        val storedRaw = if (recordStatus.isFinish() || recordStatus == BuildStatus.STAGE_SUCCESS) {
             parseBuildEndInfo(buildRecordModel?.modelVar)
-                ?.alignedTo(
-                    status = recordStatus,
-                    modelFailPositions = modelFailPositions,
-                    modelCancelPositions = modelCancelPositions,
-                    latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
-                )
-                ?.refineUserCancelCount()
         } else {
             null
         }
+        val modelFailPositions = if (storedRaw != null) {
+            BuildEndPositionCollector.collectFailPositions(model)
+        } else {
+            emptyList()
+        }
+        val modelCancelPositions = if (storedRaw != null) {
+            BuildEndPositionCollector.collectCancelPositions(model)
+        } else {
+            emptyList()
+        }
+        val storedEndInfo = storedRaw
+            ?.alignedTo(
+                status = recordStatus,
+                modelFailPositions = modelFailPositions,
+                modelCancelPositions = modelCancelPositions,
+                latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
+            )
+            ?.refineUserCancelCount()
         val buildEndInfo = (
             storedEndInfo ?: synthesizeEndInfo(
                 status = recordStatus,
@@ -504,6 +515,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
             }
         }
+        LogUtils.printCostTimeWE(watcher)
         return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,

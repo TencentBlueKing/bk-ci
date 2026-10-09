@@ -143,6 +143,12 @@ object BuildEndPositionCollector {
                         matrixFlag = false
                     )
                 )
+                // 卡片只留前 POSITION_MAX_SIZE 个，顺序就是这次遍历的顺序。
+                // 一个容器必须收完再停：里面没有插件错误时，收尾才会补 Job 超时或互斥组那一行。
+                // 停在容器之间再截断，留下的位置与走完整个编排后 take 相同。
+                if (positions.size >= POSITION_MAX_SIZE) {
+                    return positions.take(POSITION_MAX_SIZE)
+                }
                 container.fetchGroupContainers()?.forEach { matrixContainer ->
                     collect(
                         ContainerWalk(
@@ -155,6 +161,9 @@ object BuildEndPositionCollector {
                             matrixFlag = true
                         )
                     )
+                    if (positions.size >= POSITION_MAX_SIZE) {
+                        return positions.take(POSITION_MAX_SIZE)
+                    }
                 }
             }
         }
