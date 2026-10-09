@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,14 +15,14 @@ import (
 // 在没有 swap 分区的机器上（例如容器内），gopsutil 返回 Total=0，
 // 本采集器仍上报 0 值以便后端时序曲线连续。
 type Swap struct {
-	swapMemFn func() (*mem.SwapMemoryStat, error)
+	swapMemFn func(ctx context.Context) (*mem.SwapMemoryStat, error)
 	nowFn     func() time.Time
 }
 
 // NewSwap 返回默认 swap 采集器。
 func NewSwap() *Swap {
 	return &Swap{
-		swapMemFn: mem.SwapMemory,
+		swapMemFn: mem.SwapMemoryWithContext,
 		nowFn:     time.Now,
 	}
 }
@@ -30,8 +31,8 @@ func NewSwap() *Swap {
 func (s *Swap) Name() string { return MeasurementSwap }
 
 // Gather 返回唯一一条 swap metric。
-func (s *Swap) Gather() ([]Metric, error) {
-	sm, err := s.swapMemFn()
+func (s *Swap) Gather(ctx context.Context) ([]Metric, error) {
+	sm, err := s.swapMemFn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "swap: SwapMemory failed")
 	}

@@ -126,6 +126,32 @@ class StartBuildContextTest : TestBase() {
     }
 
     @Test
+    fun needSkipWhenStageRetryResidualCanceledStage() {
+        // 上一次构建被取消时，未下发的 Stage 同样会被标记 CANCELED。重试时不能把它当作已完成而整段跳过，
+        // 否则它会带着残留的 CANCELED 参与 Stage 状态聚合，使构建无论重试多少次都停在取消态
+        val stages = genStages(stageSize = 3, jobSize = 1, elementSize = 2, needFinally = false)
+        val target = stages[1]
+        val ranAndCanceled = stages[2]
+        val neverRan = stages[3]
+        target.status = BuildStatus.CANCELED.name
+        ranAndCanceled.status = BuildStatus.CANCELED.name
+        ranAndCanceled.containers.forEach { it.status = BuildStatus.CANCELED.name }
+        neverRan.status = BuildStatus.CANCELED.name
+        neverRan.containers.forEach { it.status = null }
+        params[PIPELINE_RETRY_START_TASK_ID] = target.id!!
+        val context = initDefaultStartBuildContext()
+        context.reachedRetryTargetStage = true
+
+        Assertions.assertEquals(true, context.stageRetry)
+        // 重试目标本身不跳过
+        Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(target))
+        // 真的跑过又被取消的 Stage 维持原有跳过行为
+        Assertions.assertEquals(true, context.needSkipWhenStageFailRetry(ranAndCanceled))
+        // 上一轮压根没下发的 Stage 必须重跑
+        Assertions.assertEquals(false, context.needSkipWhenStageFailRetry(neverRan))
+    }
+
+    @Test
     fun needSkipWhenTaskRetryPriorReviewedEvenIfStatusNotFinish() {
         // status 未落成终态时，只要准入审核已完成，前序 Stage 仍跳过
         val stages = genStages(stageSize = 2, jobSize = 1, elementSize = 1, needFinally = false)

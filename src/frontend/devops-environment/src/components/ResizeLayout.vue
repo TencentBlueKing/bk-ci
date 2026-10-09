@@ -11,8 +11,10 @@
         @after-resize="afterResize"
     >
         <template #aside>
-            <ResourceTypeSelector />
-            <slot name="aside" />
+            <div class="aside-wrapper">
+                <ResourceTypeSelector />
+                <slot name="aside" />
+            </div>
         </template>
 
         <template #main>
@@ -60,5 +62,14 @@
     .environment-resize-layout {
         height: 100%;
         overflow: hidden;
+    }
+    .aside-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        > .resource-selector {
+            flex-shrink: 0;
+        }
     }
 </style>

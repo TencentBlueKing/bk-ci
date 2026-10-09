@@ -53,7 +53,8 @@ class PipelineYamlInfoDao {
         defaultBranch: String?,
         userId: String,
         resourceType: YamlResourceType,
-        oldFilePath: String? = null
+        oldFilePath: String? = null,
+        defaultBranchYamlExist: Boolean = true
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
@@ -72,7 +73,8 @@ class PipelineYamlInfoDao {
                 UPDATE_TIME,
                 RESOURCE_ID,
                 RESOURCE_TYPE,
-                OLD_FILE_PATH
+                OLD_FILE_PATH,
+                DEFAULT_BRANCH_YAML_EXIST
             ).values(
                 projectId,
                 repoHashId,
@@ -87,7 +89,8 @@ class PipelineYamlInfoDao {
                 now,
                 pipelineId,
                 resourceType.name,
-                oldFilePath
+                oldFilePath,
+                defaultBranchYamlExist
             ).onDuplicateKeyIgnore()
                 .execute()
         }
@@ -99,15 +102,19 @@ class PipelineYamlInfoDao {
         repoHashId: String,
         filePath: String,
         defaultBranch: String?,
-        userId: String
+        userId: String,
+        defaultBranchYamlExist: Boolean? = null
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, now)
                 .set(DEFAULT_BRANCH, defaultBranch)
-                .where(PROJECT_ID.eq(projectId))
+            if (defaultBranchYamlExist != null) {
+                update.set(DEFAULT_BRANCH_YAML_EXIST, defaultBranchYamlExist)
+            }
+            update.where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .execute()
@@ -307,7 +314,8 @@ class PipelineYamlInfoDao {
                 creator = creator,
                 defaultBranch = defaultBranch,
                 resourceType = YamlResourceType.valueOf(resourceType),
-                oldFilePath = oldFilePath
+                oldFilePath = oldFilePath,
+                defaultBranchYamlExist = defaultBranchYamlExist ?: true
             )
         }
     }

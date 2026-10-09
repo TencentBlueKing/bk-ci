@@ -50,6 +50,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
+import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
@@ -316,21 +317,32 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         concurrencyGroup: String,
-        statusSet: List<BuildStatus>
-    ): List<Record2<String, String>> {
+        statusSet: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         val normal = with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         return normal.plus(debug)
     }
@@ -339,26 +351,47 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statusSet: List<BuildStatus>
-    ): List<Record2<String, String>> {
+        statusSet: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         val normal = with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.isNull)
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.isNull)
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         return normal.plus(debug)
     }
+
+    private fun toConcurrencyGroupBuild(
+        pipelineId: String,
+        buildId: String,
+        buildNum: Int?
+    ) = ConcurrencyGroupBuild(
+        pipelineId = pipelineId,
+        buildId = buildId,
+        buildNum = buildNum ?: 0
+    )
 
     /**
      * 查询BuildInfo，兼容所有运行时调用，不排除已删除的调试记录
@@ -661,6 +694,46 @@ class PipelineBuildDao {
             debug == null -> release
             release.queueTime > debug.queueTime -> debug
             else -> release
+        }
+    }
+
+    /**
+     * 按排队时间正序取出并发组[concurrencyGroup]内流水线[pipelineId]处于[statusSet]的构建，最多[limit]个。
+     *
+     * 用于排队数量超限时的收敛淘汰：排在最前面的是排队最久的构建，按现有的语义应被优先淘汰。
+     */
+    fun listConcurrencyQueueBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>,
+        limit: Int
+    ): List<BuildInfo> {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(mapper)
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(debugMapper)
+        }
+        return if (debug.isEmpty()) {
+            release
+        } else {
+            release.plus(debug).sortedBy { it.queueTime }.take(limit)
         }
     }
 

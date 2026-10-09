@@ -4,12 +4,10 @@ import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
 import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.model.environment.tables.TEnvTag
-import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
 import com.tencent.devops.model.environment.tables.TNodeTags
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -43,70 +41,56 @@ class EnvTagDao {
         ).execute()
     }
 
-    fun batchEnvTagNodeCount(
+    /**
+     * 查询多个 env 各自拥有的标签，按 tagKey 分组
+     * @return <envId, <tagKeyId, Set<tagValueId>>>
+     */
+    fun fetchEnvTagKeyValues(
         dslContext: DSLContext,
-        envIds: Set<Long>,
         projectId: String,
-        nodeType: Set<String>
-    ): Map<Long, Int> {
-        val resultMap = mutableMapOf<Long, Int>()
+        envIds: Set<Long>
+    ): Map<Long, Map<Long, MutableSet<Long>>> {
+        val envTagKeyValues = mutableMapOf<Long, MutableMap<Long, MutableSet<Long>>>()
         if (envIds.isEmpty()) {
-            return resultMap
+            return envTagKeyValues
         }
         with(TEnvTag.T_ENV_TAG) {
-            dslContext.select(
-                ENV_ID,
-                DSL.countDistinct(TNode.T_NODE.NODE_ID).`as`("node_count")
-            ).from(this)
-                .leftJoin(TNodeTags.T_NODE_TAGS)
-                .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
-                .leftJoin(TNode.T_NODE)
-                .on(
-                    TNode.T_NODE.NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID)
-                        .and(TNode.T_NODE.NODE_TYPE.`in`(nodeType))
-                )
+            dslContext.select(ENV_ID, TAG_KEY_ID, TAG_VALUE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.`in`(envIds))
-                .groupBy(ENV_ID)
                 .fetch()
                 .forEach {
-                    resultMap[it[ENV_ID]] = it["node_count"] as Int
+                    envTagKeyValues.getOrPut(it[ENV_ID]) { mutableMapOf() }
+                        .getOrPut(it[TAG_KEY_ID]) { mutableSetOf() }
+                        .add(it[TAG_VALUE_ID])
                 }
         }
-
-        return resultMap
+        return envTagKeyValues
     }
 
-    fun batchEnvTagNode(
+    /**
+     * 查询指定标签值下，每个节点拥有的标签值集合（仅保留这些标签值范围内的）
+     * @return <nodeId, Set<tagValueId>>
+     */
+    fun fetchNodeTagValues(
         dslContext: DSLContext,
-        envIds: Set<Long>,
-        projectId: String
-    ): Map<Long, MutableList<Long>> {
-        val resultMap = mutableMapOf<Long, MutableList<Long>>()
-        if (envIds.isEmpty()) {
-            return resultMap
+        projectId: String,
+        tagValueIds: Set<Long>
+    ): Map<Long, MutableSet<Long>> {
+        val nodeTagValues = mutableMapOf<Long, MutableSet<Long>>()
+        if (tagValueIds.isEmpty()) {
+            return nodeTagValues
         }
-        with(TEnvTag.T_ENV_TAG) {
-            dslContext.select(
-                ENV_ID,
-                TNodeTags.T_NODE_TAGS.NODE_ID
-            ).from(this)
-                .innerJoin(TNodeTags.T_NODE_TAGS)
-                .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
+        with(TNodeTags.T_NODE_TAGS) {
+            dslContext.select(NODE_ID, TAG_VALUE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(ENV_ID.`in`(envIds))
+                .and(TAG_VALUE_ID.`in`(tagValueIds))
                 .fetch()
                 .forEach {
-                    val envId = it[ENV_ID]
-                    val nodeId = it[TNodeTags.T_NODE_TAGS.NODE_ID]
-                    if (resultMap.containsKey(it[ENV_ID])) {
-                        resultMap[envId]?.add(nodeId)
-                    } else {
-                        resultMap[envId] = mutableListOf(nodeId)
-                    }
+                    nodeTagValues.getOrPut(it[NODE_ID]) { mutableSetOf() }.add(it[TAG_VALUE_ID])
                 }
         }
-        return resultMap
+        return nodeTagValues
     }
 
     fun deleteByEnvId(dslContext: DSLContext, envId: Long) {
@@ -181,22 +165,34 @@ class EnvTagDao {
     }
 
     fun fetchTagEnvByNodeId(dslContext: DSLContext, projectId: String, nodeId: Long): List<Long> {
-        with(TEnvTag.T_ENV_TAG) {
-            return dslContext.select(ENV_ID).from(this)
-                .leftJoin(TNodeTags.T_NODE_TAGS)
-                .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
-                .where(TNodeTags.T_NODE_TAGS.NODE_ID.eq(nodeId))
-                .and(TNodeTags.T_NODE_TAGS.PROJECT_ID.eq(projectId))
-                .and(PROJECT_ID.eq(projectId))
-                .fetch().map { it.value1() }
+        val tagValueIds = with(TNodeTags.T_NODE_TAGS) {
+            dslContext.select(TAG_VALUE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.eq(nodeId))
+                .fetchSet(TAG_VALUE_ID)
         }
+        return fetchTagEnvByTagValueIds(dslContext, projectId, tagValueIds.toList())
     }
 
     fun fetchTagEnvByTagValueIds(dslContext: DSLContext, projectId: String, tagValueIds: List<Long>): List<Long> {
-        with(TEnvTag.T_ENV_TAG) {
-            return dslContext.select(ENV_ID).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(TAG_VALUE_ID.`in`(tagValueIds)).fetch().map { it.value1() }
+        if (tagValueIds.isEmpty()) {
+            return emptyList()
         }
+        val nodeTagValues = tagValueIds.toSet()
+        val candidateEnvIds = with(TEnvTag.T_ENV_TAG) {
+            dslContext.selectDistinct(ENV_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TAG_VALUE_ID.`in`(nodeTagValues))
+                .fetchSet(ENV_ID)
+        }
+        if (candidateEnvIds.isEmpty()) {
+            return emptyList()
+        }
+        return fetchEnvTagKeyValues(dslContext, projectId, candidateEnvIds)
+            .filterValues { keyValues ->
+                keyValues.values.all { valuesOfKey -> valuesOfKey.any { it in nodeTagValues } }
+            }
+            .keys
+            .toList()
     }
 }

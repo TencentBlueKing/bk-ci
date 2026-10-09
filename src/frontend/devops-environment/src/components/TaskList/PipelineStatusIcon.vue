@@ -8,7 +8,7 @@
     >
         <logo
             :name="logoName"
-            :size="12"
+            :size="size"
         />
     </span>
 </template>
@@ -26,6 +26,10 @@
             status: {
                 type: String,
                 default: ''
+            },
+            size: {
+                type: Number,
+                default: 12
             }
         },
         setup (props) {

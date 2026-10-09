@@ -1,8 +1,12 @@
 <template>
-    <div class="agent-offline-records-container">
+    <div
+        ref="containerRef"
+        class="agent-offline-records-container"
+    >
         <bk-table
             v-bkloading="{ isLoading: agentOfflineData.loading }"
             :data="renderList"
+            :max-height="tableMaxHeight"
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -28,7 +32,7 @@
 </template>
 
 <script>
-    import { onMounted, watch, computed } from 'vue'
+    import { onMounted, onBeforeUnmount, watch, computed, ref, nextTick } from 'vue'
     import usePagination from '@/hooks/usePagination'
     import useNodeDetail from '@/hooks/useNodeDetail'
 
@@ -42,6 +46,23 @@
                 limitList: [10, 20, 50, 100]
             })
 
+            const containerRef = ref(null)
+            const tableMaxHeight = ref(0)
+            let resizeObserver = null
+
+            /**
+             * 计算表格最大高度：让表格填满父容器剩余空间，body 内部滚动
+             * 预留底部 padding（20px）和分页区（~60px）以保证分页可见
+             */
+            const calculateTableHeight = () => {
+                const container = containerRef.value
+                if (!container) return
+
+                const height = container.clientHeight - 50
+                // 最小兜底：避免表格被压得太小；只要父容器已布局就给值
+                tableMaxHeight.value = height > 0 ? height : 0
+            }
+
             /**
              * 加载离线记录数据
              */
@@ -54,6 +75,10 @@
                         pageSize: res.pageSize || pagination.value.limit
                     })
                 }
+                // 数据加载完成后分页已渲染，重新计算表格高度
+                nextTick(() => {
+                    calculateTableHeight()
+                })
             }
             const renderList = computed(() => {
                 return agentOfflineData.list.map(i => {
@@ -120,10 +145,26 @@
                 }
             })
 
-            // 组件挂载时加载数据
+            // 组件挂载时加载数据 + 监听容器尺寸变化
             onMounted(() => {
                 if (nodeHashId.value) {
                     loadData()
+                }
+                nextTick(() => {
+                    calculateTableHeight()
+                    if (containerRef.value && typeof ResizeObserver !== 'undefined') {
+                        resizeObserver = new ResizeObserver(() => {
+                            calculateTableHeight()
+                        })
+                        resizeObserver.observe(containerRef.value)
+                    }
+                })
+            })
+
+            onBeforeUnmount(() => {
+                if (resizeObserver) {
+                    resizeObserver.disconnect()
+                    resizeObserver = null
                 }
             })
 
@@ -133,7 +174,9 @@
                 handlePageChange,
                 handlePageLimitChange,
                 formatDuration,
-                renderList
+                renderList,
+                containerRef,
+                tableMaxHeight
             }
         }
     }
@@ -141,6 +184,9 @@
 
 <style lang="scss" scoped>
 .agent-offline-records-container {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     padding-bottom: 20px;
     
     ::v-deep .bk-table {

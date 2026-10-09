@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.pojo
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.pojo.creative.CreativeStreamStageReviewHint
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "带构建变量的历史构建模型")
@@ -90,5 +92,8 @@ data class BuildHistoryWithVars(
     @get:Schema(title = "自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
     @get:Schema(title = "构建变量集合(30天左右过期删除)", required = true)
-    val variables: Map<String, String>
+    val variables: Map<String, String>,
+    @get:Schema(title = "创作流 Stage 审核提示（非待审时为空，前端可忽略）", required = false)
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    val imateStageReview: CreativeStreamStageReviewHint? = null
 )

@@ -184,6 +184,15 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
     }
 
+    override fun validateProjectRuleOperatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        validateRulePermission(userId, projectId, authPermission, message)
+    }
+
     override fun createRuleResource(
         userId: String,
         projectId: String,

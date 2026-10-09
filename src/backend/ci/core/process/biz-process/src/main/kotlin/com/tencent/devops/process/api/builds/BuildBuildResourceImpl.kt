@@ -29,12 +29,15 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.engine.service.MutexGroupQueryService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
@@ -46,7 +49,8 @@ class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService,
     private val vMBuildService: EngineVMBuildService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val mutexGroupQueryService: MutexGroupQueryService
 ) : BuildBuildResource {
 
     @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
@@ -99,6 +103,35 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
+    override fun getBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<String> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            data = pipelineBuildFacadeService.getBuildDetailStatus(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
+    }
+
     override fun getSubBuildVars(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
         return subPipelineStartUpService.getSubVar(projectId = projectId, buildId = buildId, taskId = taskId)
     }
@@ -146,5 +179,17 @@ class BuildBuildResourceImpl @Autowired constructor(
             taskId = taskId
         )
         return Result(task?.taskParams ?: mapOf())
+    }
+
+    override fun getMutexGroupTasks(
+        projectId: String,
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>> {
+        return Result(
+            data = mutexGroupQueryService.queryMutexGroupTasks(
+                projectId = projectId,
+                mutexGroupName = mutexGroupName
+            )
+        )
     }
 }

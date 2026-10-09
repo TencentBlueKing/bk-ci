@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -30,7 +31,7 @@ var defaultDiskIgnoreFS = map[string]struct{}{
 // 关键：这类挂载点一旦后端不可达（NFS server 宕机、网络分区、SMB 掉线），
 // 底层 statfs/statvfs syscall 会进入不可中断睡眠（D 状态）永不返回，连
 // SIGKILL 都杀不掉——这正是 monitor input goroutine 累积卡死（触发
-// inflightHardCap 告警）的根因。Go 层无法打断已进入内核的 syscall，
+// input 长期 running）的根因。Go 层无法打断已进入内核的 syscall，
 // 唯一可靠的办法是「根本不对它们发起 statfs」。
 //
 // 对齐 telegraf「ignore_fs 从源头绕开」的思路；telegraf 靠运维手动配置
@@ -45,8 +46,8 @@ var networkFSPrefixes = []string{
 	"smb",   // smb2/smb3 变体
 	"afpfs", // macOS AFP
 	"afp",
-	"fuse",     // fuse.sshfs / fuse.s3fs / fuse.glusterfs 等，后端多为网络
-	"9p",       // Plan9 / 虚拟机共享目录
+	"fuse", // fuse.sshfs / fuse.s3fs / fuse.glusterfs 等，后端多为网络
+	"9p",   // Plan9 / 虚拟机共享目录
 	"glusterfs",
 	"ceph",
 	"webdav",
@@ -68,8 +69,8 @@ func isNetworkFS(fstype string) bool {
 // Disk 对齐 telegraf plugins/inputs/disk。每个 physical mountpoint 产出
 // 一条 metric，tag 含 device / fstype / path / mode。
 type Disk struct {
-	partitionsFn func(all bool) ([]disk.PartitionStat, error)
-	usageFn      func(path string) (*disk.UsageStat, error)
+	partitionsFn func(ctx context.Context, all bool) ([]disk.PartitionStat, error)
+	usageFn      func(ctx context.Context, path string) (*disk.UsageStat, error)
 	nowFn        func() time.Time
 
 	// IgnoreFS 为 nil 时使用 defaultDiskIgnoreFS。
@@ -79,8 +80,8 @@ type Disk struct {
 // NewDisk 返回默认 disk 采集器。
 func NewDisk() *Disk {
 	return &Disk{
-		partitionsFn: disk.Partitions,
-		usageFn:      disk.Usage,
+		partitionsFn: safeDiskPartitions,
+		usageFn:      disk.UsageWithContext,
 		nowFn:        time.Now,
 	}
 }
@@ -98,8 +99,8 @@ func (d *Disk) Name() string { return MeasurementDisk }
 //
 // 对于本地盘的 Usage 失败（权限等），记录跳过不影响其他挂载点，对齐
 // telegraf 的降级行为。
-func (d *Disk) Gather() ([]Metric, error) {
-	parts, err := d.partitionsFn(false)
+func (d *Disk) Gather(ctx context.Context) ([]Metric, error) {
+	parts, err := d.partitionsFn(ctx, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "disk: Partitions failed")
 	}
@@ -119,7 +120,7 @@ func (d *Disk) Gather() ([]Metric, error) {
 		if isNetworkFS(p.Fstype) {
 			continue
 		}
-		usage, uerr := d.usageFn(p.Mountpoint)
+		usage, uerr := d.usageFn(ctx, p.Mountpoint)
 		if uerr != nil || usage == nil {
 			// 本地挂载点不可读（权限等）跳过，不影响其他挂载点上报
 			continue

@@ -150,6 +150,15 @@ BEGIN
     ALTER TABLE T_ATOM ADD `OWNER_STORE_CODE` varchar(64) DEFAULT NULL COMMENT '归属应用标识';
     END IF;
 
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_ATOM'
+                AND COLUMN_NAME = 'VERSION'
+                AND CHARACTER_MAXIMUM_LENGTH < 256) THEN
+    ALTER TABLE T_ATOM MODIFY COLUMN `VERSION` varchar(256) NOT NULL COMMENT '版本号';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -35,6 +35,7 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.ShardingRoutingRuleFacadeService
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import com.tencent.devops.project.service.TableShardingConfigService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,13 +46,17 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
 ) : ShardingRoutingRuleFacadeService {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(ShardingRoutingRuleFacadeServiceImpl::class.java)
+    }
+
     override fun getShardingRoutingRuleByName(
         moduleCode: SystemModuleEnum,
         ruleType: ShardingRuleTypeEnum,
         routingName: String,
         tableName: String?
     ): ShardingRoutingRule? {
-        var shardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
+        val shardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
             moduleCode = moduleCode,
             ruleType = ruleType,
             routingName = routingName,
@@ -63,43 +68,53 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
         // 兼容历史存量项目没有分配规则的情况，如果没有规则则主动分配规则
         if (tableName.isNullOrBlank()) {
             // 分配DB分片规则
-            shardingRoutingRule = shardingRoutingRuleAssignService.assignDbShardingRoutingRule(
+            return shardingRoutingRuleAssignService.assignDbShardingRoutingRule(
                 moduleCode = moduleCode,
                 ruleType = ruleType,
                 routingName = routingName
             )
-        } else {
-            val clusterName = CommonUtils.getDbClusterName()
-            // 获取数据库表分片规则
-            val tableShardingConfig = tableShardingConfigService.getTableShardingConfigByName(
-                clusterName = clusterName,
-                moduleCode = moduleCode,
-                tableName = tableName,
-                ruleType = ruleType
-            )
-            tableShardingConfig?.let {
-                // 查找该分片规则对应的数据源
-                val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
-                    ShardingRuleTypeEnum.ARCHIVE_DB
-                } else {
-                    ShardingRuleTypeEnum.DB
-                }
-                val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
-                    moduleCode = moduleCode,
-                    ruleType = dbRuleType,
-                    routingName = routingName
-                )
-                if (dbShardingRoutingRule != null) {
-                    // 分片数据库表分片规则
-                    shardingRoutingRule = shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
-                        tableShardingConfig = tableShardingConfig,
-                        dataSourceName = dbShardingRoutingRule.dataSourceName,
-                        routingName = routingName,
-                        ruleType = ruleType
-                    )
-                }
-            }
         }
-        return shardingRoutingRule
+        val clusterName = CommonUtils.getDbClusterName()
+        // 获取数据库表分片规则
+        val tableShardingConfig = tableShardingConfigService.getTableShardingConfigByName(
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            tableName = tableName,
+            ruleType = ruleType
+        )
+        if (tableShardingConfig == null) {
+            // 返回null会让分片算法静默降级到默认分表，这里必须留痕，否则数据散落到多张分表时无从排查
+            logger.warn(
+                "assign table sharding routing rule failed, tableShardingConfig not found|" +
+                    "$clusterName|$moduleCode|$ruleType|$tableName|$routingName"
+            )
+            return null
+        }
+        // 查找该分片规则对应的数据源
+        val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+            ShardingRuleTypeEnum.ARCHIVE_DB
+        } else {
+            ShardingRuleTypeEnum.DB
+        }
+        val dbShardingRoutingRule = shardingRoutingRuleService.getShardingRoutingRuleByName(
+            moduleCode = moduleCode,
+            ruleType = dbRuleType,
+            routingName = routingName
+        )
+        if (dbShardingRoutingRule == null) {
+            // 同上，db分片规则缺失时同样会导致分片算法静默降级
+            logger.warn(
+                "assign table sharding routing rule failed, $dbRuleType rule not found|" +
+                    "$clusterName|$moduleCode|$ruleType|$tableName|$routingName"
+            )
+            return null
+        }
+        // 分配数据库表分片规则
+        return shardingRoutingRuleAssignService.assignTableShardingRoutingRule(
+            tableShardingConfig = tableShardingConfig,
+            dataSourceName = dbShardingRoutingRule.dataSourceName,
+            routingName = routingName,
+            ruleType = ruleType
+        )
     }
 }

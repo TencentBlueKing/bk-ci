@@ -71,10 +71,11 @@ class PipelineBuildTaskService @Autowired constructor(
         val containerId = buildTask.containerId
         val stageId = buildTask.stageId
         if (buildStatus == BuildStatus.CANCELED) {
-            // 删除redis中取消构建操作标识
+            // 删除redis中取消构建操作标识，供二次取消走强制终止
             redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
-            redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
-            // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
+            // #13581 不能在单个插件取消时清掉 Job 取消集合。插件很快完成时 Agent 会立刻认领下一个插件，
+            // 集合被删后后续插件无法感知取消。集合在 Job 结束后由 UpdateStateContainerCmdFinally 清理。
+            // 当task任务是取消状态时，把taskId存入redis供心跳接口获取，用于杀掉当前正在跑的插件进程
             val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
             redisOperation.leftPush(cancelTaskKey, taskId)
             // 为取消任务设置最大超时时间，防止构建异常产生的脏数据

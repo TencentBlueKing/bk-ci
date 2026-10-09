@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -239,9 +240,12 @@ class RepositoryScmConfigService @Autowired constructor(
         mergeEnabled: Boolean? = null,
         pacEnabled: Boolean? = null,
         offset: Int,
-        limit: Int
+        limit: Int,
+        checkPermission: Boolean = true
     ): SQLPage<RepositoryScmConfigVo> {
-        validateUserPlatformPermission(userId = userId)
+        if (checkPermission) {
+            validateUserPlatformPermission(userId = userId)
+        }
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val count = repositoryScmConfigDao.count(
             dslContext = dslContext,
@@ -593,6 +597,7 @@ class RepositoryScmConfigService @Autowired constructor(
             val providerPropertiesBuilder = ScmProviderProperties()
             if (scmProvider.api) {
                 require(!apiUrl.isNullOrEmpty()) { "apiUrl can not empty" }
+                validateHttpUrl(fieldName = "apiUrl", url = apiUrl!!)
                 providerPropertiesBuilder.proxyEnabled = proxyEnabled
                 providerPropertiesBuilder.httpClientProperties = HttpClientProperties(
                     apiUrl = apiUrl
@@ -634,6 +639,7 @@ class RepositoryScmConfigService @Autowired constructor(
         request: RepositoryScmConfigReq
     ): Oauth2ClientProperties? {
         require(!webUrl.isNullOrEmpty()) { "webUrl can not empty" }
+        validateHttpUrl(fieldName = "webUrl", url = webUrl!!)
         require(!clientId.isNullOrEmpty()) { "clientId can not empty" }
         require(!clientSecret.isNullOrEmpty()) { "clientSecret can not empty" }
         require(oauthCallbackUrl.isNotEmpty()) { "callbackUrl can not empty" }
@@ -702,6 +708,18 @@ class RepositoryScmConfigService @Autowired constructor(
                 } else {
                     credentialType.authType.name
                 }
+            )
+        }
+    }
+
+    /**
+     * 校验 apiUrl/webUrl 仅为带 host 的 http/https 地址，不拦截内网 IP。
+     */
+    private fun validateHttpUrl(fieldName: String, url: String) {
+        if (!OkhttpUtils.validUrl(url)) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_SCM_CONFIG_URL_INVALID,
+                params = arrayOf(fieldName)
             )
         }
     }

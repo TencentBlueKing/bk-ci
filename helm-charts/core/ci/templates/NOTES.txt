@@ -17,4 +17,3 @@
 4. **安全提示**：
    对于生产环境，强烈建议：
    - 启用 JWT 校验（参考 [JWT 配置指南](https://github.com/TencentBlueKing/bk-ci/blob/master/docs/install/jwt.md)）。
-   - 独立部署 `kubernetes-manager`（参考 [Kubernetes Manager 指南](https://github.com/TencentBlueKing/bk-ci/blob/master/docs/install/kubernetes-manager.md)）。

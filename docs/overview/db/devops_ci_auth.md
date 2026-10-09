@@ -2,9 +2,9 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.24
+**文档版本：** 1.0.25
 
-**文档描述：** devops_ci_auth 的数据库文档
+**文档描述：** devops_ci_auth的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
 | T_AUTH_ACTION | 权限操作表 |
@@ -13,20 +13,20 @@
 | T_AUTH_GROUP_USER |  |
 | T_AUTH_HANDOVER_DETAIL | 权限交接详细表 |
 | T_AUTH_HANDOVER_OVERVIEW | 权限交接总览表 |
-| T_AUTH_IAM_CALLBACK | IAM 回调地址 |
-| T_AUTH_ITSM_CALLBACK | 权限 itsm 回调表 |
+| T_AUTH_IAM_CALLBACK | IAM回调地址 |
+| T_AUTH_ITSM_CALLBACK | 权限itsm回调表 |
 | T_AUTH_MANAGER | 管理员策略表 |
 | T_AUTH_MANAGER_APPROVAL | 蓝盾超级管理员权限续期审核表 |
-| T_AUTH_MANAGER_USER | 管理员用户表（只存有效期内的用户） |
+| T_AUTH_MANAGER_USER | 管理员用户表(只存有效期内的用户) |
 | T_AUTH_MANAGER_USER_HISTORY | 管理员用户历史表 |
 | T_AUTH_MANAGER_WHITELIST | 管理员自助申请表名单表 |
 | T_AUTH_MEMBER_PROJECT_PERMISSION | 用户项目级权限表 |
 | T_AUTH_MIGRATION | 权限迁移 |
 | T_AUTH_MONITOR_SPACE | 蓝盾监控空间权限表 |
-| T_AUTH_OAUTH2_ACCESS_TOKEN | ACCESS_TOKEN 表 |
+| T_AUTH_OAUTH2_ACCESS_TOKEN | ACCESS_TOKEN表 |
 | T_AUTH_OAUTH2_CLIENT_DETAILS | 客户端信息表 |
 | T_AUTH_OAUTH2_CODE | 授权码表 |
-| T_AUTH_OAUTH2_REFRESH_TOKEN | REFRESH_TOKEN 表 |
+| T_AUTH_OAUTH2_REFRESH_TOKEN | REFRESH_TOKEN表 |
 | T_AUTH_OAUTH2_SCOPE | 授权范围表 |
 | T_AUTH_OAUTH2_SCOPE_OPERATION | 授权操作信息表 |
 | T_AUTH_PROJECT_RESET_RECORD | 项目权限重置记录表 |
@@ -37,7 +37,7 @@
 | T_AUTH_RESOURCE_GROUP_CONFIG | 资源用户组配置表 |
 | T_AUTH_RESOURCE_GROUP_MEMBER | 资源组成员 |
 | T_AUTH_RESOURCE_GROUP_PERMISSION | 资源组权限表 |
-| T_AUTH_RESOURCE_SYNC | 同步 IAM 资源 |
+| T_AUTH_RESOURCE_SYNC | 同步IAM资源 |
 | T_AUTH_RESOURCE_TYPE | 权限资源类型表 |
 | T_AUTH_STRATEGY | 权限策略表 |
 | T_AUTH_SYNC_DATA_TASK | 权限中心同步数据任务记录 |
@@ -56,7 +56,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ACTION |   varchar   | 64 |   0    |    N     |  Y   |       | 操作 ID  |
+|  1   | ACTION |   varchar   | 64 |   0    |    N     |  Y   |       | 操作ID  |
 |  2   | RESOURCE_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 蓝盾-关联资源类型  |
 |  3   | RELATED_RESOURCE_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | IAM-关联资源类型  |
 |  4   | ACTION_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 操作名称  |
@@ -75,18 +75,18 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健ID  |
 |  2   | GROUP_NAME |   varchar   | 32 |   0    |    N     |  N   |   ""    | 用户组名称  |
 |  3   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识默认用户组标识一致  |
-|  4   | GROUP_TYPE |   bit   | 1 |   0    |    N     |  N   |       | 用户组类型 0 默认分组  |
+|  4   | GROUP_TYPE |   bit   | 1 |   0    |    N     |  N   |       | 用户组类型0默认分组  |
 |  5   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户组所属项目  |
-|  6   | IS_DELETE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否删除 0 可用 1 删除  |
+|  6   | IS_DELETE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否删除0可用1删除  |
 |  7   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |   ""    | 添加人  |
 |  8   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
 |  9   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |       | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 修改时间  |
 |  11   | DISPLAY_NAME |   varchar   | 32 |   0    |    Y     |  N   |       | 用户组别名  |
-|  12   | RELATION_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 关联系统 ID  |
+|  12   | RELATION_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 关联系统ID  |
 
 **表名：** <a>T_AUTH_GROUP_PERSSION</a>
 
@@ -96,9 +96,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主健 ID  |
+|  1   | ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主健ID  |
 |  2   | AUTH_ACTION |   varchar   | 64 |   0    |    N     |  N   |   ""    | 权限动作  |
-|  3   | GROUP_CODE |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户组编号默认 7 个内置组编号固定自定义组编码随机  |
+|  3   | GROUP_CODE |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户组编号默认7个内置组编号固定自定义组编码随机  |
 |  4   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |   ""    | 创建人  |
 |  5   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
 |  6   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |       | 创建时间  |
@@ -112,9 +112,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户 ID  |
-|  3   | GROUP_ID |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户组 ID  |
+|  1   | ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户ID  |
+|  3   | GROUP_ID |   varchar   | 64 |   0    |    N     |  N   |   ""    | 用户组ID  |
 |  4   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |   ""    | 添加用户  |
 |  5   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |       | 添加时间  |
 
@@ -126,10 +126,10 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | FLOW_NO |   varchar   | 64 |   0    |    N     |  N   |       | 流程单号  |
-|  4   | ITEM_ID |   varchar   | 255 |   0    |    N     |  N   |       | 组/授权资源 ID  |
+|  4   | ITEM_ID |   varchar   | 255 |   0    |    N     |  N   |       | 组/授权资源ID  |
 |  5   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 组/授权资源关联的资源类型  |
 |  6   | HANDOVER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 交接类型-group/authorization  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -143,8 +143,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | PROJECT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 项目名称  |
 |  4   | FLOW_NO |   varchar   | 64 |   0    |    N     |  N   |       | 流程单号  |
 |  5   | TITLE |   varchar   | 256 |   0    |    Y     |  N   |       | 标题  |
@@ -160,32 +160,32 @@
 
 **表名：** <a>T_AUTH_IAM_CALLBACK</a>
 
-**说明：** IAM 回调地址
+**说明：** IAM回调地址
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | GATEWAY |   varchar   | 255 |   0    |    N     |  N   |   ""    | 目标服务网关  |
 |  3   | PATH |   varchar   | 1024 |   0    |    N     |  N   |   ""    | 目标接口路径  |
-|  4   | DELETE_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除 true-是 false-否  |
+|  4   | DELETE_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除true-是false-否  |
 |  5   | RESOURCE |   varchar   | 32 |   0    |    N     |  N   |   ""    | 资源类型  |
 |  6   | SYSTEM |   varchar   | 32 |   0    |    N     |  N   |   ""    | 接入系统  |
 
 **表名：** <a>T_AUTH_ITSM_CALLBACK</a>
 
-**说明：** 权限 itsm 回调表
+**说明：** 权限itsm回调表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 自增 ID  |
-|  2   | APPLY_ID |   int   | 10 |   0    |    N     |  N   |       | 权限中心申请单 ID  |
-|  3   | SN |   varchar   | 64 |   0    |    N     |  N   |       | ITSM 申请单号  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 自增ID  |
+|  2   | APPLY_ID |   int   | 10 |   0    |    N     |  N   |       | 权限中心申请单ID  |
+|  3   | SN |   varchar   | 64 |   0    |    N     |  N   |       | ITSM申请单号  |
 |  4   | ENGLISH_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 项目英文名  |
-|  5   | CALLBACK_ID |   varchar   | 32 |   0    |    N     |  N   |       | 权限中心审批单 ID  |
+|  5   | CALLBACK_ID |   varchar   | 32 |   0    |    N     |  N   |       | 权限中心审批单ID  |
 |  6   | APPLICANT |   varchar   | 32 |   0    |    N     |  N   |       | 申请人  |
 |  7   | APPROVER |   varchar   | 32 |   0    |    Y     |  N   |       | 最后审批人  |
 |  8   | APPROVE_RESULT |   bit   | 1 |   0    |    Y     |  N   |       | 审批结果，0-审批拒绝，1-审批成功  |
@@ -200,11 +200,11 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | NAME |   varchar   | 32 |   0    |    N     |  N   |       | 名称  |
-|  3   | ORGANIZATION_ID |   int   | 10 |   0    |    N     |  N   |       | 组织 ID  |
-|  4   | LEVEL |   int   | 10 |   0    |    N     |  N   |       | 层级 ID  |
-|  5   | STRATEGYID |   int   | 10 |   0    |    N     |  N   |       | 权限策略 ID  |
+|  3   | ORGANIZATION_ID |   int   | 10 |   0    |    N     |  N   |       | 组织ID  |
+|  4   | LEVEL |   int   | 10 |   0    |    N     |  N   |       | 层级ID  |
+|  5   | STRATEGYID |   int   | 10 |   0    |    N     |  N   |       | 权限策略ID  |
 |  6   | IS_DELETE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否删除  |
 |  7   | CREATE_USER |   varchar   | 11 |   0    |    N     |  N   |   ""    | 创建用户  |
 |  8   | UPDATE_USER |   varchar   | 11 |   0    |    Y     |  N   |   ""    | 修改用户  |
@@ -219,27 +219,27 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 自增 ID  |
-|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
-|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 自增ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户ID  |
+|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限ID  |
 |  4   | EXPIRED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限过期时间  |
 |  5   | START_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 审批单生效时间  |
 |  6   | END_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 审批单失效时间  |
-|  7   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 发送状态 0-审核流程中，1-用户拒绝续期，2-用户同意续期，3-审批人拒绝续期，4-审批人同意续期  |
+|  7   | STATUS |   int   | 10 |   0    |    N     |  N   |       | 发送状态0-审核流程中,1-用户拒绝续期,2-用户同意续期,3-审批人拒绝续期，4-审批人同意续期  |
 |  8   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  9   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 
 **表名：** <a>T_AUTH_MANAGER_USER</a>
 
-**说明：** 管理员用户表（只存有效期内的用户）
+**说明：** 管理员用户表(只存有效期内的用户)
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
-|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户ID  |
+|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限ID  |
 |  4   | START_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限生效起始时间  |
 |  5   | END_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限生效结束时间  |
 |  6   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建用户  |
@@ -255,9 +255,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
-|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户ID  |
+|  3   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理员权限ID  |
 |  4   | START_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限生效起始时间  |
 |  5   | END_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 权限生效结束时间  |
 |  6   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建用户  |
@@ -273,9 +273,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理策略 ID  |
-|  3   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | MANAGER_ID |   int   | 10 |   0    |    N     |  N   |       | 管理策略ID  |
+|  3   | USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户ID  |
 
 **表名：** <a>T_AUTH_MEMBER_PROJECT_PERMISSION</a>
 
@@ -285,9 +285,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户 ID  |
-|  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 用户ID  |
+|  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | ACTION |   varchar   | 32 |   0    |    N     |  N   |       | 权限  |
 |  5   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | 权限来源的用户组  |
 |  6   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 该组授予的权限有效期  |
@@ -301,8 +301,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态，0-迁移中，1-迁移成功，2-迁移失败  |
+|  1   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态,0-迁移中,1-迁移成功,2-迁移失败  |
 |  3   | BEFORE_GROUP_COUNT |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移前用户组数  |
 |  4   | AFTER_GROUP_COUNT |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移后用户组数  |
 |  5   | RESOURCE_COUNT |   text   | 65535 |   0    |    Y     |  N   |       | 迁移后资源数和资源用户组数  |
@@ -310,7 +310,7 @@
 |  7   | END_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 结束时间  |
 |  8   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时  |
 |  9   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
-|  10   | ROUTER_TAG |   varchar   | 32 |   0    |    Y     |  N   |       | 迁移项目的网关路由 tags  |
+|  10   | ROUTER_TAG |   varchar   | 32 |   0    |    Y     |  N   |       | 迁移项目的网关路由tags  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
@@ -322,9 +322,9 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | SPACE_BIZ_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 监控空间业务 ID  |
-|  3   | SPACE_UID |   varchar   | 64 |   0    |    N     |  N   |       | 监控空间 ID  |
+|  1   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | SPACE_BIZ_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 监控空间业务ID  |
+|  3   | SPACE_UID |   varchar   | 64 |   0    |    N     |  N   |       | 监控空间ID  |
 |  4   | CREATOR |   varchar   | 32 |   0    |    N     |  N   |       | 创建人  |
 |  5   | UPDATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 更新者  |
 |  6   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
@@ -332,20 +332,20 @@
 
 **表名：** <a>T_AUTH_OAUTH2_ACCESS_TOKEN</a>
 
-**说明：** ACCESS_TOKEN 表
+**说明：** ACCESS_TOKEN表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ACCESS_TOKEN |   varchar   | 64 |   0    |    N     |  N   |       | ACCESS_TOKEN  |
-|  2   | CLIENT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 客户端 ID  |
+|  2   | CLIENT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 客户端ID  |
 |  3   | USER_NAME |   varchar   | 32 |   0    |    Y     |  N   |       | 登录的用户名，客户端模式该值为空  |
 |  4   | PASS_WORD |   varchar   | 64 |   0    |    Y     |  N   |       | 用于密码模式  |
 |  5   | GRANT_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 授权模式  |
 |  6   | EXPIRED_TIME |   bigint   | 20 |   0    |    N     |  N   |       | 过期时间  |
 |  7   | REFRESH_TOKEN |   varchar   | 64 |   0    |    Y     |  N   |       | REFRESH_TOKEN，客户端模式该值为空  |
-|  8   | SCOPE_ID |   int   | 10 |   0    |    N     |  N   |       | 授权范围 ID  |
+|  8   | SCOPE_ID |   int   | 10 |   0    |    N     |  N   |       | 授权范围ID  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_AUTH_OAUTH2_CLIENT_DETAILS</a>
@@ -363,8 +363,8 @@
 |  5   | ICON |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 图标  |
 |  6   | AUTHORIZED_GRANT_TYPES |   varchar   | 64 |   0    |    N     |  N   |       | 授权模式  |
 |  7   | WEB_SERVER_REDIRECT_URI |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 跳转链接  |
-|  8   | ACCESS_TOKEN_VALIDITY |   bigint   | 20 |   0    |    N     |  N   |       | access_token 有效时间  |
-|  9   | REFRESH_TOKEN_VALIDITY |   bigint   | 20 |   0    |    Y     |  N   |       | refresh_token 有效时间  |
+|  8   | ACCESS_TOKEN_VALIDITY |   bigint   | 20 |   0    |    N     |  N   |       | access_token有效时间  |
+|  9   | REFRESH_TOKEN_VALIDITY |   bigint   | 20 |   0    |    Y     |  N   |       | refresh_token有效时间  |
 |  10   | CREATE_USER |   varchar   | 32 |   0    |    N     |  N   |   ""    | 创建人  |
 |  11   | UPDATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 修改人  |
 |  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -382,19 +382,19 @@
 |  2   | CODE |   varchar   | 64 |   0    |    N     |  N   |       | 授权码  |
 |  3   | USER_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 用户名  |
 |  4   | EXPIRED_TIME |   bigint   | 20 |   0    |    N     |  N   |       | 过期时间  |
-|  5   | SCOPE_ID |   int   | 10 |   0    |    N     |  N   |       | 授权范围 ID  |
+|  5   | SCOPE_ID |   int   | 10 |   0    |    N     |  N   |       | 授权范围ID  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_AUTH_OAUTH2_REFRESH_TOKEN</a>
 
-**说明：** REFRESH_TOKEN 表
+**说明：** REFRESH_TOKEN表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | REFRESH_TOKEN |   varchar   | 64 |   0    |    N     |  N   |       | REFRESH_TOKEN  |
-|  2   | CLIENT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 客户端 ID  |
+|  2   | CLIENT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 客户端ID  |
 |  3   | EXPIRED_TIME |   bigint   | 20 |   0    |    N     |  N   |       | 过期时间  |
 |  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
@@ -406,7 +406,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健ID  |
 |  2   | SCOPE |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 授权范围  |
 |  3   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
@@ -418,8 +418,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健 ID  |
-|  2   | OPERATION_ID |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主健ID  |
+|  2   | OPERATION_ID |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作ID  |
 |  3   | OPERATION_NAME_CN |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作中文名称  |
 |  4   | OPERATION_NAME_EN |   varchar   | 64 |   0    |    N     |  N   |       | 授权操作英文名称  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -432,18 +432,18 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | TASK_ID |   varchar   | 64 |   0    |    N     |  N   |       | 任务 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | TASK_ID |   varchar   | 64 |   0    |    N     |  N   |       | 任务ID  |
 |  3   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目代码  |
-|  4   | RESET_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 重置类型：FULL-完整重置，RESOURCE-资源重置，PERMISSION-权限重置  |
+|  4   | RESET_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 重置类型：FULL-完整重置,RESOURCE-资源重置,PERMISSION-权限重置  |
 |  5   | MIGRATE_RESOURCE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否迁移资源  |
-|  6   | FILTER_RESOURCE_TYPES |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的资源类型列表（JSON 格式）  |
-|  7   | FILTER_ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的操作列表（JSON 格式）  |
-|  8   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   PROCESSING    | 状态：PROCESSING-处理中，SUCCESS-成功，FAILED-失败  |
+|  6   | FILTER_RESOURCE_TYPES |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的资源类型列表(JSON格式)  |
+|  7   | FILTER_ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 过滤的操作列表(JSON格式)  |
+|  8   | STATUS |   varchar   | 32 |   0    |    N     |  N   |   PROCESSING    | 状态：PROCESSING-处理中,SUCCESS-成功,FAILED-失败  |
 |  9   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
 |  10   | START_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 开始时间  |
 |  11   | END_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 结束时间  |
-|  12   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时（毫秒）  |
+|  12   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时(毫秒)  |
 |  13   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
 |  14   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  15   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -456,14 +456,14 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源ID  |
 |  5   | RESOURCE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 资源名  |
-|  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM 资源 ID  |
-|  7   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 开启权限管理，0-不启用，1-启用  |
-|  8   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的 IAM 分级管理员 ID  |
+|  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM资源ID  |
+|  7   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 开启权限管理,0-不启用,1-启用  |
+|  8   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的IAM分级管理员ID  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  11   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
@@ -477,10 +477,10 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源ID  |
 |  5   | RESOURCE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 资源名  |
 |  6   | HANDOVER_FROM |   varchar   | 64 |   0    |    N     |  N   |       | 授予人  |
 |  7   | HANDOVER_FROM_CN_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 授予人中文名称  |
@@ -496,21 +496,21 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源ID  |
 |  5   | RESOURCE_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 资源名  |
-|  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM 资源 ID  |
+|  6   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | IAM资源ID  |
 |  7   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  8   | GROUP_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 用户组名称  |
-|  9   | DEFAULT_GROUP |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认组，0-非默认组，1-默认组  |
-|  10   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的 IAM 组 ID  |
+|  9   | DEFAULT_GROUP |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否为默认组,0-非默认组,1-默认组  |
+|  10   | RELATION_ID |   varchar   | 32 |   0    |    N     |  N   |       | 关联的IAM组ID  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  13   | DESCRIPTION |   varchar   | 512 |   0    |    Y     |  N   |       | 用户组描述  |
-|  14   | IAM_TEMPLATE_ID |   int   | 10 |   0    |    Y     |  N   |       | 人员模板 ID  |
-|  15   | APPLY_DISABLE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否禁止申请，当 true 为禁止  |
+|  14   | IAM_TEMPLATE_ID |   int   | 10 |   0    |    Y     |  N   |       | 人员模板ID  |
+|  15   | APPLY_DISABLE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否禁止申请，当true为禁止  |
 
 **表名：** <a>T_AUTH_RESOURCE_GROUP_APPLY</a>
 
@@ -520,11 +520,11 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
-|  3   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
-|  4   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
-|  5   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 状态，0-审批中，1-审批成功，2-审批超时  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员ID  |
+|  4   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM组ID  |
+|  5   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 状态,0-审批中,1-审批成功,2-审批超时  |
 |  6   | NUMBER_OF_CHECKS |   int   | 10 |   0    |    Y     |  N   |   0    | 检查次数，用于同步组数据  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  8   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -537,12 +537,12 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
 |  3   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
 |  4   | GROUP_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 用户组名称  |
-|  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式，0-开启时创建，1-启用权限管理时创建  |
-|  6   | GROUP_TYPE |   int   | 10 |   0    |    N     |  N   |   0    | 用户组类型 0-默认组 1-自定义组  |
+|  5   | CREATE_MODE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 创建模式,0-开启时创建,1-启用权限管理时创建  |
+|  6   | GROUP_TYPE |   int   | 10 |   0    |    N     |  N   |   0    | 用户组类型0-默认组1-自定义组  |
 |  7   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 用户组描述  |
 |  8   | AUTHORIZATION_SCOPES |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 用户组授权范围  |
 |  9   | ACTIONS |   text   | 65535 |   0    |    Y     |  N   |       | 用户组拥有的资源操作  |
@@ -557,15 +557,15 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 资源ID  |
 |  5   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
-|  6   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM 组 ID  |
-|  7   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员 ID  |
+|  6   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | IAM组ID  |
+|  7   | MEMBER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 成员ID  |
 |  8   | MEMBER_NAME |   varchar   | 512 |   0    |    N     |  N   |       | 成员名  |
-|  9   | MEMBER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 成员类型，用户/组织/模板  |
+|  9   | MEMBER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 成员类型,用户/组织/模板  |
 |  10   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
@@ -579,31 +579,31 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组关联的资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 用户组关联的资源 ID  |
-|  5   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组关联的 IAM 资源 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 用户组关联的资源ID  |
+|  5   | IAM_RESOURCE_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组关联的IAM资源ID  |
 |  6   | GROUP_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 用户组标识  |
-|  7   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | 关联的 IAM 组 ID  |
-|  8   | ACTION |   varchar   | 64 |   0    |    N     |  N   |       | 操作 ID  |
+|  7   | IAM_GROUP_ID |   int   | 10 |   0    |    N     |  N   |       | 关联的IAM组ID  |
+|  8   | ACTION |   varchar   | 64 |   0    |    N     |  N   |       | 操作ID  |
 |  9   | ACTION_RELATED_RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 动作关联的资源类型  |
 |  10   | RELATED_RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 组权限关联的资源类型  |
-|  11   | RELATED_RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 组权限关联的资源 ID  |
-|  12   | RELATED_IAM_RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 组权限关联的资源 ID  |
+|  11   | RELATED_RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 组权限关联的资源ID  |
+|  12   | RELATED_IAM_RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  N   |       | 组权限关联的资源ID  |
 |  13   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  14   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_AUTH_RESOURCE_SYNC</a>
 
-**说明：** 同步 IAM 资源
+**说明：** 同步IAM资源
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
-|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态，0-同步中，1-同步成功，2-同步失败  |
+|  1   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | STATUS |   int   | 10 |   0    |    Y     |  N   |   0    | 迁移状态,0-同步中,1-同步成功,2-同步失败  |
 |  3   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
 |  4   | TOTAL_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 总耗时  |
 |  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
@@ -639,10 +639,10 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 策略主键 ID  |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 策略主键ID  |
 |  2   | STRATEGY_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 策略名称  |
 |  3   | STRATEGY_BODY |   varchar   | 2000 |   0    |    N     |  N   |       | 策略内容  |
-|  4   | IS_DELETE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否删除 0 未删除 1 删除  |
+|  4   | IS_DELETE |   bit   | 1 |   0    |    N     |  N   |   0    | 是否删除0未删除1删除  |
 |  5   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  6   | UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 |  7   | CREATE_USER |   varchar   | 32 |   0    |    N     |  N   |       | 创建人  |
@@ -657,7 +657,7 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | TASK_ID |   varchar   | 255 |   0    |    N     |  Y   |       | 任务单号  |
-|  2   | TASK_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 任务类型，USER 或 DEPARTMENT  |
+|  2   | TASK_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 任务类型，USER或DEPARTMENT  |
 |  3   | START_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 开始时间  |
 |  4   | END_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 结束时间  |
 
@@ -669,11 +669,11 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 用户 ID  |
-|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  1   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 用户ID  |
+|  2   | PROJECT_CODE |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
 |  3   | RESOURCE_TYPE |   varchar   | 64 |   0    |    N     |  Y   |       | 资源类型  |
-|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  Y   |       | 资源 ID  |
-|  5   | ACTION |   varchar   | 64 |   0    |    N     |  Y   |       | 操作 ID  |
+|  4   | RESOURCE_CODE |   varchar   | 255 |   0    |    N     |  Y   |       | 资源ID  |
+|  5   | ACTION |   varchar   | 64 |   0    |    N     |  Y   |       | 操作ID  |
 |  6   | VERIFY_RESULT |   bit   | 1 |   0    |    N     |  N   |       | 鉴权结果  |
 |  7   | LAST_VERIFY_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 最后鉴权时间  |
 
@@ -686,10 +686,10 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   int   | 10 |   0    |    N     |  Y   |       |   |
-|  2   | USER_ID |   varchar   | 32 |   0    |    N     |  N   |       | 用户 ID  |
+|  2   | USER_ID |   varchar   | 32 |   0    |    N     |  N   |       | 用户ID  |
 |  3   | REMARK |   varchar   | 255 |   0    |    N     |  N   |       | 拉黑原因  |
 |  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 拉黑时间  |
-|  5   | STATUS |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否生效 1 生效 0 不生效  |
+|  5   | STATUS |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否生效1生效0不生效  |
 
 **表名：** <a>T_AUTH_USER_INFO</a>
 
@@ -700,13 +700,13 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   int   | 10 |   0    |    N     |  Y   |       |   |
-|  2   | userId |   varchar   | 255 |   0    |    N     |  N   |       | 用户 ID  |
+|  2   | userId |   varchar   | 255 |   0    |    N     |  N   |       | 用户ID  |
 |  3   | email |   varchar   | 255 |   0    |    Y     |  N   |       | 邮箱  |
 |  4   | phone |   varchar   | 32 |   0    |    Y     |  N   |       | 手机号  |
 |  5   | create_time |   datetime   | 19 |   0    |    N     |  N   |       | 注册时间  |
-|  6   | user_type |   int   | 10 |   0    |    N     |  N   |       | 用户类型 0。页面注册 1.GitHub2.Gitlab  |
+|  6   | user_type |   int   | 10 |   0    |    N     |  N   |       | 用户类型0.页面注册1.GitHub2.Gitlab  |
 |  7   | last_login_time |   datetime   | 19 |   0    |    Y     |  N   |       | 最后登陆时间  |
-|  8   | user_status |   int   | 10 |   0    |    N     |  N   |       | 用户状态，0--正常，1--冻结  |
+|  8   | user_status |   int   | 10 |   0    |    N     |  N   |       | 用户状态,0--正常,1--冻结  |
 
 **表名：** <a>T_DEPARTMENT</a>
 
@@ -716,7 +716,7 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | DEPARTMENT_ID |   int   | 10 |   0    |    N     |  Y   |       | 部门 ID  |
+|  1   | DEPARTMENT_ID |   int   | 10 |   0    |    N     |  Y   |       | 部门ID  |
 |  2   | DEPARTMENT_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 部门名称  |
 |  3   | PARENT |   int   | 10 |   0    |    Y     |  N   |       | 父级  |
 |  4   | LEVEL |   int   | 10 |   0    |    Y     |  N   |       | 层级  |
@@ -732,8 +732,8 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PARENT_ID |   int   | 10 |   0    |    N     |  N   |       | 父部门 ID  |
-|  2   | CHILDREN_ID |   int   | 10 |   0    |    N     |  N   |       | 子部门 ID  |
+|  1   | PARENT_ID |   int   | 10 |   0    |    N     |  N   |       | 父部门ID  |
+|  2   | CHILDREN_ID |   int   | 10 |   0    |    N     |  N   |       | 子部门ID  |
 |  3   | DEPTH |   int   | 10 |   0    |    N     |  N   |       | 深度  |
 |  4   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
@@ -745,11 +745,11 @@
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | USER_ID |   varchar   | 255 |   0    |    N     |  Y   |       | 用户 ID  |
+|  1   | USER_ID |   varchar   | 255 |   0    |    N     |  Y   |       | 用户ID  |
 |  2   | USER_NAME |   varchar   | 255 |   0    |    N     |  N   |       | 用户名称  |
 |  3   | ENABLED |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 是否离职  |
 |  4   | DEPARTMENT_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 部门名称  |
-|  5   | DEPARTMENT_ID |   int   | 10 |   0    |    Y     |  N   |       | 部门 ID  |
+|  5   | DEPARTMENT_ID |   int   | 10 |   0    |    Y     |  N   |       | 部门ID  |
 |  6   | FULL_DEPARTMENTS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 完整部门信息  |
 |  7   | PATH |   varchar   | 255 |   0    |    Y     |  N   |       | 部门路径  |
 |  8   | DEPARTED |   bit   | 1 |   0    |    N     |  N   |       | 是否离职  |

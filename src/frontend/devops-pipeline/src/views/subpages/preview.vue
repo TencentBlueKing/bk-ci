@@ -393,9 +393,9 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, UPDATE_STARTUP_INFO, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual, isParamValueEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -629,7 +629,7 @@
                         ...p,
                         isChanged: isObject(p.defaultValue)
                             ? !isShallowEqual(p.defaultValue, p.value)
-                            : p.defaultValue !== p.value,
+                            : !isParamValueEqual(p.defaultValue, p.value),
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
@@ -852,6 +852,8 @@
                     }
                     this.setPipelineSkipProp(this.pipelineModel.stages, this.checkTotal)
                     bus.$emit(UPDATE_PREVIEW_PIPELINE_NAME, this.pipelineModel?.name)
+                    // 通知预览头部当前所选版本是否允许手动触发
+                    bus.$emit(UPDATE_STARTUP_INFO, this.startupInfo?.canManualStartup)
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
                     this.pacError = { show: false, type: '', message: '' }

@@ -97,7 +97,7 @@
         UPDATE_TEMPLATE_REF_TYPE,
         INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
-    import { deepClone } from '@/utils/util'
+    import { deepClone, isParamValueEqual } from '@/utils/util'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
@@ -315,8 +315,8 @@
                     return {
                         ...p,
                         defaultValue: newValue,
-                        isChange: newValue !== p.defaultValue,
-                        hasChange: newValue !== templateDefaultValue,
+                        isChange: !isParamValueEqual(newValue, p.defaultValue),
+                        hasChange: !isParamValueEqual(newValue, templateDefaultValue),
                         propertyUpdates
                     }
                 }

@@ -235,7 +235,8 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId
+            credentialId = credentialId,
+            aesKeySha = certHelper.currentKeySha()
         )
     }
 
@@ -480,7 +481,8 @@ class CertServiceImpl @Autowired constructor(
                 certTeamName = teamName,
                 certUUID = uuid,
                 certExpireDate = expireDate,
-                credentialId = credentialId
+                credentialId = credentialId,
+                aesKeySha = certHelper.currentKeySha()
             )
             certEnterpriseDao.create(
                 dslContext = transactionContext,
@@ -491,7 +493,8 @@ class CertServiceImpl @Autowired constructor(
                 certDeveloperName = developerName,
                 certTeamName = teamName,
                 certUUID = uuid,
-                certExpireDate = expireDate
+                certExpireDate = expireDate,
+                aesKeySha = certHelper.currentKeySha()
             )
         }
     }
@@ -747,7 +750,8 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            credentialId = credentialId
+            credentialId = credentialId,
+            aesKeySha = certHelper.currentKeySha()
         )
     }
 
@@ -1028,7 +1032,8 @@ class CertServiceImpl @Autowired constructor(
                 certTeamName = teamName,
                 certUUID = uuid,
                 certExpireDate = expireDate,
-                credentialId = credentialId
+                credentialId = credentialId,
+                aesKeySha = certHelper.currentKeySha()
             )
             certTlsDao.create(
                 dslContext = transactionContext,
@@ -1041,7 +1046,8 @@ class CertServiceImpl @Autowired constructor(
                 clientCrtFileName = clientCrtFileName,
                 clientCrtFile = clientCrtFile,
                 clientKeyFileName = clientKeyFileName,
-                clientKeyFile = clientKeyFile
+                clientKeyFile = clientKeyFile,
+                aesKeySha = certHelper.currentKeySha()
             )
         }
     }

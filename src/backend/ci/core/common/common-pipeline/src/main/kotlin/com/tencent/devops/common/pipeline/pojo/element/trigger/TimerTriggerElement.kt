@@ -169,6 +169,17 @@ data class TimerTriggerElement(
             logger.warn("startParams is not a valid json, skip it: $startParams")
             listOf()
         }.filter { it.containsKey("key") }
-                .associate { it["key"].toString() to (it["value"]?.toString() ?: "") }
+                .associate { it["key"].toString() to convertStartParamValue(it["value"]) }
+    }
+
+    /**
+     * 转换启动参数值
+     * 复选框等多选类型的值会存成数组(如 [1])，需转为逗号分隔字符串(如 "1")，
+     * 避免直接 toString 得到 "[1]"
+     */
+    private fun convertStartParamValue(value: Any?): String = when (value) {
+        null -> ""
+        is Collection<*> -> value.joinToString(",") { it?.toString() ?: "" }
+        else -> value.toString()
     }
 }
