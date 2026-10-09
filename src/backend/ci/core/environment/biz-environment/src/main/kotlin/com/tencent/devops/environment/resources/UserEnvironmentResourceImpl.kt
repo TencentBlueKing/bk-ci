@@ -445,6 +445,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
+        createMode: Boolean?,
         tags: List<NodeTagAddOrDeleteTagItem>
     ): Result<Page<NodeWithPermission>> {
         if (projectId.isBlank()) {
@@ -456,6 +457,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 projectId = projectId,
                 page = page,
                 pageSize = pageSize,
+                createMode = createMode,
                 tags = tags
             )
         )

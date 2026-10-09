@@ -537,6 +537,9 @@ interface UserEnvironmentResource {
         @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         @Parameter(description = "标签列表", required = true)
         tags: List<NodeTagAddOrDeleteTagItem>
     ): Result<Page<NodeWithPermission>>

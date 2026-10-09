@@ -169,11 +169,12 @@ class AgentInstallSessionDao {
         now: LocalDateTime
     ): AgentInstallSessionNode? = selectNodes(dslContext)
         .where(SessionNodeTable.AGENT_ID.eq(agentId))
-        .and(SessionNodeTable.STATUS.notIn(FINISHED_NODE_STATUSES))
         .and(SessionNodeTable.CREATED_TIME.le(now))
         .orderBy(SessionNodeTable.CREATED_TIME.desc(), SessionNodeTable.ID.desc())
         .limit(1)
         .fetchOne(::mapNode)
+        // 新会话成功后，不再重试更早的失败会话，避免心跳把新配置覆盖成旧配置。
+        ?.takeUnless { it.status.name in FINISHED_NODE_STATUSES }
 
     fun compareAndSetNodeStatus(
         dslContext: DSLContext,

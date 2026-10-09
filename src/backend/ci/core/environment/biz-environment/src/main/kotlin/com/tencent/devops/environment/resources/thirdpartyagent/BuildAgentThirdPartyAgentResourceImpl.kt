@@ -74,19 +74,27 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
         val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
-        val handledByInstallSession = agentInstallSessionRuntimeService.processAgentStartup(
+        if (status == AgentStatus.DELETE) return Result(status)
+        // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
+        if (AgentStatus.UN_IMPORT_OK == status) {
+            thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
+                if (!importService.importAgent(
+                        userId = it.createUser,
+                        projectId = projectId,
+                        agentId = agentId,
+                        masterVersion = it.masterVersion
+                    )
+                ) {
+                    return Result(1, "Agent import is busy, retry startup")
+                }
+            }
+        }
+        // 并发与标签是附加配置，应用失败由会话服务记录，不阻断 Agent 启动。
+        agentInstallSessionRuntimeService.processAgentStartup(
             projectId = projectId,
             agentHashId = agentId,
             startInfo = startInfo
         )
-        // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
-        if (!handledByInstallSession && AgentStatus.UN_IMPORT_OK == status) {
-            thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
-                importService.importAgent(
-                    userId = it.createUser, projectId = projectId, agentId = agentId, masterVersion = it.masterVersion
-                )
-            }
-        }
         return Result(status)
     }
 
