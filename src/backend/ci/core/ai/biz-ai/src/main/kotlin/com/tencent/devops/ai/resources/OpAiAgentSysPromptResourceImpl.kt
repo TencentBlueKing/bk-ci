@@ -29,6 +29,7 @@ package com.tencent.devops.ai.resources
 
 import com.tencent.devops.ai.api.op.OpAiAgentSysPromptResource
 import com.tencent.devops.ai.pojo.AgentSysPromptCreateRequest
+import com.tencent.devops.ai.pojo.AgentSysPromptVO
 import com.tencent.devops.ai.service.AgentSysPromptService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -42,8 +43,8 @@ class OpAiAgentSysPromptResourceImpl @Autowired constructor(
     private val agentSysPromptService: AgentSysPromptService
 ) : OpAiAgentSysPromptResource {
 
-    override fun list(): Result<Map<String, String>> {
-        return Result(agentSysPromptService.listAllAgentSysPrompts())
+    override fun list(): Result<List<AgentSysPromptVO>> {
+        return Result(agentSysPromptService.listAllAgentSysPromptInfos())
     }
 
     override fun create(request: AgentSysPromptCreateRequest): Result<Boolean> {
