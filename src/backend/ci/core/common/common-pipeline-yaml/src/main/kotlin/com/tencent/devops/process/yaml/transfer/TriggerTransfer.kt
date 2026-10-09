@@ -291,6 +291,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     blockMr = git.block,
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    reportQualityResults = git.enableQualityReport.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includeMrAction,
                     custom = if (git.enableThirdFilter == true) CustomFilter(
@@ -314,6 +315,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers,
                     usersIgnore = git.excludeUsers,
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    reportQualityResults = git.enableQualityReport.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     skipWip = git.skipWip,
                     labels = git.includeLabels?.disjoin(),
@@ -1128,6 +1130,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             block = mr.blockMr,
             webhookQueue = mr.webhookQueue,
             enableCheck = mr.reportCommitCheck,
+            enableQualityReport = mr.reportQualityResults,
             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                 ?: PathFilterType.NamePrefixFilter,
             includeMrAction = includeMrAction,
@@ -1179,6 +1182,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     block = mr.blockMr,
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
+                    enableQualityReport = mr.reportQualityResults,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     includeMrAction = includeMrAction,
