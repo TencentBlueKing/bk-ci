@@ -42,6 +42,8 @@ import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -88,6 +90,7 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.Devfile
+import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -127,11 +130,14 @@ class CreateControl @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val softwareManageService: SoftwareManageService,
     private val streamBridge: StreamBridge,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
         private const val WORKSPACE_PREFIX = "ins-"
+        private const val CREATE_BY_VM_LOCK_KEY_PREFIX = "remotedev:createWinWorkspaceByVm:lock:"
+        private const val CREATE_BY_VM_LOCK_EXPIRED_SECONDS = 60L
     }
 
     // 用于控制台上创建
@@ -669,6 +675,40 @@ class CreateControl @Autowired constructor(
                 return false
             }
 
+        val lock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "$CREATE_BY_VM_LOCK_KEY_PREFIX${vm.cgsId}",
+            expiredTimeInSeconds = CREATE_BY_VM_LOCK_EXPIRED_SECONDS
+        )
+        lock.use {
+            lock.lock()
+            if (!bak && workspaceCommon.checkCgsRunning(vm.cgsId)) {
+                logger.warn("createWinWorkspaceByVm skip, ${vm.cgsId} already used by workspace|$uid")
+                return true
+            }
+            return createWinWorkspaceRecordByVm(
+                userId = userId,
+                oldWorkspaceName = oldWorkspaceName,
+                projectCode = projectCode,
+                ownerType = ownerType,
+                uid = uid,
+                bak = bak,
+                envId = envId,
+                vm = vm
+            )
+        }
+    }
+
+    private fun createWinWorkspaceRecordByVm(
+        userId: String,
+        oldWorkspaceName: String?,
+        projectCode: String?,
+        ownerType: WorkspaceOwnerType?,
+        uid: String,
+        bak: Boolean,
+        envId: String,
+        vm: EnvironmentResourceData
+    ): Boolean {
         val copy = oldWorkspaceName?.let {
             workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = oldWorkspaceName)
         }
@@ -775,6 +815,12 @@ class CreateControl @Autowired constructor(
                 )
             }
         }
+        // 创建回调异步写入 HOST_IP，这里先写入，避免回调前的重复调用校验不到占用
+        workspaceWindowsDao.updateWindowsResourceId(
+            dslContext = dslContext,
+            workspaceName = ws.workspaceName,
+            hostIp = vm.cgsId
+        )
         kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
                 .createStartCloudUser(userId, gameId.first)

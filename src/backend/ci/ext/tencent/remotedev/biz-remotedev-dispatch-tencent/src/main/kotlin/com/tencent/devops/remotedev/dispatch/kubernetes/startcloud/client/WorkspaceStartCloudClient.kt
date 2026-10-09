@@ -191,7 +191,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val url = "$apiUrlAI/openapi/coffee/token"
         val body = JsonUtil.toJson(token, false)
         val id = UUID.randomUUID()
-        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(

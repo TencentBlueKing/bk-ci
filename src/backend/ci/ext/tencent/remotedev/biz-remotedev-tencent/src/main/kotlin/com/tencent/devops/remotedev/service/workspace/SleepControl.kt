@@ -211,7 +211,13 @@ class SleepControl @Autowired constructor(
         )
     }
 
-    fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {
+    fun doStopWS(
+        status: Boolean,
+        operator: String,
+        workspaceName: String,
+        errorMsg: String? = null,
+        notify: Boolean = true
+    ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -259,6 +265,9 @@ class SleepControl @Autowired constructor(
         }
 
         workspaceCommon.statisticalData(workspace, operator)
+        if (!notify) {
+            return
+        }
 
         notifyControl.dispatchWebsocketPushEvent(
             userId = operator,
