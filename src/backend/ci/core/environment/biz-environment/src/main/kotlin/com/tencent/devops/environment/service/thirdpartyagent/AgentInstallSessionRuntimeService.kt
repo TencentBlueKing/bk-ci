@@ -94,8 +94,8 @@ class AgentInstallSessionRuntimeService(
 
     /**
      * Agent 启动握手时调用，在原有自动导入之后执行：把会话配置的并发与标签应用到节点。
-     * 节点由原有自动导入创建，这里不导入、不加锁（会话仅作展示，重复应用是幂等的）。
-     * 不向外抛异常，失败只记录到会话节点；FAILED 仍算未完成，Agent 下次启动会再处理。
+     * 并发与标签是附加配置，失败仅记录日志与会话节点状态，不影响 Agent 启动。
+     * FAILED 仍算未完成，Agent 下次自然启动时可再次尝试。
      */
     fun processAgentStartup(projectId: String, agentHashId: String, startInfo: ThirdPartyAgentStartInfo) {
         try {
