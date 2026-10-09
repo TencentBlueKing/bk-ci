@@ -211,16 +211,14 @@ object WeworkReviewCardConst {
 
     /**
      * 把卡片回调 SelectedItems（question_key -> option_id）写回缓存的审核参数。
-     * selected 为空时原样返回，不影响无下拉的存量卡片。
+     * selected 为空或缓存不是参数列表时原样返回。
      */
     fun applySelectedItems(storedParamsJson: String?, selected: Map<String, String>): String? {
-        if (selected.isEmpty() || storedParamsJson.isNullOrBlank() ||
-            storedParamsJson == "[]" || storedParamsJson == "null"
-        ) {
+        if (selected.isEmpty() || storedParamsUnusable(storedParamsJson)) {
             return storedParamsJson
         }
         return try {
-            val list = JsonUtil.to<MutableList<MutableMap<String, Any?>>>(storedParamsJson)
+            val list = JsonUtil.to<MutableList<MutableMap<String, Any?>>>(storedParamsJson!!)
             var changed = false
             list.forEach { item ->
                 val key = item["key"]?.toString().orEmpty()
@@ -234,6 +232,11 @@ object WeworkReviewCardConst {
         } catch (_: Exception) {
             storedParamsJson
         }
+    }
+
+    private fun storedParamsUnusable(storedParamsJson: String?): Boolean {
+        if (storedParamsJson.isNullOrBlank()) return true
+        return storedParamsJson == "[]" || storedParamsJson == "null"
     }
 
     private fun sanitizeTaskIdPart(value: String): String {
