@@ -41,7 +41,7 @@ import java.net.URLEncoder
 open class AgentUrlService @Autowired constructor(
     private val commonConfig: CommonConfig
 ) {
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+    open fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
         return "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/install"
@@ -50,7 +50,7 @@ open class AgentUrlService @Autowired constructor(
     /**
      *生成Agent URL
      */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+    open fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
         return if (agentRecord.os == OS.WINDOWS.name) {
@@ -64,7 +64,7 @@ open class AgentUrlService @Autowired constructor(
     /**
      * 生成构建机脚本下载链接
      */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+    open fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val installUrl = genAgentInstallUrl(agentRecord)
         return if (agentRecord.os != OS.WINDOWS.name) {
             "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: ${agentRecord.projectId}\" $installUrl | bash"
@@ -76,7 +76,7 @@ open class AgentUrlService @Autowired constructor(
     /**
      * 生成批量下载构建机脚本链接
      */
-    fun genAgentBatchInstallScript(
+    open fun genAgentBatchInstallScript(
         os: OS,
         zoneName: String?,
         gateway: String?,
@@ -160,14 +160,14 @@ open class AgentUrlService @Autowired constructor(
     /**
      * 生成网关域名
      */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+    open fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return fixGateway(agentRecord.gateway)
     }
 
     /**
      * 生成文件网关域名
      */
-    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+    open fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return if (agentRecord.fileGateway.isNullOrBlank()) {
             genGateway(agentRecord)
         } else {
@@ -178,7 +178,7 @@ open class AgentUrlService @Autowired constructor(
     /**
      * 调整gateway格式
      */
-    fun fixGateway(gateway: String?): String {
+    open fun fixGateway(gateway: String?): String {
         val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
         return if (gw!!.startsWith("http")) {
             gw.removeSuffix("/")
