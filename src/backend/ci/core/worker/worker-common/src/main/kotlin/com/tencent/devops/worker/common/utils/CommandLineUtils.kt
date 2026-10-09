@@ -162,6 +162,10 @@ object CommandLineUtils {
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
         try {
             val exitCode = executor.execute(cmdLine)
+            // 流收尾失败单独诊断，保留脚本真实退出码；后代进程由任务生命周期的清理逻辑处理。
+            executor.streamCleanupFailure?.let {
+                logger.warn("Command stream cleanup incomplete: ${it.javaClass.simpleName}")
+            }
             if (exitCode != 0) {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -171,6 +175,10 @@ object CommandLineUtils {
                         errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
+        } catch (interrupted: InterruptedException) {
+            // 继续传播取消，不能被下面的兜底分支包装成普通脚本错误，进而触发上层自动重试。
+            Thread.currentThread().interrupt()
+            throw interrupted
         } catch (ignored: Throwable) {
             val errorMessage = executeErrorMessage ?: "Fail to execute the command($command)"
             logger.warn(errorMessage, ignored)

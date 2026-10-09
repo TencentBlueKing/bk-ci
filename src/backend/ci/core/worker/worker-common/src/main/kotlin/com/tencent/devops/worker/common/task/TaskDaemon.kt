@@ -44,7 +44,9 @@ import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -54,6 +56,10 @@ class TaskDaemon(
     private val buildVariables: BuildVariables,
     private val workspace: File
 ) : Callable<Map<String, String>> {
+    // 每个 TaskDaemon 对应一次执行；缓存移除后 Runner 仍用这个 ID 清理，不能改用可复用的 taskId。
+    private val execution = TaskExecutorCache.Execution(Executors.newSingleThreadExecutor())
+    val executionId: String get() = execution.id
+
     override fun call(): Map<String, String> {
         // 绑定本插件的日志上下文到当前线程：
         // 1) 让插件执行线程内的所有日志归属到正确的elementId；
@@ -72,27 +78,38 @@ class TaskDaemon(
                 executeCount = buildTask.executeCount ?: LoggerService.executeCount
             )
         )
+        TaskExecutorCache.currentExecution.set(execution)
         return try {
+            // 中断必须传播给等待方，不能捕获后返回 getAllEnv，否则取消会被当成执行成功。
             task.run(buildTask, buildVariables, workspace)
             task.getAllEnv()
-        } catch (e: InterruptedException) {
-            task.getAllEnv()
         } finally {
+            TaskExecutorCache.currentExecution.remove()
             LoggerService.clearTaskContext()
         }
     }
 
     fun runWithTimeout() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        val executor = Executors.newCachedThreadPool()
+        val executor = execution.executor
         val taskId = buildTask.taskId
         if (taskId != null) {
-            TaskExecutorCache.put(taskId, executor)
+            TaskExecutorCache.put(taskId, execution)
         }
-        val f1 = executor.submit(this)
+        var f1: Future<Map<String, String>>? = null
         try {
+            // 注册缓存到提交之间也可能收到心跳取消；Execution 会拒绝或取消这次提交。
+            f1 = execution.submit(this)
             f1.get(timeout, TimeUnit.MINUTES)
                 ?: throw TimeoutException("Task[${buildTask.elementName}] timeout: $timeout minutes")
+            if (execution.cancelled) throw CancellationException("Task cancelled")
+        } catch (cancelled: CancellationException) {
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "Task[${buildTask.elementName}] cancelled",
+                cause = cancelled
+            )
         } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
@@ -100,6 +117,8 @@ class TaskDaemon(
                 errorMsg = ignore.message ?: "Task[${buildTask.elementName}] timeout: $timeout minutes"
             )
         } finally {
+            // 覆盖超时和等待方异常退出；这里只结束任务等待，外部进程清理由 Runner 统一负责。
+            f1?.cancel(true)
             executor.shutdownNow()
             if (taskId != null) {
                 TaskExecutorCache.invalidate(taskId)
