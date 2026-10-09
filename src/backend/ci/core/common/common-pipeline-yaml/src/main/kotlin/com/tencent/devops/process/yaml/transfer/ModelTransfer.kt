@@ -109,6 +109,8 @@ class ModelTransfer @Autowired constructor(
             concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
+            // YAML 是完整声明。不写 sub-group 用空白表示清空，避免沿用库里的旧标识。
+            concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
             runLockType = when {
                 yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
@@ -503,14 +505,28 @@ class ModelTransfer @Autowired constructor(
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
             setting.runLockType == PipelineRunLockType.LOCK
         ) {
+            val subGroup = setting.concurrencySubGroup?.takeIf { it.isNotBlank() }
+            // ① 整组取消不输出队列字段；③④ 带 sub-group，仍然输出队列字段。
+            val groupWideCancel = setting.concurrencyCancelInProgress && subGroup == null
             return Concurrency(
                 group = setting.concurrencyGroup,
-                cancelInProgress = setting.concurrencyCancelInProgress.nullIfDefault(false),
-                queueLength = setting.maxQueueSize
-                    .nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE),
-                queueTimeoutMinutes = setting.waitQueueTimeMinute
-                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
-                maxParallel = null
+                cancelInProgress = if (subGroup != null) {
+                    setting.concurrencyCancelInProgress
+                } else {
+                    setting.concurrencyCancelInProgress.nullIfDefault(false)
+                },
+                queueLength = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.maxQueueSize.nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE)
+                },
+                queueTimeoutMinutes = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.waitQueueTimeMinute.nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE)
+                },
+                maxParallel = null,
+                subGroup = subGroup
             )
         }
         if (setting.runLockType == PipelineRunLockType.MULTIPLE) {

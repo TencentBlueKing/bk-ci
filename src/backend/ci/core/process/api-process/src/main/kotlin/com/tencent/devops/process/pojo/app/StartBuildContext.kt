@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
@@ -157,7 +158,9 @@ data class StartBuildContext(
     // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
     val retryMatrixGroupId: String? = null,
     // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
-    val retryMatrixContainerId: String? = null
+    val retryMatrixContainerId: String? = null,
+    // 同一批标识。null 未配置；空串表示配置了但启动时解析为空
+    val concurrencySubGroup: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -523,6 +526,14 @@ data class StartBuildContext(
                         )
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
+                    },
+                concurrencySubGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                    ?.let {
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        ConcurrencySubGroupPolicy.resolve(
+                            expression = it.concurrencySubGroup,
+                            variables = PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
                     },
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =

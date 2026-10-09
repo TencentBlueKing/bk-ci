@@ -91,6 +91,7 @@ class PipelineSettingDao {
                 BUILD_NUM_RULE,
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
+                CONCURRENCY_SUB_GROUP,
                 CLEAN_VARIABLES_WHEN_RETRY,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
@@ -130,6 +131,7 @@ class PipelineSettingDao {
                 setting.buildNumRule,
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
+                setting.concurrencySubGroup,
                 setting.cleanVariablesWhenRetry,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
@@ -165,6 +167,7 @@ class PipelineSettingDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                 .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
@@ -484,6 +487,7 @@ class PipelineSettingDao {
                     failIfVariableInvalid = t.failIfVariableInvalid,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     concurrencyGroup = t.concurrencyGroup,
                     cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->

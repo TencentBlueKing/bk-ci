@@ -296,11 +296,8 @@ class QueueInterceptor @Autowired constructor(
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
-                    params = arrayOf(
-                        groupName,
-                        "<a target='_blank' href='$detailUrl'>${task.buildId}</a>"
-                    )
+                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL,
+                    params = arrayOf("<a target='_blank' href='$detailUrl'>${task.buildId}</a>")
                 ),
                 tag = "QueueInterceptor",
                 containerHashId = "",
@@ -329,6 +326,45 @@ class QueueInterceptor @Autowired constructor(
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
+        // 配置了同一批标识（含解析为空）时不走整组取消。先去重，再按本流水线队列长度放行。
+        if (concurrencyGroup.isNotBlank() && task.concurrencySubGroup != null) {
+            if (task.cancelAllowed && task.concurrencySubGroup.isBlank()) {
+                buildLogPrinter.addYellowLine(
+                    buildId = task.buildId,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_EMPTY
+                    ),
+                    tag = "QueueInterceptor",
+                    containerHashId = "",
+                    executeCount = 1,
+                    jobId = null,
+                    stepId = "QueueInterceptor"
+                )
+            } else if (task.cancelAllowed) {
+                cancelSameSubGroup(
+                    task = task,
+                    projectId = projectId,
+                    concurrencyGroup = concurrencyGroup,
+                    latestStartUser = latestStartUser
+                )
+            }
+            return checkRunLockWithSingleType(
+                task = task,
+                latestBuildId = latestBuildId,
+                latestStartUser = latestStartUser,
+                runningCount = countGroupBuild(
+                    task = task,
+                    concurrencyGroup = concurrencyGroup,
+                    status = listOf(BuildStatus.RUNNING)
+                ),
+                queueCount = countGroupBuild(
+                    task = task,
+                    concurrencyGroup = concurrencyGroup,
+                    status = QUEUE_STATUS_LIST
+                ),
+                groupName = concurrencyGroup
+            )
+        }
         return when {
             concurrencyGroup.isNotBlank() && task.concurrencyCancelInProgress && task.cancelAllowed -> {
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
@@ -406,6 +442,62 @@ class QueueInterceptor @Autowired constructor(
             }
             // 满足条件
             else -> Response(data = BuildStatus.RUNNING)
+        }
+    }
+
+    /**
+     * 只取消本流水线内、解析值相同的构建。③ 含运行中，④ 只含排队。
+     */
+    private fun cancelSameSubGroup(
+        task: InterceptData,
+        projectId: String,
+        concurrencyGroup: String,
+        latestStartUser: String?
+    ) {
+        val status = if (task.concurrencyCancelInProgress) {
+            listOf(BuildStatus.RUNNING) + QUEUE_STATUS_LIST
+        } else {
+            QUEUE_STATUS_LIST
+        }
+        val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = task.pipelineInfo.pipelineId,
+            buildId = task.buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
+        val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = status,
+            excludeBuildId = task.buildId
+        ).filter {
+            it.pipelineId == task.pipelineInfo.pipelineId &&
+                it.concurrencySubGroup == task.concurrencySubGroup
+        }
+        val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
+            candidateBuilds = builds,
+            currentContext = ConcurrencyCancelContext.of(
+                pipelineId = task.pipelineInfo.pipelineId,
+                buildId = task.buildId,
+                isRetry = task.retry == true
+            ) { pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum }
+        )
+        val reason = I18nUtil.getCodeLanMessage(
+            messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_REPLACED,
+            params = arrayOf("<a target='_blank' href='$detailUrl'>${task.buildId}</a>")
+        )
+        cancelTargets.forEach { target ->
+            pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                projectId = projectId,
+                pipelineId = target.pipelineId,
+                buildId = target.buildId,
+                userId = latestStartUser ?: task.pipelineInfo.creator,
+                groupName = concurrencyGroup,
+                detailUrl = detailUrl,
+                reasonMessage = reason
+            )
         }
     }
 
