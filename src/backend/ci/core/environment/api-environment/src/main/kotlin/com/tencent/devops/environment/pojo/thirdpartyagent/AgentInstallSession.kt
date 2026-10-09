@@ -152,8 +152,8 @@ data class AgentInstallSessionDetail(
     val createdBy: String,
     @get:Schema(title = "会话状态", required = true)
     val status: String,
-    @get:Schema(title = "安装命令", required = true)
-    val command: String,
+    @get:Schema(title = "安装命令，仅创建人且会话有效时返回，其他情况为空")
+    val command: String?,
     @get:Schema(title = "失效时间", required = true)
     val expiredAt: LocalDateTime,
     @get:Schema(title = "创建时间", required = true)

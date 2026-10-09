@@ -9,9 +9,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import com.tencent.devops.environment.TpaLock
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentInstallSessionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -29,6 +27,8 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartI
 import com.tencent.devops.environment.service.NodeTagService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -40,11 +40,9 @@ class AgentInstallSessionRuntimeService(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val importService: ImportService,
     private val nodeTagService: NodeTagService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val simpleRateLimiter: SimpleRateLimiter,
-    private val redisOperation: RedisOperation
+    private val simpleRateLimiter: SimpleRateLimiter
 ) {
     @Value("\${environment.batch-install.aes-key}")
     private var batchInstallAesKey: String = ""
@@ -95,107 +93,102 @@ class AgentInstallSessionRuntimeService(
     }
 
     /**
-     * Returns true when this agent belongs to an install session. Session agents are fully handled here, while legacy
-     * agents continue through the original startup import branch.
+     * Agent 启动握手时调用，在原有自动导入之后执行：把会话配置的并发与标签应用到节点。
+     * 节点由原有自动导入创建，这里不导入、不加锁（会话仅作展示，重复应用是幂等的）。
+     * 不向外抛异常，失败只记录到会话节点；FAILED 仍算未完成，Agent 下次启动会再处理。
      */
-    fun processAgentStartup(
+    fun processAgentStartup(projectId: String, agentHashId: String, startInfo: ThirdPartyAgentStartInfo) {
+        try {
+            val agentId = HashUtil.decodeIdToLong(agentHashId)
+            val sessionNode = sessionDao.findUnfinishedByAgentId(dslContext, agentId, LocalDateTime.now()) ?: return
+            val session = sessionDao.getById(dslContext, projectId, sessionNode.sessionId) ?: return
+            applySession(projectId, agentId, session, sessionNode, startInfo)
+        } catch (e: Exception) {
+            logger.warn("processAgentStartup|failed|$projectId|$agentHashId", e)
+        }
+    }
+
+    private fun applySession(
         projectId: String,
-        agentHashId: String,
+        agentId: Long,
+        session: AgentInstallSession,
+        sessionNode: AgentInstallSessionNode,
         startInfo: ThirdPartyAgentStartInfo
-    ): Boolean {
-        val agentId = HashUtil.decodeIdToLong(agentHashId)
-        val sessionNode = sessionDao.findUnfinishedByAgentId(dslContext, agentId, LocalDateTime.now()) ?: return false
-        val session = sessionDao.getById(dslContext, projectId, sessionNode.sessionId) ?: return false
-        TpaLock(redisOperation, "install-session:apply:$agentId").use { lock ->
-            if (!lock.tryLock()) {
-                return true
-            }
-            val now = LocalDateTime.now()
+    ) {
+        val agentVersion = startInfo.masterVersion ?: startInfo.version
+        var resolvedNodeId = sessionNode.nodeId
+        try {
             sessionDao.updateNodeStatus(
-                dslContext,
-                session.id,
-                agentId,
-                AgentInstallSessionNodeStatus.IMPORTING,
-                now
+                dslContext, session.id, agentId, AgentInstallSessionNodeStatus.IMPORTING, LocalDateTime.now()
             )
-            sessionDao.updateNodeDetails(
-                dslContext = dslContext,
-                sessionId = session.id,
-                agentId = agentId,
-                nodeId = sessionNode.nodeId,
-                hostname = startInfo.hostname,
-                ip = startInfo.hostIp,
-                errorMessage = null,
-                agentVersion = startInfo.masterVersion ?: startInfo.version,
-                updatedTime = now
-            )
-            var resolvedNodeId = sessionNode.nodeId
-            try {
-                if (session.mode == AgentInstallSessionMode.FIRST_IMPORT) {
-                    importService.importAgent(
-                        userId = session.createdBy,
-                        projectId = projectId,
-                        agentId = agentHashId,
-                        masterVersion = startInfo.masterVersion
-                    )
-                }
-                val agent = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId)
-                    ?: throw OperationException("The session agent does not exist")
-                val nodeId = agent.nodeId ?: throw OperationException("The session agent is not associated with a node")
-                resolvedNodeId = nodeId
-                if (session.mode == AgentInstallSessionMode.REINSTALL &&
-                    (session.targetAgentId != agentId || session.targetNodeId != nodeId)
-                ) {
-                    throw OperationException("The reinstall session target does not match")
-                }
-                agent.parallelTaskCount = session.config.parallelTaskCount
-                session.config.dockerParallelTaskCount?.let { agent.dockerParallelTaskCount = it }
-                thirdPartyAgentDao.saveAgent(dslContext, agent)
-                val tags = sessionDao.listTags(dslContext, session.id).map {
-                    NodeTagAddOrDeleteTagItem(tagKeyId = it.tagKeyId, tagValueId = it.tagValueId)
-                }
-                nodeTagService.replaceUserTags(projectId, nodeId, tags)
+            val agent = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId)
+                ?: throw OperationException("The session agent does not exist")
+            val nodeId = agent.nodeId ?: throw OperationException("The session agent is not associated with a node")
+            resolvedNodeId = nodeId
+            if (session.mode == AgentInstallSessionMode.REINSTALL &&
+                (session.targetAgentId != agentId || session.targetNodeId != nodeId)
+            ) {
+                throw OperationException("The reinstall session target does not match")
+            }
+            agent.parallelTaskCount = session.config.parallelTaskCount
+            session.config.dockerParallelTaskCount?.let { agent.dockerParallelTaskCount = it }
+            val tags = sessionDao.listTags(dslContext, session.id).map {
+                NodeTagAddOrDeleteTagItem(tagKeyId = it.tagKeyId, tagValueId = it.tagValueId)
+            }
+            // 并发、标签与会话节点成功状态在同一事务内提交，避免出现部分生效
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                thirdPartyAgentDao.saveAgent(context, agent)
+                nodeTagService.replaceUserTags(projectId, nodeId, tags, context)
                 sessionDao.updateNodeDetails(
-                    dslContext = dslContext,
+                    dslContext = context,
                     sessionId = session.id,
                     agentId = agentId,
                     nodeId = nodeId,
                     hostname = startInfo.hostname,
                     ip = startInfo.hostIp,
                     errorMessage = null,
-                    agentVersion = startInfo.masterVersion ?: startInfo.version,
+                    agentVersion = agentVersion,
                     updatedTime = LocalDateTime.now()
                 )
                 sessionDao.updateNodeStatus(
-                    dslContext,
+                    context,
                     session.id,
                     agentId,
                     AgentInstallSessionNodeStatus.SUCCEEDED,
                     LocalDateTime.now()
                 )
-                return true
-            } catch (e: Exception) {
-                val failedAt = LocalDateTime.now()
-                sessionDao.updateNodeDetails(
-                    dslContext = dslContext,
-                    sessionId = session.id,
-                    agentId = agentId,
-                    nodeId = resolvedNodeId,
-                    hostname = startInfo.hostname,
-                    ip = startInfo.hostIp,
-                    errorMessage = (e.message ?: e.javaClass.simpleName).take(MAX_ERROR_MESSAGE_LENGTH),
-                    agentVersion = startInfo.masterVersion ?: startInfo.version,
-                    updatedTime = failedAt
-                )
-                sessionDao.updateNodeStatus(
-                    dslContext,
-                    session.id,
-                    agentId,
-                    AgentInstallSessionNodeStatus.FAILED,
-                    failedAt
-                )
-                throw e
             }
+        } catch (e: Exception) {
+            logger.warn("applySession|failed|$projectId|$agentId|${session.id}", e)
+            markNodeFailed(session.id, agentId, resolvedNodeId, startInfo, agentVersion, e)
+        }
+    }
+
+    private fun markNodeFailed(
+        sessionId: String,
+        agentId: Long,
+        nodeId: Long?,
+        startInfo: ThirdPartyAgentStartInfo,
+        agentVersion: String?,
+        cause: Exception
+    ) {
+        try {
+            val failedAt = LocalDateTime.now()
+            sessionDao.updateNodeDetails(
+                dslContext = dslContext,
+                sessionId = sessionId,
+                agentId = agentId,
+                nodeId = nodeId,
+                hostname = startInfo.hostname,
+                ip = startInfo.hostIp,
+                errorMessage = (cause.message ?: cause.javaClass.simpleName).take(MAX_ERROR_MESSAGE_LENGTH),
+                agentVersion = agentVersion,
+                updatedTime = failedAt
+            )
+            sessionDao.updateNodeStatus(dslContext, sessionId, agentId, AgentInstallSessionNodeStatus.FAILED, failedAt)
+        } catch (e: Exception) {
+            logger.error("markNodeFailed|failed|$sessionId|$agentId", e)
         }
     }
 
@@ -256,5 +249,6 @@ class AgentInstallSessionRuntimeService(
 
     companion object {
         private const val MAX_ERROR_MESSAGE_LENGTH = 1024
+        private val logger = LoggerFactory.getLogger(AgentInstallSessionRuntimeService::class.java)
     }
 }

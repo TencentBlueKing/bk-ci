@@ -74,19 +74,20 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<AgentStatus> {
         checkParam(projectId, agentId, secretKey)
         val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
-        val handledByInstallSession = agentInstallSessionRuntimeService.processAgentStartup(
-            projectId = projectId,
-            agentHashId = agentId,
-            startInfo = startInfo
-        )
         // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
-        if (!handledByInstallSession && AgentStatus.UN_IMPORT_OK == status) {
+        if (AgentStatus.UN_IMPORT_OK == status) {
             thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
                 importService.importAgent(
                     userId = it.createUser, projectId = projectId, agentId = agentId, masterVersion = it.masterVersion
                 )
             }
         }
+        // 安装会话 Agent：在已导入的节点上应用会话配置的并发与标签，失败不影响启动
+        agentInstallSessionRuntimeService.processAgentStartup(
+            projectId = projectId,
+            agentHashId = agentId,
+            startInfo = startInfo
+        )
         return Result(status)
     }
 

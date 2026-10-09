@@ -36,10 +36,8 @@ import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
-@Service
 open class AgentUrlService @Autowired constructor(
     private val commonConfig: CommonConfig
 ) {

@@ -510,8 +510,14 @@ class NodeTagService @Autowired constructor(
 
     /**
      * 安装会话在节点导入或重装成功后替换用户标签，保留 os、arch 等内置标签。
+     * 写操作使用传入的 [transactionContext]，调用方可将其与其他写入放在同一事务中。
      */
-    fun replaceUserTags(projectId: String, nodeId: Long, tags: List<NodeTagAddOrDeleteTagItem>) {
+    fun replaceUserTags(
+        projectId: String,
+        nodeId: Long,
+        tags: List<NodeTagAddOrDeleteTagItem>,
+        transactionContext: DSLContext? = null
+    ) {
         val keyIds = tags.map { it.tagKeyId }.toSet()
         val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
             dslContext = dslContext,
@@ -529,16 +535,28 @@ class NodeTagService @Autowired constructor(
                 )
             }
         }
+        if (transactionContext != null) {
+            writeUserTags(transactionContext, projectId, nodeId, tags)
+            return
+        }
         dslContext.transaction { config ->
-            val ctx = DSL.using(config)
-            nodeTagDao.deleteNodesUserTags(ctx, projectId, setOf(nodeId))
-            if (tags.isNotEmpty()) {
-                nodeTagDao.batchAddNodeTags(
-                    dslContext = ctx,
-                    projectId = projectId,
-                    nodeAndValueAndKeyIds = mapOf(nodeId to tags.associate { it.tagValueId to it.tagKeyId })
-                )
-            }
+            writeUserTags(DSL.using(config), projectId, nodeId, tags)
+        }
+    }
+
+    private fun writeUserTags(
+        ctx: DSLContext,
+        projectId: String,
+        nodeId: Long,
+        tags: List<NodeTagAddOrDeleteTagItem>
+    ) {
+        nodeTagDao.deleteNodesUserTags(ctx, projectId, setOf(nodeId))
+        if (tags.isNotEmpty()) {
+            nodeTagDao.batchAddNodeTags(
+                dslContext = ctx,
+                projectId = projectId,
+                nodeAndValueAndKeyIds = mapOf(nodeId to tags.associate { it.tagValueId to it.tagKeyId })
+            )
         }
     }
 

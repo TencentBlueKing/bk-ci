@@ -11,6 +11,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -66,7 +68,9 @@ class AgentInstallSessionService(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val agentUrlService: AgentUrlService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     @Value("\${environment.agent-install-session.expire-days:3}")
     private var expireDays: Long = 3
@@ -113,13 +117,13 @@ class AgentInstallSessionService(
             projectId = projectId,
             offset = (currentPage - 1) * currentPageSize,
             limit = currentPageSize
-        ).map { toDetail(it, now) }
+        ).map { toDetail(it, now, userId) }
         return Page(currentPage, currentPageSize, count, records)
     }
 
     fun get(userId: String, projectId: String, sessionId: String): AgentInstallSessionDetail {
         checkViewPermission(userId, projectId)
-        return toDetail(getSession(projectId, sessionId), LocalDateTime.now())
+        return toDetail(getSession(projectId, sessionId), LocalDateTime.now(), userId)
     }
 
     fun listNodes(userId: String, projectId: String, sessionId: String): List<AgentInstallSessionNodeInfo> {
@@ -149,10 +153,20 @@ class AgentInstallSessionService(
     }
 
     fun regenerate(userId: String, projectId: String, sessionId: String): AgentInstallSessionCreateResponse {
-        checkViewPermission(userId, projectId)
         val source = getSession(projectId, sessionId)
+        val isCreator = source.createdBy == userId
+        if (!isCreator && !authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw PermissionForbiddenException(
+                message = "Only the session creator or project manager can regenerate this install session"
+            )
+        }
+        if (source.mode == AgentInstallSessionMode.FIRST_IMPORT) {
+            checkCreatePermission(userId, projectId)
+        }
         val now = LocalDateTime.now()
-        if (source.status == AgentInstallSessionStatus.ACTIVE && source.expiredTime > now) {
+        val sourceActive = source.status == AgentInstallSessionStatus.ACTIVE && source.expiredTime > now
+        // 只有创建人能拿回原会话命令；管理员代为生成时以自己的身份新建会话，不复用他人令牌
+        if (sourceActive && isCreator) {
             return createResponse(source, reused = true)
         }
         if (source.status == AgentInstallSessionStatus.REVOKED) {
@@ -191,7 +205,9 @@ class AgentInstallSessionService(
             if (existing != null && existing.id != source.id) {
                 return createResponse(existing, reused = true)
             }
-            sessionDao.markExpired(dslContext, source.id, createTime)
+            if (!sourceActive) {
+                sessionDao.markExpired(dslContext, source.id, createTime)
+            }
             return createSession(normalized, userId, projectId, createTime, previousSessionId = source.id)
         }
     }
@@ -514,19 +530,29 @@ class AgentInstallSessionService(
         )
     }
 
-    private fun toDetail(session: AgentInstallSession, now: LocalDateTime): AgentInstallSessionDetail {
+    private fun toDetail(
+        session: AgentInstallSession,
+        now: LocalDateTime,
+        userId: String
+    ): AgentInstallSessionDetail {
         val status = if (session.status == AgentInstallSessionStatus.ACTIVE && session.expiredTime <= now) {
             sessionDao.markExpired(dslContext, session.id, now)
             AgentInstallSessionStatus.EXPIRED
         } else {
             session.status
         }
+        // 安装命令携带会话令牌，只返回给创建人本人，且仅在会话仍有效时才解密
+        val command = if (session.createdBy == userId && status == AgentInstallSessionStatus.ACTIVE) {
+            command(session)
+        } else {
+            null
+        }
         return AgentInstallSessionDetail(
             sessionId = session.id,
             projectId = session.projectId,
             createdBy = session.createdBy,
             status = status.name,
-            command = command(session),
+            command = command,
             expiredAt = session.expiredTime,
             createdAt = session.createdTime,
             previousSessionId = session.previousSessionId,
@@ -676,7 +702,17 @@ class AgentInstallSessionService(
         }
     }
 
-    private fun checkViewPermission(userId: String, projectId: String) = checkCreatePermission(userId, projectId)
+    private fun checkViewPermission(userId: String, projectId: String) {
+        // CREATE 按项目鉴权，VIEW/LIST 必须查询节点资源上的授权，不能使用项目资源鉴权重载。
+        val allowed = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE) ||
+            environmentPermissionService.listNodeByPermissions(userId, projectId, VIEW_PERMISSIONS)
+                .values.any { it.isNotEmpty() }
+        if (!allowed) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION)
+            )
+        }
+    }
 
     private fun getSession(projectId: String, sessionId: String): AgentInstallSession =
         sessionDao.getById(dslContext, projectId, sessionId)
@@ -743,5 +779,6 @@ class AgentInstallSessionService(
         const val DEFAULT_PAGE = 1
         const val DEFAULT_PAGE_SIZE = 20
         const val MAX_PAGE_SIZE = 100
+        private val VIEW_PERMISSIONS = setOf(AuthPermission.LIST, AuthPermission.VIEW)
     }
 }
