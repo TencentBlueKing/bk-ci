@@ -752,6 +752,17 @@ class PipelineStageService @Autowired constructor(
                     "triggerUser" to triggerUserId,
                     "stageName" to (stage.name ?: ""),
                     "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",
+                    // 审核环节按顺序推进，环节内审核人是或签。卡片进度按环节而不是按人数计算。
+                    "reviewGroups" to JsonUtil.toJson(
+                        (checkIn.reviewGroups ?: emptyList()).map { item ->
+                            mapOf(
+                                "name" to item.name,
+                                "status" to item.status.orEmpty(),
+                                "reviewers" to StagePauseCheck.sanitizeIds(item.reviewers)
+                            )
+                        },
+                        false
+                    ),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),

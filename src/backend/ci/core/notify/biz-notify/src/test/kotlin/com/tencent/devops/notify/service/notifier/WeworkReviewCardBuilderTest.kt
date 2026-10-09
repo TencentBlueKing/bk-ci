@@ -35,7 +35,7 @@ class WeworkReviewCardBuilderTest {
         val first = plan.receiverCards.getValue("royalhuang")
         val second = plan.receiverCards.getValue("fayewang")
         assertNotEquals(first.taskId, second.taskId)
-        assertEquals("流水线人工审核（会签）", first.mainTitle.title)
+        assertEquals("流水线人工审核", first.mainTitle.title)
         assertTrue(first.subTitleText!!.contains("项目: Royal流水线测试"))
         assertTrue(first.subTitleText!!.contains("流水线: stage-review-notice"))
         assertTrue(first.subTitleText!!.contains("构建号: #6"))
@@ -53,7 +53,59 @@ class WeworkReviewCardBuilderTest {
         assertEquals("https://example.com/pc", first.buttonList!![2].url)
         assertNull(first.jumpList)
         assertNotNull(first.cardAction)
-        assertTrue(first.subTitleText!!.contains("审批进度"))
+        assertTrue(first.subTitleText!!.contains("审核人: royalhuang、fayewang（任一通过）"))
+        assertTrue(!first.subTitleText!!.contains("审批进度"))
+    }
+
+    @Test
+    fun `review progress counts groups not reviewers`() {
+        val waiting = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewStage" to "[1]Stage审核",
+                    "reviewers" to "royalhuang,fayewang",
+                    "reviewGroups" to """
+                        [{"name":"环节一","status":"","reviewers":["royalhuang","fayewang"]},
+                        {"name":"环节二","status":"","reviewers":["royalhuang"]}]
+                    """.trimIndent()
+                )
+            ),
+            title = "",
+            redisOperation = null
+        )
+        val waitingText = waiting!!.receiverCards.getValue("royalhuang").subTitleText!!
+        assertTrue(waitingText.contains("审批进度: 0/2"))
+        assertTrue(waitingText.contains("环节一: 待审核"))
+        assertTrue(waitingText.contains("环节二: 未开始"))
+        assertTrue(waitingText.contains("审核人: royalhuang、fayewang（任一通过）"))
+        assertTrue(!waitingText.contains("⏳"))
+
+        val next = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewers" to "royalhuang",
+                    "reviewGroups" to """
+                        [{"name":"环节一","status":"PROCESS","reviewers":["royalhuang","fayewang"]},
+                        {"name":"环节二","status":"","reviewers":["royalhuang"]}]
+                    """.trimIndent()
+                )
+            ),
+            title = "",
+            redisOperation = null
+        )
+        val nextText = next!!.receiverCards.getValue("royalhuang").subTitleText!!
+        assertTrue(nextText.contains("审批进度: 1/2"))
+        assertTrue(nextText.contains("环节一: 已通过"))
+        assertTrue(nextText.contains("环节二: 待审核"))
+        assertTrue(!nextText.contains("审核人:"))
     }
 
     @Test

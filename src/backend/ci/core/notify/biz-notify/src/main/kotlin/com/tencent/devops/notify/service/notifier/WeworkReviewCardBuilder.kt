@@ -133,8 +133,9 @@ object WeworkReviewCardBuilder {
             .map { WeworkReviewCardConst.weworkUserId(it) }
             .filter { it.isNotBlank() }
             .distinct()
-        val countersign = receivers.size > 1 || reviewUsers.size > 1
-        val mainTitleText = if (countersign) "流水线人工审核（会签）" else "流水线人工审核"
+        // 同一环节的多名审核人是或签，不按人数会签。进度只在存在多个审核环节时展示。
+        val reviewGroups = parseReviewGroups(body["reviewGroups"].orEmpty())
+        val mainTitleText = "流水线人工审核"
         val mainDesc = when (scene) {
             CardScene.D -> "⚠ 此审核要求通过和驳回均填写意见"
             CardScene.C2 -> "请确认审核参数，如需修改请前往蓝盾操作"
@@ -184,6 +185,7 @@ object WeworkReviewCardBuilder {
                 mainDesc = mainDesc,
                 reviewParams = reviewParams,
                 reviewUsers = reviewUsers.ifEmpty { receivers },
+                reviewGroups = reviewGroups,
                 iconUrl = body["cardIconUrl"]
             )
             receiverCards[receiver] = card
@@ -213,6 +215,7 @@ object WeworkReviewCardBuilder {
         mainDesc: String,
         reviewParams: List<ReviewCardParam>,
         reviewUsers: List<String>,
+        reviewGroups: List<ReviewGroupStep>,
         iconUrl: String?
     ): WeworkTemplateCard {
         // 左右分列会把长名称挤在右半列截断。改成整行「字段: 内容」，与蓝鲸审批助手一致，占满卡片宽度。
@@ -224,7 +227,8 @@ object WeworkReviewCardBuilder {
             reviewDesc = reviewDesc,
             scene = scene,
             reviewParams = reviewParams,
-            reviewUsers = reviewUsers
+            reviewUsers = reviewUsers,
+            reviewGroups = reviewGroups
         )
         val triggerRow = triggerUser.takeIf { it.isNotBlank() }?.let {
             listOf(
@@ -435,7 +439,8 @@ object WeworkReviewCardBuilder {
         reviewDesc: String,
         scene: CardScene,
         reviewParams: List<ReviewCardParam>,
-        reviewUsers: List<String>
+        reviewUsers: List<String>,
+        reviewGroups: List<ReviewGroupStep>
     ): String? {
         val lines = mutableListOf<String>()
         if (projectName.isNotBlank()) lines.add("项目: $projectName")
@@ -443,18 +448,12 @@ object WeworkReviewCardBuilder {
         val buildLabel = buildNum.removePrefix("#")
         if (buildLabel.isNotBlank()) lines.add("构建号: #$buildLabel")
         if (reviewStage.isNotBlank()) lines.add("审核阶段: $reviewStage")
+        appendReviewProgress(lines, reviewGroups, reviewUsers)
         val descIndex = if (reviewDesc.isNotBlank()) {
             lines.add("审核说明: $reviewDesc")
             lines.lastIndex
         } else {
             -1
-        }
-        if (reviewUsers.size > 1) {
-            lines.add("审批进度 (0/${reviewUsers.size})")
-            reviewUsers.take(6).forEach { lines.add("⏳ $it · 待审核") }
-            if (reviewUsers.size > 6) {
-                lines.add("其余 ${reviewUsers.size - 6} 人见详情")
-            }
         }
         if (scene == CardScene.C2 && reviewParams.isNotEmpty()) {
             lines.add("审核参数")
@@ -480,6 +479,76 @@ object WeworkReviewCardBuilder {
         }
         return joined().take(BODY_LIMIT).ifBlank { null }
     }
+
+    /**
+     * 多个审核环节才计入进度。同一环节里的审核人是或签，只列一次，不按人头拆成待办。
+     */
+    private fun appendReviewProgress(
+        lines: MutableList<String>,
+        groups: List<ReviewGroupStep>,
+        reviewUsers: List<String>
+    ) {
+        if (groups.size > 1) {
+            var waitingAssigned = false
+            val states = groups.map { group ->
+                val passed = group.status.equals("PROCESS", true) ||
+                    group.status.equals("REVIEW_PROCESSED", true)
+                val aborted = group.status.equals("ABORT", true) ||
+                    group.status.equals("REVIEW_ABORT", true)
+                val state = when {
+                    passed -> "已通过"
+                    aborted -> "已驳回"
+                    !waitingAssigned -> {
+                        waitingAssigned = true
+                        "待审核"
+                    }
+                    else -> "未开始"
+                }
+                group to state
+            }
+            val done = states.count { it.second == "已通过" }
+            lines.add("审批进度: $done/${groups.size}")
+            states.forEach { (group, state) -> lines.add("${group.name}: $state") }
+            val currentReviewers = states.firstOrNull { it.second == "待审核" }?.first?.reviewers
+                .orEmpty()
+                .ifEmpty { reviewUsers }
+            appendOrReviewers(lines, currentReviewers)
+        } else {
+            appendOrReviewers(lines, reviewUsers)
+        }
+    }
+
+    private fun appendOrReviewers(lines: MutableList<String>, reviewUsers: List<String>) {
+        if (reviewUsers.size > 1) {
+            lines.add("审核人: ${reviewUsers.joinToString("、")}（任一通过）")
+        }
+    }
+
+    private fun parseReviewGroups(raw: String): List<ReviewGroupStep> {
+        if (raw.isBlank() || raw == "[]" || raw == "null") return emptyList()
+        return try {
+            JsonUtil.to<List<Map<String, Any?>>>(raw).mapIndexed { index, item ->
+                val reviewers = when (val value = item["reviewers"]) {
+                    is Collection<*> -> value.mapNotNull { it?.toString() }
+                    else -> value?.toString().orEmpty().split(",", ";", "、", "\n")
+                }.map { WeworkReviewCardConst.weworkUserId(it) }.filter { it.isNotBlank() }.distinct()
+                ReviewGroupStep(
+                    name = item["name"]?.toString().orEmpty().ifBlank { "审核环节${index + 1}" },
+                    status = item["status"]?.toString().orEmpty(),
+                    reviewers = reviewers
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn("parse reviewGroups failed, rawLen=${raw.length}", ignored)
+            emptyList()
+        }
+    }
+
+    private data class ReviewGroupStep(
+        val name: String,
+        val status: String,
+        val reviewers: List<String>
+    )
 
     private fun parseReviewParams(raw: String): List<ReviewCardParam> {
         if (raw.isBlank() || raw == "[]" || raw == "null") return emptyList()
