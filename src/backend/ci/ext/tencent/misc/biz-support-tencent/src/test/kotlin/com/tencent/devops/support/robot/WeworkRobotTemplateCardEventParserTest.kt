@@ -44,6 +44,24 @@ class WeworkRobotTemplateCardEventParserTest {
     }
 
     @Test
+    fun `parses selected dropdown items`() {
+        val xml = """
+            <xml>
+              <from><alias>royalhuang</alias></from>
+              <event_key>BKCI_REVIEW|agree|review_p1</event_key>
+              <selected_items>
+                <selected_item>
+                  <question_key>deploy_env</question_key>
+                  <option_ids><option_id>prod</option_id></option_ids>
+                </selected_item>
+              </selected_items>
+            </xml>
+        """.trimIndent()
+        val click = WeworkRobotTemplateCardEventParser.parse(xml)!!
+        assertEquals(mapOf("deploy_env" to "prod"), click.selectedItems)
+    }
+
+    @Test
     fun `ignores unrelated callback`() {
         val xml = """
             <xml>

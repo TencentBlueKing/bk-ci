@@ -2,6 +2,7 @@ package com.tencent.devops.support.robot
 
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import org.w3c.dom.Document
+import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
@@ -39,31 +40,37 @@ object WeworkRobotTemplateCardEventParser {
         val items = document.getElementsByTagName("selected_item").takeIf { it.length > 0 }
             ?: document.getElementsByTagName("SelectedItem")
         for (i in 0 until items.length) {
-            val item = items.item(i)
-            val children = item.childNodes
-            var key = ""
-            var optionId = ""
-            for (j in 0 until children.length) {
-                val node = children.item(j)
-                when (node.nodeName) {
-                    "question_key", "QuestionKey" -> key = node.textContent.orEmpty()
-                    "option_ids", "OptionIds" -> {
-                        val optionNodes = node.childNodes
-                        for (k in 0 until optionNodes.length) {
-                            val optionName = optionNodes.item(k).nodeName
-                            if (optionName == "option_id" || optionName == "OptionId") {
-                                optionId = optionNodes.item(k).textContent.orEmpty()
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-            if (key.isNotBlank() && optionId.isNotBlank()) {
-                result[key] = optionId
-            }
+            val picked = readSelectedItem(items.item(i)) ?: continue
+            result[picked.first] = picked.second
         }
         return result
+    }
+
+    private fun readSelectedItem(item: Node): Pair<String, String>? {
+        val children = item.childNodes
+        var key = ""
+        var optionId = ""
+        for (j in 0 until children.length) {
+            val node = children.item(j)
+            when (node.nodeName) {
+                "question_key", "QuestionKey" -> key = node.textContent.orEmpty()
+                "option_ids", "OptionIds" -> optionId = firstOptionId(node)
+            }
+        }
+        if (key.isBlank() || optionId.isBlank()) return null
+        return key to optionId
+    }
+
+    private fun firstOptionId(optionIds: Node): String {
+        val optionNodes = optionIds.childNodes
+        for (k in 0 until optionNodes.length) {
+            val option = optionNodes.item(k)
+            val optionName = option.nodeName
+            if (optionName == "option_id" || optionName == "OptionId") {
+                return option.textContent.orEmpty()
+            }
+        }
+        return ""
     }
 
     private fun firstTag(document: Document, vararg names: String): String {

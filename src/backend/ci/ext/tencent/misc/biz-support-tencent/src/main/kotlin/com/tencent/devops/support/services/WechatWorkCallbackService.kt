@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.common.wechatwork.model.CallbackElement
 import com.tencent.devops.common.wechatwork.model.Constants.PROJECT
 import com.tencent.devops.common.wechatwork.model.Constants.SERVICE_HUMAN
 import com.tencent.devops.common.wechatwork.model.enums.EventType
@@ -168,25 +169,10 @@ class WechatWorkCallbackService @Autowired constructor(
                 false
             }
         }
-        if ((receiverType == ReceiverType.group && mentionType != "0") ||
-            receiverType == ReceiverType.single ||
-            isReviewRelatedEvent
+        if (shouldDedupCallback(receiverType, mentionType, isReviewRelatedEvent) &&
+            callbackMsgIdAlreadyHandled(callbackElement)
         ) {
-            try {
-                val msgIdIterator = callbackElement.msgElement.elementIterator("MsgId")
-                if (msgIdIterator.hasNext()) {
-                    val msgId = (msgIdIterator.next() as Element).text
-                    if (wechatWorkMessageDAO.exist(dslContext, msgId)) {
-                        // 已存在则直接返回
-                        return true
-                    } else {
-                        // 还没有存在则插入并往下走
-                        wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
-                    }
-                }
-            } catch (ignored: Exception) {
-                logger.info("skip msgId dedup for callback without MsgId: ${ignored.message}")
-            }
+            return true
         }
 
         // 从这里开始统一处理消息
@@ -281,6 +267,31 @@ class WechatWorkCallbackService @Autowired constructor(
         }
 
         return true
+    }
+
+    private fun shouldDedupCallback(
+        receiverType: ReceiverType,
+        mentionType: String,
+        isReviewRelatedEvent: Boolean
+    ): Boolean {
+        val mentionedInGroup = receiverType == ReceiverType.group && mentionType != "0"
+        return mentionedInGroup || receiverType == ReceiverType.single || isReviewRelatedEvent
+    }
+
+    /**
+     * 群里被 @、单聊、审核卡片事件需要按 MsgId 去重。重复消息返回 true，调用方直接结束。
+     */
+    private fun callbackMsgIdAlreadyHandled(callbackElement: CallbackElement): Boolean {
+        try {
+            val msgIdIterator = callbackElement.msgElement.elementIterator("MsgId")
+            if (!msgIdIterator.hasNext()) return false
+            val msgId = (msgIdIterator.next() as Element).text
+            if (wechatWorkMessageDAO.exist(dslContext, msgId)) return true
+            wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
+        } catch (ignored: Exception) {
+            logger.info("skip msgId dedup for callback without MsgId: ${ignored.message}")
+        }
+        return false
     }
 
     fun callbackGet(signature: String, timestamp: Long, nonce: String, echoStr: String?): String {
