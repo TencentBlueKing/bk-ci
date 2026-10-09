@@ -37,7 +37,6 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,9 +70,9 @@ class PipelineBuildTaskService @Autowired constructor(
         val containerId = buildTask.containerId
         val stageId = buildTask.stageId
         if (buildStatus == BuildStatus.CANCELED) {
-            // 删除redis中取消构建操作标识，供二次取消走强制终止
-            redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
-            // #13581 不能在单个插件取消时清掉 Job 取消集合。插件很快完成时 Agent 会立刻认领下一个插件，
+            // 不能在单个插件取消时清掉 CANCEL_ACTION_TIME。二次取消是否升级为 TERMINATE 依赖这个标记，
+            // 插件一被取消就删掉的话，再次点击仍走 END，无法收掉已经停在 QUEUE_CACHE 这种异常状态的插件。
+            // #13581 同样不能在单个插件取消时清掉 Job 取消集合。插件很快完成时 Agent 会立刻认领下一个插件，
             // 集合被删后后续插件无法感知取消。集合在 Job 结束后由 UpdateStateContainerCmdFinally 清理。
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取，用于杀掉当前正在跑的插件进程
             val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
