@@ -113,7 +113,9 @@ class StartWorkspaceService @Autowired constructor(
         return resp.associate {
             it.cgsId to ComputerStatusRespV2(
                 loginUsers = it.userInfos?.map { user -> user.account } ?: emptyList(),
-                status = ComputerStatusEnum.getEnumFromStatus(it.state))
+                status = ComputerStatusEnum.getEnumFromStatus(it.state),
+                screenLocked = it.screenLocked
+            )
         }
     }
 
