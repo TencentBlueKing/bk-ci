@@ -9,6 +9,7 @@ package com.tencent.devops.notify.pojo.wework
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.JsonUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -197,6 +198,36 @@ object WeworkReviewCardConst {
     fun appendUrlAction(url: String, action: String): String {
         if (url.isBlank() || url.contains("action=")) return url
         return if (url.contains("?")) "$url&action=$action" else "$url?action=$action"
+    }
+
+    /**
+     * 把卡片回调 SelectedItems（question_key -> option_id）写回缓存的审核参数。
+     * selected 为空或缓存不是参数列表时原样返回。
+     */
+    fun applySelectedItems(storedParamsJson: String?, selected: Map<String, String>): String? {
+        if (selected.isEmpty() || storedParamsUnusable(storedParamsJson)) {
+            return storedParamsJson
+        }
+        return try {
+            val list = JsonUtil.to<MutableList<MutableMap<String, Any?>>>(storedParamsJson!!)
+            var changed = false
+            list.forEach { item ->
+                val key = item["key"]?.toString().orEmpty()
+                val picked = selected[key] ?: return@forEach
+                if (item["value"]?.toString() != picked) {
+                    item["value"] = picked
+                    changed = true
+                }
+            }
+            if (changed) JsonUtil.toJson(list, false) else storedParamsJson
+        } catch (_: Exception) {
+            storedParamsJson
+        }
+    }
+
+    private fun storedParamsUnusable(storedParamsJson: String?): Boolean {
+        if (storedParamsJson.isNullOrBlank()) return true
+        return storedParamsJson == "[]" || storedParamsJson == "null"
     }
 
     private fun sanitizeTaskIdPart(value: String): String {

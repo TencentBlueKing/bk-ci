@@ -38,4 +38,12 @@ class WeworkReviewCardConstTest {
         val parsed = WeworkReviewCardConst.parseButtonKey("BKCI_REVIEW|approve|task-1")
         assertEquals(WeworkReviewCardConst.ACTION_AGREE to "task-1", parsed)
     }
+
+    @Test
+    fun `applySelectedItems writes dropdown picks back to cached params`() {
+        val stored = """[{"key":"deploy_env","value":"staging","valueType":"enum"}]"""
+        val merged = WeworkReviewCardConst.applySelectedItems(stored, mapOf("deploy_env" to "prod"))
+        assertTrue(merged!!.contains("\"prod\""))
+        assertEquals(stored, WeworkReviewCardConst.applySelectedItems(stored, emptyMap()))
+    }
 }
