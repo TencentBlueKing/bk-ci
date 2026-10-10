@@ -44,6 +44,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.TaskAtomService
+import com.tencent.devops.process.engine.atom.TaskTerminateCause
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.VMUtils.getStartVmLabel
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
@@ -178,7 +179,12 @@ class TaskControl @Autowired constructor(
                 "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +
                     "${buildTask.status}|code=$errorCode|$errorTypeName|$reason"
             )
-            val buildStatus = runTask(userId = userId, actionType = actionType, buildTask = buildTask)
+            val buildStatus = runTask(
+                userId = userId,
+                actionType = actionType,
+                buildTask = buildTask,
+                terminateCause = terminateCause()
+            )
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
                 // 如果是要轮循的才需要定时消息轮循
@@ -207,9 +213,28 @@ class TaskControl @Autowired constructor(
     }
 
     /**
+     * 被动终止链路（FastKill、Job执行超时、Agent失联）会在事件里带上终止成因，用户取消这类结束事件不带。
+     * 构建机任务在上面的分支里已直接按事件成因落库，引擎侧插件同样要带上：这类插件被强制终止时
+     * 自身给不出失败原因，成因丢了之后终态详情只能按插件类型归类，会把连带终止误判成插件自身失败。
+     */
+    private fun PipelineBuildAtomTaskEvent.terminateCause(): TaskTerminateCause? {
+        if (!actionType.isTerminate() || !FastKillUtils.isTerminateCode(errorCode)) return null
+        return TaskTerminateCause(
+            errorType = ErrorType.getErrorType(errorTypeName),
+            errorCode = errorCode,
+            errorMsg = reason
+        )
+    }
+
+    /**
      * 运行插件任务[buildTask], 并返回执行状态[BuildStatus]
      */
-    private fun runTask(userId: String, actionType: ActionType, buildTask: PipelineBuildTask) = when {
+    private fun runTask(
+        userId: String,
+        actionType: ActionType,
+        buildTask: PipelineBuildTask,
+        terminateCause: TaskTerminateCause?
+    ) = when {
         buildTask.status.isReadyToRun() -> { // 准备启动执行
             val runCondition = buildTask.additionalOptions?.runCondition
             if (actionType.isTerminate() ||
@@ -226,7 +251,13 @@ class TaskControl @Autowired constructor(
         }
 
         buildTask.status.isRunning() -> { // 运行中的，检查是否运行结束，以及决定是否强制终止
-            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, actionType = actionType))
+            atomBuildStatus(
+                taskAtomService.tryFinish(
+                    task = buildTask,
+                    actionType = actionType,
+                    terminateCause = terminateCause
+                )
+            )
         }
 
         else -> buildTask.status // 其他状态不做动作

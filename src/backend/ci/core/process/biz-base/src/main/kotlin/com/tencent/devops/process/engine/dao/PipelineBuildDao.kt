@@ -51,6 +51,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
+import com.tencent.devops.process.engine.pojo.QueueRelatedBuild
 import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
@@ -289,6 +290,112 @@ class PipelineBuildDao {
             where.fetch(debugMapper)
         } else normal
     }
+
+    /**
+     * 运行态排队列表专用：只查展示所需列，正式表与调试表合并。
+     *
+     * [pipelineId] 与 [concurrencyGroup] 二选一；并发组可跨流水线，不能再按 pipelineId 收窄。
+     */
+    fun listQueueRelatedBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        statusSet: Collection<BuildStatus>,
+        pipelineId: String? = null,
+        concurrencyGroup: String? = null
+    ): List<QueueRelatedBuild> {
+        require(pipelineId != null || concurrencyGroup != null) {
+            "listQueueRelatedBuilds requires pipelineId or concurrencyGroup"
+        }
+        val statuses = statusSet.map { it.ordinal }
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.select(
+                PROJECT_ID, PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS,
+                QUEUE_TIME, START_TIME, TRIGGER_USER, START_USER, TRIGGER, CHANNEL, WEBHOOK_TYPE, BUILD_MSG
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statuses))
+            pipelineId?.let { where.and(PIPELINE_ID.eq(it)) }
+            concurrencyGroup?.let { where.and(CONCURRENCY_GROUP.eq(it)) }
+            where.fetch { rec ->
+                toQueueRelatedBuild(
+                    projectId = rec.value1(),
+                    pipelineId = rec.value2(),
+                    buildId = rec.value3(),
+                    buildNum = rec.value4(),
+                    status = rec.value5(),
+                    queueTime = rec.value6(),
+                    startTime = rec.value7(),
+                    triggerUser = rec.value8(),
+                    startUser = rec.value9(),
+                    trigger = rec.value10(),
+                    channel = rec.value11(),
+                    webhookType = rec.value12(),
+                    buildMsg = rec.value13()
+                )
+            }
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val where = dslContext.select(
+                PROJECT_ID, PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS,
+                QUEUE_TIME, START_TIME, TRIGGER_USER, START_USER, TRIGGER, CHANNEL, WEBHOOK_TYPE, BUILD_MSG
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statuses))
+                .and(DELETE_TIME.isNull)
+            pipelineId?.let { where.and(PIPELINE_ID.eq(it)) }
+            concurrencyGroup?.let { where.and(CONCURRENCY_GROUP.eq(it)) }
+            where.fetch { rec ->
+                toQueueRelatedBuild(
+                    projectId = rec.value1(),
+                    pipelineId = rec.value2(),
+                    buildId = rec.value3(),
+                    buildNum = rec.value4(),
+                    status = rec.value5(),
+                    queueTime = rec.value6(),
+                    startTime = rec.value7(),
+                    triggerUser = rec.value8(),
+                    startUser = rec.value9(),
+                    trigger = rec.value10(),
+                    channel = rec.value11(),
+                    webhookType = rec.value12(),
+                    buildMsg = rec.value13()
+                )
+            }
+        }
+        if (debug.isEmpty()) return normal
+        if (normal.isEmpty()) return debug
+        val seen = normal.mapTo(HashSet()) { it.buildId }
+        return normal + debug.filter { it.buildId !in seen }
+    }
+
+    private fun toQueueRelatedBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildNum: Int?,
+        status: Int?,
+        queueTime: LocalDateTime?,
+        startTime: LocalDateTime?,
+        triggerUser: String?,
+        startUser: String?,
+        trigger: String?,
+        channel: String?,
+        webhookType: String?,
+        buildMsg: String?
+    ) = QueueRelatedBuild(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        buildNum = buildNum ?: 0,
+        status = status?.let { BuildStatus.values().getOrNull(it) } ?: BuildStatus.QUEUE,
+        queueTime = queueTime?.timestampmilli() ?: 0L,
+        startTime = startTime?.timestampmilli(),
+        triggerUser = triggerUser ?: startUser.orEmpty(),
+        trigger = trigger.orEmpty(),
+        channelCode = channel?.let { runCatching { ChannelCode.valueOf(it) }.getOrNull() },
+        webhookType = webhookType,
+        buildMsg = buildMsg
+    )
 
     fun countAllBuildWithStatus(
         dslContext: DSLContext,

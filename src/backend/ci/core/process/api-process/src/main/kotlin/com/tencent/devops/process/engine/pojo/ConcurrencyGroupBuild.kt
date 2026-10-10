@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+
 /**
  * 并发组内的构建引用。
  * 查询时一并带出 [buildNum]，避免 cancel-in-progress 过滤时再按 buildId 回表。
@@ -35,4 +38,23 @@ data class ConcurrencyGroupBuild(
     val pipelineId: String,
     val buildId: String,
     val buildNum: Int
+)
+
+/**
+ * 运行态排队列表所需的轻量构建字段。
+ * 不回表拉制品/材料/参数等大 JSON，避免并发组较大时把详情接口打满。
+ */
+data class QueueRelatedBuild(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val buildNum: Int,
+    val status: BuildStatus,
+    val queueTime: Long,
+    val startTime: Long?,
+    val triggerUser: String,
+    val trigger: String,
+    val channelCode: ChannelCode?,
+    val webhookType: String?,
+    val buildMsg: String?
 )

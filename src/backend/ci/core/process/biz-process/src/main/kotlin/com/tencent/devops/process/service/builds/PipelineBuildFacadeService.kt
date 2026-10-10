@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -118,6 +119,8 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.BuildRunningContext
+import com.tencent.devops.process.engine.service.record.BuildRunningInfoResolver
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -219,7 +222,8 @@ class PipelineBuildFacadeService(
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
-    private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService
+    private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
+    private val buildRunningInfoResolver: BuildRunningInfoResolver
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -1461,7 +1465,10 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = buildInfo.startUser,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.FAILED
+                    buildStatus = BuildStatus.FAILED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_SERVICE_SHUTDOWN
+                    )
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
@@ -1801,6 +1808,20 @@ class PipelineBuildFacadeService(
                 buildId = buildId
             )
             buildRecord.cancelBuildPerm = cancelBuildPerm
+        }
+        // 运行态与终态卡片互斥。阶段准入挂起时记录表会先变成 STAGE_SUCCESS 并合成「审核中」，
+        // 历史表可能仍短暂停留在 RUNNING；此时再算运行态会把两张卡片叠在一起。
+        if (buildRecord.buildEndInfo == null) {
+            buildRecord.buildRunningInfo = buildRunningInfoResolver.resolve(
+                BuildRunningContext(
+                    buildInfo = buildInfo,
+                    model = buildRecord.model,
+                    executeCount = buildRecord.executeCount,
+                    queueTime = buildRecord.queueTime,
+                    startTime = buildRecord.startTime,
+                    triggerDesc = buildRecord.trigger
+                )
+            )
         }
         return buildRecord
     }
@@ -2719,7 +2740,15 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.CANCELED,
-                    terminateFlag = finalTerminateFlag
+                    terminateFlag = finalTerminateFlag,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = if (finalTerminateFlag) {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_FORCE_TERMINATE
+                        } else {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL
+                        }
+                    )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
@@ -3143,7 +3172,11 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_RESTART
+                    )
                 )
                 return buildRestartPipeline(
                     projectId = projectId,

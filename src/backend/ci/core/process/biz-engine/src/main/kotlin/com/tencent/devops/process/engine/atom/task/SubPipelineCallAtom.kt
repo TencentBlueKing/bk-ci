@@ -35,10 +35,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.ParentPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.builds.BuildSubPipelineResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
@@ -50,6 +53,7 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import org.springframework.stereotype.Component
 
@@ -59,7 +63,8 @@ class SubPipelineCallAtom constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) : IAtomTask<SubPipelineCallElement> {
 
     override fun getParamElement(task: PipelineBuildTask): SubPipelineCallElement {
@@ -121,13 +126,36 @@ class SubPipelineCallAtom constructor(
                 )
 
                 if (force && !status.isFinish()) { // 补充强制终止对子流水线插件的处理
+                    val parentPipelineName = pipelineRepositoryService.getPipelineInfo(
+                        task.projectId, task.pipelineId
+                    )?.pipelineName
+                    val parentBuildNum = pipelineRuntimeService.getBuildInfo(
+                        task.projectId, task.buildId
+                    )?.buildNum
+                    // 父构建的取消人在cancelBuild中已先于取消事件同步落库，此处可直接读取
+                    val parentOperator = pipelineBuildRecordService.getBuildCancelUser(
+                        projectId = task.projectId,
+                        buildId = task.buildId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     pipelineRuntimeService.cancelBuild(
                         projectId = subBuildInfo.projectId,
                         pipelineId = subBuildInfo.pipelineId,
                         buildId = subBuildId,
                         userId = subBuildInfo.startUser,
                         executeCount = subBuildInfo.executeCount ?: 1,
-                        buildStatus = BuildStatus.CANCELED
+                        buildStatus = BuildStatus.CANCELED,
+                        buildEndInfo = BuildEndInfo.ofCancelParentPipeline(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_PARENT_PIPELINE,
+                            parentPipelineInfo = ParentPipelineInfo(
+                                projectId = task.projectId,
+                                pipelineId = task.pipelineId,
+                                pipelineName = parentPipelineName,
+                                buildId = task.buildId,
+                                buildNum = parentBuildNum,
+                                operator = parentOperator
+                            )
+                        )
                     )
                     status = BuildStatus.CANCELED
                 }

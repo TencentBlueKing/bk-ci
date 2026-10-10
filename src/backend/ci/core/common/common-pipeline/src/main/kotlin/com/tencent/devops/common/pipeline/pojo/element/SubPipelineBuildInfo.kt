@@ -9,5 +9,9 @@ data class SubPipelineBuildInfo(
     @get:Schema(title = "子流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "子流水线构建ID", required = true)
-    val buildId: String
+    val buildId: String,
+    @get:Schema(title = "子流水线名称(存量构建可能为空)", required = false)
+    val pipelineName: String? = null,
+    @get:Schema(title = "子流水线构建号(存量构建可能为空)", required = false)
+    val buildNum: Int? = null
 )
