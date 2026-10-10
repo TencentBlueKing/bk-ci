@@ -23,7 +23,9 @@ data class PersonalDesktopLockScreenStrategy(
     @get:Schema(title = "闲置分钟后锁屏，为空就是关闭功能", required = false)
     val lockScreenMin: Long?,
     @get:Schema(title = "闲置分钟后退出，为空就是关闭功能", required = false)
-    val exitMin: Long?
+    val exitMin: Long?,
+    @get:Schema(title = "全局锁屏时间，分钟。仅查询返回，未配置时为空", required = false)
+    val globalLockScreenMin: Long? = null
 ) {
     companion object {
         fun default() = PersonalDesktopLockScreenStrategy(null, null)
@@ -36,7 +38,9 @@ data class PublicDesktopLockScreenStrategy(
     @get:Schema(title = "闲置分钟后锁屏，为空就是关闭功能", required = false)
     val lockScreenMin: Long?,
     @get:Schema(title = "闲置分钟后退出，为空就是关闭功能", required = false)
-    val exitMin: Long?
+    val exitMin: Long?,
+    @get:Schema(title = "全局锁屏时间，分钟。仅查询返回，未配置时为空", required = false)
+    val globalLockScreenMin: Long? = null
 ) {
     companion object {
         fun default() = PublicDesktopLockScreenStrategy(null, null)
