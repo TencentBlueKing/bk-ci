@@ -90,6 +90,7 @@ import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.common.service.TxStoreCodeccService
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_AND_CREATETOR_PERMISSION
@@ -657,6 +658,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
             )
         }
+
+        // 插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
         return Result(true)
     }
 
