@@ -42,6 +42,7 @@ import io.agentscope.core.tool.mcp.McpClientWrapper
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.ZoneOffset
@@ -56,6 +57,11 @@ class AiMcpServerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val dao: AiMcpServerConfigDao
 ) {
+    /**
+     * CodeCC 首次生成修复建议可能超过原有 15 秒，其余既有 MCP 继续使用原超时。
+     */
+    @Value("\${ai.codecc.mcp-timeout-seconds:60}")
+    private var codeccMcpTimeoutSeconds: Long = DEFAULT_CODECC_MCP_TIMEOUT_SECONDS
 
     fun createSystem(request: AiMcpServerCreate): AiMcpServerInfo {
         val id = UUIDUtil.generate()
@@ -215,20 +221,24 @@ class AiMcpServerService @Autowired constructor(
     /**
      * 根据配置创建 MCP 客户端。
      * 每次调用都会新建连接，避免多实例间缓存不一致。
+     *
+     * @param operator 当前会话用户。仅当某个配置头显式包含 `{{userId}}` 时才替换，
+     *        未声明占位符的既有 MCP 配置保持完全不变
      */
-    fun createClient(config: AiMcpServerInfo): McpClientWrapper {
+    fun createClient(config: AiMcpServerInfo, operator: String? = null): McpClientWrapper {
         logger.info(
             "[McpServer] Building MCP client: name={}, " +
-                    "transport={}, url={}",
+                    "transport={}, url={}, operator={}",
             config.serverName,
             config.transportType,
-            config.serverUrl
+            config.serverUrl,
+            operator
         )
-        return buildMcpClient(config)
+        return buildMcpClient(config, operator)
     }
 
-    private fun buildMcpClient(config: AiMcpServerInfo): McpClientWrapper {
-        val headers = parseHeaders(config.headers)
+    private fun buildMcpClient(config: AiMcpServerInfo, operator: String?): McpClientWrapper {
+        val headers = resolveHeaders(config, operator)
         val builder = McpClientBuilder.create(config.serverName)
 
         when (config.transportType) {
@@ -249,7 +259,14 @@ class AiMcpServerService @Autowired constructor(
         }
 
         headers.forEach { (k, v) -> builder.header(k, v) }
-        builder.timeout(Duration.ofSeconds(MCP_TIMEOUT_SECONDS))
+        val timeoutSeconds = if (config.bindAgent == CODECC_AGENT) {
+            codeccMcpTimeoutSeconds.coerceIn(MIN_MCP_TIMEOUT_SECONDS, MAX_MCP_TIMEOUT_SECONDS)
+        } else {
+            DEFAULT_MCP_TIMEOUT_SECONDS
+        }
+        builder.timeout(
+            Duration.ofSeconds(timeoutSeconds)
+        )
 
         return builder.buildAsync().block()
             ?: throw ErrorCodeException(
@@ -296,8 +313,40 @@ class AiMcpServerService @Autowired constructor(
         const val TRANSPORT_SSE = "SSE"
         const val TRANSPORT_STREAMABLE_HTTP = "STREAMABLE_HTTP"
 
-        /** MCP 客户端连接超时（秒） */
-        private const val MCP_TIMEOUT_SECONDS = 15L
+        private const val UNKNOWN_OPERATOR = "unknown"
+        private const val USER_ID_PLACEHOLDER = "{{userId}}"
+        private const val MAX_OPERATOR_LENGTH = 128
+
+        private const val CODECC_AGENT = "codecc_agent"
+        private const val DEFAULT_MCP_TIMEOUT_SECONDS = 15L
+        private const val DEFAULT_CODECC_MCP_TIMEOUT_SECONDS = 60L
+        private const val MIN_MCP_TIMEOUT_SECONDS = 5L
+        private const val MAX_MCP_TIMEOUT_SECONDS = 300L
+
+        /**
+         * 组装 MCP 请求头。
+         *
+         * 只有显式写入 `{{userId}}` 的 header 才注入会话用户。
+         * 这样 CodeCC 可以在 X-Bkapi-Authorization 的 bk_username 中声明动态用户，
+         * iWiki 等既有 MCP 的静态 PAT/header 不会被改写或附加额外字段。
+         */
+        fun resolveHeaders(config: AiMcpServerInfo, operator: String?): Map<String, String> {
+            val headers = parseHeaders(config.headers)
+            if (headers.values.none { it.contains(USER_ID_PLACEHOLDER) }) {
+                return headers
+            }
+            val safeOperator = operator
+                ?.replace(Regex("[\\r\\n\\u0000-\\u001F]"), " ")
+                ?.trim()
+                ?.take(MAX_OPERATOR_LENGTH)
+                ?.takeIf { it.isNotEmpty() && it != UNKNOWN_OPERATOR }
+                ?: throw IllegalStateException(
+                    "MCP config ${config.serverName} requires an authenticated user"
+                )
+            return headers.mapValues { (_, value) ->
+                value.replace(USER_ID_PLACEHOLDER, safeOperator)
+            }
+        }
 
         fun parseHeaders(headersJson: String?): Map<String, String> {
             if (headersJson.isNullOrBlank()) return emptyMap()
