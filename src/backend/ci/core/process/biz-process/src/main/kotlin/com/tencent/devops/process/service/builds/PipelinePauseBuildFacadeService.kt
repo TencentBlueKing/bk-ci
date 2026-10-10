@@ -221,7 +221,9 @@ class PipelinePauseBuildFacadeService(
                     containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
                     executeCount = oldTask.executeCount ?: 1,
                     jobId = null,
-                    stepId = newElement.stepId
+                    stepId = newElement.stepId,
+                    projectId = oldTask.projectId,
+                    pipelineId = oldTask.pipelineId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
@@ -230,7 +232,9 @@ class PipelinePauseBuildFacadeService(
                     containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
                     executeCount = oldTask.executeCount ?: 1,
                     jobId = null,
-                    stepId = newElement.stepId
+                    stepId = newElement.stepId,
+                    projectId = oldTask.projectId,
+                    pipelineId = oldTask.pipelineId
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
@@ -239,7 +243,9 @@ class PipelinePauseBuildFacadeService(
                     containerHashId = VMUtils.genStartVMTaskId(oldTask.containerId),
                     executeCount = oldTask.executeCount ?: 1,
                     jobId = null,
-                    stepId = newElement.stepId
+                    stepId = newElement.stepId,
+                    projectId = oldTask.projectId,
+                    pipelineId = oldTask.pipelineId
                 )
             }
         }

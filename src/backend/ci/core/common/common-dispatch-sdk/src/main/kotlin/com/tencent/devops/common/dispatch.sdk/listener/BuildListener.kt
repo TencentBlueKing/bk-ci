@@ -121,6 +121,8 @@ interface BuildListener {
             onStartup(dispatchService.buildDispatchMessage(event))
         } catch (e: BuildFailureException) {
             dispatchService.logRed(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
                 buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
@@ -137,6 +139,8 @@ interface BuildListener {
         } catch (t: Throwable) {
             logger.warn("Fail to handle the start up message - DispatchService($event)", t)
             dispatchService.logRed(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
                 buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
