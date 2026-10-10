@@ -91,6 +91,8 @@ type DockerOptions struct {
 	Privileged bool     `json:"privileged"`
 	Network    []string `json:"network"`
 	User       string   `json:"user"`
+	Cpus       string   `json:"cpus"`
+	Memory     string   `json:"memory"`
 }
 
 type ThirdPartyBuildWithStatus struct {

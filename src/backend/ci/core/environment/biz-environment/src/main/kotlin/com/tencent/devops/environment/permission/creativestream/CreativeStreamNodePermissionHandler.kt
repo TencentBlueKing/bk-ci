@@ -57,7 +57,7 @@ class CreativeStreamNodePermissionHandler(
             return permissionNodeIds
         }
         // 先批量预取一次节点数据，避免后续逐节点重复查询。
-        strategies.forEach { it.prefetch(projectId, candidateNodeIds) }
+        strategies.forEach { it.prefetch(userId, projectId, candidateNodeIds) }
         candidateNodeIds.forEach { nodeId ->
             // supports 与权限无关，每个节点只解析一次策略，再对多个权限复用。
             val strategy = strategies.firstOrNull { it.supports(projectId, nodeId) } ?: return@forEach

@@ -57,6 +57,63 @@ class AiMcpServerService @Autowired constructor(
     private val dao: AiMcpServerConfigDao
 ) {
 
+    fun createSystem(request: AiMcpServerCreate): AiMcpServerInfo {
+        val id = UUIDUtil.generate()
+        dao.create(
+            dslContext = dslContext,
+            id = id,
+            scope = SCOPE_SYSTEM,
+            userId = null,
+            serverName = request.serverName,
+            serverUrl = request.serverUrl,
+            transportType = request.transportType,
+            headers = request.headers,
+            bindAgent = request.bindAgent,
+            enabled = request.enabled
+        )
+        val record = dao.getById(dslContext, id)
+            ?: throw ErrorCodeException(
+                errorCode = AiMessageCode.CREATE_MCP_SERVER_FAILED,
+                defaultMessage = "Failed to create MCP server config"
+            )
+        return toInfo(record)
+    }
+
+    fun listAllForOp(): List<AiMcpServerInfo> {
+        return dao.listAll(dslContext).map { toInfo(it) }
+    }
+
+    fun updateForOp(serverId: String, request: AiMcpServerUpdate): Boolean {
+        dao.getById(dslContext, serverId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.MCP_SERVER_NOT_FOUND,
+                defaultMessage = "MCP server config not found",
+                params = arrayOf(serverId)
+            )
+        return dao.update(
+            dslContext = dslContext,
+            id = serverId,
+            serverName = request.serverName,
+            serverUrl = request.serverUrl,
+            transportType = request.transportType,
+            headers = request.headers,
+            bindAgent = request.bindAgent,
+            enabled = request.enabled
+        ) > 0
+    }
+
+    fun deleteForOp(serverId: String): Boolean {
+        dao.getById(dslContext, serverId)
+            ?: throw ErrorCodeException(
+                statusCode = 404,
+                errorCode = AiMessageCode.MCP_SERVER_NOT_FOUND,
+                defaultMessage = "MCP server config not found",
+                params = arrayOf(serverId)
+            )
+        return dao.delete(dslContext, serverId) > 0
+    }
+
     fun createServer(
         userId: String,
         request: AiMcpServerCreate

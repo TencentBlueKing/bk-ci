@@ -45,12 +45,20 @@ class UserAiSessionResourceImpl @Autowired constructor(
         return Result(aiSessionService.createSession(userId, sessionCreate))
     }
 
-    override fun list(userId: String, projectId: String?): Result<List<AiSessionInfo>> {
-        return Result(aiSessionService.listSessions(userId, projectId))
+    override fun list(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?
+    ): Result<List<AiSessionInfo>> {
+        return Result(aiSessionService.listSessions(userId, projectId, pipelineId))
     }
 
-    override fun getLatest(userId: String, projectId: String?): Result<AiSessionInfo?> {
-        return Result(aiSessionService.getLatestSession(userId, projectId))
+    override fun getLatest(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?
+    ): Result<AiSessionInfo?> {
+        return Result(aiSessionService.getLatestSession(userId, projectId, pipelineId))
     }
 
     override fun updateTitle(userId: String, sessionId: String, title: String): Result<Boolean> {

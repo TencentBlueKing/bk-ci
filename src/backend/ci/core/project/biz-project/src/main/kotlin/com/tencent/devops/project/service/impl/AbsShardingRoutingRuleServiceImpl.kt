@@ -45,6 +45,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import java.util.concurrent.TimeUnit
 
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
@@ -65,12 +66,39 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
      * @return 布尔值
      */
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
-        val routingName = shardingRoutingRule.routingName
+        return try {
+            doAddShardingRoutingRuleIfAbsent(userId, shardingRoutingRule).first
+        } catch (ignored: Throwable) {
+            logger.warn("Add ShardingRoutingRule failed", ignored)
+            false
+        }
+    }
+
+    /**
+     * 添加分片路由规则，若规则已存在则复用已入库的规则
+     * @param userId 用户ID
+     * @param shardingRoutingRule 待添加的分片路由规则
+     * @return 最终生效的分片路由规则
+     */
+    override fun addShardingRoutingRuleIfAbsent(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): ShardingRoutingRule {
+        return doAddShardingRoutingRuleIfAbsent(userId, shardingRoutingRule).second
+    }
+
+    /**
+     * @return first-本次调用是否真正把规则写入db，second-最终生效的分片路由规则
+     */
+    private fun doAddShardingRoutingRuleIfAbsent(
+        userId: String,
+        shardingRoutingRule: ShardingRoutingRule
+    ): Pair<Boolean, ShardingRoutingRule> {
         val key = ShardingUtil.getShardingRoutingRuleKey(
             clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
-            routingName = routingName,
+            routingName = shardingRoutingRule.routingName,
             tableName = shardingRoutingRule.tableName
         )
         logger.info("$userId addShardingRoutingRule params: rule:$shardingRoutingRule|" +
@@ -78,44 +106,53 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()
-            var isAdded = false
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                val nameCount = shardingRoutingRuleDao.countByName(
-                    dslContext = context,
-                    clusterName = shardingRoutingRule.clusterName,
-                    moduleCode = shardingRoutingRule.moduleCode,
-                    type = shardingRoutingRule.type,
-                    routingName = routingName,
-                    tableName = shardingRoutingRule.tableName
-                )
-                if (nameCount > 0) {
-                    // 已添加则无需重复添加
-                    logger.warn("Sharding routing rule($key) already exists")
-                    return@transaction
-                }
-                // 规则入库
-                shardingRoutingRuleDao.add(context, userId, shardingRoutingRule)
-                isAdded = true // 事务提交成功后标记
+            // 持锁后重新查库，保证并发分配时所有调用方拿到的都是同一条规则
+            getPersistedShardingRoutingRule(shardingRoutingRule)?.let { persistedRule ->
+                logger.warn("Sharding routing rule($key) already exists, reuse rule:${persistedRule.routingRule}")
+                cacheShardingRoutingRule(key, persistedRule.routingRule)
+                return false to persistedRule
             }
-            if (isAdded) {
-                // 事务提交后再操作缓存和事件（避免事务回滚导致缓存脏数据）
-                // 规则写入redis缓存
-                redisOperation.set(
-                    key = key, value = shardingRoutingRule.routingRule, expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
-                )
-                // 发送规则新增事件消息
-                shardingRoutingRuleDispatcher.dispatch(
-                    ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
-                )
+            try {
+                shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
+            } catch (duplicated: DuplicateKeyException) {
+                // redis不可用时RedisLock不保证互斥，此时靠唯一索引兜底，冲突则复用已入库的规则
+                val persistedRule = getPersistedShardingRoutingRule(shardingRoutingRule) ?: throw duplicated
+                logger.warn("Sharding routing rule($key) duplicated, reuse rule:${persistedRule.routingRule}")
+                cacheShardingRoutingRule(key, persistedRule.routingRule)
+                return false to persistedRule
             }
-            return isAdded
-        } catch (ignored: Throwable) {
-            logger.warn("Add ShardingRoutingRule failed", ignored)
-            return false
+            // 入库成功后再操作缓存和事件（避免入库失败导致缓存脏数据）
+            cacheShardingRoutingRule(key, shardingRoutingRule.routingRule)
+            // 发送规则新增事件消息
+            shardingRoutingRuleDispatcher.dispatch(
+                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
+            )
+            return true to shardingRoutingRule
         } finally {
             lock.unlock()
         }
+    }
+
+    /**
+     * 查询已入库的分片路由规则，db是路由规则的唯一数据源
+     */
+    private fun getPersistedShardingRoutingRule(shardingRoutingRule: ShardingRoutingRule): ShardingRoutingRule? {
+        val record = shardingRoutingRuleDao.get(
+            dslContext = dslContext,
+            clusterName = shardingRoutingRule.clusterName,
+            moduleCode = shardingRoutingRule.moduleCode,
+            type = shardingRoutingRule.type,
+            routingName = shardingRoutingRule.routingName,
+            tableName = shardingRoutingRule.tableName
+        ) ?: return null
+        return shardingRoutingRule.copy(
+            dataSourceName = record.dataSourceName ?: shardingRoutingRule.dataSourceName,
+            routingRule = record.routingRule
+        )
+    }
+
+    private fun cacheShardingRoutingRule(key: String, routingRule: String) {
+        redisOperation.set(key = key, value = routingRule, expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME)
     }
 
     /**

@@ -244,6 +244,15 @@ interface OPProjectResource {
     ): Result<Boolean>
 
     @PUT
+    @Path("/favor/migratePersonal")
+    @Operation(summary = "回填个人项目默认收藏")
+    fun migratePersonalProjectFavor(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<Int>
+
+    @PUT
     @Path("/hidden")
     @Operation(summary = "设置项目隐藏状态")
     fun setHidden(

@@ -369,6 +369,23 @@ class ThirdPartyAgentDao {
         }
     }
 
+    fun getCreateAgentsByNodeIdsWithOs(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Set<Long>
+    ): Map<Long, String> {
+        if (nodeIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this)
+                .where(NODE_ID.`in`(nodeIds))
+                .and(PROJECT_ID.eq(projectId))
+                .and(AGENT_TYPE.eq(AgentType.CREATE.name))
+                .fetch().associate { it.nodeId to it.os }
+        }
+    }
+
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,

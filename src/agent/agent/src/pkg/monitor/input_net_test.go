@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func TestNet_Name(t *testing.T) {
 func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
 	// 同时验证：gopsutil 伪接口 "all" 被过滤 + 虚接口黑名单（lo/docker0）被过滤
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{
 				{Name: "eth0", BytesRecv: 100, BytesSent: 200},
 				{Name: "all", BytesRecv: 300, BytesSent: 400},
@@ -31,7 +32,7 @@ func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := n.Gather()
+	metrics, err := n.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +56,7 @@ func TestNet_Gather_FiltersAllPseudoInterface(t *testing.T) {
 
 func TestNet_Gather_FieldsPresent(t *testing.T) {
 	n := &Net{
-		ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) {
 			return []net.IOCountersStat{{
 				Name: "eth0", BytesRecv: 100, BytesSent: 200,
 				PacketsRecv: 10, PacketsSent: 20,
@@ -64,7 +65,7 @@ func TestNet_Gather_FieldsPresent(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	required := []string{
 		RenamedFieldSpeedRecv, RenamedFieldSpeedSent,
 		RenamedFieldSpeedPacketsRecv, RenamedFieldSpeedPacketsSent,
@@ -80,8 +81,8 @@ func TestNet_Gather_FieldsPresent(t *testing.T) {
 
 func TestNet_Gather_ErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
-	n := &Net{ioCountersFn: func(pernic bool) ([]net.IOCountersStat, error) { return nil, sentinel }, nowFn: time.Now}
-	if _, err := n.Gather(); err == nil || !errors.Is(err, sentinel) {
+	n := &Net{ioCountersFn: func(_ context.Context, pernic bool) ([]net.IOCountersStat, error) { return nil, sentinel }, nowFn: time.Now}
+	if _, err := n.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }

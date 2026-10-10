@@ -622,6 +622,13 @@ class PipelineInfoDao {
             if (!condition.pipelineIds.isNullOrEmpty()) {
                 conditions.add(PIPELINE_ID.`in`(condition.pipelineIds))
             }
+            if (!condition.excludePipelineIds.isNullOrEmpty()) {
+                conditions.add(PIPELINE_ID.notIn(condition.excludePipelineIds))
+            }
+            val channelCode = condition.channelCode
+            if (channelCode != null) {
+                conditions.add(CHANNEL.eq(channelCode.name))
+            }
             conditions.add(DELETE.eq(false))
             if (!condition.pipelineName.isNullOrBlank()) {
                 conditions.add(

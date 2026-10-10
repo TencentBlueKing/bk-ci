@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -36,7 +37,7 @@ import (
 
 // DiskIO 对齐 telegraf win_perf_counters 的 PhysicalDisk 速率计数器。
 type DiskIO struct {
-	ioCountersFn func() (map[string]disk.IOCountersStat, error)
+	ioCountersFn func(ctx context.Context) (map[string]disk.IOCountersStat, error)
 	nowFn        func() time.Time
 	sleepFn      func(time.Duration) // 单测注入点，默认 time.Sleep
 	// deviceNumberFn 把盘符（"C:"）映射到物理盘号（0, 1, ...），用于
@@ -50,8 +51,8 @@ type DiskIO struct {
 // disk.IOCounters 在 Windows 底层走 PDH 查 PhysicalDisk 累计计数。
 func NewDiskIO() *DiskIO {
 	return &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
-			return disk.IOCounters()
+		ioCountersFn: func(ctx context.Context) (map[string]disk.IOCountersStat, error) {
+			return disk.IOCountersWithContext(ctx)
 		},
 		nowFn:          time.Now,
 		sleepFn:        time.Sleep,
@@ -63,8 +64,8 @@ func NewDiskIO() *DiskIO {
 func (d *DiskIO) Name() string { return RenamedIO }
 
 // Gather 执行一次 twin-sample 并返回速率字段已换算的 metric。
-func (d *DiskIO) Gather() ([]Metric, error) {
-	s1, err := d.ioCountersFn()
+func (d *DiskIO) Gather(ctx context.Context) ([]Metric, error) {
+	s1, err := d.ioCountersFn(ctx)
 	if err != nil {
 		// 部分卷（如 WinFSP 挂载盘、Recovery 分区）可能无法识别文件系统，
 		// 此时 gopsutil 可能同时返回已采集到的部分数据和错误。
@@ -82,7 +83,7 @@ func (d *DiskIO) Gather() ([]Metric, error) {
 
 	d.sleepFn(rateSampleInterval)
 
-	s2, err := d.ioCountersFn()
+	s2, err := d.ioCountersFn(ctx)
 	if err != nil {
 		if len(s2) > 0 && isDiskIONonFatalErr(err) {
 			// 有部分数据，继续

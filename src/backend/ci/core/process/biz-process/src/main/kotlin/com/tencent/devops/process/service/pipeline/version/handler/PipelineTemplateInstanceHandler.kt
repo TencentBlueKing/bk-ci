@@ -119,9 +119,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 enablePac = enablePac,
                 repoHashId = yamlFileInfo?.repoHashId,
                 targetAction = targetAction,
-                targetBranch = branchName,
-                templateId = templateInstanceBasicInfo!!.templateId,
-                templateVersion = templateInstanceBasicInfo.templateVersion
+                targetBranch = targetBranch,
+                checkoutBranch = branchName
             )
         }
 

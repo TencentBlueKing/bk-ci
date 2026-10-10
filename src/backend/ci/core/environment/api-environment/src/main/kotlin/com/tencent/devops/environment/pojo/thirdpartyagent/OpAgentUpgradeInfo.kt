@@ -16,6 +16,7 @@ data class OpAgentUpgradeInfo(
     val agentPriorityProjectIds: Set<String>?,
     val agentDenyProjectIds: Set<String>?,
     val agentMaxUpgradeCount: Long?,
+    val releaseVersionList: Set<String>?,
     // JDK
     val jdkVersions: List<JDKInfo>?,
     val jdkForceIds: Set<Long>?,

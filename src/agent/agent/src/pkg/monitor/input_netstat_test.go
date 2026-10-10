@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ func TestNetstat_Name(t *testing.T) {
 
 func TestNetstat_Gather_CountsByState(t *testing.T) {
 	n := &Netstat{
-		connsFn: func(kind string) ([]net.ConnectionStat, error) {
+		connsFn: func(_ context.Context, kind string) ([]net.ConnectionStat, error) {
 			return []net.ConnectionStat{
 				{Type: 1, Status: "ESTABLISHED"},
 				{Type: 1, Status: "ESTABLISHED"},
@@ -32,7 +33,7 @@ func TestNetstat_Gather_CountsByState(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := n.Gather()
+	metrics, err := n.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +60,8 @@ func TestNetstat_Gather_CountsByState(t *testing.T) {
 
 func TestNetstat_Gather_ErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
-	n := &Netstat{connsFn: func(kind string) ([]net.ConnectionStat, error) { return nil, sentinel }, nowFn: time.Now}
-	if _, err := n.Gather(); err == nil || !errors.Is(err, sentinel) {
+	n := &Netstat{connsFn: func(_ context.Context, kind string) ([]net.ConnectionStat, error) { return nil, sentinel }, nowFn: time.Now}
+	if _, err := n.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -68,10 +69,10 @@ func TestNetstat_Gather_ErrorPropagates(t *testing.T) {
 func TestNetstat_Gather_AllStateFieldsPresent(t *testing.T) {
 	// 即使没有该状态的连接，field 也应存在（值为 0），便于后端时序图初始化
 	n := &Netstat{
-		connsFn: func(kind string) ([]net.ConnectionStat, error) { return nil, nil },
+		connsFn: func(_ context.Context, kind string) ([]net.ConnectionStat, error) { return nil, nil },
 		nowFn:   time.Now,
 	}
-	metrics, _ := n.Gather()
+	metrics, _ := n.Gather(context.Background())
 	required := []string{
 		RenamedFieldCurTCPEstab, RenamedFieldCurTCPSynSent, RenamedFieldCurTCPSynRecv,
 		RenamedFieldCurTCPFinWait1, RenamedFieldCurTCPFinWait2, RenamedFieldCurTCPTimeWait,

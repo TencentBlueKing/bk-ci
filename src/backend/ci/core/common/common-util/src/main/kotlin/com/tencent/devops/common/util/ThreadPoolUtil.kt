@@ -74,6 +74,8 @@ object ThreadPoolUtil {
                 logger.info(
                     "finish thread action [$actionTitle] | time cost: ${System.currentTimeMillis() - startTime}"
                 )
+            } catch (e: Exception) {
+                logger.error("thread action [$actionTitle] failed", e)
             } finally {
                 MDC.remove(BIZID)
             }

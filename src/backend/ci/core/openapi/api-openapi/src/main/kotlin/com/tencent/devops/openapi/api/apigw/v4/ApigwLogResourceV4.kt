@@ -161,6 +161,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -212,6 +215,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -312,6 +318,9 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
+        @Parameter(description = "指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String? = null,
         @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,

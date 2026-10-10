@@ -45,20 +45,18 @@ class OpAiMcpServerResourceImpl @Autowired constructor(
 ) : OpAiMcpServerResource {
 
     override fun list(): Result<List<AiMcpServerInfo>> {
-        return Result(aiMcpServerService.getMergedConfigs(null))
+        return Result(aiMcpServerService.listAllForOp())
     }
 
     override fun create(request: AiMcpServerCreate): Result<AiMcpServerInfo> {
-        return Result(aiMcpServerService.createServer("system", request))
+        return Result(aiMcpServerService.createSystem(request))
     }
 
     override fun update(serverId: String, request: AiMcpServerUpdate): Result<Boolean> {
-        return Result(
-            aiMcpServerService.updateServer("system", serverId, request)
-        )
+        return Result(aiMcpServerService.updateForOp(serverId, request))
     }
 
     override fun delete(serverId: String): Result<Boolean> {
-        return Result(aiMcpServerService.deleteServer("system", serverId))
+        return Result(aiMcpServerService.deleteForOp(serverId))
     }
 }

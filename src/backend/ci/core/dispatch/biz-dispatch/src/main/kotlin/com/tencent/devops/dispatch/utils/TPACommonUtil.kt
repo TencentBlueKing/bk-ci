@@ -144,7 +144,11 @@ class TPACommonUtil @Autowired constructor(
         } else {
             data.projectId
         }
-        val link = "$host/console/environment/$projectId/pipeline/node/allNode?nodeHashId=$nodeHashId"
+        val link = if (data.createMode == true) {
+            "$host/console/environment/$projectId/creative-stream/node/allNode?nodeHashId=$nodeHashId"
+        } else {
+            "$host/console/environment/$projectId/pipeline/node/allNode?nodeHashId=$nodeHashId"
+        }
         val msg = if (nodeHashId.isNullOrBlank()) {
             ""
         } else {
@@ -218,8 +222,10 @@ class TPACommonUtil @Autowired constructor(
                 )
             )
         } catch (e: Throwable) {
-            logger.error("updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
-                    "|$createTime|$endTime|error", e)
+            logger.error(
+                "updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
+                        "|$createTime|$endTime|error", e
+            )
         }
     }
 

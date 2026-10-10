@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.pojo.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.environment.pojo.enums.AgentType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "第三方接入机")
@@ -57,5 +58,7 @@ data class ThirdPartyAgent(
     @get:Schema(title = "Docker构建机并行执行的个数", required = false)
     val dockerParallelTaskCount: Int? = 4,
     @get:Schema(title = "agent版本")
-    val masterVersion: String?
+    val masterVersion: String?,
+    @get:Schema(title = "agent类型")
+    val agentType: AgentType? = null
 )
