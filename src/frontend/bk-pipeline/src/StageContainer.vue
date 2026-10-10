@@ -1,69 +1,83 @@
 <template>
-    <div
-        ref="stageContainer"
-        :class="{
-            'devops-stage-container': true,
-            'last-stage-container': stageIndex === stageLength - 1,
-            'readonly': !reactiveData.editable || containerDisabled,
-            'editing': reactiveData.editable
-        }"
-    >
-        <Logo
-            v-if="showLeftCruveLine"
-            size="12"
-            name="right-shape"
-            class="container-connect-triangle"
-        />
-        <template v-if="containerIndex === 0">
-            <cruve-line
+    <div class="stage-container-wrap" ref="stageContainerWrap">
+        <span
+            v-show="clothVisible"
+            class="pipeline-locate-cloth"
+            :class="{ 'is-active': clothActive }"
+            :style="clothStyle"
+            aria-hidden="true"
+        ></span>
+        <div
+            ref="stageContainer"
+            :class="{
+                'devops-stage-container': true,
+                'last-stage-container': stageIndex === stageLength - 1,
+                'readonly': !reactiveData.editable || containerDisabled,
+                'editing': reactiveData.editable
+            }"
+        >
+            <Logo
                 v-if="showLeftCruveLine"
-                class="first-connect-line connect-line left"
-                :width="58"
-                :height="60"
+                size="12"
+                name="right-shape"
+                class="container-connect-triangle"
             />
-            <cruve-line
-                v-if="showLastCruveLine"
-                class="first-connect-line connect-line right"
-                style="margin-left: 2px"
-                :width="58"
-                :direction="false"
-                :height="60"
+            <template v-if="containerIndex === 0">
+                <cruve-line
+                    v-if="showLeftCruveLine"
+                    class="first-connect-line connect-line left"
+                    :width="58"
+                    :height="60"
+                />
+                <cruve-line
+                    v-if="showLastCruveLine"
+                    class="first-connect-line connect-line right"
+                    style="margin-left: 2px"
+                    :width="58"
+                    :direction="false"
+                    :height="60"
+                />
+            </template>
+            <template v-if="containerIndex !== containerLength - 1">
+                <cruve-line
+                    v-if="showLeftCruveLine"
+                    :straight="true"
+                    :width="58"
+                    :height="cruveHeight"
+                    class="connect-line left"
+                />
+                <cruve-line
+                    v-if="showLastCruveLine"
+                    :straight="true"
+                    :width="58"
+                    :height="cruveHeight"
+                    :direction="false"
+                    class="connect-line right"
+                />
+            </template>
+            <Component
+                :is="jobComponentName"
+                v-bind="jobComponentProps"
+                v-on="listeners"
+                ref="jobBox"
             />
-        </template>
-        <template v-if="containerIndex !== containerLength - 1">
-            <cruve-line
-                v-if="showLeftCruveLine"
-                :straight="true"
-                :width="58"
-                :height="cruveHeight"
-                class="connect-line left"
-            />
-            <cruve-line
-                v-if="showLastCruveLine"
-                :straight="true"
-                :width="58"
-                :height="cruveHeight"
-                :direction="false"
-                class="connect-line right"
-            />
-        </template>
-        <Component
-            :is="jobComponentName"
-            v-bind="jobComponentProps"
-            v-on="listeners"
-            ref="jobBox"
-        />
+        </div>
     </div>
 </template>
 
 <script setup>
-    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject } from 'vue'
+    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject, watch } from 'vue'
     import { useListeners } from './hooks/useListeners'
     import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
     import MatrixGroup from './MatrixGroup'
     import { getOuterHeight } from './util'
+    import {
+        findLocateHighlightTarget,
+        getLocateClothStyle,
+        hasLocateHighlight
+    } from './locateCloth'
 
     const props = defineProps({
         stage: {
@@ -94,12 +108,13 @@
     })
 
     const reactiveData = inject('reactiveData')
+    const stageContainerWrap = ref(null)
     const stageContainer = ref(null)
     const jobBox = ref(null)
     const cruveHeight = ref(0)
+    const clothStyle = ref({})
     let resizeObserver = null
 
-    // 使用统一的useListeners Hook处理事件监听器兼容性
     const listeners = useListeners()
 
     const containerDisabled = computed(() => {
@@ -145,10 +160,42 @@
         }
     })
 
+    const clothActive = computed(() => hasLocateHighlight(props.container))
+
+    const clothVisible = computed(() => clothActive.value && !!clothStyle.value.top)
+
+    const applyClothPosition = () => {
+        if (!clothActive.value) {
+            clothStyle.value = {}
+            return
+        }
+
+        const targetEl = findLocateHighlightTarget(props.container)
+        clothStyle.value = getLocateClothStyle(stageContainerWrap.value, targetEl) || {}
+    }
+
+    const updateLocateClothPosition = () => {
+        nextTick(() => {
+            applyClothPosition()
+            requestAnimationFrame(applyClothPosition)
+        })
+    }
+
+    watch(clothActive, (active) => {
+        if (active) {
+            updateLocateClothPosition()
+        } else {
+            clothStyle.value = {}
+        }
+    })
+
     const updateCruveConnectHeight = () => {
         nextTick(() => {
             if (stageContainer.value) {
                 cruveHeight.value = getOuterHeight(stageContainer.value)
+            }
+            if (clothActive.value) {
+                applyClothPosition()
             }
         })
     }
@@ -157,25 +204,27 @@
         resizeObserver = new ResizeObserver(() => {
             updateCruveConnectHeight()
         })
-        if (stageContainer.value) {
-            resizeObserver.observe(stageContainer.value)
+        if (stageContainerWrap.value) {
+            resizeObserver.observe(stageContainerWrap.value)
         }
     })
 
     onBeforeUnmount(() => {
-        if (resizeObserver && stageContainer.value) {
-            resizeObserver.unobserve(stageContainer.value)
+        if (resizeObserver && stageContainerWrap.value) {
+            resizeObserver.unobserve(stageContainerWrap.value)
         }
     })
 
     defineExpose({
-        jobBox
+        jobBox,
+        updateLocateClothPosition
     })
 </script>
 
 <style lang="scss">
     @use "sass:math";
     @import "./conf";
+
     .devops-stage-container {
         text-align: left;
         margin: 16px 20px 24px 20px;
