@@ -100,6 +100,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.ConcurrencyQueueBuild
 import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -304,6 +305,58 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
+    }
+
+    fun getUserBuildInfo(projectId: String, buildId: String): BuildInfo? {
+        return pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)
+    }
+
+    fun listConcurrencyQueueCards(
+        projectId: String,
+        concurrencyGroup: String? = null,
+        nullGroupPipelineId: String? = null,
+        status: List<BuildStatus>,
+        beforeQueueTime: Long? = null,
+        beforePipelineId: String? = null,
+        beforeBuildNum: Int? = null,
+        excludeBuildId: String? = null,
+        limit: Int,
+        orderByStartTime: Boolean = false
+    ): List<ConcurrencyQueueBuild> {
+        return pipelineBuildDao.listConcurrencyQueueCards(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            nullGroupPipelineId = nullGroupPipelineId,
+            statusSet = status,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId,
+            limit = limit,
+            orderByStartTime = orderByStartTime
+        )
+    }
+
+    fun countConcurrencyQueueCards(
+        projectId: String,
+        concurrencyGroup: String,
+        status: List<BuildStatus>,
+        beforeQueueTime: Long,
+        beforePipelineId: String,
+        beforeBuildNum: Int,
+        excludeBuildId: String?
+    ): Int {
+        return pipelineBuildDao.countConcurrencyQueueCards(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = status,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
             excludeBuildId = excludeBuildId
         )
     }

@@ -129,6 +129,8 @@ import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.ConcurrencyQueueBuild
+import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
@@ -1513,6 +1515,151 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId
         )
+    }
+
+    /**
+     * 当前构建因互斥组排队时，返回占用者和前方队列。只读已有构建记录，不改变入队出队。
+     */
+    fun getConcurrencyQueue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): ConcurrencyQueueView {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
+            )
+        )
+        val serverTime = System.currentTimeMillis()
+        val buildInfo = pipelineRuntimeService.getUserBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+        if (buildInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
+        }
+        val concurrencyGroup = buildInfo.concurrencyGroup
+        val queued = buildInfo.status == BuildStatus.QUEUE ||
+            buildInfo.status == BuildStatus.QUEUE_CACHE ||
+            buildInfo.status == BuildStatus.LOOP_WAITING
+        if (concurrencyGroup.isNullOrBlank() || !queued) {
+            return ConcurrencyQueueView(visible = false, serverTime = serverTime)
+        }
+        val running = listConcurrencyRunning(projectId, pipelineId, concurrencyGroup, buildId)
+        val ahead = pipelineRuntimeService.listConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
+            beforeQueueTime = buildInfo.queueTime,
+            beforePipelineId = pipelineId,
+            beforeBuildNum = buildInfo.buildNum,
+            excludeBuildId = buildId,
+            limit = ConcurrencyQueueView.AHEAD_LIMIT
+        )
+        val aheadCount = pipelineRuntimeService.countConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
+            beforeQueueTime = buildInfo.queueTime,
+            beforePipelineId = pipelineId,
+            beforeBuildNum = buildInfo.buildNum,
+            excludeBuildId = buildId
+        )
+        val visibleCards = maskConcurrencyQueueCards(
+            userId = userId,
+            projectId = projectId,
+            currentPipelineId = pipelineId,
+            cards = running + ahead
+        )
+        val visibleById = visibleCards.associateBy { it.buildId to it.pipelineId }
+        return ConcurrencyQueueView(
+            visible = true,
+            serverTime = serverTime,
+            concurrencyGroup = concurrencyGroup,
+            queueTime = buildInfo.queueTime,
+            running = running.mapNotNull { visibleById[it.buildId to it.pipelineId] },
+            ahead = ahead.mapNotNull { visibleById[it.buildId to it.pipelineId] },
+            aheadCount = aheadCount
+        )
+    }
+
+    private fun listConcurrencyRunning(
+        projectId: String,
+        pipelineId: String,
+        concurrencyGroup: String,
+        buildId: String
+    ): List<ConcurrencyQueueBuild> {
+        val running = pipelineRuntimeService.listConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.RUNNING),
+            excludeBuildId = buildId,
+            limit = ConcurrencyQueueView.RUNNING_LIMIT,
+            orderByStartTime = true
+        ).toMutableList()
+        // 旧数据并发组为空、实际组名等于流水线 ID 时，仍可能挡住当前构建
+        if (concurrencyGroup == pipelineId) {
+            running += pipelineRuntimeService.listConcurrencyQueueCards(
+                projectId = projectId,
+                nullGroupPipelineId = pipelineId,
+                status = listOf(BuildStatus.RUNNING),
+                excludeBuildId = buildId,
+                limit = ConcurrencyQueueView.RUNNING_LIMIT,
+                orderByStartTime = true
+            )
+        }
+        return running.sortedBy { it.startTime ?: Long.MAX_VALUE }.take(ConcurrencyQueueView.RUNNING_LIMIT)
+    }
+
+    private fun maskConcurrencyQueueCards(
+        userId: String,
+        projectId: String,
+        currentPipelineId: String,
+        cards: List<ConcurrencyQueueBuild>
+    ): List<ConcurrencyQueueBuild> {
+        if (cards.isEmpty()) {
+            return cards
+        }
+        val pipelineIds = cards.map { it.pipelineId }.toSet()
+        val names = pipelineRepositoryService.listPipelineNameByIds(
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            filterDelete = false
+        )
+        val otherPipelineIds = pipelineIds.filter { it != currentPipelineId }
+        val permitted = if (otherPipelineIds.isEmpty()) {
+            emptySet()
+        } else {
+            pipelinePermissionService.filterPipelines(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(AuthPermission.VIEW),
+                pipelineIds = otherPipelineIds
+            )[AuthPermission.VIEW]?.toSet() ?: emptySet()
+        }
+        return cards.map { card ->
+            val canView = card.pipelineId == currentPipelineId || permitted.contains(card.pipelineId)
+            if (canView) {
+                card.copy(pipelineName = names[card.pipelineId], detailVisible = true)
+            } else {
+                card.copy(
+                    pipelineName = null,
+                    userId = "",
+                    trigger = "",
+                    buildMsg = null,
+                    detailVisible = false
+                )
+            }
+        }
     }
 
     fun getBuildDetailSimple(

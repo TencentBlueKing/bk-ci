@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.ConcurrencyQueueBuild
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.LightBuildParameter
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -64,9 +65,12 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.utils.NODE_HASH_ID
 import jakarta.ws.rs.core.Response
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.DatePart
 import org.jooq.Record15
 import org.jooq.Record2
@@ -2257,6 +2261,320 @@ class PipelineBuildDao {
             totalCount = totalCount
         )
     }
+
+    /**
+     * 互斥组排队展示用的只读查询。排序与 [getOneConcurrencyQueueBuild] 一致：
+     * QUEUE_TIME、PIPELINE_ID、BUILD_NUM。不改变入队和出队。
+     */
+    fun listConcurrencyQueueCards(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String? = null,
+        nullGroupPipelineId: String? = null,
+        statusSet: List<BuildStatus>,
+        beforeQueueTime: Long? = null,
+        beforePipelineId: String? = null,
+        beforeBuildNum: Int? = null,
+        excludeBuildId: String? = null,
+        limit: Int,
+        orderByStartTime: Boolean = false
+    ): List<ConcurrencyQueueBuild> {
+        if (concurrencyGroup.isNullOrBlank() && nullGroupPipelineId.isNullOrBlank()) {
+            return emptyList()
+        }
+        val normal = selectConcurrencyQueueCards(
+            dslContext = dslContext,
+            debug = false,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            nullGroupPipelineId = nullGroupPipelineId,
+            statusSet = statusSet,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId,
+            limit = limit,
+            orderByStartTime = orderByStartTime
+        )
+        val debug = selectConcurrencyQueueCards(
+            dslContext = dslContext,
+            debug = true,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            nullGroupPipelineId = nullGroupPipelineId,
+            statusSet = statusSet,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId,
+            limit = limit,
+            orderByStartTime = orderByStartTime
+        )
+        val merged = normal + debug
+        val sorted = if (orderByStartTime) {
+            merged.sortedBy { it.startTime ?: Long.MAX_VALUE }
+        } else {
+            merged.sortedWith(compareBy({ it.queueTime }, { it.pipelineId }, { it.buildNum }))
+        }
+        return sorted.take(limit)
+    }
+
+    fun countConcurrencyQueueCards(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        statusSet: List<BuildStatus>,
+        beforeQueueTime: Long,
+        beforePipelineId: String,
+        beforeBuildNum: Int,
+        excludeBuildId: String?
+    ): Int {
+        return countConcurrencyQueueCards(
+            dslContext = dslContext,
+            debug = false,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = statusSet,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId
+        ) + countConcurrencyQueueCards(
+            dslContext = dslContext,
+            debug = true,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = statusSet,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId
+        )
+    }
+
+    private fun selectConcurrencyQueueCards(
+        dslContext: DSLContext,
+        debug: Boolean,
+        projectId: String,
+        concurrencyGroup: String?,
+        nullGroupPipelineId: String?,
+        statusSet: List<BuildStatus>,
+        beforeQueueTime: Long?,
+        beforePipelineId: String?,
+        beforeBuildNum: Int?,
+        excludeBuildId: String?,
+        limit: Int,
+        orderByStartTime: Boolean
+    ): List<ConcurrencyQueueBuild> {
+        if (debug) {
+            return with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val where = dslContext.select(
+                    PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS, TRIGGER, TRIGGER_USER, START_USER,
+                    BUILD_MSG, QUEUE_TIME, START_TIME
+                ).from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                    .and(DELETE_TIME.isNull)
+                applyConcurrencyQueueFilter(
+                    where = where,
+                    concurrencyGroup = concurrencyGroup,
+                    concurrencyGroupField = CONCURRENCY_GROUP,
+                    nullGroupPipelineId = nullGroupPipelineId,
+                    pipelineIdField = PIPELINE_ID,
+                    beforeQueueTime = beforeQueueTime,
+                    beforePipelineId = beforePipelineId,
+                    beforeBuildNum = beforeBuildNum,
+                    queueTimeField = QUEUE_TIME,
+                    buildNumField = BUILD_NUM,
+                    excludeBuildId = excludeBuildId,
+                    buildIdField = BUILD_ID
+                )
+                if (orderByStartTime) {
+                    where.orderBy(START_TIME.asc())
+                } else {
+                    where.orderBy(QUEUE_TIME.asc(), PIPELINE_ID.asc(), BUILD_NUM.asc())
+                }
+                where.limit(limit).fetch().map { record ->
+                    toConcurrencyQueueCard(
+                        pipelineId = record.get(PIPELINE_ID),
+                        buildId = record.get(BUILD_ID),
+                        buildNum = record.get(BUILD_NUM),
+                        status = record.get(STATUS),
+                        trigger = record.get(TRIGGER),
+                        triggerUser = record.get(TRIGGER_USER),
+                        startUser = record.get(START_USER),
+                        buildMsg = record.get(BUILD_MSG),
+                        queueTime = record.get(QUEUE_TIME),
+                        startTime = record.get(START_TIME),
+                        debug = true
+                    )
+                }
+            }
+        }
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.select(
+                PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS, TRIGGER, TRIGGER_USER, START_USER,
+                BUILD_MSG, QUEUE_TIME, START_TIME
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+            applyConcurrencyQueueFilter(
+                where = where,
+                concurrencyGroup = concurrencyGroup,
+                concurrencyGroupField = CONCURRENCY_GROUP,
+                nullGroupPipelineId = nullGroupPipelineId,
+                pipelineIdField = PIPELINE_ID,
+                beforeQueueTime = beforeQueueTime,
+                beforePipelineId = beforePipelineId,
+                beforeBuildNum = beforeBuildNum,
+                queueTimeField = QUEUE_TIME,
+                buildNumField = BUILD_NUM,
+                excludeBuildId = excludeBuildId,
+                buildIdField = BUILD_ID
+            )
+            if (orderByStartTime) {
+                where.orderBy(START_TIME.asc())
+            } else {
+                where.orderBy(QUEUE_TIME.asc(), PIPELINE_ID.asc(), BUILD_NUM.asc())
+            }
+            where.limit(limit).fetch().map { record ->
+                toConcurrencyQueueCard(
+                    pipelineId = record.get(PIPELINE_ID),
+                    buildId = record.get(BUILD_ID),
+                    buildNum = record.get(BUILD_NUM),
+                    status = record.get(STATUS),
+                    trigger = record.get(TRIGGER),
+                    triggerUser = record.get(TRIGGER_USER),
+                    startUser = record.get(START_USER),
+                    buildMsg = record.get(BUILD_MSG),
+                    queueTime = record.get(QUEUE_TIME),
+                    startTime = record.get(START_TIME),
+                    debug = false
+                )
+            }
+        }
+    }
+
+    private fun countConcurrencyQueueCards(
+        dslContext: DSLContext,
+        debug: Boolean,
+        projectId: String,
+        concurrencyGroup: String,
+        statusSet: List<BuildStatus>,
+        beforeQueueTime: Long,
+        beforePipelineId: String,
+        beforeBuildNum: Int,
+        excludeBuildId: String?
+    ): Int {
+        if (debug) {
+            return with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+                val where = dslContext.selectCount().from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                    .and(DELETE_TIME.isNull)
+                applyConcurrencyQueueFilter(
+                    where = where,
+                    concurrencyGroup = concurrencyGroup,
+                    concurrencyGroupField = CONCURRENCY_GROUP,
+                    nullGroupPipelineId = null,
+                    pipelineIdField = PIPELINE_ID,
+                    beforeQueueTime = beforeQueueTime,
+                    beforePipelineId = beforePipelineId,
+                    beforeBuildNum = beforeBuildNum,
+                    queueTimeField = QUEUE_TIME,
+                    buildNumField = BUILD_NUM,
+                    excludeBuildId = excludeBuildId,
+                    buildIdField = BUILD_ID
+                )
+                where.fetchOne(0, Int::class.java) ?: 0
+            }
+        }
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+            applyConcurrencyQueueFilter(
+                where = where,
+                concurrencyGroup = concurrencyGroup,
+                concurrencyGroupField = CONCURRENCY_GROUP,
+                nullGroupPipelineId = null,
+                pipelineIdField = PIPELINE_ID,
+                beforeQueueTime = beforeQueueTime,
+                beforePipelineId = beforePipelineId,
+                beforeBuildNum = beforeBuildNum,
+                queueTimeField = QUEUE_TIME,
+                buildNumField = BUILD_NUM,
+                excludeBuildId = excludeBuildId,
+                buildIdField = BUILD_ID
+            )
+            where.fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    private fun applyConcurrencyQueueFilter(
+        where: org.jooq.SelectConditionStep<*>,
+        concurrencyGroup: String?,
+        concurrencyGroupField: Field<String>,
+        nullGroupPipelineId: String?,
+        pipelineIdField: Field<String>,
+        beforeQueueTime: Long?,
+        beforePipelineId: String?,
+        beforeBuildNum: Int?,
+        queueTimeField: Field<LocalDateTime>,
+        buildNumField: Field<java.lang.Integer>,
+        excludeBuildId: String?,
+        buildIdField: Field<String>
+    ) {
+        if (!concurrencyGroup.isNullOrBlank()) {
+            where.and(concurrencyGroupField.eq(concurrencyGroup))
+        }
+        if (!nullGroupPipelineId.isNullOrBlank()) {
+            where.and(concurrencyGroupField.isNull).and(pipelineIdField.eq(nullGroupPipelineId))
+        }
+        if (beforeQueueTime != null && beforePipelineId != null && beforeBuildNum != null) {
+            val queueDateTime = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(beforeQueueTime),
+                ZoneId.systemDefault()
+            )
+            where.and(
+                queueTimeField.lt(queueDateTime)
+                    .or(queueTimeField.eq(queueDateTime).and(pipelineIdField.lt(beforePipelineId)))
+                    .or(
+                        queueTimeField.eq(queueDateTime)
+                            .and(pipelineIdField.eq(beforePipelineId))
+                            .and(buildNumField.lt(java.lang.Integer.valueOf(beforeBuildNum)))
+                    )
+            )
+        }
+        if (!excludeBuildId.isNullOrBlank()) {
+            where.and(buildIdField.ne(excludeBuildId))
+        }
+    }
+
+    private fun toConcurrencyQueueCard(
+        pipelineId: String,
+        buildId: String,
+        buildNum: java.lang.Integer?,
+        status: java.lang.Integer?,
+        trigger: String?,
+        triggerUser: String?,
+        startUser: String?,
+        buildMsg: String?,
+        queueTime: LocalDateTime?,
+        startTime: LocalDateTime?,
+        debug: Boolean
+    ) = ConcurrencyQueueBuild(
+        buildId = buildId,
+        pipelineId = pipelineId,
+        buildNum = buildNum?.toInt() ?: 0,
+        status = status?.toInt()?.let { BuildStatus.entries.getOrNull(it)?.name } ?: BuildStatus.UNKNOWN.name,
+        userId = triggerUser ?: startUser ?: "",
+        trigger = trigger ?: "",
+        buildMsg = buildMsg,
+        queueTime = queueTime?.timestampmilli() ?: 0L,
+        startTime = startTime?.timestampmilli(),
+        debug = debug
+    )
 
 class PipelineBuildLightInfoJooqMapper : RecordMapper<
         Record15<
