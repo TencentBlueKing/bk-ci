@@ -25,24 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.EnvUtils
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Concurrency(
-    val group: String?,
-    @JsonProperty("cancel-in-progress")
-    val cancelInProgress: Boolean?,
-    @JsonProperty("queue-length")
-    val queueLength: Int?,
-    @JsonProperty("queue-timeout-minutes")
-    val queueTimeoutMinutes: Int?,
-    @JsonProperty("max-parallel")
-    val maxParallel: Int?,
-    @JsonProperty("sub-group")
-    val subGroup: String? = null
-)
+/**
+ * 并发组同一批标识。
+ *
+ * 没有该字段的存量配置与旧客户端请求保持原两档行为。
+ * [normalize] 里 null 表示请求未携带，沿用已保存的值；空白表示显式清空。
+ */
+object ConcurrencySubGroupPolicy {
+
+    fun normalize(incoming: String?, existing: String?): String? {
+        return when {
+            incoming == null -> existing
+            incoming.isBlank() -> null
+            else -> incoming
+        }
+    }
+
+    /**
+     * 启动时解析表达式。未配置返回 null；配置了但解析后为空返回空串，这次不去重。
+     */
+    fun resolve(expression: String?, variables: Map<String, String>): String? {
+        if (expression.isNullOrBlank()) {
+            return null
+        }
+        return EnvUtils.parseEnv(
+            command = expression,
+            data = variables,
+            replaceWithEmpty = true
+        ).trim()
+    }
+}

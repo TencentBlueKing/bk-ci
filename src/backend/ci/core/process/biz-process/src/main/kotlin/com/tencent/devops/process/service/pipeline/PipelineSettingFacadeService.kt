@@ -147,6 +147,9 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
         // 对齐新旧通知配置，统一根据新list数据保存
         setting.fixSubscriptions()
+        setting.applyConcurrencySubGroup(
+            pipelineRepositoryService.getSetting(projectId, pipelineId)?.concurrencySubGroup
+        )
         modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         checkRunEnvOsCompatibility(
             userId = userId,

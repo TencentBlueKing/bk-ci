@@ -72,6 +72,7 @@ class PipelineSettingVersionDao {
                 BUILD_NUM_RULE,
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
+                CONCURRENCY_SUB_GROUP,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
@@ -97,6 +98,7 @@ class PipelineSettingVersionDao {
                 setting.buildNumRule,
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
+                setting.concurrencySubGroup,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.pipelineAsCodeSettings?.let { self ->
@@ -118,6 +120,7 @@ class PipelineSettingVersionDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
@@ -154,6 +157,7 @@ class PipelineSettingVersionDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
@@ -286,6 +290,7 @@ class PipelineSettingVersionDao {
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     concurrencyGroup = t.concurrencyGroup,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->

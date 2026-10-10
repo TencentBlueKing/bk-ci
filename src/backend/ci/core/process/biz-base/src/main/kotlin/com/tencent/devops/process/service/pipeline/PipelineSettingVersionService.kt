@@ -253,6 +253,7 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.concurrencyGroup = settingVersion.concurrencyGroup ?: settingInfo.concurrencyGroup
         settingInfo.concurrencyCancelInProgress = settingVersion.concurrencyCancelInProgress
             ?: settingInfo.concurrencyCancelInProgress
+        settingInfo.concurrencySubGroup = settingVersion.concurrencySubGroup ?: settingInfo.concurrencySubGroup
         settingInfo.waitQueueTimeMinute = settingVersion.waitQueueTimeMinute ?: settingInfo.waitQueueTimeMinute
         settingInfo.maxQueueSize = settingVersion.maxQueueSize ?: settingInfo.maxQueueSize
         settingInfo.maxConRunningQueueSize = if (settingVersion.maxConRunningQueueSize != -1) {

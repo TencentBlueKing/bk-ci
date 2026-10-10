@@ -817,6 +817,9 @@ object ProcessMessageCode {
     const val BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE = "bkMergeTemplateYamlUpdateTitle" // 修改模版发布mr标题
     const val BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE = "bkMergeTemplateInstanceYamlTitle" // 模版实例化标题
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
+    const val BK_CONCURRENCY_SUB_GROUP_EMPTY = "bkConcurrencySubGroupEmpty" // 同一批标识启动时为空
+    const val BK_CONCURRENCY_SUB_GROUP_REPLACED = "bkConcurrencySubGroupReplaced" // 同一批标识被更新构建取代
+    const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL = "bkConcurrencyQueueSizeCancel" // 排队超出队列长度被取消
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}

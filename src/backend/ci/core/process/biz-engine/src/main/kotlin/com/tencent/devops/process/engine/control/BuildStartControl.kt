@@ -395,7 +395,11 @@ class BuildStartControl @Autowired constructor(
                         params = arrayOf(concurrencyGroup)
                     )
                 )
-                if (setting.concurrencyCancelInProgress) {
+                // 同一批标识已配置时，取消发生在新构建到达。这里只保留组锁，避免按 ① 跨流水线取消。
+                if (setting.concurrencyCancelInProgress &&
+                    buildInfo.concurrencySubGroup == null &&
+                    setting.concurrencySubGroup.isNullOrBlank()
+                ) {
                     val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = buildInfo.pipelineId,

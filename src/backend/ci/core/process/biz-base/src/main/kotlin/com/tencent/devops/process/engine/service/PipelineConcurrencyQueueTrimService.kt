@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import kotlin.math.min
 import org.slf4j.LoggerFactory
@@ -130,7 +132,9 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
             trimmed++
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[$pipelineId] queue size exceeded limit($maxQueueSize), cancel the earliest queued build",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL
+                ),
                 tag = TAG,
                 containerHashId = "",
                 executeCount = buildInfo.executeCount,

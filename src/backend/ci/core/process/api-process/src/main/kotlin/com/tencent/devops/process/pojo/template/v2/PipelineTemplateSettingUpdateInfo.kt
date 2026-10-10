@@ -69,6 +69,8 @@ data class PipelineTemplateSettingUpdateInfo(
     val concurrencyGroup: String? = null,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean? = null,
+    @get:Schema(title = "同一批标识", required = false)
+    val concurrencySubGroup: String? = null,
     @get:Schema(title = "并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
@@ -99,6 +101,7 @@ data class PipelineTemplateSettingUpdateInfo(
         maxQueueSize = pipelineSetting.maxQueueSize,
         concurrencyGroup = pipelineSetting.concurrencyGroup,
         concurrencyCancelInProgress = pipelineSetting.concurrencyCancelInProgress,
+        concurrencySubGroup = pipelineSetting.concurrencySubGroup,
         maxConRunningQueueSize = pipelineSetting.maxConRunningQueueSize,
         failIfVariableInvalid = pipelineSetting.failIfVariableInvalid,
         buildCancelPolicy = pipelineSetting.buildCancelPolicy,

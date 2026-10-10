@@ -25,24 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Concurrency(
-    val group: String?,
-    @JsonProperty("cancel-in-progress")
-    val cancelInProgress: Boolean?,
-    @JsonProperty("queue-length")
-    val queueLength: Int?,
-    @JsonProperty("queue-timeout-minutes")
-    val queueTimeoutMinutes: Int?,
-    @JsonProperty("max-parallel")
-    val maxParallel: Int?,
-    @JsonProperty("sub-group")
-    val subGroup: String? = null
-)
+class ConcurrencySubGroupPolicyTest {
+
+    @Test
+    fun normalizeKeepsStoredValueWhenFieldAbsent() {
+        assertEquals("mr-1", ConcurrencySubGroupPolicy.normalize(null, "mr-1"))
+        assertNull(ConcurrencySubGroupPolicy.normalize(null, null))
+    }
+
+    @Test
+    fun normalizeClearsOnBlankAndKeepsValue() {
+        assertNull(ConcurrencySubGroupPolicy.normalize("", "mr-1"))
+        assertNull(ConcurrencySubGroupPolicy.normalize("  ", "mr-1"))
+        assertEquals("\${{ci.mr_id}}", ConcurrencySubGroupPolicy.normalize("\${{ci.mr_id}}", null))
+    }
+
+    @Test
+    fun resolveBlankExpressionAsNotConfigured() {
+        assertNull(ConcurrencySubGroupPolicy.resolve(null, emptyMap()))
+        assertNull(ConcurrencySubGroupPolicy.resolve("  ", mapOf("ci.mr_id" to "8")))
+    }
+
+    @Test
+    fun resolveMissingVariableAsEmpty() {
+        assertEquals("", ConcurrencySubGroupPolicy.resolve("\${{ci.mr_id}}", emptyMap()))
+        assertEquals("8", ConcurrencySubGroupPolicy.resolve("\${{ci.mr_id}}", mapOf("ci.mr_id" to "8")))
+    }
+}
