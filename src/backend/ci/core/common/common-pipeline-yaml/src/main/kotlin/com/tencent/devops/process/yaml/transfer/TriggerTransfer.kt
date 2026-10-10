@@ -254,8 +254,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     branchesIgnore = git.excludeBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includePushAction,
                     custom = if (git.enableThirdFilter == true) CustomFilter(
@@ -271,8 +271,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     tags = git.tagName?.disjoin(),
                     tagsIgnore = git.excludeTagName?.disjoin(),
                     fromBranches = git.fromBranches?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     action = git.includeTagAction
                 )
 
@@ -286,9 +286,9 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
-                    blockMr = git.block,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
+                    blockMr = git.block.nullIfDefault(false),
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
@@ -297,7 +297,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         url = git.thirdUrl,
                         credentials = git.thirdSecretToken
                     ) else null,
-                    skipWip = git.skipWip,
+                    skipWip = git.skipWip.nullIfDefault(false),
                     labels = git.includeLabels?.disjoin(),
                     labelsIgnore = git.excludeLabels?.disjoin()
                 )
@@ -311,11 +311,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
-                    skipWip = git.skipWip,
+                    skipWip = git.skipWip.nullIfDefault(false),
                     labels = git.includeLabels?.disjoin(),
                     labelsIgnore = git.excludeLabels?.disjoin()
                 )
@@ -335,7 +335,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     action = git.includeIssueAction,
                     assignees = git.includeAssignees?.disjoin(),
                     assigneesIgnore = git.excludeAssignees?.disjoin(),
-                    usersIgnore = git.excludeUsers,
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     labels = git.includeLabels?.disjoin(),
                     labelsIgnore = git.excludeLabels?.disjoin()
                 )
@@ -362,8 +362,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     branches = null,
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name)
                 )
 
@@ -393,8 +393,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
                     paths = git.includePaths?.disjoin(),
                     pathsIgnore = git.excludePaths?.disjoin(),
-                    users = git.includeUsers,
-                    usersIgnore = git.excludeUsers,
+                    users = git.includeUsers.nonEmptyOrNull(),
+                    usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     assignees = git.includeAssignees?.disjoin(),
                     assigneesIgnore = git.excludeAssignees?.disjoin(),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
@@ -1053,7 +1053,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     private fun List<String>.join() = this.joinToString(separator = ",")
 
-    private fun String.disjoin() = this.split(",")
+    private fun String.disjoin() = this.split(",").filter { it.isNotBlank() }.ifEmpty { null }
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
 

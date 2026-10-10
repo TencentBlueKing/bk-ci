@@ -124,7 +124,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
-            params.codeType = CodeType.GIT
+            params.codeType = CodeType.TGIT
             params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
             params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)

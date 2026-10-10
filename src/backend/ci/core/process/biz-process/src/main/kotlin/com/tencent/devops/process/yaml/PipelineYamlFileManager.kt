@@ -34,37 +34,27 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.ENABLE_PAC_EVENT_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
-import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.listener.PipelineYamlChangeContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPipelineActionType
@@ -77,117 +67,34 @@ import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred
 import com.tencent.devops.repository.pojo.hub.ScmFilePushReq
 import com.tencent.devops.repository.pojo.hub.ScmPullRequestCreateReq
-import com.tencent.devops.scm.api.enums.ContentKind
 import com.tencent.devops.scm.api.pojo.Commit
 import com.tencent.devops.scm.api.pojo.Content
 import com.tencent.devops.scm.api.pojo.PullRequest
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+/**
+ * 单文件事件驱动的 YAML 生命周期变更。
+ *
+ * PAC 生命周期编排入口见 [PipelineYamlPacManager]。
+ */
 @Service
 class PipelineYamlFileManager @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineYamlSyncService: PipelineYamlSyncService,
     private val pipelineYamlViewService: PipelineYamlViewService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val pipelineYamlFileService: PipelineYamlFileService,
-    private val pipelineYamlResourceManager: PipelineYamlResourceManager,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val sampleEventDispatcher: SampleEventDispatcher
+    private val pipelineYamlResourceManager: PipelineYamlResourceManager
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
         private const val MAX_PULL_REQUEST_TITLE_LENGTH = 255
-    }
-
-    fun syncYamlFile(
-        userId: String,
-        projectId: String,
-        yamlFileSyncReq: PipelineYamlFileSyncReq
-    ) {
-        val repoHashId = yamlFileSyncReq.repository.repoHashId!!
-        try {
-            val yamlDiffs = mutableListOf<PipelineYamlDiff>()
-            val eventTime = LocalDateTime.now()
-            with(yamlFileSyncReq) {
-                val requestId = MDC.get(TraceTag.BIZID)
-                val eventId = pipelineTriggerEventService.getEventId()
-                val eventDesc = I18Variable(
-                    code = ENABLE_PAC_EVENT_DESC,
-                    params = listOf(userId)
-                ).toJsonStr()
-                val triggerEvent = PipelineTriggerEvent(
-                    projectId = repository.projectId,
-                    eventId = eventId,
-                    triggerType = repository.getScmType().name,
-                    eventSource = repository.repoHashId,
-                    eventType = PipelineTriggerType.MANUAL.name,
-                    triggerUser = userId,
-                    eventDesc = eventDesc,
-                    requestId = requestId,
-                    createTime = LocalDateTime.now(),
-                    eventBody = null
-                )
-                pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
-
-                fileTrees.filter {
-                    it.kind == ContentKind.FILE && GitActionCommon.checkYamlPipelineFile(it.path)
-                }.forEach { tree ->
-                    val filePath = GitActionCommon.getCiFilePath(tree.path)
-                    val oldFilePath = null
-                    val yamlFileEvent = PipelineYamlDiff(
-                        projectId = projectId,
-                        eventId = eventId,
-                        eventType = "SYNC",
-                        repoHashId = repoHashId,
-                        defaultBranch = defaultBranch,
-                        filePath = filePath,
-                        fileType = YamlFileType.getFileType(filePath),
-                        actionType = YamlFileActionType.SYNC,
-                        triggerUser = userId,
-                        oldFilePath = oldFilePath,
-                        ref = defaultBranch,
-                        blobId = tree.blobId,
-                        commitId = commit.sha,
-                        commitMsg = commit.message,
-                        commitTime = commit.commitTime ?: LocalDateTime.now(),
-                        committer = commit.committer?.name ?: ""
-                    )
-                    yamlDiffs.add(yamlFileEvent)
-                }
-                val directories = yamlDiffs.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
-                // 创建yaml流水线组
-                pipelineYamlViewService.createYamlViewIfAbsent(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    aliasName = repository.aliasName,
-                    directoryList = directories
-                )
-                yamlDiffs.forEach {
-                    val yamlFileEvent = PipelineYamlFileEvent(
-                        repository = repository,
-                        yamlDiff = it,
-                        eventTime = eventTime
-                    )
-                    sampleEventDispatcher.dispatch(yamlFileEvent)
-                }
-            }
-        } catch (exception: Exception) {
-            logger.error("Failed to sync pipeline yaml file|$projectId|$repoHashId", exception)
-            pipelineYamlSyncService.enablePacFailed(
-                projectId = projectId,
-                repoHashId = repoHashId
-            )
-            throw exception
-        }
     }
 
     fun createOrUpdateYamlFile(event: PipelineYamlFileEvent): Boolean {
@@ -490,13 +397,15 @@ class PipelineYamlFileManager @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
                     )
                 }
-                pipelineYamlViewService.createYamlViewIfAbsent(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    aliasName = repository.aliasName,
-                    directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
-                )
+                if (!YamlFileUtils.isTemplateFile(filePath)) {
+                    pipelineYamlViewService.createYamlViewIfAbsent(
+                        userId = userId,
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        aliasName = repository.aliasName,
+                        directoryList = setOf(YamlFileUtils.getCiDirectory(filePath))
+                    )
+                }
                 lock.lock()
                 val defaultBranch = serverRepository.defaultBranch!!
                 val ref = when {
@@ -662,14 +571,14 @@ class PipelineYamlFileManager @Autowired constructor(
         content: Content,
         commit: Commit
     ) {
-        val directory = GitActionCommon.getCiDirectory(filePath)
+        val directory = YamlFileUtils.getCiDirectory(filePath)
         // 保存流水线
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath
         )
-        val resourceType = GitActionCommon.getYamlResourceType(
+        val resourceType = YamlFileUtils.getYamlResourceType(
             filePath = filePath,
             fileContent = content.content
         )
@@ -720,7 +629,7 @@ class PipelineYamlFileManager @Autowired constructor(
     }
 
     private fun PipelineYamlFileEvent.createYamlPipeline(): DeployPipelineResult {
-        val directory = GitActionCommon.getCiDirectory(filePath)
+        val directory = YamlFileUtils.getCiDirectory(filePath)
         val content = pipelineYamlFileService.getFileContent(
             projectId = projectId,
             path = filePath,
@@ -730,7 +639,7 @@ class PipelineYamlFileManager @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
             params = arrayOf(filePath, commit.commitId)
         )
-        val resourceType = GitActionCommon.getYamlResourceType(
+        val resourceType = YamlFileUtils.getYamlResourceType(
             filePath = filePath,
             fileContent = content.content
         )
@@ -957,7 +866,7 @@ class PipelineYamlFileManager @Autowired constructor(
             yaml = content.content,
             event = this
         )
-        val resourceType = GitActionCommon.getYamlResourceType(
+        val resourceType = YamlFileUtils.getYamlResourceType(
             filePath = filePath,
             fileContent = content.content
         )
@@ -1161,7 +1070,7 @@ class PipelineYamlFileManager @Autowired constructor(
      * 删除源分支分支版本当合并时
      */
     private fun PipelineYamlFileEvent.deleteSourceWhenMerged(pipelineId: String) {
-        val sourceRef = GitActionCommon.getSourceRef(
+        val sourceRef = YamlFileUtils.getSourceRef(
             fork = fork,
             sourceFullName = sourceFullName!!,
             sourceBranch = sourceBranch!!
@@ -1235,7 +1144,7 @@ class PipelineYamlFileManager @Autowired constructor(
         )
         // 删除流水线后清理流水线组
         if (!isTemplate) {
-            val directory = GitActionCommon.getCiDirectory(filePath)
+            val directory = YamlFileUtils.getCiDirectory(filePath)
             pipelineYamlViewService.cleanupYamlView(
                 userId = userId,
                 projectId = projectId,
@@ -1384,11 +1293,11 @@ class PipelineYamlFileManager @Autowired constructor(
             yaml = content.content,
             event = this
         )
-        val resourceType = GitActionCommon.getYamlResourceType(
+        val resourceType = YamlFileUtils.getYamlResourceType(
             filePath = filePath,
             fileContent = content.content
         )
-        val directory = GitActionCommon.getCiDirectory(filePath)
+        val directory = YamlFileUtils.getCiDirectory(filePath)
         pipelineYamlService.rename(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -1440,8 +1349,8 @@ class PipelineYamlFileManager @Autowired constructor(
         )
         // 重命名导致目录变更时，从旧目录流水线组移除并清理空组；同目录重命名无需处理
         if (!isTemplate && needDeleteOldInfo) {
-            val oldDirectory = GitActionCommon.getCiDirectory(oldFilePath)
-            val newDirectory = GitActionCommon.getCiDirectory(filePath)
+            val oldDirectory = YamlFileUtils.getCiDirectory(oldFilePath)
+            val newDirectory = YamlFileUtils.getCiDirectory(filePath)
             if (oldDirectory != newDirectory) {
                 pipelineYamlViewService.cleanupYamlView(
                     userId = userId,

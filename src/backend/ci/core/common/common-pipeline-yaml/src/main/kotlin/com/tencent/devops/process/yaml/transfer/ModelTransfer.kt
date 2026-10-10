@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -580,7 +581,7 @@ class ModelTransfer @Autowired constructor(
                     on.value.forEach { pre ->
                         triggerV3.add(pre.toPre(modelInput.version).also {
                             it as PreTriggerOnV3
-                            if (!it.repoName.isNullOrBlank()) {
+                            if (!it.repoName.isNullOrBlank() || on.key != ScmType.CODE_GIT) {
                                 it.type = on.key.alis
                             }
                         })

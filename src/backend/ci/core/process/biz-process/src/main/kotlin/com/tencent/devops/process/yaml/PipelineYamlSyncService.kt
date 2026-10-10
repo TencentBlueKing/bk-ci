@@ -35,11 +35,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.yaml.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
-import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,44 +48,6 @@ class PipelineYamlSyncService @Autowired constructor(
     private val pipelineYamlSyncDao: PipelineYamlSyncDao,
     private val redisOperation: RedisOperation
 ) {
-
-    fun initPacSyncDetail(
-        projectId: String,
-        repoHashId: String,
-        yamlPathList: List<YamlPathListEntry>
-    ) {
-        val syncFileInfoList = yamlPathList.map {
-            PipelineYamlSyncInfo(
-                filePath = it.yamlPath,
-                fileUrl = it.yamlUrl,
-                syncStatus = RepoYamlSyncStatusEnum.SYNC
-            )
-        }
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineYamlSyncDao.delete(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId
-            )
-            pipelineYamlSyncDao.batchAdd(
-                dslContext = transactionContext,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                syncFileInfoList = syncFileInfoList
-            )
-        }
-        val syncStatus = if (syncFileInfoList.isEmpty()) {
-            RepoYamlSyncStatusEnum.SUCCEED.name
-        } else {
-            RepoYamlSyncStatusEnum.SYNC.name
-        }
-        client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            syncStatus = syncStatus
-        )
-    }
 
     fun enablePacFailed(
         projectId: String,
