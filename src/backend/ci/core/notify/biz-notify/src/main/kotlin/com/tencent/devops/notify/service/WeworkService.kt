@@ -29,6 +29,7 @@ package com.tencent.devops.notify.service
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 
 interface WeworkService {
 
@@ -37,4 +38,28 @@ interface WeworkService {
     fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
 
     fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean
+
+    /**
+     * 发送企业微信模板卡片。默认实现降级为 false，由调用方改走文本。
+     */
+    fun sendTemplateCardMessage(
+        receivers: Collection<String>,
+        templateCard: WeworkTemplateCard
+    ): Boolean = false
+
+    /**
+     * 按接收人发送各自的模板卡片。返回发送失败的接收人，供上层只对失败者降级文本。
+     * 默认逐人调用 [sendTemplateCardMessage]，不改变既有实现。
+     */
+    fun sendTemplateCardMessages(
+        receiverCards: Map<String, WeworkTemplateCard>
+    ): Set<String> {
+        val failed = linkedSetOf<String>()
+        receiverCards.forEach { (receiver, card) ->
+            if (!sendTemplateCardMessage(listOf(receiver), card)) {
+                failed.add(receiver)
+            }
+        }
+        return failed
+    }
 }
