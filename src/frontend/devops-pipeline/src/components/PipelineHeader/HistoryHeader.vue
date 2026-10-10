@@ -165,7 +165,7 @@
         RESOURCE_TYPE,
         TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
-    import { pipelineTabIdMap, DRAFT_STATUS } from '@/utils/pipelineConst'
+    import { pipelineTabIdMap, DRAFT_STATUS, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
@@ -512,14 +512,21 @@
             },
 
             handleVersionChange (versionId, version) {
-                let routeType = this.$route.params.type || this.isTemplate ? 'instanceList' : 'history'
+                let routeType = this.isTemplate ? 'instanceList' : 'history'
                 const noRecordVersionTab = this.isTemplate ? ['instanceList'] : ['history', 'triggerEvent']
+                const moreTabs = ['delegation', 'changeLog']
 
                 if (version) {
                     this.selectPipelineVersion(version)
                     if (this.releaseVersion) {
-                        const noRecordVersion = noRecordVersionTab.includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
-                        routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                        // 当前 tab 按默认值兜底（路由无 type 参数时流水线默认 history、模板默认 instanceList）
+                        const curType = this.$route.params.type || routeType
+                        const isReleaseTarget = versionId === this.releaseVersion && version.status === VERSION_STATUS_ENUM.RELEASED
+                        const isBranchTarget = version.isBranchVersion
+                        const curTabDisabled = noRecordVersionTab.includes(curType)
+                            ? (!isReleaseTarget && !isBranchTarget)
+                            : (moreTabs.includes(curType) && !isReleaseTarget)
+                        routeType = curTabDisabled ? pipelineTabIdMap.pipeline : curType
                     }
                 }
 
