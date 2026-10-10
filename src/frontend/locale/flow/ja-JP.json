@@ -804,7 +804,12 @@
         "bkTapdBugStatusChangeEventDesc": "バグ [{issue}] のステータスが {user} により変更されました",
         "bkTapdStoryBugLinkEventDesc": "ストーリー [{issue}] が {user} により他のバグに関連付けられました",
         "bkTapdStoryBugUnlinkEventDesc": "ストーリー [{issue}] のバグ関連付けが {user} により解除されました",
-        "bkTapdGenericEventDesc": "TAPD {event} イベント [{issue}] のアクション [{action}] が {user} によりトリガーされました"
+        "bkTapdGenericEventDesc": "TAPD {event} イベント [{issue}] のアクション [{action}] が {user} によりトリガーされました",
+        "bkArtifactFileArrivedEventDesc": "成果物 [{name}] {size}が到着、ソース {pipeline}, by {user}，{repo}",
+        "bkArtifactFolderArrivedEventDesc": "成果物ディレクトリ [{name}] {size}が到着、ソース {pipeline}，by {user}，{repo}",
+        "bkArtifactImageArrivedEventDesc": "イメージ: [{name}] が到着、ソース: {pipeline}, by {user}",
+        "bkArtifactRepoPipeline": "パイプライン倉庫",
+        "bkArtifactRepoCustom": "カスタム倉庫"
       }
     },
     "delegation": {
