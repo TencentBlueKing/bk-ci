@@ -2521,7 +2521,7 @@ class PipelineBuildDao {
         beforePipelineId: String?,
         beforeBuildNum: Int?,
         queueTimeField: Field<LocalDateTime>,
-        buildNumField: Field<java.lang.Integer>,
+        buildNumField: Field<Int>,
         excludeBuildId: String?,
         buildIdField: Field<String>
     ) {
@@ -2542,7 +2542,7 @@ class PipelineBuildDao {
                     .or(
                         queueTimeField.eq(queueDateTime)
                             .and(pipelineIdField.eq(beforePipelineId))
-                            .and(buildNumField.lt(java.lang.Integer.valueOf(beforeBuildNum)))
+                            .and(buildNumField.lt(beforeBuildNum))
                     )
             )
         }
@@ -2554,8 +2554,8 @@ class PipelineBuildDao {
     private fun toConcurrencyQueueCard(
         pipelineId: String,
         buildId: String,
-        buildNum: java.lang.Integer?,
-        status: java.lang.Integer?,
+        buildNum: Int?,
+        status: Int?,
         trigger: String?,
         triggerUser: String?,
         startUser: String?,
@@ -2566,8 +2566,8 @@ class PipelineBuildDao {
     ) = ConcurrencyQueueBuild(
         buildId = buildId,
         pipelineId = pipelineId,
-        buildNum = buildNum?.toInt() ?: 0,
-        status = status?.toInt()?.let { BuildStatus.entries.getOrNull(it)?.name } ?: BuildStatus.UNKNOWN.name,
+        buildNum = buildNum ?: 0,
+        status = status?.let { BuildStatus.entries.getOrNull(it)?.name } ?: BuildStatus.UNKNOWN.name,
         userId = triggerUser ?: startUser ?: "",
         trigger = trigger ?: "",
         buildMsg = buildMsg,
