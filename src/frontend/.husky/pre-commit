@@ -1,1 +1,2 @@
+cd src/frontend || exit 1
 pnpm lint-staged

@@ -1,1 +1,3 @@
-npx --no -- commitlint --edit ${1}
+msg=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+cd src/frontend || exit 1
+npx --no -- commitlint --edit "$msg"
