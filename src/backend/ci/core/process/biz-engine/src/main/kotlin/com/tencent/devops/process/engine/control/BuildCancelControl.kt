@@ -60,6 +60,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import java.time.LocalDateTime
@@ -429,10 +430,25 @@ class BuildCancelControl @Autowired constructor(
         stageId: String,
         variables: Map<String, String>
     ) {
-
+        val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+            buildVariableService = buildVariableService,
+            projectId = projectId,
+            buildId = buildId,
+            variables = variables
+        )
         val mutexGroup = when (container) {
-            is VMBuildContainer -> mutexControl.decorateMutexGroup(container.mutexGroup, variables)
-            is NormalContainer -> mutexControl.decorateMutexGroup(container.mutexGroup, variables)
+            is VMBuildContainer -> mutexControl.decorateMutexGroup(
+                mutexGroup = container.mutexGroup,
+                variables = variables,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
+            is NormalContainer -> mutexControl.decorateMutexGroup(
+                mutexGroup = container.mutexGroup,
+                variables = variables,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
             else -> null
         }
 

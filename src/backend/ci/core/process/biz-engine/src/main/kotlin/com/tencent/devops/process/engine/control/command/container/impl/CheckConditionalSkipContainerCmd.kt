@@ -41,6 +41,8 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -51,7 +53,8 @@ import org.springframework.stereotype.Service
 @Service
 class CheckConditionalSkipContainerCmd constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -127,7 +130,12 @@ class CheckConditionalSkipContainerCmd constructor(
             )
             ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
-                variables = containerContext.variables.plus(contextMap),
+                session = BuildVarExprOverflowHelper.session(
+                    buildVariableService = buildVariableService,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    variables = containerContext.variables.plus(contextMap)
+                ),
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,
                 customCondition = jobControlOption.customCondition,

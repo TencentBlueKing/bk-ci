@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
@@ -102,6 +101,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
@@ -205,9 +205,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             ?: throw NotFoundException("Fail to find build: buildId($buildId)")
         Preconditions.checkNotNull(buildInfo) { NotFoundException("Pipeline build ($buildId) is not exist") }
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
-        // var表中获取环境变量，并对老版本变量进行兼容
+        // var表中获取环境变量，并对老版本变量进行兼容（大变量保持引用串，避免 claim 包体放大）
         val pipelineId = buildInfo.pipelineId
-        val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
+        val varSnapshot = buildVariableService.getVariableSnapshot(projectId, buildInfo.pipelineId, buildId)
+        val variables = varSnapshot.smallVars
         val variablesWithType = buildVariableService.getAllVariableWithType(
             projectId = projectId,
             buildId = buildId
@@ -275,7 +276,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         model = model,
                         buildInfo = buildInfo,
                         variablesWithType = variablesWithType,
-                        vmName = vmName
+                        vmName = vmName,
+                        overflowKeys = varSnapshot.largeKeys,
+                        overflowLoader = if (varSnapshot.largeKeys.isEmpty()) null else varSnapshot.largeValueLoader
                     )
                     buildingHeartBeatUtils.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
@@ -324,7 +327,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         model: Model?,
         buildInfo: BuildInfo,
         variablesWithType: MutableList<BuildParameters>,
-        vmName: String
+        vmName: String,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Triple<MutableList<BuildEnv>, MutableMap<String, String>, Long> {
         return when (container) {
             is VMBuildContainer -> {
@@ -338,7 +343,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     stage = stage,
                     model = model,
                     buildInfo = buildInfo,
-                    variablesWithType = variablesWithType
+                    variablesWithType = variablesWithType,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
             }
 
@@ -363,7 +370,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         stage: Stage,
         model: Model?,
         buildInfo: BuildInfo,
-        variablesWithType: MutableList<BuildParameters>
+        variablesWithType: MutableList<BuildParameters>,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Triple<MutableList<BuildEnv>, MutableMap<String, String>, Long> {
         val containerAppResource = client.get(ServiceContainerAppResource::class)
         val envList = mutableListOf<BuildEnv>()
@@ -376,9 +385,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         ).toMutableMap()
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
-        fillContainerContext(contextMap, container.customEnv, container.matrixContext)
+        fillContainerContext(
+            context = contextMap,
+            customBuildEnv = container.customEnv,
+            matrixContext = container.matrixContext,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
         val contextPair by lazy {
-            EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
+            EnvReplacementParser.getCustomExecutionContextByMap(
+                variables = contextMap,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
         }
         container.buildEnv?.forEach { env ->
             containerAppResource.getBuildEnv(
@@ -387,7 +406,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     value = env.value,
                     contextMap = contextMap,
                     onlyExpression = dialect.supportUseExpression(),
-                    contextPair = contextPair
+                    contextPair = contextPair,
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 ),
                 os = ContainerUtils.getContainerOs(
                     modelOs = container.baseOS?.name,
@@ -405,7 +426,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 value = v,
                 contextMap = contextMap,
                 onlyExpression = dialect.supportUseExpression(),
-                contextPair = contextPair
+                contextPair = contextPair,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
             contextMap[k] = value
             customBuildParameters.add(
@@ -423,7 +446,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 value = nameAndValue.value,
                 contextMap = contextMap,
                 onlyExpression = dialect.supportUseExpression(),
-                contextPair = contextPair
+                contextPair = contextPair,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
             contextMap[key] = value
             customBuildParameters.add(
@@ -447,10 +472,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun fillContainerContext(
         context: MutableMap<String, String>,
         customBuildEnv: List<NameAndValue>?,
-        matrixContext: Map<String, String>?
+        matrixContext: Map<String, String>?,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ) {
         val contextPair by lazy {
-            EnvReplacementParser.getCustomExecutionContextByMap(context)
+            EnvReplacementParser.getCustomExecutionContextByMap(
+                variables = context,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
         }
         val dialect = PipelineDialectUtil.getPipelineDialect(context[PIPELINE_DIALECT])
         customBuildEnv?.let {
@@ -460,7 +491,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         value = it.value,
                         contextMap = context,
                         onlyExpression = dialect.supportUseExpression(),
-                        contextPair = contextPair
+                        contextPair = contextPair,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
                     )
                 }
             )
@@ -910,8 +943,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     params = task.taskParams.map {
                         // 表达式在worker端替换
                         val obj = if (!dialect.supportUseExpression()) {
-                            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                                it.value, buildVariable
+                            // 传统方言在引擎侧替换：被 ${{ key }} 引用到的大变量替换成真实值(按需加载)，
+                            // ${x}/$x 旧语法与未引用的大变量仍保持引用串，避免 4M 值随 claim 全量下发。
+                            BuildVarExprOverflowHelper.replaceEnvVarWithOverflow(
+                                value = it.value,
+                                variables = buildVariable,
+                                buildVariableService = buildVariableService,
+                                projectId = task.projectId,
+                                buildId = buildId
                             )
                         } else {
                             it.value

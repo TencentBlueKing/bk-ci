@@ -50,7 +50,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_RUNS_EVEN_IF_CA
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TASK_DISABLED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.service.BuildVarExprSession
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
@@ -170,7 +172,7 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         containerFinalStatus: BuildStatus,
-        variables: Map<String, String>,
+        session: BuildVarExprSession,
         hasFailedTaskInSuccessContainer: Boolean,
         message: StringBuilder = StringBuilder()
     ): Boolean {
@@ -223,12 +225,12 @@ object ControlUtils {
                 skip = checkCustomVariableSkip(
                     buildId = buildId,
                     additionalOptions = additionalOptions,
-                    variables = variables,
+                    variables = session.variables,
                     message = message
                 ) || checkCustomConditionSkip(
                     buildId = buildId,
                     additionalOptions = additionalOptions,
-                    variables = variables,
+                    session = session,
                     message = message
                 )
             } else -> {
@@ -242,13 +244,18 @@ object ControlUtils {
     private fun checkCustomConditionSkip(
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
-        variables: Map<String, String>,
+        session: BuildVarExprSession,
         message: StringBuilder
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()
         ) {
-            return !evalExpressionAsCode(additionalOptions.customCondition, buildId, variables, message)
+            return !evalExpressionAsCode(
+                customCondition = additionalOptions.customCondition,
+                buildId = buildId,
+                session = session,
+                message = message
+            )
         }
 
         return false
@@ -257,7 +264,7 @@ object ControlUtils {
     // Job是否跳过判断
     fun checkJobSkipCondition(
         conditions: List<NameAndValue>,
-        variables: Map<String, String>,
+        session: BuildVarExprSession,
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
@@ -278,13 +285,19 @@ object ControlUtils {
                 false
             } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return !evalExpressionAsCode(
+                    customCondition = customCondition,
+                    buildId = buildId,
+                    session = session,
+                    message = message
+                )
             }
             else -> {
                 message.append(runCondition)
                 return false
             } // 其它类型直接返回不跳过
         }
+        val variables = session.variables
         for (names in conditions) {
             val key = names.key
             val value = names.value
@@ -303,7 +316,7 @@ object ControlUtils {
     // stage是否跳过判断
     fun checkStageSkipCondition(
         conditions: List<NameAndValue>,
-        variables: Map<String, String>,
+        session: BuildVarExprSession,
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
@@ -313,10 +326,16 @@ object ControlUtils {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpressionAsCode(customCondition, buildId, variables, message)
+                return !evalExpressionAsCode(
+                    customCondition = customCondition,
+                    buildId = buildId,
+                    session = session,
+                    message = message
+                )
             }
             else -> return false // 其它类型直接返回不跳过
         }
+        val variables = session.variables
         for (names in conditions) {
             val key = names.key
             val value = names.value
@@ -330,19 +349,30 @@ object ControlUtils {
         return skip
     }
 
+    /**
+     * 求值自定义条件表达式。大变量在 context 中为引用串时，仅对条件里**出现过的** overflow key 按需还原，
+     * 避免一次条件判断把构建内全部大变量加载进内存。
+     */
     private fun evalExpressionAsCode(
         customCondition: String?,
         buildId: String,
-        variables: Map<String, String>,
+        session: BuildVarExprSession,
         message: StringBuilder
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
                 // 新增的表达式调用需要去掉兼容老流水线变量
-                val variablesWithOutOld = variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
+                val variablesWithOutOld =
+                    session.variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
+                val evalContext = resolveOverflowForCondition(
+                    condition = customCondition,
+                    variables = variablesWithOutOld,
+                    overflowKeys = session.overflowKeys,
+                    overflowLoader = session.overflowLoader
+                )
                 val expressionResult = ExpressionParser.evaluateByMap(
-                    expression = EnvReplacementParser.parse(customCondition, variables),
-                    contextMap = variablesWithOutOld,
+                    expression = EnvReplacementParser.parse(customCondition, evalContext),
+                    contextMap = evalContext,
                     fetchValue = false
                 )
                 logger.info(
@@ -395,6 +425,74 @@ object ControlUtils {
             false
         }
     }
+
+    /**
+     * 仅还原条件表达式中出现的大变量引用，避免条件判断触发全量加载。
+     */
+    private fun resolveOverflowForCondition(
+        condition: String,
+        variables: Map<String, String>,
+        overflowKeys: Set<String>,
+        overflowLoader: ((String) -> String?)?
+    ): Map<String, String> {
+        if (overflowLoader == null || overflowKeys.isEmpty()) {
+            return variables
+        }
+        val keysInCondition = overflowKeys.filter { referencedInCondition(condition, it) }
+        if (keysInCondition.isEmpty()) {
+            return variables
+        }
+        val resolved = variables.toMutableMap()
+        keysInCondition.forEach { key ->
+            if (BuildVarOverflowUtils.isOverflowReference(resolved[key])) {
+                overflowLoader.invoke(key)?.let { resolved[key] = it }
+            }
+        }
+        return resolved
+    }
+
+    /**
+     * 判断 [key] 是否作为**独立标识符**出现在条件表达式 [condition] 中。
+     *
+     * 本方法只决定「要不要去溢出表拉真实值」，不参与求值：
+     * - 漏判（该拉没拉）：条件里仍是 `__BK_OVF__:<len>`，比较会静默算错。
+     * - 误判（不该拉却拉）：多一次溢出表 IO / 多占内存，求值结果不变。
+     * 所以边界宁可略宽，也不能漏掉真正的变量引用。
+     *
+     * 流水线变量名由字母、数字、`_` 组成（PAC 路径还带 `.`，`.` 是路径分隔符，不是名字的一部分）。
+     * 合法引用两侧一定不是标识符字符，例如：
+     * - `payload=='ok'`、`${{ payload }}`、`variables.payload`、`foo(payload)`
+     * 粘连命中则不是引用，必须跳过，否则 `payload` 会把 `a`、`a1` 会把 `a` 误当成引用去拉几 M 的值：
+     * - `payload` 中的 `a`：右侧是 `y`（标识符）
+     * - `a1` 中的 `a`：右侧是 `1`（标识符）
+     *
+     * 保守误判可接受、求值不受影响：字符串字面量 `'payload'` 也会命中（两侧是引号）。
+     * 条件里写死了和某个大变量同名的单词时会多加载一次，远好过漏加载。
+     */
+    private fun referencedInCondition(condition: String, key: String): Boolean {
+        if (key.isEmpty()) {
+            return false
+        }
+        var from = 0
+        while (from <= condition.length - key.length) {
+            val idx = condition.indexOf(key, from)
+            if (idx < 0) {
+                return false
+            }
+            val end = idx + key.length
+            // 两侧都不是 [A-Za-z0-9_]：命中的是独立 token，而不是更长名字的一部分
+            val leftFree = idx == 0 || !condition[idx - 1].isIdentifierPart()
+            val rightFree = end >= condition.length || !condition[end].isIdentifierPart()
+            if (leftFree && rightFree) {
+                return true
+            }
+            from = idx + 1
+        }
+        return false
+    }
+
+    /** 变量名合法字符；`.` / `$` / `'` / 运算符等都不是，用作 token 边界。 */
+    private fun Char.isIdentifierPart(): Boolean = isLetterOrDigit() || this == '_'
 
     fun checkContainerFailure(c: PipelineBuildContainer) =
         c.status.isFailure() && c.controlOption.jobControlOption.continueWhenFailed != true

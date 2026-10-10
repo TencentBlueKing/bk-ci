@@ -66,6 +66,7 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -476,6 +477,7 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(jobVariables)
             customEnv.forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
@@ -484,7 +486,9 @@ object Runner {
                         contextMap = jobVariables,
                         onlyExpression = dialect.supportUseExpression(),
                         functions = SpecialFunctions.functions,
-                        output = SpecialFunctions.output
+                        output = SpecialFunctions.output,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
                     )
                     jobVariables["envs.${it.key}"] = value
                     taskBuildVariable[it.key!!] = value

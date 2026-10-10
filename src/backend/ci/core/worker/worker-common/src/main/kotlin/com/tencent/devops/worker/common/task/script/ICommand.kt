@@ -41,6 +41,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
 
@@ -74,17 +75,20 @@ interface ICommand {
         val acrossTargetProjectId by lazy {
             TemplateAcrossInfoUtil.getAcrossInfo(variables, taskId)?.targetProjectId
         }
-        val contextMap = variables.plus(
+        // 按预置映射关系补齐 ci.* 上下文（如 ci.build_id 取自 BK_CI_BUILD_ID），返回值已包含原始构建变量
+        val contextMap = PipelineVarUtil.fillContextVarMap(variables).toMutableMap()
+        // 任务运行期上下文优先级最高，必须在预置填充之后覆盖：
+        // 否则同名构建变量（如 WORKSPACE）会把 ci.workspace 改写成非本任务工作空间的值
+        contextMap.putAll(
             mapOf(
                 WORKSPACE_CONTEXT to dir.absolutePath,
                 CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
                 JOB_OS_CONTEXT to AgentEnv.getOS().name
             )
-        ).toMutableMap()
-        // 增加上下文的替换
-        PipelineVarUtil.fillContextVarMap(contextMap)
+        )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         return if (dialect.supportUseExpression()) {
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
             EnvReplacementParser.parse(
                 value = command,
                 contextMap = contextMap,
@@ -94,16 +98,26 @@ interface ICommand {
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId),
                         CIKeywordsService.CIKeywordsRuntimeNamedValue()
-                    )
+                    ),
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 ),
                 functions = SpecialFunctions.functions,
-                output = SpecialFunctions.output
+                output = SpecialFunctions.output,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
             )
         } else {
+            // 经典方言：脚本正文的 ${{ 大变量 }} 由这里解析（process 侧 claim 对 URL 编码脚本是 no-op）。
+            // 把被引用到的大变量重写成合成 key 并注入真实值，未被引用的大变量保持引用串不变。
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
+            val (rewrittenCommand, synthVars) =
+                BuildVarOverflowExprSupport.rewriteOverflowText(command, overflowKeys, overflowLoader)
+            val effectiveContext = if (synthVars.isEmpty()) contextMap else contextMap.plus(synthVars)
             ReplacementUtils.replace(
-                command,
+                rewrittenCommand,
                 object : KeyReplacement {
-                    override fun getReplacement(key: String): String? = contextMap[key] ?: try {
+                    override fun getReplacement(key: String): String? = effectiveContext[key] ?: try {
                         if (key == CI_TOKEN_CONTEXT) {
                             CIKeywordsService.getOrRequestToken()
                         } else {
