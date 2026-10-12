@@ -82,6 +82,50 @@ class AiMcpServerHeaderTest {
     }
 
     @Test
+    fun `explicit access token placeholder is replaced with token of sanitized operator`() {
+        val requestedUsers = mutableListOf<String>()
+        val headers = AiMcpServerService.resolveHeaders(
+            config("""{"X-Bkapi-Authorization":"{\"access_token\":\"{{accessToken}}\"}","X-Bkapi-Timeout":"60"}"""),
+            " tester "
+        ) {
+            requestedUsers.add(it)
+            "token-xyz_789"
+        }
+
+        assertEquals(listOf("tester"), requestedUsers)
+        assertEquals("""{"access_token":"token-xyz_789"}""", headers["X-Bkapi-Authorization"])
+        assertEquals("60", headers["X-Bkapi-Timeout"])
+    }
+
+    @Test
+    fun `access token placeholder config fails closed when token is unavailable or unsafe`() {
+        val configured = config("""{"X-Bkapi-Authorization":"{\"access_token\":\"{{accessToken}}\"}"}""")
+        assertThrows(IllegalStateException::class.java) {
+            AiMcpServerService.resolveHeaders(configured, "tester")
+        }
+        listOf(null, "", "abc\",\"bk_username\":\"admin", "abc\\def", "a b").forEach { token ->
+            assertThrows(IllegalStateException::class.java) {
+                AiMcpServerService.resolveHeaders(configured, "tester") { token }
+            }
+        }
+        listOf(null, "", "unknown").forEach { operator ->
+            assertThrows(IllegalStateException::class.java) {
+                AiMcpServerService.resolveHeaders(configured, operator) { "token" }
+            }
+        }
+    }
+
+    @Test
+    fun `access token is not requested when config does not declare it`() {
+        val headers = AiMcpServerService.resolveHeaders(
+            config("""{"Authorization":"Bearer existing-pat"}"""),
+            "tester"
+        ) { throw AssertionError("should not be called") }
+
+        assertEquals(mapOf("Authorization" to "Bearer existing-pat"), headers)
+    }
+
+    @Test
     fun `empty configuration remains empty`() {
         val headers = AiMcpServerService.resolveHeaders(config(null), "tester")
 
