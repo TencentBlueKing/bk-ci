@@ -1155,6 +1155,7 @@
     "cpuUnit": "C",
     "workspace": "Workspace",
     "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/src by default",
+    "dockerWorkspaceTips": "If not filled, the it will be saved in [Agent installation directory]/docker_workspace/data/[pipeline ID]/[Job index] by default",
     "envDependency": "Mount dependent software over NFS",
     "envDependencyTips": "Not recommended. Given software might not be compatible with your desired build environment. It is recommended to create and use your docker image instead. After selecting the dependence on tools above, the following will be executed:  ",
     "abnormal": "Abnormal",

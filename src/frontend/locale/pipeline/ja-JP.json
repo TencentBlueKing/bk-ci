@@ -1150,6 +1150,7 @@
     "cpuUnit": "コア",
     "workspace": "作業スペースを指定",
     "workspaceTips": "入力しない場合は、デフォルトは [Agentインストールディレクトリ]/workspace/[パイプラインID]/src です",
+    "dockerWorkspaceTips": "入力しない場合は、デフォルトは [Agentインストールディレクトリ]/docker_workspace/data/[パイプラインID]/[Job番号] です",
     "envDependency": "nfs方式で依存環境をマウント",
     "envDependencyTips": "推奨されません。マウントされた環境はすべての構築シナリオと互換性があるとは限りません。構築に依存する環境はイメージに入れて使用することを推奨します。上記の依存環境を選択した後、次の操作を実行します",
     "abnormal": "異常",

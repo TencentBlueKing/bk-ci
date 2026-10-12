@@ -395,7 +395,7 @@
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, UPDATE_STARTUP_INFO, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual, isParamValueEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -629,7 +629,7 @@
                         ...p,
                         isChanged: isObject(p.defaultValue)
                             ? !isShallowEqual(p.defaultValue, p.value)
-                            : p.defaultValue !== p.value,
+                            : !isParamValueEqual(p.defaultValue, p.value),
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))

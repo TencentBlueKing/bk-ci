@@ -71,7 +71,8 @@ class SensitiveConfDao {
         fieldName: String,
         fieldValue: String,
         fieldType: String,
-        fieldDesc: String?
+        fieldDesc: String?,
+        aesKeySha: String?
     ) {
         with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
             dslContext.insertInto(
@@ -84,7 +85,8 @@ class SensitiveConfDao {
                 FIELD_TYPE,
                 FIELD_DESC,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                AES_KEY_SHA
             )
                 .values(
                     id,
@@ -95,7 +97,8 @@ class SensitiveConfDao {
                     fieldType,
                     fieldDesc,
                     userId,
-                    userId
+                    userId,
+                    aesKeySha
                 ).execute()
         }
     }
