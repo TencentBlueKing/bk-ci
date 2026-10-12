@@ -1,11 +1,12 @@
 import {
+    ENVIRONMENT_API_URL_PREFIX,
     MERTICS_URL_PREFIX,
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
 
 const prefix = `/${MERTICS_URL_PREFIX}/user/metrics/query/`
-const prefixBuild ='/ms/environment/api/user/envnode/'
+const prefixBuild = `/${ENVIRONMENT_API_URL_PREFIX}/user/envnode`
 const prefixWarn =`/${MERTICS_URL_PREFIX}/user/metrics/query_bk_alert`
 const stateParams = {
     format: "table",
