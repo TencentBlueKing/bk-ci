@@ -41,6 +41,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.MessageDigest
@@ -275,6 +277,54 @@ object FileUtil {
 
     fun resolveSafeChildFile(baseDirPath: String, relativePath: String?): File =
         resolveSafeChildFile(File(baseDirPath), relativePath)
+
+    /**
+     * 先反复 URL 解码再做 [resolveSafeChildFile]。
+     * 禁止在解码前用 contains("../") 这类黑名单：%2e%2e%2f 会绕过检查，解码后才变成 ../。
+     *
+     * 解码后会去掉前导 / 或 \：File(base, "/etc/passwd") 在 Unix 上会忽略 base 变成绝对路径，
+     * 而历史下载 filePath 又经常带前导 /（例如 /bk-custom/...），必须按「相对 base 的子路径」解析。
+     */
+    fun resolveSafeDecodedChildFile(baseDir: File, filePath: String?): File {
+        if (filePath.isNullOrBlank() || filePath.contains('\u0000')) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath ?: "")
+            )
+        }
+        val decoded = decodeUrlRepeatedly(filePath).trimStart('/', '\\')
+        return resolveSafeChildFile(baseDir, decoded)
+    }
+
+    fun resolveSafeDecodedChildFile(baseDirPath: String, filePath: String?): File =
+        resolveSafeDecodedChildFile(File(baseDirPath), filePath)
+
+    /**
+     * 反复做百分号解码直到稳定，最多 [maxRounds] 次，防止 %252e 二次编码绕过。
+     * 不含 % 时直接返回，避免把路径里合法的 + 当成 form 空格（URLDecoder 的 + → space）。
+     */
+    fun decodeUrlRepeatedly(raw: String, maxRounds: Int = 3): String {
+        if (raw.indexOf('%') < 0) {
+            return raw
+        }
+        var current = raw
+        repeat(maxRounds) {
+            if (current.indexOf('%') < 0) {
+                return current
+            }
+            val decoded = try {
+                // + 先改成 %2B，只解码 %xx，避免 foo+bar.zip 被变成 foo bar.zip
+                URLDecoder.decode(current.replace("+", "%2B"), StandardCharsets.UTF_8.name())
+            } catch (_: Exception) {
+                current
+            }
+            if (decoded == current) {
+                return current
+            }
+            current = decoded
+        }
+        return current
+    }
 
     /**
      * 防御 Zip Slip：将解压条目名安全地解析到目标目录之下。

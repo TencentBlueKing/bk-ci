@@ -3,6 +3,7 @@ package com.tencent.devops.openapi.api.apigw.v4.environment.job
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.job.agentreq.ApiGwInstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.InstallAgentResult
@@ -14,6 +15,7 @@ import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryExecuteObjectLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -25,6 +27,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResu
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.OpOperateResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryExecuteObjectLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
@@ -159,6 +162,32 @@ interface ApigwTXEnvironmentJobResourceV4 {
         @Parameter(description = "批量查询日志的请求信息", required = true)
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
+
+    @Operation(
+        summary = "批量查询作业执行对象（主机）日志，默认单次最多查询10台主机",
+        tags = [
+            "v4_app_job_batch_get_job_instance_execute_object_log",
+            "v4_user_job_batch_get_job_instance_execute_object_log"
+        ]
+    )
+    @POST
+    @Path("/{projectId}/batch_get_job_instance_execute_object_log")
+    fun batchGetExecuteObjectLog(
+        @Parameter(description = "appCode", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "批量查询执行对象日志的请求信息", required = true)
+        queryExecuteObjectLogsReq: QueryExecuteObjectLogsReq
+    ): Result<QueryExecuteObjectLogsResult>
 
     @Operation(summary = "创建帐号的Job接口", tags = ["v4_app_job_create_account"])
     @POST

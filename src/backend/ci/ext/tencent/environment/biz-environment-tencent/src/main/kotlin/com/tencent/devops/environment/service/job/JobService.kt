@@ -29,10 +29,12 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_JOB_INSTANCE_NO_STEP
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_SCRIPT_EXECUTE_HOST_EMPTY
 import com.tencent.devops.environment.pojo.job.agentres.OperateStepInstanceResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryAgentStatusFromJobReq
@@ -104,6 +106,18 @@ import com.tencent.devops.environment.pojo.job.jobresp.StepResultGroup
 import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import com.tencent.devops.environment.pojo.job.jobresp.TopoNode
 import com.tencent.devops.environment.pojo.job.jobresp.VariableServer
+import com.tencent.devops.environment.pojo.job.jobreq.QueryExecuteObjectLogsReq
+import com.tencent.devops.environment.pojo.job.jobresp.ExecuteObjectFileTaskLog
+import com.tencent.devops.environment.pojo.job.jobresp.ExecuteObjectInfo
+import com.tencent.devops.environment.pojo.job.jobresp.FileStepExecuteObjectLog
+import com.tencent.devops.environment.pojo.job.jobresp.QueryExecuteObjectLogsResult
+import com.tencent.devops.environment.pojo.job.jobresp.ScriptStepExecuteObjectLog
+import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudQueryExecuteObjectLogsReq
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudExecuteObject
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudFileTaskLog
+import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudQueryExecuteObjectLogsResult
+import java.io.IOException
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import jakarta.ws.rs.core.Response
@@ -117,6 +131,8 @@ class JobService @Autowired constructor(
     companion object {
         private const val DEFAULT_FAILED_RETRY_OPERATION_CODE = 2
         private const val MAX_HTTP_RETRY_TIME = 3
+        private const val RETRY_PERIOD_MILLS = 500L
+        private val logger = LoggerFactory.getLogger(JobService::class.java)
     }
 
     fun executeScript(
@@ -361,6 +377,115 @@ class JobService @Autowired constructor(
             }
         )
         return queryJobInstanceLogsRes
+    }
+
+    fun batchGetExecuteObjectLog(
+        projectId: String,
+        queryExecuteObjectLogsReq: QueryExecuteObjectLogsReq
+    ): QueryExecuteObjectLogsResult {
+        val stepInstanceId = getFirstStepInstanceId(projectId, queryExecuteObjectLogsReq.jobInstanceId)
+        val jobCloudReq = JobCloudQueryExecuteObjectLogsReq(
+            jobInstanceId = queryExecuteObjectLogsReq.jobInstanceId,
+            stepInstanceId = stepInstanceId,
+            hostIdList = queryExecuteObjectLogsReq.hostIdList,
+            ipList = queryExecuteObjectLogsReq.ipList?.map {
+                JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
+            },
+            bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+        )
+        val jobCloudRes = retryOnServerError {
+            try {
+                // getResultFromV4Res会清理操作名，每次重试前都需要重新设置
+                ApigwJobCloudApi.setJobOperationName(::batchGetExecuteObjectLog.name)
+                apigwJobCloudApi.executeV4PostRequest(
+                    jobCloud = jobCloudReq,
+                    classOfU = JobCloudQueryExecuteObjectLogsResult::class.java
+                )
+            } finally {
+                ApigwJobCloudApi.removeJobOperationName()
+            }
+        }
+        val data = jobCloudRes.data
+        return QueryExecuteObjectLogsResult(
+            jobInstanceId = data?.jobInstanceId ?: queryExecuteObjectLogsReq.jobInstanceId,
+            stepInstanceId = data?.stepInstanceId ?: stepInstanceId,
+            logType = data?.logType ?: -1,
+            scriptStepExecuteObjectLogs = data?.scriptStepExecuteObjectLogs?.map {
+                ScriptStepExecuteObjectLog(
+                    executeObject = parseExecuteObject(it.executeObject),
+                    logContent = it.logContent
+                )
+            },
+            fileStepExecuteObjectLogs = data?.fileStepExecuteObjectLogs?.map {
+                FileStepExecuteObjectLog(
+                    executeObject = parseExecuteObject(it.executeObject),
+                    uploadLogs = it.uploadLog?.map { log -> parseFileTaskLog(log) },
+                    downloadLogs = it.downloadLog?.map { log -> parseFileTaskLog(log) }
+                )
+            },
+            jobRequestId = jobCloudRes.jobRequestId
+        )
+    }
+
+    private fun getFirstStepInstanceId(projectId: String, jobInstanceId: Long): Long {
+        val statusRes = queryJobInstanceStatus(
+            projectId = projectId,
+            jobInstanceId = jobInstanceId,
+            returnIpResult = false
+        )
+        return statusRes.data?.stepInstanceList?.firstOrNull()?.stepInstanceId
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_JOB_INSTANCE_NO_STEP,
+                params = arrayOf(jobInstanceId.toString())
+            )
+    }
+
+    private fun parseExecuteObject(executeObject: JobCloudExecuteObject?): ExecuteObjectInfo? {
+        return executeObject?.let {
+            ExecuteObjectInfo(
+                type = it.type,
+                resourceId = it.resourceId,
+                bkHostId = it.host?.bkHostId,
+                bkCloudId = it.host?.bkCloudId,
+                ip = it.host?.ip
+            )
+        }
+    }
+
+    private fun parseFileTaskLog(log: JobCloudFileTaskLog): ExecuteObjectFileTaskLog {
+        return ExecuteObjectFileTaskLog(
+            mode = log.mode,
+            srcExecuteObject = parseExecuteObject(log.srcExecuteObject),
+            srcPath = log.srcPath,
+            destExecuteObject = parseExecuteObject(log.destExecuteObject),
+            destPath = log.destPath,
+            status = log.status,
+            logContent = log.logContent,
+            size = log.size,
+            speed = log.speed,
+            process = log.process
+        )
+    }
+
+    /**
+     * 仅对网络异常与作业平台5xx重试，4xx等参数类错误直接抛出
+     */
+    private fun <T> retryOnServerError(action: () -> T): T {
+        var remainingTimes = MAX_HTTP_RETRY_TIME
+        while (true) {
+            try {
+                return action()
+            } catch (e: Exception) {
+                remainingTimes--
+                val retryable = e is IOException ||
+                    (e is CustomException && e.status.family == Response.Status.Family.SERVER_ERROR)
+                if (!retryable || remainingTimes <= 0) {
+                    throw e
+                }
+                logger.warn("retry batchGetExecuteObjectLog, remainingTimes=$remainingTimes|${e.message}")
+                Thread.sleep(RETRY_PERIOD_MILLS)
+            }
+        }
     }
 
     private fun parseHostInRes(host: JobCloudHostInRes): HostInRes {

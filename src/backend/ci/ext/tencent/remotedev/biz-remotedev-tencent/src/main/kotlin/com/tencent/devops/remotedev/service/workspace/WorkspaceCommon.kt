@@ -271,13 +271,48 @@ class WorkspaceCommon @Autowired constructor(
             }.associate { it.key to it.value }
     }
 
-    @Suppress("ComplexMethod")
     fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
         status: WorkspaceStatus,
         mountType: WorkspaceMountType,
         preloaded: WorkspaceInfo? = null
+    ): WorkspaceStatus {
+        val fixed = doFixUnexpectedStatus(userId, workspaceName, status, mountType, preloaded)
+        if (fixed != status) {
+            dispatchStatusChangePush(userId, workspaceName, fixed)
+        }
+        return fixed
+    }
+
+    private fun dispatchStatusChangePush(userId: String, workspaceName: String, fixed: WorkspaceStatus) {
+        kotlin.runCatching {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: return
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = workspace.workspaceSystemType,
+                workspaceMountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
+            )
+        }.onFailure {
+            logger.warn("dispatchStatusChangePush error|$workspaceName|$fixed", it)
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun doFixUnexpectedStatus(
+        userId: String,
+        workspaceName: String,
+        status: WorkspaceStatus,
+        mountType: WorkspaceMountType,
+        preloaded: WorkspaceInfo?
     ): WorkspaceStatus {
         val workspaceInfo = preloaded ?: kotlin.runCatching {
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
@@ -292,12 +327,18 @@ class WorkspaceCommon @Autowired constructor(
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
         when {
             workspaceInfo.status == EnvStatusEnum.readyToRun || workspaceInfo.status == EnvStatusEnum.stopped -> {
-                sleepControl.doStopWS(true, userId, workspaceName)
+                sleepControl.doStopWS(true, userId, workspaceName, notify = false)
                 return WorkspaceStatus.STOPPED
             }
 
             workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
-                deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
+                deleteControl.doDeleteWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    errorMsg = workspaceInfo.environmentIP,
+                    notify = false
+                )
                 return WorkspaceStatus.DELETED
             }
 
@@ -332,7 +373,13 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
-                return startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
+                return startControl.doStartWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    environmentHost = workspaceInfo.environmentHost,
+                    notify = false
+                )
             }
 
             workspaceInfo.status == EnvStatusEnum.startFailed -> {

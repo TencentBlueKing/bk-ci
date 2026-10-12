@@ -900,6 +900,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = res.displayName,
                 ownerDepartments = depInfo,
                 currentLoginUsers = res.hostIp?.let { ip -> loginUserMap?.get(ip)?.loginUsers }?.toSet() ?: emptySet(),
+                screenLocked = res.hostIp?.let { ip -> loginUserMap?.get(ip)?.screenLocked },
                 machineType = workspaceWindows[name]?.let { win -> allConfig[win.winConfigId.toString()]?.size },
                 macAddress = workspaceWindows[name]?.macAddress,
                 zoneType = specZoneConfig[res.zoneId]?.type?.name
