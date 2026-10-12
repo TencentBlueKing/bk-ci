@@ -1372,7 +1372,7 @@ class WorkspaceService @Autowired constructor(
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
             // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人可以看
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
-                if (multiple == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
+                if (multiple == true || live == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         sharedUsers = listOf(userId)
