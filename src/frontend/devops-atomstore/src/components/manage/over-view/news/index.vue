@@ -8,6 +8,8 @@
 </template>
 
 <script>
+    import { formatByUserTz } from '../../../../../../common-lib/time'
+
     export default {
         props: {
             detail: Object,
@@ -67,7 +69,7 @@
                 }).then((res) => {
                     const records = res.records || []
                     this.list = [...this.list, ...records.map((x) => ({
-                        tag: x.createTime,
+                        tag: formatByUserTz(x.createTime),
                         content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
                     }))]
                     this.loadEnd = res.count <= this.list.length
