@@ -1049,13 +1049,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         userId: String,
         workspaceName: String?,
-        envHashId: String?
+        envHashId: String?,
+        live: Boolean?
     ): Result<WorkspaceStartCloudDetail?> {
-        logger.info("startCloudWorkspaceDetail |$appCode|$userId|$workspaceName|$envHashId")
+        logger.info("startCloudWorkspaceDetail |$appCode|$userId|$workspaceName|$envHashId|$live")
         return client.get(ServiceRemoteDevResource::class).startCloudWorkspaceDetail(
             userId = userId,
             workspaceName = workspaceName,
-            envHashId = envHashId
+            envHashId = envHashId,
+            live = live
         )
     }
 

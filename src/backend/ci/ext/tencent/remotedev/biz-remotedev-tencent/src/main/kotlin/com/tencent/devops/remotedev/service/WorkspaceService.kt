@@ -1587,7 +1587,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         // 审计
-        if (!multiple) {
+        if (!multiple && !live) {
             ActionAuditContext.current()
                 .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
                 .setScopeId(workspace.projectId)
@@ -1596,7 +1596,7 @@ class WorkspaceService @Autowired constructor(
             permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
             ActionAuditContext.current()
                 .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        } else {
+        } else if (multiple) {
             val result = try {
                 workspaceStartCloudClient.checkTeamAccessible(userId, workspace.workspaceName)
             } catch (e: Exception) {
