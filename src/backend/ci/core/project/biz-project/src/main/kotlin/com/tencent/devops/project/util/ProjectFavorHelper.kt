@@ -30,10 +30,13 @@ package com.tencent.devops.project.util
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectVO
+import org.slf4j.LoggerFactory
 import java.text.Collator
 import java.util.Locale
 
 object ProjectFavorHelper {
+
+    private val logger = LoggerFactory.getLogger(ProjectFavorHelper::class.java)
 
     fun attachAndSort(
         projects: List<ProjectVO>,
@@ -54,20 +57,29 @@ object ProjectFavorHelper {
     ): List<ProjectVO> {
         val descending = collation == ProjectCollation.DESC
         val nameCollator = Collator.getInstance(Locale.CHINA)
-        return projects.sortedWith(
-            compareByDescending<ProjectVO> { it.favor == true }
-                .thenComparator { left, right ->
-                    val result = when (sortType) {
-                        ProjectSortType.ENGLISH_NAME ->
-                            left.englishName.compareTo(right.englishName, ignoreCase = true)
-                        else -> ProjectNamePinyinHelper.compare(
-                            left = left.projectName,
-                            right = right.projectName,
-                            collator = nameCollator
-                        )
+        return try {
+            projects.sortedWith(
+                compareByDescending<ProjectVO> { it.favor == true }
+                    .thenComparator { left, right ->
+                        val result = when (sortType) {
+                            ProjectSortType.ENGLISH_NAME ->
+                                left.englishName.compareTo(right.englishName, ignoreCase = true)
+                            else -> ProjectNamePinyinHelper.compare(
+                                left = left.projectName,
+                                right = right.projectName,
+                                collator = nameCollator
+                            )
+                        }
+                        if (descending) -result else result
                     }
-                    if (descending) -result else result
-                }
-        )
+            )
+        } catch (ignored: Exception) {
+            // 排序只影响展示，失败时保留数据库顺序，避免整个列表接口不可用
+            logger.warn(
+                "sort projects failed, fallback to db order|$sortType|$collation|${projects.size}",
+                ignored
+            )
+            projects.sortedByDescending { it.favor == true }
+        }
     }
 }
