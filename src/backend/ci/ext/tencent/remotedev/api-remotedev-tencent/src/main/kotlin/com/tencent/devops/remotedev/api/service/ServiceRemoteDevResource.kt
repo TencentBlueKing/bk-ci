@@ -1236,4 +1236,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("zoneId")
         zoneId: String
     ): Result<ThirdPartyDesktopTokenResp>
+
+    @Operation(summary = "重装场景：根据已注册的cdsId生成第三方云桌面token，有效期1小时，可获取cdskey，cds未分配时可分配")
+    @POST
+    @Path("/third_party_desktop/reinstall_token")
+    fun genThirdPartyDesktopReinstallToken(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "已注册云桌面的cdsId(即envId/cgsId)", required = true)
+        @QueryParam("cdsId")
+        cdsId: String
+    ): Result<ThirdPartyDesktopTokenResp>
 }

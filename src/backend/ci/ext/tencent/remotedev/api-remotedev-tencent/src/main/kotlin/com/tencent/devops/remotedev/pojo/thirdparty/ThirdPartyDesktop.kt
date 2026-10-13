@@ -13,7 +13,11 @@ data class ThirdPartyDesktopTokenInfo(
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "过期时间戳(毫秒)")
-    val expireTime: Long
+    val expireTime: Long,
+    @get:Schema(title = "是否为重装 token：基于已有 cdsId 签发，不能注册新机器")
+    val reinstall: Boolean = false,
+    @get:Schema(title = "分配时的拥有者，为空时使用 userId")
+    val assignOwner: String? = null
 )
 
 @Schema(title = "第三方云桌面 token 返回")
@@ -34,4 +38,16 @@ data class ThirdPartyDesktopRegisterReq(
 data class ThirdPartyDesktopCdsKeyResp(
     @get:Schema(title = "cdskey")
     val cdsKey: String?
+)
+
+/**
+ * 注册成功后 cdsId 与注册人的长期绑定，存 Redis
+ * 用于机器未分配时的重装场景：此时还没有工作空间记录，只能靠它确认机器归属
+ */
+data class ThirdPartyDesktopBinding(
+    val userId: String,
+    val projectId: String,
+    val os: String,
+    val zoneId: String,
+    val ip: String
 )

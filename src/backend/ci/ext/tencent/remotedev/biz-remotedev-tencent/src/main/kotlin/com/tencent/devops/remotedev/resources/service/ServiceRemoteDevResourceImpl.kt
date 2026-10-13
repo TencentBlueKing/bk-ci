@@ -1173,4 +1173,11 @@ class ServiceRemoteDevResourceImpl(
             )
         )
     }
+
+    override fun genThirdPartyDesktopReinstallToken(
+        userId: String,
+        cdsId: String
+    ): Result<ThirdPartyDesktopTokenResp> {
+        return Result(thirdPartyDesktopService.genReinstallToken(userId = userId, cdsId = cdsId))
+    }
 }
