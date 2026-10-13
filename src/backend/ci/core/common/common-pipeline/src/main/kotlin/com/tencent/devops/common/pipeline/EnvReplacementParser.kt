@@ -126,7 +126,7 @@ object EnvReplacementParser {
         } else {
             // 旧风格 `${xxx}` / `$xxx` 不支持大变量懒加载——contextMap 里大变量是
             // 纯引用串（`__BK_OVF__:<len>`），既不会泄漏真实内容，也不会触发
-            // 任何溢出表 IO，与改造前的 4K 截断行为相比"显示效果不同但内存代价更低"。
+            // 任何制品库 IO，与改造前的 4K 截断行为相比"显示效果不同但内存代价更低"。
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, options.contextMap)
         }.let {
             JsonUtil.toJson(it, false)

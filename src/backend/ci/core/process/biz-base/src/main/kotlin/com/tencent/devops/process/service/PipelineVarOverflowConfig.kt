@@ -29,8 +29,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STARTUP_TOTAL_MAX
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Component
@@ -41,25 +39,17 @@ import org.springframework.stereotype.Component
  *  - 满足"内存限制阈值动态调整"的运营诉求；
  *  - 把易变的阈值与核心写读服务解耦，避免给被广泛注入的 [BuildVariableService] 套代理。
  *
- * 三个阈值都只对"启用大变量后的新构建"生效，对历史 build（单变量 ≤ 4K）完全零影响。
+ * 阈值都只对"启用大变量后的新构建"生效，对历史 build（单变量 ≤ 4K）完全零影响。
  */
 @Component
 @RefreshScope
 class PipelineVarOverflowConfig {
 
     /**
-     * 单变量值硬上限（字符数）。超过则在写入侧直接丢弃 + WARN，
-     * 避免单条异常大变量撑爆 mediumtext / 堆内存。
-     * 默认 [PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]（4M）。
-     */
-    @Value("\${pipeline.variables.hardMaxLength:$PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX}")
-    val hardMaxLength: Int = PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
-
-    /**
      * 懒加载器内 Caffeine 缓存允许保留的最大字符数（maximumWeight，weigher=string.length）。
      * 这是"单次表达式求值会话内**实际驻留**内存"的主要决定因素，
      * 单 Pod 峰值驻留 ≈ 并发会话数 × cacheMax。
-     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（8M）。
+     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（4M）。
      */
     @Value("\${pipeline.variables.lazyLoad.cacheMax:$PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX}")
     val lazyLoadCacheMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX.toLong()
@@ -67,18 +57,18 @@ class PipelineVarOverflowConfig {
     /**
      * 单会话总加载字节硬上限（字符数）。超过抛
      * [BuildVarOverflowBudgetExceededException]，把潜在 OOM 转为明确的用户用法错误。
-     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（32M）。
+     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（8M）。
      */
     @Value("\${pipeline.variables.lazyLoad.budgetMax:$PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX}")
     val lazyLoadBudgetMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX.toLong()
 
     /**
-     * 单次启动所有启动参数值的**总长度**上限（字符数）。超过则在启动入口直接抛错终止，
-     * 避免大量大变量导致启动期内存 / 溢出表写入 / 后续读取失控。
-     * 默认 [PIPELINE_VARIABLES_STARTUP_TOTAL_MAX]（32M）。
+     * 启动构建时是否校验流水线定义的启动参数值长度（不超过
+     * [com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX]）。
+     * 启动参数在构建全程常驻内存，不支持大变量；仅为兼容存量超长参数的流水线保留关闭能力。
      */
-    @Value("\${pipeline.variables.startupTotalMax:$PIPELINE_VARIABLES_STARTUP_TOTAL_MAX}")
-    val startupParamsTotalMax: Long = PIPELINE_VARIABLES_STARTUP_TOTAL_MAX.toLong()
+    @Value("\${pipeline.startParam.value.checkEnabled:true}")
+    val startParamValueCheckEnabled: Boolean = true
 
     /**
      * 保存流水线编排时是否校验启动参数（TriggerContainer.params / templateParams）默认值长度。

@@ -237,7 +237,7 @@ object Runner {
         var waitCount = 0
         loop@ while (true) {
             logger.info("Start to claim the task")
-            val buildTask = EngineService.claimTask()
+            val buildTask = BuildVarOverflowExprSupport.replaceClassicTaskParams(EngineService.claimTask())
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
@@ -477,7 +477,10 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
-            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(jobVariables)
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                variables = jobVariables,
+                prefetchTexts = customEnv.mapNotNull { it.value }
+            )
             customEnv.forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换

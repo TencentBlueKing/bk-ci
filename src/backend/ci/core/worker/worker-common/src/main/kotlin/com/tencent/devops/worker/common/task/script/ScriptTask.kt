@@ -37,7 +37,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
@@ -53,6 +55,7 @@ import com.tencent.devops.worker.common.task.TaskDaemon.Companion.PARAM_MAX_LENG
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
+import com.tencent.devops.worker.common.utils.LargeVariableStore
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLDecoder
@@ -237,16 +240,26 @@ open class ScriptTask : ITask() {
         var res = true
         if (failIfVariableInvalid) {
             it.forEach { (key, value) ->
-                if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addErrorLine(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
-                            language = AgentEnv.getLocaleLanguage(),
-                            params = arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
-                        )
+                if (value.length <= PARAM_MAX_LENGTH) return@forEach
+                // 超过 4K 的值可作为大变量存入制品库（上限按 UTF-8 字节计），不支持时仍以 4K 为上限
+                val params = if (LargeVariableStore.isSupported()) {
+                    if (!BuildVarOverflowUtils.exceedsLargeValueLimit(value)) return@forEach
+                    arrayOf(
+                        key,
+                        PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES.toString(),
+                        BuildVarOverflowUtils.utf8Length(value).toString()
                     )
-                    res = false
+                } else {
+                    arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
                 }
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = params
+                    )
+                )
+                res = false
             }
         }
         return res

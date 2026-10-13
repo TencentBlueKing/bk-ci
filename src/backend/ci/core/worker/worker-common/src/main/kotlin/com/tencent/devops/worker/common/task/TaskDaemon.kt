@@ -36,11 +36,15 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.LargeVariableStore
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -135,32 +139,26 @@ class TaskDaemon(
         val buildResult = mutableMapOf<String, String>()
         val sensitiveKeys = getSensitiveKeys().toMutableSet()
         if (allEnv.isNotEmpty()) {
+            val largeValues = mutableMapOf<String, String>()
             allEnv.forEach { (key, value) ->
-                if (value.length > PARAM_MAX_LENGTH) {
-                    // 极端情况防御：超过硬上限（4M）直接拒绝上报，避免单条记录撑爆传输/数据库。
-                    // 与服务端 BuildVariableService.acceptWithinHardLimit 协同：
-                    // 即便此处漏过，服务端仍会丢弃并 WARN，构建不会因此失败。
-                    LoggerService.addWarnLine(
-                        "Warning, assignment to variable [$key] failed, " +
-                            "more than $PARAM_MAX_LENGTH characters(len=${value.length})"
-                    )
-                    return@forEach
-                }
-                if (value.length > PARAM_MAX_LENGTH_WARN) {
-                    // 4K~4M 区间：照常上报，但提醒用户旧风格 `$xxx`/`${xxx}` 不会展开真实值，
-                    // 必须改用 ${{ xxx }} 表达式才能在服务端解析到完整值。
-                    LoggerService.addWarnLine(
-                        "Notice, variable [$key] is larger than $PARAM_MAX_LENGTH_WARN characters" +
-                            "(len=${value.length}), it will be stored in the overflow table; " +
-                            "use \${{ $key }} expression to reference it on the server side."
-                    )
-                }
                 if (SensitiveValueService.matchSensitiveValue(value)) {
                     LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
                     return@forEach
                 }
-                buildResult[key] = value
+                if (value.length <= PARAM_MAX_LENGTH) {
+                    buildResult[key] = value
+                } else if (key !in sensitiveKeys && !BuildVarOverflowUtils.exceedsLargeValueLimit(value) &&
+                    LargeVariableStore.isSupported()
+                ) {
+                    largeValues[key] = value
+                } else {
+                    LoggerService.addWarnLine(
+                        "Warning, assignment to variable [$key] failed, " +
+                            "more than ${valueLimitText(key in sensitiveKeys)}(len=${value.length})"
+                    )
+                }
             }
+            buildResult.putAll(storeLargeValues(largeValues))
         }
 
         // 对内置bat脚本执行失败进行监控
@@ -196,20 +194,42 @@ class TaskDaemon(
         )
     }
 
+    /**
+     * 在构建机上把超长变量并行上传到制品库，只向引擎上报引用串；上传失败的变量丢弃并告警。
+     */
+    private fun storeLargeValues(largeValues: Map<String, String>): Map<String, String> {
+        if (largeValues.isEmpty()) return emptyMap()
+        val references = LargeVariableStore.currentScope()
+            ?.let { LargeVariableStore.store(it, buildTask.executeCount ?: 1, largeValues) }
+            ?: emptyMap()
+        largeValues.forEach { (key, value) ->
+            if (references.containsKey(key)) {
+                LoggerService.addNormalLine(
+                    "Notice, variable [$key] is larger than $PARAM_MAX_LENGTH characters(len=${value.length}), " +
+                        "it is stored in artifactory; use \${{ $key }} expression to reference the full value."
+                )
+            } else {
+                LoggerService.addWarnLine(
+                    "Warning, assignment to variable [$key] failed, upload large value(len=${value.length}) error"
+                )
+            }
+        }
+        return references
+    }
+
     companion object {
         /**
-         * Worker 端单变量值最大字符上限（4MB）。
-         *
-         * 历史值为 4000：与主表 VALUE 列的 varchar(4000) 对齐，超过则丢弃；
-         * 现在主表 + 溢出表方案上线后，4MB 以下的值都能完整入库，
-         * Worker 端不再以 4K 作为硬上限丢数据，仅作日志告警。
+         * 变量值直接上报的最大字符数，与 DB VALUE 列 varchar(4000) 对齐；
+         * 超过的非敏感值（不超过 [PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES]）作为大变量存入制品库。
          */
-        const val PARAM_MAX_LENGTH = 4 * 1024 * 1024
+        const val PARAM_MAX_LENGTH = PIPELINE_VARIABLES_STRING_LENGTH_MAX
 
-        /**
-         * 触发"建议改用 ${{ xxx }} 引用"提示日志的阈值（仍是 4K）。
-         * 超过此阈值的变量在传统 `$xxx` / `${xxx}` 引用方式下只能看到摘要值。
-         */
-        const val PARAM_MAX_LENGTH_WARN = 4000
+        /** 变量值上限的展示文案：可存入制品库时为大变量上限，否则为直接上报上限。 */
+        fun valueLimitText(sensitive: Boolean): String =
+            if (!sensitive && LargeVariableStore.isSupported()) {
+                "${PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES / 1024}KB"
+            } else {
+                "$PARAM_MAX_LENGTH characters"
+            }
     }
 }

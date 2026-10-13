@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.BuildVarExprSession
 import java.util.concurrent.TimeUnit
 
 object TaskUtils {
@@ -307,18 +306,10 @@ object TaskUtils {
     /**
      * 解析[task]中的[ElementAdditionalOptions]配置的超时设定，做变量替换，并返回日志信息
      */
-    fun parseTimeout(
-        task: PipelineBuildTask,
-        session: BuildVarExprSession
-    ): String {
+    fun parseTimeout(task: PipelineBuildTask, contextMap: Map<String, String>): String {
         val timeoutStr = task.additionalOptions?.timeoutVar
         return if (!timeoutStr.isNullOrBlank()) {
-            val obj = Timeout.decTimeout(
-                timeoutVar = timeoutStr,
-                contextMap = session.variables,
-                overflowKeys = session.overflowKeys,
-                overflowLoader = session.overflowLoader
-            )
+            val obj = Timeout.decTimeout(timeoutStr, contextMap)
             task.additionalOptions!!.change = true
             task.additionalOptions!!.timeout = obj.minutes.toLong() // 替换成真正的超时分钟数
             val ele: Element = JsonUtil.mapTo((task.taskParams), Element::class.java)

@@ -35,7 +35,7 @@ import com.tencent.devops.common.expression.expression.sdk.IString
  * 懒加载字符串上下文。
  *
  * 用于流水线大变量场景：当变量值超过主表 4K 限制时，主表只存"摘要"，
- * 完整值存在溢出表中。表达式 ${{ xxx }} 真正访问该值时，才通过 [supplier]
+ * 完整值存在制品库中。表达式 ${{ xxx }} 真正访问该值时，才通过 [supplier]
  * 加载完整值，避免一次性把全部大变量加载进内存。
  *
  * - [supplier] 仅在第一次取值时被调用，取到的值会被缓存以便后续重复访问；

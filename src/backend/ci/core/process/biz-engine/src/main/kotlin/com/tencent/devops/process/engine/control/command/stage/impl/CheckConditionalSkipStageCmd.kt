@@ -121,7 +121,8 @@ class CheckConditionalSkipStageCmd constructor(
                     buildVariableService = buildVariableService,
                     projectId = stage.projectId,
                     buildId = stage.buildId,
-                    variables = variables.plus(contextMap)
+                    variables = variables.plus(contextMap),
+                    pipelineId = stage.pipelineId
                 ),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,

@@ -364,15 +364,15 @@ object ControlUtils {
                 // 新增的表达式调用需要去掉兼容老流水线变量
                 val variablesWithOutOld =
                     session.variables.filter { PipelineVarUtil.oldVarToNewVar(it.key) == null }
-                val evalContext = resolveOverflowForCondition(
+                val loaded = loadOverflowInCondition(
                     condition = customCondition,
                     variables = variablesWithOutOld,
                     overflowKeys = session.overflowKeys,
                     overflowLoader = session.overflowLoader
                 )
                 val expressionResult = ExpressionParser.evaluateByMap(
-                    expression = EnvReplacementParser.parse(customCondition, evalContext),
-                    contextMap = evalContext,
+                    expression = EnvReplacementParser.parse(customCondition, session.variables.plus(loaded)),
+                    contextMap = variablesWithOutOld.plus(loaded),
                     fetchValue = false
                 )
                 logger.info(
@@ -427,36 +427,31 @@ object ControlUtils {
     }
 
     /**
-     * 仅还原条件表达式中出现的大变量引用，避免条件判断触发全量加载。
+     * 仅加载条件表达式中出现的大变量（[variables] 中值为引用串的 key），返回 key -> 真实值，
+     * 由调用方覆盖到原上下文上；避免条件判断触发全量加载。
      */
-    private fun resolveOverflowForCondition(
+    private fun loadOverflowInCondition(
         condition: String,
         variables: Map<String, String>,
         overflowKeys: Set<String>,
         overflowLoader: ((String) -> String?)?
     ): Map<String, String> {
         if (overflowLoader == null || overflowKeys.isEmpty()) {
-            return variables
+            return emptyMap()
         }
-        val keysInCondition = overflowKeys.filter { referencedInCondition(condition, it) }
-        if (keysInCondition.isEmpty()) {
-            return variables
-        }
-        val resolved = variables.toMutableMap()
-        keysInCondition.forEach { key ->
-            if (BuildVarOverflowUtils.isOverflowReference(resolved[key])) {
-                overflowLoader.invoke(key)?.let { resolved[key] = it }
-            }
-        }
-        return resolved
+        return overflowKeys.asSequence()
+            .filter { BuildVarOverflowUtils.isOverflowReference(variables[it]) }
+            .filter { referencedInCondition(condition, it) }
+            .mapNotNull { key -> overflowLoader.invoke(key)?.let { key to it } }
+            .toMap()
     }
 
     /**
      * 判断 [key] 是否作为**独立标识符**出现在条件表达式 [condition] 中。
      *
-     * 本方法只决定「要不要去溢出表拉真实值」，不参与求值：
+     * 本方法只决定「要不要去制品库拉真实值」，不参与求值：
      * - 漏判（该拉没拉）：条件里仍是 `__BK_OVF__:<len>`，比较会静默算错。
-     * - 误判（不该拉却拉）：多一次溢出表 IO / 多占内存，求值结果不变。
+     * - 误判（不该拉却拉）：多一次制品库 IO / 多占内存，求值结果不变。
      * 所以边界宁可略宽，也不能漏掉真正的变量引用。
      *
      * 流水线变量名由字母、数字、`_` 组成（PAC 路径还带 `.`，`.` 是路径分隔符，不是名字的一部分）。

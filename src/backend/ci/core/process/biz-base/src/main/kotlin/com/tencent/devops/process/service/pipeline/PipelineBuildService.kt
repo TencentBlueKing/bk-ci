@@ -98,7 +98,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -215,10 +215,11 @@ class PipelineBuildService(
                 pipelineVersion = signPipelineVersion
             )
         }
-        // failIfVariableInvalid 已废弃：大变量按需加载方案上线后，
-        // 4K 上限不再是硬约束，现网超长变量也能正常入库（>4K 走溢出表）。
-        // 仍校验"硬上限 4M"以避免极端情况下单条记录撑爆 mediumtext。
-        rejectIfVariableHardOversize(pipelineParamMap)
+        checkStartupParamsLength(
+            pipelineParamMap = pipelineParamMap,
+            startParamKeys = resource.model.getTriggerContainer().params.mapTo(HashSet()) { it.id },
+            failIfVariableInvalid = setting?.failIfVariableInvalid == true
+        )
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -448,12 +449,9 @@ class PipelineBuildService(
         paramMap[PIPELINE_DIALECT] = BuildParameters(
             PIPELINE_DIALECT, ctx.pipelineDialectType, readOnly = true
         )
-        // 兼容历史构建：仍然保留 PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG 这个内置变量，
-        // 但其值固定为 false —— Worker 端读到该 flag 后会跳过 4K 报错路径，
-        // 流水线因变量超长而失败的旧行为彻底消失。
         if (ctx.failIfVariableInvalid == true) {
             paramMap[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG] = BuildParameters(
-                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, false, readOnly = true
+                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, true, readOnly = true
             )
         }
     }
@@ -533,31 +531,23 @@ class PipelineBuildService(
     }
 
     /**
-     * 启动参数大小防御性校验，两道闸门：
-     *  1. **单值硬上限**（4M，[PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX]）：避免单条值撑爆溢出表 mediumtext；
-     *  2. **总大小上限**（可配置，[PipelineVarOverflowConfig.startupParamsTotalMax]，默认 32M）：
-     *     避免一次传入大量大变量导致启动期内存 / 溢出表写入 / 后续按需读取失控。
-     *
-     * 在此处校验可一处覆盖所有启动通道（manualStartup / timer / webhook / service / app / replay）。
-     * 注意：此时 pipelineParamMap 尚未追加 `variables.` 前缀副本，故各用户变量只计一次，统计准确。
+     * 启动参数在整个构建过程中常驻内存（BUILD_PARAMETERS、引擎上下文、构建机），不支持大变量：
+     *  - 流水线定义的启动参数超过 4000 一律拒绝；重试沿用已接受过的参数，不再校验；
+     *  - 触发器 / 系统注入的其它变量保持历史行为，仅在开启 failIfVariableInvalid 时拒绝。
      */
-    fun rejectIfVariableHardOversize(pipelineParamMap: MutableMap<String, BuildParameters>) {
-        var totalLen = 0L
-        val totalMax = pipelineVarOverflowConfig.startupParamsTotalMax
-        pipelineParamMap.forEach { (key, value) ->
-            val len = value.value.toString().length
-            if (len > PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX) {
+    private fun checkStartupParamsLength(
+        pipelineParamMap: Map<String, BuildParameters>,
+        startParamKeys: Set<String>,
+        failIfVariableInvalid: Boolean
+    ) {
+        val checkStartParams = pipelineVarOverflowConfig.startParamValueCheckEnabled &&
+            !pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)
+        pipelineParamMap.forEach { (key, param) ->
+            if (param.value.toString().length <= PIPELINE_VARIABLES_STRING_LENGTH_MAX) return@forEach
+            if (failIfVariableInvalid || (checkStartParams && key in startParamKeys)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
-                    params = arrayOf(key, "${PIPELINE_VARIABLES_STRING_LENGTH_HARD_MAX / (1024 * 1024)}M")
-                )
-            }
-            totalLen += len
-            if (totalLen > totalMax) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_START_VARIABLES_TOTAL_OVERSIZE,
-                    params = arrayOf(totalLen.toString(), totalMax.toString()),
-                    defaultMessage = "Total size of startup variables[$totalLen] exceeds the limit[$totalMax]"
+                    params = arrayOf(key)
                 )
             }
         }

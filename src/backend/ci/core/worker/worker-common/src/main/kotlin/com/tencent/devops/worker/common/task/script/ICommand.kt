@@ -88,7 +88,10 @@ interface ICommand {
         )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         return if (dialect.supportUseExpression()) {
-            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                contextMap,
+                listOf(command)
+            )
             EnvReplacementParser.parse(
                 value = command,
                 contextMap = contextMap,
@@ -110,7 +113,10 @@ interface ICommand {
         } else {
             // 经典方言：脚本正文的 ${{ 大变量 }} 由这里解析（process 侧 claim 对 URL 编码脚本是 no-op）。
             // 把被引用到的大变量重写成合成 key 并注入真实值，未被引用的大变量保持引用串不变。
-            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                contextMap,
+                listOf(command)
+            )
             val (rewrittenCommand, synthVars) =
                 BuildVarOverflowExprSupport.rewriteOverflowText(command, overflowKeys, overflowLoader)
             val effectiveContext = if (synthVars.isEmpty()) contextMap else contextMap.plus(synthVars)

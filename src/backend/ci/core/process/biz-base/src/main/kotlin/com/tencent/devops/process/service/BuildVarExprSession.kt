@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.pojo.BuildVariableSnapshot
-
 /**
  * 一次表达式求值会话：携带变量 Map + 大变量 overflowKeys/loader。
  *
@@ -40,19 +38,6 @@ data class BuildVarExprSession(
     val overflowLoader: ((String) -> String?)?
 ) {
     companion object {
-        fun fromSnapshot(snapshot: BuildVariableSnapshot): BuildVarExprSession {
-            val loader = if (snapshot.largeKeys.isEmpty()) {
-                null
-            } else {
-                snapshot.largeValueLoader
-            }
-            return BuildVarExprSession(
-                variables = snapshot.smallVars,
-                overflowKeys = snapshot.largeKeys,
-                overflowLoader = loader
-            )
-        }
-
         fun empty(variables: Map<String, String> = emptyMap()): BuildVarExprSession {
             return BuildVarExprSession(
                 variables = variables,

@@ -134,7 +134,8 @@ class CheckConditionalSkipContainerCmd constructor(
                     buildVariableService = buildVariableService,
                     projectId = container.projectId,
                     buildId = container.buildId,
-                    variables = containerContext.variables.plus(contextMap)
+                    variables = containerContext.variables.plus(contextMap),
+                    pipelineId = container.pipelineId
                 ),
                 buildId = container.buildId,
                 runCondition = jobControlOption.runCondition,

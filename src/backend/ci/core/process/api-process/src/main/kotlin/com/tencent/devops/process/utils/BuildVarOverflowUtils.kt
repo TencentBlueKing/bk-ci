@@ -27,26 +27,23 @@
 
 package com.tencent.devops.process.utils
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.UUID
 import org.slf4j.LoggerFactory
 
 /**
- * 大变量"引用协议"工具。
+ * 大变量"引用协议"工具（引擎 / Worker 共用）。
  *
- * 主表 T_PIPELINE_BUILD_VAR.VALUE 长度受限于 varchar(4000)。
- * 当真实值超过该长度时：
- *  - 真实值进入 T_PIPELINE_BUILD_VAR_OVERFLOW（mediumtext，~16M 容量）；
- *  - 主表只保留一条**纯引用**：`__BK_OVF__:<originalLength>`；
- *  - 主表不再保留任何"截断摘要"内容，避免给现网带来无意义的字节占用与
- *    敏感数据泄露风险。
+ * 变量值超过 [PIPELINE_VARIABLES_STRING_LENGTH_MAX]（4000 字符）时，真实值以文件形式存入制品库，
+ * 变量表里只保存引用串（启动参数不支持大变量，见 PipelineBuildService）：
  *
- * 引用串只承载两种信息：
- *  - 是否大变量（是否带哨兵前缀）；
- *  - 原始字符长度（便于 UI/日志/告警显示，无需再二次查询溢出表）。
+ *     __BK_OVF__:<字符长度>:<写入时的执行次数>:<UTF-8 内容的 sha256 十六进制>
  *
- * 大变量真实值仅在 ${{ xxx }} 表达式按需求值时通过
- * [com.tencent.devops.process.engine.dao.PipelineBuildVarOverflowDao] 拉取，
- * `$xxx` / `${xxx}` 旧风格固定看到引用串本身。
+ *  - 文件按执行次数分目录、按内容寻址，路径为 [blobPath]：同一次执行内同值只存一份、写入天然幂等；
+ *    重试产生的新值落在新的执行次数目录下，不会覆盖之前执行的文件，旧引用仍可读取原值；
+ *  - 下载后用摘要校验内容完整性，摘要只允许 64 位小写十六进制，杜绝路径穿越；
+ *  - `$xxx` / `${xxx}` 旧语法看到的固定是引用串，只有 `${{ xxx }}` 表达式按需加载真实值。
  */
 object BuildVarOverflowUtils {
 
@@ -57,42 +54,125 @@ object BuildVarOverflowUtils {
 
     /**
      * 仅匹配双花括号 `${{ key }}`；key 内不含 `$ { }`。
-     * 单花括号 `${ }` / `$x` 旧语法不在此处处理（保持引用串，避免 4M 值意外展开）。
+     * 单花括号 `${ }` / `$x` 旧语法不在此处处理（保持引用串，避免大值意外展开）。
      */
     private val doubleBracePattern = Regex("\\$\\{\\{([^{}$]+)}}")
 
-    /** 主表 VALUE 列字符上限，与 [PIPELINE_VARIABLES_STRING_LENGTH_MAX] 对齐。 */
+    private val referencePattern = Regex(
+        "^${Regex.escape(PIPELINE_VARIABLES_OVERFLOW_PREFIX)}(\\d{1,10}):([1-9]\\d{0,5}):([0-9a-f]{64})$"
+    )
+
     private const val MAIN_TABLE_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_MAX
 
-    /** 哨兵前缀，用于在主表 VALUE 列识别"是否大变量引用"。 */
+    private const val LARGE_VALUE_MAX_BYTES: Int = PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+
+    private const val BLOB_DIR = "large-variables"
+
+    private val HEX = "0123456789abcdef".toCharArray()
+
+    /** 哨兵前缀，用于识别"是否大变量引用"。 */
     const val OVERFLOW_PREFIX: String = PIPELINE_VARIABLES_OVERFLOW_PREFIX
 
     /**
-     * 判断主表 VALUE 是否为"大变量引用"。
+     * 大变量文件所在的制品库仓库（ArtifactoryType.PIPELINE，即流水线仓库），与构建产物同属
+     * `/{pipelineId}/{buildId}` 目录，随构建产物的清理策略一起过期。
      *
-     * 用户主动构造该前缀的概率极低；即使发生，按需加载时溢出表查询为 null，
-     * `$xxx`/`${xxx}` 风格仍直接看到这串字符，行为退化为"与改造前一致"。
+     * 上传时**不带** pipelineId / buildId 元数据：构建制品列表、制品搜索都按这两个元数据查询，
+     * 因此大变量文件不会混进用户看到的构建产物。
+     */
+    const val REPO_NAME = "pipeline"
+
+    /**
+     * 解析后的大变量引用。
+     * @property length 原始值字符长度（供 UI / 日志展示与预算预判）
+     * @property executeCount 写入该值时构建的执行次数（重试后递增），决定文件所在目录
+     * @property digest UTF-8 内容 sha256 十六进制，同时是制品库文件名
+     */
+    data class LargeVarRef(val length: Int, val executeCount: Int, val digest: String)
+
+    /**
+     * 是否为大变量引用串（只看前缀）。无法解析的引用（含格式不完整的历史引用）
+     * 一律按"加载失败"处理：保留引用串原样输出。
      */
     fun isOverflowReference(value: String?): Boolean {
         return value != null && value.startsWith(OVERFLOW_PREFIX)
     }
 
-    /**
-     * 计算主表 VALUE 列实际写入的字符串。
-     *  - rawValue 长度 ≤ [MAIN_TABLE_MAX_LENGTH]：直接返回原值；
-     *  - 否则：返回纯引用串 `__BK_OVF__:<rawValue.length>`，
-     *    其最大长度 = OVERFLOW_PREFIX.length + 10（Int 最大 10 位）≈ 25，
-     *    主表 varchar(4000) 列恒能容纳。
-     */
-    fun toMainTableValue(rawValue: String): String {
-        return if (rawValue.length <= MAIN_TABLE_MAX_LENGTH) rawValue else "$OVERFLOW_PREFIX${rawValue.length}"
+    fun parseReference(value: String?): LargeVarRef? {
+        if (!isOverflowReference(value)) return null
+        val match = referencePattern.matchEntire(value!!) ?: return null
+        val length = match.groupValues[1].toIntOrNull() ?: return null
+        return LargeVarRef(
+            length = length,
+            executeCount = match.groupValues[2].toInt(),
+            digest = match.groupValues[3]
+        )
     }
 
-    /** 是否需要将真实值写入溢出表。 */
-    fun shouldOverflow(rawValue: String): Boolean = rawValue.length > MAIN_TABLE_MAX_LENGTH
+    fun toReference(ref: LargeVarRef): String = "$OVERFLOW_PREFIX${ref.length}:${ref.executeCount}:${ref.digest}"
+
+    /** 是否需要以大变量形式存储（超过主表上限且不是引用串）。 */
+    fun shouldOverflow(rawValue: String): Boolean =
+        rawValue.length > MAIN_TABLE_MAX_LENGTH && !isOverflowReference(rawValue)
+
+    /** 是否超过大变量单值上限 [PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES]（按 UTF-8 字节计）。 */
+    fun exceedsLargeValueLimit(rawValue: String): Boolean {
+        // 每个 char 编码后 1~3 字节（代理对 2 char 共 4 字节），先用字符数做无分配的快速判定
+        if (rawValue.length > LARGE_VALUE_MAX_BYTES) return true
+        if (rawValue.length.toLong() * 3 <= LARGE_VALUE_MAX_BYTES) return false
+        return utf8Length(rawValue) > LARGE_VALUE_MAX_BYTES
+    }
+
+    /** 不分配内存地计算字符串的 UTF-8 编码字节数。 */
+    fun utf8Length(value: CharSequence): Long {
+        var bytes = 0L
+        var i = 0
+        val n = value.length
+        while (i < n) {
+            val c = value[i]
+            bytes += when {
+                c.code < 0x80 -> 1
+                c.code < 0x800 -> 2
+                Character.isHighSurrogate(c) && i + 1 < n && Character.isLowSurrogate(value[i + 1]) -> {
+                    i++
+                    4
+                }
+                else -> 3
+            }
+            i++
+        }
+        return bytes
+    }
+
+    fun sha256Hex(value: String): String = sha256Hex(value.toByteArray(StandardCharsets.UTF_8))
+
+    fun sha256Hex(bytes: ByteArray): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        val sb = StringBuilder(digest.size * 2)
+        digest.forEach { b ->
+            val v = b.toInt() and 0xff
+            sb.append(HEX[v ushr 4]).append(HEX[v and 0x0f])
+        }
+        return sb.toString()
+    }
 
     /**
-     * 从变量 Map 中收集大变量引用键（value 为 `__BK_OVF__:<len>`）。
+     * 校验下载内容与引用摘要一致后解码；不一致（文件损坏 / 路径被覆盖）返回 null。
+     */
+    fun decodeVerified(ref: LargeVarRef, bytes: ByteArray): String? {
+        if (sha256Hex(bytes) != ref.digest) return null
+        return String(bytes, StandardCharsets.UTF_8)
+    }
+
+    /** 某次构建的大变量根目录（[REPO_NAME] 仓库内），也是构建机临时令牌的授权范围（覆盖所有执行次数）。 */
+    fun blobDir(pipelineId: String, buildId: String): String = "/$pipelineId/$buildId/$BLOB_DIR"
+
+    /** 大变量文件在 [REPO_NAME] 仓库中的完整路径：`/{pipelineId}/{buildId}/large-variables/{executeCount}/{sha256}`。 */
+    fun blobPath(pipelineId: String, buildId: String, ref: LargeVarRef): String =
+        "${blobDir(pipelineId, buildId)}/${ref.executeCount}/${ref.digest}"
+
+    /**
+     * 从变量 Map 中收集大变量引用键。
      * 供引擎 / Worker 在调用 [com.tencent.devops.common.pipeline.EnvReplacementParser] 前组装 overflowKeys。
      */
     fun collectOverflowKeys(variables: Map<String, String>): Set<String> {
@@ -101,6 +181,28 @@ object BuildVarOverflowUtils {
             .filter { isOverflowReference(it.value) }
             .map { it.key }
             .toSet()
+    }
+
+    /**
+     * 估算 [texts] 中通过 `${{ }}` 可能引用到的大变量键（用于批量预取，允许少量误判）。
+     */
+    fun findReferencedOverflowKeys(texts: Collection<String>, overflowKeys: Set<String>): Set<String> {
+        if (overflowKeys.isEmpty()) return emptySet()
+        val exprTexts = texts.filter { it.contains("\${{") }
+        if (exprTexts.isEmpty()) return emptySet()
+        return overflowKeys.filterTo(HashSet()) { key ->
+            val bare = key.removePrefix(VARIABLES_PREFIX)
+            exprTexts.any { it.contains(bare) }
+        }
+    }
+
+    /** 把表达式里的 key 映射成变量表中实际存在的 key（兼容 `variables.` 前缀）。 */
+    fun resolveStoredKey(key: String, variables: Map<String, String>): String? {
+        if (variables.containsKey(key)) return key
+        val bare = key.removePrefix(VARIABLES_PREFIX)
+        if (variables.containsKey(bare)) return bare
+        val prefixed = VARIABLES_PREFIX + bare
+        return if (variables.containsKey(prefixed)) prefixed else null
     }
 
     /**
@@ -114,22 +216,22 @@ object BuildVarOverflowUtils {
     )
 
     /**
-     * 传统方言 `${{ 大变量 }}` 按需加载的**唯一共享实现**（引擎 claim 侧与 Worker 侧共用）。
+     * 传统方言 `${{ 大变量 }}` 按需加载的**唯一共享实现**（Worker 侧 claim 参数替换 / 脚本替换、
+     * 以及兼容老 Worker 的引擎侧 claim 替换共用）。
      *
      * 把被 `${{ key }}` 引用到、且命中溢出键的大变量重写成 `${{ 合成唯一键 }}`，并把
      * 合成键 -> 真实值 收进 [OverflowRewriteResult.synthVars]；调用方将其并入替换上下文，交由各自的
-     * 替换引擎（引擎侧 ObjectReplaceEnvVarUtil / Worker 脚本侧 ReplacementUtils）把合成键当**普通变量**
-     * 完成替换，从而复用各引擎的 JSON 转义 / quoteReplacement，任意上下文都不会被破坏。
+     * 替换引擎（ObjectReplaceEnvVarUtil / ReplacementUtils）把合成键当**普通变量**完成替换，
+     * 从而复用各引擎的 JSON 转义 / quoteReplacement，任意上下文都不会被破坏。
      *
-     * 语义约束（两侧一致）：
+     * 语义约束：
      * - 仅双花括号 `${{ }}` 且命中溢出键才触发加载；同键只加载一次（去重）；
      * - `${x}` / `$x` 旧语法、未被引用的大变量、其它普通变量：完全不动；
-     * - loader 返回 null 或仍是引用串（溢出表 miss / 加载失败）：保持原 token 不变，
-     *   行为退化为"输出引用串"，与历史一致。
+     * - loader 返回 null 或仍是引用串（加载失败）：保持原 token 不变，行为退化为"输出引用串"。
      *
      * @param value 待处理值，支持 String 及任意 Map/List 嵌套对象图
      * @param overflowKeys [collectOverflowKeys] 收集到的溢出键；为空时直接原样返回
-     * @param loader 按落库 key 拉取真实值；由调用方决定远程/本地及兜底策略
+     * @param loader 按 key 加载真实值；由调用方决定远程/本地及兜底策略
      */
     fun rewriteOverflowRefs(
         value: Any?,
@@ -156,7 +258,7 @@ object BuildVarOverflowUtils {
         fun rewrite(value: Any?): Any? = when (value) {
             is String -> rewriteText(value)
             is Map<*, *> -> value.entries.associateTo(LinkedHashMap<Any?, Any?>()) { (k, v) -> k to rewrite(v) }
-            is List<*> -> value.map { rewrite(it) }
+            is List<*> -> value.mapTo(ArrayList()) { rewrite(it) }
             else -> value
         }
 
@@ -188,7 +290,7 @@ object BuildVarOverflowUtils {
 
         // 支持任意层级 key，含嵌套 context 键（如 jobs.x.steps.y.outputs.z），其落库 key 即完整 dotted 名
         private fun isOverflowToken(key: String): Boolean {
-            val loadKey = if (key.startsWith(VARIABLES_PREFIX)) key.removePrefix(VARIABLES_PREFIX) else key
+            val loadKey = key.removePrefix(VARIABLES_PREFIX)
             return overflowKeys.contains(key) ||
                 overflowKeys.contains(loadKey) ||
                 overflowKeys.contains(VARIABLES_PREFIX + loadKey)

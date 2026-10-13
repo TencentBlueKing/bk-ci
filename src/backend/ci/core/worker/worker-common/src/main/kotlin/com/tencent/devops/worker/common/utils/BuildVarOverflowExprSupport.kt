@@ -27,112 +27,55 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonSchemaUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
-import com.tencent.devops.process.utils.PIPELINE_ID
-import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.variable.BuildVariableSDKApi
-import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 
 /**
  * Worker 侧大变量表达式按需加载支持。
  *
- * claim 下发的 variables 中大变量仅为引用串 `__BK_OVF__:<len>`；
- * 当插件入参 / 脚本使用 `${{ key }}` 时，通过 loader 远程拉取真实值。
+ * 下发给构建机的变量中，大变量仅为引用串 `__BK_OVF__:<len>:<executeCount>:<sha256>`；
+ * 当插件入参 / 脚本使用 `${{ key }}` 时，按引用串从制品库下载真实值（[LargeVariableStore]）。
  */
 object BuildVarOverflowExprSupport {
 
     private val logger = LoggerFactory.getLogger(BuildVarOverflowExprSupport::class.java)
-    private val variableApi by lazy { ApiFactory.create(BuildVariableSDKApi::class) }
-
-    private const val VARIABLES_PREFIX = "variables."
 
     /**
-     * @return overflowKeys 与按需 loader；无大变量时 loader 为 null
+     * @param prefetchTexts 即将被替换的文本；其中通过 `${{ }}` 引用到的大变量会被批量预取
+     * @return overflowKeys 与按需 loader；无大变量或制品库上下文不可用时 loader 为 null
      */
     fun resolveOverflowOptions(
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        prefetchTexts: Collection<String> = emptyList()
     ): Pair<Set<String>, ((String) -> String?)?> {
         val overflowKeys = BuildVarOverflowUtils.collectOverflowKeys(variables)
         if (overflowKeys.isEmpty()) {
             return emptySet<String>() to null
         }
-        // variables map 里不一定有 BK_CI_PIPELINE_ID（例如部分上下文裁剪场景），
-        // 用 LoggerService.buildVariables 兜底，避免 loader 被跳过导致 ${{ }} 仍展开成引用串。
-        val pipelineId = variables[PIPELINE_ID]?.takeIf { it.isNotBlank() }
-            ?: LoggerService.buildVariables?.pipelineId.orEmpty()
-        if (pipelineId.isBlank()) {
-            logger.warn("OVERFLOW_LOADER_SKIP|pipelineId blank, overflowKeys=$overflowKeys")
+        val scope = LargeVariableStore.currentScope()
+        if (scope == null) {
+            logger.warn("OVERFLOW_LOADER_SKIP|build context not ready, overflowKeys=${overflowKeys.size}")
             return overflowKeys to null
         }
-        val loader: (String) -> String? = loader@{ key ->
-            try {
-                val loadKey = resolveLoadKey(key)
-                val data = fetchRealValue(pipelineId, loadKey)
-                // 短路径 steps.x.outputs.y 直查 miss 时，尝试用 jobId 补前缀重查
-                val stepResult = tryFetchFullStepOutput(data, pipelineId, loadKey, key)
-                if (stepResult != null) {
-                    return@loader stepResult
-                }
-                handleLoadResult(key, loadKey, data, variables)
-            } catch (ignore: Throwable) {
-                logger.warn("OVERFLOW_LOADER_FAIL|key=$key|${ignore.message}", ignore)
-                variables[key] ?: variables[key.removePrefix(VARIABLES_PREFIX)]
-            }
+        val referenced = BuildVarOverflowUtils.findReferencedOverflowKeys(prefetchTexts, overflowKeys)
+        if (referenced.size > 1) {
+            LargeVariableStore.prefetch(scope, referenced.mapNotNull { variables[it] })
+        }
+        val loader: (String) -> String? = { key ->
+            BuildVarOverflowUtils.resolveStoredKey(key, variables)
+                ?.let { variables[it] }
+                ?.let { reference -> LargeVariableStore.load(scope, reference) ?: reference }
         }
         return overflowKeys to loader
     }
 
-    private fun resolveLoadKey(key: String): String =
-        key.removePrefix(VARIABLES_PREFIX)
-
-    /**
-     * 短路径 steps.x.outputs.y 是运行时派生、不落库；其落库 key 为 jobs.<jobId>.steps.x.outputs.y。
-     * 直查 miss（null 或仍是引用串）时，用当前 jobId 补前缀重查一次。
-     */
-    private fun tryFetchFullStepOutput(
-        data: String?,
-        pipelineId: String,
-        loadKey: String,
-        key: String
-    ): String? {
-        if (data != null && !BuildVarOverflowUtils.isOverflowReference(data)) return null
-        if (!isShortStepOutput(loadKey)) return null
-        val jobId = LoggerService.buildVariables?.jobId?.takeIf { it.isNotBlank() } ?: return null
-        val fullKey = "jobs.$jobId.$loadKey"
-        val full = fetchRealValue(pipelineId, fullKey)
-        if (full == null || BuildVarOverflowUtils.isOverflowReference(full)) return null
-        logger.info("OVERFLOW_LOADER_OK|key=$key|fullKey=$fullKey|len=${full.length}")
-        return full
-    }
-
-    private fun handleLoadResult(
-        key: String,
-        loadKey: String,
-        data: String?,
-        variables: Map<String, String>
-    ): String? = when {
-        data == null -> {
-            logger.warn("OVERFLOW_LOADER_NULL|key=$key|loadKey=$loadKey")
-            variables[key] ?: variables[loadKey]
-        }
-        BuildVarOverflowUtils.isOverflowReference(data) -> {
-            // process 仍返回引用串：溢出表 miss 或未加载成功
-            logger.warn("OVERFLOW_LOADER_STILL_REF|key=$key|loadKey=$loadKey|data=$data")
-            data
-        }
-        else -> {
-            logger.info("OVERFLOW_LOADER_OK|key=$key|loadKey=$loadKey|len=${data.length}")
-            data
-        }
-    }
-
     /**
      * 经典方言脚本/文本的 ${{ 大变量 }} 按需加载。
-     *
-     * process 侧 claim 对 URL 编码的脚本正文是 no-op（匹配不到 `${{`），脚本正文的 `${{ }}`
-     * 实际由 worker 端 [ICommand.parseTemplate] 经典分支的 [ReplacementUtils] 解析，而 claim 下发的
-     * variables 中大变量只是引用串 `__BK_OVF__:<len>`，直接替换只会得到引用串。
      *
      * 重写逻辑复用引擎/Worker 共享实现 [BuildVarOverflowUtils.rewriteOverflowRefs]：把被 `${{ key }}`
      * 引用到的大变量重写成 `${{ 合成key }}`，调用方把返回的 合成key -> 真实值 映射并入替换上下文，
@@ -155,24 +98,62 @@ object BuildVarOverflowExprSupport {
         return (result.value as String) to result.synthVars
     }
 
-    private const val STEPS_PREFIX = "steps."
-    private const val OUTPUTS_INFIX = ".outputs."
-
-    // steps.<stepId>.outputs.<name> 短路径：当前 job 运行时派生、不落库
-    private fun isShortStepOutput(key: String): Boolean =
-        key.startsWith(STEPS_PREFIX) && key.contains(OUTPUTS_INFIX)
-
     /**
-     * 单键查询大变量真实值；接口异常/失败返回 null（由调用方决定回退策略）。
+     * 引擎声明未替换传统方言参数时（[BuildTask.replaceVarOnWorker]），在构建机上完成与引擎
+     * `EngineVMBuildService.claim` 等价的替换：Map/List 参数按结构递归替换后压缩输出，字符串参数按文本替换；
+     * 引用到的大变量按需从制品库加载。单个参数替换异常时退化为不加载大变量的文本替换。
      */
-    private fun fetchRealValue(pipelineId: String, varName: String): String? {
-        val result = variableApi.getBuildVariableValue(pipelineId = pipelineId, varName = varName)
-        if (result.isNotOk()) {
-            logger.warn(
-                "OVERFLOW_LOADER_FAIL|varName=$varName|status=${result.status}|message=${result.message}"
-            )
-            return null
+    fun replaceClassicTaskParams(buildTask: BuildTask): BuildTask {
+        if (buildTask.replaceVarOnWorker != true) return buildTask
+        val params = buildTask.params
+        if (params.isNullOrEmpty()) return buildTask
+        val variables = buildTask.buildVariable ?: emptyMap()
+        val (overflowKeys, loader) = resolveOverflowOptions(variables, params.values)
+        val replaced = params.mapValues { (key, value) ->
+            try {
+                replaceClassicParam(value, variables, overflowKeys, loader)
+            } catch (ignore: Throwable) {
+                logger.warn("CLASSIC_PARAM_REPLACE_FAIL|key=$key|${ignore.message}")
+                ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables).toString()
+            }
         }
-        return result.data
+        return buildTask.copy(params = replaced)
     }
+
+    private fun replaceClassicParam(
+        value: String,
+        variables: Map<String, String>,
+        overflowKeys: Set<String>,
+        loader: ((String) -> String?)?
+    ): String {
+        // 引擎对 Map/List 参数按结构替换后压缩输出、对字符串参数（含 JSON 文本）按文本替换；
+        // Map/List 参数下发时即为同一 ObjectMapper 的压缩序列化结果，据此还原其原始类型
+        val origin: Any = parseJsonContainer(value)
+            ?.takeIf { JsonUtil.toJson(it, formatted = false) == value }
+            ?: value
+        val (target, context) = if (loader != null && value.contains("\${{")) {
+            val result = BuildVarOverflowUtils.rewriteOverflowRefs(origin, overflowKeys, loader)
+            val context = if (result.synthVars.isEmpty()) variables else variables.plus(result.synthVars)
+            result.value to context
+        } else {
+            origin to variables
+        }
+        val replaced = ObjectReplaceEnvVarUtil.replaceEnvVar(target, context) ?: return value
+        return replaced as? String ?: JsonUtil.toJson(replaced, formatted = false)
+    }
+
+    private fun parseJsonContainer(value: String): Any? {
+        val trimmed = value.trim()
+        val isObject = trimmed.startsWith("{") && trimmed.endsWith("}")
+        val isArray = trimmed.startsWith("[") && trimmed.endsWith("]")
+        if ((!isObject && !isArray) || !JsonSchemaUtil.validateJson(trimmed)) return null
+        return try {
+            if (isObject) JsonUtil.to(trimmed, mapTypeRef) else JsonUtil.to(trimmed, listTypeRef)
+        } catch (ignore: Throwable) {
+            null
+        }
+    }
+
+    private val mapTypeRef = object : TypeReference<LinkedHashMap<String, Any?>>() {}
+    private val listTypeRef = object : TypeReference<ArrayList<Any?>>() {}
 }

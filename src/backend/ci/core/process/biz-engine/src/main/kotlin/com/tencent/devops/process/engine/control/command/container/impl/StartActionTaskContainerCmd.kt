@@ -490,15 +490,7 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
-            val msg = TaskUtils.parseTimeout(
-                task = toDoTask,
-                session = BuildVarExprOverflowHelper.session(
-                    buildVariableService = buildVariableService,
-                    projectId = toDoTask.projectId,
-                    buildId = toDoTask.buildId,
-                    variables = contextMap
-                )
-            )
+            val msg = TaskUtils.parseTimeout(toDoTask, contextMap)
             buildLogPrinter.addDebugLine(
                 buildId = toDoTask.buildId,
                 message = msg,
@@ -527,7 +519,8 @@ class StartActionTaskContainerCmd(
             buildVariableService = buildVariableService,
             projectId = projectId,
             buildId = buildId,
-            variables = contextMap
+            variables = contextMap,
+            pipelineId = pipelineId
         )
         if (this.taskId != VMUtils.genStartVMTaskId(this.containerId)) { // 非开机插件,检查条件
             return ControlUtils.checkTaskSkip(

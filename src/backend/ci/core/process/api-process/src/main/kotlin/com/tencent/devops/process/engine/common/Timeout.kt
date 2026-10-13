@@ -91,12 +91,7 @@ object Timeout {
     /**
      * #7954 timeout支持变量解析
      */
-    fun decTimeout(
-        timeoutVar: String?,
-        contextMap: Map<String, String>,
-        overflowKeys: Set<String> = emptySet(),
-        overflowLoader: ((String) -> String?)? = null
-    ): TimeoutObj {
+    fun decTimeout(timeoutVar: String?, contextMap: Map<String, String>): TimeoutObj {
 
         val obj: TimeoutObj
 
@@ -104,12 +99,7 @@ object Timeout {
 
         if (PipelineVarUtil.isVar(timeoutStr)) { // 使用了变量的方式定义超时，需要解析
 
-            val tTimeout = EnvReplacementParser.parse(
-                value = timeoutStr,
-                contextMap = contextMap,
-                overflowKeys = overflowKeys,
-                overflowLoader = overflowLoader
-            )
+            val tTimeout = EnvReplacementParser.parse(timeoutStr, contextMap = contextMap)
 
             // 要检查配置的超时值是否在合理范围内
             obj = transTimeoutObj(tTimeout)

@@ -580,7 +580,10 @@ open class MarketAtomTask : ITask() {
         val atomParams = mutableMapOf<String, String>()
         try {
             if (dialect.supportUseExpression()) {
-                val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(variables)
+                val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                    variables = variables,
+                    prefetchTexts = inputMap.values.map { JsonUtil.toJson(it) }
+                )
                 val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
@@ -684,9 +687,9 @@ open class MarketAtomTask : ITask() {
                     }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
-                    // 大变量入参只在日志里展示引用串，避免把 4M 级真实值刷进构建日志；
+                    // 大变量入参只在日志里展示引用串，避免把 512KB 级真实值刷进构建日志；
                     // 插件通过 input.json 拿到的仍是真实值，不受此展示截断影响。
-                    val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN) {
+                    val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
                         "__BK_OVF__:${value.length}"
                     } else {
                         value
@@ -694,7 +697,7 @@ open class MarketAtomTask : ITask() {
                     LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$display")
                 }
             } else {
-                val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN) {
+                val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
                     "__BK_OVF__:${value.length}"
                 } else {
                     value
@@ -960,7 +963,7 @@ open class MarketAtomTask : ITask() {
                 if (outputTemplate.containsKey(varKey)) {
                     if (isSensitiveOutput) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
-                    } else if (value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN) {
+                    } else if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
                         // 超长输出不打印真实值：约定 output(overflow) 前缀，前端可渲染「查看」按钮并调 variables/value
                         LoggerService.addNormalLine(
                             "output(overflow): $key=__BK_OVF__:${value.length}"
@@ -971,7 +974,7 @@ open class MarketAtomTask : ITask() {
                 } else {
                     val display = when {
                         isSensitive -> "******"
-                        value.length > TaskDaemon.PARAM_MAX_LENGTH_WARN -> "__BK_OVF__:${value.length}"
+                        value.length > TaskDaemon.PARAM_MAX_LENGTH -> "__BK_OVF__:${value.length}"
                         else -> value
                     }
                     LoggerService.addWarnLine("output(except): $key=$display")

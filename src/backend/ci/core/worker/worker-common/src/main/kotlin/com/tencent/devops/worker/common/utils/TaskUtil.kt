@@ -127,7 +127,10 @@ object TaskUtil {
         val dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
 
         // 对 taskParams 中的值做统一表达式替换，解决新版方言下 ${{ steps.xxx }} 未被替换的问题
-        val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(contextMap)
+        val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+            variables = contextMap,
+            prefetchTexts = taskParams.values
+        )
         return taskParams.mapValues { (_, value) ->
             if (dialect.supportUseExpression()) {
                 EnvReplacementParser.parse(

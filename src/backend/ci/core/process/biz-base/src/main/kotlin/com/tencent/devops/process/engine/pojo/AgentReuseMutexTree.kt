@@ -28,13 +28,7 @@ data class AgentReuseMutexTree(
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
 ) {
-    fun addNode(
-        container: VMBuildContainer,
-        stageIndex: Int,
-        variables: Map<String, String>,
-        overflowKeys: Set<String> = emptySet(),
-        overflowLoader: ((String) -> String?)? = null
-    ) {
+    fun addNode(container: VMBuildContainer, stageIndex: Int, variables: Map<String, String>) {
         val dispatchType = container.dispatchType
         if (dispatchType !is ThirdPartyAgentDispatch) {
             return
@@ -45,12 +39,7 @@ data class AgentReuseMutexTree(
             if (PipelineVarUtil.isVar(dispatchType.value)) {
                 idIsVar = true
             }
-            EnvReplacementParser.parse(
-                value = dispatchType.value,
-                contextMap = variables,
-                overflowKeys = overflowKeys,
-                overflowLoader = overflowLoader
-            )
+            EnvReplacementParser.parse(dispatchType.value, contextMap = variables)
         } else {
             null
         }
