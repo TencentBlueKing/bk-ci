@@ -1,0 +1,40 @@
+{{- $items := list
+  (dict "name" "auth")
+  (dict "name" "ai")
+  (dict "name" "artifactory")
+  (dict "name" "dispatch")
+  (dict "name" "environment")
+  (dict "name" "log")
+  (dict "name" "metrics")
+  (dict "name" "misc")
+  (dict "name" "notify")
+  (dict "name" "openapi")
+  (dict "name" "process")
+  (dict "name" "project")
+  (dict "name" "quality")
+  (dict "name" "repository")
+  (dict "name" "store")
+  (dict "name" "ticket")
+  (dict "name" "websocket")
+  (dict "name" "support")
+  (dict "name" "stream")
+  (dict "name" "statistics")
+  (dict "name" "scm")
+  (dict "name" "remotedev")
+  (dict "name" "prebuild")
+  (dict "name" "lambda")
+  (dict "name" "experience")
+  (dict "name" "engine")
+  (dict "name" "dispatch-devcloud" "valuesKey" "dispatchDevcloud")
+-}}
+{{- range $item := $items }}
+{{- $key := $item.name -}}
+{{- if $item.valuesKey -}}
+{{- $key = $item.valuesKey -}}
+{{- end -}}
+{{- $svc := index $.Values $key }}
+{{- if $svc.enabled }}
+---
+{{ include "bkci.ms.workload" (dict "name" $item.name "valuesKey" $key "root" $) }}
+{{- end }}
+{{- end }}

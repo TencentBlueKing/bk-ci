@@ -1,0 +1,53 @@
+{{- $items := list
+  (dict "name" "experience" "key" "experience")
+  (dict "name" "prebuild" "key" "prebuild")
+  (dict "name" "process" "key" "process")
+  (dict "name" "statistics" "key" "statistics")
+  (dict "name" "ticket" "key" "ticket")
+  (dict "name" "environment" "key" "environment")
+  (dict "name" "project" "key" "project")
+  (dict "name" "metrics" "key" "metrics")
+  (dict "name" "store" "key" "store")
+  (dict "name" "engine" "key" "engine")
+  (dict "name" "repository" "key" "repository")
+  (dict "name" "dispatch" "key" "dispatch")
+  (dict "name" "auth" "key" "auth")
+  (dict "name" "notify" "key" "notify")
+  (dict "name" "lambda" "key" "lambda")
+  (dict "name" "log" "key" "log")
+  (dict "name" "openapi" "key" "openapi")
+  (dict "name" "websocket" "key" "websocket")
+  (dict "name" "misc" "key" "misc")
+  (dict "name" "dispatch-devcloud" "key" "dispatchDevcloud" "selector" "dispatchDevcloud")
+  (dict "name" "quality" "key" "quality")
+  (dict "name" "artifactory" "key" "artifactory")
+-}}
+{{- range $item := $items }}
+{{- $svc := index $.Values $item.key }}
+{{- if and $svc.enabled $.Values.remoteDebug.enabled }}
+{{- $selector := $item.name -}}
+{{- if $item.selector -}}
+{{- $selector = $item.selector -}}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: debug-{{ $item.name }}
+  labels:
+    app.kubernetes.io/name: {{ $selector }}
+    app.kubernetes.io/component: microservice
+  annotations:
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-2mgq2ka8
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: {{ $selector }}
+  ports:
+    - name: debug
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+{{- end }}
+{{- end }}
