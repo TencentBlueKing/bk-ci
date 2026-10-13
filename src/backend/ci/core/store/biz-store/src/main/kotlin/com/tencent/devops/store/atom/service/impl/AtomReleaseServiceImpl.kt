@@ -551,10 +551,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             props = props,
             marketAtomUpdateRequest = marketAtomUpdateRequest
         )
-
-        // 插件参数定义变更后，失效参数联动配置缓存。
-        AtomPropsCacheManager.invalidate(redisOperation, marketAtomUpdateRequest.atomCode)
-
         val atomPackageSourceType = getAtomPackageSourceType(repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
@@ -965,10 +961,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomRecord = atomRecord,
             atomRequest = marketAtomUpdateRequest
         )
-
-        // 插件参数定义变更后，失效参数联动配置缓存。
-        AtomPropsCacheManager.invalidate(redisOperation, marketAtomUpdateRequest.atomCode)
-
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
@@ -1730,6 +1722,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = prepared.qualityFlag)
             )
         }
+
+        // 上面事务更新了插件的 PROPS，所以插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
     }
 
     /**
