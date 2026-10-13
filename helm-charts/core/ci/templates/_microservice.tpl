@@ -133,6 +133,8 @@ spec:
               value: {{ $root.Values.multiCluster.defaultNamespace }}
             - name: JAVA_TOOL_OPTIONS
               value: {{ $root.Values.java.options }} -XX:InitialRAMPercentage={{ $svc.jvm.heapPct }} -XX:MaxRAMPercentage={{ $svc.jvm.heapPct }}
+            - name: MALLOC_ARENA_MAX
+              value: {{ $root.Values.java.mallocArenaMax | quote }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
