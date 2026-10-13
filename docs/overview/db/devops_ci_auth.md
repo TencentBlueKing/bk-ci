@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_auth
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.26
 
 **文档描述：** devops_ci_auth的数据库文档
 | 表名                  | 说明       |
@@ -347,6 +347,7 @@
 |  7   | REFRESH_TOKEN |   varchar   | 64 |   0    |    Y     |  N   |       | REFRESH_TOKEN，客户端模式该值为空  |
 |  8   | SCOPE_ID |   int   | 10 |   0    |    N     |  N   |       | 授权范围ID  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  10   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_AUTH_OAUTH2_CLIENT_DETAILS</a>
 
