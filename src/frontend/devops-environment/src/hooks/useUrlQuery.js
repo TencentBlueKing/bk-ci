@@ -30,7 +30,8 @@ export default function useUrlQuery (options = {}) {
         nodeHashId: '',
         // 分页参数
         page: 1,
-        pageSize: 10,
+        // pageSize 不设默认值：URL 无该参数时置空，由消费方决定回退值（如 localStorage 缓存）
+        pageSize: null,
         // 排序参数
         sortType: '',
         collation: '',
@@ -108,7 +109,8 @@ export default function useUrlQuery (options = {}) {
         queryParams.value.dateTimeRange = []
         queryParams.value.nodeHashId = ''
         queryParams.value.page = 1
-        queryParams.value.pageSize = 10
+        // URL 无 pageSize 时不写死默认值，置空让消费方自行回退（localStorage / 默认 10）
+        queryParams.value.pageSize = null
         queryParams.value.sortType = ''
         queryParams.value.collation = ''
 
@@ -333,7 +335,7 @@ export default function useUrlQuery (options = {}) {
 
         // 处理分页
         params.page = queryParams.value.page
-        params.pageSize = queryParams.value.pageSize
+        params.pageSize = queryParams.value.pageSize || 10
 
         // 处理排序
         if (queryParams.value.sortType) {

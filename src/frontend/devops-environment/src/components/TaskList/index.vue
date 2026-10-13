@@ -117,10 +117,10 @@
                                 class="title-icon"
                             />
                             <div class="task-title-content">
-                                <span class="task-name">
+                                <!-- <span class="task-name">
                                     <bk-tag v-if="getJobStageLabel(task)">{{ getJobStageLabel(task) }}</bk-tag>
                                     {{ task.jobName }}
-                                </span>
+                                </span> -->
                                 <span class="task-pipeline-name">
                                     <span class="pipeline-prefix">{{ $t('environment.pipeline') }}：</span>
                                     <a
