@@ -22,6 +22,8 @@ remoteDebug:
 # java 启动参数
 java:
   options: ""
+  # glibc malloc arena 上限，避免 Java 进程占用过多虚拟内存
+  mallocArenaMax: "4"
 
 # ingress 配置
 ingress:
