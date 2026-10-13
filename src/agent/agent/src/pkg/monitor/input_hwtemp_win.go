@@ -46,6 +46,11 @@ import (
 //
 // 阈值类传感器（Distance to TjMax、Warning/Critical Temperature、
 // Thermal Sensor * Limit、Resolution 等）不是实际温度，统一过滤。
+//
+// 上报格式：作为 env measurement 的子指标 temperature 上报（每个传感器一条，
+// 以 sensor 等 tag 区分），复用 env 已有的后端 kafka topic 与监控结果表，后端
+// （environment 服务按 measurement 白名单路由 topic）无需改动。温度行只带
+// temperature 字段，Kernel input 产出的 env 行（uptime 等）不受影响。
 
 const (
 	// lhmHTTPURL LHM Remote Web Server 的 data.json 地址。
@@ -354,7 +359,7 @@ type HWTemp struct {
 	source string
 	// disabled 已探测 lhmMaxProbes 次且所有数据源都明确不可用，生命周期内不再尝试。
 	disabled bool
-	// probes 已完成的“明确不可用”探测次数（被 deadline 打断的不计）。
+	// probes 已完成的失败探测次数（含本轮 deadline 被耗尽的情况）。
 	probes int
 	// nextProbe 下一次允许探测的时间，零值表示立即探测。
 	nextProbe time.Time
@@ -376,10 +381,14 @@ func newHWTempWithClient(c lhmClient, source string) *HWTemp {
 	return &HWTemp{client: c, source: source, nowFn: time.Now}
 }
 
-// Name 返回 "temp"。
-func (h *HWTemp) Name() string { return MeasurementTemp }
+// hwTempInputName input 标识，仅用于日志（runner 跳过 / 失败提示），与
+// Kernel input 的 "env" 区分；实际上报的 measurement 是 env。
+const hwTempInputName = "hwtemp"
 
-// Gather 读取 LHM 温度传感器，每个传感器产出一条 metric。
+// Name 返回 input 标识 "hwtemp"。
+func (h *HWTemp) Name() string { return hwTempInputName }
+
+// Gather 读取 LHM 温度传感器，每个传感器产出一条 env metric（字段 temperature）。
 //
 // 查询同步执行：HTTP 受 ctx 控制；WMI 卡住时本方法不返回，由 inputRunner
 // 保持 running 并在后续轮次跳过，保证最多只有一个卡住的 goroutine。
@@ -486,9 +495,9 @@ func (h *HWTemp) toMetrics(rs []lhmReading) []Metric {
 			tags[TagHardwareType] = r.HardwareType
 		}
 		out = append(out, Metric{
-			Name:      MeasurementTemp,
+			Name:      RenamedEnv,
 			Tags:      tags,
-			Fields:    map[string]interface{}{FieldTemp: roundTo(r.Value, 1)},
+			Fields:    map[string]interface{}{FieldTemperature: roundTo(r.Value, 1)},
 			Timestamp: now,
 		})
 	}

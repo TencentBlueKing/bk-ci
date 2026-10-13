@@ -33,8 +33,6 @@ const (
 	MeasurementSystem    = "system"
 	MeasurementKernel    = "kernel"
 	MeasurementProcesses = "processes"
-	// MeasurementTemp Windows 硬件温度（LibreHardwareMonitor HTTP / WMI），对齐 telegraf inputs.temp
-	MeasurementTemp = "temp"
 )
 
 // ------------------------------------------------------------
@@ -176,8 +174,9 @@ const (
 	FieldZombies      = "zombies"
 	FieldTotalThreads = "total_threads"
 
-	// temp（单位摄氏度）
-	FieldTemp = "temp"
+	// 硬件温度（Windows，LibreHardwareMonitor），作为 env measurement 的子指标上报，
+	// 单位摄氏度。复用 env 已有的后端 topic / 监控结果表，无需后端改动。
+	FieldTemperature = "temperature"
 )
 
 // ------------------------------------------------------------
@@ -264,7 +263,7 @@ const (
 	TagInstance   = "instance"
 	TagObjectName = "objectname" // Windows PDH ObjectName（如 Processor / PhysicalDisk / Network Interface）
 
-	// temp measurement（LibreHardwareMonitor）
+	// env.temperature 维度（LibreHardwareMonitor）
 	TagSensor       = "sensor"        // 传感器 Identifier，如 /amdcpu/0/temperature/2，全局唯一
 	TagSensorName   = "sensor_name"   // 传感器名，如 Core (Tctl/Tdie)
 	TagHardware     = "hardware"      // 所属硬件名，如 AMD Ryzen 9 5950X

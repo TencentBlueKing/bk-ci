@@ -120,14 +120,14 @@ func TestHWTemp_GatherHTTP(t *testing.T) {
 			t.Errorf("unexpected sensor %s", m.Tags[TagSensor])
 			continue
 		}
-		if m.Name != MeasurementTemp || !m.Timestamp.Equal(ts) {
+		if m.Name != RenamedEnv || !m.Timestamp.Equal(ts) {
 			t.Errorf("%s: bad name/ts %s %v", m.Tags[TagSensor], m.Name, m.Timestamp)
 		}
 		if m.Tags[TagSensorName] != w.name || m.Tags[TagHardware] != w.hw || m.Tags[TagHardwareType] != w.hwType {
 			t.Errorf("%s: tags = %+v, want %+v", m.Tags[TagSensor], m.Tags, w)
 		}
-		if m.Fields[FieldTemp] != w.v {
-			t.Errorf("%s: temp = %v, want %v", m.Tags[TagSensor], m.Fields[FieldTemp], w.v)
+		if m.Fields[FieldTemperature] != w.v || len(m.Fields) != 1 {
+			t.Errorf("%s: fields = %v, want only %s=%v", m.Tags[TagSensor], m.Fields, FieldTemperature, w.v)
 		}
 	}
 }
@@ -480,6 +480,25 @@ func TestHWTemp_StuckIsNotReentered(t *testing.T) {
 	}
 }
 
+// TestHWTemp_SurvivesRename 温度行经过 Rename（内部版恒等；out+windows 下
+// env -> kernel）后，temperature 字段与传感器维度保持不变。
+func TestHWTemp_SurvivesRename(t *testing.T) {
+	c := &fakeLHMClient{readings: []lhmReading{{Identifier: "/intelcpu/0/temperature/26", Name: "CPU Package", Hardware: "CPU", HardwareType: "Cpu", Value: 67}}}
+	ms, _ := newHWTempWithClient(c, "fake").Gather(context.Background())
+	out := Rename(ms)
+	if len(out) != 1 {
+		t.Fatalf("want 1, got %d", len(out))
+	}
+	if out[0].Fields[FieldTemperature] != 67.0 || len(out[0].Fields) != 1 {
+		t.Errorf("fields changed by rename: %v", out[0].Fields)
+	}
+	for _, k := range []string{TagSensor, TagSensorName, TagHardware, TagHardwareType} {
+		if out[0].Tags[k] == "" {
+			t.Errorf("tag %s dropped by rename: %v", k, out[0].Tags)
+		}
+	}
+}
+
 // TestHWTemp_RealLHM 连接本机真实 LHM，默认跳过。
 // 运行：$env:LHM_REAL_TEST="1"; go test ./src/pkg/monitor -run TestHWTemp_RealLHM -v
 func TestHWTemp_RealLHM(t *testing.T) {
@@ -497,6 +516,6 @@ func TestHWTemp_RealLHM(t *testing.T) {
 	for _, m := range ms {
 		t.Logf("%s,%s=%s,%s=%s,%s=%q,%s=%q %s=%v",
 			m.Name, TagSensor, m.Tags[TagSensor], TagHardwareType, m.Tags[TagHardwareType],
-			TagHardware, m.Tags[TagHardware], TagSensorName, m.Tags[TagSensorName], FieldTemp, m.Fields[FieldTemp])
+			TagHardware, m.Tags[TagHardware], TagSensorName, m.Tags[TagSensorName], FieldTemperature, m.Fields[FieldTemperature])
 	}
 }
