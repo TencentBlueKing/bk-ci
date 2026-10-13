@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.pojo.thirdparty
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "第三方云桌面 token 携带的信息")
+@Schema(title = "第三方云桌面 token 对应的信息，存于 Redis")
 data class ThirdPartyDesktopTokenInfo(
     @get:Schema(title = "用户ID")
     val userId: String,
@@ -13,9 +13,7 @@ data class ThirdPartyDesktopTokenInfo(
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "过期时间戳(毫秒)")
-    val expireTime: Long,
-    @get:Schema(title = "随机串，保证每次生成的 token 不同")
-    val nonce: String
+    val expireTime: Long
 )
 
 @Schema(title = "第三方云桌面 token 返回")

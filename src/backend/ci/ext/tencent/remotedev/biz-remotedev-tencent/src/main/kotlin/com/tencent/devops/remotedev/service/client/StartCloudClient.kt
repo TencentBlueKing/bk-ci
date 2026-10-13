@@ -8,10 +8,10 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudApplyCdsKeyReq
+import com.tencent.devops.remotedev.pojo.startcloud.StartCloudApplyCdsKeyResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
-import com.tencent.devops.remotedev.pojo.startcloud.StartCloudCdsKeyReq
-import com.tencent.devops.remotedev.pojo.startcloud.StartCloudCdsKeyRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudKickInstanceReq
@@ -168,37 +168,38 @@ class StartCloudClient @Autowired constructor(
     }
 
     /**
-     * cdsId(即 envId) + vmId 换取 cdsKey，供第三方注册的云桌面使用
-     * 对应 CDS OpenApiSchedulerResource.exchangeCdsKey
+     * cdsId(即 envId) + vmId 申请 cdsKey，供第三方注册的云桌面使用
+     * 对应 CDS OpenApiSchedulerResource.applyCdsKey，同一 vmId + cdsId 重复申请返回已有 key
+     * vmId 已绑定到其他 cdsId 或 cdsId 不存在时 CDS 返回 code != 0
      */
-    fun exchangeCdsKey(
+    fun applyCdsKey(
         envId: String,
         vmId: String
-    ): String? {
-        val url = "${config.apiUrl}/openapi/capi/schedule/cds-key/exchange"
+    ): String {
+        val url = "${config.apiUrl}/openapi/capi/schedule/cds-key/apply"
         val body = JsonUtil.toJson(
-            StartCloudCdsKeyReq(
+            StartCloudApplyCdsKeyReq(
                 cdsId = envId,
-                vmId = vmId
+                cdsVmId = vmId
             ),
             false
         )
-        logger.info("exchangeCdsKey request url: $url, body: $body")
+        logger.info("applyCdsKey request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(genStartApiHeaders(body).toHeaders())
             .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
-        val resp = doRequest(request).resolveResponse<StartCloudResp<StartCloudCdsKeyRespData>>()
-        if (resp.code != 0) {
-            logger.warn("request cds-key/exchange error ${resp.code}|${resp.message}")
+        val resp = doRequest(request).resolveResponse<StartCloudApplyCdsKeyResp>()
+        if (resp.code != 0 || resp.cdsKey.isNullOrBlank()) {
+            logger.warn("request cds-key/apply error ${resp.code}|${resp.message}|$envId|$vmId")
             throw RemoteServiceException(
                 errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
                 errorCode = resp.code
             )
         }
-        return resp.data?.cdsKey
+        return resp.cdsKey
     }
 
     private fun messageRegister(

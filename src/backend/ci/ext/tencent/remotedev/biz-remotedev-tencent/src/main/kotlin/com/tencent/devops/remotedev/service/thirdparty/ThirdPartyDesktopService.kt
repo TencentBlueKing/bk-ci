@@ -1,12 +1,10 @@
 package com.tencent.devops.remotedev.service.thirdparty
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_ILLEGAL_ERROR
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_SECRET_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -22,17 +20,15 @@ import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import jakarta.ws.rs.core.Response
-import java.security.MessageDigest
+import java.security.SecureRandom
 import java.util.Base64
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
- * 一个 token 的注册记录，存 Redis，key 为 token 中的 nonce
+ * 一个 token 的注册记录，存 Redis
  * 后续 taskStatus / cdsKey / assign 接口只允许操作这里记录的资源
  */
 data class ThirdPartyDesktopRegisterRecord(
@@ -44,7 +40,8 @@ data class ThirdPartyDesktopRegisterRecord(
 /**
  * 第三方机器注册为云桌面相关能力
  *
- * token 格式：{AES 密文}.{HMAC-SHA256(密文)}，先验签再解密，防止密文被篡改
+ * token 为 32 位随机串（24 字节 SecureRandom，base64url），本身不携带任何信息
+ * userId/os/zoneId/projectId 存在 Redis 中，key 使用 token 的 sha256，Redis 中不落 token 明文
  * 一个 token 只能注册一台机器，后续接口的入参必须属于该 token 的注册记录
  */
 @Service
@@ -56,13 +53,19 @@ class ThirdPartyDesktopService @Autowired constructor(
     private val permissionService: PermissionService
 ) {
 
-    /* 第三方云桌面 token 加解密及签名密钥 */
-    @Value("\${remoteDev.thirdPartyDesktop.secret:#{null}}")
-    private val secret: String? = null
-
     /* 第三方云桌面 token 有效期（秒），默认 1 小时 */
     @Value("\${remoteDev.thirdPartyDesktop.expireSeconds:3600}")
     private val expireSeconds: Long = DEFAULT_EXPIRE_SECONDS
+
+    private val secureRandom = SecureRandom()
+
+    /**
+     * 校验通过的 token：id 为 token 的 sha256，用于拼接各个 Redis key
+     */
+    private data class VerifiedToken(
+        val id: String,
+        val info: ThirdPartyDesktopTokenInfo
+    )
 
     fun genToken(
         userId: String,
@@ -70,7 +73,6 @@ class ThirdPartyDesktopService @Autowired constructor(
         os: String,
         zoneId: String
     ): ThirdPartyDesktopTokenResp {
-        val key = checkSecret()
         if (userId.isBlank() || projectId.isBlank() || zoneId.isBlank()) {
             throw illegal("userId/projectId/zoneId can not be blank")
         }
@@ -86,80 +88,70 @@ class ThirdPartyDesktopService @Autowired constructor(
             os = osEnum.name,
             zoneId = zoneId,
             projectId = projectId,
-            expireTime = expireTime,
-            nonce = UUIDUtil.generate()
+            expireTime = expireTime
         )
-        logger.info("genToken|$userId|$projectId|${osEnum.name}|$zoneId|$expireTime|${info.nonce}")
-        val token = try {
-            val cipherText = AESUtil.encrypt(key, JsonUtil.toJson(info, formatted = false))
-            "$cipherText$TOKEN_SEPARATOR${sign(key, cipherText)}"
-        } catch (e: Throwable) {
-            logger.error("genToken|encrypt failed", e)
+        val token = randomToken()
+        val tokenId = ShaUtils.sha256(token)
+        // 碰撞概率可忽略，用 setIfAbsent 兜底，保证不会覆盖已有 token
+        if (!redisOperation.setIfAbsent(tokenKey(tokenId), JsonUtil.toJson(info, formatted = false), expireSeconds)) {
+            logger.error("genToken|token conflict|$userId|$projectId")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = PARAMETER_SECRET_ERROR,
-                defaultMessage = "genToken failed because encrypt failed",
-                params = arrayOf("encrypt", "genToken failed because encrypt failed")
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                defaultMessage = "genToken failed, please retry",
+                params = arrayOf("token", "genToken failed, please retry")
             )
         }
+        logger.info("genToken|$userId|$projectId|${osEnum.name}|$zoneId|$expireTime|${tokenId.take(LOG_ID_LENGTH)}")
         return ThirdPartyDesktopTokenResp(token = token, expireTime = expireTime)
     }
 
     /**
-     * 校验 token 并返回 token 中的信息：先验 HMAC 签名，再解密，最后校验过期时间
-     * 非法或过期直接抛 401
+     * 校验 token：格式合法且 Redis 中存在未过期的记录，否则抛 401
      */
-    fun verifyToken(token: String?): ThirdPartyDesktopTokenInfo {
-        val key = checkSecret()
+    private fun verifyToken(token: String?): VerifiedToken {
         if (token.isNullOrBlank()) {
             throw unauthorized("token is empty")
         }
-        val parts = token.split(TOKEN_SEPARATOR)
-        if (parts.size != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+        if (!TOKEN_REGEX.matches(token)) {
             throw unauthorized("token illegal")
         }
-        val (cipherText, signature) = parts
-        val expected = sign(key, cipherText)
-        if (!MessageDigest.isEqual(
-                expected.toByteArray(Charsets.UTF_8),
-                signature.toByteArray(Charsets.UTF_8)
-            )
-        ) {
-            logger.warn("verifyToken|token signature mismatch")
-            throw unauthorized("token illegal")
+        val tokenId = ShaUtils.sha256(token)
+        val value = redisOperation.get(tokenKey(tokenId))
+        if (value.isNullOrBlank()) {
+            logger.warn("verifyToken|token not found or expired|${tokenId.take(LOG_ID_LENGTH)}")
+            throw unauthorized("token illegal or expired")
         }
         val info = try {
-            JsonUtil.to(AESUtil.decrypt(key, cipherText), ThirdPartyDesktopTokenInfo::class.java)
+            JsonUtil.to(value, ThirdPartyDesktopTokenInfo::class.java)
         } catch (e: Throwable) {
-            logger.warn("verifyToken|token illegal|${e.message}")
-            throw unauthorized("token illegal")
-        }
-        if (info.nonce.isBlank() || info.userId.isBlank() || info.projectId.isBlank()) {
+            logger.warn("verifyToken|parse failed|${tokenId.take(LOG_ID_LENGTH)}|${e.message}")
             throw unauthorized("token illegal")
         }
         if (info.expireTime < System.currentTimeMillis()) {
             logger.warn("verifyToken|token expired|${info.userId}|${info.expireTime}")
             throw unauthorized("token expired")
         }
-        return info
+        return VerifiedToken(id = tokenId, info = info)
     }
 
     /**
-     * 一个 token 只能注册一台机器：先用 setIfAbsent 抢占 nonce，成功后记录 taskId/envId
+     * 一个 token 只能注册一台机器：先用 setIfAbsent 抢占，成功后记录 taskId/envId
      * BCS 调用失败会释放占位，允许同一个 token 重试
      */
     fun registerVm(token: String?, ip: String): CreateCvmResp? {
-        val info = verifyToken(token)
+        val verified = verifyToken(token)
+        val info = verified.info
         if (ip.isBlank()) {
             throw illegal("ip can not be blank")
         }
-        val recordKey = registerKey(info.nonce)
+        val recordKey = registerKey(verified.id)
         val ttl = remainSeconds(info)
         if (!redisOperation.setIfAbsent(recordKey, REGISTERING, ttl)) {
-            logger.warn("registerVm|token already used|${info.userId}|${info.nonce}|$ip")
+            logger.warn("registerVm|token already used|${info.userId}|$ip")
             throw forbidden("token has already been used to register a machine")
         }
-        logger.info("registerVm|${info.userId}|${info.projectId}|${info.os}|${info.zoneId}|$ip|${info.nonce}")
+        logger.info("registerVm|${info.userId}|${info.projectId}|${info.os}|${info.zoneId}|$ip")
         val resp = try {
             remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).registerVm(
                 RegisterVmData(
@@ -195,42 +187,44 @@ class ThirdPartyDesktopService @Autowired constructor(
     }
 
     fun getTaskStatus(token: String?, taskId: String): WorkspaceTaskStatus? {
-        val info = verifyToken(token)
+        val verified = verifyToken(token)
         if (taskId.isBlank()) {
             throw illegal("taskId can not be blank")
         }
-        val record = getRecord(info)
+        val record = getRecord(verified)
         if (record.taskId != taskId) {
-            logger.warn("getTaskStatus|taskId not belong to token|${info.userId}|$taskId|${record.taskId}")
+            logger.warn("getTaskStatus|taskId not belong to token|${verified.info.userId}|$taskId|${record.taskId}")
             throw forbidden("taskId $taskId does not belong to this token")
         }
-        logger.info("getTaskStatus|${info.userId}|$taskId")
+        logger.info("getTaskStatus|${verified.info.userId}|$taskId")
         return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).taskStatus(taskId)
     }
 
     /**
-     * envId 必须是本 token 注册出来的；vmId 由 CDS 校验其归属的 cdsId 与 envId 一致
+     * envId 必须是本 token 注册出来的；CDS apply 会把 vmId 与 envId(cdsId) 绑定，
+     * 已绑定到其他 cdsId 的 vmId 会被 CDS 拒绝，同一组 vmId + envId 重复调用返回同一个 key
      */
     fun getCdsKey(token: String?, vmId: String, envId: String): ThirdPartyDesktopCdsKeyResp {
-        val info = verifyToken(token)
+        val verified = verifyToken(token)
         if (vmId.isBlank() || envId.isBlank()) {
             throw illegal("vmId/envId can not be blank")
         }
-        checkEnvBelong(info, envId, "getCdsKey")
-        logger.info("getCdsKey|${info.userId}|$vmId|$envId")
-        return ThirdPartyDesktopCdsKeyResp(cdsKey = startCloudClient.exchangeCdsKey(envId = envId, vmId = vmId))
+        checkEnvBelong(verified, envId, "getCdsKey")
+        logger.info("getCdsKey|${verified.info.userId}|$vmId|$envId")
+        return ThirdPartyDesktopCdsKeyResp(cdsKey = startCloudClient.applyCdsKey(envId = envId, vmId = vmId))
     }
 
     /**
      * envId 必须是本 token 注册出来的，且一个 token 只能分配一次（避免重复增加项目配额）
      */
     fun assignWorkspace(token: String?, envId: String): Boolean {
-        val info = verifyToken(token)
+        val verified = verifyToken(token)
+        val info = verified.info
         if (envId.isBlank()) {
             throw illegal("envId can not be blank")
         }
-        checkEnvBelong(info, envId, "assignWorkspace")
-        val assignKey = assignKey(info.nonce)
+        checkEnvBelong(verified, envId, "assignWorkspace")
+        val assignKey = assignKey(verified.id)
         if (!redisOperation.setIfAbsent(assignKey, envId, remainSeconds(info))) {
             logger.warn("assignWorkspace|already assigned|${info.userId}|$envId")
             throw forbidden("env $envId has already been assigned by this token")
@@ -259,16 +253,16 @@ class ThirdPartyDesktopService @Autowired constructor(
         return true
     }
 
-    private fun checkEnvBelong(info: ThirdPartyDesktopTokenInfo, envId: String, action: String) {
-        val record = getRecord(info)
+    private fun checkEnvBelong(verified: VerifiedToken, envId: String, action: String) {
+        val record = getRecord(verified)
         if (record.envId.isNullOrBlank() || record.envId != envId) {
-            logger.warn("$action|envId not belong to token|${info.userId}|$envId|${record.envId}")
+            logger.warn("$action|envId not belong to token|${verified.info.userId}|$envId|${record.envId}")
             throw forbidden("env $envId does not belong to this token")
         }
     }
 
-    private fun getRecord(info: ThirdPartyDesktopTokenInfo): ThirdPartyDesktopRegisterRecord {
-        val value = redisOperation.get(registerKey(info.nonce))
+    private fun getRecord(verified: VerifiedToken): ThirdPartyDesktopRegisterRecord {
+        val value = redisOperation.get(registerKey(verified.id))
         if (value.isNullOrBlank()) {
             throw forbidden("no machine registered by this token")
         }
@@ -278,47 +272,27 @@ class ThirdPartyDesktopService @Autowired constructor(
         return try {
             JsonUtil.to(value, ThirdPartyDesktopRegisterRecord::class.java)
         } catch (e: Throwable) {
-            logger.warn("getRecord|parse failed|${info.nonce}|${e.message}")
+            logger.warn("getRecord|parse failed|${verified.info.userId}|${e.message}")
             throw forbidden("no machine registered by this token")
         }
     }
 
-    /* Redis 记录与 token 同生命周期，至少保留 1 分钟 */
+    private fun randomToken(): String {
+        val bytes = ByteArray(TOKEN_BYTES)
+        secureRandom.nextBytes(bytes)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    }
+
+    /* 注册/分配记录与 token 同生命周期，至少保留 1 分钟 */
     private fun remainSeconds(info: ThirdPartyDesktopTokenInfo): Long {
         return maxOf((info.expireTime - System.currentTimeMillis()) / 1000 + 1, MIN_RECORD_SECONDS)
     }
 
-    private fun registerKey(nonce: String) = "$REDIS_KEY_PREFIX:register:$nonce"
+    private fun tokenKey(tokenId: String) = "$REDIS_KEY_PREFIX:token:$tokenId"
 
-    private fun assignKey(nonce: String) = "$REDIS_KEY_PREFIX:assign:$nonce"
+    private fun registerKey(tokenId: String) = "$REDIS_KEY_PREFIX:register:$tokenId"
 
-    /**
-     * HMAC-SHA256 签名，签名密钥由 secret 派生，避免与加密直接共用同一把密钥
-     */
-    private fun sign(secret: String, content: String): String {
-        val macKey = hmac(secret.toByteArray(Charsets.UTF_8), MAC_KEY_INFO.toByteArray(Charsets.UTF_8))
-        val signature = hmac(macKey, content.toByteArray(Charsets.UTF_8))
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(signature)
-    }
-
-    private fun hmac(key: ByteArray, data: ByteArray): ByteArray {
-        val mac = Mac.getInstance(HMAC_SHA256)
-        mac.init(SecretKeySpec(key, HMAC_SHA256))
-        return mac.doFinal(data)
-    }
-
-    private fun checkSecret(): String {
-        if (secret.isNullOrBlank()) {
-            logger.error("[remoteDev.thirdPartyDesktop.secret] is not configured")
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = PARAMETER_SECRET_ERROR,
-                defaultMessage = "[remoteDev.thirdPartyDesktop.secret] is not configured",
-                params = arrayOf("config", "[remoteDev.thirdPartyDesktop.secret] is not configured")
-            )
-        }
-        return secret
-    }
+    private fun assignKey(tokenId: String) = "$REDIS_KEY_PREFIX:assign:$tokenId"
 
     private fun unauthorized(msg: String) = ErrorCodeException(
         statusCode = Response.Status.UNAUTHORIZED.statusCode,
@@ -346,10 +320,12 @@ class ThirdPartyDesktopService @Autowired constructor(
         private const val DEFAULT_EXPIRE_SECONDS = 3600L
         private const val MIN_RECORD_SECONDS = 60L
         private const val DEFAULT_MACHINE_TYPE = "XL2"
-        private const val TOKEN_SEPARATOR = "."
-        private const val HMAC_SHA256 = "HmacSHA256"
-        private const val MAC_KEY_INFO = "remotedev:third_party_desktop:token:mac"
         private const val REDIS_KEY_PREFIX = "remotedev:third_party_desktop"
         private const val REGISTERING = "REGISTERING"
+
+        /* 24 字节随机数，base64url 无填充后固定 32 位 */
+        private const val TOKEN_BYTES = 24
+        private val TOKEN_REGEX = Regex("^[A-Za-z0-9_-]{32}$")
+        private const val LOG_ID_LENGTH = 8
     }
 }
