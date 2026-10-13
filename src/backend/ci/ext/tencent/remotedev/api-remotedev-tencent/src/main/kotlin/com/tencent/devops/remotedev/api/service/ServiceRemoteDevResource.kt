@@ -63,6 +63,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.v3.oas.annotations.Operation
@@ -1217,4 +1218,22 @@ interface ServiceRemoteDevResource {
         @QueryParam("os")
         os: ClientOS
     ): Result<ClientLatestVersion>
+
+    @Operation(summary = "生成第三方机器注册云桌面使用的token，有效期1小时")
+    @POST
+    @Path("/third_party_desktop/token")
+    fun genThirdPartyDesktopToken(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作系统，如 LINUX/WINDOWS", required = true)
+        @QueryParam("os")
+        os: String,
+        @Parameter(description = "地域，如 CQ12", required = true)
+        @QueryParam("zoneId")
+        zoneId: String
+    ): Result<ThirdPartyDesktopTokenResp>
 }

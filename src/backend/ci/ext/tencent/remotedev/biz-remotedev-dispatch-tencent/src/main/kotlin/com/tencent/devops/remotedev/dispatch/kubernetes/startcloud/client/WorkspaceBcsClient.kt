@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.remotedev.AvailableResourceReq
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.RegisterVmData
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
@@ -600,6 +601,22 @@ class WorkspaceBcsClient @Autowired constructor(
         val url = "$bcsCloudUrl/api/v1/remotedevenv/cvms"
 
         val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request)
+            .resolveResponse<BcsResp<EnvironmentCreateRsp.EnvironmentCreateRspData>>().data
+    }
+
+    fun registerVm(
+        data: RegisterVmData
+    ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/registervm"
+
+        val body = JsonUtil.toJson(data, false)
+        logger.info("registerVm request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(makeHeaders().toHeaders())

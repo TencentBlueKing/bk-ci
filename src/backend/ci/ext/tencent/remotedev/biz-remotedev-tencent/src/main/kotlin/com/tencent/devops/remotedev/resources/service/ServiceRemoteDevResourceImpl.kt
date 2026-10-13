@@ -77,6 +77,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
@@ -107,6 +108,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.thirdparty.ThirdPartyDesktopService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -158,7 +160,8 @@ class ServiceRemoteDevResourceImpl(
     private val coffeeAIService: CoffeeAIService,
     private val openClawService: OpenClawService,
     private val templateWorkspaceAssignService: TemplateWorkspaceAssignService,
-    private val clientUpgradeService: ClientUpgradeService
+    private val clientUpgradeService: ClientUpgradeService,
+    private val thirdPartyDesktopService: ThirdPartyDesktopService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -1153,5 +1156,21 @@ class ServiceRemoteDevResourceImpl(
     ): Result<ClientLatestVersion> {
         val version = clientUpgradeService.getLatestVersion(type, os).ifBlank { null }
         return Result(ClientLatestVersion(version = version))
+    }
+
+    override fun genThirdPartyDesktopToken(
+        userId: String,
+        projectId: String,
+        os: String,
+        zoneId: String
+    ): Result<ThirdPartyDesktopTokenResp> {
+        return Result(
+            thirdPartyDesktopService.genToken(
+                userId = userId,
+                projectId = projectId,
+                os = os,
+                zoneId = zoneId
+            )
+        )
     }
 }
