@@ -1,5 +1,5 @@
 const path = require('path')
-const fs = require('fs')
+// const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -52,12 +52,14 @@ module.exports = ({ entry, isConsole, publicPath, dist, port = 8080, argv, env }
                 },
                 {
                     test: /\.scss$/,
-                    use: [{
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            publicPath: (resourcePath, context) => ''
-                        }
-                    }, 'css-loader', 'sass-loader']
+                    use: [isDev
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                publicPath: (resourcePath, context) => ''
+                            }
+                        }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -175,7 +177,7 @@ module.exports = ({ entry, isConsole, publicPath, dist, port = 8080, argv, env }
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'wss://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
             // https: {
             //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),

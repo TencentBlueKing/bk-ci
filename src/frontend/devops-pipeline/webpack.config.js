@@ -80,6 +80,7 @@ module.exports = (env, argv) => {
     ]
     config.devServer.historyApiFallback = {
         rewrites: [
+            { from: /^\/pipeline/, to: '/pipeline/index.html' },
             { from: /^\/bkci\/pipeline/, to: '/bkci/pipeline/index.html' }
         ]
     }

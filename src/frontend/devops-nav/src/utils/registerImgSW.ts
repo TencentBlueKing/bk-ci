@@ -18,7 +18,11 @@ export function registerImgServiceWorker (): void {
         return
     }
 
-    const prefix = window.PUBLIC_URL_PREFIX || ''
+    const prefix = (window.PUBLIC_URL_PREFIX || '').trim()
+    // 内网根路径部署不传子路径。未配置、空串或占位符未替换时不注册，避免在整站 scope 上挂 Service Worker。
+    if (!prefix || prefix === '/' || prefix.startsWith('__')) {
+        return
+    }
 
     const swUrl = `${prefix}/console/static/sw.js?prefix=${encodeURIComponent(prefix)}`
     const scope = `${prefix}/`

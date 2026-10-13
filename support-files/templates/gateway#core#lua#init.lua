@@ -102,7 +102,8 @@ config = {
         auto_prefix = ""
     },
     tenant = {
-        enabled = __BK_TENANT_ENABLED__
+        -- 未传、空串或非 true 都按单租户启动，避免占位符被渲染成空后 Lua 语法错误
+        enabled = ("__BK_TENANT_ENABLED__" == "true")
     },
     bk_login = {
         host = "__BK_PAAS_PRIVATE_URL__",
