@@ -1474,7 +1474,7 @@
     "fastKill": "启用Fast-kill",
     "fastKillDesc": "启用Fast-kill",
     "maxConcurrency": "最大并发数",
-    "maxConcurrencyDesc": "最大并发数范围1-20",
+    "maxConcurrencyDesc": "同时运行的任务上限，留空为 5。变量的取值也须是 1–50 的整数，否则本 Job 失败。",
     "mutualGroupName": "互斥组名称",
     "mutualGroupNamePlaceholder": "字段不能为空，只支持英文、数字或填写变量",
     "queueEnable": "启用互斥组排队",

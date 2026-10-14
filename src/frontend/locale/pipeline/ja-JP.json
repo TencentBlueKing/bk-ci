@@ -1472,7 +1472,7 @@
     "fastKill": "Fast-killを有効にする",
     "fastKillDesc": "Fast-killを有効にする",
     "maxConcurrency": "最大並行数",
-    "maxConcurrencyDesc": "最大並行数の範囲は1-20です",
+    "maxConcurrencyDesc": "同時実行タスクの上限です。未入力時は 5。変数の値も 1–50 の整数である必要があり、それ以外の場合はこの Job が失敗します。",
     "mutualGroupName": "相互排他グループ名",
     "mutualGroupNamePlaceholder": "フィールドは空にできません、英数字または変数の入力のみをサポート",
     "queueEnable": "相互排他グループキューを有効にする",

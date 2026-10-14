@@ -40,6 +40,7 @@
                         :handle-change="handleUpdateJobMatrix"
                         :value="normalizedMatrixControlOption[key]"
                         :disabled="disabled"
+                        :pipeline-dialect="pipelineDialect"
                         v-bind="obj"
                     />
                 </form-field>
@@ -54,12 +55,16 @@
     import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
     import { hasAnyMatrixRuleValue } from '@/utils/matrixRule'
     import { mapActions } from 'vuex'
+    import MatrixMaxConcurrencyInput from './MatrixMaxConcurrencyInput'
 
     const MATRIX_RULE_FIELDS = ['strategyStr', 'includeCaseStr', 'excludeCaseStr']
     const MATRIX_REQUIRED_ERROR_FIELD = 'matrixRuleRequired'
 
     export default {
         name: 'job-mutual',
+        components: {
+            MatrixMaxConcurrencyInput
+        },
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],
         props: {
             enableMatrix: {

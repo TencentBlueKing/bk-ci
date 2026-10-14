@@ -101,11 +101,11 @@ const jobOptionConfigMixin = {
                     default: true
                 },
                 maxConcurrency: {
-                    rule: { numeric: true, min_value: 1, max_value: 20 },
-                    component: 'vuex-input',
-                    required: true,
+                    rule: { matrixMaxConcurrencyRule: this.pipelineDialect },
+                    component: 'matrix-max-concurrency-input',
                     label: this.$t('storeMap.maxConcurrency'),
-                    placeholder: this.$t('storeMap.maxConcurrencyDesc'),
+                    desc: this.$t('storeMap.maxConcurrencyDesc'),
+                    placeholder: '1–50',
                     default: '5'
                 }
             },

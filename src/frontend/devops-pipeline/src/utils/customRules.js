@@ -125,6 +125,19 @@ const customeRules = {
             return isValidNumber || isValidVar
         }
     },
+    // Matrix Job 最大并发：留空（默认 5）、1-50 整数，或按流水线方言的变量引用
+    matrixMaxConcurrencyRule: {
+        validate: function (value, args) {
+            if (value === null || value === undefined || value === '') {
+                return true
+            }
+            const str = String(value)
+            if (/^([1-9]|[1-4]\d|50)$/.test(str)) {
+                return true
+            }
+            return args[0] === 'CLASSIC' ? str.isBkVar() : str.isBKConstraintVar()
+        }
+    },
     reminderTimeRule: {
         validate: function (value, args) {
             return /^(?:[1-9]|[1-9]\d|1[0-5][0-9]|168)$/.test(value)
