@@ -351,7 +351,7 @@
     "arrivalBatchTip": "Use either option when the whole group must queue and only the latest build of the same batch should remain. Example: pipelines share group ${'{{'}ci.repo{'}}'}, and one pipeline keeps the latest build of a merge request with batch id ${'{{'}ci.mr_id{'}}'}.",
     "subGroup": "Batch id",
     "subGroupPlaceholder": "e.g. ${'{{'}ci.mr_id{'}}'}",
-    "subGroupDesc": "Builds with the same value are one batch. Required when a same-batch policy is selected.",
+    "subGroupDesc": "Builds with the same value are one batch. Required when a same-batch policy is selected. If it resolves to empty or the literal null at startup, the build only queues and is not deduplicated.",
     "subGroupRequired": "Batch id is required",
     "lockGroupDesc": "A concurrency group can be any string or expression, and the effective scope is under the current project. Support variables with values that can be determined during the startup phase, such as ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (provided that the value of a is clear at startup), etc",
     "buildCancelPolicyOptions": {

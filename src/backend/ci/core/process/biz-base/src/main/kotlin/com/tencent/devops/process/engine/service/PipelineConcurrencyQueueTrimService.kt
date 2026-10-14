@@ -130,6 +130,8 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
                 return@forEach
             }
             trimmed++
+            // 对账淘汰的是最早排队，没有单一触发构建，文案不带 {0}。
+            // 拦截器满员挤出用 BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD，两处不要合并。
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(

@@ -186,10 +186,15 @@ export default {
             concurrencyArrivalPolicy: null
         })
     },
+    // 到达策略只存在前端，不落库。拉设置会重建 pipelineSetting，运行锁组件可能随之重建。
+    // 同一条流水线保留已选策略：标识还没填时，清空后会把「同一批 + 取消」推导成整组取消，必填校验失效。
+    // 换流水线才清空，交给组件按新设置重新推导。离开编辑页走 RESET，仍然清空。
     [PIPELINE_SETTING_MUTATION]: (state, pipelineSetting) => {
+        const saved = state.concurrencyArrivalPolicy
+        const samePipeline = saved && pipelineSetting && saved.pipelineId === pipelineSetting.pipelineId
         return Object.assign(state, {
             pipelineSetting,
-            concurrencyArrivalPolicy: null
+            concurrencyArrivalPolicy: samePipeline ? saved : null
         })
     },
     [SET_CONCURRENCY_ARRIVAL_POLICY]: (state, concurrencyArrivalPolicy) => {

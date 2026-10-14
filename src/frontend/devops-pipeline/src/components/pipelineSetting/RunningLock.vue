@@ -457,6 +457,8 @@
                     if (!setting) return
                     const saved = this.$store.state.atom.concurrencyArrivalPolicy
                     const samePipeline = saved && saved.pipelineId === setting.pipelineId
+                    // 只在换流水线时重新推导。同一条流水线刷新设置时沿用已选策略，
+                    // 避免标识未填被推回整组取消或按顺序排队。store 被清空时把当前单选写回去。
                     if (!oldSetting || setting.pipelineId !== oldSetting.pipelineId) {
                         const policy = samePipeline ? saved.policy : this.deriveArrivalPolicy(setting)
                         this.arrivalPolicy = policy
@@ -477,6 +479,7 @@
             }
         },
         methods: {
+            // 仅在没有已选策略时使用。空标识加取消运行中会落到整组取消，这是存量数据的读法。
             deriveArrivalPolicy (setting) {
                 const subGroup = (setting?.concurrencySubGroup || '').trim()
                 if (subGroup) {

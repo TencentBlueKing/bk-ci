@@ -285,6 +285,8 @@ class QueueInterceptor @Autowired constructor(
             return
         }
         logger.info("[$pipelineId]|${task.buildId}|QUEUE_OUT_SIZE|$groupName|out=${outQueueBuilds.size}")
+        // 满员挤出发生在当前构建入库之前，被取消的是更早的排队，{0} 指向这次触发挤出的构建。
+        // 不要改回 BK_CONCURRENCY_QUEUE_SIZE_CANCEL：启动对账没有单一触发构建，两处文案不能共用。
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
             projectCode = projectId,
             pipelineId = task.pipelineInfo.pipelineId,
@@ -297,7 +299,7 @@ class QueueInterceptor @Autowired constructor(
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL,
+                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD,
                     params = arrayOf("<a target='_blank' href='$detailUrl'>${task.buildId}</a>")
                 ),
                 tag = "QueueInterceptor",
@@ -451,7 +453,12 @@ class QueueInterceptor @Autowired constructor(
     }
 
     /**
-     * 只取消本流水线内、解析值相同的构建。③ 含运行中，④ 只含排队。
+     * 入库前的同一批取消，只做提前优化。权威去重在 BuildStartControl.cancelOlderSameBatch。
+     *
+     * 本方法跑在构建历史写入之前。并发触发互相看不见，当前构建通常还没有 buildNum，
+     * [ConcurrencyCancelGuardUtils.olderSameBatch] 会返回空列表，避免把已经入库、构建号更大的构建取消掉。
+     * 重试时历史已在，只取消本流水线内构建号更小、解析值相同的构建。③ 含运行中，④ 只含排队。
+     * 原因文案的 {0} 是当前构建链接。
      */
     private fun cancelSameSubGroup(
         task: InterceptData,
@@ -478,17 +485,15 @@ class QueueInterceptor @Autowired constructor(
             concurrencyGroup = concurrencyGroup,
             status = status,
             excludeBuildId = task.buildId
-        ).filter {
-            it.pipelineId == task.pipelineInfo.pipelineId &&
-                ConcurrencySubGroupPolicy.effectiveBatchId(it.concurrencySubGroup) == batchId
-        }
-        val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
+        )
+        // 入库前通常还没有构建号，这时不取消，留给持有组锁的启动逻辑。已有构建号时只取消更小的。
+        val currentBuildNum = pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum
+        val cancelTargets = ConcurrencyCancelGuardUtils.olderSameBatch(
             candidateBuilds = builds,
-            currentContext = ConcurrencyCancelContext.of(
-                pipelineId = task.pipelineInfo.pipelineId,
-                buildId = task.buildId,
-                isRetry = task.retry == true
-            ) { pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum }
+            pipelineId = task.pipelineInfo.pipelineId,
+            currentBuildId = task.buildId,
+            currentBuildNum = currentBuildNum,
+            batchId = batchId
         )
         val reason = I18nUtil.getCodeLanMessage(
             messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_REPLACED,
