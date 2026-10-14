@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -83,6 +84,8 @@ data class PipelineSetting(
     var concurrencyGroup: String? = PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean = false,
+    @get:Schema(title = "同一批标识。null 表示请求未携带，保存时沿用已有值；空白表示清空", required = false)
+    var concurrencySubGroup: String? = null,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
@@ -199,6 +202,14 @@ data class PipelineSetting(
     fun copyConcurrencyGroup(other: PipelineSetting) {
         concurrencyGroup = other.concurrencyGroup
         concurrencyCancelInProgress = other.concurrencyCancelInProgress
+        concurrencySubGroup = other.concurrencySubGroup
         maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+    }
+
+    /**
+     * 旧客户端不传同一批标识时沿用已保存的值，空白表示显式清空。
+     */
+    fun applyConcurrencySubGroup(existing: String?) {
+        concurrencySubGroup = ConcurrencySubGroupPolicy.normalize(concurrencySubGroup, existing)
     }
 }

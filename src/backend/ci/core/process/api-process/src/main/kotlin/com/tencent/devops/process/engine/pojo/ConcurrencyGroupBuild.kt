@@ -34,5 +34,6 @@ package com.tencent.devops.process.engine.pojo
 data class ConcurrencyGroupBuild(
     val pipelineId: String,
     val buildId: String,
-    val buildNum: Int
+    val buildNum: Int,
+    val concurrencySubGroup: String? = null
 )
