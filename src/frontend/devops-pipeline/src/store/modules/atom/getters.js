@@ -227,6 +227,16 @@ export default {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
 
+            const savedArrival = state.concurrencyArrivalPolicy
+            const arrivalPolicy = savedArrival && savedArrival.pipelineId === pipelineSetting?.pipelineId
+                ? savedArrival.policy
+                : null
+            const isGroupLock = ['GROUP_LOCK', 'SINGLE'].includes(pipelineSetting?.runLockType)
+            const subGroup = (pipelineSetting?.concurrencySubGroup || '').trim()
+            if (isGroupLock && (arrivalPolicy === 'CANCEL_BATCH' || arrivalPolicy === 'KEEP_BATCH') && !subGroup) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.subGroupRequired'))
+            }
+
             if (stages.length > state.pipelineLimit.stageLimit) {
                 throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.stageLimit') + state.pipelineLimit.stageLimit))
             }
