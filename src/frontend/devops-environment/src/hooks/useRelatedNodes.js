@@ -98,6 +98,16 @@ export default function useRelatedNodes () {
         }
     }
     
+    // 预览动态环境按标签匹配到的节点列表
+    const previewTagEnvNodes = (params, tags = []) => {
+        return proxy.$store.dispatch('environment/previewTagEnvNodes', {
+            ...params,
+            projectId: projectId.value,
+            createMode: isCreateResType.value,
+            tags
+        })
+    }
+    
     const handleCloseDialog = () => {
         isShow.value = false
     }
@@ -127,6 +137,7 @@ export default function useRelatedNodes () {
         // function
         relateNodes,
         requestNodeList,
+        previewTagEnvNodes,
         handleCloseDialog,
         handleShowRelatedNodes,
         fetchTagList,
