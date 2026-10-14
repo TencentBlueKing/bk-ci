@@ -79,7 +79,9 @@ data class WeSecProjectWorkspace(
     @get:Schema(title = "start客户端所需唯一索引")
     val curLaunchId: Int? = null,
     @get:Schema(title = "resourceId")
-    val resourceId: String? = null
+    val resourceId: String? = null,
+    @get:Schema(title = "是否锁屏")
+    val screenLocked: Boolean? = null
 )
 
 @Schema(title = "组织信息")

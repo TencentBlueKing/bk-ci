@@ -186,7 +186,6 @@ class ServiceRemoteDevResourceImpl(
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun desktopTokenCheck(token: String, dToken: String): Result<UserOnePassword> {
-        logger.info("Checking desktop token $dToken")
         return Result(permissionService.checkAndGetUser1Password(dToken))
     }
 
@@ -1078,14 +1077,13 @@ class ServiceRemoteDevResourceImpl(
             pageSize ?: DEFAULT_PAGE_SIZE,
             MAX_PAGE_SIZE
         )
-        return Result(
-            workspaceService.getWorkspaceList(
-                userId = userId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search
-            )
+        val result = workspaceService.getWorkspaceList(
+            userId = userId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = search
         )
+        return Result(coffeeAIService.enrichAgentMode(result))
     }
 
     override fun batchQueryThumbnailWorkspaces(
@@ -1130,9 +1128,17 @@ class ServiceRemoteDevResourceImpl(
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envHashId: String?
+        envHashId: String?,
+        live: Boolean?
     ): Result<WorkspaceStartCloudDetail?> {
-        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
+        return Result(
+            workspaceService.startCloudWorkspaceDetail(
+                userId = userId,
+                workspaceName = workspaceName,
+                envId = envHashId,
+                live = live
+            )
+        )
     }
 
     override fun createOpenClaw(

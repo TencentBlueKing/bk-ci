@@ -69,7 +69,7 @@
                     </span>
                 </span>
                 <a
-                    v-if="!isCreateResType"
+                    v-if="!isCreateResType && !isAgentNormal"
                     class="reinstall-agent-btn"
                     @click="handleReinstallAgent"
                 >
@@ -208,7 +208,7 @@
                 },
                 {
                     name: 'taskList',
-                    label: proxy.$t('environment.taskDetail')
+                    label: proxy.$t('environment.nodeInfo.buildTask')
                 },
                 {
                     name: 'offlineRecords',

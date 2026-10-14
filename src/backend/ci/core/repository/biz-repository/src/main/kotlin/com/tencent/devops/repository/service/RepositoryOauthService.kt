@@ -88,14 +88,25 @@ class RepositoryOauthService @Autowired constructor(
         userId: String,
         scmCode: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        oauthUserId: String? = null
     ): Page<RepoOauthRefVo> {
+        val queryUserId = oauthUserId?.takeIf { it.isNotBlank() } ?: userId
+        if (queryUserId != userId) {
+            val tokenInfo = oauth2TokenStoreManager.get(queryUserId, scmCode)
+            if (tokenInfo?.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT,
+                    params = arrayOf(userId, queryUserId)
+                )
+            }
+        }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val repoCondition = RepoCondition(
             authType = RepoAuthType.OAUTH,
-            oauthUserId = userId,
+            oauthUserId = queryUserId,
             scmCode = scmCode
         )
         val count = codeRepositoryManager.countByCondition(

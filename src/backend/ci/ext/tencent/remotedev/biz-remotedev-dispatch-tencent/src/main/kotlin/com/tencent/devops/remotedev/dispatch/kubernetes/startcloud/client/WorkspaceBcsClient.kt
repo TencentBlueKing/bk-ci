@@ -9,6 +9,9 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.BatchVmStatusReq
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.BatchVmStatusRsp
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvVmStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentStatusRsp
@@ -221,6 +224,59 @@ class WorkspaceBcsClient @Autowired constructor(
                 errorMessage = "获取工作空间信息接口异常:  接口超时, url: $url"
             )
         }
+    }
+
+    /**
+     * BCS v2 批量查询虚拟机状态。
+     * uid 列表按 [BATCH_SIZE] 分批请求，结果按 envId 聚合为 Map。
+     * 空列表直接返回空 Map，不发请求。
+     */
+    fun batchGetVmStatus(uids: List<String>): Map<String, EnvVmStatus> {
+        if (uids.isEmpty()) {
+            return emptyMap()
+        }
+        val url = "$bcsCloudUrl/api/v2/remotedevenv/vm/status"
+        val result = mutableMapOf<String, EnvVmStatus>()
+        uids.distinct().chunked(BATCH_SIZE).forEach { batch ->
+            val body = JsonUtil.toJson(BatchVmStatusReq(uid = batch), false)
+            val request = Request.Builder()
+                .url(url)
+                .headers(makeHeaders().toHeaders())
+                .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+                .build()
+            try {
+                OkhttpUtils.doHttp(request).use { response ->
+                    val responseContent = response.body!!.string()
+                    logger.info(
+                        "batch get vm status size ${batch.size} " +
+                            "response: ${response.rid()}|$responseContent"
+                    )
+                    if (!response.isSuccessful) {
+                        throw WorkspaceDispatchException(
+                            "批量获取工作空间信息接口异常: ${response.code}"
+                        )
+                    }
+                    val rsp: BatchVmStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                    if (OK != rsp.code) {
+                        throw WorkspaceDispatchException(
+                            "批量获取工作空间信息接口异常: ${rsp.code}-${rsp.message}"
+                        )
+                    }
+                    rsp.data?.items?.forEach { item ->
+                        val envId = item.envId
+                        if (!envId.isNullOrBlank()) {
+                            result[envId] = item
+                        }
+                    }
+                }
+            } catch (e: SocketTimeoutException) {
+                logger.error("batch get vm status SocketTimeoutException.", e)
+                throw WorkspaceDispatchException(
+                    errorMessage = "批量获取工作空间信息接口异常: 接口超时, url: $url"
+                )
+            }
+        }
+        return result
     }
 
     fun startGetTaskStatus(
@@ -596,6 +652,9 @@ class WorkspaceBcsClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceBcsClient::class.java)
         const val OK = 0
+
+        // 批量查询虚拟机状态每批上限。需求约定 200/批，BCS 接口上限为 500。
+        private const val BATCH_SIZE = 200
 
         private fun Response.rid(): String? {
             return this.headers["x-request-id"]

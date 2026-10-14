@@ -376,7 +376,7 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildReviewBroadCastEvent(
                         source = "stage($stageId) reviewed with PROCESSED", projectId = projectId,
                         pipelineId = pipelineId, buildId = buildId, userId = userId,
-                        stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                        stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                         status = BuildStatus.REVIEW_PROCESSED.name
                     ),
                     // stage 审核通过
@@ -527,7 +527,7 @@ class PipelineStageService @Autowired constructor(
                 PipelineBuildReviewBroadCastEvent(
                     source = "stage($stageId) reviewed with ABORT", projectId = projectId,
                     pipelineId = pipelineId, buildId = buildId, userId = userId,
-                    stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                    stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                     status = BuildStatus.REVIEW_ABORT.name
                 ),
                 // stage 审核驳回
@@ -726,7 +726,10 @@ class PipelineStageService @Autowired constructor(
                 buildId = stage.buildId, userId = userId,
                 reviewType = BuildReviewType.STAGE_REVIEW,
                 status = BuildStatus.REVIEWING.name,
-                stageId = stage.stageId, taskId = null
+                stageId = stage.stageId, taskId = null,
+                reviewers = group.reviewers.filter { it.isNotBlank() },
+                hasReviewParams = !checkIn.reviewParams.isNullOrEmpty(),
+                stageSeq = stage.seq
             ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,

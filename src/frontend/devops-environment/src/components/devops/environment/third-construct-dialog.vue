@@ -301,7 +301,7 @@
                 }
             },
             handleToHelpDocument () {
-                window.open(this.BKCI_DOCS?.BUILD_NODE_GUIDE_DOC, '_blank')
+                window.open(this.BKCI_DOCS?.ENV_FAQ_DOC, '_blank')
             }
         }
     }

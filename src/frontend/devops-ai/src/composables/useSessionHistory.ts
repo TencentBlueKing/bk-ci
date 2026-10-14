@@ -3,7 +3,7 @@ import { deleteSession as deleteSessionApi, getSessions } from "../api";
 import { useParams } from "./useParams";
 
 export function useSessionHistory() {
-  const { projectId } = useParams();
+  const { projectId, pipelineId } = useParams();
   const showHistory = shallowRef(false);
   const sessionList = ref<any[]>([]);
   const historyLoading = shallowRef(false);
@@ -11,7 +11,10 @@ export function useSessionHistory() {
   async function fetchSessionList() {
     historyLoading.value = true;
     try {
-      const list = await getSessions(unref(projectId) || undefined);
+      const list = await getSessions(
+        unref(projectId) || undefined,
+        unref(pipelineId) || undefined,
+      );
       sessionList.value = (list || []).map((s: any) => ({
         id: s.id,
         title: s.title || "未命名对话",
@@ -24,7 +27,7 @@ export function useSessionHistory() {
     }
   }
 
-  watch(projectId, () => {
+  watch([projectId, pipelineId], () => {
     sessionList.value = [];
     if (showHistory.value) {
       void fetchSessionList();

@@ -47,6 +47,12 @@ interface ServiceWorkspaceDispatchInterface {
         mountType: WorkspaceMountType
     ): Result<WorkspaceInfo>
 
+    fun getWorkspaceInfos(
+        userId: String,
+        workspaceNames: List<String>,
+        mountType: WorkspaceMountType
+    ): Result<Map<String, WorkspaceInfo>>
+
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,

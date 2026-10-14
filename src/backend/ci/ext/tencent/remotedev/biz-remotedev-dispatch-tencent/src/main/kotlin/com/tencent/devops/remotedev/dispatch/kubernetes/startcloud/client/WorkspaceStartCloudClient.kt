@@ -17,6 +17,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.CoffeeAIDelete
 import com.tencent.devops.remotedev.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.pojo.CoffeeWorkspaceAgentInfo
 import com.tencent.devops.remotedev.pojo.ImateAvatar
 import com.tencent.devops.remotedev.pojo.WorkspaceRegistration
 import java.net.SocketTimeoutException
@@ -190,7 +191,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val url = "$apiUrlAI/openapi/coffee/token"
         val body = JsonUtil.toJson(token, false)
         val id = UUID.randomUUID()
-        logger.info("$id|User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -323,6 +323,43 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun listAIWorkspaces(userId: String): List<CoffeeWorkspaceAgentInfo> {
+        val url = "$apiUrlAI/openapi/coffee/workspaces"
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId list coffee workspaces response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "列出AI云桌面工作空间接口异常: ${response.code}"
+                    )
+                }
+                val result = JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<List<CoffeeWorkspaceAgentInfo>>>() {}
+                )
+                if (result.isNotOk()) {
+                    throw WorkspaceDispatchException(
+                        "列出AI云桌面工作空间接口返回异常: ${result.status}-${result.message}"
+                    )
+                }
+                return result.data ?: emptyList()
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId list coffee workspaces get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "列出AI云桌面工作空间接口超时, url: $url"
+            )
+        }
+    }
+
     fun getCoffeeDigitalAvatar(userId: String, digitalAvatarId: String): ImateAvatar {
         val encodedId = URLEncoder.encode(digitalAvatarId, StandardCharsets.UTF_8.name())
         val url = "$apiUrlAI/openapi/coffee/digital_avatars/$encodedId"
@@ -389,6 +426,39 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId checkTeamAccessible get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "校验用户是否有该环境所属分身的开黑访问权限 接口超时, url: $url"
+            )
+        }
+    }
+
+    fun checkLiveScope(userId: String, workspaceName: String): Boolean {
+        val url = "$apiUrlAI/openapi/live/check_live_scope?workspaceName=" +
+                URLEncoder.encode(workspaceName, StandardCharsets.UTF_8.name())
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders("", userId).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId checkLiveScope response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "校验用户是否有该环境所属分身的开黑可用范围权限 接口异常: ${response.code}"
+                    )
+                }
+                return JsonUtil.to(
+                    responseContent,
+                    object : TypeReference<Result<Boolean>>() {}
+                ).data ?: false
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId checkLiveScope get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "校验用户是否有该环境所属分身的开黑可用范围权限 接口超时, url: $url"
             )
         }
     }

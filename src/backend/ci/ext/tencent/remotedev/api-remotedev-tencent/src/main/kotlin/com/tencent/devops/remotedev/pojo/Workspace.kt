@@ -106,5 +106,9 @@ data class Workspace(
     @get:Schema(title = "区域")
     val zoneId: String? = null,
     @get:Schema(title = "系统")
-    val os: OS? = null
+    val os: OS? = null,
+    @get:Schema(title = "是否开启AI功能")
+    val coffeeAi: Boolean? = false,
+    @get:Schema(title = "AI分身agent类型(如OPENCLAW)，结果中存在AI桌面时返回")
+    val agentMode: String? = null
 ) : IWorkspace

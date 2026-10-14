@@ -102,6 +102,12 @@
 
     /** Latest context reported by the inner pipeline iframe in this tab. */
     const subAppContext = ref<{ projectId?: string; pipelineId?: string; buildId?: string }>({})
+    type AiAnalysisError = Record<string, string>
+    type AiAnalysisRequest = {
+        prompt?: string;
+        error?: AiAnalysisError | AiAnalysisError[];
+    }
+    const pendingAnalysis = ref<AiAnalysisRequest | null>(null)
 
     const iframeSrc = computed(() => {
         return `${window.PUBLIC_URL_PREFIX || ''}/ai/`
@@ -135,6 +141,7 @@
         }
         iframeUtil?: {
             syncAiContext: (target: Window | null | undefined, ctx: Record<string, string>) => void
+            sendAiAnalysis: (target: Window | null | undefined, params: Record<string, unknown>) => void
         }
     } | undefined
 
@@ -171,6 +178,23 @@
 
     function postContextToAi () {
         root?.iframeUtil?.syncAiContext(iframeRef.value?.contentWindow, getMergedContext())
+    }
+
+    function postPendingAnalysis () {
+        if (!pendingAnalysis.value || !iframeRef.value?.contentWindow) return
+        root?.iframeUtil?.sendAiAnalysis(iframeRef.value.contentWindow, pendingAnalysis.value)
+        pendingAnalysis.value = null
+    }
+
+    function handleAnalysisRequest (params: AiAnalysisRequest) {
+        pendingAnalysis.value = params || {}
+        if (!panelVisible.value) {
+            iframeLoading.value = true
+            panelVisible.value = true
+        } else if (!iframeLoading.value) {
+            postContextToAi()
+            postPendingAnalysis()
+        }
     }
 
     function togglePanel () {
@@ -392,12 +416,14 @@
     function handleIframeLoad () {
         iframeLoading.value = false
         postContextToAi()
+        postPendingAnalysis()
     }
 
     onMounted(() => {
         eventBus.$on(AI_IFRAME_EVENTS.CLOSE_PANEL, handleClosePanel)
         eventBus.$on(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, handleSubContextUpdate)
         eventBus.$on(AI_IFRAME_EVENTS.REQUEST_CONTEXT, postContextToAi)
+        eventBus.$on(AI_IFRAME_EVENTS.REQUEST_ANALYSIS, handleAnalysisRequest)
         window.addEventListener('resize', handleViewportResize)
     })
 
@@ -405,6 +431,7 @@
         eventBus.$off(AI_IFRAME_EVENTS.CLOSE_PANEL, handleClosePanel)
         eventBus.$off(AI_IFRAME_EVENTS.UPDATE_SUB_CONTEXT, handleSubContextUpdate)
         eventBus.$off(AI_IFRAME_EVENTS.REQUEST_CONTEXT, postContextToAi)
+        eventBus.$off(AI_IFRAME_EVENTS.REQUEST_ANALYSIS, handleAnalysisRequest)
         window.removeEventListener('resize', handleViewportResize)
         removeDragListeners()
     })

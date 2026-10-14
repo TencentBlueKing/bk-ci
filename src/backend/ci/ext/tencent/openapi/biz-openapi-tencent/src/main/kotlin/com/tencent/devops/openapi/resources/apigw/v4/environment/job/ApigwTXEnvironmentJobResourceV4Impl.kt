@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.v4.environment.job
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.job.TencentServiceJobResource
@@ -14,6 +15,7 @@ import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobreq.OperateStepInstanceReq
+import com.tencent.devops.environment.pojo.job.jobreq.QueryExecuteObjectLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.jobreq.ScriptExecuteReq
 import com.tencent.devops.environment.pojo.job.jobreq.TaskTerminateReq
@@ -25,6 +27,7 @@ import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceDetailResu
 import com.tencent.devops.environment.pojo.job.jobresp.GetStepInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.JobResult
 import com.tencent.devops.environment.pojo.job.jobresp.OpOperateResult
+import com.tencent.devops.environment.pojo.job.jobresp.QueryExecuteObjectLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.jobresp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.jobresp.ScriptExecuteResult
@@ -91,6 +94,20 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
             TencentServiceJobResource::class
         ).queryJobInstanceLogs(
             userId, projectId, queryJobInstanceLogsReq
+        )
+    }
+
+    override fun batchGetExecuteObjectLog(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        queryExecuteObjectLogsReq: QueryExecuteObjectLogsReq
+    ): Result<QueryExecuteObjectLogsResult> {
+        return client.get(TencentServiceJobResource::class).batchGetExecuteObjectLog(
+            userId = userId,
+            projectId = projectId,
+            queryExecuteObjectLogsReq = queryExecuteObjectLogsReq
         )
     }
 

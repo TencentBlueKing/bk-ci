@@ -44,6 +44,22 @@
                             </span>
                         </span>
                     </bk-tag>
+                    <button
+                        v-if="execDetail.status === 'FAILED' && execDetail.errorInfoList?.length"
+                        type="button"
+                        class="exec-detail-ai-analysis"
+                        :aria-label="$t('details.aiAnalyzeFailure')"
+                        v-bk-tooltips="$t('details.aiAnalyzeFailure')"
+                        @click="analyzeFailure"
+                    >
+                        <span class="exec-detail-ai-analysis-inner">
+                            <img
+                                :src="aiAvatar"
+                                alt=""
+                            />
+                            {{ $t('details.aiAnalyzeFailure') }}
+                        </span>
+                    </button>
                     <span
                         v-bk-overflow-tips
                         class="exec-detail-summary-header-build-msg"
@@ -172,6 +188,7 @@
     import Summary from '@/components/ExecDetail/Summary'
     import ExecPipeline from '@/components/ExecPipeline'
     import Logo from '@/components/Logo'
+    import aiAvatar from '@/images/ai-avatar.png'
     import Outputs from '@/components/Outputs'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import stageReviewPanel from '@/components/StageReviewPanel'
@@ -182,6 +199,12 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
+    import {
+        formatBuildNumPrefix,
+        joinFailureItems,
+        joinLabeledLine,
+        requestAiAnalysis
+    } from '@/utils/aiAnalysis'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -214,6 +237,7 @@
 
         data () {
             return {
+                aiAvatar,
                 isLoading: true,
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
@@ -587,6 +611,27 @@
             },
             collapseSummary () {
                 this.summaryVisible = !this.summaryVisible
+            },
+            analyzeFailure () {
+                const buildNumPrefix = formatBuildNumPrefix(this.execDetail.buildNum)
+                const failures = joinFailureItems(this.execDetail.errorInfoList).join('\n')
+                const body = [
+                    joinLabeledLine(this.$t('pipelineName'), this.execDetail.pipelineName),
+                    joinLabeledLine(this.$t('buildNum'), buildNumPrefix.trim()),
+                    this.$t('details.aiAttachmentAllFailures'),
+                    failures
+                ].filter(Boolean).join('\n')
+                requestAiAnalysis(
+                    this.execDetail.errorInfoList,
+                    this.$t('details.aiAnalyzeFailurePrompt', { buildNum: buildNumPrefix }),
+                    {},
+                    {
+                        attachment: {
+                            title: this.$t('details.aiAnalyzeFailureAttachmentTitle'),
+                            body
+                        }
+                    }
+                )
             }
         }
     }
@@ -633,6 +678,50 @@
 
       .exec-status-tag {
         margin: 0;
+      }
+
+      .exec-detail-ai-analysis {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        height: 24px;
+        padding: 0 8px;
+        margin-left: 8px;
+        border: 1px solid #A3C5FD;
+        border-radius: 12px;
+        background: #fff;
+        color: #3A84FF;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        appearance: none;
+        outline: none;
+
+        .exec-detail-ai-analysis-inner {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          white-space: nowrap;
+          line-height: 1;
+        }
+
+        img {
+          flex-shrink: 0;
+          width: 16px;
+          height: 16px;
+          object-fit: contain;
+        }
+
+        &:hover,
+        &:active,
+        &:focus {
+          border-color: #699DF4;
+          color: #2B73E0;
+          background: #fff;
+        }
       }
 
       .exec-status-label {

@@ -1,5 +1,6 @@
 import AuthoringEnv from '@/components/AuthoringEnv'
 import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
+import { applyNativeInputValue } from '@/utils/nativeInputValue'
 import { Form, Input } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -42,11 +43,8 @@ export default defineComponent({
       emit('update:modelValue', baseInfoData.value)
     }
 
-    function handleFieldChange<K extends keyof typeof baseInfoData.value>(
-      key: K,
-      value: (typeof baseInfoData.value)[K],
-    ) {
-      baseInfoData.value[key] = value
+    function commitTextField(field: 'pipelineName' | 'pipelineDesc', e: Event) {
+      applyNativeInputValue(baseInfoData.value, field, e)
       handleChange()
     }
 
@@ -66,15 +64,17 @@ export default defineComponent({
             maxlength={128}
           >
             <Input
-              modelValue={baseInfoData.value.pipelineName}
-              onUpdate:modelValue={(value: string) => handleFieldChange('pipelineName', value)}
+              v-model={baseInfoData.value.pipelineName}
+              onChange={handleChange}
+              onBlur={(e: FocusEvent) => commitTextField('pipelineName', e)}
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
           <Form.FormItem label={t('flow.content.description')} property="pipelineDesc">
             <Input
-              modelValue={baseInfoData.value.pipelineDesc}
-              onUpdate:modelValue={(value: string) => handleFieldChange('pipelineDesc', value)}
+              v-model={baseInfoData.value.pipelineDesc}
+              onChange={handleChange}
+              onBlur={(e: FocusEvent) => commitTextField('pipelineDesc', e)}
               type="textarea"
             ></Input>
           </Form.FormItem>

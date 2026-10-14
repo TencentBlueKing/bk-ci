@@ -94,7 +94,7 @@ class CreativeStreamNodeTypeService(
 
             AgentPropsSource.REMOTEDEV -> CreativeStreamNodeType.CLOUD_DESKTOP
 
-            AgentPropsSource.IEG_IMATE -> CreativeStreamNodeType.OTHER
+            AgentPropsSource.IEG_IMATE -> CreativeStreamNodeType.IEG_IMATE
         }
     }
 

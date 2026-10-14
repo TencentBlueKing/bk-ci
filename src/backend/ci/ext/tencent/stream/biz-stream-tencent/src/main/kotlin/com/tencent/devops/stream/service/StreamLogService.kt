@@ -38,6 +38,7 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.util.GitCommonUtils
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -52,6 +53,8 @@ class StreamLogService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
@@ -72,18 +75,19 @@ class StreamLogService @Autowired constructor(
         executeCount: Int?
     ): QueryLogs {
         logger.info("StreamLogService|getInitLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
-        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()),
-            pipelineId = pipeline.pipelineId,
+            projectId = target.projectId,
+            pipelineId = target.pipelineId,
             buildId = buildId,
             tag = tag,
             containerHashId = jobId,
             executeCount = executeCount,
             debug = debug,
             jobId = null,
-            stepId = null
+            stepId = null,
+            checkPermissionFlag = false
         ).data!!
     }
 
@@ -98,12 +102,12 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("StreamLogServic|getAfterLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
-        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        logger.info("StreamLogService|getAfterLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
+        val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()),
-            pipelineId = pipeline.pipelineId,
+            projectId = target.projectId,
+            pipelineId = target.pipelineId,
             buildId = buildId,
             start = start,
             tag = tag,
@@ -111,7 +115,8 @@ class StreamLogService @Autowired constructor(
             executeCount = executeCount,
             debug = debug,
             jobId = null,
-            stepId = null
+            stepId = null,
+            checkPermissionFlag = false
         ).data!!
     }
 
@@ -124,11 +129,11 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        logger.info("StreamLogServic|downloadLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
-        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
+        logger.info("StreamLogService|downloadLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
+        val target = resolveLogQueryTarget(gitProjectId, pipelineId, buildId)
         val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
-        path.append(GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()))
-        path.append("/${pipeline.pipelineId}/$buildId/download?executeCount=${executeCount ?: 1}")
+        path.append(target.projectId)
+        path.append("/${target.pipelineId}/$buildId/download?executeCount=${executeCount ?: 1}")
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
@@ -143,16 +148,53 @@ class StreamLogService @Autowired constructor(
         val response = OkhttpUtils.doLongGet(path.toString(), headers)
         return Response
             .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
+            .header("content-disposition", "attachment; filename = ${target.pipelineId}-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
-            .header("X-DEVOPS-PROJECT-ID", "gitciproject")
+            .header("X-DEVOPS-PROJECT-ID", target.projectId)
             .build()
     }
 
-    private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
-        gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
-            ?: throw CustomException(
-                Response.Status.FORBIDDEN,
-                I18nUtil.getCodeLanMessage(PIPELINE_NOT_FOUND_OR_DELETED)
+    /**
+     * 用构建记录反查流水线真实归属，禁止透传前端 projectId 去打 log。
+     */
+    private fun resolveLogQueryTarget(
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String
+    ): StreamLogQueryTarget {
+        val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
+            ?: throw pipelineNotFound()
+        if (eventBuild.pipelineId.isNullOrBlank() || eventBuild.pipelineId != pipelineId) {
+            throw pipelineNotFound()
+        }
+        val ownerPipeline = gitPipelineResourceDao.getPipelinesInIds(
+            dslContext = dslContext,
+            gitProjectId = null,
+            pipelineIds = listOf(eventBuild.pipelineId)
+        ).firstOrNull() ?: throw pipelineNotFound()
+
+        if (!StreamLogProjectResolver.canViewFromGitProject(
+                viewingGitProjectId = gitProjectId,
+                ownerGitProjectId = ownerPipeline.gitProjectId,
+                eventGitProjectId = eventBuild.gitProjectId,
+                sourceGitProjectId = eventBuild.sourceGitProjectId
             )
+        ) {
+            throw pipelineNotFound()
+        }
+
+        val logProjectId = streamBasicSettingService.getStreamConf(ownerPipeline.gitProjectId)?.projectCode
+            ?: GitCommonUtils.getCiProjectId(ownerPipeline.gitProjectId, streamGitConfig.getScmType())
+        return StreamLogQueryTarget(
+            projectId = logProjectId,
+            pipelineId = ownerPipeline.pipelineId
+        )
+    }
+
+    private fun pipelineNotFound(): CustomException {
+        return CustomException(
+            Response.Status.FORBIDDEN,
+            I18nUtil.getCodeLanMessage(PIPELINE_NOT_FOUND_OR_DELETED)
+        )
+    }
 }

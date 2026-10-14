@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useOutputsStore } from '@/stores/outputsStore'
-import { convertFileSize } from '@/utils/util'
+import { convertFileSize, getConsoleOrigin } from '@/utils/util'
 import { repoTypeNameMap, ARTIFACTORY_TYPE } from '@/utils/flowConst'
 import type { Output } from '@/api/outputs'
 
@@ -118,7 +118,7 @@ export function useOutputs(currentTab: ComputedRef<string>) {
       handler: () => {
         if (!activeOutput.value) return
 
-        const urlPrefix = `/console/repo/${route.params.projectId}`
+        const urlPrefix = `${getConsoleOrigin()}/console/repo/${route.params.projectId}`
         const pos = activeOutput.value.fullPath.lastIndexOf('/')
         const fileName = activeOutput.value.fullPath.substring(0, pos)
         const repoName = repoTypeNameMap[activeOutput.value.artifactoryType]

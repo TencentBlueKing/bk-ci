@@ -103,7 +103,8 @@ class NodeDao {
         sortType: String?,
         collation: String?,
         tagValueIds: Set<Long>?,
-        operatorStatus: NodeOperatorStatus? = null
+        operatorStatus: NodeOperatorStatus? = null,
+        nodeIpList: Set<String>? = null
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
             val dsl = dslContext.select(*TNode.T_NODE.fields()).from(this)
@@ -128,7 +129,8 @@ class NodeDao {
                 sortType = sortType,
                 collation = collation,
                 tagValueIds = tagValueIds,
-                operatorStatus = operatorStatus
+                operatorStatus = operatorStatus,
+                nodeIpList = nodeIpList
             )
             query.limit(limit).offset(offset)
                 .fetchInto(this)
@@ -153,7 +155,8 @@ class NodeDao {
         collation: String?,
         tagValueIds: Set<Long>?,
         nodeIds: List<Long>? = null,
-        operatorStatus: NodeOperatorStatus? = null
+        operatorStatus: NodeOperatorStatus? = null,
+        nodeIpList: Set<String>? = null
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
@@ -168,6 +171,8 @@ class NodeDao {
                 nodeIps.size == 1 -> query.and(NODE_IP.like("%${nodeIps[0]}%"))
                 nodeIps.size > 1 -> query.and(NODE_IP.`in`(nodeIps))
             }
+        } else if (!nodeIpList.isNullOrEmpty()) {
+            query.and(NODE_IP.`in`(nodeIpList))
         }
         if (!displayName.isNullOrEmpty()) {
             query.and(DISPLAY_NAME.like("%$displayName%"))
@@ -259,7 +264,8 @@ class NodeDao {
         collation: String?,
         tagValueIds: Set<Long>?,
         nodeIds: List<Long>? = null,
-        operatorStatus: NodeOperatorStatus? = null
+        operatorStatus: NodeOperatorStatus? = null,
+        nodeIpList: Set<String>? = null
     ): Int {
         with(TNode.T_NODE) {
             val dsl = dslContext.selectCount().from(TNode.T_NODE)
@@ -285,7 +291,8 @@ class NodeDao {
                 collation = collation,
                 tagValueIds = tagValueIds,
                 nodeIds = nodeIds,
-                operatorStatus = operatorStatus
+                operatorStatus = operatorStatus,
+                nodeIpList = nodeIpList
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -385,6 +392,23 @@ class NodeDao {
                 .and(NODE_TYPE.`in`(nodeTypes))
                 .fetch()
                 .mapTo(mutableSetOf()) { it[NODE_ID] }
+        }
+    }
+
+    /**
+     * 查询节点的类型，返回 nodeId -> nodeType
+     */
+    fun fetchNodeWithType(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, String> {
+        if (nodeIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID, NODE_TYPE)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetch()
+                .associate { it[NODE_ID] to it[NODE_TYPE] }
         }
     }
 
@@ -504,7 +528,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-        /** Node ID **/
+            /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
@@ -798,11 +822,16 @@ class NodeDao {
         }
     }
 
-    fun fetchProjectNodeCount(dslContext: DSLContext, projectId: String): Map<NodeType, Int> {
+    fun fetchProjectNodeCount(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>? = null
+    ): Map<NodeType, Int> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_TYPE, DSL.count().`as`("COUNT"))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .let { if (nodeIds != null) it.and(NODE_ID.`in`(nodeIds)) else it }
                 .groupBy(NODE_TYPE)
                 .fetch().map { NodeType.get(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
         }

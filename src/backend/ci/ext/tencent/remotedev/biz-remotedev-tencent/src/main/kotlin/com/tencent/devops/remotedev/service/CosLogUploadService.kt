@@ -61,6 +61,21 @@ class CosLogUploadService {
         }
     }
 
+    fun generateDownloadUrl(key: String): String {
+        val cosClient = buildCosClient()
+        try {
+            val expiration = Date(
+                System.currentTimeMillis() + DOWNLOAD_EXPIRE_SECONDS * 1000
+            )
+            val presignedUrl = cosClient.generatePresignedUrl(
+                bucket, key.trimStart('/'), expiration, HttpMethodName.GET
+            )
+            return replaceDomain(presignedUrl)
+        } finally {
+            cosClient.shutdown()
+        }
+    }
+
     private fun buildCosClient(): COSClient {
         val credentials = BasicCOSCredentials(secretId, secretKey)
         val clientConfig = ClientConfig(Region(region))
@@ -77,6 +92,7 @@ class CosLogUploadService {
         private val logger =
             LoggerFactory.getLogger(CosLogUploadService::class.java)
         private const val EXPIRE_SECONDS = 600L
+        private const val DOWNLOAD_EXPIRE_SECONDS = 86400L
         private val DATE_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd")
         private val TIME_FORMATTER =

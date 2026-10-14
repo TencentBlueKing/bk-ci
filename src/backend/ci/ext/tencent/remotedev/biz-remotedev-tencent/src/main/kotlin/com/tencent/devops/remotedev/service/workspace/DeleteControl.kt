@@ -390,7 +390,8 @@ class DeleteControl @Autowired constructor(
         status: Boolean,
         operator: String,
         workspaceName: String,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        notify: Boolean = true
     ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -462,6 +463,9 @@ class DeleteControl @Autowired constructor(
             client.get(ServiceAgentResource::class).deleteCreateNode(operator, null, workspaceName)
         } catch (e: Exception) {
             logger.warn("delete workspace $workspaceName create node error", e)
+        }
+        if (!notify) {
+            return
         }
 
         notifyControl.dispatchWebsocketPushEvent(

@@ -38,6 +38,8 @@ import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
+import jakarta.annotation.PostConstruct
+import java.security.MessageDigest
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,9 +55,16 @@ class ExternalResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
     }
 
-    /*请求合法性校验时使用的密钥*/
+    /*请求合法性校验时使用的密钥（cds 网络配置回调签名使用），留空禁止启动*/
     @Value("\${externalKey:}")
     val externalKey = ""
+
+    @PostConstruct
+    fun checkKey() {
+        check(externalKey.isNotBlank()) {
+            "externalKey must be configured (fail-closed), blank value is not allowed"
+        }
+    }
 
     override fun softwareInstallCallback(
         type: String,
@@ -65,7 +74,11 @@ class ExternalResourceImpl @Autowired constructor(
         workspaceName: String,
         softwareList: SoftwareCallbackRes
     ): Result<Boolean> {
-        if (key != externalKey) return Result(false)
+        // key 为一次性回调 token，绑定 workspaceName，短期有效
+        if (!softwareManageService.verifySoftwareCallbackToken(key, workspaceName)) {
+            logger.warn("softwareInstallCallback rejected|workspaceName=$workspaceName")
+            return Result(false)
+        }
         softwareManageService.softwareInstallationCompleteCallback(
             type = type,
             workspaceName = workspaceName,
@@ -86,7 +99,7 @@ class ExternalResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|" +
-                "sslMode=$sslMode|ts=$ts|token=$token"
+                "sslMode=$sslMode|ts=$ts"
         )
 
         // 验证请求
@@ -117,8 +130,8 @@ class ExternalResourceImpl @Autowired constructor(
             return false
         }
         val sign = ShaUtils.sha256("$ts$externalKey$ip")
-        if (sign != token) {
-            logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|ip=$ip")
+        if (!MessageDigest.isEqual(sign.toByteArray(), token.toByteArray())) {
+            logger.warn("sign not match|ts=$ts|ip=$ip")
             return false
         }
         return true

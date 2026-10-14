@@ -25,28 +25,38 @@ class UserImateResourceImpl @Autowired constructor(
         return Result(coffeeAIService.getAiWorkspaceList(userId))
     }
 
-    override fun listImateAvatars(userId: String): Result<List<ImateAvatar>> {
-        logger.info("用户查询已登记数字分身：userId={}", userId)
-        return Result(coffeeAIService.listImateAvatars(userId))
+    override fun listImateAvatars(
+        userId: String,
+        projectId: String?,
+        devopsProjectId: String?
+    ): Result<List<ImateAvatar>> {
+        val resolvedProjectId = firstNonBlank(projectId, devopsProjectId)
+        logger.info("用户查询已登记数字分身：userId={} projectId={}", userId, resolvedProjectId)
+        return Result(coffeeAIService.listImateAvatars(userId, resolvedProjectId))
     }
 
     override fun inspectImateWorkspace(
         userId: String,
         workspaceName: String?,
-        digitalAvatarId: String?
+        digitalAvatarId: String?,
+        projectId: String?,
+        devopsProjectId: String?
     ): Result<ImateWorkspaceInspect> {
         requireWorkspaceOrAvatar(workspaceName, digitalAvatarId)
+        val resolvedProjectId = firstNonBlank(projectId, devopsProjectId)
         logger.info(
-            "用户检查imate分身归属：userId={} workspaceName={} digitalAvatarId={}",
+            "用户检查imate分身归属：userId={} workspaceName={} digitalAvatarId={} projectId={}",
             userId,
             workspaceName,
-            digitalAvatarId
+            digitalAvatarId,
+            resolvedProjectId
         )
         return Result(
             coffeeAIService.inspectUserWorkspace(
                 userId = userId,
                 workspaceName = workspaceName,
-                digitalAvatarId = digitalAvatarId
+                digitalAvatarId = digitalAvatarId,
+                projectId = resolvedProjectId
             )
         )
     }
@@ -55,14 +65,18 @@ class UserImateResourceImpl @Autowired constructor(
         userId: String,
         workspaceName: String?,
         expirationMinutes: Long?,
-        digitalAvatarId: String?
+        digitalAvatarId: String?,
+        projectId: String?,
+        devopsProjectId: String?
     ): Result<String> {
         requireWorkspaceOrAvatar(workspaceName, digitalAvatarId)
+        val resolvedProjectId = firstNonBlank(projectId, devopsProjectId)
         logger.info(
-            "用户请求imate令牌：userId={} workspaceName={} digitalAvatarId={} expirationMinutes={}",
+            "用户请求imate令牌：userId={} workspaceName={} digitalAvatarId={} projectId={} expirationMinutes={}",
             userId,
             workspaceName,
             digitalAvatarId,
+            resolvedProjectId,
             expirationMinutes
         )
         return Result(
@@ -70,7 +84,8 @@ class UserImateResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 expirationMinutes = expirationMinutes,
-                digitalAvatarId = digitalAvatarId
+                digitalAvatarId = digitalAvatarId,
+                projectId = resolvedProjectId
             )
         )
     }
@@ -79,5 +94,10 @@ class UserImateResourceImpl @Autowired constructor(
         if (workspaceName.isNullOrBlank() && digitalAvatarId.isNullOrBlank()) {
             throw ParamBlankException("Invalid workspaceName")
         }
+    }
+
+    private fun firstNonBlank(primary: String?, fallback: String?): String? {
+        return primary?.trim()?.takeIf { it.isNotEmpty() }
+            ?: fallback?.trim()?.takeIf { it.isNotEmpty() }
     }
 }

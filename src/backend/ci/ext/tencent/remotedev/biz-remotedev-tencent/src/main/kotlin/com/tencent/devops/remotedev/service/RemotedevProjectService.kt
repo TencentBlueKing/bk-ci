@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -15,7 +14,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -120,21 +118,24 @@ class RemotedevProjectService @Autowired constructor(
     fun updateVmName(projects: Set<String>) {
         projects.forEach { projectId ->
             logger.info("updateVmName|$projectId")
-            workspaceDao.fetchProjectWorkspaceName(dslContext, projectId).parallelStream().forEach { workspaceName ->
-                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                val workspaceInfo = kotlin.runCatching {
-                    SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
-                        .getWorkspaceInfo(ADMIN_NAME, workspaceName, WorkspaceMountType.START).data!!
-                }.getOrElse { ignore ->
-                    logger.warn(
-                        "get workspace info error $workspaceName|${ignore.message}"
-                    )
-                    return@forEach
-                }
+            val names = workspaceDao.fetchProjectWorkspaceName(dslContext, projectId)
+            if (names.isEmpty()) {
+                return@forEach
+            }
+            val infoMap = kotlin.runCatching {
+                SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+                    .getWorkspaceInfos(ADMIN_NAME, names.toList(), WorkspaceMountType.START)
+                    .data ?: emptyMap()
+            }.getOrElse {
+                logger.warn("get workspace infos error $projectId|${it.message}")
+                emptyMap()
+            }
+            names.forEach { name ->
+                val info = infoMap[name] ?: return@forEach
                 workspaceWindowsDao.updateVmName(
                     dslContext = dslContext,
-                    workspaceName = workspaceName,
-                    vmName = workspaceInfo.vmName
+                    workspaceName = name,
+                    vmName = info.vmName
                 )
             }
         }

@@ -684,8 +684,13 @@
                     } else {
                         i.defaultValue = templateParam.required ? i.defaultValue : templateParam.defaultValue
                     }
-                    i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
-                    i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
+                    if (isObject(i.defaultValue)) {
+                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
+                    } else {
+                        i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
+                    }
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
@@ -704,8 +709,13 @@
                     if (templateParam.type === 'FORM_LIST') {
                         i.fields = templateParam.fields ?? []
                     }
-                    i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
-                    i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
+                    if (isObject(i.defaultValue)) {
+                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
+                    } else {
+                        i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
+                        i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                    }
                 }
             }
             i.propertyUpdates = collectPropertyUpdates(i, initialInstanceParam)
@@ -720,7 +730,7 @@
                 const newItem = {
                     ...item,
                     isNew: true,
-                    readonlyCheck: false,
+                    readOnlyCheck: false,
                     isRequiredParam: item.required && item.asInstanceInput,
                     required: item.required
                 }
@@ -1454,7 +1464,11 @@
                                         ? Number(newDefaultValue)
                                         : newDefaultValue
                                     
-                                    isChange = !isParamValueEqual(currentValue, initialDefaultValue)
+                                    isChange = isObject(currentValue)
+                                        ? !isShallowEqual(currentValue, initialDefaultValue)
+                                        : (allVersionKeyList.includes(id)
+                                            ? currentValue !== initialDefaultValue
+                                            : !isParamValueEqual(currentValue, initialDefaultValue))
                                 }
                                 
                                 // 计算 hasChange：当前实例的值与模板默认值不同

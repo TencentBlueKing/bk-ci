@@ -220,36 +220,101 @@ class WorkspaceCommon @Autowired constructor(
     // 尝试修复异常工作空间状态
     fun fixUnexpectedWorkspace() {
         logger.info("fixUnexpectedWorkspace")
-        workspaceDao.fetchErrorWorkspace(dslContext)?.parallelStream()?.forEach {
-            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            logger.info(
-                "workspace ${it.workspaceName} is EXCEPTION, try to fix."
-            )
-            if (!checkProjectRouter(
+        val eligible = workspaceDao.fetchErrorWorkspace(dslContext)
+            ?.filter {
+                checkProjectRouter(
                     creator = it.createUserId,
                     workspaceName = it.workspaceName,
                     workspaceOwnerType = it.ownerType
                 )
-            ) {
-                return@forEach
             }
+            ?: return
+        if (eligible.isEmpty()) {
+            return
+        }
+        val infoMap = batchFetchWorkspaceInfos(ADMIN_NAME, eligible)
+        eligible.parallelStream().forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            logger.info(
+                "workspace ${it.workspaceName} is EXCEPTION, try to fix."
+            )
             fixUnexpectedStatus(
                 userId = ADMIN_NAME,
                 workspaceName = it.workspaceName,
                 status = it.status,
-                mountType = it.workspaceMountType
+                mountType = it.workspaceMountType,
+                preloaded = infoMap[it.workspaceName]
             )
         }
     }
 
-    @Suppress("ComplexMethod")
+    /**
+     * 按 mountType 分组批量预取工作空间信息, 容错合并为 Map<workspaceName, WorkspaceInfo>。
+     * 某组批量查询失败或某实例未返回时, 该 name 不入 Map, 由调用方回退单查, 行为与逐个查询一致。
+     */
+    fun batchFetchWorkspaceInfos(
+        userId: String,
+        workspaces: List<WorkspaceRecordInf>
+    ): Map<String, WorkspaceInfo> {
+        if (workspaces.isEmpty()) {
+            return emptyMap()
+        }
+        val dispatch = SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
+        return workspaces.groupBy { it.workspaceMountType }
+            .flatMap { (mountType, list) ->
+                kotlin.runCatching {
+                    dispatch.getWorkspaceInfos(userId, list.map { it.workspaceName }, mountType).data
+                }.getOrElse {
+                    logger.warn("batch getWorkspaceInfos error mountType=$mountType|${it.message}")
+                    null
+                }?.entries.orEmpty()
+            }.associate { it.key to it.value }
+    }
+
     fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
         status: WorkspaceStatus,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        preloaded: WorkspaceInfo? = null
     ): WorkspaceStatus {
-        val workspaceInfo = kotlin.runCatching {
+        val fixed = doFixUnexpectedStatus(userId, workspaceName, status, mountType, preloaded)
+        if (fixed != status) {
+            dispatchStatusChangePush(userId, workspaceName, fixed)
+        }
+        return fixed
+    }
+
+    private fun dispatchStatusChangePush(userId: String, workspaceName: String, fixed: WorkspaceStatus) {
+        kotlin.runCatching {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: return
+            notifyControl.dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                type = WebSocketActionType.WORKSPACE_ASSIGN,
+                status = true,
+                action = WorkspaceAction.ASSIGN,
+                systemType = workspace.workspaceSystemType,
+                workspaceMountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType,
+                projectId = workspace.projectId
+            )
+        }.onFailure {
+            logger.warn("dispatchStatusChangePush error|$workspaceName|$fixed", it)
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun doFixUnexpectedStatus(
+        userId: String,
+        workspaceName: String,
+        status: WorkspaceStatus,
+        mountType: WorkspaceMountType,
+        preloaded: WorkspaceInfo?
+    ): WorkspaceStatus {
+        val workspaceInfo = preloaded ?: kotlin.runCatching {
             SpringContextUtil.getBean(ServiceWorkspaceDispatchInterface::class.java)
                 .getWorkspaceInfo(userId, workspaceName, mountType).data!!
         }.getOrElse { ignore ->
@@ -262,12 +327,18 @@ class WorkspaceCommon @Autowired constructor(
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
         when {
             workspaceInfo.status == EnvStatusEnum.readyToRun || workspaceInfo.status == EnvStatusEnum.stopped -> {
-                sleepControl.doStopWS(true, userId, workspaceName)
+                sleepControl.doStopWS(true, userId, workspaceName, notify = false)
                 return WorkspaceStatus.STOPPED
             }
 
             workspaceInfo.status == EnvStatusEnum.deleted || workspaceInfo.status == EnvStatusEnum.readyDelete -> {
-                deleteControl.doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
+                deleteControl.doDeleteWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    errorMsg = workspaceInfo.environmentIP,
+                    notify = false
+                )
                 return WorkspaceStatus.DELETED
             }
 
@@ -302,7 +373,13 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
-                return startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
+                return startControl.doStartWS(
+                    status = true,
+                    operator = userId,
+                    workspaceName = workspaceName,
+                    environmentHost = workspaceInfo.environmentHost,
+                    notify = false
+                )
             }
 
             workspaceInfo.status == EnvStatusEnum.startFailed -> {
@@ -500,6 +577,18 @@ class WorkspaceCommon @Autowired constructor(
         }.onFailure {
             logger.warn("Error getting workspace info by eid $eid: ${it.message}")
         }.getOrNull()
+    }
+
+    fun getWorkspaceInfoByEids(eids: List<String>): Map<String, WorkspaceInfo> {
+        if (eids.isEmpty()) {
+            return emptyMap()
+        }
+        return kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .getWorkspaceInfoByEids(eids).data
+        }.onFailure {
+            logger.warn("Error getting workspace info by eids size ${eids.size}: ${it.message}")
+        }.getOrNull() ?: emptyMap()
     }
 
     fun getCgsData(
@@ -1131,13 +1220,15 @@ class WorkspaceCommon @Autowired constructor(
         val workspaces = workspaceDao.fetchByProjectAndNames(
             dslContext, projectId, instanceIds
         )
+        val infoMap = batchFetchWorkspaceInfos(userId, workspaces)
         val result = ConcurrentHashMap<String, String>()
         workspaces.parallelStream().forEach { ws ->
             val status = fixUnexpectedStatus(
                 userId = userId,
                 workspaceName = ws.workspaceName,
                 status = ws.status,
-                mountType = ws.workspaceMountType
+                mountType = ws.workspaceMountType,
+                preloaded = infoMap[ws.workspaceName]
             )
             result[ws.workspaceName] = status.name
         }

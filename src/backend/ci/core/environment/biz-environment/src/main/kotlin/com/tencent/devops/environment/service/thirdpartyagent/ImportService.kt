@@ -147,14 +147,14 @@ class ImportService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
     )
-    fun importAgent(userId: String, projectId: String, agentId: String, masterVersion: String?) {
+    fun importAgent(userId: String, projectId: String, agentId: String, masterVersion: String?): Boolean {
 
         val id = HashUtil.decodeIdToLong(agentId)
 
         TpaLock(redisOperation = redisOperation, key = "ia:$id").use { lock ->
             if (!lock.tryLock()) { // 并发场景，不向用户展示信息
                 LOG.info("$agentId duplicate import, skip")
-                return
+                return false
             }
             val nodeId = import(id, projectId, agentId, userId, masterVersion)
             if (nodeId != null) {
@@ -163,6 +163,7 @@ class ImportService @Autowired constructor(
                     .setInstanceName(nodeId.toString())
                     .setInstanceId(nodeId.toString())
             }
+            return true
         }
     }
 

@@ -189,6 +189,7 @@
                     :image-type-list="imageTypeList"
                     :choose-image="chooseImage"
                     :handle-container-change="handleContainerChange"
+                    @validation-change="handleDockerValidationChange"
                 />
             </form-field>
 
@@ -350,7 +351,7 @@
                     name="workspace"
                     :value="container.dispatchType.workspace"
                     :handle-change="changeBuildResource"
-                    :placeholder="$t('editPage.workspaceTips')"
+                    :placeholder="workspacePlaceholder"
                 />
             </form-field>
 
@@ -566,7 +567,8 @@
                 windowsVersionList: [],
                 macOSHwSpecList: [],
                 isShowDebug: false,
-                isShowPerformance: false
+                isShowPerformance: false,
+                dockerResourceLimitError: false
             }
         },
         computed: {
@@ -787,6 +789,14 @@
                 }
                 return this.container.dispatchType.performanceConfigId
             },
+            isEnableDocker () {
+                return this.isLinuxOsDockerImage && Object.keys(this.dockerInfo).length > 0
+            },
+            workspacePlaceholder () {
+                return this.isEnableDocker
+                    ? this.$t('editPage.dockerWorkspaceTips')
+                    : this.$t('editPage.workspaceTips')
+            },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
             }
@@ -794,14 +804,19 @@
         watch: {
             errors: {
                 deep: true,
-                handler: function (errors, old) {
+                handler: function (errors) {
                     // this.setContainerValidate()
-                    if (!this.editable) {
-                        return
-                    }
-                    const isError = errors.any()
-                    this.handleContainerChange('isError', isError)
+                    this.syncContainerValidation(errors.any())
                 }
+            },
+            isLinuxOsDockerImage (isApplicable) {
+                if (!isApplicable) {
+                    this.dockerResourceLimitError = false
+                }
+                this.syncContainerValidation()
+            },
+            editable (isEditable) {
+                if (isEditable) this.syncContainerValidation()
             }
         },
         created () {
@@ -874,6 +889,24 @@
                 'requestImageVersionlist',
                 'requestImageHistory'
             ]),
+
+            handleDockerValidationChange (isError) {
+                if (this.dockerResourceLimitError === isError) return
+
+                this.dockerResourceLimitError = isError
+                this.syncContainerValidation()
+            },
+
+            syncContainerValidation (formHasError = this.errors.any()) {
+                if (!this.editable) return
+
+                const dockerResourceHasError
+                    = this.isLinuxOsDockerImage && this.dockerResourceLimitError
+                const isError = formHasError || dockerResourceHasError
+                if (this.container.isError !== isError) {
+                    this.handleContainerChange('isError', isError)
+                }
+            },
 
             changeResourceType (name, val) {
                 const currentType
@@ -1192,7 +1225,7 @@
                     removeErrors.map((e) => errors.remove(e.field))
                 }
                 const isError = !!errors.items.length
-                this.handleContainerChange('isError', isError)
+                this.syncContainerValidation(isError)
             },
 
             changeBuildResource (name, value, envProjectId) {

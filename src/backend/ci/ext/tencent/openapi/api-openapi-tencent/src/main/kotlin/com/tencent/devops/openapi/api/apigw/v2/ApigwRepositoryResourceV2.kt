@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -102,19 +102,4 @@ interface ApigwRepositoryResourceV2 {
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<String>
-
-    @Operation(summary = "获取git代码库accessToken信息", tags = ["v2_app_repositories_git"])
-    @GET
-    @Path("/git/{userId}")
-    fun gitGet(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<String?>
 }

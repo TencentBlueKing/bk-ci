@@ -142,6 +142,17 @@ interface RemoteDevInterface {
      */
     fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
 
+    /**
+     * 批量查询工作空间状态。默认逐个回退到 [getWorkspaceInfo]，START 实现走 BCS v2 批量接口。
+     */
+    fun getWorkspaceInfos(
+        userId: String,
+        workspaceNames: List<String>
+    ): Map<String, WorkspaceInfo> =
+        workspaceNames.mapNotNull { name ->
+            runCatching { name to getWorkspaceInfo(userId, name) }.getOrNull()
+        }.toMap()
+
     fun expandDisk(
         workspaceName: String,
         userId: String,
