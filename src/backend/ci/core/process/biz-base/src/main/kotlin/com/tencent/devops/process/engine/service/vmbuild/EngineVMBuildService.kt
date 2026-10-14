@@ -157,8 +157,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val projectCacheService: ProjectCacheService
 ) {
 
-    @Value("\${pipeline.vmStarted.terminateOnContainerRestart:true}")
-    private val terminateOnContainerRestart: Boolean = true
+    @Value("\${pipeline.vmStarted.terminateOnContainerRestart:false}")
+    private val terminateOnContainerRestart: Boolean = false
 
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
