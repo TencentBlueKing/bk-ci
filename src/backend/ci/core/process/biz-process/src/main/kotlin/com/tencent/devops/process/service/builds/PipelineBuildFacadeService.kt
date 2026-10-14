@@ -78,7 +78,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -1166,6 +1165,8 @@ class PipelineBuildFacadeService(
             )
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
+            setting.correctAndPadding()
+            val maxConRunningQueueSize = setting.maxConRunningQueueSize!!
             runLock.lock()
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
@@ -1178,7 +1179,7 @@ class PipelineBuildFacadeService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    maxConRunningQueueSize = maxConRunningQueueSize,
                     // stage审核时暂不执行流水线并发组取消逻辑
                     cancelAllowed = false
                 )

@@ -218,6 +218,7 @@ open class DefaultModelCheckPlugin constructor(
     override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
         setting.successSubscriptionList?.checkSubscriptionList()
         setting.failSubscriptionList?.checkSubscriptionList()
+        setting.correctAndPadding() // 不希望报错，直接预置
     }
 
     private fun List<Subscription>.checkSubscriptionList() {

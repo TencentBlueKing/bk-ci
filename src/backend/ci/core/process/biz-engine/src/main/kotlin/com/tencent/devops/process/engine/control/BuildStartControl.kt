@@ -55,7 +55,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -71,8 +70,6 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
-import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
-import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -90,6 +87,8 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -98,11 +97,11 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import java.time.LocalDateTime
-import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import kotlin.math.max
 
 /**
  * 构建控制器
@@ -239,6 +238,8 @@ class BuildStartControl @Autowired constructor(
                 pipelineVersion = buildInfo.version
             )
 
+            setting?.correctAndPadding() // 纠正历史数据
+
             if (setting?.runLockType == PipelineRunLockType.MULTIPLE) {
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     // 并发时不按排队队列领取，直接更改状态为队列待处理
@@ -254,7 +255,7 @@ class BuildStartControl @Autowired constructor(
                     canStart = checkRunningCountWithLimit(
                         setting = setting,
                         executeCount = executeCount,
-                        limitCount = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                        limitCount = setting.maxConRunningQueueSize!!
                     )
                 } else {
                     buildLogPrinter.addLine(
@@ -265,7 +266,7 @@ class BuildStartControl @Autowired constructor(
                 }
             }
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
-            if (setting?.runLockType == PipelineRunLockType.SINGLE ||
+            else if (setting?.runLockType == PipelineRunLockType.SINGLE ||
                 setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
             ) {
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
@@ -273,11 +274,7 @@ class BuildStartControl @Autowired constructor(
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
                 }
                 if (canStart) {
-                    canStart = checkRunningCountWithLimit(
-                        setting = setting,
-                        executeCount = executeCount,
-                        limitCount = 1
-                    )
+                    canStart = checkRunningCountWithLimit(setting, executeCount = executeCount, limitCount = 1)
                 } else {
                     buildLogPrinter.addLine(
                         message = "Waiting build #${buildInfo.buildNum - 1}",
@@ -285,14 +282,8 @@ class BuildStartControl @Autowired constructor(
                         jobId = null, stepId = TAG
                     )
                 }
-            }
-
-            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
-                canStart = checkGroupType(
-                    buildInfo = buildInfo,
-                    setting = setting,
-                    executeCount = executeCount
-                )
+            } else if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                canStart = checkGroupType(buildInfo = buildInfo, setting = setting, executeCount = executeCount)
             }
 
             if (canStart) {
@@ -315,7 +306,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo, setting)
+                broadcastStartEvent(buildInfo, pipelineSetting = setting)
             } else {
                 broadcastQueueEvent(buildInfo)
             }

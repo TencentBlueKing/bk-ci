@@ -124,7 +124,7 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser
                 )
 
-            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
+            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= min(
                 PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
                 task.maxConRunningQueueSize
             ) ->
@@ -133,7 +133,7 @@ class QueueInterceptor @Autowired constructor(
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_MAX_PARALLEL,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${max(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
+                    ) + " ${min(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
                 )
 
             else -> Response(data = BuildStatus.RUNNING)
