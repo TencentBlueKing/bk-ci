@@ -672,7 +672,8 @@ class PipelineRuntimeService @Autowired constructor(
                 artifactList = artifactList,
                 artifactQuality = artifactQuality,
                 remark = remark,
-                totalTime = if (startTime != null && endTime != null) {
+                // 调试历史把未开始的 startTime 兜成 0。排队中被取消时不能用结束时间去减 0，否则耗时变成时间戳。
+                totalTime = if ((startTime ?: 0L) > 0L && (endTime ?: 0L) > 0L) {
                     (endTime!! - startTime!!).takeIf { it > 0 }
                 } else null,
                 executeTime = executeTime,
