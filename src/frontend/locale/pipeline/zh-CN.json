@@ -348,7 +348,7 @@
     "arrivalBatchTip": "适用范围：需要整组排队，并按同一批只留最新时，均可使用这两档。场景示例：多条流水线共用分组名称 ${'{{'}ci.repo{'}}'} 排队。其中一条仅需保留同一个合并请求的最新构建，同一批标识设为 ${'{{'}ci.mr_id{'}}'}。",
     "subGroup": "同一批标识",
     "subGroupPlaceholder": "如 ${'{{'}ci.mr_id{'}}'}",
-    "subGroupDesc": "取值相同的构建计为同一批。启动时若值为空，此设置不生效。",
+    "subGroupDesc": "取值相同的构建计为同一批。选择同一批策略时必填。",
     "subGroupRequired": "请填写同一批标识",
     "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持在启动阶段能确定值的变量，比如 ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (前提是a在启动时值已明确)等",
     "buildCancelPolicyLabel": "取消构建策略",

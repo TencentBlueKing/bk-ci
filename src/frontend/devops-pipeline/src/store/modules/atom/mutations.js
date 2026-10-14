@@ -53,6 +53,7 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
+    SET_CONCURRENCY_ARRIVAL_POLICY,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_CONTAINER_FETCHING,
@@ -181,13 +182,19 @@ export default {
     },
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
-            pipelineSetting: null
+            pipelineSetting: null,
+            concurrencyArrivalPolicy: null
         })
     },
     [PIPELINE_SETTING_MUTATION]: (state, pipelineSetting) => {
         return Object.assign(state, {
-            pipelineSetting
+            pipelineSetting,
+            concurrencyArrivalPolicy: null
         })
+    },
+    [SET_CONCURRENCY_ARRIVAL_POLICY]: (state, concurrencyArrivalPolicy) => {
+        Vue.set(state, 'concurrencyArrivalPolicy', concurrencyArrivalPolicy)
+        return state
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
         // 使用 Vue.set 或解构赋值确保响应式更新

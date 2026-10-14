@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -326,25 +327,29 @@ class QueueInterceptor @Autowired constructor(
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
-        // 配置了同一批标识（含解析为空）时不走整组取消。先去重，再按本流水线队列长度放行。
+        // 配置了同一批标识时不走整组取消。标识为空、null 时只排队，不去重。
         if (concurrencyGroup.isNotBlank() && task.concurrencySubGroup != null) {
-            if (task.cancelAllowed && task.concurrencySubGroup.isBlank()) {
-                buildLogPrinter.addYellowLine(
-                    buildId = task.buildId,
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_EMPTY
-                    ),
-                    tag = "QueueInterceptor",
-                    containerHashId = "",
-                    executeCount = 1,
-                    jobId = null,
-                    stepId = "QueueInterceptor"
-                )
+            val batchId = ConcurrencySubGroupPolicy.effectiveBatchId(task.concurrencySubGroup)
+            if (batchId == null) {
+                if (task.cancelAllowed) {
+                    buildLogPrinter.addYellowLine(
+                        buildId = task.buildId,
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_EMPTY
+                        ),
+                        tag = "QueueInterceptor",
+                        containerHashId = "",
+                        executeCount = 1,
+                        jobId = null,
+                        stepId = "QueueInterceptor"
+                    )
+                }
             } else if (task.cancelAllowed) {
                 cancelSameSubGroup(
                     task = task,
                     projectId = projectId,
                     concurrencyGroup = concurrencyGroup,
+                    batchId = batchId,
                     latestStartUser = latestStartUser
                 )
             }
@@ -452,6 +457,7 @@ class QueueInterceptor @Autowired constructor(
         task: InterceptData,
         projectId: String,
         concurrencyGroup: String,
+        batchId: String,
         latestStartUser: String?
     ) {
         val status = if (task.concurrencyCancelInProgress) {
@@ -474,7 +480,7 @@ class QueueInterceptor @Autowired constructor(
             excludeBuildId = task.buildId
         ).filter {
             it.pipelineId == task.pipelineInfo.pipelineId &&
-                it.concurrencySubGroup == task.concurrencySubGroup
+                ConcurrencySubGroupPolicy.effectiveBatchId(it.concurrencySubGroup) == batchId
         }
         val cancelTargets = ConcurrencyCancelGuardUtils.filterTargets(
             candidateBuilds = builds,

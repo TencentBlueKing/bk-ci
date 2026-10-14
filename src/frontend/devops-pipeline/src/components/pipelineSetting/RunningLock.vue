@@ -200,6 +200,7 @@
                             </bk-form-item>
                             <bk-form-item
                                 v-if="showSubGroup"
+                                :required="showSubGroup"
                                 :label="$t('settings.subGroup')"
                                 :desc="$t('settings.subGroupDesc')"
                                 desc-type="icon"
@@ -364,14 +365,14 @@
                 const batchTip = this.$t('settings.arrivalBatchTip')
                 return [
                     {
-                        id: 'CANCEL_GROUP',
-                        label: this.$t('settings.arrivalCancelGroup'),
-                        desc: this.$t('settings.arrivalCancelGroupDesc')
-                    },
-                    {
                         id: 'QUEUE',
                         label: this.$t('settings.arrivalQueue'),
                         desc: this.$t('settings.arrivalQueueDesc')
+                    },
+                    {
+                        id: 'CANCEL_GROUP',
+                        label: this.$t('settings.arrivalCancelGroup'),
+                        desc: this.$t('settings.arrivalCancelGroupDesc')
                     },
                     {
                         id: 'CANCEL_BATCH',
@@ -454,8 +455,18 @@
                 immediate: true,
                 handler (setting, oldSetting) {
                     if (!setting) return
+                    const saved = this.$store.state.atom.concurrencyArrivalPolicy
+                    const samePipeline = saved && saved.pipelineId === setting.pipelineId
                     if (!oldSetting || setting.pipelineId !== oldSetting.pipelineId) {
-                        this.arrivalPolicy = this.deriveArrivalPolicy(setting)
+                        const policy = samePipeline ? saved.policy : this.deriveArrivalPolicy(setting)
+                        this.arrivalPolicy = policy
+                        if (!samePipeline) {
+                            this.rememberArrivalPolicy(setting.pipelineId, policy)
+                        }
+                        return
+                    }
+                    if (!samePipeline) {
+                        this.rememberArrivalPolicy(setting.pipelineId, this.arrivalPolicy)
                     }
                 }
             }
@@ -473,8 +484,15 @@
                 }
                 return setting?.concurrencyCancelInProgress ? 'CANCEL_GROUP' : 'QUEUE'
             },
+            rememberArrivalPolicy (pipelineId, policy) {
+                this.$store.commit('atom/SET_CONCURRENCY_ARRIVAL_POLICY', {
+                    pipelineId,
+                    policy
+                })
+            },
             handleArrivalPolicyChange (policy) {
                 this.arrivalPolicy = policy
+                this.rememberArrivalPolicy(this.pipelineSetting?.pipelineId, policy)
                 const cancel = policy === 'CANCEL_GROUP' || policy === 'CANCEL_BATCH'
                 const keepSubGroup = policy === 'CANCEL_BATCH' || policy === 'KEEP_BATCH'
                 this.handleRunningLockChange({

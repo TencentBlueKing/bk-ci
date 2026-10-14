@@ -46,16 +46,30 @@ object ConcurrencySubGroupPolicy {
     }
 
     /**
-     * 启动时解析表达式。未配置返回 null；配置了但解析后为空返回空串，这次不去重。
+     * 能用来区分同一批的标识。空白和字面量 null 都视为没有标识。
+     */
+    fun effectiveBatchId(value: String?): String? {
+        val text = value?.trim() ?: return null
+        if (text.isEmpty() || text.equals("null", ignoreCase = true)) {
+            return null
+        }
+        return text
+    }
+
+    /**
+     * 启动时解析表达式。
+     * 未配置返回 null，由取消开关决定整组取消或排队。
+     * 配置了但解析为 null、空白时返回空串：这次不按同一批取消，进入队列按顺序运行。
      */
     fun resolve(expression: String?, variables: Map<String, String>): String? {
         if (expression.isNullOrBlank()) {
             return null
         }
-        return EnvUtils.parseEnv(
+        val resolved = EnvUtils.parseEnv(
             command = expression,
             data = variables,
             replaceWithEmpty = true
         ).trim()
+        return effectiveBatchId(resolved) ?: ""
     }
 }

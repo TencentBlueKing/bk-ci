@@ -57,4 +57,14 @@ class ConcurrencySubGroupPolicyTest {
         assertEquals("", ConcurrencySubGroupPolicy.resolve("\${{ci.mr_id}}", emptyMap()))
         assertEquals("8", ConcurrencySubGroupPolicy.resolve("\${{ci.mr_id}}", mapOf("ci.mr_id" to "8")))
     }
+
+    @Test
+    fun resolveNullLiteralAsEmptyBatch() {
+        assertEquals("", ConcurrencySubGroupPolicy.resolve("\${{variables.aa}}", mapOf("variables.aa" to "null")))
+        assertEquals("", ConcurrencySubGroupPolicy.resolve("\${{variables.aa}}", mapOf("variables.aa" to " NULL ")))
+        assertNull(ConcurrencySubGroupPolicy.effectiveBatchId(null))
+        assertNull(ConcurrencySubGroupPolicy.effectiveBatchId(""))
+        assertNull(ConcurrencySubGroupPolicy.effectiveBatchId("null"))
+        assertEquals("mr-1", ConcurrencySubGroupPolicy.effectiveBatchId(" mr-1 "))
+    }
 }
