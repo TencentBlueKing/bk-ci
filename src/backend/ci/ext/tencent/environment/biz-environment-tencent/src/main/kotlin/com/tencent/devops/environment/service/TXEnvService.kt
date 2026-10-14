@@ -54,7 +54,6 @@ import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.EnvTagNodeEnableDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
@@ -83,7 +82,7 @@ class TXEnvService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val envTagDao: EnvTagDao,
-    private val nodeTagKeyDao: NodeTagKeyDao,
+    private val envTagService: EnvTagService,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
@@ -102,7 +101,7 @@ class TXEnvService @Autowired constructor(
     nodeDao = nodeDao,
     envNodeDao = envNodeDao,
     envTagDao = envTagDao,
-    nodeTagKeyDao = nodeTagKeyDao,
+    envTagService = envTagService,
     thirdPartyAgentDao = thirdPartyAgentDao,
     slaveGatewayService = slaveGatewayService,
     environmentPermissionService = environmentPermissionService,

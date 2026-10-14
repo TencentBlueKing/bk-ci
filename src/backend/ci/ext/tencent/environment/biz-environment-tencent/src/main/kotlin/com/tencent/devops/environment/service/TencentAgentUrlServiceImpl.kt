@@ -40,9 +40,11 @@ import java.net.URLEncoder
 /**
  * 腾讯内部旧版专用Agent下载链接生成服务
  */
-open class TencentAgentUrlServiceImpl constructor(
+open class TencentAgentUrlServiceImpl(
     private val commonConfig: CommonConfig
-) : AgentUrlService {
+) : AgentUrlService(
+    commonConfig = commonConfig
+) {
 
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
