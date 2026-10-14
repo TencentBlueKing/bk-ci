@@ -73,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -207,8 +208,8 @@ class PipelineRepositoryService constructor(
         fun PipelineSetting.checkParam() {
             val maxResNum = maxPipelineResNum
             if (maxResNum != null && maxResNum < 1) {
-                throw InvalidParamException(
-                    message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL,
                     params = arrayOf("maxPipelineResNum")
                 )
             }
@@ -220,21 +221,35 @@ class PipelineRepositoryService constructor(
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
                 ) {
-                    throw InvalidParamException(
-                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL),
-                        params = arrayOf("waitQueueTimeMinute")
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL,
+                        params = arrayOf(
+                            "$PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN",
+                            "$PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX"
+                        )
                     )
                 }
                 if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
                     maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
                 ) {
-                    throw InvalidParamException(
-                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL),
-                        params = arrayOf("maxQueueSize")
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL,
+                        params = arrayOf(
+                            "$PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN",
+                            "$PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX"
+                        )
+                    )
+                }
+
+                if (maxConRunningQueueSize != null &&
+                    this.maxConRunningQueueSize!! !in 1..PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL,
+                        params = arrayOf("$PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX")
                     )
                 }
             }
-            correctAndPadding() // 忽略错误的并发最大数设置（前端没有限制导致传递至后台），直接强制为正常的最大值
         }
     }
 
@@ -780,7 +795,7 @@ class PipelineRepositoryService constructor(
     ): PipelineSetting {
         // 空白流水线设置初始化
         val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
-            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
+        val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""
