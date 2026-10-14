@@ -125,17 +125,27 @@ const customeRules = {
             return isValidNumber || isValidVar
         }
     },
-    // Matrix Job 最大并发：留空（默认 5）、1-50 整数，或按流水线方言的变量引用
-    matrixMaxConcurrencyRule: {
+    // Matrix Job 最大并发（数字）：留空（默认 5）或 1-50 整数；变量走 maxConcurrencyVar
+    matrixMaxConcurrencyNumericRule: {
+        validate: function (value) {
+            if (value === null || value === undefined || value === '') {
+                return true
+            }
+            return /^([1-9]|[1-4]\d|50)$/.test(String(value))
+        }
+    },
+    // Matrix Job 最大并发（变量）：未使用时可空；非空时必须为方言锚定的整串纯变量
+    matrixMaxConcurrencyVarRule: {
         validate: function (value, args) {
             if (value === null || value === undefined || value === '') {
                 return true
             }
             const str = String(value)
-            if (/^([1-9]|[1-4]\d|50)$/.test(str)) {
-                return true
+            // 不使用 isBkVar / isBKConstraintVar：其 .test() 未锚定整串，会误放过 x${var} / ${var}x
+            if (args[0] === 'CLASSIC') {
+                return /^\$\{\{[\w_.-]+\}\}$/.test(str) || /^\$\{[\w_.-]+\}$/.test(str)
             }
-            return args[0] === 'CLASSIC' ? str.isBkVar() : str.isBKConstraintVar()
+            return /^\$\{\{[\w_.-]+\}\}$/.test(str)
         }
     },
     reminderTimeRule: {

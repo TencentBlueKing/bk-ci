@@ -101,12 +101,19 @@ const jobOptionConfigMixin = {
                     default: true
                 },
                 maxConcurrency: {
-                    rule: { matrixMaxConcurrencyRule: this.pipelineDialect },
+                    rule: { matrixMaxConcurrencyNumericRule: true },
                     component: 'matrix-max-concurrency-input',
                     label: this.$t('storeMap.maxConcurrency'),
                     desc: this.$t('storeMap.maxConcurrencyDesc'),
                     placeholder: '1–50',
-                    default: '5'
+                    // 与后端 Int? 对齐：缺省用 null（语义默认 5），勿用 ''
+                    default: null
+                },
+                // 变量表达式存此字段；UI 由 maxConcurrency 复合组件处理，不单独成行
+                maxConcurrencyVar: {
+                    rule: { matrixMaxConcurrencyVarRule: this.pipelineDialect },
+                    default: '',
+                    isHidden: true
                 }
             },
             normalRunConditionList: [

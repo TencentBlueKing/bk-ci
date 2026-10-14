@@ -22,8 +22,8 @@
             class="bk-form-input pointer-events-auto matrix-max-concurrency-field"
             type="text"
             inputmode="numeric"
-            :name="name"
-            :value="value"
+            name="maxConcurrency"
+            :value="maxConcurrency == null ? '' : maxConcurrency"
             :disabled="disabled"
             :placeholder="placeholder"
             @input="handleNumericInput"
@@ -33,8 +33,8 @@
             v-else
             class="bk-form-input pointer-events-auto matrix-max-concurrency-field"
             type="text"
-            :name="name"
-            :value="value"
+            name="maxConcurrencyVar"
+            :value="maxConcurrencyVar"
             :disabled="disabled"
             :placeholder="varPlaceholder"
             @input="handleVarInput"
@@ -45,16 +45,19 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import atomFieldMixin from '@/components/atomFormField/atomFieldMixin'
 
     export default {
         name: 'matrix-max-concurrency-input',
         components: {
             Logo
         },
-        mixins: [atomFieldMixin],
+        inheritAttrs: false,
         props: {
-            value: {
+            maxConcurrency: {
+                type: [String, Number],
+                default: ''
+            },
+            maxConcurrencyVar: {
                 type: [String, Number],
                 default: ''
             },
@@ -65,6 +68,14 @@
             pipelineDialect: {
                 type: String,
                 default: 'CLASSIC'
+            },
+            disabled: {
+                type: Boolean,
+                default: false
+            },
+            handleChange: {
+                type: Function,
+                default: () => () => {}
             }
         },
         data () {
@@ -80,38 +91,46 @@
             }
         },
         watch: {
-            value: {
+            maxConcurrencyVar: {
                 immediate: true,
                 handler (newValue) {
-                    if (this.isValidVar(newValue)) {
+                    // 回显：maxConcurrencyVar 非空（合法或任意非空串）则进入 VAR 模式
+                    if (newValue !== null && newValue !== undefined && String(newValue) !== '') {
                         this.isVarInputMode = true
                     }
                 }
             }
         },
         methods: {
-            isValidVar (value) {
-                if (value === null || value === undefined || value === '') {
-                    return false
-                }
-                const str = String(value)
-                if (this.pipelineDialect === 'CLASSIC') {
-                    return str.isBkVar()
-                }
-                return str.isBKConstraintVar()
+            revalidateFields (maxConcurrency, maxConcurrencyVar) {
+                this.$nextTick(() => {
+                    if (!this.$validator) {
+                        return
+                    }
+                    this.$validator.validate('maxConcurrency', maxConcurrency)
+                    this.$validator.validate('maxConcurrencyVar', maxConcurrencyVar)
+                })
             },
-            emitChange (nextValue) {
-                if (String(nextValue) === String(this.value ?? '')) {
-                    return
+            // maxConcurrency 对应后端 Int?：空/未用必须用 null，禁止写 ''；有值写 number
+            clearMaxConcurrency () {
+                this.handleChange('maxConcurrency', null)
+            },
+            normalizeNumericValue (value) {
+                if (value === '' || value === null || value === undefined) {
+                    return null
                 }
-                this.handleChange(this.name, nextValue)
+                const num = Number(value)
+                return Number.isFinite(num) ? num : null
             },
             handleChangeType () {
                 if (this.disabled) {
                     return
                 }
+                // 切换模式：清空双字段，再翻转模式并重校验，避免残留错误提示
+                this.clearMaxConcurrency()
+                this.handleChange('maxConcurrencyVar', '')
                 this.isVarInputMode = !this.isVarInputMode
-                this.emitChange('')
+                this.revalidateFields(null, '')
             },
             handleNumericInput (e) {
                 const raw = e.target.value || ''
@@ -119,20 +138,31 @@
                 if (digitsOnly !== raw) {
                     e.target.value = digitsOnly
                 }
-                this.emitChange(digitsOnly)
+                const next = this.normalizeNumericValue(digitsOnly)
+                this.handleChange('maxConcurrency', next)
+                this.handleChange('maxConcurrencyVar', '')
+                this.revalidateFields(next, '')
             },
             handleNumericBlur (e) {
                 const trimVal = (e.target.value || '').trim()
                 e.target.value = trimVal
-                this.emitChange(trimVal)
+                const next = this.normalizeNumericValue(trimVal)
+                this.handleChange('maxConcurrency', next)
+                this.handleChange('maxConcurrencyVar', '')
+                this.revalidateFields(next, '')
             },
             handleVarInput (e) {
-                this.emitChange(e.target.value)
+                const next = e.target.value
+                this.handleChange('maxConcurrencyVar', next)
+                this.clearMaxConcurrency()
+                this.revalidateFields(null, next)
             },
             handleVarBlur (e) {
                 const trimVal = (e.target.value || '').trim()
                 e.target.value = trimVal
-                this.emitChange(trimVal)
+                this.handleChange('maxConcurrencyVar', trimVal)
+                this.clearMaxConcurrency()
+                this.revalidateFields(null, trimVal)
             }
         }
     }
