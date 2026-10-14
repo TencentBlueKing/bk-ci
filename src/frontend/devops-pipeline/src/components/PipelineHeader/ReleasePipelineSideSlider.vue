@@ -788,6 +788,14 @@
             templateInstanceEnablePac () {
                 return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
+            // 首个实例已绑定的 PAC 仓库信息，用于模板实例模式回显
+            firstInstancePacInfo () {
+                const firstInstance = this.instanceList[0] ?? {}
+                return {
+                    repoHashId: firstInstance.repoHashId ?? '',
+                    scmType: firstInstance.scmType ?? ''
+                }
+            },
             disabledPacSwitcher () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
             },
@@ -856,7 +864,22 @@
                 handler: function (val) {
                     if (!this.isTemplateInstanceMode) return
                     this.releaseParams.enablePac = val
-                    this.releaseParams.repoHashId = this.instanceList[0]?.repoHashId
+                    const firstInstance = this.instanceList[0]
+                    this.releaseParams.repoHashId = firstInstance?.repoHashId
+                    this.releaseParams.scmType = firstInstance?.scmType ?? ''
+                },
+                immediate: true
+            },
+            // 实例详情（含 scmType/repoHashId）可能晚于侧栏初始化返回，此时 templateInstanceEnablePac 布尔值不变、上方 watcher 不会触发，这里补充回填
+            firstInstancePacInfo: {
+                handler: function ({ repoHashId, scmType }) {
+                    if (!this.isTemplateInstanceMode || !this.templateInstanceEnablePac) return
+                    if (repoHashId) {
+                        this.releaseParams.repoHashId = repoHashId
+                    }
+                    if (scmType) {
+                        this.releaseParams.scmType = scmType
+                    }
                 },
                 immediate: true
             },

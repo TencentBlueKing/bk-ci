@@ -808,7 +808,7 @@ export function getMaterialIconByType (type) {
         CODE_GIT: 'CODE_GIT',
         CODE_GITLAB: 'CODE_GITLAB',
         GITHUB: 'codeGithubWebHookTrigger',
-        CODE_TGIT: 'CODE_GIT',
+        CODE_TGIT: 'CODE_TGIT',
         CODE_P4: 'CODE_P4',
         CODE_REMOTE: 'remoteTrigger',
         CODE_SERVICE: 'openApi'
