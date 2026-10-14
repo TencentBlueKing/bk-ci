@@ -1179,6 +1179,7 @@ class PipelineBuildFacadeService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    concurrencySubGroup = buildInfo.concurrencySubGroup,
                     maxConRunningQueueSize = maxConRunningQueueSize,
                     // stage审核时暂不执行流水线并发组取消逻辑
                     cancelAllowed = false

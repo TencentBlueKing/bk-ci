@@ -317,6 +317,7 @@ class PipelineBuildService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    concurrencySubGroup = context.concurrencySubGroup,
                     maxConRunningQueueSize = maxConRunningQueueSize,
                     retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null,
                     retryOnRunningBuild = context.retryOnRunningBuild

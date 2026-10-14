@@ -3201,6 +3201,9 @@
         "group" : {
           "type" : "string"
         },
+        "sub-group" : {
+          "type" : "string"
+        },
         "cancel-in-progress" : {
           "type" : "boolean"
         },
