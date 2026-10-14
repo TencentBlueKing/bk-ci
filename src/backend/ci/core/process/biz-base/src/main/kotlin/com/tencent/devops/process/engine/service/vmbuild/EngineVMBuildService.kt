@@ -658,6 +658,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             // #13581 取消过程中禁止认领普通插件。插件执行很快时，当前插件完成后 Agent 会立刻 claim 下一个，
             // 若此时取消集合已被清掉或取消瞬间没有 RUNNING 插件，Job 会继续跑完。
             // PRE_TASK_FAILED_EVEN_CANCEL / 关机与结束节点仍按原逻辑认领，保证 finally 语义和资源回收。
+            // 引擎已经选出的 post 仍要认领，否则它停在 QUEUE_CACHE，Wait_Finish / Clean_Job 无法开始。
             if (shouldSkipClaimWhenJobCanceling(task, buildId, vmSeqId)) {
                 LOG.info(
                     "ENGINE|$buildId|BC_CANCEL_WAIT|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}"
@@ -672,28 +673,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     /**
-     * Job 取消中时，Agent 不能再认领普通插件。
-     * 仍允许认领：即使取消也执行的插件、引擎侧任务（关机等）、以及 end 节点。
+     * Job 取消中时，构建机不能再认领普通插件。放行规则见 [TaskUtils.shouldSkipAgentClaimWhenJobCanceling]。
      */
     private fun shouldSkipClaimWhenJobCanceling(
         task: PipelineBuildTask,
         buildId: String,
         vmSeqId: String
     ): Boolean {
-        if (!TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)) {
-            return false
-        }
-        val failedEvenCancel = task.additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-        if (failedEvenCancel) {
-            return false
-        }
-        if (task.taskAtom.isNotBlank()) {
-            return false
-        }
-        if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) {
-            return false
-        }
-        return true
+        return TaskUtils.shouldSkipAgentClaimWhenJobCanceling(
+            task = task,
+            jobCanceling = TaskUtils.isJobCancelFlag(redisOperation, buildId, vmSeqId)
+        )
     }
 
     private fun claim(
