@@ -39,14 +39,16 @@ enum class TriggerType(val alis: String) {
     BASE("base"),
     SCM_GIT("scm_git"),
     SCM_SVN("scm_svn"),
-    TAPD("tapd")
+    TAPD("tapd"),
+    // 非内置类型的触发器，按 YAML 声明的类型名交给 TriggerConverter 注册中心处理，只由解析器赋值
+    GENERIC("generic")
     ;
 
     companion object {
 
         fun parse(alis: String?): TriggerType? {
             values().forEach {
-                if (alis == it.alis) return it
+                if (it != GENERIC && alis == it.alis) return it
             }
             return null
         }
