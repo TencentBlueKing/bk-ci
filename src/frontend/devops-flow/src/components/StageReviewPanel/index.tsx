@@ -7,6 +7,7 @@ import { convertTime } from '@/utils/util'
 import { Button, Input, Message, Radio, Select, Sideslider, Steps, Table, Timeline } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import styles from './StageReviewPanel.module.css'
 
 const { Option } = Select
@@ -33,8 +34,9 @@ export default defineComponent({
     const { t } = useI18n()
     const { requestTriggerStage } = useExecuteDetail()
     const authStore = useAuthStore()
+    const route = useRoute()
 
-    const isCancel = ref(false)
+    const isCancel = ref(route.query.action === 'reject')
     const suggest = ref('')
     const errMessage = ref('')
     const isApproving = ref(false)
