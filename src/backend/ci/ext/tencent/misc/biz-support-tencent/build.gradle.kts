@@ -35,6 +35,7 @@ dependencies {
     api(project(":ext:tencent:misc:model-support-tencent"))
     api(project(":core:ticket:api-ticket"))
     api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:misc:api-support-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))

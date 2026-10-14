@@ -1,0 +1,101 @@
+package com.tencent.devops.process.service
+
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
+import com.tencent.devops.process.pojo.pipeline.ExtServiceWeworkReviewCallBackReq
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
+class TXPipelineWeworkReviewServiceTest {
+
+    @Test
+    fun `resolve from simple fields`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "royalhuang",
+            action = "agree",
+            taskId = "task-1"
+        )
+        assertEquals(
+            Triple("royalhuang", WeworkReviewCardConst.ACTION_AGREE, "task-1"),
+            TXPipelineWeworkReviewService.resolveExternalCallBack(req)
+        )
+    }
+
+    @Test
+    fun `resolve FromUserName EventKey TaskId aliases`() {
+        val req = JsonUtil.to(
+            """
+            {
+              "FromUserName": "royalhuang@example.com",
+              "EventKey": "BKCI_REVIEW|approve|review_p1_b1",
+              "TaskId": "review_p1_b1"
+            }
+            """.trimIndent(),
+            ExtServiceWeworkReviewCallBackReq::class.java
+        )
+        assertEquals(
+            Triple("royalhuang", WeworkReviewCardConst.ACTION_AGREE, "review_p1_b1"),
+            TXPipelineWeworkReviewService.resolveExternalCallBack(req)
+        )
+    }
+
+    @Test
+    fun `resolve action and taskId from eventKey when fields missing`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "fayewang",
+            eventKey = "BKCI_REVIEW|reject|task-2"
+        )
+        assertEquals(
+            Triple("fayewang", WeworkReviewCardConst.ACTION_REJECT, "task-2"),
+            TXPipelineWeworkReviewService.resolveExternalCallBack(req)
+        )
+    }
+
+    @Test
+    fun `resolve approve_with_params as agree`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "royalhuang",
+            action = "approve_with_params",
+            taskId = "task-3"
+        )
+        assertEquals(
+            Triple("royalhuang", WeworkReviewCardConst.ACTION_AGREE, "task-3"),
+            TXPipelineWeworkReviewService.resolveExternalCallBack(req)
+        )
+    }
+
+    @Test
+    fun `selectedItems stay optional so existing callbacks unchanged`() {
+        val req = ExtServiceWeworkReviewCallBackReq(
+            userId = "royalhuang",
+            action = "agree",
+            taskId = "task-1"
+        )
+        assertEquals(null, req.selectedItems)
+        val withSelected = JsonUtil.to(
+            """
+            {
+              "userId": "royalhuang",
+              "action": "agree",
+              "taskId": "task-1",
+              "selectedItems": {"deploy_env": "prod"}
+            }
+            """.trimIndent(),
+            ExtServiceWeworkReviewCallBackReq::class.java
+        )
+        assertEquals(mapOf("deploy_env" to "prod"), withSelected.selectedItems)
+        val merged = WeworkReviewCardConst.applySelectedItems(
+            """[{"key":"deploy_env","value":"staging"}]""",
+            withSelected.selectedItems.orEmpty()
+        )
+        assertEquals(true, merged!!.contains("prod"))
+        assertEquals(false, merged.contains("staging"))
+    }
+
+    @Test
+    fun `html page escapes message`() {
+        val html = TXPipelineWeworkReviewService.htmlPage(true, "已由 a<b> 同意审核")
+        assertEquals(true, html.contains("已由 a&lt;b&gt; 同意审核"))
+        assertEquals(false, html.contains("<b>"))
+    }
+}

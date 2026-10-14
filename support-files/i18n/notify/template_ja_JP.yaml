@@ -221,7 +221,7 @@
     id: "930450b9edfe479e8c7504623261584d"
     sender: "DevOps"
     title: "${content}"
-    body: "審査説明: ${reviewDesc}\n\nPC端で ${reviewUrl} をクリック\nスマホ端で ${reviewAppUrl} をクリック"
+    body: "審査説明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
     title: "${content}"
@@ -816,8 +816,8 @@
   weworkTemplate:
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
-    title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} 構築Stage審査"
-    body: "構築状態为stage success，需要您的審査才执行後続流程\n審査説明: ${reviewDesc}\nPC端点击 ${reviewUrl}\nスマホ端点击 ${reviewAppUrl}"
+    title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} ビルドStage審査"
+    body: "ビルド状態がstage successで、続行するにはあなたの審査が必要です\n審査説明: ${reviewDesc}"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "プロジェクト【${projectName}】下のパイプライン【${pipelineName}】#${buildNum} 構築Stage審査"
@@ -881,7 +881,6 @@
 
       若无需提醒，请修改人工審査プラグイン配置
 
-      PC端審査：${reviewUrl} 移动端審査：${reviewAppUrl}
   creator: "system"
   modifior: "system"
 - index: 40

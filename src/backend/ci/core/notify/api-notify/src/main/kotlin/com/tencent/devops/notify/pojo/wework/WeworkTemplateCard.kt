@@ -24,6 +24,8 @@ data class WeworkTemplateCard(
     val source: WeworkTemplateCardSource? = WeworkTemplateCardSource(desc = "蓝盾流水线", descColor = 3),
     @JsonProperty("main_title")
     val mainTitle: WeworkTemplateCardMainTitle,
+    @JsonProperty("emphasis_content")
+    val emphasisContent: WeworkTemplateCardEmphasis? = null,
     @JsonProperty("quote_area")
     val quoteArea: WeworkTemplateCardQuoteArea? = null,
     @JsonProperty("sub_title_text")
@@ -57,6 +59,12 @@ data class WeworkTemplateCardSource(
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class WeworkTemplateCardMainTitle(
+    val title: String,
+    val desc: String? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WeworkTemplateCardEmphasis(
     val title: String,
     val desc: String? = null
 )
@@ -156,6 +164,7 @@ object WeworkReviewCardConst {
     const val ACTION_MODIFY = "modify"
     const val CARD_TYPE_BUTTON = "button_interaction"
     const val CARD_TYPE_MULTIPLE = "multiple_interaction"
+    const val CARD_TYPE_TEXT_NOTICE = "text_notice"
     const val MAX_DROPDOWN = 3
     const val MAX_OPTION = 10
     const val MAX_HLIST = 6

@@ -2,6 +2,7 @@ package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
+import com.tencent.devops.notify.pojo.wework.WeworkReviewResultCard
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -237,6 +238,25 @@ class WeworkReviewCardBuilderTest {
         assertTrue(body.length <= 256)
         assertTrue(body.contains("流水线: a-very-long-pipeline-name-that-used-to-be-clipped"))
         assertTrue(body.contains("审核说明:"))
+    }
+
+    @Test
+    fun `result card is text notice without buttons`() {
+        val card = WeworkReviewResultCard.build(
+            taskId = "review_t1",
+            resultTitle = WeworkReviewResultCard.RESULT_APPROVED,
+            reviewer = "royalhuang",
+            reviewedAt = "2026-09-22 20:00:00",
+            projectName = "demo",
+            pipelineName = "p",
+            buildNum = "9",
+            reviewStage = "Stage审核"
+        )
+        assertEquals(WeworkReviewCardConst.CARD_TYPE_TEXT_NOTICE, card.cardType)
+        assertEquals("已通过", card.emphasisContent!!.title)
+        assertTrue(card.emphasisContent!!.desc!!.contains("royalhuang"))
+        assertEquals("demo", card.horizontalContentList!!.first { it.keyname == "项目" }.value)
+        assertNull(card.buttonList)
     }
 
     @Test

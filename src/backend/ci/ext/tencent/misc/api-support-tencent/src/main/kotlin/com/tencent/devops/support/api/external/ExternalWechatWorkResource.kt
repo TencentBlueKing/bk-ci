@@ -87,7 +87,12 @@ interface ExternalWechatWorkResource {
     ): Result<String>
 
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_XML)
+    @Consumes(
+        MediaType.TEXT_XML,
+        MediaType.APPLICATION_XML,
+        MediaType.TEXT_PLAIN,
+        MediaType.WILDCARD
+    )
     @Operation(summary = "企业微信机器人回调接口(POST)")
     @POST
     @Path("/robot/callback")
