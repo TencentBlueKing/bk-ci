@@ -385,8 +385,10 @@ export const actions = {
     /**
      * 流水线插件统计数据
      */
-    requestAtomStatistic ({ commit }, { storeType, storeCode }) {
-        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}`)
+    requestAtomStatistic ({ commit }, { storeType, storeCode, serviceScope }) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}`, {
+            params: serviceScope ? { serviceScope } : undefined
+        })
     },
 
     /**
