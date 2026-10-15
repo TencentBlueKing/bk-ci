@@ -310,13 +310,13 @@ class WorkspaceJoinDao {
             )
         }
 
-        // viewers 条件查询
+        // viewers 条件查询；CLIENT 下 viewers 是当前用户的可见性边界，必须精确匹配
         search.viewers?.ifEmpty { null }?.let { viewers ->
             conditions.add(
                 TWorkspace.T_WORKSPACE.NAME.`in`(
                     visibleWorkspaceNamesQuery(
                         users = viewers,
-                        fuzzy = search.onFuzzyMatch,
+                        fuzzy = search.onFuzzyMatch && queryType != QueryType.CLIENT,
                         assignTypes = listOf(
                             WorkspaceShared.AssignType.VIEWER.name,
                             WorkspaceShared.AssignType.OWNER.name
