@@ -35,7 +35,7 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
 /**
  * 流水线设置-最大并发数量-默认值
  */
-const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 50
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 200
 
 /**
  * 流水线设置-最大并发数量-最大值
