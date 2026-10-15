@@ -127,8 +127,17 @@ class PipelineTemplateCompatibilityAdapter(
             version = resolvedVersion
         )
 
-        // 获取版本列表 & currentVersion / latestVersion
-        val versions = buildVersionList(projectId, templateId)
+        // 获取正式版本、分支版本列表 & currentVersion / latestVersion
+        val versions = buildVersionList(
+            projectId = projectId,
+            templateId = templateId,
+            status = VersionStatus.RELEASED
+        )
+        val branchVersions = buildVersionList(
+            projectId = projectId,
+            templateId = templateId,
+            status = VersionStatus.BRANCH
+        )
         val resource = details.resource
         val currentVersion = toTemplateVersion(resource)
         val latestResource = pipelineTemplateResourceService.getLatestReleasedResource(
@@ -182,7 +191,8 @@ class PipelineTemplateCompatibilityAdapter(
             logoUrl = templateInfo.logoUrl ?: "",
             hasPermission = hasPermission,
             params = params,
-            templateParams = templateParams
+            templateParams = templateParams,
+            branchVersions = branchVersions
         )
     }
 
@@ -588,16 +598,19 @@ class PipelineTemplateCompatibilityAdapter(
             versionName = resource.versionName ?: "",
             updateTime = resource.updateTime ?: 0L,
             createTime = resource.createdTime ?: 0L,
-            creator = resource.creator
+            creator = resource.creator,
+            status = resource.status
         )
     }
 
     /**
-     * 构建 getTemplate 的版本列表。
+     * 按状态构建 getTemplate 的版本列表。
+     * 查询分支版本时，DAO 会自动排除 INACTIVE 分支。
      */
-    private fun buildVersionList(
+    internal fun buildVersionList(
         projectId: String,
-        templateId: String
+        templateId: String,
+        status: VersionStatus
     ): List<TemplateVersion> {
         val page = pipelineTemplateFacadeService.getTemplateVersions(
             projectId = projectId,
@@ -605,7 +618,7 @@ class PipelineTemplateCompatibilityAdapter(
             commonCondition = PipelineTemplateResourceCommonCondition(
                 projectId = projectId,
                 templateId = templateId,
-                status = VersionStatus.RELEASED
+                status = status
             )
         )
         return page.records.map { record ->
@@ -614,7 +627,8 @@ class PipelineTemplateCompatibilityAdapter(
                 versionName = record.versionName,
                 createTime = record.createTime,
                 updateTime = record.updateTime ?: record.createTime,
-                creator = record.creator
+                creator = record.creator,
+                status = record.status ?: status
             )
         }
     }
@@ -639,15 +653,28 @@ class PipelineTemplateCompatibilityAdapter(
             )
         }
         if (!versionName.isNullOrBlank()) {
-            val condition = PipelineTemplateResourceCommonCondition(
-                projectId = projectId,
-                templateId = templateId,
-                version = version,
-                versionName = versionName,
-                status = VersionStatus.RELEASED
+            val released = pipelineTemplateResourceService.getOrNull(
+                PipelineTemplateResourceCommonCondition(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version,
+                    versionName = versionName,
+                    status = VersionStatus.RELEASED
+                )
             )
-            val resource = pipelineTemplateResourceService.get(condition)
-            return resource.version
+            if (released != null) {
+                return released.version
+            }
+            val branch = pipelineTemplateResourceService.get(
+                PipelineTemplateResourceCommonCondition(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = version,
+                    versionName = versionName,
+                    status = VersionStatus.BRANCH
+                )
+            )
+            return branch.version
         }
         return null
     }
