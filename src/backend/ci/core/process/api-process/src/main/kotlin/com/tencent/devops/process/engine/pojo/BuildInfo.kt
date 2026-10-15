@@ -84,7 +84,9 @@ data class BuildInfo(
     val nodeHashId: String? = null,
     val triggerEventType: String? = null,
     // 草稿版本号
-    val draftVersion: Int? = null
+    val draftVersion: Int? = null,
+    // 同一批标识。null 表示未配置；空串表示配置了但启动时解析为空
+    var concurrencySubGroup: String? = null
 ) {
 
     fun isFinish() = when {

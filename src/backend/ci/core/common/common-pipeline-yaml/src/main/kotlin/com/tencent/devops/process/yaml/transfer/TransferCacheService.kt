@@ -22,6 +22,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import org.apache.commons.lang3.StringUtils
 import org.json.JSONObject
@@ -186,8 +187,26 @@ class TransferCacheService @Autowired constructor(
 
     fun getAtomDefaultValue(key: String) = atomDefaultValueCache.get(key) ?: JSONObject()
 
+    /**
+     * 一次性批量获取插件参数定义（task.json 的 input 部分）。
+     *
+     * process 侧不缓存插件数据，每次需要时发一次批量请求由 store 侧返回（store 侧有 Redis 缓存）。
+     *
+     * @param params 本次需要的插件（插件标识 + 版本）。
+     * @return key 为「插件标识@版本」，value 中 key 为参数名，value 为该参数的完整定义。
+     */
+    fun getAtomInputProps(params: List<ElementThirdPartySearchParam>): Map<String, Map<String, Any>> {
+        if (params.isEmpty()) return emptyMap()
+
+        return kotlin.runCatching {
+            client.get(ServiceMarketAtomResource::class).getAtomInputProps(GetAtomInputPropsRequest(params)).data
+        }.onFailure {
+            logger.error("get atom input props error, size:${params.size}", it)
+        }.getOrNull() ?: emptyMap()
+    }
+
     fun getStoreImageDetail(userId: String, imageCode: String, imageVersion: String?, tenantId: String? = null) =
-        storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}@${tenantId ?: ""}")
+        storeImageInfoCache.get("$userId@@$imageCode@@${imageVersion ?: ""}@@${tenantId ?: ""}")
 
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 

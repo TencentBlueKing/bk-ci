@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MyAtomResp
@@ -143,5 +144,11 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         tenantId: String?
     ): Result<MyAtomResp?> {
         return marketAtomService.getMyAtoms(userId, atomName, page, pageSize, TenantUtils.getTenantId(tenantId))
+    }
+
+    override fun getAtomInputProps(
+        getAtomInputPropsRequest: GetAtomInputPropsRequest
+    ): Result<Map<String, Map<String, Any>>?> {
+        return Result(marketAtomService.getAtomInputProps(getAtomInputPropsRequest))
     }
 }
