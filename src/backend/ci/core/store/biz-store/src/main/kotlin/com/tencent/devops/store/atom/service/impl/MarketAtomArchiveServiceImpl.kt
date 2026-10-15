@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.CommonServiceUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomDao
@@ -45,6 +46,7 @@ import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomConfigInfo
@@ -102,6 +104,9 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     @Autowired
     lateinit var client: Client
 
+    @Autowired
+    lateinit var redisOperation: RedisOperation
+
     private val logger = LoggerFactory.getLogger(MarketAtomArchiveServiceImpl::class.java)
 
     override fun getFileStr(
@@ -146,14 +151,19 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     ): Result<Boolean> {
         logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
         val atomCount = atomDao.countByCode(dslContext, atomCode)
-        if (atomCount < 0) {
+        if (atomCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         if (atomRecord.classType != atomCode) {
             // 校验用户是否是该插件的开发成员
             val flag = storeMemberDao.isStoreMember(
@@ -176,7 +186,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     atomRecord
                 } else {
-                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
+                        ?: return I18nUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(atomCode),
+                            language = I18nUtil.getLanguage(userId)
+                        )
                 },
                 releaseType = releaseType,
                 osList = osList,
@@ -306,6 +321,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomPkgInfoUpdateRequest.atomEnvRequests)
         }
+
+        // 插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
         return Result(true)
     }
 }

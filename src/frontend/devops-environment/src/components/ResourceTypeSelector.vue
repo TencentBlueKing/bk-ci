@@ -101,18 +101,25 @@
                     activeValue.value = value
                     localStorage.setItem(RES_TYPE_STORAGE_KEY, value)
 
-                    // 切换资源类型时，一次性重置相关参数（envType / envId / tabName），
-                    // 避免与 group_aside.vue 的 watch resType 连续触发多次 replace 产生竞争。
-                    // 同时捕获 "Navigation cancelled" 异常，防止其冒泡到全局错误处理器。
+                    // 切换资源类型时，保留当前所在页面（环境/节点），只更新 resType 参数；
+                    // 仅当处于环境详情页（envDetail）时，才重置 envType / envId / tabName，
+                    // 避免污染节点页（nodeList / setNodeTag）的路由参数。
+                    // 这里一次性完成 URL 更新，避免与 group_aside.vue 的 watch resType
+                    // 连续触发多次 replace 产生竞争；同时捕获 "Navigation cancelled" 异常，
+                    // 防止其冒泡到全局错误处理器。
+                    const currentName = proxy.$route.name
+                    const params = {
+                        ...proxy.$route.params,
+                        resType: value
+                    }
+                    if (currentName === 'envDetail') {
+                        params.envType = ENV_TYPE_MAP.ALL
+                        params.envId = undefined
+                        params.tabName = 'node'
+                    }
                     proxy.$router.replace({
-                        name: 'envDetail',
-                        params: {
-                            ...proxy.$route.params,
-                            resType: value,
-                            envType: ENV_TYPE_MAP.ALL,
-                            envId: undefined,
-                            tabName: 'node'
-                        }
+                        name: currentName,
+                        params
                     }).catch(err => {
                         console.warn('路由导航被取消:', err?.message || err)
                     })

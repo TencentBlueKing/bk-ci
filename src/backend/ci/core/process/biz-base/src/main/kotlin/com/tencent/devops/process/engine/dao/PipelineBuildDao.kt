@@ -118,6 +118,7 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
+                        CONCURRENCY_SUB_GROUP,
                         VERSION_NAME,
                         YAML_VERSION,
                         EXECUTE_COUNT,
@@ -145,6 +146,7 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
+                        startBuildContext.concurrencySubGroup,
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
                         startBuildContext.executeCount,
@@ -177,6 +179,7 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
+                        CONCURRENCY_SUB_GROUP,
                         YAML_VERSION,
                         RESOURCE_MODEL,
                         EXECUTE_COUNT,
@@ -204,6 +207,7 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
+                        startBuildContext.concurrencySubGroup,
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
                         startBuildContext.executeCount,
@@ -234,6 +238,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+                .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
@@ -250,6 +255,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+                .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
@@ -428,7 +434,7 @@ class PipelineBuildDao {
         excludeBuildId: String? = null
     ): List<ConcurrencyGroupBuild> {
         val normal = with(T_PIPELINE_BUILD_HISTORY) {
-            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM, CONCURRENCY_SUB_GROUP).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -436,11 +442,11 @@ class PipelineBuildDao {
                 where.and(BUILD_ID.ne(excludeBuildId))
             }
             where.orderBy(START_TIME.asc()).fetch().map { record ->
-                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3(), record.value4())
             }
         }
         val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM, CONCURRENCY_SUB_GROUP).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
@@ -448,7 +454,7 @@ class PipelineBuildDao {
                 where.and(BUILD_ID.ne(excludeBuildId))
             }
             where.orderBy(START_TIME.asc()).fetch().map { record ->
-                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3(), record.value4())
             }
         }
         return normal.plus(debug)
@@ -493,11 +499,13 @@ class PipelineBuildDao {
     private fun toConcurrencyGroupBuild(
         pipelineId: String,
         buildId: String,
-        buildNum: Int?
+        buildNum: Int?,
+        concurrencySubGroup: String? = null
     ) = ConcurrencyGroupBuild(
         pipelineId = pipelineId,
         buildId = buildId,
-        buildNum = buildNum ?: 0
+        buildNum = buildNum ?: 0,
+        concurrencySubGroup = concurrencySubGroup
     )
 
     /**
@@ -2179,6 +2187,7 @@ class PipelineBuildDao {
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     buildMsg = t.buildMsg,
@@ -2217,8 +2226,8 @@ class PipelineBuildDao {
                     queueTime = t.queueTime?.timestampmilli() ?: 0L,
                     startUser = t.startUser,
                     triggerUser = t.triggerUser ?: t.startUser ?: "",
-                    startTime = t.startTime?.timestampmilli() ?: 0L,
-                    endTime = t.endTime?.timestampmilli() ?: 0L,
+                    startTime = t.startTime?.timestampmilli(),
+                    endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
                     firstTaskId = t.firstTaskId,
                     parentBuildId = t.parentBuildId,
@@ -2241,6 +2250,7 @@ class PipelineBuildDao {
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     artifactList = t.artifactInfo?.let { self ->

@@ -676,7 +676,8 @@ class PipelineRuntimeService @Autowired constructor(
                 artifactList = artifactList,
                 artifactQuality = artifactQuality,
                 remark = remark,
-                totalTime = if (startTime != null && endTime != null) {
+                // 调试历史把未开始的 startTime 兜成 0。排队中被取消时不能用结束时间去减 0，否则耗时变成时间戳。
+                totalTime = if ((startTime ?: 0L) > 0L && (endTime ?: 0L) > 0L) {
                     (endTime!! - startTime!!).takeIf { it > 0 }
                 } else null,
                 executeTime = executeTime,
@@ -1179,7 +1180,8 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     newList
                 },
-                concurrencyGroup = context.concurrencyGroup
+                concurrencyGroup = context.concurrencyGroup,
+                concurrencySubGroup = context.concurrencySubGroup
             )
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
@@ -2315,7 +2317,8 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         userId: String,
         groupName: String,
-        detailUrl: String
+        detailUrl: String,
+        reasonMessage: String? = null
     ) {
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
@@ -2336,8 +2339,10 @@ class PipelineRuntimeService @Autowired constructor(
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = taskId,
                     containerHashId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1,
@@ -2347,8 +2352,10 @@ class PipelineRuntimeService @Autowired constructor(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = "QueueInterceptor",
                     containerHashId = "",
                     executeCount = 1,

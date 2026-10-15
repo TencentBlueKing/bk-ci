@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.consumer
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
@@ -100,19 +101,81 @@ class NotifyMessageConsumer @Autowired constructor(
 
     fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
         try {
-            val weworkNotifyTextMessage = WeworkNotifyTextMessage(
-                receivers = weworkNotifyMessageWithOperation.getReceivers(),
-                receiverType = WeworkReceiverType.single,
-                textType = if (weworkNotifyMessageWithOperation.markdownContent) {
-                    WeworkTextType.markdown
-                } else {
-                    WeworkTextType.text
-                },
-                message = weworkNotifyMessageWithOperation.body
+            val receiverCards = weworkNotifyMessageWithOperation.receiverTemplateCards
+            val templateCard = weworkNotifyMessageWithOperation.templateCard
+            logger.info(
+                "reviewNotifyTrace|hop=notify.consume|" +
+                    "id=${weworkNotifyMessageWithOperation.id}|" +
+                    "receivers=${JsonUtil.toJson(weworkNotifyMessageWithOperation.getReceivers())}|" +
+                    "markdown=${weworkNotifyMessageWithOperation.markdownContent}|" +
+                    "receiverCards=${receiverCards?.size ?: 0}|hasCard=${templateCard != null}|" +
+                    "taskId=${templateCard?.taskId}|" +
+                    "body=${weworkNotifyMessageWithOperation.body}"
             )
-            weworkService.sendTextMessage(weworkNotifyTextMessage)
+            if (!receiverCards.isNullOrEmpty()) {
+                val failed = weworkService.sendTemplateCardMessages(receiverCards)
+                logger.info(
+                    "reviewNotifyTrace|hop=notify.send.card.batch|" +
+                        "total=${receiverCards.size}|failed=$failed"
+                )
+                if (failed.isEmpty()) {
+                    return
+                }
+                logger.warn(
+                    "reviewNotifyTrace|hop=notify.send.fallback|reason=cardFailedPartial|failed=$failed"
+                )
+                sendWeworkText(weworkNotifyMessageWithOperation, failed)
+                return
+            }
+            if (templateCard != null) {
+                val ok = weworkService.sendTemplateCardMessage(
+                    receivers = weworkNotifyMessageWithOperation.getReceivers(),
+                    templateCard = templateCard
+                )
+                logger.info(
+                    "reviewNotifyTrace|hop=notify.send.card|ok=$ok|" +
+                        "taskId=${templateCard.taskId}|" +
+                        "receivers=${weworkNotifyMessageWithOperation.getReceivers()}"
+                )
+                if (ok) {
+                    return
+                }
+                logger.warn(
+                    "reviewNotifyTrace|hop=notify.send.fallback|reason=cardFailed|" +
+                        "taskId=${templateCard.taskId}|" +
+                        "receivers=${weworkNotifyMessageWithOperation.getReceivers()}"
+                )
+            }
+            sendWeworkText(
+                weworkNotifyMessageWithOperation,
+                weworkNotifyMessageWithOperation.getReceivers()
+            )
         } catch (ignored: Exception) {
-            logger.warn("Failed process received Wework message", ignored)
+            logger.warn("reviewNotifyTrace|hop=notify.consume.error", ignored)
         }
+    }
+
+    private fun sendWeworkText(
+        weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation,
+        receivers: Collection<String>
+    ) {
+        if (receivers.isEmpty()) {
+            return
+        }
+        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+            receivers = receivers.toMutableSet(),
+            receiverType = WeworkReceiverType.single,
+            textType = if (weworkNotifyMessageWithOperation.markdownContent) {
+                WeworkTextType.markdown
+            } else {
+                WeworkTextType.text
+            },
+            message = weworkNotifyMessageWithOperation.body
+        )
+        val sendResult = weworkService.sendTextMessage(weworkNotifyTextMessage)
+        logger.info(
+            "reviewNotifyTrace|hop=notify.send.text|ok=$sendResult|" +
+                "message=${JsonUtil.toJson(weworkNotifyTextMessage)}"
+        )
     }
 }

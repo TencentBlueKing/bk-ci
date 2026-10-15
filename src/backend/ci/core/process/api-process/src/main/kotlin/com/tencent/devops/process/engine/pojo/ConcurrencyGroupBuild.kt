@@ -37,7 +37,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 data class ConcurrencyGroupBuild(
     val pipelineId: String,
     val buildId: String,
-    val buildNum: Int
+    val buildNum: Int,
+    val concurrencySubGroup: String? = null
 )
 
 /**

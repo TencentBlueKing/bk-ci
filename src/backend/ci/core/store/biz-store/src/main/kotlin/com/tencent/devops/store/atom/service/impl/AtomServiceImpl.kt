@@ -56,6 +56,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -80,6 +81,7 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -835,6 +837,132 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         )
     }
 
+    private fun buildPipelineAtom(
+        record: TAtomRecord,
+        serviceScope: ServiceScopeEnum?
+    ): Result<PipelineAtom?> {
+        val classifyIdMapJson = record.classifyIdMap
+        val classifyId = if (serviceScope == null || serviceScope == ServiceScopeEnum.PIPELINE) {
+            record.classifyId
+        } else {
+            if (!classifyIdMapJson.isNullOrEmpty()) {
+                try {
+                    val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java)
+                    classifyIdMap?.get(serviceScope.name) as? String
+                } catch (e: Exception) {
+                    logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+                    record.classifyId
+                }
+            } else {
+                record.classifyId
+            }
+        } ?: record.classifyId
+        val atomClassify = classifyService.getClassify(classifyId).data
+        val atomLabelList = atomLabelService.getLabelsByAtomId(record.id, serviceScope)
+        val atomFeature = atomFeatureDao.getAtomFeature(dslContext, record.atomCode)
+        // 构建 serviceScopeDetails（返回所有服务范围的详情信息）
+        val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
+            atomId = record.id,
+            serviceScopeStr = record.serviceScope,
+            classifyIdMapJson = classifyIdMapJson,
+            pipelineClassifyIdFallback = record.classifyId,
+            jobTypeValue = record.jobType,
+            jobTypeMapValue = record.jobTypeMap,
+            osValue = record.os,
+            osMapValue = record.osMap
+        )
+        return Result(
+            PipelineAtom(
+                id = record.id,
+                name = record.name,
+                atomCode = record.atomCode,
+                version = record.version,
+                classType = record.classType,
+                logoUrl = record.logoUrl?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
+                icon = record.icon,
+                summary = record.summary,
+                serviceScope = ServiceScopeUtil.parseServiceScopes(record.serviceScope).ifEmpty { null },
+                jobType = record.jobType,
+                jobTypeMap = record.jobTypeMap,
+                os = JsonUtil.toOrNull(record.os, List::class.java) as List<String>?,
+                classifyId = atomClassify?.id,
+                classifyCode = atomClassify?.classifyCode,
+                classifyName = atomClassify?.classifyName,
+                docsLink = StoreUtils.transformDocsLink(
+                    docsLink = record.docsLink,
+                    storeType = StoreTypeEnum.ATOM,
+                    serviceScope = serviceScope
+                ),
+                category = AtomCategoryEnum.getAtomCategory(record.categroy.toInt()),
+                atomType = AtomTypeEnum.getAtomType(record.atomType.toInt()),
+                atomStatus = AtomStatusEnum.getAtomStatus(record.atomStatus.toInt()),
+                description = record.description?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                },
+                // 指定ID查询场景只返回当前版本自身，不再拉取该插件全部版本列表
+                versionList = listOf(
+                    VersionInfo(versionName = record.version, versionValue = record.version)
+                ),
+                atomLabelList = atomLabelList,
+                creator = record.creator,
+                defaultFlag = record.defaultFlag,
+                latestFlag = record.latestFlag,
+                htmlTemplateVersion = record.htmlTemplateVersion,
+                buildLessRunFlag = record.buildLessRunFlag,
+                weight = record.weight,
+                props = record.props?.let {
+                    val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                        jsonStr = it,
+                        keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                            storeType = StoreTypeEnum.ATOM,
+                            storeCode = record.atomCode,
+                            version = record.version
+                        )
+                    )
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.PROPS)
+                        ?.decorate(propJsonStr) as Map<String, Any>?
+                },
+                data = record.data?.let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.DATA)
+                        ?.decorate(record.data) as Map<String, Any>?
+                },
+                recommendFlag = atomFeature?.recommendFlag,
+                frontendType = FrontendTypeEnum.getFrontendTypeObj(record.htmlTemplateVersion),
+                visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record.visibilityLevel as Int),
+                createTime = record.createTime.timestampmilli(),
+                updateTime = record.updateTime.timestampmilli(),
+                serviceScopeDetails = serviceScopeDetails
+            )
+        )
+    }
+
+    /**
+     * 根据插件版本ID获取插件信息（含分支测试版本），并校验用户是否为该插件的成员
+     */
+    override fun getPipelineAtomByIdWithPermissionCheck(
+        userId: String,
+        id: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<PipelineAtom?> {
+        val record = atomDao.getPipelineAtom(dslContext, id) ?: return Result(null)
+        // 校验用户是否为该插件的成员，防止任意atomId越权获取插件完整定义
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = record.atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(record.atomCode)
+            )
+        }
+        return buildPipelineAtom(record = record, serviceScope = serviceScope)
+    }
+
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
@@ -952,6 +1080,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val classType = handleClassType(atomRequest.os, atomRequest.serviceScopeConfigs)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
+
+        // 插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomRequest.atomCode)
+
         return Result(true)
     }
 
@@ -1085,6 +1217,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     serviceScope = atomUpdateRequest.getEffectiveServiceScope()
                 )
             }
+
+            // 插件参数定义变更后，失效参数联动配置缓存。
+            AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
             Result(true)
         } else {
             I18nUtil.generateResponseDataObject(
@@ -1100,11 +1236,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 删除插件信息
      */
     override fun deletePipelineAtom(id: String): Result<Boolean> {
+        // 删除前先取插件标识，删除后无法再查到该插件的版本数据。
+        val atomCode = atomDao.getPipelineAtom(dslContext, id)?.atomCode
+
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 删除插件信息
             atomDao.delete(context, id)
         }
+
+        // 插件参数定义被删除，失效参数联动配置缓存。
+        atomCode?.let { AtomPropsCacheManager.invalidate(redisOperation, it) }
+
         return Result(true)
     }
 

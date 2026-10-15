@@ -107,6 +107,7 @@ object ProjectMessageCode {
     const val ERROR_KPI_PRODUCT_INVALID = "2119059" // KPI产品无效
     const val PROJECT_FAVOR_SUCC = "2119060" // 项目收藏成功
     const val PROJECT_FAVOR_CANCEL_SUCC = "2119061" // 项目取消收藏成功
+    const val ENUM_LABEL_CANNOT_DELETE = "2119063" // 内置项目标签不允许删除
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败
