@@ -498,6 +498,8 @@ object ProcessMessageCode {
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101374"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
+    // 获取Fork仓库YAML失败：PR触发人[{0}]尚未完成OAUTH授权或没有仓库[{1}]读取权限
+    const val ERROR_PAC_FORK_YAML_OAUTH = "2101375"
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
@@ -815,6 +817,13 @@ object ProcessMessageCode {
     const val BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE = "bkMergeTemplateYamlUpdateTitle" // 修改模版发布mr标题
     const val BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE = "bkMergeTemplateInstanceYamlTitle" // 模版实例化标题
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
+    const val BK_CONCURRENCY_SUB_GROUP_EMPTY = "bkConcurrencySubGroupEmpty" // 同一批标识启动时为空
+    // {0} 是触发取代的构建链接。拦截器提前取消和启动时的权威去重都会传入。
+    const val BK_CONCURRENCY_SUB_GROUP_REPLACED = "bkConcurrencySubGroupReplaced"
+    // 启动时的队列对账没有单一触发构建，文案不能带占位符。
+    const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL = "bkConcurrencyQueueSizeCancel"
+    // 拦截器满员挤出能指向当前构建。与上面拆开，避免对账日志打出未替换的 {0}。
+    const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD = "bkConcurrencyQueueSizeCancelByBuild"
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
@@ -933,4 +942,7 @@ object ProcessMessageCode {
 
     // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
     const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
+
+    // 构建机容器发生重启，构建进程已中断
+    const val BK_BUILD_CONTAINER_RESTARTED = "bkBuildContainerRestarted"
 }

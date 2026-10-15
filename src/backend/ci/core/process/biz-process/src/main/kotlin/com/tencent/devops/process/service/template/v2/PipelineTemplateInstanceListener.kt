@@ -329,7 +329,8 @@ class PipelineTemplateInstanceListener @Autowired constructor(
             filePath = filePath,
             targetAction = instanceBase.targetAction,
             targetBranch = instanceBase.targetBranch,
-            description = instanceBase.description
+            description = instanceBase.description,
+            instanceTime = instanceBase.createTime
         )
 
         return try {

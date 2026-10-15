@@ -26,6 +26,7 @@
                     </bk-button>
                 </span>
                 <span
+                    v-if="!isDynamicEnv"
                     v-bk-tooltips="{
                         content: $t('environment.builtInEnvRemoveNodeTips'),
                         disabled: !isBuiltInEnv || !!selectedNodesList.length
@@ -169,7 +170,7 @@
                 width="200"
             />
             <bk-table-column
-                v-if="!isCreateResType"
+                v-if="!isCreateResType && isBuildEnv"
                 :label="$t('environment.enableTitle')"
                 prop="operate"
                 fixed="right"
@@ -190,6 +191,7 @@
                 </template>
             </bk-table-column>
             <bk-table-column
+                v-if="!isDynamicEnv"
                 :label="$t('environment.operation')"
                 prop="operate"
                 fixed="right"
@@ -300,11 +302,13 @@
                 projectId,
                 envHashId,
                 envNodeList,
+                currentEnv,
                 fetchEnvDetail,
                 fetchEnvNodeList,
                 requestRemoveNode,
                 toggleEnableNode,
-                isBuiltInEnv
+                isBuiltInEnv,
+                isBuildEnv
             } = useEnvDetail()
             const isLoading = ref(false)
             const tableSize = ref('small')
@@ -320,6 +324,8 @@
             const failStatus = ref(['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'])
 
             const resType = computed(() => proxy.$route.params.resType)
+            // 是否为动态关联环境（按标签规则关联，envNodeType 为 TAG）
+            const isDynamicEnv = computed(() => currentEnv.value?.envNodeType === 'TAG')
             const searchList = computed(() => ([
                 {
                     name: proxy.$t('environment.nodeInfo.displayName'),
@@ -610,7 +616,9 @@
                 projectId,
                 envHashId,
                 isCreateResType,
+                isBuildEnv,
                 isBuiltInEnv,
+                isDynamicEnv,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 

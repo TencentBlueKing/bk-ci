@@ -76,6 +76,14 @@ class ExternalAgentConfigDao {
         }
     }
 
+    fun listAll(dslContext: DSLContext): Result<TAiExternalAgentConfigRecord> {
+        with(TAiExternalAgentConfig.T_AI_EXTERNAL_AGENT_CONFIG) {
+            return dslContext.selectFrom(this)
+                .orderBy(UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByUser(
         dslContext: DSLContext,
         userId: String

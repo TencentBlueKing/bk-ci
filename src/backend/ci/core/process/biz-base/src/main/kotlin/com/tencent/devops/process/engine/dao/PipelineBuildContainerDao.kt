@@ -273,6 +273,22 @@ class PipelineBuildContainerDao {
         }
     }
 
+    fun listByBuildIds(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: Collection<String>,
+    ): List<PipelineBuildContainer> {
+        if (buildIds.isEmpty()) {
+            return emptyList()
+        }
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.`in`(buildIds))
+                .fetch(mapper)
+        }
+    }
+
     fun countStageContainers(
         dslContext: DSLContext,
         projectId: String,

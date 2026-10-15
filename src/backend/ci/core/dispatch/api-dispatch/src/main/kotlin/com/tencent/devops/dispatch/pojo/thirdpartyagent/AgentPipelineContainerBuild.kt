@@ -10,7 +10,7 @@ data class AgentPipelineContainerBuild(
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
+    val pipelineId: String?,
     @get:Schema(title = "作业容器ID", required = true)
     val containerId: String,
     @get:Schema(title = "执行次数", required = true)
@@ -24,6 +24,31 @@ data class AgentPipelineContainerBuild(
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
     @get:Schema(title = "触发人", required = true)
-    val creator: String
+    val creator: String?,
+    @get:Schema(title = "构建包含的任务列表", required = false)
+    val tasks: List<AgentPipelineBuildTask>?,
+    @get:Schema(title = "构建包含的节点信息", required = false)
+    val nodeInfo: NodeInfo?
 )
 
+@Schema(title = "构建包含的任务")
+data class AgentPipelineBuildTask(
+    @get:Schema(title = "任务名称", required = false)
+    val taskName: String?,
+    @get:Schema(title = "作业容器ID", required = false)
+    val vmSeqId: String?,
+    @get:Schema(title = "stageId", required = false)
+    val stageId: String?,
+    @get:Schema(title = "stageNumb")
+    var stageNumb: String?
+)
+
+
+data class NodeInfo(
+    @get:Schema(title = "agentHashId", required = true)
+    val agentHashId: String,
+    @get:Schema(title = "nodeHashId", required = true)
+    val nodeHashId: String,
+    @get:Schema(title = "别名", required = true)
+    val displayName: String?
+)

@@ -3055,6 +3055,15 @@
                           },
                           "user" : {
                             "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -3190,6 +3199,9 @@
       "additionalProperties" : false,
       "properties" : {
         "group" : {
+          "type" : "string"
+        },
+        "sub-group" : {
           "type" : "string"
         },
         "cancel-in-progress" : {
@@ -3532,6 +3544,15 @@
                             }
                           },
                           "user" : {
+                            "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
                             "type" : "string"
                           }
                         }

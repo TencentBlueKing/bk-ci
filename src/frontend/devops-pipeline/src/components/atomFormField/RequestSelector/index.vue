@@ -263,7 +263,26 @@
                     this.timeId = setTimeout(async () => {
                         try {
                             const regExp = new RegExp(this.replaceKey, 'g')
-                            const url = this.searchUrl.replace(regExp, name)
+                            let searchContextKey = '__requestSelectorSearch__'
+                            while (this.searchUrl.includes(searchContextKey)) {
+                                searchContextKey += '_'
+                            }
+                            const searchUrl = this.searchUrl
+                                .replace(regExp, `{${searchContextKey}}`)
+                                .replace(/\\/g, '\\\\')
+                                .replace(/'/g, "\\'")
+                                .replace(/\r/g, '\\r')
+                                .replace(/\n/g, '\\n')
+                                .replace(/\u2028/g, '\\u2028')
+                                .replace(/\u2029/g, '\\u2029')
+                            const query = this.$route.params
+                            const url = this.urlParse(searchUrl, {
+                                bkPoolType: this?.container?.dispatchType?.buildType,
+                                ...query,
+                                ...(this.paramValues || {}),
+                                ...this.element,
+                                [searchContextKey]: name
+                            })
                             const data = await this.$ajax.get(url)
                             const resData = this.getResponseData(data)
 

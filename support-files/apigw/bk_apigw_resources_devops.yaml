@@ -404,6 +404,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/auth/permission/projects/{projectId}/list_user_resources:
+    post:
+      operationId: "v4_app_list_user_resources_by_permissions"
+      description: "查询用户在项目下对指定操作拥有权限的资源实例列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/auth/permission/projects/{projectId}/list_user_resources"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/auth/project/{projectId}/batch_add_resource_group_members:
     post:
       operationId: "v4_app_batch_add_resource_group_members"
@@ -1977,6 +1998,48 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/creative_stream_project_list:
+    get:
+      operationId: "v4_app_creative_stream_project_list"
+      description: "查询当前用户有创作流权限的项目列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/project/creative_stream_project_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/get_projects_by_label:
+    get:
+      operationId: "v4_app_get_projects_by_label"
+      description: "根据项目标签查询项目ID列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/project/get_projects_by_label"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/list/by/conditions/{page}/{pageSize}:
     post:
       operationId: "v4_app_list_projects_by_conditions"
@@ -2560,48 +2623,6 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/build_start"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/imate_build_start:
-    post:
-      operationId: "v4_app_imate_build_start"
-      description: "IMate消息提醒启动流水线"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/imate_build_start"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-app/projects/{projectId}/visibility_build_manual_startup_info:
-    get:
-      operationId: "v4_app_visibility_build_startInfo"
-      description: "获取可见性流水线手动启动参数"
-      tags:
-      - "V4应用态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-          userVerifiedRequired: false
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-app/v4/projects/{projectId}/visibility_build_manual_startup_info"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -3210,6 +3231,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/logs/latest_logs:
+    get:
+      operationId: "v4_app_log_latest"
+      description: "获取当前查询条件下行号最大的N条日志"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/logs/latest_logs"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/logs/log_mode:
     get:
       operationId: "v4_app_log_mode"
@@ -3290,6 +3332,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/projects/{projectId}/manual_start_build_stage"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/mutex_group_tasks:
+    get:
+      operationId: "v4_app_mutex_group_tasks"
+      description: "查询互斥组当前任务列表"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/{projectId}/mutex_group_tasks"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -5578,6 +5641,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/auth/permission/projects/{projectId}/list_user_resources:
+    post:
+      operationId: "v4_user_list_user_resources_by_permissions"
+      description: "查询用户在项目下对指定操作拥有权限的资源实例列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "post"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/auth/permission/projects/{projectId}/list_user_resources"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/auth/project/{projectId}/member_insight/authorization/health_check:
     get:
       operationId: "v4_user_check_auth_health"
@@ -6837,6 +6921,48 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/projects/creative_stream_project_list:
+    get:
+      operationId: "v4_user_creative_stream_project_list"
+      description: "查询当前用户有创作流权限的项目列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/project/creative_stream_project_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/get_projects_by_label:
+    get:
+      operationId: "v4_user_get_projects_by_label"
+      description: "根据项目标签查询项目ID列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/project/get_projects_by_label"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/projects/project/get_projects_by_product_id:
     get:
       operationId: "v4_user_get_projects_by_product_id"
@@ -7378,48 +7504,6 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/build_start"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/imate_build_start:
-    post:
-      operationId: "v4_user_imate_build_start"
-      description: "IMate消息提醒启动流水线"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "post"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/imate_build_start"
-          timeout: 30
-        enableWebsocket: false
-        isPublic: true
-        matchSubpath: false
-  /v4/apigw-user/projects/{projectId}/visibility_build_manual_startup_info:
-    get:
-      operationId: "v4_user_visibility_build_startInfo"
-      description: "获取可见性流水线手动启动参数"
-      tags:
-      - "V4用户态"
-      x-bk-apigateway-resource:
-        allowApplyPermission: true
-        authConfig:
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-          userVerifiedRequired: true
-        backend:
-          matchSubpath: false
-          method: "get"
-          name: "backend-1"
-          path: "/openapi/api/apigw-user/v4/projects/{projectId}/visibility_build_manual_startup_info"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -8070,6 +8154,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/logs/latest_logs:
+    get:
+      operationId: "v4_user_log_latest"
+      description: "获取当前查询条件下行号最大的N条日志"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/logs/latest_logs"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/projects/{projectId}/logs/log_mode:
     get:
       operationId: "v4_user_log_mode"
@@ -8150,6 +8255,27 @@ paths:
           method: "post"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/manual_start_build_stage"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/mutex_group_tasks:
+    get:
+      operationId: "v4_user_mutex_group_tasks"
+      description: "查询互斥组当前任务列表"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/{projectId}/mutex_group_tasks"
           timeout: 30
         enableWebsocket: false
         isPublic: true

@@ -82,6 +82,7 @@ import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -102,6 +103,7 @@ import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService.Companion.AGENT_TELEGRAF_HEARTBEAT
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
@@ -368,7 +370,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 "${trans(props.exitError.errorEnum, userId)}|${props.exitError.message}"
             } else {
                 null
-            }
+            },
+            nodeType = NodeType.get(nodeRecord.nodeType)
         )
 
         if (needHeartbeatInfo) {
@@ -915,7 +918,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                masterVersion = agentRecord.masterVersion
+                masterVersion = agentRecord.masterVersion,
+                agentType = AgentType.fromValue(agentRecord.agentType)
             )
         )
     }
@@ -1378,29 +1382,31 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         newHeartbeatInfo: NewHeartbeatInfo
     ): HeartbeatResponse {
         var online: Boolean? = null
-
+        val heartbeatMetrics = mutableMapOf<String, Any>()
+        val heartbeatTags = mutableMapOf<String, String>()
+        heartbeatTags[NewHeartbeatInfo::agentId.name] = agentHashId
+        heartbeatTags[NewHeartbeatInfo::projectId.name] = projectId
         val agentId = HashUtil.decodeIdToLong(hash = agentHashId)
-        val heartbeatResponse = dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            val agentRecord = getAgentRecord(context = context, id = agentId, secretKey = secretKey)
-                ?: run {
-                    logger.warn("The agent($agentHashId) is not exist")
-                    return@transactionResult HeartbeatResponse(
-                        AgentStatus = AgentStatus.DELETE.name,
-                        language = commonConfig.devopsDefaultLocaleLanguage
-                    )
-                }
-
-            val nodeRecord = agentRecord.nodeId?.let {
-                nodeDao.get(dslContext = context, projectId = agentRecord.projectId, nodeId = it)
-            } ?: run {
-                logger.warn("The agent($agentHashId)'s node(${agentRecord.nodeId}) not exist!")
-                return@transactionResult HeartbeatResponse(
+        val agentRecord = getAgentRecord(context = dslContext, id = agentId, secretKey = secretKey)
+            ?: run {
+                logger.warn("The agent($agentHashId) is not exist")
+                return HeartbeatResponse(
                     AgentStatus = AgentStatus.DELETE.name,
                     language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
+        val nodeRecord = agentRecord.nodeId?.let {
+            nodeDao.get(dslContext = dslContext, projectId = agentRecord.projectId, nodeId = it)
+        } ?: run {
+            logger.warn("The agent($agentHashId)'s node(${agentRecord.nodeId}) not exist!")
+            return HeartbeatResponse(
+                AgentStatus = AgentStatus.DELETE.name,
+                language = commonConfig.devopsDefaultLocaleLanguage
+            )
+        }
+        val heartbeatResponse = dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
             val oldProps = if (agentRecord.agentProps != null) {
                 try {
                     JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
@@ -1489,9 +1495,16 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (nodeChanged) {
                 nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
             }
-
+            heartbeatMetrics[NewHeartbeatInfo::parallelTaskCount.name] = agentRecord.parallelTaskCount
+            heartbeatMetrics[NewHeartbeatInfo::dockerParallelTaskCount.name] = agentRecord.dockerParallelTaskCount
+            heartbeatMetrics[NewHeartbeatInfo::busyTaskSize.name] = newHeartbeatInfo.busyTaskSize
+            heartbeatMetrics[NewHeartbeatInfo::dockerBusyTaskSize.name] = newHeartbeatInfo.dockerBusyTaskSize
+            heartbeatTags[NodeBaseInfo::nodeId.name] = nodeRecord.nodeHashId
+            heartbeatTags[NodeBaseInfo::displayName.name] = nodeRecord.displayName
+            heartbeatTags[NewHeartbeatInfo::agentIp.name] = agentRecord.ip
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
+                projectId = agentRecord.projectId,
                 masterVersion = newHeartbeatInfo.masterVersion,
                 slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
@@ -1510,8 +1523,20 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createMod = nodeRecord.nodeType == NodeType.CREATE.name
             )
         }
-        thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
-        online?.let { thirdPartAgentService.addAgentAction(projectId, agentId, action = AgentAction.ONLINE) }
+        thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(agentRecord.projectId, agentId, newHeartbeatInfo)
+        online?.let {
+            thirdPartAgentService.addAgentAction(
+                agentRecord.projectId,
+                agentId,
+                action = AgentAction.ONLINE
+            )
+        }
+        agentMetricService.reportAgentMetrics(
+            fields = heartbeatMetrics,
+            name = AGENT_TELEGRAF_HEARTBEAT,
+            tags = heartbeatTags,
+            timestamp = newHeartbeatInfo.heartbeatTime
+        )
         return heartbeatResponse
     }
 

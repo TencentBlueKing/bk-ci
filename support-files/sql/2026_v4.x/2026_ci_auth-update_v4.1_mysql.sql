@@ -28,6 +28,15 @@ BEGIN
     ALTER TABLE T_AUTH_RESOURCE_GROUP_MEMBER ADD `JOINED_AT` datetime DEFAULT NULL COMMENT '加入时间';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_AUTH_OAUTH2_ACCESS_TOKEN'
+                    AND COLUMN_NAME = 'AES_KEY_SHA') THEN
+        ALTER TABLE `T_AUTH_OAUTH2_ACCESS_TOKEN`
+            ADD COLUMN `AES_KEY_SHA` varchar(64) DEFAULT NULL COMMENT '加密密钥SHA指纹';
+    END IF;
+
 END <CI_UBF>
 DELIMITER ;
 COMMIT;

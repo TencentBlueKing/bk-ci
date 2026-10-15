@@ -16,6 +16,208 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.8
+## 2026-10-13
+### Changelog since v4.2.0-rc.7
+### Summary
+Key changes in this release:
+
+**Features**
+- Creation Flow orchestration plugins support search
+- Third-party build machines support specifying CPU/memory limits when running build tasks with Docker
+- When a Gongfeng MR triggers a pipeline that requires review, the review info is synced to the Gongfeng MR
+- Environment Management adds a node task detail view and supports searching nodes by batch IPs
+- Project Management supports tag capability
+- The BK-CI intelligent assistant supports pipeline-level sessions
+- The bash plugin supports multi-line variable values when outputting variables
+
+**Bug Fixes**
+- Fixed retries potentially cancelling the latest build when only one pipeline is allowed to run at a time
+- Fixed PAC template instantiation branches not being isolated by user and time, causing MRs to mix in others' changes
+- Fixed abnormal build status display after a pipeline is cancelled
+- Fixed YAML variable values being incorrectly parsed as integers
+
+#### New Features
+
+##### Pipeline
+- [New] feat: Add an API to query pipeline IDs and names by permission [Link](http://github.com/TencentBlueKing/bk-ci/issues/13522)
+- [New] feat: Optimize the search function of Creation Flow orchestration plugins [Link](http://github.com/TencentBlueKing/bk-ci/issues/13527)
+- [New] feat: Support specifying CPU/memory limits when third-party build machines run build tasks with Docker [Link](http://github.com/TencentBlueKing/bk-ci/issues/13513)
+- [New] feat: Add an API to query the tasks in the current group by mutual exclusion group name [Link](http://github.com/TencentBlueKing/bk-ci/issues/13142)
+- [New] feat: Adjust the disable logic of the run button on the pipeline execution preview page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13563)
+- [New] feat: When a Gongfeng MR triggers a pipeline that requires review, sync the review info to the Gongfeng MR [Link](http://github.com/TencentBlueKing/bk-ci/issues/13504)
+
+##### Repository
+- [New] bug: Fix incorrect data display when switching between different repositories for repository trigger events [Link](http://github.com/TencentBlueKing/bk-ci/issues/13612)
+
+##### Environment Management
+- [New] feat: Add a node task detail view in environment management [Link](http://github.com/TencentBlueKing/bk-ci/issues/13340)
+- [New] feat: Support searching nodes by batch IPs entered by the user [Link](http://github.com/TencentBlueKing/bk-ci/issues/13343)
+
+##### Project Management
+- [New] feat: Project Management supports tag capability [Link](http://github.com/TencentBlueKing/bk-ci/issues/13620)
+- [New] feat: Optimize switching the project list and project list [Link](http://github.com/TencentBlueKing/bk-ci/issues/13408)
+
+##### Agent
+- [New] feat: Agent reports concurrency metric data [Link](http://github.com/TencentBlueKing/bk-ci/issues/12526)
+
+##### Others
+- [New] feat: backend.conf uses prefix matching [Link](http://github.com/TencentBlueKing/bk-ci/issues/13708)
+- [New] feat: Fix quality red line security issues [Link](http://github.com/TencentBlueKing/bk-ci/issues/13665)
+- [New] feat: Remove the dispatch k8s module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13649)
+- [New] feat: Support multi-line variable values when the bash plugin outputs variables [Link](http://github.com/TencentBlueKing/bk-ci/issues/12879)
+- [New] feat: The BK-CI intelligent assistant supports pipeline-level sessions [Link](http://github.com/TencentBlueKing/bk-ci/issues/13617)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: Stage retry should select "run only failed Jobs" by default [Link](http://github.com/TencentBlueKing/bk-ci/issues/11834)
+- [Improved] perf: Public variable optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13566)
+- [Improved] perf: Optimize the performance of PipelineYamlService#yamlExistInDefaultBranch [Link](http://github.com/TencentBlueKing/bk-ci/issues/13521)
+- [Improved] perf: Optimize the performance of com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager#checkMigratingPipelines [Link](http://github.com/TencentBlueKing/bk-ci/issues/13523)
+- [Improved] perf: Optimize the interaction of the input dropdown box [Link](http://github.com/TencentBlueKing/bk-ci/issues/12717)
+
+##### Store
+- [Improved] perf: Add an expiration time to the plugin runtime cache [Link](http://github.com/TencentBlueKing/bk-ci/issues/13659)
+- [Improved] perf: Optimize the completeness of the plugin version list display in the Store [Link](http://github.com/TencentBlueKing/bk-ci/issues/13436)
+
+##### Environment Management
+- [Improved] perf: Add error codes to environment management [Link](http://github.com/TencentBlueKing/bk-ci/issues/13695)
+
+##### Quality Gate
+- [Improved] perf: Add a Service-mode interface to ExternalQualityResource [Link](http://github.com/TencentBlueKing/bk-ci/issues/13666)
+- [Improved] perf: Automatically complete the <a> tag for quality red line metric prompts that are links, to display them as hyperlinks [Link](http://github.com/TencentBlueKing/bk-ci/issues/13606)
+
+##### Permission Center
+- [Improved] perf: Add validation when deleting project artifact quality metadata tags [Link](http://github.com/TencentBlueKing/bk-ci/issues/13670)
+
+##### Project Management
+- [Improved] perf: Optimize the sub-table routing rule allocation for the pipeline archive database [Link](http://github.com/TencentBlueKing/bk-ci/issues/13552)
+
+##### Others
+- [Improved] perf: Improve permission validation for relevant interfaces [Link](http://github.com/TencentBlueKing/bk-ci/issues/13679)
+- [Improved] perf: Immediately stop the build and display error info when the container restarts [Link](http://github.com/TencentBlueKing/bk-ci/issues/13587)
+- [Improved] perf: Team Creation Flow supports digital avatar nodes [Link](http://github.com/TencentBlueKing/bk-ci/issues/13600)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] bug: PAC template instantiation branches should be isolated by user and time to avoid MRs mixing in others' changes [Link](http://github.com/TencentBlueKing/bk-ci/issues/13626)
+- [Fixed] bug: When instantiating a PAC pipeline template, if there is no change and the MR is closed, the instantiation status stays "updating" [Link](http://github.com/TencentBlueKing/bk-ci/issues/13495)
+- [Fixed] bug: Fix the empty value issue for boolean type variables [Link](http://github.com/TencentBlueKing/bk-ci/issues/13658)
+- [Fixed] bug: Updating version references should not change the version update time [Link](http://github.com/TencentBlueKing/bk-ci/issues/13629)
+- [Fixed] bug: When a PAC instantiation uses a branch version, it may not be the latest branch version [Link](http://github.com/TencentBlueKing/bk-ci/issues/13645)
+- [Fixed] bug: PAC/YAML conversion hardcodes instanceFromTemplate to false, causing template quality red lines to not take effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13650)
+- [Fixed] bug: When a job's plugin executes very fast, clicking cancel sometimes fails to cancel the job [Link](http://github.com/TencentBlueKing/bk-ci/issues/13581)
+- [Fixed] bug: Fix incorrect workspace description display when Docker is enabled to run build tasks [Link](http://github.com/TencentBlueKing/bk-ci/issues/13633)
+- [Fixed] bug: Fix the issue that checking the markdown option in the manual review plugin does not take effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13635)
+- [Fixed] bug: When a pipeline is configured to allow only one pipeline to run at a time (cancel the running build), retry may mistakenly cancel the latest build [Link](http://github.com/TencentBlueKing/bk-ci/issues/13450)
+- [Fixed] bug: PAC YAML parsing failure should not trigger execution again [Link](http://github.com/TencentBlueKing/bk-ci/issues/13623)
+- [Fixed] bug: YAML variable value 2026_8_6 is parsed as integer 202686 [Link](http://github.com/TencentBlueKing/bk-ci/issues/13618)
+- [Fixed] bug: PAC should use the logged-in username to get the fork repository YAML content [Link](http://github.com/TencentBlueKing/bk-ci/issues/13591)
+- [Fixed] The request-selector component does not support searching variable substitution [Link](http://github.com/TencentBlueKing/bk-ci/issues/13614)
+- [Fixed] bug: The SVN trigger plugin does not output the ci.repo_url context [Link](http://github.com/TencentBlueKing/bk-ci/issues/13536)
+- [Fixed] bug: When registering a repository trigger, if a repository branch type variable is used, it prompts that the repository cannot be found [Link](http://github.com/TencentBlueKing/bk-ci/issues/13512)
+- [Fixed] bug: Build status display issue after pipeline cancellation [Link](http://github.com/TencentBlueKing/bk-ci/issues/13579)
+- [Fixed] bug: The maximum queue count configured for a pipeline does not take effect in some scenarios [Link](http://github.com/TencentBlueKing/bk-ci/issues/13499)
+
+##### Repository
+- [Fixed] bug: Fix the "current user has no platform management permission, please contact the administrator to add operation permission" prompt on the My Authorization page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13589)
+
+##### Credential Management
+- [Fixed] feat: Secrets support automatic refresh [Link](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### Environment Management
+- [Fixed] bugfix: Incorrect exported node data [Link](http://github.com/TencentBlueKing/bk-ci/issues/13642)
+- [Fixed] bugfix: Fix node management related display bugs [Link](http://github.com/TencentBlueKing/bk-ci/issues/13491)
+- [Fixed] bugfix: Dynamic environment tag selection rules [Link](http://github.com/TencentBlueKing/bk-ci/issues/13575)
+
+##### Agent
+- [Fixed] bugfix: Creation environment agent cannot be upgraded [Link](http://github.com/TencentBlueKing/bk-ci/issues/13604)
+- [Fixed] bugfix: Fix the macOS agent blocking monitoring issue caused by process sleep in the new version [Link](http://github.com/TencentBlueKing/bk-ci/issues/13526)
+
+##### Others
+- [Fixed] bug: Supplement interface permissions [Link](http://github.com/TencentBlueKing/bk-ci/issues/13669)
+- [Fixed] bug: An empty page number when querying the template version list generates illegal SQL OFFSET [Link](http://github.com/TencentBlueKing/bk-ci/issues/13686)
+- [Fixed] bug: Fix incorrect domain when the Creation Flow jumps to the Environment Management service [Link](http://github.com/TencentBlueKing/bk-ci/issues/13631)
+- [Fixed] bug: The os data for plugins that support Creation Flow cloud task environments should be empty [Link](http://github.com/TencentBlueKing/bk-ci/issues/13621)
+
+# v4.2.0-rc.7
+## 2026-09-08
+### Changelog since v4.2.0-rc.6
+### Summary
+Key changes in this release:
+
+**Features**
+- Build steps support displaying runtime progress details
+- Pipelines support public variable management, with improved compatibility, count statistics, and internationalization configuration for public variable groups
+- Plugin run conditions add a "run only when a preceding plugin failed (excluding skipped failures)" condition
+- Environment Management optimizes node list display and adds a cloud desktop type
+- Creation Flow supports copying to personal projects by following the manifest, adds stage review locking, and Creation Environments support specifying the OS
+- Added backend management capabilities for the AI module
+
+**Bug Fixes**
+- Fixed cancelled jobs during a retried build leaving a residual CANCELED status that wrongly marked the final build status as cancelled
+- Fixed PAC listening incorrectly prompting an invalid configuration and allowing input
+- Fixed stage reviews not skipping already-executed stages during retries
+- Fixed Creation Flow scheduled triggers not executing
+
+#### New Features
+
+##### Pipeline
+- [New] feat: build steps support displaying runtime progress details [Link](http://github.com/TencentBlueKing/bk-ci/issues/12805)
+- [New] feat: pipeline public variable management [Link](http://github.com/TencentBlueKing/bk-ci/issues/12010)
+- [New] feat: plugin run conditions add the "run only when a preceding plugin failed (excluding skipped failures)" condition [Link](http://github.com/TencentBlueKing/bk-ci/issues/13429)
+
+##### Environment Management
+- [New] feat: environment - node list display optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13384)
+- [New] feat: environment adds cloud desktop type [Link](http://github.com/TencentBlueKing/bk-ci/issues/13486)
+
+##### Others
+- [New] feat: stage review locking added to creation flows initiated from imate sessions [Link](http://github.com/TencentBlueKing/bk-ci/issues/13530)
+- [New] feat: supplement backend management capabilities for the AI module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13535)
+- [New] feat: creation flow supports copying to personal projects by following the manifest [Link](http://github.com/TencentBlueKing/bk-ci/issues/13432)
+- [New] feat: creation environment supports specifying the OS [Link](http://github.com/TencentBlueKing/bk-ci/issues/13375)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: validate project id when creating/editing a pipeline [Link](http://github.com/TencentBlueKing/bk-ci/issues/13475)
+- [Improved] perf: supplement internationalization config for public variable group release logs [Link](http://github.com/TencentBlueKing/bk-ci/issues/13509)
+- [Improved] perf: public variable group YAML parsing environment compatibility [Link](http://github.com/TencentBlueKing/bk-ci/issues/13467)
+- [Improved] perf: public variable count statistics optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13274)
+- [Improved] perf: pipeline model serialization processing of variable parameters logic optimization [Link](http://github.com/TencentBlueKing/bk-ci/issues/13257)
+
+##### Log Service
+- [Improved] perf: log module supports project-aggregated statistics and circuit breaking [Link](http://github.com/TencentBlueKing/bk-ci/issues/13379)
+- [Improved] perf: supplement pipeline build log interface parameters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13525)
+
+##### Others
+- [Improved] bug: version experience ext code rollback [Link](http://github.com/TencentBlueKing/bk-ci/issues/13368)
+- [Improved] perf: optimize service configuration [Link](http://github.com/TencentBlueKing/bk-ci/issues/13546)
+- [Improved] perf: sync update build log resource openapi interface with the latest parameters [Link](http://github.com/TencentBlueKing/bk-ci/issues/13508)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] fix: when listening to PAC, it should not prompt an invalid configuration nor allow input [Link](http://github.com/TencentBlueKing/bk-ci/issues/13554)
+- [Fixed] bug: stage review not skipping already-executed stages during retries [Link](http://github.com/TencentBlueKing/bk-ci/issues/13500)
+- [Fixed] bug: cancelled jobs during a retried build leave a residual CANCELED status, causing the final build status to be wrongly marked as cancelled [Link](http://github.com/TencentBlueKing/bk-ci/issues/13407)
+- [Fixed] bug: scheduled task parameter checkbox type gets converted to [] [Link](http://github.com/TencentBlueKing/bk-ci/issues/13472)
+- [Fixed] bug: codecc channel does not limit the maximum number of pipelines [Link](http://github.com/TencentBlueKing/bk-ci/issues/13465)
+
+##### Environment Management
+- [Fixed] bug: environment management - node detail page, Agent offline records table not fully displayed and cannot scroll [Link](http://github.com/TencentBlueKing/bk-ci/issues/13496)
+
+##### Log Service
+- [Fixed] bug: exception handling for burst traffic in the log module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13327)
+
+##### Permission Center
+- [Fixed] fix: the project selected by default in the permission center is incorrect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13478)
+
+##### Others
+- [Fixed] bug: creation flow scheduled trigger not executing [Link](http://github.com/TencentBlueKing/bk-ci/issues/13490)
+
 # v4.2.0-rc.6
 ## 2026-08-18
 ### Changelog since v4.2.0-rc.5

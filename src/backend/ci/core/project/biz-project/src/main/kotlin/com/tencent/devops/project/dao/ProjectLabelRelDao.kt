@@ -32,6 +32,7 @@ import com.tencent.devops.model.project.tables.TProjectLabelRel
 import com.tencent.devops.model.project.tables.records.TProjectLabelRelRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -64,7 +65,7 @@ class ProjectLabelRelDao {
     fun batchAdd(dslContext: DSLContext, projectId: String, labelIdList: List<String>) {
         with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
             val bachExceute = dslContext.batch(
-                "INSERT INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
+                "INSERT IGNORE INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
             for (item in labelIdList) {
                 bachExceute.bind(UUIDUtil.generate(), item, projectId)
             }
@@ -86,5 +87,80 @@ class ProjectLabelRelDao {
                     .where(PROJECT_ID.eq(projectId))
                     .execute()
         }
+    }
+
+    fun deleteByProjectIdAndLabelIds(
+        dslContext: DSLContext,
+        projectId: String,
+        labelIds: Collection<String>
+    ) {
+        if (labelIds.isEmpty()) {
+            return
+        }
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LABEL_ID.`in`(labelIds))
+                .execute()
+        }
+    }
+
+    fun deleteByLabelId(dslContext: DSLContext, labelId: String) {
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(LABEL_ID.eq(labelId))
+                .execute()
+        }
+    }
+
+    fun listProjectIdsByLabelId(
+        dslContext: DSLContext,
+        labelId: String,
+        projectIds: Collection<String>
+    ): Set<String> {
+        if (projectIds.isEmpty()) {
+            return emptySet()
+        }
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            return dslContext.select(PROJECT_ID)
+                .from(this)
+                .where(LABEL_ID.eq(labelId))
+                .and(PROJECT_ID.`in`(projectIds))
+                .fetchSet(PROJECT_ID)
+        }
+    }
+
+    fun countByProjectIds(
+        dslContext: DSLContext,
+        projectIds: Collection<String>
+    ): Map<String, Int> {
+        if (projectIds.isEmpty()) {
+            return emptyMap()
+        }
+        with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
+            return dslContext.select(PROJECT_ID, DSL.count())
+                .from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+                .groupBy(PROJECT_ID)
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
+    fun batchAddProjects(
+        dslContext: DSLContext,
+        labelId: String,
+        projectIds: List<String>
+    ) {
+        if (projectIds.isEmpty()) {
+            return
+        }
+        val batchExecute = dslContext.batch(
+            "INSERT IGNORE INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)"
+        )
+        for (projectId in projectIds) {
+            batchExecute.bind(UUIDUtil.generate(), labelId, projectId)
+        }
+        batchExecute.execute()
     }
 }

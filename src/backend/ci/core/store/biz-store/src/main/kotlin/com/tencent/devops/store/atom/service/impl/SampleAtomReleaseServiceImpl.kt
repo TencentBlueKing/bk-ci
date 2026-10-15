@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
+import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
 import com.tencent.devops.common.api.constant.NUM_THREE
@@ -122,8 +123,13 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         userId: String,
         atomId: String,
         isNormalUpgrade: Boolean,
-        status: Int
+        status: Int,
+        branchTestFlag: Boolean
     ): List<ReleaseProcessItem> {
+        // 分支测试版本：仅展示到测试环节，不展示测试之后的发布流程
+        if (branchTestFlag) {
+            return handleBranchTestProcessInfo(status)
+        }
         val processInfo = initProcessInfo()
         val totalStep = NUM_FOUR
         when (status) {
@@ -135,6 +141,41 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             }
             AtomStatusEnum.RELEASED.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, SUCCESS)
+            }
+        }
+        return processInfo
+    }
+
+    /**
+     * 分支测试版本进度：仅包含提交、测试环节，不展示测试之后的发布流程
+     */
+    private fun handleBranchTestProcessInfo(status: Int): List<ReleaseProcessItem> {
+        val processInfo = mutableListOf<ReleaseProcessItem>()
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
+        when (status) {
+            AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
+            }
+            // 仓库来源升级提交后进入构建/代码检查阶段，归入提交环节的进行中/失败展示
+            AtomStatusEnum.BUILDING.status, AtomStatusEnum.CODECCING.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, DOING)
+            }
+            AtomStatusEnum.BUILD_FAIL.status, AtomStatusEnum.CODECC_FAIL.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, FAIL)
+            }
+            AtomStatusEnum.TESTING.status -> {
+                // 测试进行中：先标记前序步骤完成，再手动将测试步骤置为进行中（避免末步被置为完成）
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_TWO, SUCCESS)
+                processInfo.firstOrNull { it.step == NUM_THREE }?.status = DOING
+            }
+            AtomStatusEnum.TESTED.status, AtomStatusEnum.GROUNDING_SUSPENSION.status -> {
+                storeCommonService.setProcessInfo(processInfo, NUM_THREE, NUM_THREE, SUCCESS)
+            }
+            else -> {
+                // 分支测试不应进入 AUDITING 等状态，命中即记录 warn 以便发现脏数据
+                logger.warn("handleBranchTestProcessInfo unexpected status|status=$status")
             }
         }
         return processInfo

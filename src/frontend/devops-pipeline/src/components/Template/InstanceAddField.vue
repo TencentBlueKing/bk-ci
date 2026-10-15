@@ -158,6 +158,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { getParamsValuesMap } from '@/utils/util'
+    import { isBooleanParam } from '@/store/modules/atom/paramsConfig'
     const props = defineProps({
         instanceList: Array
     })
@@ -302,7 +303,16 @@
         })
     }
     function handleConfirm () {
-        proxy.$emit('confirm', renderParamList.value)
+        // 布尔参数在表单中始终以 true/false 展示（空默认值会被归一为 false），
+        // 提交时需与展示值保持一致，避免未改动/未选中的布尔参数被当成空值提交，
+        // 导致实例参数被清空（defaultValue 变 ''）并被误标为「更新」
+        const submitList = renderParamList.value.map(p => {
+            if (isBooleanParam(p.type)) {
+                return { ...p, defaultValue: p.defaultValue === 'true' || p.defaultValue === true }
+            }
+            return p
+        })
+        proxy.$emit('confirm', submitList)
     }
     function handleCancel () {
         proxy.$emit('cancel', renderParamList.value)

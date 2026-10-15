@@ -2,6 +2,7 @@ import type { FlowSettings } from '@/api/flowModel'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { RunLockType } from '@/types/flow'
+import { applyNativeInputValue } from '@/utils/nativeInputValue'
 import { Checkbox, Form, Input, Loading, Radio } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
 import { defineComponent, nextTick, onMounted, ref, watch } from 'vue'
@@ -18,7 +19,6 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    const flowId = route.params.flowId as string
     const { flowSetting, updateFlowSetting, loading } = useFlowModel()
     const nameInputRef = ref<any>(null)
     const store = useFlowModelStore()
@@ -74,6 +74,15 @@ export default defineComponent({
       })
     }
 
+    function commitTextField(
+      field: 'pipelineName' | 'desc' | 'concurrencyGroup',
+      e: Event,
+    ) {
+      applyNativeInputValue(formData.value, field, e)
+      if (flowSetting.value?.[field] === formData.value[field]) return
+      handleChange()
+    }
+
     return () => (
       <Loading loading={loading.value} class={sharedStyles.tabContainer}>
         <div class={styles.basicSettings}>
@@ -92,6 +101,7 @@ export default defineComponent({
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}
                   onChange={handleChange}
+                  onBlur={(e: FocusEvent) => commitTextField('pipelineName', e)}
                 />
                 {hasFieldError('pipelineName') && (
                   <p class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>
@@ -106,6 +116,7 @@ export default defineComponent({
                   placeholder={t('flow.content.descriptionPlaceholder')}
                   maxlength={500}
                   onChange={handleChange}
+                  onBlur={(e: FocusEvent) => commitTextField('desc', e)}
                 />
               </FormItem>
             </div>
@@ -179,6 +190,7 @@ export default defineComponent({
                           placeholder={t('flow.content.groupNamePlaceholder')}
                           maxlength={128}
                           onChange={handleChange}
+                          onBlur={(e: FocusEvent) => commitTextField('concurrencyGroup', e)}
                         />
                         {hasFieldError('concurrencyGroup') && (
                           <p class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>

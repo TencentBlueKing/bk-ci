@@ -113,6 +113,14 @@ class AiSkillDao {
         }
     }
 
+    fun listAll(dslContext: DSLContext): Result<TAiSkillRecord> {
+        with(TAiSkill.T_AI_SKILL) {
+            return dslContext.selectFrom(this)
+                .orderBy(SCOPE.asc(), UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByUser(
         dslContext: DSLContext,
         userId: String

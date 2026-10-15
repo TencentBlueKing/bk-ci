@@ -40,6 +40,16 @@ enum class JobTypeEnum {
     fun isBuildEnv(): Boolean = this == AGENT || this == CREATIVE_STREAM
 
     /**
+     * 同一服务范围下配对的无编译环境 jobType。
+     * AGENT → AGENT_LESS；CREATIVE_STREAM → CLOUD_TASK；无编译环境自身返回 null。
+     */
+    fun pairedNonBuildEnv(): JobTypeEnum? = when (this) {
+        AGENT -> AGENT_LESS
+        CREATIVE_STREAM -> CLOUD_TASK
+        else -> null
+    }
+
+    /**
      * 编译环境 jobType 在未显式指定 OS 时的默认操作系统列表。
      * CREATIVE_STREAM 默认支持 WINDOWS；AGENT 无默认值（由用户选择）。
      */
@@ -50,10 +60,9 @@ enum class JobTypeEnum {
 
     companion object {
         /**
-         * 从 T_ATOM.JOB_TYPE 纯字符串值解析出 JobTypeEnum。
-         * JOB_TYPE 字段只存纯字符串（如 "AGENT"），不会出现 JSON。
+         * 从纯字符串解析 JobTypeEnum，非法或空值返回 null。
          */
-        private fun parseFromJobType(raw: String?): JobTypeEnum? {
+        fun parseOrNull(raw: String?): JobTypeEnum? {
             if (raw.isNullOrBlank()) return null
             return runCatching { valueOf(raw) }.getOrNull()
         }
@@ -68,7 +77,7 @@ enum class JobTypeEnum {
                 val result = entries.filter { jobTypeMap.contains("\"${it.name}\"") }
                 if (result.isNotEmpty()) return result
             }
-            val parsed = parseFromJobType(jobType)
+            val parsed = parseOrNull(jobType)
             return if (parsed != null) listOf(parsed) else emptyList()
         }
     }
