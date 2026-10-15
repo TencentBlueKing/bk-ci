@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -181,22 +182,20 @@ object JsonUtil {
      */
     private fun legacyTimestampModule(): SimpleModule {
         return SimpleModule("legacyDateTimeLong").apply {
-            addDeserializer(
-                Long::class.javaObjectType,
-                LegacyDateTimeLongDeserializer(
-                    NumberDeserializers.LongDeserializer(Long::class.javaObjectType, null)
-                )
-            )
+            addLegacyLongDeserializer(Long::class.javaObjectType, null)
             val primitiveType = Long::class.javaPrimitiveType
             if (primitiveType != null) {
-                addDeserializer(
-                    primitiveType,
-                    LegacyDateTimeLongDeserializer(
-                        NumberDeserializers.LongDeserializer(primitiveType, 0L)
-                    )
-                )
+                addLegacyLongDeserializer(primitiveType, 0L)
             }
         }
+    }
+
+    private fun SimpleModule.addLegacyLongDeserializer(type: Class<Long>, nullValue: Long?) {
+        @Suppress("UNCHECKED_CAST")
+        val deserializer = LegacyDateTimeLongDeserializer(
+            NumberDeserializers.LongDeserializer(type, nullValue)
+        ) as JsonDeserializer<Long>
+        addDeserializer(type, deserializer)
     }
 
     private fun javaTimeModule(): JavaTimeModule {

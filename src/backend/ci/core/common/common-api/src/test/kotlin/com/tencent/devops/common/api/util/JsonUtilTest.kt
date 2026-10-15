@@ -212,6 +212,9 @@ class JsonUtilTest {
 
         val nullable = JsonUtil.to("""{"createTime":null}""", OptionalTime::class.java)
         Assertions.assertNull(nullable.createTime)
+
+        val textualNull = JsonUtil.to("""{"createTime":"null"}""", OptionalTime::class.java)
+        Assertions.assertNull(textualNull.createTime)
     }
 
     @Test

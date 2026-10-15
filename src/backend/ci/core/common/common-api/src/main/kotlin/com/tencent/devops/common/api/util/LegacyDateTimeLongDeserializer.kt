@@ -45,9 +45,13 @@ import java.time.temporal.ChronoField
  */
 class LegacyDateTimeLongDeserializer(
     private val delegate: JsonDeserializer<Long>
-) : JsonDeserializer<Long>() {
+) : JsonDeserializer<Long?>() {
 
-    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): Long {
+    /**
+     * 返回值必须可空。Jackson 会把字符串 "null" 和 JSON null 解成 null，
+     * 若这里声明成非空 Long，Kotlin 会在返回时抛出空指针。
+     */
+    override fun deserialize(parser: JsonParser, ctxt: DeserializationContext): Long? {
         if (parser.currentToken == JsonToken.VALUE_STRING) {
             parseLegacyDateTime(parser.text)?.let { return it }
         }
