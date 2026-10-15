@@ -12,8 +12,6 @@
   background: var(--bg-hover-active, #e9f4ff);
 }
 
-.atomCard:hover .atomInfoContent .atomFrom,
-.atomCard.active .atomInfoContent .atomFrom,
 .atomCard:hover .atomOperate .atomFrom,
 .atomCard.active .atomOperate .atomFrom {
   opacity: 1;
@@ -108,7 +106,7 @@
   font-size: 12px;
   font-weight: normal;
   color: var(--color-text-tertiary);
-  justify-content: space-between;
+  gap: 15px;
 }
 
 .scoreGroup {
@@ -117,12 +115,46 @@
   align-items: center;
 }
 
+.scoreStarBase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scoreStarReal {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.starGold {
+  color: var(--color-warning, #ffb400);
+  flex-shrink: 0;
+}
+
+.starGray {
+  color: var(--color-text-disabled);
+  flex-shrink: 0;
+}
+
+.scoreNum {
+  margin-left: 6px;
+  color: var(--color-text-secondary, #979ba5);
+}
+
 .hotIconContainer {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  .hotIcon {
+  .hotIconRed {
     color: var(--color-danger);
+  }
+  .hotIconGray {
+    color: var(--color-text-disabled);
   }
 }
 
@@ -142,7 +174,7 @@
   white-space: nowrap;
 }
 
-.selectAtomBtn:hover {
+.selectAtomBtn:not([disabled]):hover {
   background-color: var(--color-primary, #3a84ff);
   border-color: var(--color-primary, #3a84ff);
   color: var(--bg-primary, #ffffff);
@@ -162,7 +194,15 @@
   font-size: 12px;
   opacity: 0;
   color: var(--color-text-disabled);
+  position: absolute;
+  bottom: 1px;
+  right: 110px;
+  width: 160px;
+  text-align: right;
   transition: opacity 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .atomLink {
@@ -170,7 +210,7 @@
   opacity: 0;
   color: var(--color-primary, #3a84ff);
   position: absolute;
-  bottom: 0;
+  bottom: 1px;
   text-decoration: none;
   transition: opacity 0.2s;
 }
