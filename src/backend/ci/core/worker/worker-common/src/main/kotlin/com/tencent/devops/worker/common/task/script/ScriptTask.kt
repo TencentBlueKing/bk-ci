@@ -233,36 +233,57 @@ open class ScriptTask : ITask() {
         }
     }
 
+    /**
+     * 开启「变量值超长时失败」时校验脚本写出的变量，存在超限值时返回 false。
+     *
+     * 不支持大变量时，超过 4000 字符即失败，文案与改造前一致；
+     * 支持时，不超过 512KB（UTF-8 字节）的值交给制品库，超过才失败。
+     * 开关关闭、或没有超 4000 的值时直接返回，不查询制品库。
+     */
     private fun failIfVariableInvalidCheck(
         failIfVariableInvalid: Boolean,
-        it: Map<String, String>
+        variables: Map<String, String>
     ): Boolean {
-        var res = true
-        if (failIfVariableInvalid) {
-            it.forEach { (key, value) ->
-                if (value.length <= PARAM_MAX_LENGTH) return@forEach
-                // 超过 4K 的值可作为大变量存入制品库（上限按 UTF-8 字节计），不支持时仍以 4K 为上限
-                val params = if (LargeVariableStore.isSupported()) {
-                    if (!BuildVarOverflowUtils.exceedsLargeValueLimit(value)) return@forEach
-                    arrayOf(
-                        key,
-                        PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES.toString(),
-                        BuildVarOverflowUtils.utf8Length(value).toString()
-                    )
-                } else {
-                    arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
-                }
-                LoggerService.addErrorLine(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
-                        language = AgentEnv.getLocaleLanguage(),
-                        params = params
-                    )
-                )
-                res = false
-            }
+        if (!failIfVariableInvalid) {
+            return true
         }
-        return res
+        var largeVariableSupported: Boolean? = null
+        var valid = true
+        variables.forEach { (key, value) ->
+            if (value.length <= PARAM_MAX_LENGTH) {
+                return@forEach
+            }
+            val supported = largeVariableSupported
+                ?: LargeVariableStore.isSupported().also { largeVariableSupported = it }
+            if (supported && !BuildVarOverflowUtils.exceedsLargeValueLimit(value)) {
+                return@forEach
+            }
+            LoggerService.addErrorLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = variableLengthErrorParams(supported, key, value)
+                )
+            )
+            valid = false
+        }
+        return valid
+    }
+
+    /** 不支持大变量时按字符数报错；支持时按 UTF-8 字节数报错。 */
+    private fun variableLengthErrorParams(
+        largeVariableSupported: Boolean,
+        key: String,
+        value: String
+    ): Array<String> {
+        if (!largeVariableSupported) {
+            return arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
+        }
+        return arrayOf(
+            key,
+            PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES.toString(),
+            BuildVarOverflowUtils.utf8Length(value).toString()
+        )
     }
 
     open fun takeBuildEnvs(
