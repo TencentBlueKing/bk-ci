@@ -396,6 +396,11 @@
     import { mapActions, mapState } from 'vuex'
     import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
+    // 表格行高 / 表头高度 / 分页栏高度 / 表格上边距，用于按容器高度自适应每页条数
+    const ROW_HEIGHT = 42
+    const TABLE_HEADER_HEIGHT = 42
+    const PAGINATION_HEIGHT = 64
+    const TABLE_MARGIN_TOP = 20
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
@@ -884,6 +889,9 @@
             this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
+            await this.$nextTick()
+            // URL 与 localStorage 均无 pageSize 时，按容器高度自适应每页条数
+            this.applyAutoSizeLimit()
             await this.init()
         },
         methods: {
@@ -1386,6 +1394,37 @@
                 this.updatePagination(1, limit)
                 this.requestList(this.requestParams)
             },
+
+            /**
+             * 按容器高度计算每页可展示条数（行高 42px）
+             * 容器为 .sub-view-port，需扣除筛选栏高度、表格上边距、表头及分页栏高度
+             */
+            calcPageSizeByHeight () {
+                const container = document.querySelector('.sub-view-port')
+                if (!container) return 0
+                const containerHeight = container.clientHeight
+                const filterEl = container.querySelector('.filter-bar')
+                const filterHeight = filterEl?.offsetHeight || 0
+                const calculatedHeight = containerHeight - filterHeight - TABLE_MARGIN_TOP
+                if (calculatedHeight <= 200) return 0
+                const tableBodyHeight = calculatedHeight - TABLE_HEADER_HEIGHT - PAGINATION_HEIGHT
+                return Math.max(1, Math.floor(tableBodyHeight / ROW_HEIGHT))
+            },
+
+            /**
+             * URL 与 localStorage 均无 pageSize 时，按窗口/容器高度自适应每页条数
+             */
+            applyAutoSizeLimit () {
+                if (this.queryParams.pageSize || localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) return
+                const rowCount = this.calcPageSizeByHeight()
+                if (rowCount && rowCount !== this.paginationData.limit) {
+                    this.paginationData.limit = rowCount
+                    // 将计算出的条数插入分页选项，保证下拉框能正确回显
+                    this.paginationData.limitList = [rowCount, ...this.paginationData.limitList.filter(item => item !== rowCount)]
+                        .sort((a, b) => a - b)
+                }
+            },
+
             handleSortChange ({ column, prop, order }) {
                 const orderMap = {
                     ascending: 'ASC',
