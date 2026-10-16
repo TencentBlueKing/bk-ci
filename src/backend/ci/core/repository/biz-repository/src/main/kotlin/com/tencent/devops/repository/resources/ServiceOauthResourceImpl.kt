@@ -34,11 +34,14 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.pojo.oauth.ScmOauthStatus
+import com.tencent.devops.repository.service.RepositoryOauthService
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.ScmTokenService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.scm.config.GitConfig
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,7 +50,9 @@ class ServiceOauthResourceImpl @Autowired constructor(
     private val tGitOAuthService: TGitOAuthService,
     private val githubService: IGithubService,
     private val oauth2TokenStoreManager: Oauth2TokenStoreManager,
-    private val scmTokenService: ScmTokenService
+    private val scmTokenService: ScmTokenService,
+    private val repositoryOauthService: RepositoryOauthService,
+    private val gitConfig: GitConfig
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
@@ -116,6 +121,23 @@ class ServiceOauthResourceImpl @Autowired constructor(
         return Result(
             oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) != null
         )
+    }
+
+    override fun scmOauthStatus(
+        userId: String,
+        scmCode: String,
+        redirectUrl: String?
+    ): Result<ScmOauthStatus> {
+        if (oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) != null) {
+            return Result(ScmOauthStatus(authorized = true))
+        }
+        val oauthUrl = repositoryOauthService.oauthUrl(
+            userId = userId,
+            scmCode = scmCode,
+            redirectUrl = redirectUrl?.takeIf { it.isNotBlank() } ?: gitConfig.redirectUrl,
+            oauthUserId = userId
+        )
+        return Result(ScmOauthStatus(authorized = false, url = oauthUrl.url))
     }
 
     override fun scmRepoOauthToken(scmCode: String, oauthUserId: String): Result<GitToken?> {
