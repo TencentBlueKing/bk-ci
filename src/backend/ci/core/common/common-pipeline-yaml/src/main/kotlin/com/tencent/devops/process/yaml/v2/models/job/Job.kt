@@ -28,7 +28,9 @@
 package com.tencent.devops.process.yaml.v2.models.job
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.process.yaml.utils.YamlScalarSerializer
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -112,7 +114,8 @@ data class Strategy(
     val fastKill: Boolean? = null,
     @get:Schema(title = "max-parallel")
     @JsonProperty("max-parallel")
-    val maxParallel: Int? = null
+    @get:JsonSerialize(using = YamlScalarSerializer::class)
+    val maxParallel: String? = null
 )
 
 data class RunsOn(

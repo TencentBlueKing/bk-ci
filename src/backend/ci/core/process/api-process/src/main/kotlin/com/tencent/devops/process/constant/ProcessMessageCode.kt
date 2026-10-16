@@ -618,6 +618,11 @@ object ProcessMessageCode {
     const val ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT = "2101693" // 项目{0}不是个人项目，团队创作流分享暂未支持
     const val ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID = "2101694" // 撤销授权须提供 shareId+flowIds 或 talentCode
 
+    // 矩阵Job最大并发数（支持变量）在模板实例化时解析后不在1-MAX之间
+    const val ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID = "2101695" // {0} 中 Matrix job「{1}」的最大并发数为 {2}，须为 1-{3} 的整数
+    // 矩阵Job最大并发数（支持变量）在运行时启动matrix job时解析后不在1-MAX之间
+    const val ERROR_MATRIX_MAX_CONCURRENCY_INVALID = "2101696" // Matrix job「{0}」的最大并发数为 {1}，须为 1-{2} 的整数
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

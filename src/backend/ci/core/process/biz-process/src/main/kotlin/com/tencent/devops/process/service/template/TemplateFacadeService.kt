@@ -135,6 +135,7 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.MatrixConcurrencyCheckService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -199,7 +200,8 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val matrixConcurrencyCheckService: MatrixConcurrencyCheckService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -1769,6 +1771,12 @@ class TemplateFacadeService @Autowired constructor(
                         defaultStageTagId = defaultStageTagId
                     )
                 instanceModel.templateId = templateId
+                // 最大并发数支持变量，实例化时用实例参数解析后严格校验，不通过则实例化失败
+                matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+                    projectId = projectId,
+                    pipelineName = pipelineName,
+                    model = instanceModel
+                )
                 // TODO #9145 创建流水线实例时的yaml覆盖逻辑
                 val pipelineId = pipelineInfoFacadeService.createPipeline(
                     userId = userId,
@@ -1996,6 +2004,12 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         instanceModel.templateId = templateId
+        // 最大并发数支持变量，更新实例时用最新参数解析后严格校验，不通过则更新失败
+        matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+            projectId = projectId,
+            pipelineName = templateInstanceUpdate.pipelineName,
+            model = instanceModel
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(

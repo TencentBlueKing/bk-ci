@@ -365,7 +365,7 @@ object YamlObjects {
             include = include,
             exclude = exclude,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
+            maxParallel = getNullValue("max-parallel", strategyMap)
         )
     }
 
