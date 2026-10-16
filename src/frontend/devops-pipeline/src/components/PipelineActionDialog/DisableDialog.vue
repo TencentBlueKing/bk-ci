@@ -357,10 +357,11 @@
                 text-decoration: underline;
             }
         }
-        .jump-icon {
-            fill: #3c96ff;
-            vertical-align: bottom;
-        }
+    }
+    .jump-icon {
+        fill: #3c96ff;
+        vertical-align: bottom;
+        line-height: 1;
     }
     .pac-disable-info-list {
         margin: 16px 0 0;
