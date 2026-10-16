@@ -726,7 +726,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                         timestamp = System.currentTimeMillis(),
                         tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                     )
-                }
+                },
+                projectId = projectId,
+                pipelineId = pipelineId
             )
             if (buildId.id.isNotBlank()) {
                 webhookBuildParameterService.save(

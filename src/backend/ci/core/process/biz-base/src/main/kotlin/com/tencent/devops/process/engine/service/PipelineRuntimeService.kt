@@ -101,6 +101,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.ConcurrencyQueueBuild
 import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -308,6 +309,58 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
+    }
+
+    fun getUserBuildInfo(projectId: String, buildId: String): BuildInfo? {
+        return pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)
+    }
+
+    fun listConcurrencyQueueCards(
+        projectId: String,
+        concurrencyGroup: String? = null,
+        nullGroupPipelineId: String? = null,
+        status: List<BuildStatus>,
+        beforeQueueTime: Long? = null,
+        beforePipelineId: String? = null,
+        beforeBuildNum: Int? = null,
+        excludeBuildId: String? = null,
+        limit: Int,
+        orderByStartTime: Boolean = false
+    ): List<ConcurrencyQueueBuild> {
+        return pipelineBuildDao.listConcurrencyQueueCards(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            nullGroupPipelineId = nullGroupPipelineId,
+            statusSet = status,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
+            excludeBuildId = excludeBuildId,
+            limit = limit,
+            orderByStartTime = orderByStartTime
+        )
+    }
+
+    fun countConcurrencyQueueCards(
+        projectId: String,
+        concurrencyGroup: String,
+        status: List<BuildStatus>,
+        beforeQueueTime: Long,
+        beforePipelineId: String,
+        beforeBuildNum: Int,
+        excludeBuildId: String?
+    ): Int {
+        return pipelineBuildDao.countConcurrencyQueueCards(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = status,
+            beforeQueueTime = beforeQueueTime,
+            beforePipelineId = beforePipelineId,
+            beforeBuildNum = beforeBuildNum,
             excludeBuildId = excludeBuildId
         )
     }
@@ -866,7 +919,9 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = context.buildId,
             tag = null,
             containerHashId = null,
-            executeCount = context.executeCount
+            executeCount = context.executeCount,
+            projectId = context.projectId,
+            pipelineId = context.pipelineId
         )
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -1323,7 +1378,9 @@ class PipelineRuntimeService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
                     tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                    jobId = null, stepId = TAG
+                    jobId = null, stepId = TAG,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId
                 )
             }
         }
@@ -1537,7 +1594,9 @@ class PipelineRuntimeService @Autowired constructor(
             buildLogPrinter.addYellowLine(
                 buildId = buildInfo.buildId, message = "Approved by user($userId)",
                 tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                jobId = null, stepId = TAG
+                jobId = null, stepId = TAG,
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             StartBuildContext.init4SendBuildStartEvent(
                 userId = userId,
@@ -1596,7 +1655,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildLogPrinter.addYellowLine(
             buildId = buildId, message = "Disapproved by user($userId)",
             tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-            jobId = null, stepId = TAG
+            jobId = null, stepId = TAG,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -1681,7 +1742,9 @@ class PipelineRuntimeService @Autowired constructor(
             tag = retryStartTaskId!!,
             jobId = retryTaskInContainerId,
             executeCount = executeCount,
-            stepId = null
+            stepId = null,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -2346,7 +2409,9 @@ class PipelineRuntimeService @Autowired constructor(
                     tag = taskId,
                     containerHashId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1,
-                    jobId = null, stepId = stepId
+                    jobId = null, stepId = stepId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
             if (tasks.isEmpty()) {
@@ -2359,7 +2424,9 @@ class PipelineRuntimeService @Autowired constructor(
                     tag = "QueueInterceptor",
                     containerHashId = "",
                     executeCount = 1,
-                    jobId = null, stepId = "QueueInterceptor"
+                    jobId = null, stepId = "QueueInterceptor",
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
             try {

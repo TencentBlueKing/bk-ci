@@ -59,6 +59,7 @@ object WindowsCommandLineUtils {
             executor.workingDirectory = workspace
         }
 
+        // 与 CommandLineUtils 相同：进程级合流动后只读 stdout，分级交给 ## 前缀
         val outputStream = object : LogOutputStream() {
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
@@ -76,26 +77,7 @@ object WindowsCommandLineUtils {
                 }
             }
         }
-
-        val errorStream = object : LogOutputStream() {
-            override fun processLine(line: String?, level: Int) {
-                if (line == null) {
-                    return
-                }
-
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    tmpLine = it.onParseLine(tmpLine)
-                }
-                if (print2Logger) {
-                    LoggerService.addErrorLine(tmpLine)
-                } else {
-                    result.append(tmpLine).append("\n")
-                }
-            }
-        }
-        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
+        executor.streamHandler = PumpStreamHandler(outputStream, null)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
