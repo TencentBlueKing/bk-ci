@@ -1717,6 +1717,7 @@ class PipelineListFacadeService @Autowired constructor(
                     autoSummary = it.autoSummary,
                     taskCount = it.taskCount,
                     lock = it.locked,
+                    yamlLock = it.yamlLocked ?: false,
                     canManualStartup = it.manualStartup == 1,
                     latestBuildEstimatedExecutionSeconds = latestBuildEstimatedExecutionSeconds,
                     deploymentTime = (it.updateTime)?.timestampmilli() ?: 0,
@@ -2066,7 +2067,13 @@ class PipelineListFacadeService @Autowired constructor(
             updateTime = pipelineInfo.updateTime,
             viewNames = pipelineViewNames,
             latestVersionStatus = pipelineInfo.latestVersionStatus,
-            locked = pipelineInfo.locked ?: false
+            locked = pipelineInfo.locked ?: false,
+            lockUser = pipelineInfo.lockUser,
+            lockReason = pipelineInfo.lockReason,
+            lockTime = pipelineInfo.lockTime,
+            yamlLocked = pipelineInfo.yamlLocked ?: false,
+            yamlLockUser = pipelineInfo.yamlLockUser,
+            yamlLockTime = pipelineInfo.yamlLockTime
         )
     }
 

@@ -168,6 +168,53 @@ class PipelineInfoDao {
                 .where(conditions)
                 .execute() == 1
         }
+    }
+
+    fun updateLock(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        locked: Boolean,
+        lockUser: String,
+        lockReason: String?
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
+            val update = dslContext.update(this)
+                .set(LOCKED, locked)
+                .set(LOCK_USER, lockUser)
+                .set(LOCK_TIME, now)
+            if (lockReason != null) {
+                update.set(LOCK_REASON, lockReason)
+            } else {
+                update.setNull(LOCK_REASON)
+            }
+            update.set(UPDATE_TIME, now)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute() == 1
+        }
+    }
+
+    fun updateYamlLock(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        yamlLocked: Boolean,
+        yamlLockUser: String
+    ): Boolean {
+        return with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
+            dslContext.update(this)
+                .set(YAML_LOCKED, yamlLocked)
+                .set(YAML_LOCK_USER, yamlLockUser)
+                .set(YAML_LOCK_TIME, now)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute() == 1
+        }
+    }
 //        if (count < 1) {
 //            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
 //            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
@@ -184,7 +231,6 @@ class PipelineInfoDao {
 //                "and result=${count == 1}"
 //        )
 //        return version
-    }
 
     fun countByPipelineIds(
         dslContext: DSLContext,
@@ -745,6 +791,12 @@ class PipelineInfoDao {
                         VersionStatus.valueOf(it)
                     } ?: VersionStatus.RELEASED,
                     locked = t.locked,
+                    lockUser = t.lockUser,
+                    lockReason = t.lockReason,
+                    lockTime = t.lockTime?.timestampmilli(),
+                    yamlLocked = t.yamlLocked,
+                    yamlLockUser = t.yamlLockUser,
+                    yamlLockTime = t.yamlLockTime?.timestampmilli(),
                     autoSummary = t.autoSummary
                 )
             }
@@ -932,7 +984,7 @@ class PipelineInfoDao {
             dslContext.select(PIPELINE_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(LOCKED.eq(true))
+                .and(LOCKED.eq(true).or(YAML_LOCKED.eq(true)))
                 .and(DELETE.eq(false))
                 .fetch(PIPELINE_ID, String::class.java)
         }
