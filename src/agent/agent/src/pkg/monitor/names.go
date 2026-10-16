@@ -33,6 +33,8 @@ const (
 	MeasurementSystem    = "system"
 	MeasurementKernel    = "kernel"
 	MeasurementProcesses = "processes"
+	// MeasurementTemp Windows 硬件温度（LibreHardwareMonitor HTTP / WMI），对齐 telegraf inputs.temp
+	MeasurementTemp = "temp"
 )
 
 // ------------------------------------------------------------
@@ -173,6 +175,9 @@ const (
 	FieldStopped      = "stopped"
 	FieldZombies      = "zombies"
 	FieldTotalThreads = "total_threads"
+
+	// temp（单位摄氏度）
+	FieldTemp = "temp"
 )
 
 // ------------------------------------------------------------
@@ -258,6 +263,12 @@ const (
 	TagSource     = "source" // monitor / collector 区分上报来源
 	TagInstance   = "instance"
 	TagObjectName = "objectname" // Windows PDH ObjectName（如 Processor / PhysicalDisk / Network Interface）
+
+	// temp measurement（LibreHardwareMonitor）
+	TagSensor       = "sensor"        // 传感器 Identifier，如 /amdcpu/0/temperature/2，全局唯一
+	TagSensorName   = "sensor_name"   // 传感器名，如 Core (Tctl/Tdie)
+	TagHardware     = "hardware"      // 所属硬件名，如 AMD Ryzen 9 5950X
+	TagHardwareType = "hardware_type" // 所属硬件类型，如 Cpu / GpuNvidia / Storage / Motherboard
 
 	// 全局 tag（由 reporter 从 config 注入）
 	TagProjectID      = "projectId"
