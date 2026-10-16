@@ -45,13 +45,30 @@ class UserStoreMemberResourceImpl(val storeMemberService: StoreMemberService) : 
         return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
-    override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
+    override fun add(userId: String, tenantId: String?, storeMemberReq: StoreMemberReq): Result<Boolean> {
         val storeType = storeMemberReq.storeType
-        return getStoreMemberService(storeType).add(userId, storeMemberReq, storeType)
+        return getStoreMemberService(storeType).add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            tenantId = tenantId
+        )
     }
 
-    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
-        return getStoreMemberService(storeType).delete(userId, id, storeCode, storeType)
+    override fun delete(
+        userId: String,
+        tenantId: String?,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
+        return getStoreMemberService(storeType).delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            tenantId = tenantId
+        )
     }
 
     override fun view(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {

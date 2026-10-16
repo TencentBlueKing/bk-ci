@@ -4,6 +4,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :resource-name="groupName"
+        :ajax-prefix="ajaxPrefix"
         :show-create-group="false"
     />
 </template>
@@ -13,7 +14,8 @@
         name: 'auth-tab',
         data () {
             return {
-                resourceType: 'pipeline_group'
+                resourceType: 'pipeline_group',
+                ajaxPrefix: window.PUBLIC_URL_PREFIX,
             }
         },
         computed: {

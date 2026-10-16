@@ -43,5 +43,7 @@ data class UserVO(
     @get:Schema(title = "用户名")
     var username: String,
     @get:Schema(title = "权限")
-    val permissions: String?
+    val permissions: String?,
+    @get:Schema(title = "用户时区（IANA）")
+    val timeZone: String? = null
 )

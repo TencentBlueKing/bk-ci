@@ -35,4 +35,5 @@ open class BaseNotifyPost {
     var frequencyLimit: Int = 0
     var fromSysId: String = ""
     var tofSysId: String = ""
+    var tenantId: String? = null
 }

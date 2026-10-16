@@ -82,7 +82,7 @@ class PipelineOperationLogService @Autowired constructor(
         } catch (ignore: Throwable) {
             logger.warn(
                 "[$projectId]|$userId|$pipelineId|addOperationLog with error, " +
-                    "version=$version, operationLogType=$operationLogType", ignore
+                        "version=$version, operationLogType=$operationLogType", ignore
             )
         }
     }
@@ -156,10 +156,12 @@ class PipelineOperationLogService @Autowired constructor(
 
     fun getOperatorInPage(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean? = false
     ): List<String> {
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         return pipelineOperationLogDao.getOperatorList(
-            dslContext = dslContext,
+            dslContext = queryDslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )

@@ -41,7 +41,7 @@
                                 class="item-pipelinename"
                                 :title="props.row.pipelineName"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.latestBuildId}`"
+                                :href="pipelineHref"
                             >{{ props.row.pipelineName }}
                             </a>
                         </template>
@@ -67,7 +67,7 @@
                         prop="latestBuildStartTime"
                     >
                         <template slot-scope="props">
-                            <span>{{ localConvertTime(props.row.latestBuildStartTime) }}</span>
+                            <time-display :value="props.row.latestBuildStartTime" />
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -77,9 +77,12 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             pipelineListConf: Object,
             loading: Object,
@@ -90,17 +93,14 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            pipelineHref () {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${this.pipelineId}/detail/${this.latestBuildId}`
             }
         },
         methods: {
             close () {
                 this.$emit('close')
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp)
             }
         }
     }

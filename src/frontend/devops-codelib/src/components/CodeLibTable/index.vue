@@ -124,14 +124,16 @@
                     </span>
                     <a
                         v-if="!['OAUTH'].includes(props.row.authType)"
-                        :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
+                        :href="getTicketEditUrl(projectId, props.row.authIdentity)"
                         target="_blank"
                     >
-                        {{ props.row.authIdentity }}
+                        <bk-user-display-name :user-id="props.row.authIdentity" />
                     </a>
-                    <span v-else>
-                        {{ props.row.authIdentity }}
-                    </span>
+
+                    <bk-user-display-name
+                        v-else
+                        :user-id="props.row.authIdentity"
+                    />
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -141,6 +143,9 @@
                 prop="updatedUser"
                 show-overflow-tooltip
             >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.updatedUser" />
+                </template>
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.lastModifiedTime"
@@ -149,7 +154,7 @@
                 prop="updatedTime"
             >
                 <template slot-scope="props">
-                    {{ prettyDateTimeFormat(Number(props.row.updatedTime + '000')) }}
+                    <time-display :value="props.row.updatedTime" />
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -236,25 +241,26 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
-        TABLE_COLUMN_CACHE,
+        getOffset
+    } from '@/utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { mapActions, mapState } from 'vuex'
+    import {
+        CACHE_CODELIB_TABLE_WIDTH_MAP,
         CODE_REPOSITORY_CACHE,
         CODE_REPOSITORY_SEARCH_VAL,
-        CACHE_CODELIB_TABLE_WIDTH_MAP,
-        listColumnsCache
+        listColumnsCache,
+        TABLE_COLUMN_CACHE
     } from '../../config/'
-    import {
-        getOffset,
-        prettyDateTimeFormat
-    } from '@/utils/'
     import EmptyTableStatus from '../empty-table-status.vue'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     
     export default {
         components: {
             EmptyTableStatus,
+            TimeDisplay,
             UsingPipelinesDialog
         },
         props: {
@@ -491,7 +497,6 @@
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
-            prettyDateTimeFormat,
 
             /**
              * @desc 计算表格高度
@@ -682,6 +687,9 @@
             handelHeaderDragend (newWidth, oldWidth, column) {
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_CODELIB_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
+            },
+            getTicketEditUrl (projectId, credentialId) {
+                return `${window.getRoutePrefix()}/ticket/${projectId}/editCredential/${credentialId}`
             }
         }
     }

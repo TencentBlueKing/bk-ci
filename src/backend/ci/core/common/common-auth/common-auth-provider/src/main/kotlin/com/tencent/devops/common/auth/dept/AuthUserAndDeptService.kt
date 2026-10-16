@@ -14,10 +14,10 @@ class AuthUserAndDeptService(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, Boolean/*isDeparted*/>()
 
-    override fun checkUserDeparted(name: String): Boolean {
+    override fun checkUserDeparted(name: String, tenantId: String?): Boolean {
         val isCachePresent = user2DepartedStatus.getIfPresent(name) != null
         if (!isCachePresent) {
-            val isUserDeparted = client.get(ServiceDeptResource::class).checkUserDeparted(name).data ?: true
+            val isUserDeparted = client.get(ServiceDeptResource::class).checkUserDeparted(name, tenantId).data ?: true
             user2DepartedStatus.put(name, isUserDeparted)
         }
         return user2DepartedStatus.getIfPresent(name) ?: true

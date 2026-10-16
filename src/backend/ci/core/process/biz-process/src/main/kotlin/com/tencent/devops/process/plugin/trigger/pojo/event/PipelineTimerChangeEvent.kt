@@ -45,6 +45,8 @@ data class PipelineTimerChangeEvent(
     override val userId: String,
     val crontabExpressionJson: String,
     val taskId: String?,
+    /** IANA 时区；空则调度回落 Asia/Shanghai */
+    val timeZone: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

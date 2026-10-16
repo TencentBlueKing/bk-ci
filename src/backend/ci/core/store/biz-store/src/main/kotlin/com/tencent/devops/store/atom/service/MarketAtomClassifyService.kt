@@ -49,5 +49,5 @@ interface MarketAtomClassifyService {
      * @param atomCode 插件标识
      * @return 插件分类信息
      */
-    fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?>
+    fun getAtomClassifyInfo(atomCode: String, tenantId: String?): Result<AtomClassifyInfo?>
 }

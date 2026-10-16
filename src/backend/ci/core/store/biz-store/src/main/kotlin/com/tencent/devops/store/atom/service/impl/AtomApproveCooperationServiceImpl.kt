@@ -34,15 +34,15 @@ import com.tencent.devops.store.atom.dao.AtomApproveRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.AbstractStoreApproveSpecifyBusInfoService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.AbstractStoreApproveSpecifyBusInfoService
-import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -75,7 +75,8 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String,
         approveId: String,
-        storeApproveRequest: StoreApproveRequest
+        storeApproveRequest: StoreApproveRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("approveStoreSpecifyBusInfo params: [$userId|$storeType|$storeCode|$storeApproveRequest]")
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
@@ -96,7 +97,13 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType
             )
-            val addAtomMemberResult = atomMemberService.add(userId, storeMemberReq, storeType, true)
+            val addAtomMemberResult = atomMemberService.add(
+                userId = userId,
+                storeMemberReq = storeMemberReq,
+                storeType = storeType,
+                collaborationFlag = true,
+                tenantId = tenantId
+            )
             if (addAtomMemberResult.isNotOk()) {
                 return Result(status = addAtomMemberResult.status, message = addAtomMemberResult.message, data = false)
             }
@@ -114,12 +121,12 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             if (storeApproveRequest.approveStatus == ApproveStatusEnum.PASS) {
                 // 如果申请者已经是插件的成员则直接更新该成员的调试项目为协作申请时录入的项目
                 storeProjectRelDao.updateUserStoreTestProject(
-                        dslContext = context,
-                        userId = atomApproveRecord!!.applicant,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        projectCode = atomApproveRelRecord.testProjectCode,
-                        storeProjectType = StoreProjectTypeEnum.TEST
+                    dslContext = context,
+                    userId = atomApproveRecord!!.applicant,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    projectCode = atomApproveRelRecord.testProjectCode,
+                    storeProjectType = StoreProjectTypeEnum.TEST
                 )
             }
         }
@@ -127,7 +134,7 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             // 给用户发送驳回通知
             executorService.submit<Unit> {
                 val receivers = mutableSetOf(atomApproveRecord!!.applicant)
-                val atomName = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
+                val atomName = marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)?.name ?: ""
                 val bodyParams = mapOf(
                     "atomAdmin" to userId,
                     "atomName" to atomName,

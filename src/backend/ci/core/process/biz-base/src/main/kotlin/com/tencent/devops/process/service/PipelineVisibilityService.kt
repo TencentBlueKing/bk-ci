@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineVisibilityDao
@@ -47,7 +48,11 @@ class PipelineVisibilityService @Autowired constructor(
         pipelineId: String
     ) {
         val userInfo = userInfoCache.get(userId) {
-            client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data
+            client.get(ServiceDeptResource::class).getUserInfo(
+                userId = userId,
+                tenantId = TenantUtils.getTenantId(),
+                name = userId
+            ).data
         } ?: return
         val userDepartments = userInfo.deptInfo?.lastOrNull {
             !it.fullName.isNullOrBlank()
@@ -225,7 +230,10 @@ class PipelineVisibilityService @Autowired constructor(
     private fun getUserDeptIds(userId: String): Set<String> {
         return userDeptIdCache.get(userId) {
             try {
-                client.get(ServiceDeptResource::class).getUserDeptIds(userId).data ?: emptySet()
+                client.get(ServiceDeptResource::class).getUserDeptIds(
+                    userId = userId,
+                    tenantId = TenantUtils.getTenantId()
+                ).data ?: emptySet()
             } catch (e: Exception) {
                 logger.warn("Failed to get dept list for user $userId", e)
                 emptySet()

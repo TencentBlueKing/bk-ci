@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.template.dao
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TLabel
@@ -57,6 +58,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
 
 @Suppress("ALL")
 @Repository
@@ -73,13 +75,15 @@ class MarketTemplateDao {
         labelCodeList: List<String>?,
         score: Int?,
         rdType: TemplateRdTypeEnum?,
-        excludeProjectCode: String? = null
+        excludeProjectCode: String? = null,
+        tenantId: String? = null
     ): Int {
         val (tt, conditions) = formatConditions(
             keyword = keyword,
             rdType = rdType,
             classifyCode = classifyCode,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
 
         val baseStep = dslContext.select(DSL.countDistinct(tt.ID)).from(tt)
@@ -171,10 +175,14 @@ class MarketTemplateDao {
         keyword: String?,
         rdType: TemplateRdTypeEnum?,
         classifyCode: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        tenantId: String? = null
     ): Pair<TTemplate, MutableList<Condition>> {
         val tTemplate = TTemplate.T_TEMPLATE
         val conditions = mutableListOf<Condition>()
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+        }
         conditions.add(tTemplate.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tTemplate.LATEST_FLAG.eq(true)) // 最新版本
         if (!keyword.isNullOrEmpty()) {
@@ -212,13 +220,15 @@ class MarketTemplateDao {
         desc: Boolean?,
         excludeProjectCode: String? = null,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String? = null
     ): Result<out Record>? {
         val (tt, conditions) = formatConditions(
             keyword = keyword,
             rdType = rdType,
             classifyCode = classifyCode,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
 
         val baseStep = dslContext.select(
@@ -517,11 +527,18 @@ class MarketTemplateDao {
         }
     }
 
-    fun getLatestTemplateByCode(dslContext: DSLContext, templateCode: String): TTemplateRecord? {
+    fun getLatestTemplateByCode(
+        dslContext: DSLContext,
+        templateCode: String,
+        tenantId: String? = null
+    ): TTemplateRecord? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(LATEST_FLAG.eq(true))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
+                }
                 .fetchOne()
         }
     }
@@ -629,7 +646,8 @@ class MarketTemplateDao {
         description: String?,
         excludeStatus: TemplateStatusEnum? = null,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String? = null
     ): Result<out Record> {
         val tTemplate = TTemplate.T_TEMPLATE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -650,7 +668,8 @@ class MarketTemplateDao {
             status = status,
             modifier = modifier,
             description = description,
-            excludeStatus = excludeStatus
+            excludeStatus = excludeStatus,
+            tenantId = tenantId
         )
         return dslContext.select(
             tTemplate.ID,
@@ -692,6 +711,7 @@ class MarketTemplateDao {
         modifier: String?,
         description: String?,
         excludeStatus: TemplateStatusEnum? = null,
+        tenantId: String? = null
     ): Long {
         val tTemplate = TTemplate.T_TEMPLATE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -706,7 +726,8 @@ class MarketTemplateDao {
             status = status,
             modifier = modifier,
             description = description,
-            excludeStatus = excludeStatus
+            excludeStatus = excludeStatus,
+            tenantId = tenantId
         )
         return dslContext.select(
             DSL.countDistinct(tTemplate.TEMPLATE_CODE)
@@ -730,9 +751,13 @@ class MarketTemplateDao {
         status: TemplateStatusEnum?,
         excludeStatus: TemplateStatusEnum?,
         modifier: String?,
-        description: String?
+        description: String?,
+        tenantId: String? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+        }
         conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         conditions.add(tStoreProjectRel.TYPE.eq(0))
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
@@ -807,4 +832,10 @@ class MarketTemplateDao {
                 .execute()
         }
     }
+
+    private fun useTenantCondition(tenantId: String?) =
+        TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

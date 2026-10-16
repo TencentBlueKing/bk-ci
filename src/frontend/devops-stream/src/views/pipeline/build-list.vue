@@ -141,7 +141,7 @@
                     <template slot-scope="props">
                         <p class="consume">
                             <span class="consume-item"><i class="bk-icon icon-clock"></i>{{ props.row.buildHistory.executeTime | totalFliter }}</span>
-                            <span class="consume-item"><i class="bk-icon icon-calendar"></i>{{ props.row.buildHistory.startTime | timeFilter }}</span>
+                            <span class="consume-item"><i class="bk-icon icon-calendar"></i><time-display :value="props.row.buildHistory.startTime" /></span>
                         </p>
                     </template>
                 </bk-table-column>
@@ -286,7 +286,6 @@
     import {
         goYaml,
         preciseDiff,
-        timeFormatter,
         modifyHtmlTitle,
         debounce,
         throttle
@@ -301,6 +300,7 @@
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
     import EmptyTableStatus from '@/components/empty-table-status'
+    import TimeDisplay from '../../../../common-lib/time-display'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
@@ -313,14 +313,11 @@
             optMenu,
             codeSection,
             BkUiForm,
-            EmptyTableStatus
+            EmptyTableStatus,
+            TimeDisplay
         },
 
         filters: {
-            timeFilter (val) {
-                return timeFormatter(val)
-            },
-
             totalFliter (val) {
                 return preciseDiff(val)
             }

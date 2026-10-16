@@ -13,7 +13,7 @@
             </span>
             <p class="trigger-event-desc">
                 <EventDesc :event-desc="event.eventDesc" />
-                <span class="trigger-event-item-lighter-field">{{ convertTime(event.eventTime) }}</span>
+                <span class="trigger-event-item-lighter-field"><time-display :value="event.eventTime" /></span>
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
@@ -65,14 +65,15 @@
         RESOURCE_TYPE
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
-    import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import { BUILD_NUM_LINK_REG, safeUrl, toText } from './eventDescConfig'
     import EventDesc from './EventDesc.vue'
 
     export default {
         components: {
-            EventDesc
+            EventDesc,
+            TimeDisplay
         },
         props: {
             events: {
@@ -106,7 +107,6 @@
             ...mapActions('pipelines', [
                 'reTriggerEvent'
             ]),
-            convertTime,
             getBuildNumLink (buildNum) {
                 const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
                 if (!match) {

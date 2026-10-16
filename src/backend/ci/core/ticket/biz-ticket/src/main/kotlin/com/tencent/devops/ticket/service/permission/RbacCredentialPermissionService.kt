@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import org.jooq.DSLContext
@@ -159,6 +160,7 @@ class RbacCredentialPermissionService constructor(
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
             token = tokenService.getSystemToken()!!,
             projectCode = projectId,
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,

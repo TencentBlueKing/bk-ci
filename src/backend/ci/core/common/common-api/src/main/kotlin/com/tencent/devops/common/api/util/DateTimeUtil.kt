@@ -32,7 +32,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
@@ -167,8 +166,19 @@ object DateTimeUtil {
         return convertDateToLocalDateTime(simpleDateFormat.parse(simpleDateFormat.format(date)))
     }
 
+    /**
+     * LocalDateTime → 秒级 Unix。按 [ZoneId.systemDefault] 解释（与 [timestamp] 扩展一致）。
+     * 禁止再硬编码 UTC+8。
+     */
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
-        return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
+        return localDateTime?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
+    }
+
+    /**
+     * LocalDateTime → 毫秒级 Unix。对人端 API 优先使用本方法或 [timestampmilli]。
+     */
+    fun convertLocalDateTimeToTimestampMilli(localDateTime: LocalDateTime?): Long? {
+        return localDateTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
     }
 
     /*
@@ -176,6 +186,39 @@ object DateTimeUtil {
     * */
     fun convertTimestampToLocalDateTime(timestamp: Long): LocalDateTime {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
+    }
+
+    /**
+     * 毫秒时间戳 → LocalDateTime（systemDefault）
+     */
+    fun convertTimestampMilliToLocalDateTime(timestampMilli: Long): LocalDateTime {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestampMilli), ZoneId.systemDefault())
+    }
+
+    /**
+     * 解析 IANA 时区；非法或空时回退 systemDefault。
+     */
+    fun resolveZoneId(timeZone: String?): ZoneId {
+        if (timeZone.isNullOrBlank()) {
+            return ZoneId.systemDefault()
+        }
+        return try {
+            ZoneId.of(timeZone)
+        } catch (_: Exception) {
+            ZoneId.systemDefault()
+        }
+    }
+
+    /**
+     * 将用户时区下的日历日区间转为 DB 用 LocalDateTime 区间（systemDefault）。
+     * @return Pair(startInclusive, endExclusive)
+     */
+    fun calendarDateRangeToLocalDateTime(
+        startDate: String,
+        endDate: String,
+        timeZone: String? = null
+    ): Pair<LocalDateTime, LocalDateTime> {
+        return TimeZoneDayRangeUtils.ofCalendarDates(startDate, endDate, timeZone).toSystemLocalDateTime()
     }
 
     fun convertLocalDateTimeToDate(localDateTime: LocalDateTime): Date {
@@ -186,6 +229,16 @@ object DateTimeUtil {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     }
 
+    /**
+     * 将 LocalDateTime 格式化为字符串（按 systemDefault）。
+     *
+     * **禁止用于对人端 API VO**：前端应按用户时区格式化毫秒时间戳。
+     * 仅允许通知文案、日志、内部运维展示等场景。见 timezone_and_datetime.md。
+     */
+    @Deprecated(
+        message = "Do not use for client-facing API fields; return epoch millis instead",
+        replaceWith = ReplaceWith("dateTime?.timestampmilli()")
+    )
     fun toDateTime(dateTime: LocalDateTime?, format: String = YYYY_MM_DD_HH_MM_SS): String {
         if (dateTime == null) {
             return ""
@@ -193,6 +246,21 @@ object DateTimeUtil {
         val zone = ZoneId.systemDefault()
         val instant = dateTime.atZone(zone).toInstant()
         val simpleDateFormat = SimpleDateFormat(format)
+        return simpleDateFormat.format(Date.from(instant))
+    }
+
+    /**
+     * 按指定 IANA 时区格式化毫秒时间戳（通知文案等后端展示场景）。
+     */
+    fun formatEpochMilli(
+        epochMilli: Long,
+        timeZone: String? = null,
+        format: String = YYYY_MM_DD_HH_MM_SS
+    ): String {
+        val zone = resolveZoneId(timeZone)
+        val instant = Instant.ofEpochMilli(epochMilli)
+        val simpleDateFormat = SimpleDateFormat(format)
+        simpleDateFormat.timeZone = TimeZone.getTimeZone(zone)
         return simpleDateFormat.format(Date.from(instant))
     }
 

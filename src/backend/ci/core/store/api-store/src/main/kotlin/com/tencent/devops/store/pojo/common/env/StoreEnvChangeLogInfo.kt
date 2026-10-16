@@ -39,6 +39,6 @@ data class StoreEnvChangeLogInfo(
     val afterVarValue: String,
     @get:Schema(title = "修改用户", required = true)
     val modifier: String,
-    @get:Schema(title = "修改时间", required = true)
-    val updateTime: String
+    @get:Schema(title = "修改时间（毫秒时间戳）", required = true)
+    val updateTime: Long
 )

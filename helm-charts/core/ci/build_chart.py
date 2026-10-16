@@ -47,7 +47,9 @@ include_dict = {
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
     'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}',
     'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}',
-    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}'
+    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}',
+    # 新 key 未出现时回落到旧 key，避免存量 values 只写了 bkCiSyncCronEnabled
+    'bkCiAuthSyncCronEnabled': '{{ include "bkci.authSyncCronEnabled" . }}'
 }
 
 # 正则匹配 __BK_XXX__

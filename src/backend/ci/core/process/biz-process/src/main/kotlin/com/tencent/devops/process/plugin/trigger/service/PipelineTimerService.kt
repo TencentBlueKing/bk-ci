@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerBranchDao
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerDao
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
+import com.tencent.devops.process.plugin.trigger.util.TimerTimeZoneUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,9 +77,11 @@ open class PipelineTimerService @Autowired constructor(
         taskId: String,
         noScm: Boolean?,
         startParam: Map<String, String>?,
+        timeZone: String? = null,
         transaction: DSLContext = dslContext
     ): Result<Boolean> {
         val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
+        val resolvedTimeZone = TimerTimeZoneUtils.resolve(timeZone)
         return if (0 < pipelineTimerDao.save(
                 transaction,
                 projectId,
@@ -90,7 +93,8 @@ open class PipelineTimerService @Autowired constructor(
                 branchs?.let { JsonUtil.toJson(it) },
                 noScm,
                 startParam?.let { JsonUtil.toJson(it) },
-                taskId
+                taskId,
+                resolvedTimeZone
             )
         ) {
             pipelineEventDispatcher.dispatch(
@@ -100,7 +104,8 @@ open class PipelineTimerService @Autowired constructor(
                     pipelineId = pipelineId,
                     taskId = taskId,
                     userId = userId,
-                    crontabExpressionJson = crontabJson
+                    crontabExpressionJson = crontabJson,
+                    timeZone = resolvedTimeZone
                 )
             )
             Result(true)
@@ -113,6 +118,7 @@ open class PipelineTimerService @Autowired constructor(
                     taskId = taskId,
                     userId = userId,
                     crontabExpressionJson = crontabJson,
+                    timeZone = resolvedTimeZone,
                     actionType = ActionType.TERMINATE
                 )
             )
@@ -222,7 +228,8 @@ open class PipelineTimerService @Autowired constructor(
                 taskId = taskId,
                 startParam = startParam?.let {
                     JsonUtil.to(it, object : TypeReference<Map<String, String>>() {})
-                }
+                },
+                timeZone = pipelineTimerDao.readTimeZone(this)
             )
         }
     }

@@ -95,6 +95,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceGrou
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateResultService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV0PolicyService
+import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateProjectCodePrefixService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.provider.rbac.service.migrate.RbacPermissionMigrateService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
@@ -108,6 +109,7 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.UserManageService
+import com.tencent.devops.auth.service.TenantAuthDeptServiceImpl
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
@@ -699,6 +701,7 @@ class RbacAuthConfiguration {
         syncDataTaskDao: AuthSyncDataTaskDao,
         rbacCommonService: RbacCommonService,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        migrateProjectCodePrefixService: MigrateProjectCodePrefixService,
         authProjectResetRecordDao: AuthProjectResetRecordDao
     ) = RbacPermissionMigrateService(
         client = client,
@@ -721,6 +724,7 @@ class RbacAuthConfiguration {
         syncDataTaskDao = syncDataTaskDao,
         rbacCommonService = rbacCommonService,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
+        migrateProjectCodePrefixService = migrateProjectCodePrefixService,
         authProjectResetRecordDao = authProjectResetRecordDao
     )
 
@@ -834,4 +838,8 @@ class RbacAuthConfiguration {
         syncDataTaskDao = syncDataTaskDao,
         userService = userService
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "bk", name = ["enableMultiTenantMode"], havingValue = "true")
+    fun tenantDeptServiceImpl() = TenantAuthDeptServiceImpl()
 }

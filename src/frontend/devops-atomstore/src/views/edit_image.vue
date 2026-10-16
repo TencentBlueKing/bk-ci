@@ -225,7 +225,7 @@
                         </bk-option>
                         <a
                             v-if="form.projectCode"
-                            :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                            :href="createCredentialUrl"
                             slot="extension"
                             target="_blank"
                         > {{ $t('store.新增凭证') }} </a>
@@ -464,6 +464,9 @@
             },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
+            },
+            createCredentialUrl () {
+                return `${window.getRoutePrefix()}/ticket/${this.form.projectCode}/createCredential/USERNAME_PASSWORD/true`
             }
         },
 

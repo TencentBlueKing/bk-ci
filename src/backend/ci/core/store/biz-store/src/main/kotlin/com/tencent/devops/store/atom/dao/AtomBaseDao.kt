@@ -28,6 +28,8 @@
 package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID as STORE_TENANT_ID
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -149,11 +151,14 @@ abstract class AtomBaseDao {
             .or(TAtom.T_ATOM.BRANCH_TEST_FLAG.isNull())
     }
 
-    fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String, tenantId: String? = null): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(formalVersionConditions(atomCode))
                 .and(LATEST_FLAG.eq(true))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
+                }
                 .fetchOne()
         }
     }
@@ -167,7 +172,12 @@ abstract class AtomBaseDao {
         }
     }
 
-    fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean = false): TAtomRecord? {
+    fun getNewestAtomByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        branchTestFlag: Boolean = false,
+        tenantId: String? = null
+    ): TAtomRecord? {
         // 查正式版本时与 formalVersionConditions 保持同一口径：未标记过的记录（NULL）按正式版本处理
         val flagCondition = if (branchTestFlag) {
             TAtom.T_ATOM.BRANCH_TEST_FLAG.eq(true)
@@ -177,6 +187,9 @@ abstract class AtomBaseDao {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(flagCondition))
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -186,10 +199,14 @@ abstract class AtomBaseDao {
     fun getMaxVersionAtomByCode(
         dslContext: DSLContext,
         atomCode: String,
-        atomStatus: AtomStatusEnum? = null
+        atomStatus: AtomStatusEnum? = null,
+        tenantId: String? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = formalVersionConditions(atomCode)
+            if (useTenantCondition(tenantId)) {
+                conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
+            }
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
             }
@@ -214,13 +231,19 @@ abstract class AtomBaseDao {
                         str = VERSION,
                         delim = ".",
                         count = -1
-                    ).plus(0).desc())
+                    ).plus(0).desc()
+                )
                 .limit(1)
                 .fetchOne()
         }
     }
 
-    fun getSupportGitCiAtom(dslContext: DSLContext, os: String?, classType: String?): Result<Record1<String>> {
+    fun getSupportGitCiAtom(
+        dslContext: DSLContext,
+        os: String?,
+        classType: String?,
+        tenantId: String? = null
+    ): Result<Record1<String>> {
         val ta = TAtom.T_ATOM
         val conditions = mutableListOf<Condition>()
         if (!os.isNullOrBlank()) {
@@ -228,6 +251,9 @@ abstract class AtomBaseDao {
         }
         if (!classType.isNullOrBlank()) {
             conditions.add(ta.CLASS_TYPE.eq(classType))
+        }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tenantVisibleCondition(STORE_TENANT_ID, tenantId))
         }
         buildJobTypeCondition(ta, JobTypeEnum.AGENT.name, ServiceScopeEnum.PIPELINE)?.let {
             conditions.add(it)
@@ -483,4 +509,10 @@ abstract class AtomBaseDao {
             else -> null
         }
     }
+
+    protected fun useTenantCondition(tenantId: String?) =
+        TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
+
+    protected fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

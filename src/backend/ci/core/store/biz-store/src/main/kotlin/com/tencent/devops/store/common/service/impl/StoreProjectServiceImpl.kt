@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
@@ -89,13 +90,18 @@ class StoreProjectServiceImpl @Autowired constructor(
     override fun getInstalledProjects(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        tenantId: String?
     ): Result<List<InstalledProjRespItem>> {
         val watcher = Watcher(id = "getInstalledProjects|$userId|$storeCode|$storeType")
         try {
             // 获取用户有权限的项目列表
             watcher.start("get accessible projects")
-            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            val projectList = client.get(ServiceProjectResource::class).list(
+                userId = userId,
+                productIds = null,
+                tenantId = tenantId
+            ).data
             if (projectList?.isEmpty() == true) {
                 return Result(mutableListOf())
             }
@@ -115,7 +121,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                         projectCode = it.projectCode,
                         projectName = projectCodeMap[it.projectCode]?.projectName,
                         creator = it.creator,
-                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                        createTime = it.createTime.timestampmilli()
                     )
                 )
             }
@@ -130,7 +136,8 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeId: String,
         installStoreReq: InstallStoreReq,
         publicFlag: Boolean,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        tenantId: String?
     ): Result<Boolean> {
         val storeCode = installStoreReq.storeCode
         val storeType = installStoreReq.storeType
@@ -155,7 +162,8 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType,
             projectCodeList = projectCodeList,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
@@ -291,7 +299,8 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum,
         projectCodeList: ArrayList<String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        tenantId: String?
     ): Result<Boolean> {
         val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
         if (!installFlag) {
@@ -303,7 +312,11 @@ class StoreProjectServiceImpl @Autowired constructor(
         }
         if (ChannelCode.isNeedAuth(channelCode) && projectCodeList.isNotEmpty()) {
             // 获取用户有权限的项目列表
-            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            val projectList = client.get(ServiceProjectResource::class).list(
+                userId = userId,
+                productIds = null,
+                tenantId = tenantId
+            ).data
             // 判断用户是否有权限安装到对应的项目
             val privilegeProjectCodeList = mutableListOf<String>()
             projectList?.map {

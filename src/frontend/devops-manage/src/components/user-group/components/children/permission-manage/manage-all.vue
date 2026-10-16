@@ -427,13 +427,14 @@ import { batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/uti
 import userDetailGroupTable from "@/store/userDetailGroupTable";
 import DetailGroupTab from "./detail-group-tab.vue";
 import { AngleRight  } from 'bkui-vue/lib/icon';
+import tools from '@/utils/tools';
 
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
 const route = useRoute();
 const formRef = ref(null);
 const renewalRef = ref(null);
-const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
+const projectId = computed(() => route.params?.projectCode || route.query?.projectCode || tools.getCookie('X-DEVOPS-PROJECT-ID'));
 const isNotProject = computed(() => projectId.value === 'my-project' || !projectId.value);
 const expiredAt = ref(30);
 const isShowSlider = ref(false);
@@ -591,7 +592,7 @@ const activeItems = computed(() => {
 onMounted(() => {
   init(true);
 });
-watch(projectId, () => {
+watch(projectId.value, () => {
   init(true);
 });
 function init (flag, searchValue) {

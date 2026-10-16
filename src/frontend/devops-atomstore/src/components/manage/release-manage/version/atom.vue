@@ -48,12 +48,20 @@
                 :label="$t('store.创建人')"
                 prop="creator"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.创建时间')"
                 prop="createTime"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template slot-scope="props">
+                    <time-display :value="props.row.createTime" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.操作')"
                 width="150"
@@ -150,8 +158,9 @@
                 >
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布者：') }}</span>
-                        <span>{{ detail.publisher || '--' }}</span>
+                        <bk-user-display-name :user-id="detail.publisher" />
                     </li>
+
                     <li class="detail-item">
                         <span class="detail-label">{{ $t('store.发布类型：') }}</span>
                         <span>{{ releaseMap[detail.releaseType] || '--' }}</span>
@@ -183,10 +192,12 @@
 <script>
     import { atomStatusMap } from '@/store/constants'
     import atomDetail from '../../detail/atom-detail/show.vue'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         components: {
-            atomDetail
+            atomDetail,
+            TimeDisplay
         },
 
         props: {

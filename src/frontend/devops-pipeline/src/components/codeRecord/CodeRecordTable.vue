@@ -46,8 +46,11 @@
                 :width="200"
                 :label="$t('details.commitTime')"
                 prop="commitTime"
-                :formatter="formatTimeColumn"
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <time-display :value="props.row.commitTime" />
+                </template>
+            </bk-table-column>
         </bk-table>
     </div>
     <div
@@ -67,12 +70,13 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import TimeDisplay from '../../../../common-lib/time-display'
     export default {
         name: 'code-record-table',
         components: {
-            Logo
+            Logo,
+            TimeDisplay
         },
         props: {
             commitList: {
@@ -97,9 +101,6 @@
             }
         },
         methods: {
-            formatTimeColumn (row) {
-                return row.commitTime ? convertTime(row.commitTime) : '--'
-            },
             formatCommitId (commitId) {
                 return commitId && typeof commitId === 'string' ? commitId.slice(0, 8) : '--'
             }
