@@ -8,7 +8,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.yaml.exception.hanlder.YamlTriggerExceptionUtil
+import com.tencent.devops.process.yaml.common.YamlExceptionUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,7 +107,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 filePath = filePath
             )
         } catch (ignored: Exception) {
-            val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
+            val (reason, reasonDetail) = YamlExceptionUtil.getReasonDetail(exception = ignored)
             syncFailed(reason = reason, reasonDetail = reasonDetail)
         }
     }

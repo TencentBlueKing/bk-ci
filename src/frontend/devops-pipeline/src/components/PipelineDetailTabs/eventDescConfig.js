@@ -156,6 +156,9 @@ export const EVENT_DESC_PARAM_MAPPERS = {
     bkRepoEnablePacEventDesc: mapParams({
         user: userParam(0)
     }),
+    bkRepoDisablePacEventDesc: mapParams({
+        user: userParam(0)
+    }),
     // bkGit* 事件（通用 Git 平台，参数格式同 bkTgit*）
     bkGitPushEventDesc: mapParams({
         branch: textParam(0),
