@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.26
 
 **文档描述：** devops_ci_process的数据库文档
 | 表名                  | 说明       |
@@ -700,6 +700,7 @@
 |  8   | USER_ID |   varchar   | 100 |   0    |    Y     |  N   |       | 创建人  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
+|  11   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_PIPELINE_COPY_TASK_RESOURCE</a>
 
@@ -1817,6 +1818,7 @@
 |  12   | RESOURCE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 资源ID,流水线ID/模版ID  |
 |  13   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   PIPELINE    | 资源类型,流水线/模版  |
 |  14   | OLD_FILE_PATH |   varchar   | 512 |   0    |    Y     |  N   |       | 重命名前的文件路径，用于保留原流水线时追溯  |
+|  15   | DEFAULT_BRANCH_YAML_EXIST |   bit   | 1 |   0    |    N     |  N   |   b'1'    | yaml文件是否在默认分支存在  |
 
 **表名：** <a>T_PIPELINE_YAML_SYNC</a>
 
@@ -1893,6 +1895,7 @@
 |  10   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 启用  |
 |  11   | FAILURE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 失败时间  |
 |  12   | SECRET_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 鉴权参数  |
+|  13   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_PROJECT_PIPELINE_CALLBACK_HISTORY</a>
 
