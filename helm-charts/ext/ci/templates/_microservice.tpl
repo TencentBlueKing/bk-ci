@@ -115,16 +115,39 @@ spec:
         - name: wait-for-mysql
           image: {{ include "common.images.image" (dict "imageRoot" $root.Values.backendImage "global" $root.Values.global) }}
           imagePullPolicy: {{ $root.Values.backendImage.pullPolicy }}
-          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" $root) }}
+          {{- $mysqlData := split ":" (include "bkci.mysqlAddr" $root) }}
+          env:
+            - name: MYSQL_USER
+              value: {{ include "bkci.mysqlUsername" $root | quote }}
+            - name: MYSQL_HOST
+              value: {{ $mysqlData._0 | quote }}
+            - name: MYSQL_PORT
+              value: {{ $mysqlData._1 | quote }}
+            - name: MYSQL_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "bkci.mysql.secretName" $root }}
+                  key: mysql-root-password
           command:
             - "/bin/sh"
             - "-c"
             - |
-              while ! mysql -u{{- include "bkci.mysqlUsername" $root }} -p{{- include "bkci.mysqlPassword" $root }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}; do
+              umask 077
+              {
+                printf '%s\n' '[client]'
+                printf 'user=%s\n' "$MYSQL_USER"
+                printf 'host=%s\n' "$MYSQL_HOST"
+                printf 'port=%s\n' "$MYSQL_PORT"
+                printf '%s\n' 'protocol=TCP'
+                printf 'password="%s"\n' "$(printf '%s' "$MYSQL_PWD" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+              } > /tmp/mysql-client.cnf
+              unset MYSQL_PWD
+              while ! mysql --defaults-extra-file=/tmp/mysql-client.cnf --connect-timeout=5 -e "SELECT 1"; do
                 echo "mysql connecting.."
                 sleep 3
               done
-              echo "MySQL is available";
+              rm -f /tmp/mysql-client.cnf
+              echo "MySQL is available"
       {{- end }}
       containers:
         - name: {{ $name }}
