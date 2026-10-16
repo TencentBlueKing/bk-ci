@@ -1,5 +1,39 @@
 <template>
     <div class="pipeline-history-header">
+        <div
+            style="display: none;"
+            :key="Date.now()"
+        >
+            <div
+                id="pipelineDisabledTooltip"
+                class="pipeline-disabled-tooltip"
+            >
+                <p class="disabled-tooltip-title">{{ $t('pacPipelineLockTips') }}</p>
+                <p
+                    v-if="isPageAndYamlDisabled"
+                    class="disabled-tooltip-sub-title"
+                >
+                    {{ $t('resolveBothDisabledTips') }}
+                </p>
+                <template v-for="group in disabledTooltipGroups">
+                    <p
+                        v-if="group.title"
+                        :key="group.key"
+                        class="disabled-tooltip-group-title"
+                    >
+                        {{ group.title }}
+                    </p>
+                    <p
+                        v-for="item in group.items"
+                        :key="`${item.value}-${Date.now()}`"
+                        class="disabled-tooltip-item"
+                    >
+                        <span class="item-label">{{ item.label }}</span>
+                        <span class="item-value">{{ item.value }}</span>
+                    </p>
+                </template>
+            </div>
+        </div>
         <component
             :is="breadCrumb"
             v-bind="breadCrumbProps"
@@ -108,6 +142,7 @@
                 <template v-if="editAndExecutable">
                     <span
                         v-if="!archiveFlag"
+                        :key="Date.now()"
                         v-bk-tooltips="tooltip"
                     >
                         <bk-button
@@ -149,38 +184,6 @@
             :show-version-sideslider="showVersionSideslider"
             @close="closeVersionSideSlider"
         />
-        <!-- 禁用态执行按钮 tooltip 模板：三种禁用场景 -->
-        <div style="display: none;">
-            <div
-                id="pipelineDisabledTooltip"
-                class="pipeline-disabled-tooltip"
-            >
-                <p class="disabled-tooltip-title">{{ $t('pacPipelineLockTips') }}</p>
-                <p
-                    v-if="isPageAndYamlDisabled"
-                    class="disabled-tooltip-sub-title"
-                >
-                    {{ $t('resolveBothDisabledTips') }}
-                </p>
-                <template v-for="group in disabledTooltipGroups">
-                    <p
-                        v-if="group.title"
-                        :key="group.key"
-                        class="disabled-tooltip-group-title"
-                    >
-                        {{ group.title }}
-                    </p>
-                    <p
-                        v-for="item in group.items"
-                        :key="`${group.key}-${item.label}`"
-                        class="disabled-tooltip-item"
-                    >
-                        <span class="item-label">{{ item.label }}</span>
-                        <span class="item-value">{{ item.value }}</span>
-                    </p>
-                </template>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -364,16 +367,16 @@
             // 页面（UI）禁用明细
             pageDisabledItems () {
                 return [
-                    { label: this.$t('disabledByLabel'), value: this.pipelineInfo?.lockedUser || '--' },
-                    { label: this.$t('disabledAtLabel'), value: convertTime(this.pipelineInfo?.lockedTime) },
-                    { label: this.$t('disableReasonLabel'), value: this.pipelineInfo?.lockedReason || '--' }
+                    { label: this.$t('disabledByLabel'), value: this.pipelineInfo?.lockUser || '--' },
+                    { label: this.$t('disabledAtLabel'), value: convertTime(this.pipelineInfo?.lockTime) },
+                    { label: this.$t('disableReasonLabel'), value: this.pipelineInfo?.lockReason || '--' }
                 ]
             },
             // YAML 声明禁用明细
             yamlDisabledItems () {
                 return [
-                    { label: this.$t('submitterLabel'), value: this.pipelineInfo?.yamlLockedUser || '--' },
-                    { label: this.$t('submitTimeLabel'), value: convertTime(this.pipelineInfo?.yamlLockedTime) }
+                    { label: this.$t('submitterLabel'), value: this.pipelineInfo?.yamlLockUser || '--' },
+                    { label: this.$t('submitTimeLabel'), value: convertTime(this.pipelineInfo?.yamlLockTime) }
                 ]
             },
             // 禁用 tooltip 分组信息：三种禁用场景

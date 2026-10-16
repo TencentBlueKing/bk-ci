@@ -184,11 +184,11 @@
             // 代码库 YAML 中声明 disable-pipeline: true 导致的禁用
             yamlLocked: Boolean,
             // UI 禁用人
-            lockedUser: String,
+            lockUser: String,
             // UI 禁用时间
-            lockedTime: Number,
+            lockTime: Number,
             // UI 禁用原因
-            lockedReason: String
+            lockReason: String
         },
         data () {
             return {
@@ -205,15 +205,15 @@
             },
             // 已禁用（仅 UI 禁用场景）时展示的禁用人
             pacDisabledByUser () {
-                return this.lockedUser || '--'
+                return this.lockUser || '--'
             },
             // 已禁用（仅 UI 禁用场景）时展示的禁用时间
             pacDisabledAt () {
-                return convertTime(this.lockedTime)
+                return convertTime(this.lockTime)
             },
             // 已禁用（仅 UI 禁用场景）时展示的禁用原因
             pacDisabledReason () {
-                return this.lockedReason || '--'
+                return this.lockReason || '--'
             },
             // YAML 禁用场景下展示的文件路径
             pacYamlFilePath () {
@@ -254,15 +254,16 @@
                 }
             },
             async disablePipeline () {
+                const lock = this.lock
                 try {
                     this.disabling = true
                     await this.lockPipeline({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.pipelineId,
+                        enable: lock,
                         params: {
-                            enable: this.lock,
                             // 仅 PAC 流水线禁用时需要传禁用原因
-                            ...(this.pacEnabled && !this.lock ? { lockedReason: this.disableReason } : {})
+                            ...(this.pacEnabled && !lock ? { lockReason: this.disableReason } : {})
                         }
                     })
                     // PAC 流水线在详情页需重新拉取详情，刷新禁用人/禁用时间/禁用原因等展示数据
@@ -271,12 +272,12 @@
                     }
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t(this.lock ? 'enableSuc' : 'disableSuc', [this.pipelineName]),
+                        message: this.$t(lock ? 'enableSuc' : 'disableSuc', [this.pipelineName]),
                         limit: 1
                     })
                     this.$nextTick(() => {
                         this.handleCancel()
-                        this.$emit('done', this.lock)
+                        this.$emit('done', lock)
                     })
                 } catch (error) {
                     this.$bkMessage({
