@@ -370,7 +370,7 @@ class PipelineRuntimeService @Autowired constructor(
                 startUser = it.latestStartUser ?: "",
                 startTime = DateTimeUtil.toDateTime(it.latestStartTime),
                 endTime = DateTimeUtil.toDateTime(it.latestEndTime),
-                status = if (status != null) BuildStatus.values()[status].name else null
+                status = if (status != null) BuildStatus.entries[status].name else null
             )
         }
 

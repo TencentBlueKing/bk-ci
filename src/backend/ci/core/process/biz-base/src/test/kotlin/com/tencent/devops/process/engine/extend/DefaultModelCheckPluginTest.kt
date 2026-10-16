@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.process.service.PipelineVarOverflowConfig
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -66,13 +67,15 @@ class DefaultModelCheckPluginTest : TestBase() {
     private val stageCommonSettingConfig: StageCommonSettingConfig = mockk()
     private val jobCommonSettingConfig: JobCommonSettingConfig = mockk()
     private val taskCommonSettingConfig: TaskCommonSettingConfig = mockk()
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig = mockk()
     private val checkPlugin = DefaultModelCheckPlugin(
         client = client,
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
         taskCommonSettingConfig = taskCommonSettingConfig,
-        elementBizPluginServices = listOf()
+        elementBizPluginServices = listOf(),
+        pipelineVarOverflowConfig = pipelineVarOverflowConfig
     )
     private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
     private val serviceAtomResource: ServiceAtomResource = mockk()
@@ -157,6 +160,7 @@ class DefaultModelCheckPluginTest : TestBase() {
                 )
             )
             )
+        every { pipelineVarOverflowConfig.startParamDefaultValueCheckEnabled } returns true
         every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
         every { pipelineCommonSettingConfig.maxStageNum } returns (20)
         every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)

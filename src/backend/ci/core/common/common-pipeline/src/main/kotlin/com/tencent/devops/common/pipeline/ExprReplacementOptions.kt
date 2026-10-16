@@ -37,7 +37,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 表达式替换上下文
  */
 @Schema(title = "表达式替换参数")
-data class ExprReplacementOptions(
+data class ExprReplacementOptions @JvmOverloads constructor(
     @get:Schema(title = "环境变量", required = true)
     val contextMap: Map<String, String>,
     @get:Schema(title = "值是否能不存在", required = true)
@@ -45,5 +45,15 @@ data class ExprReplacementOptions(
     @get:Schema(title = "表达式上下文", required = true)
     val contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
     val functions: Iterable<IFunctionInfo>? = null,
-    val output: ExpressionOutput? = null
+    val output: ExpressionOutput? = null,
+    /**
+     * "溢出"变量名集合（对应主表 VALUE 仅存摘要的大变量）。
+     * 仅 ${{ xxx }} 表达式语法可以解析其完整值。
+     */
+    val overflowKeys: Set<String> = emptySet(),
+    /**
+     * 当表达式访问溢出变量时调用，按需拉取完整值。
+     * 如果没有溢出变量，可以为 null。
+     */
+    val overflowLoader: ((String) -> String?)? = null
 )

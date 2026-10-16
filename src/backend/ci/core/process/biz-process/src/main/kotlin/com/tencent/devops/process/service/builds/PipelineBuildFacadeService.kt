@@ -159,7 +159,6 @@ import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -219,7 +218,6 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
@@ -427,6 +425,37 @@ class PipelineBuildFacadeService(
                 it.defaultValue = HIDDEN_SYMBOL
             }
         }
+    }
+
+    /**
+     * 按变量名获取构建运行期变量真实值（大变量从制品库按需下载，敏感变量脱敏）。
+     * 供日志「查看完整值」等场景使用。
+     */
+    fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        archiveFlag: Boolean? = false
+    ): String? {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        return buildVariableService.getVariableValue(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            varName = varName,
+            queryDslContext = queryDslContext,
+            maskSensitive = true
+        )
     }
 
     fun retry(

@@ -235,9 +235,39 @@ const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 const val PIPELINE_CONDITION_EXPRESSION_LENGTH_MAX = 512
 
 /**
- * 入库VAR表，流水线变量最大长度
+ * 入库VAR表，流水线变量主表 VALUE 列最大长度。
+ * 超过该长度的值以文件形式存入制品库，主表只保存大变量引用串（见 [PIPELINE_VARIABLES_OVERFLOW_PREFIX]）。
  */
 const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
+
+/**
+ * 大变量单值上限（UTF-8 字节数，512KB）。超过则不能作为大变量存入制品库。
+ */
+const val PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES = 512 * 1024
+
+/**
+ * 大变量引用前缀。主表中大变量的值为引用串：
+ *
+ *     __BK_OVF__:<字符长度>:<写入时的执行次数>:<UTF-8 内容的 sha256 十六进制>
+ *
+ * 真实值以文件形式存放在制品库（见 [BuildVarOverflowUtils.blobPath]），按需下载。
+ */
+const val PIPELINE_VARIABLES_OVERFLOW_PREFIX = "__BK_OVF__:"
+
+/**
+ * 服务端单次表达式求值会话允许从制品库加载的大变量总字符数上限，默认 8M。
+ * 超过后抛 BuildVarOverflowBudgetExceededException，避免异常脚本放大成 OOM。
+ *
+ * **运营可配置**：`pipeline.variables.lazyLoad.budgetMax`
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX = 8 * 1024 * 1024
+
+/**
+ * 服务端单次求值会话内大变量缓存的最大字符数，默认 4M。
+ *
+ * **运营可配置**：`pipeline.variables.lazyLoad.cacheMax`
+ */
+const val PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX = 4 * 1024 * 1024
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

@@ -41,6 +41,7 @@ import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -91,7 +92,14 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
+        val candidate = variables[varName] ?: allContext[varName] ?: allContext[alisName]
+        // 单变量查询：命中大变量引用时按引用串从制品库下载真实值，失败时保留引用串
+        val finalValue = if (BuildVarOverflowUtils.isOverflowReference(candidate)) {
+            buildVariableService.newOverflowLoader(projectId, pipelineId, buildId).load(candidate!!) ?: candidate
+        } else {
+            candidate
+        }
+        return Result(finalValue)
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

@@ -37,7 +37,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
@@ -56,6 +58,7 @@ import com.tencent.devops.worker.common.task.TaskDaemon.Companion.PARAM_MAX_LENG
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
+import com.tencent.devops.worker.common.utils.LargeVariableStore
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLDecoder
@@ -271,26 +274,57 @@ open class ScriptTask : ITask() {
         }
     }
 
+    /**
+     * 开启「变量值超长时失败」时校验脚本写出的变量，存在超限值时返回 false。
+     *
+     * 不支持大变量时，超过 4000 字符即失败，文案与改造前一致；
+     * 支持时，不超过 512KB（UTF-8 字节）的值交给制品库，超过才失败。
+     * 开关关闭、或没有超 4000 的值时直接返回，不查询制品库。
+     */
     private fun failIfVariableInvalidCheck(
         failIfVariableInvalid: Boolean,
-        it: Map<String, String>
+        variables: Map<String, String>
     ): Boolean {
-        var res = true
-        if (failIfVariableInvalid) {
-            it.forEach { (key, value) ->
-                if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addErrorLine(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
-                            language = AgentEnv.getLocaleLanguage(),
-                            params = arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
-                        )
-                    )
-                    res = false
-                }
-            }
+        if (!failIfVariableInvalid) {
+            return true
         }
-        return res
+        var largeVariableSupported: Boolean? = null
+        var valid = true
+        variables.forEach { (key, value) ->
+            if (value.length <= PARAM_MAX_LENGTH) {
+                return@forEach
+            }
+            val supported = largeVariableSupported
+                ?: LargeVariableStore.isSupported().also { largeVariableSupported = it }
+            if (supported && !BuildVarOverflowUtils.exceedsLargeValueLimit(value)) {
+                return@forEach
+            }
+            LoggerService.addErrorLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = variableLengthErrorParams(supported, key, value)
+                )
+            )
+            valid = false
+        }
+        return valid
+    }
+
+    /** 不支持大变量时按字符数报错；支持时按 UTF-8 字节数报错。 */
+    private fun variableLengthErrorParams(
+        largeVariableSupported: Boolean,
+        key: String,
+        value: String
+    ): Array<String> {
+        if (!largeVariableSupported) {
+            return arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
+        }
+        return arrayOf(
+            key,
+            PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES.toString(),
+            BuildVarOverflowUtils.utf8Length(value).toString()
+        )
     }
 
     open fun takeBuildEnvs(

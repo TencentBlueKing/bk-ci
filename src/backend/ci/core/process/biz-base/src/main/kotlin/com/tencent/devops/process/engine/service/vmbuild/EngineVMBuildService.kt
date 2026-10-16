@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
@@ -102,6 +101,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
@@ -704,7 +704,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机请求执行任务
      */
-    fun buildClaimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): BuildTask {
+    fun buildClaimTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        replaceVarOnWorker: Boolean = false
+    ): BuildTask {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             containerIdLock.lock()
@@ -745,7 +751,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
             }
 
-            return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
+            return claim(
+                task = task,
+                buildId = buildId,
+                userId = task.starter,
+                vmSeqId = vmSeqId,
+                replaceVarOnWorker = replaceVarOnWorker
+            )
         } finally {
             containerIdLock.unlock()
         }
@@ -769,7 +781,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task: PipelineBuildTask,
         buildId: String,
         userId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        replaceVarOnWorker: Boolean
     ): BuildTask {
         LOG.info("ENGINE|$buildId|BC_ING|${task.projectId}|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
@@ -887,6 +900,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                 }
                 val dialect = PipelineDialectUtil.getPipelineDialect(buildVariable[PIPELINE_DIALECT])
+                // 表达式方言始终在 worker 端替换；传统方言仅当构建机声明支持时也交给构建机替换，
+                // 老版本构建机仍由引擎替换，保证不会漏替换或重复替换
+                val replaceOnEngine = !dialect.supportUseExpression() && !replaceVarOnWorker
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
@@ -898,10 +914,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     executeCount = task.executeCount,
                     type = task.taskType,
                     params = task.taskParams.map {
-                        // 表达式在worker端替换
-                        val obj = if (!dialect.supportUseExpression()) {
-                            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                                it.value, buildVariable
+                        val obj = if (replaceOnEngine) {
+                            BuildVarExprOverflowHelper.replaceEnvVarWithOverflow(
+                                value = it.value,
+                                variables = buildVariable,
+                                buildVariableService = buildVariableService,
+                                projectId = task.projectId,
+                                pipelineId = task.pipelineId,
+                                buildId = buildId
                             )
                         } else {
                             it.value
@@ -912,7 +932,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     }.toMap(),
                     buildVariable = buildVariable,
                     containerType = task.containerType,
-                    signToken = signToken
+                    signToken = signToken,
+                    replaceVarOnWorker = if (!dialect.supportUseExpression() && replaceVarOnWorker) true else null
                 )
             }
         }
