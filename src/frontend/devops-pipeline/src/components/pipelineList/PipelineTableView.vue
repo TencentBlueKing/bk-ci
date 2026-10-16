@@ -368,7 +368,7 @@
                                     class="desc"
                                 >
                                     <logo
-                                        name="branch"
+                                        :name="props.row.startType === 'codeArtifactWebhookTrigger' ? 'pipeline' : 'branch'"
                                         size="16"
                                     />
                                     <span>{{ props.row.webhookAliasName }}</span>
