@@ -80,6 +80,10 @@ collect_gateway (){
 }
 
 prepare_agentless (){
+  if [ ! -d "$ci_pkg_dir/dockerhost" ]; then
+    echo "WARNING: skip agentless, dockerhost dir not found: $ci_pkg_dir/dockerhost"
+    return 0
+  fi
   echo "generate agentless."
   cp -r "$ci_pkg_dir/dockerhost" "$ci_pkg_dir/agentless"
 }
