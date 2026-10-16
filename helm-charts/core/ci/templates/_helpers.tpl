@@ -107,6 +107,25 @@ MySQL password
 {{- end -}}
 
 {{/*
+MySQL Secret name. Matches Bitnami mysql 10.3.0 mysql.secretName
+(existingSecret, otherwise common.names.fullname of the mysql subchart).
+*/}}
+{{- define "bkci.mysql.secretName" -}}
+{{- if .Values.mysql.auth.existingSecret -}}
+{{- tpl .Values.mysql.auth.existingSecret . -}}
+{{- else if .Values.mysql.fullnameOverride -}}
+{{- .Values.mysql.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "mysql" .Values.mysql.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Elasticsearch host
 */}}
 {{- define "bkci.elasticsearchHost" -}}
