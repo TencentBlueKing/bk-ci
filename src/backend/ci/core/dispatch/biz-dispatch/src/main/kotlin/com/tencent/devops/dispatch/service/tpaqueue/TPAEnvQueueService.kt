@@ -7,6 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_DISPATCH_AGENT
 import com.tencent.devops.dispatch.constants.BK_ENV_NODE_DISABLE
@@ -20,7 +21,10 @@ import com.tencent.devops.dispatch.pojo.EnvQueueContext
 import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.dispatch.utils.DispatchLockCleanup
 import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentJobEnvLock
+import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor.TryAgentResult
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -40,7 +44,8 @@ class TPAEnvQueueService @Autowired constructor(
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentService: ThirdPartyAgentService,
-    private val tpaSingleQueueService: TPASingleQueueService
+    private val tpaSingleQueueService: TPASingleQueueService,
+    private val redisOperation: RedisOperation
 ) {
     fun initEnvContext(dataContext: QueueDataContext): EnvQueueContext {
         val data = dataContext.data
@@ -97,6 +102,31 @@ class TPAEnvQueueService @Autowired constructor(
         context: EnvQueueContext,
         dataContext: QueueDataContext
     ) {
+        val data = dataContext.data
+        val jobId = data.jobId?.takeIf { it.isNotBlank() }
+        val envId = context.envId
+        if (jobId == null || envId == null) {
+            dispatchInEnvQueue(context, dataContext)
+            return
+        }
+        // 已在途的新队列事件也要参与同一 Job 锁，避免与灰度/默认环境路径并行超配额。
+        val lock = ThirdPartyAgentJobEnvLock(redisOperation, data.projectId, data.pipelineId, jobId, envId)
+        DispatchLockCleanup.run<Boolean>(
+            description = "queue job|${data.toLog()}|$envId",
+            unlock = { lock.unlock() },
+            isQueued = { it }
+        ) {
+            if (!lock.tryLock()) throw TPACommonUtil.queueRetry(ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR)
+            // 缓存可能来自上一轮锁持有期，不能作为本轮 Job 配额放行依据。
+            context.setProjectJobRunningAndQueueAllCount(jobId, null)
+            context.clearAgentsJobRunningAndQueueAllMap(jobId)
+            dispatchInEnvQueue(context, dataContext)
+            // dispatchInEnvQueue 仅在入队成功时正常返回，否则抛失败/重试。
+            true
+        }
+    }
+
+    private fun dispatchInEnvQueue(context: EnvQueueContext, dataContext: QueueDataContext) {
         ignoreAgentCheck(context, dataContext)
         allNodeConcurrencyCheck(context, dataContext)
         singleNodeConcurrencyCheck(context, dataContext)
@@ -356,21 +386,25 @@ class TPAEnvQueueService @Autowired constructor(
         ).toSet()
 
         val isDocker = data.dispatchType.dockerInfo != null
+        // 同一轮队列复用负载快照，仅批量补齐新增、缺失或成功占位后失效的节点。
+        val missingAgentIds = activeAgents.map { it.agentId }.filter {
+            it !in context.agentRunningCnt || (isDocker && it !in context.dockerRunningCnt)
+        }.toSet()
+        if (missingAgentIds.isNotEmpty()) {
+            val counts = thirdPartyAgentService.countRunningAndQueueByAgents(missingAgentIds)
+            missingAgentIds.forEach { agentId ->
+                val (normal, docker) = counts[agentId] ?: Pair(0, 0)
+                context.agentRunningCnt[agentId] = normal
+                context.dockerRunningCnt[agentId] = docker
+            }
+        }
+
         val runningCounts = mutableMapOf<String, Int>()
         val dockerRunningCounts = mutableMapOf<String, Int>()
         activeAgents.forEach { agent ->
-            val rc = context.agentRunningCnt[agent.agentId]
-                ?: thirdPartyAgentService.getRunningBuilds(agent.agentId).also {
-                    context.agentRunningCnt[agent.agentId] = it
-                }
-            runningCounts[agent.agentId] = rc
-
+            runningCounts[agent.agentId] = context.agentRunningCnt.getValue(agent.agentId)
             if (isDocker) {
-                val drc = context.dockerRunningCnt[agent.agentId]
-                    ?: thirdPartyAgentService.getDockerRunningBuilds(agent.agentId).also {
-                        context.dockerRunningCnt[agent.agentId] = it
-                    }
-                dockerRunningCounts[agent.agentId] = drc
+                dockerRunningCounts[agent.agentId] = context.dockerRunningCnt.getValue(agent.agentId)
             }
 
             commonUtil.logDebug(
@@ -384,8 +418,10 @@ class TPAEnvQueueService @Autowired constructor(
         activeAgents.forEach { agent ->
             agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
         }
+        // 共享环境策略属于环境项目，不属于触发构建的项目。
         val strategyResult = thirdPartyAgentService.getEnvStrategiesWithTags(
-            projectId = data.projectId,
+            projectId = (data.dispatchType as ThirdPartyAgentEnvDispatchType).envProjectId
+                ?.takeIf { it.isNotBlank() } ?: data.projectId,
             envId = context.envId,
             nodeIds = nodeIdToAgentId.keys
         )
@@ -405,10 +441,15 @@ class TPAEnvQueueService @Autowired constructor(
             ),
             logAction = { msg -> commonUtil.logDebug(data, msg) }
         )
-        val matched = executor.execute(strategyResult.strategies) { agent ->
+        val matched = executor.executeWithRule(strategyResult.strategies) { agent, nodeRule ->
             dataContext.buildAgent = agent
-            val ok = tpaSingleQueueService.genAgentBuild(context, dataContext)
-            if (ok) {
+            val result = tpaSingleQueueService.tryAgentWithRule(data, agent, context.envId, nodeRule) { (normal, docker) ->
+                runningCounts[agent.agentId] = normal
+                dockerRunningCounts[agent.agentId] = docker
+                context.agentRunningCnt[agent.agentId] = normal
+                context.dockerRunningCnt[agent.agentId] = docker
+            }
+            if (result == TryAgentResult.SUCCESS) {
                 commonUtil.logWithAgentUrl(
                     data = data,
                     messageCode = BK_ENV_DISPATCH_AGENT,
@@ -417,7 +458,7 @@ class TPAEnvQueueService @Autowired constructor(
                     agentHashId = agent.agentId
                 )
             }
-            ok
+            result
         }
         if (matched != null) {
             return true

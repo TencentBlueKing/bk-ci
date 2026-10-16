@@ -93,6 +93,10 @@ data class EnvQueueContext(
         agentsJobRunningAndQueueAllMap[jobId]?.set(agentId, cnt)
     }
 
+    fun clearAgentsJobRunningAndQueueAllMap(jobId: String) {
+        agentsJobRunningAndQueueAllMap.remove(jobId)
+    }
+
     fun setAllAgentsJobRunningAndQueueAllMap(jobId: String, map: MutableMap<String, Int>) {
         agentsJobRunningAndQueueAllMap[jobId] = map
     }
