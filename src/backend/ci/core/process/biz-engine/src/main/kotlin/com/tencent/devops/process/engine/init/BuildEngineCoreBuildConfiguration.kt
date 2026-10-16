@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -176,6 +177,7 @@ class BuildEngineCoreBuildConfiguration {
     @Bean
     fun pipelineTaskPauseListener(
         @Autowired redisOperation: RedisOperation,
+        @Autowired pipelineBuildRecordService: PipelineBuildRecordService,
         @Autowired taskBuildRecordService: TaskBuildRecordService,
         @Autowired pipelineTaskService: PipelineTaskService,
         @Autowired pipelineContainerService: PipelineContainerService,
@@ -186,6 +188,7 @@ class BuildEngineCoreBuildConfiguration {
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher
     ) = PipelineTaskPauseListener(
         redisOperation = redisOperation,
+        pipelineBuildRecordService = pipelineBuildRecordService,
         taskBuildRecordService = taskBuildRecordService,
         pipelineTaskService = pipelineTaskService,
         pipelineContainerService = pipelineContainerService,
