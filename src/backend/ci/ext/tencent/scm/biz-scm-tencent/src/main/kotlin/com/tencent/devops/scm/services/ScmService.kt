@@ -404,7 +404,7 @@ class ScmService @Autowired constructor(
                 targetBranch = targetBranch,
                 approvals = approvals
             )
-            if (mrRequestId != null) {
+            if (mrRequestId != null && enableQualityReport != false) {
                 if (reportData.second.isEmpty()) return
                 val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
                 scm.addMRComment(mrRequestId!!, comment)
