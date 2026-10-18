@@ -443,7 +443,12 @@ class TPAEnvQueueService @Autowired constructor(
         )
         val matched = executor.executeWithRule(strategyResult.strategies) { agent, nodeRule ->
             dataContext.buildAgent = agent
-            val result = tpaSingleQueueService.tryAgentWithRule(data, agent, context.envId, nodeRule) { (normal, docker) ->
+            val result = tpaSingleQueueService.tryAgentWithRule(
+                data,
+                agent,
+                context.envId,
+                nodeRule
+            ) { (normal, docker) ->
                 runningCounts[agent.agentId] = normal
                 dockerRunningCounts[agent.agentId] = docker
                 context.agentRunningCnt[agent.agentId] = normal

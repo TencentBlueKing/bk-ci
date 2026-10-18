@@ -241,7 +241,10 @@ class EnvDispatchGrayTest {
 
     @Test
     fun loadChangesAreRecheckedUnderAgentLockAndDoNotQueue() {
-        val data = ThirdPartyAgentDispatchData(message(), message().event.dispatchType as ThirdPartyAgentEnvDispatchType)
+        val data = ThirdPartyAgentDispatchData(
+            message(),
+            message().event.dispatchType as ThirdPartyAgentEnvDispatchType
+        )
         val queue = TPASingleQueueService(redis, mockk(), mockk<Client>(), mockk(relaxed = true), mockk(), agents)
         every { agents.countRunningAndQueueByAgents(setOf("agent")) } answers {
             assertTrue(locks.containsKey("DISPATCH_REDIS_LOCK_AGENT_consumer_agent"))
