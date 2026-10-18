@@ -760,7 +760,9 @@ class ThirdPartyDispatchService @Autowired constructor(
             nodeIds = nodeIdToAgentId.keys
         )
         // 不含 PRE_BUILD 策略时，不扫描最近构建历史。
-        val preBuildAgentIds = if (strategyResult.strategies.any { it.enabled && it.scope == StrategyScope.PRE_BUILD }) {
+        val preBuildAgentIds = if (
+            strategyResult.strategies.any { it.enabled && it.scope == StrategyScope.PRE_BUILD }
+        ) {
             thirdPartyAgentBuildService.getPreBuildAgentIds(
                 projectId = dispatchMessage.event.projectId,
                 pipelineId = dispatchMessage.event.pipelineId,
