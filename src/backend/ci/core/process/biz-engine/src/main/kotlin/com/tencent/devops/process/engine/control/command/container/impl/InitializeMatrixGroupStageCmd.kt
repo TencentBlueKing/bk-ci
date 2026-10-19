@@ -73,6 +73,7 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.MatrixConcurrencyUtils
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
@@ -102,6 +103,7 @@ class InitializeMatrixGroupStageCmd(
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContextService: PipelineContextService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
@@ -305,9 +307,8 @@ class InitializeMatrixGroupStageCmd(
                 matrixOption = fetchMatrixOption(
                     option = modelContainer.matrixControlOption,
                     jobName = modelContainer.name,
-                    variables = variables,
-                    dialect = dialect,
-                    userId = event.userId
+                    commandContext = commandContext,
+                    dialect = dialect
                 )
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
@@ -505,9 +506,8 @@ class InitializeMatrixGroupStageCmd(
                 matrixOption = fetchMatrixOption(
                     option = modelContainer.matrixControlOption,
                     jobName = modelContainer.name,
-                    variables = variables,
-                    dialect = dialect,
-                    userId = event.userId
+                    commandContext = commandContext,
+                    dialect = dialect
                 )
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
@@ -970,18 +970,16 @@ class InitializeMatrixGroupStageCmd(
     private fun fetchMatrixOption(
         option: MatrixControlOption?,
         jobName: String,
-        variables: Map<String, String>,
-        dialect: IPipelineDialect,
-        userId: String
+        commandContext: ContainerContext,
+        dialect: IPipelineDialect
     ): MatrixControlOption {
         val matrixOption = option ?: throw DependNotFoundException("matrix option not found")
         return matrixOption.copy(
             maxConcurrency = resolveMaxConcurrency(
                 option = matrixOption,
                 jobName = jobName,
-                variables = variables,
-                dialect = dialect,
-                userId = userId
+                commandContext = commandContext,
+                dialect = dialect
             )
         )
     }
@@ -999,9 +997,8 @@ class InitializeMatrixGroupStageCmd(
         val maxConcurrency = resolveMaxConcurrency(
             option = option,
             jobName = fetchJobName(parentContainer),
-            variables = commandContext.variables,
-            dialect = dialect,
-            userId = commandContext.event.userId
+            commandContext = commandContext,
+            dialect = dialect
         )
         val originConcurrency = option.maxConcurrency
         option.maxConcurrency = maxConcurrency
@@ -1040,19 +1037,51 @@ class InitializeMatrixGroupStageCmd(
     }
 
     /**
+     * 构造解析最大并发数使用的变量上下文：构建变量 + [PipelineContextService.buildContext]聚合的运行上下文
+     * （job 输出变量、job 状态、矩阵聚合输出、ci.* 等）。
+     *
+     * 只聚合不替换：buildContext 只输出上下文键，原始构建变量始终保留，
+     * 与 CheckConditionalSkipContainerCmd 等运行时判断的用法保持一致。
+     */
+    private fun buildConcurrencyVariables(commandContext: ContainerContext): Map<String, String> {
+        val container = commandContext.container
+        return commandContext.variables.plus(
+            pipelineContextService.buildContext(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerId = container.containerId,
+                taskId = null,
+                variables = commandContext.variables,
+                executeCount = commandContext.executeCount
+            )
+        )
+    }
+
+    /**
      * 解析并校验最大并发数，返回生效值（未配置时取默认值）：
      * 变量表达式先用上下文变量解析，解析结果必须是1到上限之间的整数，
      * 否则矩阵Job直接失败退出，不做静默截断或回退，避免用变量绕过最大并发数的有效性要求。
+     *
+     * 解析上下文除构建变量外，还合并[PipelineContextService.buildContext]聚合的运行上下文
+     * （jobs.<jobId>.steps.<stepId>.outputs.<name>、job状态、矩阵聚合输出、ci.*等），
+     * 与Job运行条件等其它运行时表达式判断保持一致，避免同一表达式在条件里能解析、在并发数里解析不了。
+     *
+     * 注意：输出变量没有裸名短键（短键 steps.<stepId>.outputs.<name> 只对当前Job生效），
+     * 跨Job引用必须使用完整表达式如 ${{ jobs.<jobId>.steps.<stepId>.outputs.<name> }}，
+     * 裸名（如 ${{my_name}}）在任何上下文中都不存在，只能命中流水线入参/普通构建变量。
      */
     private fun resolveMaxConcurrency(
         option: MatrixControlOption,
         jobName: String,
-        variables: Map<String, String>,
-        dialect: IPipelineDialect,
-        userId: String
+        commandContext: ContainerContext,
+        dialect: IPipelineDialect
     ): Int {
         val concurrencyVar = option.maxConcurrencyVar?.trim()
         if (!concurrencyVar.isNullOrBlank()) {
+            // 仅在配置了变量时才构建聚合上下文，避免给纯数字配置增加额外的构建记录读取开销
+            val variables = buildConcurrencyVariables(commandContext = commandContext)
             val parsed = EnvReplacementParser.parse(
                 value = concurrencyVar,
                 contextMap = variables,
@@ -1068,7 +1097,7 @@ class InitializeMatrixGroupStageCmd(
                     invalidMessage(
                         jobName = jobName,
                         value = parsed.takeIf { it.isNotBlank() } ?: concurrencyVar,
-                        userId = userId
+                        userId = commandContext.event.userId
                     )
                 )
             }
@@ -1078,7 +1107,11 @@ class InitializeMatrixGroupStageCmd(
         if (!MatrixConcurrencyUtils.isValid(maxConcurrency)) {
             LOG.warn("ENGINE|MATRIX_MAX_CONCURRENCY_INVALID|job=$jobName|maxConcurrency=$maxConcurrency")
             throw InvalidParamException(
-                invalidMessage(jobName = jobName, value = maxConcurrency.toString(), userId = userId)
+                invalidMessage(
+                    jobName = jobName,
+                    value = maxConcurrency.toString(),
+                    userId = commandContext.event.userId
+                )
             )
         }
         return maxConcurrency
