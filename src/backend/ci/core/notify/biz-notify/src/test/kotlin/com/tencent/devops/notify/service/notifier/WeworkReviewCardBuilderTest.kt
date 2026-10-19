@@ -71,6 +71,8 @@ class WeworkReviewCardBuilderTest {
                     "pipelineName" to "stage-review-notice",
                     "reviewUrl" to "https://example.com/pc",
                     "reviewStage" to "[1]Stage审核",
+                    "triggerUser" to "royalhuang",
+                    "buildNum" to "10",
                     "reviewers" to "royalhuang,fayewang",
                     "reviewGroups" to """
                         [{"name":"环节一","status":"","reviewers":["royalhuang","fayewang"]},
@@ -82,12 +84,13 @@ class WeworkReviewCardBuilderTest {
             redisOperation = null
         )
         val waitingCard = waiting!!.receiverCards.getValue("royalhuang")
+        assertEquals(
+            listOf("项目", "流水线", "构建号", "进度", "审核人", "触发人"),
+            waitingCard.horizontalContentList!!.map { it.keyname }
+        )
         assertEquals("0/2", waitingCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
         assertEquals("royalhuang、fayewang", waitingCard.horizontalContentList!!.first { it.keyname == "审核人" }.value)
-        val waitingText = waitingCard.subTitleText!!
-        assertTrue(waitingText.contains("环节一 待审核"))
-        assertTrue(waitingText.contains("环节二 未开始"))
-        assertTrue(!waitingText.contains("⏳"))
+        assertNull(waitingCard.subTitleText)
 
         val next = WeworkReviewCardBuilder.build(
             request = reviewRequest(
@@ -109,9 +112,7 @@ class WeworkReviewCardBuilderTest {
         val nextCard = next!!.receiverCards.getValue("royalhuang")
         assertEquals("1/2", nextCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
         assertTrue(nextCard.horizontalContentList!!.none { it.keyname == "审核人" })
-        val nextText = nextCard.subTitleText!!
-        assertTrue(nextText.contains("环节一 已通过"))
-        assertTrue(nextText.contains("环节二 待审核"))
+        assertNull(nextCard.subTitleText)
     }
 
     @Test

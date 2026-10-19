@@ -432,8 +432,8 @@ object WeworkReviewCardBuilder {
     }
 
     /**
-     * 键值列表对齐文档里的「邀请人」行。审核说明放引用区，多环节进度放二级文本，避免挤成一段。
-     * 同一环节的审核人是或签，只占一行。
+     * 键值列表对齐文档里的「邀请人」行。审核说明放引用区。
+     * 多环节只显示进度分数，不展开环节名。多名审核人单独占一行。
      */
     private fun layout(
         projectName: String,
@@ -456,33 +456,49 @@ object WeworkReviewCardBuilder {
         if (buildLabel.isNotBlank() && buildLabel != "-") {
             addRow(rows, "构建号", "#$buildLabel")
         }
-        addRow(rows, "审核阶段", reviewStage)
-        val reserveTrigger = if (triggerUser.isNotBlank()) 1 else 0
-        if (states.size > 1 && rows.size < LIST_LIMIT - reserveTrigger) {
+        val tail = mutableListOf<WeworkTemplateCardHorizontalContent>()
+        if (states.size > 1) {
             val done = states.count { it.second == "已通过" }
-            addRow(rows, "进度", "$done/${states.size}")
+            tail.add(contentRow("进度", "$done/${states.size}"))
         }
-        if (reviewers.size > 1 && rows.size < LIST_LIMIT - reserveTrigger) {
-            addRow(rows, "审核人", reviewers.joinToString("、"))
+        if (reviewers.size > 1) {
+            tail.add(contentRow("审核人", reviewers.joinToString("、")))
         }
         if (triggerUser.isNotBlank()) {
-            addRow(
-                rows,
-                key = "触发人",
-                value = triggerUser,
-                type = 3,
-                userid = WeworkReviewCardConst.weworkUserId(triggerUser)
+            tail.add(
+                contentRow(
+                    key = "触发人",
+                    value = triggerUser,
+                    type = 3,
+                    userid = WeworkReviewCardConst.weworkUserId(triggerUser)
+                )
             )
         }
+        if (rows.size + tail.size < LIST_LIMIT) {
+            addRow(rows, "审核阶段", reviewStage)
+        }
+        tail.forEach { row -> addRow(rows, row.keyname, row.value, row.type, row.userid) }
         val quote = reviewDesc.takeIf { it.isNotBlank() }?.let {
             WeworkTemplateCardQuoteArea(title = "审核说明", quoteText = clip(it, QUOTE_LIMIT))
         }
         return CardLayout(
             rows = rows.takeIf { it.isNotEmpty() },
             quote = quote,
-            subTitle = subTitle(states, reviewers, rows, scene, reviewParams)
+            subTitle = paramSubTitle(scene, reviewParams)
         )
     }
+
+    private fun contentRow(
+        key: String,
+        value: String,
+        type: Int? = null,
+        userid: String? = null
+    ) = WeworkTemplateCardHorizontalContent(
+        keyname = key.take(KEY_LIMIT),
+        value = clip(value, VALUE_LIMIT),
+        type = type,
+        userid = userid
+    )
 
     private fun addRow(
         rows: MutableList<WeworkTemplateCardHorizontalContent>,
@@ -502,26 +518,10 @@ object WeworkReviewCardBuilder {
         )
     }
 
-    private fun subTitle(
-        states: List<Pair<ReviewGroupStep, String>>,
-        reviewers: List<String>,
-        rows: List<WeworkTemplateCardHorizontalContent>,
-        scene: CardScene,
-        reviewParams: List<ReviewCardParam>
-    ): String? {
-        val lines = mutableListOf<String>()
-        if (states.size > 1) {
-            lines.add(states.joinToString(" · ") { (group, state) -> "${group.name} $state" })
-        }
-        if (reviewers.size > 1 && rows.none { it.keyname == "审核人" }) {
-            lines.add("审核人 ${reviewers.joinToString("、")}（任一通过）")
-        }
-        if (scene == CardScene.C2) {
-            reviewParams.take(5).forEach { param ->
-                lines.add("${param.title}: ${param.displayValue()}")
-            }
-        }
-        return lines.joinToString("\n").takeIf { it.isNotBlank() }?.let { clip(it, SUBTITLE_LIMIT) }
+    private fun paramSubTitle(scene: CardScene, reviewParams: List<ReviewCardParam>): String? {
+        if (scene != CardScene.C2 || reviewParams.isEmpty()) return null
+        val text = reviewParams.take(5).joinToString("\n") { "${it.title}: ${it.displayValue()}" }
+        return clip(text, SUBTITLE_LIMIT)
     }
 
     private fun currentReviewers(
