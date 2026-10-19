@@ -35,7 +35,7 @@ class WeworkReviewCardBuilderTest {
         val first = plan.receiverCards.getValue("royalhuang")
         val second = plan.receiverCards.getValue("fayewang")
         assertNotEquals(first.taskId, second.taskId)
-        assertEquals("[Royal流水线测试]人工审核", first.mainTitle.title)
+        assertEquals("<Royal流水线测试>人工审核", first.mainTitle.title)
         val rows = first.horizontalContentList!!
         assertEquals(listOf("流水线", "构建号", "阶段名", "审核人", "触发人"), rows.map { it.keyname })
         assertEquals("stage-review-notice", rows[0].value)
@@ -87,7 +87,7 @@ class WeworkReviewCardBuilderTest {
             listOf("流水线", "构建号", "阶段名", "审核流", "进度", "触发人"),
             waitingCard.horizontalContentList!!.map { it.keyname }
         )
-        assertEquals("[Royal流水线测试]人工审核", waitingCard.mainTitle.title)
+        assertEquals("<Royal流水线测试>人工审核", waitingCard.mainTitle.title)
         assertEquals("Stage审核", waitingCard.horizontalContentList!!.first { it.keyname == "阶段名" }.value)
         assertEquals("首次审核", waitingCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertNull(waitingCard.subTitleText)

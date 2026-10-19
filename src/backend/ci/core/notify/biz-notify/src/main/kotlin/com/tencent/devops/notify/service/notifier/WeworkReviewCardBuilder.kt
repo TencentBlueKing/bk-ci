@@ -498,11 +498,11 @@ object WeworkReviewCardBuilder {
     private fun reviewTitle(projectName: String): String {
         val name = projectName.trim()
         if (name.isBlank()) return "流水线人工审核"
-        val wrapped = "[$name]人工审核"
+        val wrapped = "<$name>人工审核"
         if (wrapped.length <= TITLE_LIMIT) return wrapped
-        val keep = TITLE_LIMIT - "]人工审核".length - 2
+        val keep = TITLE_LIMIT - ">人工审核".length - 2
         if (keep <= 0) return "人工审核"
-        return "[${name.take(keep)}…]人工审核"
+        return "<${name.take(keep)}…>人工审核"
     }
 
     private fun stageDisplayName(stageName: String, reviewStage: String): String {
