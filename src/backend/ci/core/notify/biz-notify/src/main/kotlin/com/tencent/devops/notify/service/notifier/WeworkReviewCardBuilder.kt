@@ -434,7 +434,7 @@ object WeworkReviewCardBuilder {
 
     /**
      * 键值列表对齐文档里的「邀请人」行。审核说明放引用区。
-     * 阶段名是流水线 Stage 名称，审核流是审核环节名称。列表最多 6 行，这两行优先保留。
+     * 阶段名是流水线 Stage 名称，审核流只展示当前待审核环节。列表最多 6 行，这两行优先保留。
      */
     private fun layout(
         pipelineName: String,
@@ -461,7 +461,7 @@ object WeworkReviewCardBuilder {
         if (stageLabel.isNotBlank()) {
             extras.add(contentRow("阶段名", stageLabel))
         }
-        val flow = reviewGroups.map { it.name.trim() }.filter { it.isNotBlank() }.joinToString("、")
+        val flow = currentFlowName(reviewGroups, states)
         if (flow.isNotBlank()) {
             extras.add(contentRow("审核流", flow))
         }
@@ -560,6 +560,16 @@ object WeworkReviewCardBuilder {
         if (scene != CardScene.C2 || reviewParams.isEmpty()) return null
         val text = reviewParams.take(5).joinToString("\n") { "${it.title}: ${it.displayValue()}" }
         return clip(text, SUBTITLE_LIMIT)
+    }
+
+    private fun currentFlowName(
+        groups: List<ReviewGroupStep>,
+        states: List<Pair<ReviewGroupStep, String>>
+    ): String {
+        val waiting = states.firstOrNull { it.second == "待审核" }?.first?.name?.trim().orEmpty()
+        if (waiting.isNotBlank()) return waiting
+        if (groups.size == 1) return groups.first().name.trim()
+        return ""
     }
 
     private fun currentReviewers(

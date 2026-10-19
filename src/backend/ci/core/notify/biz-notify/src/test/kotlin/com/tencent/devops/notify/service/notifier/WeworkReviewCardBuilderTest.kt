@@ -89,7 +89,7 @@ class WeworkReviewCardBuilderTest {
         )
         assertEquals("[Royal流水线测试]人工审核", waitingCard.mainTitle.title)
         assertEquals("Stage审核", waitingCard.horizontalContentList!!.first { it.keyname == "阶段名" }.value)
-        assertEquals("首次审核、二次审核", waitingCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
+        assertEquals("首次审核", waitingCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertNull(waitingCard.subTitleText)
 
         val next = WeworkReviewCardBuilder.build(
@@ -110,7 +110,7 @@ class WeworkReviewCardBuilderTest {
             redisOperation = null
         )
         val nextCard = next!!.receiverCards.getValue("royalhuang")
-        assertEquals("环节一、环节二", nextCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
+        assertEquals("环节二", nextCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertEquals("1/2", nextCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
         assertTrue(nextCard.horizontalContentList!!.none { it.keyname == "审核人" })
         assertNull(nextCard.subTitleText)
