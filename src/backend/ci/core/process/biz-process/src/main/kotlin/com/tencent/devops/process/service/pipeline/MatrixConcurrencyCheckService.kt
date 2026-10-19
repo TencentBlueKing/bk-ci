@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.utils.MatrixConcurrencyUtils
@@ -70,42 +72,66 @@ class MatrixConcurrencyCheckService(
         val contextMap = PipelineVarUtil.fillVariableMap(
             model.getTriggerContainer().params.associate { it.id to (it.defaultValue?.toString() ?: "") }
         )
-        for (stage in model.stages) {
-            for (container in stage.containers) {
-                // 非矩阵Job跳过（等价于原 forEach + return@container 的语义，不能用 break，
-                // 否则会终止本 Stage 剩余容器的遍历，漏掉后面的矩阵Job）
-                if (container.matrixGroupFlag != true) continue
-                val option = when (container) {
-                    is VMBuildContainer -> container.matrixControlOption
-                    is NormalContainer -> container.matrixControlOption
-                    else -> null
-                } ?: continue
-                // 未配置并发数时取默认值，属于合法配置
-                val maxConcurrencyVar = option.maxConcurrencyVar?.trim()
-                val value = if (!maxConcurrencyVar.isNullOrBlank()) {
-                    val parsed = EnvReplacementParser.parse(
-                        value = maxConcurrencyVar,
-                        contextMap = contextMap,
-                        onlyExpression = dialect.supportUseExpression()
-                    ).trim()
-                    // 实例化阶段取不到值：交由运行时启动matrix job时校验，不在此误判为非法
-                    if (isUnresolved(parsed)) continue
-                    parsed
-                } else {
-                    option.maxConcurrency?.toString() ?: continue
-                }
-                if (!MatrixConcurrencyUtils.isValid(value.toIntOrNull())) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID,
-                        params = arrayOf(
-                            pipelineName,
-                            container.name,
-                            // 解析结果为空时展示原始变量表达式，避免出现「最大并发数为 ，须为...」这种无值文案
-                            value.takeIf { it.isNotBlank() } ?: maxConcurrencyVar.orEmpty(),
-                            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX.toString()
-                        )
+        model.stages.forEach { stage ->
+            checkStageMaxConcurrency(
+                stage = stage,
+                pipelineName = pipelineName,
+                contextMap = contextMap,
+                dialect = dialect
+            )
+        }
+    }
+
+    /**
+     * 校验单个Stage下所有容器的Matrix最大并发数，非法则抛[ErrorCodeException]（错误码2101695）。
+     *
+     * 以下场景跳过当前容器，不做判定：
+     * - 非矩阵Job；
+     * - 取不到[MatrixControlOption]；
+     * - 未配置并发数（取默认值，属于合法配置）；
+     * - 变量在实例化阶段解析不出结果（[isUnresolved]），交由运行时启动matrix job时严格校验。
+     *
+     * 注意：跳过一律用 continue —— 必须覆盖本Stage的全部容器，
+     * 用 break 会中断遍历漏掉后面的矩阵Job，用 return 会连带跳过后续Stage。
+     */
+    private fun checkStageMaxConcurrency(
+        stage: Stage,
+        pipelineName: String,
+        contextMap: Map<String, String>,
+        dialect: IPipelineDialect
+    ) {
+        for (container in stage.containers) {
+            if (container.matrixGroupFlag != true) continue
+            val option = when (container) {
+                is VMBuildContainer -> container.matrixControlOption
+                is NormalContainer -> container.matrixControlOption
+                else -> null
+            } ?: continue
+            // 未配置并发数时取默认值，属于合法配置
+            val maxConcurrencyVar = option.maxConcurrencyVar?.trim()
+            val value = if (!maxConcurrencyVar.isNullOrBlank()) {
+                val parsed = EnvReplacementParser.parse(
+                    value = maxConcurrencyVar,
+                    contextMap = contextMap,
+                    onlyExpression = dialect.supportUseExpression()
+                ).trim()
+                // 实例化阶段取不到值：交由运行时启动matrix job时校验，不在此误判为非法
+                if (isUnresolved(parsed)) continue
+                parsed
+            } else {
+                option.maxConcurrency?.toString() ?: continue
+            }
+            if (!MatrixConcurrencyUtils.isValid(value.toIntOrNull())) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID,
+                    params = arrayOf(
+                        pipelineName,
+                        container.name,
+                        // 解析结果为空时展示原始变量表达式，避免出现「最大并发数为 ，须为...」这种无值文案
+                        value.takeIf { it.isNotBlank() } ?: maxConcurrencyVar.orEmpty(),
+                        PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX.toString()
                     )
-                }
+                )
             }
         }
     }
