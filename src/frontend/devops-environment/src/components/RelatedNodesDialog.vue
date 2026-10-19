@@ -32,13 +32,17 @@
                 <template v-if="relatedType === RELATED_TYPE.NODE">
                     <bk-input
                         v-model="searchKeyword"
+                        class="batch-search-input"
+                        :class="{ 'is-focused': isSearchFocused }"
+                        type="textarea"
+                        :rows="1"
                         :placeholder="$t('environment.searchNodePlaceholder')"
-                        right-icon="bk-icon icon-search"
-                        @enter="handleSearch"
-                        @clear="handleSearch"
                         clearable
+                        @focus="isSearchFocused = true"
+                        @blur="isSearchFocused = false"
+                        @clear="handleSearchClear"
                     />
-    
+
                     <div
                         class="node-list-section"
                         v-bkloading="{ isLoading }"
@@ -324,7 +328,7 @@
 </template>
 
 <script>
-    import { ref, computed, onMounted, watch } from 'vue'
+    import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
     import Logo from '@/components/Logo'
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -374,6 +378,16 @@
             })
 
             const searchKeyword = ref('')
+            const isSearchFocused = ref(false)
+            // 批量搜索防抖定时器
+            let searchDebounceTimer = null
+
+            // 按空格、中英文逗号/分号、换行、| 分隔解析输入，去重并过滤空字符串
+            const parseSearchTokens = (input) => {
+                if (!input) return []
+                const tokens = input.split(/[\s,，;；|]+/).map(token => token.trim()).filter(Boolean)
+                return [...new Set(tokens)]
+            }
             const dialogConfigs = {
                 top: '120'
             }
@@ -457,11 +471,19 @@
             const isNodeSelected = (nodeHashId) => {
                 return selectedNodeIds.value.has(nodeHashId)
             }
-            const handleSearch = (keyword) => {
-                searchKeyword.value = keyword
-                pageChange(1)
-                fetchNodeList()
+            const handleSearchClear = () => {
+                searchKeyword.value = ''
             }
+            // 监听搜索输入变化，防抖触发搜索（textarea 中回车为换行分隔，不做快捷搜索）
+            watch(() => searchKeyword.value, (val) => {
+                if (!isShow.value) return
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+                searchDebounceTimer = setTimeout(() => {
+                    searchDebounceTimer = null
+                    pageChange(1)
+                    fetchNodeList()
+                }, 500)
+            })
             const handleNodeClick = (node) => {
                 const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
                 
@@ -542,11 +564,12 @@
             // 获取节点列表
             const fetchNodeList = async () => {
                 try {
+                    // IP 搜索统一走 ipListSearch（请求体，后端按分隔符解析后精确 IN 查询）
+                    const tokens = parseSearchTokens(searchKeyword.value)
                     const res = await requestNodeList({
                         page: pagination.value.current,
-                        pageSize: pagination.value.limit,
-                        keywords: searchKeyword.value
-                    })
+                        pageSize: pagination.value.limit
+                    }, [], tokens.join(','))
                     pagination.value.count = res.count
                     pageChange(pagination.value.current + 1)
                 } catch (error) {
@@ -740,6 +763,10 @@
                 }
             }
 
+            onUnmounted(() => {
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+            })
+
             // 监听弹窗显示状态,显示时初始化数据
             watch(() => isShow.value, async (newVal) => {
                 if (newVal) {
@@ -787,6 +814,7 @@
                 isLoading,
                 relatedType,
                 searchKeyword,
+                isSearchFocused,
                 currentEnv,
                 osDisplayName,
                 selectedNodesList,
@@ -814,7 +842,7 @@
                 handleClearSelection,
                 handleRemoveSelectedNode,
                 handleScroll,
-                handleSearch,
+                handleSearchClear,
                 handleCloseDialog,
                 handleSave,
                 getLabelValues,
@@ -836,6 +864,22 @@
     }
     .bk-dialog-tool {
         display: none;
+    }
+
+    .batch-search-input {
+        margin-bottom: 16px;
+        textarea {
+            height: 32px;
+            min-height: 32px;
+            resize: none;
+            transition: height .15s ease;
+            &::placeholder {
+                color: #C4C6CC;
+            }
+        }
+        &.is-focused textarea {
+            height: 96px;
+        }
     }
 
     .dialog-content {

@@ -93,9 +93,10 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId, params, tags }) {
+    requestNodeList ({ commit }, { projectId, params, tags, ipListSearch }) {
         const query = new URLSearchParams(params).toString()
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, { tags }).then(response => {
+        const body = ipListSearch ? { tags, ipListSearch } : { tags }
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, body).then(response => {
             return response
         })
     },

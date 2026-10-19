@@ -65,7 +65,7 @@ export default function useRelatedNodes () {
             console.error('Failed to fetch tag list:', error)
         }
     }
-    const requestNodeList = async (params, tags = []) => {
+    const requestNodeList = async (params, tags = [], ipListSearch = '') => {
         try {
             isLoading.value = true
             const res = await proxy.$store.dispatch('environment/requestNodeList', {
@@ -80,7 +80,8 @@ export default function useRelatedNodes () {
                         osName: currentEnv.value.os.toLowerCase()
                     } : {})
                 },
-                tags
+                tags,
+                ipListSearch
             })
             
             if (params.page === 1) {
