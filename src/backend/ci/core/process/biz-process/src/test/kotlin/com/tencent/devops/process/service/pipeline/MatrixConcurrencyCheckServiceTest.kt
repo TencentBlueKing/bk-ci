@@ -124,6 +124,32 @@ class MatrixConcurrencyCheckServiceTest {
         )
     }
 
+    @Test
+    @DisplayName("矩阵Job前面有普通Job时同样要被校验，不能因非矩阵Job中断遍历")
+    fun checkMatrixJobAfterNormalJob() {
+        val exception = assertThrows(ErrorCodeException::class.java) {
+            service.checkInstanceMatrixMaxConcurrency(
+                projectId = PROJECT_ID,
+                pipelineName = PIPELINE_NAME,
+                model = buildModel(maxConcurrency = 0, withLeadingNormalJob = true)
+            )
+        }
+        assertEquals(ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID, exception.errorCode)
+    }
+
+    @Test
+    @DisplayName("变量解析不出的矩阵Job之后的矩阵Job同样要被校验，跳过不能变成中断")
+    fun checkMatrixJobAfterUnresolvedVarJob() {
+        val exception = assertThrows(ErrorCodeException::class.java) {
+            service.checkInstanceMatrixMaxConcurrency(
+                projectId = PROJECT_ID,
+                pipelineName = PIPELINE_NAME,
+                model = buildModel(maxConcurrency = 51, withLeadingUnresolvedVarJob = true)
+            )
+        }
+        assertEquals(ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID, exception.errorCode)
+    }
+
     private fun assertInvalid(maxConcurrency: Int? = null, maxConcurrencyVar: String? = null, paramValue: String = "") {
         val exception = assertThrows(ErrorCodeException::class.java) {
             service.checkInstanceMatrixMaxConcurrency(
@@ -142,7 +168,11 @@ class MatrixConcurrencyCheckServiceTest {
     private fun buildModel(
         maxConcurrency: Int? = null,
         maxConcurrencyVar: String? = null,
-        paramValue: String = ""
+        paramValue: String = "",
+        // 在被测矩阵Job之前放一个普通Job：遍历遇到非矩阵Job必须跳过而不是中断
+        withLeadingNormalJob: Boolean = false,
+        // 在被测矩阵Job之前放一个变量解析不出的矩阵Job：解析不出应跳过，同样不能中断后续遍历
+        withLeadingUnresolvedVarJob: Boolean = false
     ): Model {
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -175,12 +205,30 @@ class MatrixConcurrencyCheckServiceTest {
                 maxConcurrencyVar = maxConcurrencyVar
             )
         )
+        val stageContainers = mutableListOf<NormalContainer>()
+        if (withLeadingNormalJob) {
+            stageContainers.add(NormalContainer(id = "1", name = "normal-job", matrixGroupFlag = false))
+        }
+        if (withLeadingUnresolvedVarJob) {
+            stageContainers.add(
+                NormalContainer(
+                    id = "2",
+                    name = "unresolved-job",
+                    matrixGroupFlag = true,
+                    matrixControlOption = MatrixControlOption(
+                        strategyStr = "{}",
+                        maxConcurrencyVar = "\${NOT_EXIST_VAR}"
+                    )
+                )
+            )
+        }
+        stageContainers.add(matrixJob)
         return Model(
             name = PIPELINE_NAME,
             desc = null,
             stages = listOf(
                 Stage(containers = listOf(triggerContainer), id = "stage-0"),
-                Stage(containers = listOf(matrixJob), id = "stage-1")
+                Stage(containers = stageContainers, id = "stage-1")
             )
         )
     }

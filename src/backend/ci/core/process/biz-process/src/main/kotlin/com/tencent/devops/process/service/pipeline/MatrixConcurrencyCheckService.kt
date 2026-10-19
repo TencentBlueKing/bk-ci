@@ -70,14 +70,16 @@ class MatrixConcurrencyCheckService(
         val contextMap = PipelineVarUtil.fillVariableMap(
             model.getTriggerContainer().params.associate { it.id to (it.defaultValue?.toString() ?: "") }
         )
-        model.stages.forEach { stage ->
-            stage.containers.forEach container@{ container ->
-                if (container.matrixGroupFlag != true) return@container
+        for (stage in model.stages) {
+            for (container in stage.containers) {
+                // 非矩阵Job跳过（等价于原 forEach + return@container 的语义，不能用 break，
+                // 否则会终止本 Stage 剩余容器的遍历，漏掉后面的矩阵Job）
+                if (container.matrixGroupFlag != true) continue
                 val option = when (container) {
                     is VMBuildContainer -> container.matrixControlOption
                     is NormalContainer -> container.matrixControlOption
                     else -> null
-                } ?: return@container
+                } ?: continue
                 // 未配置并发数时取默认值，属于合法配置
                 val maxConcurrencyVar = option.maxConcurrencyVar?.trim()
                 val value = if (!maxConcurrencyVar.isNullOrBlank()) {
@@ -87,10 +89,10 @@ class MatrixConcurrencyCheckService(
                         onlyExpression = dialect.supportUseExpression()
                     ).trim()
                     // 实例化阶段取不到值：交由运行时启动matrix job时校验，不在此误判为非法
-                    if (isUnresolved(parsed)) return@container
+                    if (isUnresolved(parsed)) continue
                     parsed
                 } else {
-                    option.maxConcurrency?.toString() ?: return@container
+                    option.maxConcurrency?.toString() ?: continue
                 }
                 if (!MatrixConcurrencyUtils.isValid(value.toIntOrNull())) {
                     throw ErrorCodeException(
