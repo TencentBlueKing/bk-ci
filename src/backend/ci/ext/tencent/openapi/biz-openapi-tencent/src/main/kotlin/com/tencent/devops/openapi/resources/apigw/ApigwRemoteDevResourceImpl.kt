@@ -171,6 +171,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).checkUserIpPermission(userId, ip)
     }
 
+    override fun checkWorkspaceSharePermission(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        workspaceName: String
+    ): Result<Boolean> {
+        logger.info("checkWorkspaceSharePermission|$appCode|$userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceSharePermission(
+            userId = userId,
+            workspaceName = workspaceName
+        )
+    }
+
     override fun assignWorkspace(
         appCode: String?,
         apigwType: String?,

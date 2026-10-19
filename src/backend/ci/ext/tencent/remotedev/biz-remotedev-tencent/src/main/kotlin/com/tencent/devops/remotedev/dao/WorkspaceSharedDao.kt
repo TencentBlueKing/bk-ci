@@ -66,6 +66,29 @@ class WorkspaceSharedDao {
         }
     }
 
+    /**
+     * 判断用户是否持有指定类型、未过期且工作空间未删除的分享记录
+     */
+    fun existValidShared(
+        dslContext: DSLContext,
+        workspaceName: String,
+        sharedUser: String,
+        assignTypes: Set<WorkspaceShared.AssignType>
+    ): Boolean {
+        if (assignTypes.isEmpty()) return false
+        val ws = TWorkspace.T_WORKSPACE
+        with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            return dslContext.selectCount().from(this)
+                .innerJoin(ws).on(WORKSPACE_NAME.eq(ws.NAME))
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(SHARED_USER.eq(sharedUser))
+                .and(ASSIGN_TYPE.`in`(assignTypes.map { it.name }))
+                .and(EXPIRATION.isNull.or(EXPIRATION.greaterThan(LocalDateTime.now())))
+                .and(ws.STATUS.ne(WorkspaceStatus.DELETED.ordinal))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun fetchWorkspaceSharedInfo(
         dslContext: DSLContext,
         workspaceName: String,

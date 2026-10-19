@@ -217,6 +217,27 @@ interface ApigwRemoteDevResource {
         ip: String
     ): Result<Boolean>
 
+    @Operation(
+        summary = "校验用户是否为云桌面拥有者或共享人",
+        tags = ["v4_app_check_workspace_share_permission"]
+    )
+    @GET
+    @Path("/check_workspace_share_permission")
+    fun checkWorkspaceSharePermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "提供给BCS做分配云桌面给指定项目或用户", tags = ["v4_app_assign_workspace"])
     @POST
     @Path("/assign/workspace")
