@@ -63,6 +63,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -602,7 +603,10 @@ interface ServiceRemoteDevResource {
         @QueryParam("ip")
         ip: String?,
         @Parameter(description = "备注名称", required = true)
-        workspaceProperty: WorkspaceProperty
+        workspaceProperty: WorkspaceProperty,
+        @Parameter(description = "项目ID(项目英文名)，不为空时校验项目管理员权限", required = false)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<Boolean>
 
     @Operation(summary = "工作空间扩展硬盘回调")
@@ -1219,23 +1223,23 @@ interface ServiceRemoteDevResource {
         os: ClientOS
     ): Result<ClientLatestVersion>
 
-    @Operation(summary = "生成第三方机器注册云桌面使用的token，有效期1小时")
+    @Operation(summary = "生成第三方Windows机器注册云桌面的安装命令（内含有效期1小时的一次性token）")
     @POST
-    @Path("/third_party_desktop/token")
-    fun genThirdPartyDesktopToken(
+    @Path("/third_party_desktop/install_command")
+    fun genThirdPartyDesktopInstallCommand(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "操作系统，如 LINUX/WINDOWS", required = true)
-        @QueryParam("os")
-        os: String,
-        @Parameter(description = "地域，如 CQ12", required = true)
+        @Parameter(description = "地域，需以数字结尾，如 GZ11", required = true)
         @QueryParam("zoneId")
-        zoneId: String
-    ): Result<ThirdPartyDesktopTokenResp>
+        zoneId: String,
+        @Parameter(description = "游戏ID列表，逗号分隔的纯数字，如 980000,980008", required = true)
+        @QueryParam("gameIdList")
+        gameIdList: String
+    ): Result<ThirdPartyDesktopInstallCommandResp>
 
     @Operation(summary = "重装场景：根据已注册的cdsId生成第三方云桌面token，有效期1小时，可获取cdskey，cds未分配时可分配")
     @POST

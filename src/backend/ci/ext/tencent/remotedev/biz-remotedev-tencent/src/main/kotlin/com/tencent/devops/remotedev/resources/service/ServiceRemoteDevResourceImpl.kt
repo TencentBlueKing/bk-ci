@@ -77,6 +77,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
@@ -682,8 +683,12 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         workspaceName: String?,
         ip: String?,
-        workspaceProperty: WorkspaceProperty
+        workspaceProperty: WorkspaceProperty,
+        projectId: String?
     ): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         return Result(
             workspaceService.modifyWorkspaceProperty(
                 userId = userId,
@@ -1158,18 +1163,18 @@ class ServiceRemoteDevResourceImpl(
         return Result(ClientLatestVersion(version = version))
     }
 
-    override fun genThirdPartyDesktopToken(
+    override fun genThirdPartyDesktopInstallCommand(
         userId: String,
         projectId: String,
-        os: String,
-        zoneId: String
-    ): Result<ThirdPartyDesktopTokenResp> {
+        zoneId: String,
+        gameIdList: String
+    ): Result<ThirdPartyDesktopInstallCommandResp> {
         return Result(
-            thirdPartyDesktopService.genToken(
+            thirdPartyDesktopService.genInstallCommand(
                 userId = userId,
                 projectId = projectId,
-                os = os,
-                zoneId = zoneId
+                zoneId = zoneId,
+                gameIdList = gameIdList
             )
         )
     }

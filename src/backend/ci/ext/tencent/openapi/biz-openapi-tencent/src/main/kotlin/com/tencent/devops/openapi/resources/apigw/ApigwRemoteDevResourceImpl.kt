@@ -74,6 +74,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import java.time.LocalDateTime
@@ -558,7 +559,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             workspaceName = workspaceName,
             ip = ip,
-            workspaceProperty = workspaceProperty
+            workspaceProperty = workspaceProperty,
+            projectId = null
+        )
+    }
+
+    override fun modifyWorkspacePropertyProject(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        projectId: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        logger.info("modifyWorkspacePropertyProject $projectId|$userId|$workspaceName|$ip|$workspaceProperty")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceProperty(
+            userId = userId,
+            workspaceName = workspaceName,
+            ip = ip,
+            workspaceProperty = workspaceProperty,
+            projectId = projectId
         )
     }
 
@@ -1128,6 +1147,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getClientLatestVersion(
             type = type,
             os = os
+        )
+    }
+
+    override fun genThirdPartyDesktopInstallCommand(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        zoneId: String,
+        gameIdList: String
+    ): Result<ThirdPartyDesktopInstallCommandResp> {
+        logger.info("genThirdPartyDesktopInstallCommand |$appCode|$userId|$projectId|$zoneId|$gameIdList")
+        return client.get(ServiceRemoteDevResource::class).genThirdPartyDesktopInstallCommand(
+            userId = userId,
+            projectId = projectId,
+            zoneId = zoneId,
+            gameIdList = gameIdList
         )
     }
 }

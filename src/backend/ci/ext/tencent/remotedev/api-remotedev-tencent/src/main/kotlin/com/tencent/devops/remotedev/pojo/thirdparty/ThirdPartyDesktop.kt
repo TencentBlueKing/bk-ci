@@ -28,6 +28,14 @@ data class ThirdPartyDesktopTokenResp(
     val expireTime: Long
 )
 
+@Schema(title = "第三方云桌面安装命令返回")
+data class ThirdPartyDesktopInstallCommandResp(
+    @get:Schema(title = "在目标 Windows 机器管理员 PowerShell 中粘贴执行的完整命令，已包含 token")
+    val command: String,
+    @get:Schema(title = "命令中 token 的过期时间戳(毫秒)，过期后需重新生成命令")
+    val expireTime: Long
+)
+
 @Schema(title = "第三方云桌面注册请求")
 data class ThirdPartyDesktopRegisterReq(
     @get:Schema(title = "机器IP", required = true)

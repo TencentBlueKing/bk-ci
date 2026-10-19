@@ -18,10 +18,12 @@ import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.RegisterVmData
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopBinding
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopCdsKeyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenInfo
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import jakarta.ws.rs.core.Response
 import java.security.SecureRandom
@@ -66,7 +68,8 @@ class ThirdPartyDesktopService @Autowired constructor(
     private val permissionService: PermissionService,
     private val dslContext: DSLContext,
     private val workspaceJoinDao: WorkspaceJoinDao,
-    private val workspaceDao: WorkspaceDao
+    private val workspaceDao: WorkspaceDao,
+    private val configCacheService: ConfigCacheService
 ) {
 
     /* 第三方云桌面 token 有效期（秒），默认 1 小时 */
@@ -77,6 +80,14 @@ class ThirdPartyDesktopService @Autowired constructor(
     @Value("\${remoteDev.thirdPartyDesktop.bindingExpireDays:30}")
     private val bindingExpireDays: Long = DEFAULT_BINDING_EXPIRE_DAYS
 
+    /* 安装脚本下载地址，必须配置，可被 Redis key [SCRIPT_URL_KEY] 覆盖 */
+    @Value("\${remoteDev.thirdPartyDesktop.scriptUrl:}")
+    private val scriptUrl: String = ""
+
+    /* 脚本在用户机器上回调的 remotedev 地址，按环境配置，可被 Redis key [API_HOST_KEY] 覆盖 */
+    @Value("\${remoteDev.thirdPartyDesktop.apiHost:}")
+    private val apiHost: String = ""
+
     private val secureRandom = SecureRandom()
 
     /**
@@ -86,6 +97,97 @@ class ThirdPartyDesktopService @Autowired constructor(
         val id: String,
         val info: ThirdPartyDesktopTokenInfo
     )
+
+    /**
+     * 生成第三方 Windows 机器注册云桌面的安装命令：签发一次性 token 后拼进 PowerShell 命令模板
+     * 用户在目标机器的管理员 PowerShell 中粘贴执行即可，脚本自行调用 register/task_status/cdskey/assign
+     */
+    fun genInstallCommand(
+        userId: String,
+        projectId: String,
+        zoneId: String,
+        gameIdList: String
+    ): ThirdPartyDesktopInstallCommandResp {
+        // 参数会拼进 PowerShell 命令，必须严格校验，避免命令注入
+        val zone = zoneId.trim()
+        if (!ZONE_REGEX.matches(zone)) {
+            throw illegal("zoneId $zoneId is illegal, must end with digits, e.g. GZ11")
+        }
+        val gameIds = gameIdList.split(",").map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        if (gameIds.isEmpty() || gameIds.any { !GAME_ID_REGEX.matches(it) }) {
+            throw illegal("gameIdList $gameIdList is illegal, must be comma separated digits, e.g. 980000,980008")
+        }
+        val url = resolveUrlConfig(SCRIPT_URL_KEY, scriptUrl, "scriptUrl")
+        val host = resolveUrlConfig(API_HOST_KEY, apiHost, "apiHost").trimEnd('/')
+        val tokenResp = genToken(userId = userId, projectId = projectId, os = OS.WINDOWS.name, zoneId = zone)
+        val command = buildInstallCommand(
+            token = tokenResp.token,
+            zoneId = zone,
+            apiHost = host,
+            gameIdList = gameIds.joinToString(","),
+            scriptUrl = url
+        )
+        logger.info("genInstallCommand|$userId|$projectId|$zone|${gameIds.joinToString(",")}|$host|$url")
+        return ThirdPartyDesktopInstallCommandResp(command = command, expireTime = tokenResp.expireTime)
+    }
+
+    /**
+     * 配置优先级：Redis(含 T_CONFIG 表，ConfigCacheService 本地缓存 1 分钟) > 配置文件
+     * 只接受 http(s) 地址，且不能包含引号、空白等会破坏 PowerShell 命令的字符
+     */
+    private fun resolveUrlConfig(redisKey: String, configValue: String, name: String): String {
+        val override = configCacheService.get(redisKey)?.trim()?.ifBlank { null }
+        val value = override ?: configValue.trim()
+        if (value.isBlank()) {
+            logger.error("genInstallCommand|[remoteDev.thirdPartyDesktop.$name] is not configured")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                defaultMessage = "[remoteDev.thirdPartyDesktop.$name] is not configured",
+                params = arrayOf("config", "[remoteDev.thirdPartyDesktop.$name] is not configured")
+            )
+        }
+        if (!SAFE_URL_REGEX.matches(value)) {
+            logger.error("genInstallCommand|$name is illegal|$value|fromRedis=${override != null}")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = PARAMETER_ILLEGAL_ERROR,
+                defaultMessage = "thirdPartyDesktop $name is illegal",
+                params = arrayOf("config", "thirdPartyDesktop $name is illegal")
+            )
+        }
+        return value
+    }
+
+    /**
+     * 命令模板见 CDS《第三方云桌面注册 —— 后台对接说明》，token 走环境变量，不出现在子进程命令行
+     */
+    private fun buildInstallCommand(
+        token: String,
+        zoneId: String,
+        apiHost: String,
+        gameIdList: String,
+        scriptUrl: String
+    ): String = listOf(
+        "\$env:CDS_TOKEN = ${psQuote(token)}",
+        "\$env:CDS_ZONE  = ${psQuote(zoneId)}",
+        "\$env:CDS_HOST  = ${psQuote(apiHost)}",
+        "\$env:CDS_GAME_ID_LIST = ${psQuote(gameIdList)}",
+        "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12",
+        "\$f = Join-Path \$env:TEMP 'cds_register_thirdparty.ps1'",
+        "Invoke-WebRequest -UseBasicParsing -Uri ${psQuote(scriptUrl)} -OutFile \$f",
+        "if (-not (Select-String -Path \$f -Pattern 'Requires -Version' -Quiet)) {",
+        "    Write-Host '脚本下载异常（内容不符合预期），请检查网络或联系管理员' -ForegroundColor Red",
+        "} else {",
+        "    powershell -NoProfile -ExecutionPolicy Bypass -File \$f",
+        "    Write-Host \"退出码: \$LASTEXITCODE\"",
+        "}",
+        "Remove-Item Env:CDS_TOKEN, Env:CDS_ZONE, Env:CDS_HOST, Env:CDS_GAME_ID_LIST -ErrorAction SilentlyContinue",
+        "Remove-Item \$f -ErrorAction SilentlyContinue"
+    ).joinToString("\n")
+
+    /* PowerShell 单引号字符串：内部单引号写两次，单引号内 $ 不会被展开 */
+    private fun psQuote(value: String) = "'" + value.replace("'", "''") + "'"
 
     fun genToken(
         userId: String,
@@ -492,6 +594,12 @@ class ThirdPartyDesktopService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyDesktopService::class.java)
         private const val DEFAULT_EXPIRE_SECONDS = 3600L
+        /* Redis 覆盖配置的 key，值为完整地址，删除 key 即回落到配置文件 */
+        const val SCRIPT_URL_KEY = "remotedev:thirdPartyDesktop:scriptUrl"
+        const val API_HOST_KEY = "remotedev:thirdPartyDesktop:apiHost"
+        private val ZONE_REGEX = Regex("^[A-Za-z]*\\d+$")
+        private val GAME_ID_REGEX = Regex("^\\d{1,20}$")
+        private val SAFE_URL_REGEX = Regex("^https?://[A-Za-z0-9._~:/?#\\[\\]@!&()*+,;=%-]+$")
         private const val DEFAULT_BINDING_EXPIRE_DAYS = 30L
         private const val SECONDS_PER_DAY = 24 * 3600L
         private const val MIN_RECORD_SECONDS = 60L
