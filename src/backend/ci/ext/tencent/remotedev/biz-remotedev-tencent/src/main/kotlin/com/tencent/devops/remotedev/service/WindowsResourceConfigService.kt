@@ -324,6 +324,10 @@ class WindowsResourceConfigService @Autowired constructor(
         return configCacheService.getWindowsResourceType(withUnavailable ?: false, onlySpecModel)
     }
 
+    fun getAllDisplayType(): List<WindowsResourceTypeConfig> {
+        return getAllType(withUnavailable = true, onlySpecModel = null).filter { it.display != false }
+    }
+
     fun getTypeConfig(
         machineType: String
     ): WindowsResourceTypeConfig? {

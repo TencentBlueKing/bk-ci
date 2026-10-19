@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
     `DISK` varchar(32) NOT NULL DEFAULT '200' COMMENT '本地SSD盘，单位GB',
     `HDISK` varchar(32) NOT NULL DEFAULT '1' COMMENT '云SSD盘，单位TB',
     `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
+    `DISPLAY` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否对外展示，0 表示仅后台使用',
     `WEIGHT` int(11) NOT NULL DEFAULT '0' COMMENT '权重，用于控制台页面展示先后顺序',
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
     `SPEC_MODEL` bit(1) DEFAULT b'0' NOT NULL COMMENT '是否是特殊机型',

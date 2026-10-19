@@ -62,7 +62,8 @@ class WindowsResourceTypeDao {
                 WEIGHT,
                 DESCRIPTION,
                 SPEC_MODEL,
-                MACHINE_FLAG
+                MACHINE_FLAG,
+                DISPLAY
             ).values(
                 config.size,
                 config.type ?: "",
@@ -78,7 +79,8 @@ class WindowsResourceTypeDao {
                 config.weight ?: 0,
                 config.description,
                 config.specModel,
-                config.machineFlag ?: ""
+                config.machineFlag ?: "",
+                displayValue(config)
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -149,6 +151,7 @@ class WindowsResourceTypeDao {
                 .set(WEIGHT, config.weight ?: 0)
                 .set(SPEC_MODEL, config.specModel)
                 .set(MACHINE_FLAG, config.machineFlag ?: "")
+                .set(DISPLAY, displayValue(config))
                 .where(ID.eq(id))
                 .execute()
         }
@@ -165,6 +168,8 @@ class WindowsResourceTypeDao {
                 .execute()
         }
     }
+
+    private fun displayValue(config: WindowsResourceTypeConfig): Byte = if (config.display == false) 0 else 1
 
     class TWindowsResourceTypeJooqMapper : RecordMapper<TWindowsResourceTypeRecord, WindowsResourceTypeConfig> {
         override fun map(record: TWindowsResourceTypeRecord?): WindowsResourceTypeConfig? {
@@ -186,7 +191,8 @@ class WindowsResourceTypeDao {
                     weight = weight,
                     description = description,
                     specModel = specModel,
-                    machineFlag = machineFlag
+                    machineFlag = machineFlag,
+                    display = ByteUtils.byte2Bool(display)
                 )
             }
         }

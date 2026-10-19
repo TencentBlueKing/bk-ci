@@ -30,6 +30,16 @@ BEGIN
             WHERE TYPE = 'DEVCLOUD';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_WINDOWS_RESOURCE_TYPE'
+                        AND COLUMN_NAME = 'DISPLAY') THEN
+        ALTER TABLE T_WINDOWS_RESOURCE_TYPE
+            ADD COLUMN `DISPLAY` tinyint(1) NOT NULL DEFAULT '1'
+            COMMENT '是否对外展示，0 表示仅后台使用' AFTER `AVAILABLED`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
