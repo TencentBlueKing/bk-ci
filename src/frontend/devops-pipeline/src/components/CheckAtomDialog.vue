@@ -213,7 +213,11 @@
                         elementId: this.element.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
-                    this.data = Object.assign(res, { status: '' })
+                    const action = this.$route.query.action
+                    const status = action === 'reject'
+                        ? 'ABORT'
+                        : (action === 'approve' || action === 'modify' ? 'PROCESS' : '')
+                    this.data = Object.assign(res, { status })
                 } catch (err) {
                     this.$showTips({
                         theme: 'error',

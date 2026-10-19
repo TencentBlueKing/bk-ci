@@ -38,6 +38,8 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.process.api.service.ServiceTXWeworkReviewCallBackResource
 import com.tencent.devops.support.constant.SupportMessageCode.BK_GROUP_CHATID
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
@@ -80,6 +82,11 @@ class RobotService @Autowired constructor(
 
     fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
         logger.info("signature:$signature | timestamp:$timestamp | nonce:$nonce | reqData:$reqData")
+        val xmlString = getDecrypeMsg(signature, timestamp, nonce, reqData)
+        logger.info("xmlString:$xmlString")
+        if (tryHandleReviewCardEvent(xmlString)) {
+            return true
+        }
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
         logger.info("chitId:${robotCallBack.chatId} | robotCallBack:$robotCallBack")
         if (robotCallBack.eventType == "enter_chat") {
@@ -129,6 +136,31 @@ class RobotService @Autowired constructor(
             }
         }
         return true
+    }
+
+    /**
+     * 消息推送 template_card 点击（path/94874：event_key / task_id）转发 process 审核。
+     */
+    private fun tryHandleReviewCardEvent(xmlString: String): Boolean {
+        val click = WeworkRobotTemplateCardEventParser.parse(xmlString) ?: return false
+        return try {
+            logger.info(
+                "wework robot review card event|userId=${click.userId}|action=${click.action}|" +
+                    "taskId=${click.taskId}|selected=${click.selectedItems.keys}"
+            )
+            client.get(ServiceTXWeworkReviewCallBackResource::class)
+                .manualReviewCallBack(
+                    userId = click.userId,
+                    action = click.action,
+                    taskId = click.taskId,
+                    selectedItems = click.selectedItems.takeIf { it.isNotEmpty() }
+                        ?.let { JsonUtil.toJson(it, false) }
+                )
+            true
+        } catch (ignored: Exception) {
+            logger.warn("wework robot review card event failed", ignored)
+            false
+        }
     }
 
     @SuppressWarnings("ComplexMethod")

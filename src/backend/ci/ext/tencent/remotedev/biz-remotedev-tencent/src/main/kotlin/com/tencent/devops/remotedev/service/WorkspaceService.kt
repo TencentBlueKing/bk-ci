@@ -131,15 +131,18 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tai.TaiService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import com.tencent.devops.remotedev.utils.WorkspaceListUtil
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
@@ -175,7 +178,8 @@ class WorkspaceService @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val whiteListDao: WhiteListDao,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceStartCloudClient: WorkspaceStartCloudClient
+    private val workspaceStartCloudClient: WorkspaceStartCloudClient,
+    @Qualifier("remoteDevIoExecutor") private val ioExecutor: Executor
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -696,18 +700,18 @@ class WorkspaceService @Autowired constructor(
 
         val windowsWorkspaces = result.filterIsInstance<WorkspaceRecordWithWindows>().associateBy { it.workspaceName }
         val loginUserMap =
-            startWorkspaceService.cachingLoginUsers(windowsWorkspaces.map { it.value.hostIp ?: "" }.toSet())
+            startWorkspaceService.cachingLoginUsers(WorkspaceListUtil.loginStatusHostIps(windowsWorkspaces.values))
 // 获取CDS对应的母机ip信息
         val hostIps = windowsWorkspaces.mapNotNull { it.value.hostIp }.filter { it.isNotEmpty() }
         val cdsInfo = windowsGpuResourceDao.batchFetchWindowsGpuPool(dslContext = dslContext, hostIps = hostIps)
             .associateBy { it.cgsId }
-        val infoMap = prefetchFixWorkspaceInfos(userId, result, windowsWorkspaces, loginUserMap)
+        val fixedStatus = fixUnexpectedStatuses(userId, result, windowsWorkspaces, loginUserMap)
 
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
             val detail = windowsWorkspaces[it.workspaceName]
             val loginInfo = detail?.hostIp?.let { ip -> loginUserMap[ip] }
-            val status = checkStatus(it, userId, loginInfo, infoMap[it.workspaceName])
+            val status = fixedStatus[it.workspaceName] ?: it.status
             records.add(
                 ProjectWorkspace(
                     workspaceId = it.workspaceId,
@@ -1019,23 +1023,21 @@ class WorkspaceService @Autowired constructor(
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
 
-        val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
-            dslContext,
-            result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }.toSet()
-        ).associateBy { it.workspaceName }
-
         val windowsWorkspace = result.filterIsInstance<WorkspaceRecordWithWindows>().associateBy { it.workspaceName }
 
         val loginUserMap =
-            startWorkspaceService.cachingLoginUsers(windowsWorkspace.map { it.value.hostIp ?: "" }.toSet())
-        val infoMap = prefetchFixWorkspaceInfos(userId, result, windowsWorkspace, loginUserMap)
+            startWorkspaceService.cachingLoginUsers(WorkspaceListUtil.loginStatusHostIps(windowsWorkspace.values))
+        val fixedStatus = fixUnexpectedStatuses(userId, result, windowsWorkspace, loginUserMap)
 
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
             records = result.map {
                 val hostIp = windowsWorkspace[it.workspaceName]?.hostIp
                 val loginInfo = hostIp?.let { ip -> loginUserMap[ip] }
-                val status = checkStatus(it, userId, loginInfo, infoMap[it.workspaceName])
+                val status = fixedStatus[it.workspaceName] ?: it.status
+                val winConfigId = windowsWorkspace[it.workspaceName]
+                    ?.takeIf { w -> w.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }
+                    ?.winConfigId
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
@@ -1064,8 +1066,8 @@ class WorkspaceService @Autowired constructor(
                     workspaceKind = it.workspaceKind,
                     assignType = sharedWorkspace[it.workspaceName]?.find { shared -> shared.sharedUser == userId }?.type
                         ?: WorkspaceShared.AssignType.OWNER,
-                    winConfigId = allWindows[it.workspaceName]?.winConfigId,
-                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                    winConfigId = winConfigId,
+                    winConfig = winConfigId?.let { id -> allConfig[id.toLong()] },
                     zoneConfig = zone,
                     currentLoginUsers = loginInfo?.loginUsers ?: emptyList(),
                     os = it.os,
@@ -1076,19 +1078,27 @@ class WorkspaceService @Autowired constructor(
     }
 
     /**
-     * 只批量预取需要走 fixUnexpectedStatus 的实例, 正常实例不打 BCS。
+     * 只修正需要走 fixUnexpectedStatus 的实例, 正常实例不打 BCS。
+     * 修正彼此独立, 并行执行后同步等待; 返回 Map 中只包含被修正的实例。
      */
-    private fun prefetchFixWorkspaceInfos(
+    private fun fixUnexpectedStatuses(
         userId: String,
         result: List<WorkspaceRecordInf>,
         windowsMap: Map<String, WorkspaceRecordWithWindows>,
         loginUserMap: Map<String, ComputerStatusRespV2>
-    ): Map<String, WorkspaceInfo> {
-        val needFix = result.filter { ws ->
-            val loginInfo = windowsMap[ws.workspaceName]?.hostIp?.let { ip -> loginUserMap[ip] }
-            needsBcsFix(ws, loginInfo)
+    ): Map<String, WorkspaceStatus> {
+        val loginInfoOf = { ws: WorkspaceRecordInf ->
+            windowsMap[ws.workspaceName]?.hostIp?.let { ip -> loginUserMap[ip] }
         }
-        return workspaceCommon.batchFetchWorkspaceInfos(userId, needFix)
+        val needFix = result.filter { ws -> needsBcsFix(ws, loginInfoOf(ws)) }
+        if (needFix.isEmpty()) {
+            return emptyMap()
+        }
+        val infoMap = workspaceCommon.batchFetchWorkspaceInfos(userId, needFix)
+        val fixed = WorkspaceListUtil.parallelMap(needFix, ioExecutor) { ws ->
+            checkStatus(ws, userId, loginInfoOf(ws), infoMap[ws.workspaceName])
+        }
+        return needFix.map { it.workspaceName }.zip(fixed).toMap()
     }
 
     private fun needsBcsFix(
@@ -1341,7 +1351,8 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         workspaceName: String?,
         envId: String?,
-        multiple: Boolean? = null
+        multiple: Boolean? = null,
+        live: Boolean? = null
     ): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
             val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = workspaceName)
@@ -1371,20 +1382,20 @@ class WorkspaceService @Autowired constructor(
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
             // --story=136579406 【云桌面】支持团队虾和开黑功能 如果是被分享人可以看
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
-                if (multiple == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
+                if (multiple == true || live == true || workspaceSharedDao.fetchWorkspaceSharedInfo(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         sharedUsers = listOf(userId)
                     ).isNotEmpty()
                 ) {
-                    return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+                    return startCloudWorkspaceDetail(userId, workspace, multiple ?: false, live ?: false)
                 }
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false)
+            return startCloudWorkspaceDetail(userId, workspace, multiple ?: false, live ?: false)
         }
         if (envId != null) {
             val userEnvs = getUserEnv4Use(userId)
@@ -1461,7 +1472,7 @@ class WorkspaceService @Autowired constructor(
                     notify = false
                 )
             }
-            return startCloudWorkspaceDetail(userId, workspace, false)
+            return startCloudWorkspaceDetail(userId, workspace, false, live ?: false)
         }
         throw ErrorCodeException(
             errorCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode
@@ -1556,12 +1567,37 @@ class WorkspaceService @Autowired constructor(
     private fun startCloudWorkspaceDetail(
         userId: String,
         workspace: WorkspaceRecordWithWindows,
-        multiple: Boolean
+        multiple: Boolean,
+        live: Boolean
     ): WorkspaceStartCloudDetail {
         logger.info("$userId get startCloud workspace from workspaceName ${workspace.workspaceName}")
 
+        // 开黑可用范围门禁（独立于 multiple）：校验不通过直接拒绝
+        if (live) {
+            val liveAccessible = try {
+                workspaceStartCloudClient.checkLiveScope(userId, workspace.workspaceName)
+            } catch (e: Exception) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have live access to workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+            if (!liveAccessible) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    params = arrayOf(
+                        "We're sorry but you don't have live access to workspace " +
+                                workspace.workspaceName
+                    )
+                )
+            }
+        }
+
         // 审计
-        if (!multiple) {
+        if (!multiple && !live) {
             ActionAuditContext.current()
                 .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
                 .setScopeId(workspace.projectId)
@@ -1570,7 +1606,7 @@ class WorkspaceService @Autowired constructor(
             permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
             ActionAuditContext.current()
                 .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        } else {
+        } else if (multiple) {
             val result = try {
                 workspaceStartCloudClient.checkTeamAccessible(userId, workspace.workspaceName)
             } catch (e: Exception) {

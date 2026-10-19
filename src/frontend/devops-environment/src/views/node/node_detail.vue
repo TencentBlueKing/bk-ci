@@ -69,7 +69,7 @@
                     </span>
                 </span>
                 <a
-                    v-if="!isCreateResType"
+                    v-if="!isCreateResType && !isAgentNormal"
                     class="reinstall-agent-btn"
                     @click="handleReinstallAgent"
                 >

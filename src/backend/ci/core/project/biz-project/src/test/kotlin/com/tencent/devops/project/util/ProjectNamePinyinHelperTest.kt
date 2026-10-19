@@ -27,7 +27,9 @@
 
 package com.tencent.devops.project.util
 
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.text.Collator
 import java.util.Locale
@@ -77,5 +79,38 @@ class ProjectNamePinyinHelperTest {
         assertEquals(setOf("吧项目", "bkdevops"), sorted.subList(4, 6).toSet())
         assertEquals(setOf("测试11", "ceshi11"), sorted.subList(6, 8).toSet())
         assertEquals(setOf("zhenwtest", "组织架构修正"), sorted.subList(8, 10).toSet())
+    }
+
+    @Test
+    fun firstLetterMatchesRangeBoundaries() {
+        assertEquals('a', ProjectNamePinyinHelper.firstLetter("澳"))
+        assertEquals('b', ProjectNamePinyinHelper.firstLetter("芭"))
+        assertEquals('y', ProjectNamePinyinHelper.firstLetter("孕"))
+        assertEquals('z', ProjectNamePinyinHelper.firstLetter("匝"))
+        assertEquals('z', ProjectNamePinyinHelper.firstLetter("座"))
+    }
+
+    @Test
+    fun firstLetterReturnsNullForLevel2Chinese() {
+        listOf("亍项目", "兀项目", "乩项目", "齄项目").forEach { name ->
+            assertNull(assertDoesNotThrow<Char?> { ProjectNamePinyinHelper.firstLetter(name) })
+        }
+    }
+
+    @Test
+    fun firstLetterReturnsNullForCharsOutsideGb2312Level1() {
+        assertNull(ProjectNamePinyinHelper.firstLetter("Ａbc"))
+        assertNull(ProjectNamePinyinHelper.firstLetter("臺灣"))
+    }
+
+    @Test
+    fun level2ChineseSortsBeforeAlphaGroups() {
+        val names = listOf("测试11", "亍项目", "aaa-rbac-dev", "组织架构修正", "兀项目")
+        val sorted = assertDoesNotThrow<List<String>> {
+            names.sortedWith { left, right -> ProjectNamePinyinHelper.compare(left, right, collator) }
+        }
+
+        assertEquals(setOf("亍项目", "兀项目"), sorted.subList(0, 2).toSet())
+        assertEquals(listOf("aaa-rbac-dev", "测试11", "组织架构修正"), sorted.subList(2, 5))
     }
 }

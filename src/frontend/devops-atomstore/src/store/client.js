@@ -1,4 +1,4 @@
-import { STORE_TYPE, BASE_PREFIX } from '@/utils/constants'
+import { STORE_TYPE } from '@/utils/constants'
 const prefix = 'store/api'
 const projectPrefix = 'project/api'
 const artifactoryPrefix = 'artifactory/api'
@@ -234,7 +234,7 @@ export const actions = {
      * 上传文件
      */
     uploadFiles ({ commit }, formData) {
-        return vue.$ajax.post(`${BASE_PREFIX}/misc/api/user/file/upload`, formData, {
+        return vue.$ajax.post('misc/api/user/file/upload', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

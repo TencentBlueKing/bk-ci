@@ -54,8 +54,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
+        val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
             streamLogService.getInitLogs(
                 userId = userId,
@@ -81,8 +80,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
+        val gitProjectId = authorize(userId, projectId, buildId)
         return Result(
             streamLogService.getAfterLogs(
                 userId = userId,
@@ -107,13 +105,7 @@ class UserStreamLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(buildId)
-        permissionService.checkStreamPermission(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW
-        )
+        val gitProjectId = authorize(userId, projectId, buildId)
         return streamLogService.downloadLogs(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -123,6 +115,16 @@ class UserStreamLogResourceImpl @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount
         )
+    }
+
+    private fun authorize(userId: String, projectId: String, buildId: String): Long {
+        checkParam(buildId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
+        return GitCommonUtils.getGitProjectId(projectId)
     }
 
     private fun checkParam(buildId: String) {

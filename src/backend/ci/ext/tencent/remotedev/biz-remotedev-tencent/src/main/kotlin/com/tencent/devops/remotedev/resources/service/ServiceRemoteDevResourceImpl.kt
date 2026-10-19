@@ -1128,9 +1128,17 @@ class ServiceRemoteDevResourceImpl(
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
-        envHashId: String?
+        envHashId: String?,
+        live: Boolean?
     ): Result<WorkspaceStartCloudDetail?> {
-        return Result(workspaceService.startCloudWorkspaceDetail(userId, workspaceName, envHashId))
+        return Result(
+            workspaceService.startCloudWorkspaceDetail(
+                userId = userId,
+                workspaceName = workspaceName,
+                envId = envHashId,
+                live = live
+            )
+        )
     }
 
     override fun createOpenClaw(

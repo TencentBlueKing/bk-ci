@@ -8,6 +8,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -19,6 +20,7 @@ import com.tencent.devops.dispatch.pojo.TPAQueueEvent
 import com.tencent.devops.dispatch.pojo.TPAQueueEventContext
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentSqlQueueType
+import com.tencent.devops.dispatch.utils.DispatchLogBuffer
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentQueueEnvLock
@@ -39,7 +41,8 @@ class TPAQueueService @Autowired constructor(
     private val tpaQueueDao: TPAQueueDao,
     private val tpaEnvQueueService: TPAEnvQueueService,
     private val dispatchService: DispatchService,
-    private val jobQuotaService: JobQuotaService
+    private val jobQuotaService: JobQuotaService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     fun queue(data: ThirdPartyAgentDispatchData) {
         logger.info("queue|${data.toLog()}")
@@ -84,6 +87,9 @@ class TPAQueueService @Autowired constructor(
         logger.info("queue_dispatch|${event.toLog()}")
         // 每个排队队列中的最长的只会是Job排队时间，7天
         // 目前只有ENV
+        // TODO: 灰度队列暂不调整：锁按项目+环境互斥，取数和续发计数却额外按 pipelineId 过滤。
+        // 同环境另一流水线入队抢锁失败后，当前消费者不会处理或续发它的记录，可能留下无事件唤醒的积压。
+        // 后续统一锁、取数和续发的作用域，并评估存量锁/在途事件兼容及补偿唤醒，不能只修改单处维度。
         val lock = ThirdPartyAgentQueueEnvLock(
             redisOperation = redisOperation,
             projectId = event.projectId,
@@ -106,6 +112,9 @@ class TPAQueueService @Autowired constructor(
                 event.sendData = null
             }
             logger.info("queue_dispatch|${event.toLog()}")
+            // TODO: sendTo 内部吞掉发送异常并忽略 send 返回 false，失败时此处 catch 无法解锁，锁可能保留 7 天。
+            // 后续让队列投递显式感知结果，失败时按 lockValue 释放本次锁并可靠重投/补偿唤醒；锁到期不会自动续发。
+            // 调整公共发送接口前需评估其他调用方，当前仅记录风险，不改变发送及锁语义。
             event.sendTo(streamBridge)
         } catch (e: Throwable) {
             // 只可能是发送消息错误或者抓到的异常处理逻辑错误，但是为了防止没解锁
@@ -120,7 +129,6 @@ class TPAQueueService @Autowired constructor(
      * 同时将排队信息保存到 sql 中，每次结束排队都更新，这样不论哪个消息进来了，信息都是持久化的
      */
     fun doQueue(event: TPAQueueEvent) {
-        inQueue(event)
         val lock = ThirdPartyAgentQueueEnvLock(
             redisOperation = redisOperation,
             projectId = event.projectId,
@@ -128,7 +136,18 @@ class TPAQueueService @Autowired constructor(
             expiredTimeInSeconds = ENV_LOCK_TIME_OUT_7D,
             lockValue = event.lockValue
         )
-        lock.unlock()
+        // 一轮事件可能包含多个构建，不能逐条记录刷新，否则日志 RPC 仍占用整个环境队列锁。
+        DispatchLogBuffer.withBuffer(buildId = null, printer = buildLogPrinter) {
+            try {
+                inQueue(event)
+            } finally {
+                lock.unlock()
+            }
+        }
+        // 解锁并发送日志后再续发，避免重新持有队列锁时刷新上一轮日志。
+        // TODO: withBuffer 返回前仍在消费线程同步发送日志；虽然已解锁，慢日志 RPC 仍会阻塞下面的下一轮续发。
+        // 后续将续发与日志 I/O 解耦，采用有界缓冲、超时和明确失败策略，保留同一构建内日志顺序并避免锁内刷新。
+        // 当前仅记录优化建议，暂不改变发送顺序。
         // 解锁后去查询，如果还有没有下发完的那么就再发送一条记录
         try {
             val count = tpaQueueDao.fetchProjectDataCount(

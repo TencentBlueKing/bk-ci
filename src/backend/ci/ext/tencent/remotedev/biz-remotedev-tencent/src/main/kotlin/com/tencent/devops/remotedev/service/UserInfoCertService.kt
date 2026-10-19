@@ -18,7 +18,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.enums.ProjectLabel
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.UserAuthApplyDao
@@ -157,6 +159,25 @@ class UserInfoCertService @Autowired constructor(
             ).data?.records?.filter { it.joinedType == JoinedType.DIRECT && it.expiredAt < expiredTime }
                 ?.ifEmpty { null } ?: return
 
+            if (isCommonImateProject(data.projectId)) {
+                logger.info("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|${data.projectId}|${data.userId}|direct renewal")
+                val groupIds = groupList.map { it.groupId }.toSet()
+                val recordId = userAuthApplyDao.create(
+                    dslContext = dslContext,
+                    projectId = data.projectId,
+                    userId = data.userId,
+                    status = UserAuthRecordStatus.RUNNING,
+                    info = UserAuthInfo(groupIds = groupIds)
+                )
+                renewalGroups(
+                    recordId = recordId,
+                    projectId = data.projectId,
+                    userId = data.userId,
+                    groupIds = groupIds
+                )
+                return
+            }
+
             // 太湖用户发送给云研发管理员；集团用户发送给项目管理员
             val admins = if (UserUtil.isTaiUser(data.userId)) {
                 permissionService.managers(data.projectId).toSet()
@@ -213,16 +234,30 @@ class UserInfoCertService @Autowired constructor(
             return
         }
         val groupIds = JsonUtil.to(record.authInfo.data(), object : TypeReference<UserAuthInfo>() {}).groupIds
+        renewalGroups(
+            recordId = recordId,
+            projectId = record.projectId,
+            userId = record.userId,
+            groupIds = groupIds
+        )
+    }
+
+    private fun renewalGroups(
+        recordId: Long,
+        projectId: String,
+        userId: String,
+        groupIds: Set<Int>
+    ) {
         try {
             groupIds.forEach {
                 client.get(ServiceResourceMemberResource::class).renewalGroupMember(
                     token = tokenService.getSystemToken(),
-                    userId = record.userId,
-                    projectCode = record.projectId,
+                    userId = userId,
+                    projectCode = projectId,
                     renewalConditionReq = GroupMemberSingleRenewalReq(
                         groupId = it,
                         targetMember = ResourceMemberInfo(
-                            id = record.userId,
+                            id = userId,
                             type = "user"
                         ),
                         renewalDuration = 365
@@ -246,9 +281,40 @@ class UserInfoCertService @Autowired constructor(
         .expireAfterWrite(Duration.ofMinutes(10))
         .build { key -> configCacheService.get(key)?.split(";")?.toSet() ?: setOf() }
 
+    fun isCommonImateProject(projectId: String): Boolean {
+        return projectId in (projectLabelCache.get(ProjectLabel.COMMON_IMATE) ?: emptySet())
+    }
+
+    // 加载失败返回 null，Caffeine 不缓存 null，下次调用会重新加载
+    private val projectLabelCache: LoadingCache<ProjectLabel, Set<String>> = Caffeine.newBuilder()
+        .maximumSize(10L)
+        .expireAfterWrite(Duration.ofMinutes(10))
+        .build { label -> loadProjectIdsByLabel(label) }
+
+    private fun loadProjectIdsByLabel(label: ProjectLabel): Set<String>? {
+        return try {
+            val projectIds = mutableSetOf<String>()
+            var page = 1
+            do {
+                val records = client.get(ServiceProjectResource::class).listProjectIdsByLabel(
+                    label = label,
+                    page = page,
+                    pageSize = LABEL_QUERY_PAGE_SIZE
+                ).data?.records ?: emptyList()
+                projectIds.addAll(records)
+                page++
+            } while (records.size >= LABEL_QUERY_PAGE_SIZE)
+            projectIds
+        } catch (e: Exception) {
+            logger.error("$USER_CERT_LOG_PREFIX|listProjectIdsByLabel|$label error", e)
+            null
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(UserInfoCertService::class.java)
         private const val TICKET_EXPIRT_DAYS = 15L
+        private const val LABEL_QUERY_PAGE_SIZE = 10000
         private const val USER_CERT_LOG_PREFIX = "USER_CERT_LOG"
         private const val REMOTEDEV_USER_ATUCH_CHECK_REDIS_KEY_PREFIX = "remotedev:user_auth_check"
     }

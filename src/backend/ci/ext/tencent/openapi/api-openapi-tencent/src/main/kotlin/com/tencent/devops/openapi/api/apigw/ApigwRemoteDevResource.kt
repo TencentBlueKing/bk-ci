@@ -1581,7 +1581,10 @@ interface ApigwRemoteDevResource {
         workspaceName: String?,
         @Parameter(description = "环境id", required = true)
         @QueryParam("envHashId")
-        envHashId: String?
+        envHashId: String?,
+        @Parameter(description = "是否校验开黑可用范围", required = false)
+        @QueryParam("live")
+        live: Boolean?
     ): Result<WorkspaceStartCloudDetail?>
 
     @Operation(summary = "分配龙虾云桌面", tags = ["v4_app_remotedev_create_openclaw"])

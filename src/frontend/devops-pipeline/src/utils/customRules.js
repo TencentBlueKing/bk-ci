@@ -48,7 +48,13 @@ const customeRules = {
     notInList: {
         validate: function (value, args) {
             if (Array.isArray(args)) {
-                return !args.some(item => decodeURIComponent(item) === value)
+                return !args.some(item => {
+                    try {
+                        return decodeURIComponent(item) === value
+                    } catch (error) {
+                        return item === value
+                    }
+                })
             }
             return true
         },

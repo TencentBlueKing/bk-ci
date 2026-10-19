@@ -14,7 +14,9 @@ import com.tencent.devops.remotedev.pojo.strategy.PublicDesktopLockScreenStrateg
 import com.tencent.devops.remotedev.pojo.strategy.QuitOnExitStrategy
 import com.tencent.devops.remotedev.pojo.strategy.SilentUpgradeStrategy
 import com.tencent.devops.remotedev.pojo.strategy.StrategyType
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -23,7 +25,8 @@ class ProjectStrategyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectStrategyDao: ProjectStrategyDao,
     private val permissionService: PermissionService,
-    private val cosLogUploadService: CosLogUploadService
+    private val cosLogUploadService: CosLogUploadService,
+    private val configCacheService: ConfigCacheService
 ) {
     fun createOrUpdateStrategy(
         info: ProjectStrategyInfo
@@ -36,7 +39,9 @@ class ProjectStrategyService @Autowired constructor(
                     zoneType = info.zoneType,
                     strategyType = StrategyType.PERSONAL_DESKTOP_LOCK_SCREEN,
                     content = JsonUtil.toJson(
-                        info.personalDesktopLockScreenStrategy ?: PersonalDesktopLockScreenStrategy.default(), false
+                        (info.personalDesktopLockScreenStrategy ?: PersonalDesktopLockScreenStrategy.default())
+                            .copy(globalLockScreenMin = null),
+                        false
                     )
                 )
 
@@ -46,7 +51,9 @@ class ProjectStrategyService @Autowired constructor(
                     zoneType = info.zoneType,
                     strategyType = StrategyType.PUBLIC_DESKTOP_LOCK_SCREEN,
                     content = JsonUtil.toJson(
-                        info.publicDesktopLockScreenStrategy ?: PublicDesktopLockScreenStrategy.default(), false
+                        (info.publicDesktopLockScreenStrategy ?: PublicDesktopLockScreenStrategy.default())
+                            .copy(globalLockScreenMin = null),
+                        false
                     )
                 )
 
@@ -149,6 +156,44 @@ class ProjectStrategyService @Autowired constructor(
                 }
             }
         }
+        fillGlobalLockScreenMin(info, resp)
         return resp
+    }
+
+    private fun fillGlobalLockScreenMin(info: ProjectStrategyFetchInfo, resp: ProjectStrategyResp) {
+        val requested = info.typeList.filter { it in LOCK_SCREEN_STRATEGY_TYPES }
+        if (requested.isEmpty()) {
+            return
+        }
+        val globalLockScreenMin = readGlobalLockScreenMin()
+        if (StrategyType.PERSONAL_DESKTOP_LOCK_SCREEN in requested) {
+            val current = resp.personalDesktopLockScreenStrategy ?: PersonalDesktopLockScreenStrategy.default()
+            resp.personalDesktopLockScreenStrategy = current.copy(globalLockScreenMin = globalLockScreenMin)
+        }
+        if (StrategyType.PUBLIC_DESKTOP_LOCK_SCREEN in requested) {
+            val current = resp.publicDesktopLockScreenStrategy ?: PublicDesktopLockScreenStrategy.default()
+            resp.publicDesktopLockScreenStrategy = current.copy(globalLockScreenMin = globalLockScreenMin)
+        }
+    }
+
+    private fun readGlobalLockScreenMin(): Long? {
+        val raw = configCacheService.get(GLOBAL_LOCK_SCREEN_MIN_KEY)?.trim()
+        if (raw.isNullOrBlank()) {
+            return null
+        }
+        val minutes = raw.toLongOrNull()
+        if (minutes == null) {
+            logger.warn("invalid global lock screen config|$GLOBAL_LOCK_SCREEN_MIN_KEY|$raw")
+        }
+        return minutes
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectStrategyService::class.java)
+        private const val GLOBAL_LOCK_SCREEN_MIN_KEY = "remotedev:globalLockScreenMin"
+        private val LOCK_SCREEN_STRATEGY_TYPES = setOf(
+            StrategyType.PERSONAL_DESKTOP_LOCK_SCREEN,
+            StrategyType.PUBLIC_DESKTOP_LOCK_SCREEN
+        )
     }
 }

@@ -496,6 +496,27 @@ class WechatWorkService @Autowired constructor(
         return sendPostToWechatWorkApi(url, message)
     }
 
+    /**
+     * 用回调 ResponseCode 更新原模板卡片。失败返回 false，不影响审核结果。
+     */
+    fun updateTemplateCard(responseCode: String, templateCard: Any): Boolean {
+        if (responseCode.isBlank()) return false
+        val payload = mutableMapOf<String, Any>(
+            "response_code" to responseCode,
+            "template_card" to templateCard
+        )
+        wechatWorkConfiguration.serviceId?.toIntOrNull()?.let { payload["agentid"] = it }
+        return try {
+            sendPostToWechatWorkApi(
+                "$wechatWorkApiURL/cgi-bin/message/update_template_card",
+                JsonUtil.toJson(payload, false)
+            )
+        } catch (ignored: Exception) {
+            logger.warn("update wework template card failed", ignored)
+            false
+        }
+    }
+
     // 上传临时素材
     fun uploadMedia(
         mediaType: UploadMediaType,

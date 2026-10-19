@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "")
 data class TemplateModelDetail(
-    @get:Schema(title = "版本列表", required = false)
+    @get:Schema(title = "正式版本列表", required = false)
     val versions: List<TemplateVersion>,
     @get:Schema(title = "当前版本", required = false)
     val currentVersion: TemplateVersion,
@@ -56,5 +56,7 @@ data class TemplateModelDetail(
     @get:Schema(title = "参数列表", required = false)
     val params: List<BuildFormProperty>,
     @get:Schema(title = "模板参数构建", required = false)
-    val templateParams: List<BuildFormProperty>? = null
+    val templateParams: List<BuildFormProperty>? = null,
+    @get:Schema(title = "活跃分支版本列表", required = false)
+    val branchVersions: List<TemplateVersion> = emptyList()
 )
