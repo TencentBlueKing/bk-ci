@@ -661,7 +661,7 @@ class ThirdPartyDesktopService @Autowired constructor(
         private const val DEFAULT_BINDING_EXPIRE_DAYS = 30L
         private const val SECONDS_PER_DAY = 24 * 3600L
         private const val MIN_RECORD_SECONDS = 60L
-        private const val DEFAULT_MACHINE_TYPE = "XL2"
+        private const val DEFAULT_MACHINE_TYPE = "X"
         private const val REDIS_KEY_PREFIX = "remotedev:third_party_desktop"
         private const val REGISTERING = "REGISTERING"
         /* 分配并发锁兜底过期，正常在 finally 中释放 */
