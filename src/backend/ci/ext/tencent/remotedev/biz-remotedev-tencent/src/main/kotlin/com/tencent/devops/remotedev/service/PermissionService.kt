@@ -82,6 +82,7 @@ class PermissionService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PermissionService::class.java)
         private const val REDIS_KEY = "remotedev_1Password:"
         private const val EXPIRED_SECOND = 5L
+        private val OWNER_OR_VIEWER = setOf(WorkspaceShared.AssignType.OWNER, WorkspaceShared.AssignType.VIEWER)
     }
 
     @Value("\${remoteDev.aes.key:}")
@@ -407,6 +408,18 @@ class PermissionService @Autowired constructor(
 
     fun checkUserPermissionByImateTeam(userId: String, workspaceName: String): Boolean {
         return imateTeamPermissionCache.get("$userId@@$workspaceName")
+    }
+
+    /**
+     * 仅依据分享表判断用户是否为拥有者(OWNER)或共享人(VIEWER)，不将工作空间创建人视为有权限
+     */
+    fun hasSharedOwnerOrViewer(userId: String, workspaceName: String): Boolean {
+        return workspaceSharedDao.existValidShared(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = userId,
+            assignTypes = OWNER_OR_VIEWER
+        )
     }
 
     fun getCDIOauth(workspaceName: String, appId: String): Oauth2AccessTokenVo {

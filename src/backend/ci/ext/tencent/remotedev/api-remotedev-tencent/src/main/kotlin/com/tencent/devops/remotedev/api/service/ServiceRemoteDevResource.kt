@@ -651,6 +651,18 @@ interface ServiceRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Operation(summary = "校验用户是否为云桌面拥有者或共享人(不含创建人)")
+    @GET
+    @Path("/check_workspace_share_permission")
+    fun checkWorkspaceSharePermission(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
     @Operation(summary = "扩容磁盘大小")
     @POST
     @Path("/expanddisk")

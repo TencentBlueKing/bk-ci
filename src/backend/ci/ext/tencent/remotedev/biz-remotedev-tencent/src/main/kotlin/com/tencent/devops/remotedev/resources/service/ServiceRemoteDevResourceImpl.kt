@@ -719,6 +719,10 @@ class ServiceRemoteDevResourceImpl(
         return Result(workspaceRecordService.checkWorkspaceUserApproval(workspaceName = workspaceName, userId = userId))
     }
 
+    override fun checkWorkspaceSharePermission(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(permissionService.hasSharedOwnerOrViewer(userId = userId, workspaceName = workspaceName))
+    }
+
     override fun expandDisk(
         userId: String,
         workspaceName: String,
