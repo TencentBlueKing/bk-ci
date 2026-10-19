@@ -12,6 +12,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -477,8 +479,11 @@ class ThirdPartyDesktopService @Autowired constructor(
     }
 
     /**
-     * envId 必须是本 token 注册（或重装 token 绑定）的，且 cds 未分配
-     * 一个 token 只能分配一次（避免重复增加项目配额）
+     * envId 必须是本 token 注册（或重装 token 绑定）的
+     * 支持重复调用（切换环境后需要在新环境重新分配）：
+     * 本环境已分配到同一项目 -> 直接返回成功，不再调用底层（底层会先加配额再跳过，重复调用会白加配额）
+     * 本环境已分配到其他项目 -> 403
+     * 资源池状态不可用 -> 403（同样是为了避免白加配额）
      */
     fun assignWorkspace(token: String?, envId: String): Boolean {
         val verified = verifyToken(token)
@@ -488,20 +493,37 @@ class ThirdPartyDesktopService @Autowired constructor(
         }
         checkEnvBelong(verified, envId, "assignWorkspace")
         // 注册接口返回的是 BCS environmentUid，而 createControl.assignWorkspace 按 listcgs 的 cgsId(zoneId.ip) 匹配
-        // 这里先在 listcgs 中按 envId 找到对应的 cgsId（重装 token 绑定的就是 cgsId，同样兼容）
-        val cgsId = resolveCgsId(envId)
-        // createControl.assignWorkspace 会先给项目加配额再跳过已分配的 cgsId，必须在这里提前拦截
-        if (workspaceDao.getAvailableCgsWorkspace(dslContext = dslContext, cgsId = cgsId) > 0) {
-            logger.warn("assignWorkspace|cds already assigned|${info.userId}|$envId|$cgsId|reinstall=${info.reinstall}")
-            throw forbidden("env $envId has already been assigned")
+        val cgs = resolveCgs(envId)
+        val cgsId = cgs.cgsId
+        // 并发保护：同一台机器同时只允许一个分配请求，结束即释放，不限制后续重复分配
+        val lockKey = assigningKey(cgsId)
+        if (!redisOperation.setIfAbsent(lockKey, verified.id, ASSIGN_LOCK_SECONDS)) {
+            logger.warn("assignWorkspace|assigning|${info.userId}|$envId|$cgsId")
+            throw forbidden("env $envId is assigning, please retry later")
         }
-        val assignKey = assignKey(verified.id)
-        if (!redisOperation.setIfAbsent(assignKey, envId, remainSeconds(info))) {
-            logger.warn("assignWorkspace|already assigned|${info.userId}|$envId")
-            throw forbidden("env $envId has already been assigned by this token")
-        }
-        logger.info("assignWorkspace|${info.userId}|${info.projectId}|${info.os}|$envId|$cgsId")
         try {
+            val ws = workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                dslContext = dslContext,
+                ip = cgsId,
+                notStatus = listOf(WorkspaceStatus.DELETED, WorkspaceStatus.DELIVERING_FAILED)
+            ).maxByOrNull { it.createTime }
+            if (ws != null) {
+                if (ws.projectId == info.projectId) {
+                    logger.info("assignWorkspace|already assigned, skip|${info.userId}|$envId|$cgsId|${ws.workspaceName}")
+                    return true
+                }
+                logger.warn("assignWorkspace|assigned to other project|$envId|$cgsId|${ws.projectId}|${info.projectId}")
+                throw forbidden("env $envId has already been assigned to project ${ws.projectId}")
+            }
+            if (workspaceDao.getAvailableCgsWorkspace(dslContext = dslContext, cgsId = cgsId) > 0) {
+                logger.warn("assignWorkspace|cds occupied|${info.userId}|$envId|$cgsId")
+                throw forbidden("env $envId has already been assigned")
+            }
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) {
+                logger.warn("assignWorkspace|cds not available|$envId|$cgsId|status=${cgs.status}")
+                throw forbidden("env $envId is not available in resource pool, status=${cgs.status}")
+            }
+            logger.info("assignWorkspace|${info.userId}|${info.projectId}|${info.os}|$envId|$cgsId")
             createControl.assignWorkspace(
                 userId = info.userId,
                 data = OpProjectWorkspaceAssignData(
@@ -516,10 +538,8 @@ class ThirdPartyDesktopService @Autowired constructor(
                 ),
                 assignOwner = info.assignOwner ?: info.userId
             )
-        } catch (e: Throwable) {
-            // 分配失败释放占位，允许重试
-            redisOperation.delete(assignKey)
-            throw e
+        } finally {
+            redisOperation.delete(lockKey)
         }
         return true
     }
@@ -530,7 +550,7 @@ class ThirdPartyDesktopService @Autowired constructor(
      * envId：BCS environmentUid（如 56385x8zru7lrvnv-1792409866669546025），注册接口返回
      * 按格式判断后走不同匹配，统一解析成 listcgs 中的 cgsId；找不到则不分配，避免白加项目配额
      */
-    private fun resolveCgsId(cdsId: String): String {
+    private fun resolveCgs(cdsId: String): EnvironmentResourceData {
         val byCgsId = CGS_ID_REGEX.matches(cdsId)
         val startCloud = SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
         val cgs = if (byCgsId) {
@@ -543,7 +563,7 @@ class ThirdPartyDesktopService @Autowired constructor(
             throw notFound("env $cdsId not found in resource pool, register may not be finished")
         }
         logger.info("assignWorkspace|resolveCgsId|$cdsId|byCgsId=$byCgsId|${cgs.cgsId}|${cgs.envId}|${cgs.status}")
-        return cgs.cgsId
+        return cgs
     }
 
     private fun checkEnvBelong(verified: VerifiedToken, envId: String, action: String) {
@@ -595,7 +615,7 @@ class ThirdPartyDesktopService @Autowired constructor(
 
     private fun registerKey(tokenId: String) = "$REDIS_KEY_PREFIX:register:$tokenId"
 
-    private fun assignKey(tokenId: String) = "$REDIS_KEY_PREFIX:assign:$tokenId"
+    private fun assigningKey(cgsId: String) = "$REDIS_KEY_PREFIX:assigning:$cgsId"
 
     private fun bindingKey(cdsId: String) = "$REDIS_KEY_PREFIX:binding:$cdsId"
 
@@ -644,6 +664,8 @@ class ThirdPartyDesktopService @Autowired constructor(
         private const val DEFAULT_MACHINE_TYPE = "XL2"
         private const val REDIS_KEY_PREFIX = "remotedev:third_party_desktop"
         private const val REGISTERING = "REGISTERING"
+        /* 分配并发锁兜底过期，正常在 finally 中释放 */
+        private const val ASSIGN_LOCK_SECONDS = 120L
 
         /* 24 字节随机数，base64url 无填充后固定 32 位 */
         private const val TOKEN_BYTES = 24
