@@ -46,11 +46,13 @@
                         :title="pacYamlFilePath"
                         @click="handleCopyYamlPath"
                     >{{ pacYamlFilePath }}</span>
-                    <span @click="handleJumpToYaml">
+                    <span
+                        @click="handleJumpToYaml"
+                        class="jump-icon"
+                    >
                         <logo
                             name="tiaozhuan"
                             size="12"
-                            class="jump-icon"
                         />
                     </span>
                 </div>
@@ -112,11 +114,13 @@
                         :title="pacYamlFilePath"
                         @click="handleCopyYamlPath"
                     >{{ pacYamlFilePath }}</span>
-                    <span @click="handleJumpToYaml">
+                    <span
+                        @click="handleJumpToYaml"
+                        class="jump-icon"
+                    >
                         <logo
                             name="tiaozhuan"
                             size="12"
-                            class="jump-icon"
                         />
                     </span>
                 </div>
@@ -336,7 +340,7 @@
         text-align: left;
         code {
             background: #EAEBF0;
-            padding: 0 4px;
+            padding: 2px 4px;
             border-radius: 2px;
         }
     }
@@ -359,9 +363,10 @@
         }
     }
     .jump-icon {
-        fill: #3c96ff;
+        color: #3a84ff;
         vertical-align: bottom;
         line-height: 1;
+        cursor: pointer;
     }
     .pac-disable-info-list {
         margin: 16px 0 0;
