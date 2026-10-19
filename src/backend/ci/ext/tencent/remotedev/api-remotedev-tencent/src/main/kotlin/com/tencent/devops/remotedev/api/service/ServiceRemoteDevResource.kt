@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1223,7 +1224,7 @@ interface ServiceRemoteDevResource {
         os: ClientOS
     ): Result<ClientLatestVersion>
 
-    @Operation(summary = "生成第三方Windows机器注册云桌面的安装命令（内含有效期1小时的一次性token）")
+    @Operation(summary = "生成第三方机器注册云桌面的安装命令（内含一次性token），目前仅支持WINDOWS，其他系统返回空命令")
     @POST
     @Path("/third_party_desktop/install_command")
     fun genThirdPartyDesktopInstallCommand(
@@ -1236,9 +1237,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "地域，需以数字结尾，如 GZ11", required = true)
         @QueryParam("zoneId")
         zoneId: String,
-        @Parameter(description = "游戏ID列表，逗号分隔的纯数字，如 980000,980008", required = true)
-        @QueryParam("gameIdList")
-        gameIdList: String
+        @Parameter(description = "操作系统，WINDOWS/LINUX/MACOS，目前仅WINDOWS会返回命令", required = true)
+        @QueryParam("os")
+        os: OS
     ): Result<ThirdPartyDesktopInstallCommandResp>
 
     @Operation(summary = "重装场景：根据已注册的cdsId生成第三方云桌面token，有效期1小时，可获取cdskey，cds未分配时可分配")

@@ -33,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1705,7 +1706,7 @@ interface ApigwRemoteDevResource {
     ): Result<ClientLatestVersion>
 
     @Operation(
-        summary = "生成第三方Windows机器注册云桌面的安装命令",
+        summary = "生成第三方机器注册云桌面的安装命令，目前仅支持WINDOWS，其他系统返回空命令",
         tags = ["v4_app_remotedev_third_party_desktop_install_command"]
     )
     @POST
@@ -1726,8 +1727,8 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "地域，需以数字结尾，如 GZ11", required = true)
         @QueryParam("zoneId")
         zoneId: String,
-        @Parameter(description = "游戏ID列表，逗号分隔的纯数字，如 980000,980008", required = true)
-        @QueryParam("gameIdList")
-        gameIdList: String
+        @Parameter(description = "操作系统，WINDOWS/LINUX/MACOS，目前仅WINDOWS会返回命令", required = true)
+        @QueryParam("os")
+        os: OS
     ): Result<ThirdPartyDesktopInstallCommandResp>
 }

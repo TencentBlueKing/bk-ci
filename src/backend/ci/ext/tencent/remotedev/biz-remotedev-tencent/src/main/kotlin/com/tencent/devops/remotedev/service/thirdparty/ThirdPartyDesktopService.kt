@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
@@ -69,7 +70,8 @@ class ThirdPartyDesktopService @Autowired constructor(
     private val dslContext: DSLContext,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDao: WorkspaceDao,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao
 ) {
 
     /* 第三方云桌面 token 有效期（秒），默认 1 小时 */
@@ -99,35 +101,41 @@ class ThirdPartyDesktopService @Autowired constructor(
     )
 
     /**
-     * 生成第三方 Windows 机器注册云桌面的安装命令：签发一次性 token 后拼进 PowerShell 命令模板
-     * 用户在目标机器的管理员 PowerShell 中粘贴执行即可，脚本自行调用 register/task_status/cdskey/assign
+     * 生成第三方机器注册云桌面的安装命令：签发一次性 token 后拼进对应系统的命令模板
+     * 目前只有 WINDOWS 有脚本，其他系统返回空命令且不签发 token
+     * gameId 取项目在 T_PROJECT_START_APP_LINK 中映射的 START appid，查不到报错
      */
     fun genInstallCommand(
         userId: String,
         projectId: String,
         zoneId: String,
-        gameIdList: String
+        os: OS
     ): ThirdPartyDesktopInstallCommandResp {
+        if (os != OS.WINDOWS) {
+            logger.info("genInstallCommand|os not supported, return empty|$userId|$projectId|$zoneId|$os")
+            return ThirdPartyDesktopInstallCommandResp(command = "", expireTime = 0L)
+        }
         // 参数会拼进 PowerShell 命令，必须严格校验，避免命令注入
         val zone = zoneId.trim()
         if (!ZONE_REGEX.matches(zone)) {
             throw illegal("zoneId $zoneId is illegal, must end with digits, e.g. GZ11")
         }
-        val gameIds = gameIdList.split(",").map { it.trim() }.filter { it.isNotEmpty() }.distinct()
-        if (gameIds.isEmpty() || gameIds.any { !GAME_ID_REGEX.matches(it) }) {
-            throw illegal("gameIdList $gameIdList is illegal, must be comma separated digits, e.g. 980000,980008")
+        val gameId = projectStartAppLinkDao.getAppId(dslContext, projectId)?.toString()
+        if (gameId.isNullOrBlank() || !GAME_ID_REGEX.matches(gameId)) {
+            logger.warn("genInstallCommand|gameId not found|$userId|$projectId|$gameId")
+            throw notFound("project $projectId has no gameId mapping")
         }
         val url = resolveUrlConfig(SCRIPT_URL_KEY, scriptUrl, "scriptUrl")
         val host = resolveUrlConfig(API_HOST_KEY, apiHost, "apiHost").trimEnd('/')
-        val tokenResp = genToken(userId = userId, projectId = projectId, os = OS.WINDOWS.name, zoneId = zone)
-        val command = buildInstallCommand(
+        val tokenResp = genToken(userId = userId, projectId = projectId, os = os.name, zoneId = zone)
+        val command = buildWindowsInstallCommand(
             token = tokenResp.token,
             zoneId = zone,
             apiHost = host,
-            gameIdList = gameIds.joinToString(","),
+            gameIdList = gameId,
             scriptUrl = url
         )
-        logger.info("genInstallCommand|$userId|$projectId|$zone|${gameIds.joinToString(",")}|$host|$url")
+        logger.info("genInstallCommand|$userId|$projectId|$zone|$os|$gameId|$host|$url")
         return ThirdPartyDesktopInstallCommandResp(command = command, expireTime = tokenResp.expireTime)
     }
 
@@ -162,7 +170,7 @@ class ThirdPartyDesktopService @Autowired constructor(
     /**
      * 命令模板见 CDS《第三方云桌面注册 —— 后台对接说明》，token 走环境变量，不出现在子进程命令行
      */
-    private fun buildInstallCommand(
+    private fun buildWindowsInstallCommand(
         token: String,
         zoneId: String,
         apiHost: String,

@@ -43,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1167,14 +1168,14 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         projectId: String,
         zoneId: String,
-        gameIdList: String
+        os: OS
     ): Result<ThirdPartyDesktopInstallCommandResp> {
         return Result(
             thirdPartyDesktopService.genInstallCommand(
                 userId = userId,
                 projectId = projectId,
                 zoneId = zoneId,
-                gameIdList = gameIdList
+                os = os
             )
         )
     }

@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -1156,14 +1157,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         userId: String,
         projectId: String,
         zoneId: String,
-        gameIdList: String
+        os: OS
     ): Result<ThirdPartyDesktopInstallCommandResp> {
-        logger.info("genThirdPartyDesktopInstallCommand |$appCode|$userId|$projectId|$zoneId|$gameIdList")
+        logger.info("genThirdPartyDesktopInstallCommand |$appCode|$userId|$projectId|$zoneId|$os")
         return client.get(ServiceRemoteDevResource::class).genThirdPartyDesktopInstallCommand(
             userId = userId,
             projectId = projectId,
             zoneId = zoneId,
-            gameIdList = gameIdList
+            os = os
         )
     }
 }
