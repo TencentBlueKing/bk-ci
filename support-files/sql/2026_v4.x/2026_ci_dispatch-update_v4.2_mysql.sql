@@ -12,14 +12,6 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
-                    AND COLUMN_NAME = 'TIME_INTERVAL') THEN
-    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD` ADD INDEX `IDX_PROJECT_ENV_JOB` (PROJECT_ID, ENV_ID, JOB_ID, PIPELINE_ID);
-    END IF;
-
     IF EXISTS(SELECT 1
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
@@ -45,6 +37,27 @@ BEGIN
                      AND INDEX_NAME = 'IDX_ENV_ID') THEN
     ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD`
             ADD INDEX `IDX_ENV_ID`(`ENV_ID`);
+    END IF;
+
+    -- Job 并发查询先按配额维度 + 活跃状态筛选，避免扫描整条流水线的历史记录。
+    -- 新索引覆盖旧索引的最左前缀，先确保新索引创建成功，再删除旧索引。
+    -- 用索引元数据判断，重复执行不重复创建或删除。
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND INDEX_NAME = 'IDX_PROJECT_ENV_JOB_STATUS') THEN
+    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD`
+            ADD INDEX `IDX_PROJECT_ENV_JOB_STATUS` (`PROJECT_ID`, `ENV_ID`, `JOB_ID`, `PIPELINE_ID`, `STATUS`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.statistics
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                AND INDEX_NAME = 'IDX_PROJECT_ENV_JOB') THEN
+    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD`
+            DROP INDEX `IDX_PROJECT_ENV_JOB`;
     END IF;
 
     COMMIT;
