@@ -110,8 +110,9 @@ class BuildVarOverflowStorage @Autowired constructor(
     }
 
     /**
-     * 上传前确认仓库存在。同一项目只创建一次，结果放进 Caffeine；
-     * 创建失败不写入缓存。用制品库默认用户创建，避免构建触发人没有建仓权限。
+     * 上传前确认仓库存在。同一项目只确认一次，结果放进 Caffeine。
+     * 创建成功报文是 code=0、data 为空；重名返回 251007，按已存在处理。
+     * 确认失败不写入缓存。用制品库默认用户创建，避免构建触发人没有建仓权限。
      */
     private fun ensureRepo(projectId: String) {
         if (!isEnabled()) {

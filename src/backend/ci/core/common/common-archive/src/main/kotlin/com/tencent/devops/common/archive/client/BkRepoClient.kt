@@ -28,6 +28,7 @@
 package com.tencent.devops.common.archive.client
 
 import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -226,13 +227,33 @@ class BkRepoClient constructor(
     }
 
     /**
-     * 创建大变量仓库。仓库已存在时忽略。创建失败抛出，由调用方决定是否重试。
+     * 确认大变量仓库存在。创建成功时报文是 code=0、data=null，不能用 data 判断结果。
+     * 仓库重名返回 [ERROR_REPO_EXISTED]，同样视为已存在。其它失败抛出，由调用方决定是否重试。
      */
     fun ensureVariableRepo(userId: String, projectId: String) {
         if (!useBkRepo()) {
             return
         }
-        createGenericRepo(userId = userId, projectId = projectId, repoName = REPO_VARIABLE, display = false)
+        try {
+            createGenericRepo(userId = userId, projectId = projectId, repoName = REPO_VARIABLE, display = false)
+        } catch (e: RemoteServiceException) {
+            if (e.errorCode == ERROR_REPO_EXISTED) {
+                return
+            }
+            throw e
+        }
+    }
+
+    private fun businessCode(content: String): Int? {
+        val codeNode = runCatching { objectMapper.readTree(content).get("code") }.getOrNull() ?: return null
+        return businessCodeOf(codeNode)
+    }
+
+    private fun businessCodeOf(codeNode: JsonNode): Int? {
+        if (!codeNode.isNumber && !codeNode.isTextual) {
+            return null
+        }
+        return codeNode.asText().toIntOrNull()
     }
 
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
@@ -1350,6 +1371,11 @@ class BkRepoClient constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
+            // 业务码在响应体里。HTTP 200 和非 2xx 都可能带上可忽略的码，例如创建仓库重名 251007。
+            if (allowCode != null && businessCode(responseContent) == allowCode) {
+                logger.info("request bkrepo api failed but it can be allowed: $responseContent")
+                return null
+            }
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
@@ -1359,11 +1385,12 @@ class BkRepoClient constructor(
             } catch (e: JacksonException) {
                 throw RemoteServiceException(responseContent, this.code)
             }
-            if (allowCode == responseData.code) {
-                logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
-                return null
-            }
-            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
+            throw RemoteServiceException(
+                errorMessage = responseData.message ?: responseData.code.toString(),
+                httpStatus = this.code,
+                responseContent = responseContent,
+                errorCode = responseData.code
+            )
         }
     }
 
