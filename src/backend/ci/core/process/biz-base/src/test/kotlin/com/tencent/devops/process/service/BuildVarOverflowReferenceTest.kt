@@ -48,10 +48,12 @@ class BuildVarOverflowReferenceTest {
     fun blobPathContainsExecuteCount() {
         val ref = LargeVarRef(length = 5000, executeCount = 2, digest = digest)
         Assertions.assertEquals(
-            "/p-1/b-1/large-variables/2/$digest",
+            "/p-1/b-1/2/$digest",
             BuildVarOverflowUtils.blobPath("p-1", "b-1", ref)
         )
-        Assertions.assertEquals("/p-1/b-1/large-variables", BuildVarOverflowUtils.blobDir("p-1", "b-1"))
+        Assertions.assertEquals("/p-1/b-1", BuildVarOverflowUtils.blobDir("p-1", "b-1"))
+        Assertions.assertEquals("variable", BuildVarOverflowUtils.REPO_NAME)
+        Assertions.assertFalse(BuildVarOverflowUtils.blobPath("p-1", "b-1", ref).contains("."))
     }
 
     @Test

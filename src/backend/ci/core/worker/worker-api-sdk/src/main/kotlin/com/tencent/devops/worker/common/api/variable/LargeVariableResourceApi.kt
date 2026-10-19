@@ -39,6 +39,8 @@ import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.net.HttpRetryException
+import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipInputStream
 import okhttp3.Request
@@ -46,17 +48,16 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 
 /**
- * 大变量文件读写，与 [com.tencent.devops.worker.common.utils.ArchiveUtils.archivePipelineFiles] 的制品库对接方式一致：
+ * 大变量文件读写。上传通道与 [BkRepoReportResourceApi.uploadReport] 一致：
  *
- * - 配置了 bkrepo 文件网关（[BkRepoResourceApi.tokenAccess]）：申请本构建大变量目录的临时令牌，
- *   经文件网关 `/generic/temporary/{upload|download}/...` 读写；
+ * - 配置了 bkrepo 文件网关：申请本构建目录的临时令牌，经 `/generic/temporary/{upload|download}/...` 读写，
+ *   路径整段 URL 编码（与 [BkRepoResourceApi.uploadFileByToken] 相同）；
  * - 否则经构建网关 `/bkrepo/api/build/generic/...` 直连。
  *
- * 批量下载没有临时令牌形态，统一经构建网关 `POST /bkrepo/api/build/generic/batch/{projectId}/{repo}`；
- * 失败或缺失的文件由调用方逐个下载兜底（单个下载仍按上面的规则选择通道）。
+ * 与报告上传的差异：令牌类型是 [TokenType.ALL] 而不是 UPLOAD，因为同一个令牌还要下载。
+ * 文件不带 pipelineId / buildId 元数据，也不带后缀。上传成功后给流水线、构建目录设置展示名，失败不影响上传。
  *
- * 上传不携带 pipelineId / buildId 等元数据，避免大变量文件出现在构建制品列表中；
- * 但与构件归档一样给流水线、构建目录设置展示名（流水线名 / 构建号）。
+ * 批量下载没有临时令牌形态，统一经构建网关；失败或缺失的文件由调用方逐个下载兜底。
  */
 class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi {
 
@@ -65,6 +66,7 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
     override fun upload(scope: LargeVariableScope, ref: LargeVarRef, content: ByteArray) {
         val fullPath = BuildVarOverflowUtils.blobPath(scope.pipelineId, scope.buildId, ref)
         val body = content.toRequestBody(OctetMediaType)
+        // 与报告上传一致：覆盖写、提交到边缘节点，不附带流水线元数据
         val headers = mapOf(BKREPO_UID to scope.userId, BKREPO_OVERWRITE to "true", BKREPO_COMMIT_EDGE to "true")
         val token = repoToken(scope)
         val request = if (token == null) {
@@ -77,13 +79,27 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
                 useFileDevnetGateway = scope.vmBuildEnv
             )
         }
-        val response = request(request, "upload large variable failed")
-        val code = objectMapper.readTree(response)?.get("code")?.asText()
-        if (code != null && code != "0") {
+        // 节点创建超时在制品库里是非 2xx，request() 会直接抛 RemoteServiceException。
+        // 与 uploadFileByToken 一样，从错误响应体里认出 251030 再交给上传重试。
+        val response = try {
+            request(request, "upload large variable failed")
+        } catch (e: RemoteServiceException) {
+            val detail = createNodeTimeoutDetail(e.responseContent)
+            if (detail != null) {
+                throw HttpRetryException(detail, CODE_CREATE_NODE_TIMEOUT)
+            }
+            throw e
+        }
+        val codeNode = runCatching { objectMapper.readTree(response)?.get("code") }.getOrNull()
+        if (codeNode != null && codeNode.asInt() == CODE_CREATE_NODE_TIMEOUT) {
+            throw HttpRetryException(response, CODE_CREATE_NODE_TIMEOUT)
+        }
+        if (codeNode != null && codeNode.asText() != "0") {
             throw RemoteServiceException("upload large variable failed: $response")
         }
-        if (displayNameMarked.add(scope.buildId)) {
-            markDisplayName(scope)
+        if (scope.buildId !in displayNameMarked && markDisplayName(scope)) {
+            displayNameMarked.add(scope.buildId)
+            displayNameMarked.retainAll(setOf(scope.buildId))
         }
     }
 
@@ -146,12 +162,16 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         return result
     }
 
-    /** 与 [BkRepoResourceApi.setPipelineMetadata] 一致：流水线目录展示流水线名，构建目录展示构建号；失败不影响上传。 */
-    private fun markDisplayName(scope: LargeVariableScope) {
+    /**
+     * 与 [BkRepoResourceApi.setPipelineMetadata] 一致：流水线目录展示流水线名，构建目录展示构建号。
+     * @return 全部设置成功（或没有需要设置的目录）时为 true，失败时下次上传再试
+     */
+    private fun markDisplayName(scope: LargeVariableScope): Boolean {
         val dirs = listOfNotNull(
             scope.pipelineName?.takeIf { it.isNotBlank() }?.let { "/${scope.pipelineId}" to it },
             scope.buildNum?.takeIf { it.isNotBlank() }?.let { "/${scope.pipelineId}/${scope.buildId}" to it }
         )
+        var success = true
         dirs.forEach { (dir, displayName) ->
             try {
                 bkRepoResourceApi.saveMetadata(
@@ -162,16 +182,29 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
                     metadata = mapOf(METADATA_DISPLAY_NAME to displayName)
                 )
             } catch (ignore: Exception) {
+                success = false
                 logger.warn("LARGE_VAR_DISPLAY_NAME_FAIL|$dir|${ignore.message}")
             }
         }
+        return success
+    }
+
+    /** 响应体里的创建节点超时文案；不是该错误时返回 null。 */
+    private fun createNodeTimeoutDetail(responseContent: String?): String? {
+        if (responseContent.isNullOrBlank()) return null
+        val node = runCatching { objectMapper.readTree(responseContent) }.getOrNull() ?: return null
+        if (node.get("code")?.asInt() != CODE_CREATE_NODE_TIMEOUT) return null
+        return node.get("message")?.asText()?.takeIf { it.isNotBlank() } ?: responseContent
     }
 
     private fun directPath(scope: LargeVariableScope, fullPath: String) =
         "/bkrepo/api/build/generic/${scope.projectId}/${BuildVarOverflowUtils.REPO_NAME}$fullPath"
 
-    private fun temporaryPath(action: String, scope: LargeVariableScope, fullPath: String, token: String) =
-        "/generic/temporary/$action/${scope.projectId}/${BuildVarOverflowUtils.REPO_NAME}$fullPath?token=$token"
+    /** 与 [BkRepoResourceApi.uploadFileByToken] 相同：整段 fullPath 做 URL 编码，斜杠变成 %2F。 */
+    private fun temporaryPath(action: String, scope: LargeVariableScope, fullPath: String, token: String): String {
+        val encoded = URLEncoder.encode(fullPath, "UTF-8").replace("+", "%20")
+        return "/generic/temporary/$action/${scope.projectId}/${BuildVarOverflowUtils.REPO_NAME}/$encoded?token=$token"
+    }
 
     /**
      * 文件网关模式下返回本构建大变量目录的读写令牌（进程内复用，临近过期前重新申请）；直连模式返回 null。
@@ -225,6 +258,7 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         private const val TOKEN_RETRY_TIMES = 3
         private const val TOKEN_RETRY_PERIOD = 1000L
         private const val METADATA_DISPLAY_NAME = "displayName"
+        private const val CODE_CREATE_NODE_TIMEOUT = 251030
 
         private val logger = LoggerFactory.getLogger(LargeVariableResourceApi::class.java)
 

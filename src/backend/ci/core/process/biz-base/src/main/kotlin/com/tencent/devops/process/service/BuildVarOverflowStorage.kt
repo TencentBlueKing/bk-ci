@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
@@ -40,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
- * 服务端大变量文件读写（制品库流水线仓库 [BuildVarOverflowUtils.REPO_NAME]）。
+ * 服务端大变量文件读写（制品库 [BuildVarOverflowUtils.REPO_NAME] 仓库）。
  *
  * 大变量的上传 / 下载主要在构建机完成，服务端只处理没有构建机参与的场景：
  * API / 老构建机写入的变量、引擎侧表达式求值，以及用户查看完整值。
@@ -54,73 +55,90 @@ class BuildVarOverflowStorage @Autowired constructor(
     fun isEnabled(): Boolean = bkRepoClient.useBkRepo()
 
     /**
-     * 写入目标。
+     * 一次上传的归属。
      * @property executeCount 写入时构建的执行次数，决定文件所在子目录
-     * @property pipelineName / buildNum 流水线、构建目录的展示名（与构件归档一致），为空时不设置
+     * @property pipelineName / buildNum 流水线、构建目录的展示名，为空时不设置
      */
-    data class UploadTarget(val executeCount: Int, val pipelineName: String?, val buildNum: String?)
+    data class UploadScope(
+        val projectId: String,
+        val pipelineId: String,
+        val buildId: String,
+        val executeCount: Int,
+        val pipelineName: String?,
+        val buildNum: String?
+    )
 
     /**
      * 上传大变量并返回引用串。调用方需保证 [isEnabled]、值超过 4K 且不超过单值上限。
+     * 文件和目录展示名都用系统用户写入。
      */
-    @Suppress("LongParameterList")
-    fun upload(
-        userId: String?,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        target: UploadTarget,
-        value: String
-    ): String {
+    fun upload(scope: UploadScope, value: String): String {
         val bytes = value.toByteArray(StandardCharsets.UTF_8)
         val ref = BuildVarOverflowUtils.LargeVarRef(
             length = value.length,
-            executeCount = target.executeCount.coerceAtLeast(1),
+            executeCount = scope.executeCount.coerceAtLeast(1),
             digest = BuildVarOverflowUtils.sha256Hex(bytes)
         )
-        val path = BuildVarOverflowUtils.blobPath(pipelineId, buildId, ref)
-        var attempt = 0
-        while (true) {
+        val path = BuildVarOverflowUtils.blobPath(scope.pipelineId, scope.buildId, ref)
+        uploadBytes(scope, path, bytes)
+        markDisplayName(scope)
+        return BuildVarOverflowUtils.toReference(ref)
+    }
+
+    /** 首次失败后再试 [UPLOAD_RETRY_TIMES] 次，随后把最后一次异常抛出。 */
+    private fun uploadBytes(scope: UploadScope, path: String, bytes: ByteArray) {
+        var lastError: Exception? = null
+        for (attempt in 0..UPLOAD_RETRY_TIMES) {
             try {
+                ensureRepo(scope.projectId)
                 bkRepoClient.uploadFile(
-                    userId = userId.orSystem(),
-                    projectId = projectId,
+                    userId = SYSTEM,
+                    projectId = scope.projectId,
                     repoName = BuildVarOverflowUtils.REPO_NAME,
                     path = path.removePrefix("/"),
                     inputStream = ByteArrayInputStream(bytes)
                 )
-                break
+                return
             } catch (ignored: Exception) {
-                if (++attempt > UPLOAD_RETRY_TIMES) throw ignored
-                logger.warn("$buildId|LARGE_VAR_UPLOAD_RETRY|path=$path|${ignored.message}")
+                lastError = ignored
+                if (attempt < UPLOAD_RETRY_TIMES) {
+                    logger.warn("${scope.buildId}|LARGE_VAR_UPLOAD_RETRY|path=$path|${ignored.message}")
+                }
             }
         }
-        markDisplayName(userId.orSystem(), projectId, pipelineId, buildId, target)
-        return BuildVarOverflowUtils.toReference(ref)
+        throw lastError ?: IllegalStateException("large variable upload failed")
     }
 
-    private fun markDisplayName(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        target: UploadTarget
-    ) {
+    /**
+     * 上传前确认仓库存在。同一项目只创建一次，结果放进 Caffeine；
+     * 创建失败不写入缓存。用制品库默认用户创建，避免构建触发人没有建仓权限。
+     */
+    private fun ensureRepo(projectId: String) {
+        if (!isEnabled()) {
+            return
+        }
+        variableRepoReady.get(projectId) {
+            bkRepoClient.ensureVariableRepo(REPO_CREATE_USER, projectId)
+            true
+        }
+    }
+
+    private fun markDisplayName(scope: UploadScope) {
         val dirs = listOfNotNull(
-            target.pipelineName?.takeIf { it.isNotBlank() }?.let { pipelineId to it },
-            target.buildNum?.takeIf { it.isNotBlank() }?.let { "$pipelineId/$buildId" to it }
+            scope.pipelineName?.takeIf { it.isNotBlank() }?.let { scope.pipelineId to it },
+            scope.buildNum?.takeIf { it.isNotBlank() }?.let { "${scope.pipelineId}/${scope.buildId}" to it }
         )
         dirs.forEach { (dir, displayName) ->
             try {
                 bkRepoClient.setMetadata(
-                    userId = userId,
-                    projectId = projectId,
+                    userId = SYSTEM,
+                    projectId = scope.projectId,
                     repoName = BuildVarOverflowUtils.REPO_NAME,
                     path = dir,
                     metadata = mapOf(METADATA_DISPLAY_NAME to displayName)
                 )
             } catch (ignored: Exception) {
-                logger.warn("$buildId|LARGE_VAR_DISPLAY_NAME_FAIL|dir=$dir|${ignored.message}")
+                logger.warn("${scope.buildId}|LARGE_VAR_DISPLAY_NAME_FAIL|dir=$dir|${ignored.message}")
             }
         }
     }
@@ -177,7 +195,14 @@ class BuildVarOverflowStorage @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildVarOverflowStorage::class.java)
+        /** 与 artifactory 模块的 BKREPO_DEFAULT_USER 相同，这里不引用该模块。 */
+        private const val REPO_CREATE_USER = "admin"
         private const val UPLOAD_RETRY_TIMES = 1
         private const val METADATA_DISPLAY_NAME = "displayName"
+        private const val VARIABLE_REPO_READY_MAX = 100_000L
+
+        private val variableRepoReady = Caffeine.newBuilder()
+            .maximumSize(VARIABLE_REPO_READY_MAX)
+            .build<String, Boolean>()
     }
 }

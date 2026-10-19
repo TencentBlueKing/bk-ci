@@ -47,7 +47,7 @@ data class LargeVariableScope(
 )
 
 /**
- * Worker 直连制品库流水线仓库读写大变量文件（路径见 BuildVarOverflowUtils.blobPath）。
+ * Worker 直连制品库 variable 仓库读写大变量文件（路径见 BuildVarOverflowUtils.blobPath）。
  *
  * 与构件归档（ArchiveUtils.archivePipelineFiles）的制品库对接方式保持一致：
  * 配置了制品库文件网关时用临时令牌经文件网关读写，否则经构建网关直连。

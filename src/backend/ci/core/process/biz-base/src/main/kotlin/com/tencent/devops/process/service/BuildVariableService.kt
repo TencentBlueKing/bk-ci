@@ -293,12 +293,13 @@ class BuildVariableService @Autowired constructor(
         rewriteReadOnly: Boolean? = null
     ) {
         val storedValue = toStoredValue(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            key = name,
-            rawValue = value.toString(),
-            sensitive = null
+            LargeValue(
+                buildId = buildId,
+                key = name,
+                rawValue = value.toString(),
+                sensitive = null,
+                scope = { uploadScope(projectId, pipelineId, buildId) }
+            )
         ) ?: return
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
@@ -443,7 +444,9 @@ class BuildVariableService @Autowired constructor(
         variables: Map<String, BuildParameters>
     ): Map<String, BuildParameters> {
         if (variables.values.none { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }) return variables
-        val target by lazy { uploadTarget(projectId = projectId, buildId = buildId) }
+        val target by lazy {
+            uploadScope(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+        }
         val result = LinkedHashMap<String, BuildParameters>(variables.size)
         variables.forEach { (key, param) ->
             val raw = param.value.toString()
@@ -452,13 +455,13 @@ class BuildVariableService @Autowired constructor(
                 return@forEach
             }
             toStoredValue(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                key = param.key,
-                rawValue = raw,
-                sensitive = param.sensitive,
-                target = { target }
+                LargeValue(
+                    buildId = buildId,
+                    key = param.key,
+                    rawValue = raw,
+                    sensitive = param.sensitive,
+                    scope = { target }
+                )
             )?.let {
                 result[key] = param.copy(value = it)
             }
@@ -467,47 +470,51 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
+     * 待入库的变量。 [scope] 只在真正上传时求值，避免短值也去查执行次数。
+     */
+    private class LargeValue(
+        val buildId: String,
+        val key: String,
+        val rawValue: String,
+        val sensitive: Boolean?,
+        val scope: () -> BuildVarOverflowStorage.UploadScope
+    )
+
+    /**
      * 计算变量入库值：≤ 4K 原样返回；> 4K 上传制品库后返回引用串；
      * 敏感值、制品库非 bkrepo、超过 512KB 或上传失败时返回 null（丢弃 + WARN，与历史 4K 截断行为一致）。
-     * [target] 只在真正需要上传时才求值（需要额外查一次变量表）。
      */
-    @Suppress("LongParameterList")
-    private fun toStoredValue(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        key: String,
-        rawValue: String,
-        sensitive: Boolean?,
-        target: () -> BuildVarOverflowStorage.UploadTarget = { uploadTarget(projectId, buildId) }
-    ): String? {
-        if (!BuildVarOverflowUtils.shouldOverflow(rawValue)) return rawValue
+    private fun toStoredValue(value: LargeValue): String? {
+        if (!BuildVarOverflowUtils.shouldOverflow(value.rawValue)) return value.rawValue
         val reason = when {
-            sensitive == true -> "sensitive"
+            value.sensitive == true -> "sensitive"
             !buildVarOverflowStorage.isEnabled() -> "storageDisabled"
-            BuildVarOverflowUtils.exceedsLargeValueLimit(rawValue) -> "exceedsLargeValueLimit"
+            BuildVarOverflowUtils.exceedsLargeValueLimit(value.rawValue) -> "exceedsLargeValueLimit"
             else -> null
         }
         if (reason == null) {
             try {
-                return buildVarOverflowStorage.upload(
-                    userId = null,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    target = target(),
-                    value = rawValue
-                )
+                return buildVarOverflowStorage.upload(scope = value.scope(), value = value.rawValue)
             } catch (ignored: Exception) {
-                LOG.warn("$buildId|LARGE_VAR_UPLOAD_FAIL|key=$key|len=${rawValue.length}", ignored)
+                LOG.warn(
+                    "${value.buildId}|LARGE_VAR_UPLOAD_FAIL|key=${value.key}|len=${value.rawValue.length}",
+                    ignored
+                )
             }
         }
-        LOG.warn("$buildId|ABANDON_DATA|key=$key|len=${rawValue.length}|reason=${reason ?: "uploadFail"}")
+        LOG.warn(
+            "${value.buildId}|ABANDON_DATA|key=${value.key}|len=${value.rawValue.length}|" +
+                "reason=${reason ?: "uploadFail"}"
+        )
         return null
     }
 
     /** 一次查询取齐上传所需的执行次数（与 [getBuildExecuteCount] 口径一致）、流水线名与构建号。 */
-    private fun uploadTarget(projectId: String, buildId: String): BuildVarOverflowStorage.UploadTarget {
+    private fun uploadScope(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildVarOverflowStorage.UploadScope {
         val vars = pipelineBuildVarDao.getVars(
             dslContext = commonDslContext,
             projectId = projectId,
@@ -520,7 +527,10 @@ class BuildVariableService @Autowired constructor(
         } else {
             1
         }
-        return BuildVarOverflowStorage.UploadTarget(
+        return BuildVarOverflowStorage.UploadScope(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
             executeCount = executeCount,
             pipelineName = vars[PIPELINE_NAME],
             buildNum = vars[PIPELINE_BUILD_NUM]

@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory
  *
  *     __BK_OVF__:<字符长度>:<写入时的执行次数>:<UTF-8 内容的 sha256 十六进制>
  *
- *  - 文件按执行次数分目录、按内容寻址，路径为 [blobPath]：同一次执行内同值只存一份、写入天然幂等；
+ *  - 文件在 `variable` 仓库，路径为 [blobPath]（无后缀）：同一次执行内同值只存一份、写入天然幂等；
  *    重试产生的新值落在新的执行次数目录下，不会覆盖之前执行的文件，旧引用仍可读取原值；
  *  - 下载后用摘要校验内容完整性，摘要只允许 64 位小写十六进制，杜绝路径穿越；
  *  - `$xxx` / `${xxx}` 旧语法看到的固定是引用串，只有 `${{ xxx }}` 表达式按需加载真实值。
@@ -66,21 +66,16 @@ object BuildVarOverflowUtils {
 
     private const val LARGE_VALUE_MAX_BYTES: Int = PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 
-    private const val BLOB_DIR = "large-variables"
-
     private val HEX = "0123456789abcdef".toCharArray()
 
     /** 哨兵前缀，用于识别"是否大变量引用"。 */
     const val OVERFLOW_PREFIX: String = PIPELINE_VARIABLES_OVERFLOW_PREFIX
 
     /**
-     * 大变量文件所在的制品库仓库（ArtifactoryType.PIPELINE，即流水线仓库），与构建产物同属
-     * `/{pipelineId}/{buildId}` 目录，随构建产物的清理策略一起过期。
-     *
-     * 上传时**不带** pipelineId / buildId 元数据：构建制品列表、制品搜索都按这两个元数据查询，
-     * 因此大变量文件不会混进用户看到的构建产物。
+     * 大变量文件所在的制品库仓库，与 common-archive 的 REPO_VARIABLE 保持一致。
+     * `display = false`，不出现在制品库仓库列表。文件不带后缀，文件名就是内容摘要。
      */
-    const val REPO_NAME = "pipeline"
+    const val REPO_NAME = "variable"
 
     /**
      * 解析后的大变量引用。
@@ -164,10 +159,13 @@ object BuildVarOverflowUtils {
         return String(bytes, StandardCharsets.UTF_8)
     }
 
-    /** 某次构建的大变量根目录（[REPO_NAME] 仓库内），也是构建机临时令牌的授权范围（覆盖所有执行次数）。 */
-    fun blobDir(pipelineId: String, buildId: String): String = "/$pipelineId/$buildId/$BLOB_DIR"
+    /**
+     * 某次构建在 [REPO_NAME] 仓库中的目录，也是构建机临时令牌的授权范围（覆盖所有执行次数）。
+     * 这个仓库里只有大变量，令牌授到构建目录不会碰到流水线仓库里的构建产物。
+     */
+    fun blobDir(pipelineId: String, buildId: String): String = "/$pipelineId/$buildId"
 
-    /** 大变量文件在 [REPO_NAME] 仓库中的完整路径：`/{pipelineId}/{buildId}/large-variables/{executeCount}/{sha256}`。 */
+    /** 大变量文件完整路径：`/{pipelineId}/{buildId}/{executeCount}/{sha256}`，无后缀。 */
     fun blobPath(pipelineId: String, buildId: String, ref: LargeVarRef): String =
         "${blobDir(pipelineId, buildId)}/${ref.executeCount}/${ref.digest}"
 
