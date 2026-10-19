@@ -62,6 +62,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
+import com.tencent.devops.process.service.PipelineVarOverflowConfig
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
@@ -119,7 +120,8 @@ class PipelineBuildService(
     private val buildIdGenerator: BuildIdGenerator,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineStartupPermissionExtService: PipelineStartupPermissionExtService,
-    private val client: Client
+    private val client: Client,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -213,9 +215,11 @@ class PipelineBuildService(
                 pipelineVersion = signPipelineVersion
             )
         }
-        if (setting?.failIfVariableInvalid == true) {
-            failIfVariableInvalid(pipelineParamMap)
-        }
+        checkStartupParamsLength(
+            pipelineParamMap = pipelineParamMap,
+            startParamKeys = resource.model.getTriggerContainer().params.mapTo(HashSet()) { it.id },
+            failIfVariableInvalid = setting?.failIfVariableInvalid == true
+        )
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -527,9 +531,21 @@ class PipelineBuildService(
         }
     }
 
-    fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
-        pipelineParamMap.forEach { (key, value) ->
-            if (value.value.toString().length > PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+    /**
+     * 启动参数在整个构建过程中常驻内存（BUILD_PARAMETERS、引擎上下文、构建机），不支持大变量：
+     *  - 流水线定义的启动参数超过 4000 一律拒绝；重试沿用已接受过的参数，不再校验；
+     *  - 触发器 / 系统注入的其它变量保持历史行为，仅在开启 failIfVariableInvalid 时拒绝。
+     */
+    private fun checkStartupParamsLength(
+        pipelineParamMap: Map<String, BuildParameters>,
+        startParamKeys: Set<String>,
+        failIfVariableInvalid: Boolean
+    ) {
+        val checkStartParams = pipelineVarOverflowConfig.startParamValueCheckEnabled &&
+            !pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)
+        pipelineParamMap.forEach { (key, param) ->
+            if (param.value.toString().length <= PIPELINE_VARIABLES_STRING_LENGTH_MAX) return@forEach
+            if (failIfVariableInvalid || (checkStartParams && key in startParamKeys)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
                     params = arrayOf(key)

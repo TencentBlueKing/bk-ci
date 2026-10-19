@@ -47,6 +47,7 @@ import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
@@ -73,6 +74,7 @@ import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
+import com.tencent.devops.common.archive.constant.REPO_VARIABLE
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
@@ -147,6 +149,7 @@ class BkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT, display = false)
             createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey, display = false)
+            createGenericRepo(userId, projectId, REPO_VARIABLE, display = false)
             true
         } catch (e: Exception) {
             logger.error("BKSystemErrorMonitor|BK_REPO|create repo resource error", e)
@@ -222,6 +225,16 @@ class BkRepoClient constructor(
         doRequest(request).resolveResponse<Response<Void>>(ERROR_REPO_EXISTED)
     }
 
+    /**
+     * 创建大变量仓库。仓库已存在时忽略。创建失败抛出，由调用方决定是否重试。
+     */
+    fun ensureVariableRepo(userId: String, projectId: String) {
+        if (!useBkRepo()) {
+            return
+        }
+        createGenericRepo(userId = userId, projectId = projectId, repoName = REPO_VARIABLE, display = false)
+    }
+
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
         logger.info("getFileSize, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
@@ -239,8 +252,10 @@ class BkRepoClient constructor(
                 " metadata: $metadata"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
+        // nodeMetadata 是当前字段（报告归档走它）；metadata 保留给仍认旧字段的制品库
         val requestData = UserMetadataSaveRequest(
-            metadata = metadata
+            metadata = metadata,
+            nodeMetadata = metadata.map { (key, value) -> MetadataModel(key, value) }
         )
         val request = Request.Builder()
             .url(url)

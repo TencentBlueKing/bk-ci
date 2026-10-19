@@ -69,7 +69,10 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.service.BuildVarExprOverflowHelper
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -104,7 +107,8 @@ class InitializeMatrixGroupStageCmd(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
 
     companion object {
@@ -260,7 +264,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(matrixContext(matrixOption, variables, parentContainer))
                 contextCaseList = matrixConfig.getAllCombinations()
                 variables[NODE_OS]
                     ?.takeIf { it.isNotBlank() && modelContainer.baseOS != null }
@@ -454,7 +458,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(matrixContext(matrixOption, variables, parentContainer))
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -905,6 +909,29 @@ class InitializeMatrixGroupStageCmd(
                 )
             }
         }
+    }
+
+    /**
+     * 计算矩阵组合用的上下文：strategy / include / exclude 中经 `${{ }}`（含 fromJSON）引用到的大变量还原为真实值。
+     * 只用于 [MatrixControlOption.convertMatrixConfig]，Job 名、互斥组等其它字段仍按原上下文解析。
+     */
+    private fun matrixContext(
+        option: MatrixControlOption,
+        variables: Map<String, String>,
+        container: PipelineBuildContainer
+    ): Map<String, String> {
+        val (overflowKeys, overflowLoader) = BuildVarExprOverflowHelper.options(
+            buildVariableService = buildVariableService,
+            projectId = container.projectId,
+            buildId = container.buildId,
+            variables = variables,
+            pipelineId = container.pipelineId
+        )
+        if (overflowLoader == null) return variables
+        val texts = listOfNotNull(option.strategyStr, option.includeCaseStr, option.excludeCaseStr)
+        val loaded = BuildVarOverflowUtils.findReferencedOverflowKeys(texts, overflowKeys)
+            .mapNotNull { key -> overflowLoader(key)?.let { key to it } }
+        return if (loaded.isEmpty()) variables else variables + loaded
     }
 
     private fun checkAndFetchOption(option: MatrixControlOption?): MatrixControlOption {

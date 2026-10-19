@@ -54,7 +54,9 @@ class ServiceVarResourceImpl @Autowired constructor(
         return if (varName.isNullOrBlank()) {
             Result(buildVariableService.getAllVariable(projectId, pid, buildId))
         } else {
-            Result(mapOf(varName to (buildVariableService.getVariable(projectId, pid, buildId, varName) ?: "")))
+            // 单变量查询：命中大变量引用时按需还原真实值（与 BuildVarResource 行为对齐）
+            val value = buildVariableService.getVariableValue(projectId, pid, buildId, varName)
+            Result(mapOf(varName to (value ?: "")))
         }
     }
 

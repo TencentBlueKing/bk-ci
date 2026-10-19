@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
@@ -36,12 +37,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.PipelineBuildVarLock
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,7 +56,9 @@ class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val pipelineAsCodeService: PipelineAsCodeService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig,
+    private val buildVarOverflowStorage: BuildVarOverflowStorage
 ) {
 
     /**
@@ -70,7 +77,10 @@ class BuildVariableService @Autowired constructor(
     }
 
     /**
-     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串
+     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串。
+     *
+     * 注意：旧风格 `${xxx}` 模板**不会**触发大变量下载——若变量是大变量，
+     * 这里看到的是引用串 `__BK_OVF__:<len>:<executeCount>:<sha256>`。
      */
     fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
         return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
@@ -88,8 +98,17 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun getVariable(projectId: String, pipelineId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
-        return if (vars.isNotEmpty()) vars[varName] else null
+        // 单变量查询只按 key 精准查，避免把一次构建的全部变量都拉出来（历史实现会全量加载再取一个 key）。
+        // 落库统一使用新变量名，这里把调用方可能传入的旧变量名 / 预置上下文名映射成落库 key 后再查，
+        // 与 mixOldVarAndNewVar 的取值口径保持一致，不改变对旧命名（含前缀映射）的兼容能力。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val dataMap = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = setOf(varName, storedKey)
+        )
+        return dataMap[varName] ?: dataMap[storedKey]
     }
 
     fun getAllVariable(
@@ -109,6 +128,65 @@ class BuildVariableService @Autowired constructor(
             dataMap
         } else {
             PipelineVarUtil.mixOldVarAndNewVar(dataMap)
+        }
+    }
+
+    /**
+     * 新建一个会话级大变量加载器，见 [BuildVarOverflowLoader]。
+     */
+    fun newOverflowLoader(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String? = null
+    ) = BuildVarOverflowLoader(
+        storage = buildVarOverflowStorage,
+        userId = userId,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        maxCacheBytes = pipelineVarOverflowConfig.lazyLoadCacheMax,
+        maxBudgetBytes = pipelineVarOverflowConfig.lazyLoadBudgetMax
+    )
+
+    /**
+     * 单变量按需获取真实值：大变量从制品库下载，下载失败时退化为引用串。
+     * 若需要在一次会话中多次访问大变量，请改用 [newOverflowLoader]。
+     *
+     * @param maskSensitive 面向用户展示时传 true，敏感变量返回 [HIDDEN_SYMBOL]
+     */
+    @Suppress("LongParameterList")
+    fun getVariableValue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        queryDslContext: DSLContext? = null,
+        maskSensitive: Boolean = false
+    ): String? {
+        // 落库统一新变量名，兼容旧名 / 预置上下文名（含前缀映射）后单点查询，避免漏查。
+        val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
+        val queryContext = queryDslContext ?: commonDslContext
+        val value = if (maskSensitive) {
+            val param = sequenceOf(varName, storedKey).distinct().firstNotNullOfOrNull { key ->
+                pipelineBuildVarDao.getVarsWithType(queryContext, projectId, buildId, key).firstOrNull()
+            } ?: return null
+            if (param.sensitive == true) return HIDDEN_SYMBOL
+            param.value.toString()
+        } else {
+            val varMap = pipelineBuildVarDao.getVars(
+                dslContext = queryContext,
+                projectId = projectId,
+                buildId = buildId,
+                keys = setOf(varName, storedKey)
+            )
+            varMap[varName] ?: varMap[storedKey]
+        }
+        if (!BuildVarOverflowUtils.isOverflowReference(value)) return value
+        return newOverflowLoader(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            .load(value!!) ?: run {
+            LOG.warn("$buildId|LARGE_VAR_MISS|key=$varName|ref=$value|keep reference")
+            value
         }
     }
 
@@ -145,6 +223,21 @@ class BuildVariableService @Autowired constructor(
         variables: Map<String, Any>,
         sensitiveKeys: Set<String>? = null
     ) {
+        // 大变量上传是网络 IO，放在事务外完成，避免长时间占用数据库连接
+        val parameters = externalizeLargeValues(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = variables.map { va ->
+                va.key to BuildParameters(
+                    key = va.key,
+                    value = va.value,
+                    valueType = BuildFormPropertyType.STRING,
+                    sensitive = sensitiveKeys?.contains(va.key)
+                )
+            }.toMap()
+        )
+        if (parameters.isEmpty()) return
         commonDslContext.transaction { t ->
             val context = DSL.using(t)
             batchSetVariable(
@@ -152,14 +245,7 @@ class BuildVariableService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                variables = variables.map { va ->
-                    va.key to BuildParameters(
-                        key = va.key,
-                        value = va.value,
-                        valueType = BuildFormPropertyType.STRING,
-                        sensitive = sensitiveKeys?.contains(va.key)
-                    )
-                }.toMap()
+                variables = parameters
             )
         }
     }
@@ -206,6 +292,15 @@ class BuildVariableService @Autowired constructor(
         readOnly: Boolean? = null,
         rewriteReadOnly: Boolean? = null
     ) {
+        val storedValue = toStoredValue(
+            LargeValue(
+                buildId = buildId,
+                key = name,
+                rawValue = value.toString(),
+                sensitive = null,
+                scope = { uploadScope(projectId, pipelineId, buildId) }
+            )
+        ) ?: return
         val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
@@ -217,7 +312,7 @@ class BuildVariableService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     name = name,
-                    value = value,
+                    value = storedValue,
                     readOnly = readOnly
                 )
             } else {
@@ -226,7 +321,7 @@ class BuildVariableService @Autowired constructor(
                     projectId = projectId,
                     buildId = buildId,
                     name = name,
-                    value = value,
+                    value = storedValue,
                     rewriteReadOnly = rewriteReadOnly
                 )
             }
@@ -336,5 +431,113 @@ class BuildVariableService @Autowired constructor(
             readOnly = true,
             likeStr = likeStr
         )
+    }
+
+    /**
+     * 把超过 4K 的值上传制品库并替换为引用串；无法外置的值被丢弃。
+     * 未超过 4K 的值（含已是引用串的值）原样返回，因此可安全地重复调用。
+     */
+    private fun externalizeLargeValues(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, BuildParameters>
+    ): Map<String, BuildParameters> {
+        if (variables.values.none { BuildVarOverflowUtils.shouldOverflow(it.value.toString()) }) return variables
+        val target by lazy {
+            uploadScope(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+        }
+        val result = LinkedHashMap<String, BuildParameters>(variables.size)
+        variables.forEach { (key, param) ->
+            val raw = param.value.toString()
+            if (!BuildVarOverflowUtils.shouldOverflow(raw)) {
+                result[key] = param
+                return@forEach
+            }
+            toStoredValue(
+                LargeValue(
+                    buildId = buildId,
+                    key = param.key,
+                    rawValue = raw,
+                    sensitive = param.sensitive,
+                    scope = { target }
+                )
+            )?.let {
+                result[key] = param.copy(value = it)
+            }
+        }
+        return result
+    }
+
+    /**
+     * 待入库的变量。 [scope] 只在真正上传时求值，避免短值也去查执行次数。
+     */
+    private class LargeValue(
+        val buildId: String,
+        val key: String,
+        val rawValue: String,
+        val sensitive: Boolean?,
+        val scope: () -> BuildVarOverflowStorage.UploadScope
+    )
+
+    /**
+     * 计算变量入库值：≤ 4K 原样返回；> 4K 上传制品库后返回引用串；
+     * 敏感值、制品库非 bkrepo、超过 512KB 或上传失败时返回 null（丢弃 + WARN，与历史 4K 截断行为一致）。
+     */
+    private fun toStoredValue(value: LargeValue): String? {
+        if (!BuildVarOverflowUtils.shouldOverflow(value.rawValue)) return value.rawValue
+        val reason = when {
+            value.sensitive == true -> "sensitive"
+            !buildVarOverflowStorage.isEnabled() -> "storageDisabled"
+            BuildVarOverflowUtils.exceedsLargeValueLimit(value.rawValue) -> "exceedsLargeValueLimit"
+            else -> null
+        }
+        if (reason == null) {
+            try {
+                return buildVarOverflowStorage.upload(scope = value.scope(), value = value.rawValue)
+            } catch (ignored: Exception) {
+                LOG.warn(
+                    "${value.buildId}|LARGE_VAR_UPLOAD_FAIL|key=${value.key}|len=${value.rawValue.length}",
+                    ignored
+                )
+            }
+        }
+        LOG.warn(
+            "${value.buildId}|ABANDON_DATA|key=${value.key}|len=${value.rawValue.length}|" +
+                "reason=${reason ?: "uploadFail"}"
+        )
+        return null
+    }
+
+    /** 一次查询取齐上传所需的执行次数（与 [getBuildExecuteCount] 口径一致）、流水线名与构建号。 */
+    private fun uploadScope(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildVarOverflowStorage.UploadScope {
+        val vars = pipelineBuildVarDao.getVars(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            keys = setOf(PIPELINE_RETRY_COUNT, PIPELINE_NAME, PIPELINE_BUILD_NUM)
+        )
+        val retryCount = vars[PIPELINE_RETRY_COUNT]
+        val executeCount = if (NumberUtils.isParsable(retryCount)) {
+            (retryCount!!.toIntOrNull() ?: 0) + 1
+        } else {
+            1
+        }
+        return BuildVarOverflowStorage.UploadScope(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount,
+            pipelineName = vars[PIPELINE_NAME],
+            buildNum = vars[PIPELINE_BUILD_NUM]
+        )
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(BuildVariableService::class.java)
     }
 }

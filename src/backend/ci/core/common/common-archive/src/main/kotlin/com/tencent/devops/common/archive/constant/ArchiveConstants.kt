@@ -54,3 +54,6 @@ const val REPO_PIPELINE = "pipeline"
 const val REPO_CUSTOM = "custom"
 const val REPO_REPORT = "report"
 const val REPO_LOG = "log"
+
+/** 大变量文件仓库。不在制品库列表展示，路径为 `/{pipelineId}/{buildId}/{executeCount}/{sha256}`。 */
+const val REPO_VARIABLE = "variable"
