@@ -27,7 +27,6 @@
 
 package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
@@ -64,10 +63,6 @@ class DispatchJobMetricsDao {
         dslContext: DSLContext,
         dispatchJobReq: BaseQueryReqVO
     ): MaxJobConcurrencyVO? {
-        val startDateTime =
-            DateTimeUtil.stringToLocalDate(dispatchJobReq.startTime!!)!!.atStartOfDay()
-        val endDateTime =
-            DateTimeUtil.stringToLocalDate(dispatchJobReq.endTime!!)!!.atStartOfDay()
         with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
             val subQuery = dslContext.select(
                 PROJECT_ID,
@@ -75,7 +70,7 @@ class DispatchJobMetricsDao {
                 DSL.max(MAX_JOB_CONCURRENCY.cast(Int::class.java)).`as`("maxJobConcurrency")
             ).from(this)
                 .where(PROJECT_ID.eq(dispatchJobReq.projectId))
-                .and(CREATE_TIME.between(startDateTime, endDateTime))
+                .and(THE_DATE.between(dispatchJobReq.startTime, dispatchJobReq.endTime))
                 .and(CHANNEL_CODE.eq("BS"))
                 .groupBy(PROJECT_ID, JOB_TYPE)
                 .asTable("subQuery")
