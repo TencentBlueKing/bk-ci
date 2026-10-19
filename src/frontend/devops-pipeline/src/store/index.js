@@ -28,6 +28,7 @@ import atom from './modules/atom'
 import common from './modules/common/'
 import pipelines from './modules/pipelines/'
 import templates from './modules/templates/'
+import publicVar from './modules/publicVar/'
 import crossProjectCopy from './modules/crossProjectCopy/'
 
 import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
@@ -48,6 +49,7 @@ export default new Vuex.Store({
         pipelines,
         common,
         templates,
+        publicVar,
         crossProjectCopy
     },
     // 公共 store

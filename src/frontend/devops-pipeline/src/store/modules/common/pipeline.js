@@ -217,6 +217,9 @@ export const actions = {
     },
     requestInterceptAtom: async ({ commit }, { projectId, ...params }) => {
         try {
+            if (!projectId || !params.pipelineId) {
+                return
+            }
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchRuleList`, { params })
 
             commit(INTERCEPT_ATOM_MUTATION, {

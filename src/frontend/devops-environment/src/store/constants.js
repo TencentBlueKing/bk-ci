@@ -25,6 +25,13 @@ export const SERVICE_RESOURCE_TYPE = {
     PIPELINE: 'pipeline',
     CREATE: 'creative-stream'
 }
+
+// 创作流节点工作空间类型
+export const CREATE_WORKSPACE_TYPE = {
+    REMOTEDEV: 'REMOTEDEV', // 普通云桌面
+    DEVCLOUD: 'DEVCLOUD', // TEG iMate Linux
+    IEG_IMATE: 'IEG_IMATE' // IEG iMate linux/windows 云桌面
+}
 export const ENV_TYPE_MAP = {
     ALL: 'ALL',
     BUILD: 'BUILD',

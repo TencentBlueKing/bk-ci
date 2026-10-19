@@ -463,7 +463,7 @@
                             width="288"
                             :on-hide="handleCancelConfirmPublish"
                             :confirm-text="$t('confirmPublish')"
-                            @confirm="releaseConfirm()"
+                            @confirm="releaseConfirm"
                             @cancel="handleCancelConfirmPublish"
                         >
                             <div slot="content">
@@ -481,7 +481,7 @@
                                 theme="primary"
                                 :loading="releasing"
                                 :disabled="releasing"
-                                @click="releasePipeline(false)"
+                                @click="releasePipeline"
                             >
                                 {{ $t("release") }}
                             </bk-button>
@@ -643,6 +643,7 @@
                 isLoadingVersionList: false,
                 showVersionNameExistDialog: false,
                 existingVersionName: '',
+                skipVersionNameCheck: false,
                 isPublishedDialogShow: false,
                 lasterDraftInfo: null,
                 releaseStatus: null,
@@ -1005,7 +1006,8 @@
                         this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
-                            if (this.isDraftBaseBranchVersion) {
+                            // 模板实例化发布的 targetActionOptions 不含源分支选项，不应自动赋默认值，需由用户主动选择
+                            if (this.isDraftBaseBranchVersion && !this.isTemplateInstanceMode) {
                                 this.releaseParams.targetAction = TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                             }
                         })
@@ -1127,7 +1129,7 @@
                 this.showConfirmPublish = false
             },
             // 发布逻辑
-            async releaseConfirm (skipVersionNameCheck) {
+            async releaseConfirm () {
                 const { projectId, templateId, pipelineId } = this.$route.params
                 const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                 try {
@@ -1138,7 +1140,7 @@
                     
                     // 检查版本名是否存在（仅对模板生效且有自定义版本名时）
                     const versionNameToCheck = this.customVersionName?.trim()
-                    if (this.isTemplate && versionNameToCheck && !skipVersionNameCheck) {
+                    if (this.isTemplate && versionNameToCheck && !this.skipVersionNameCheck) {
                         const isExist = await this.checkTemplateVersionNameExist({
                             projectId,
                             templateId,
@@ -1440,7 +1442,9 @@
                     this.releasing = false
                 }
             },
-            async releasePipeline (skipVersionNameCheck = false) {
+            async releasePipeline () {
+                // 每次点击发布重置，仅在版本名重复弹窗确认后置为 true
+                this.skipVersionNameCheck = false
                 if (this.isTemplateInstanceMode) {
                     try {
                         if (this.releasing) return
@@ -1490,7 +1494,7 @@
                         return
                     }
 
-                    this.releaseConfirm(skipVersionNameCheck)
+                    this.releaseConfirm()
                 }
             },
             async handleNewDraft () {
@@ -1539,6 +1543,7 @@
             },
             hideReleaseSlider () {
                 this.cancelRelease()
+                this.skipVersionNameCheck = false
                 this.releaseParams = {
                     enablePac: this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled,
                     description: '',
@@ -1672,10 +1677,13 @@
             },
             handleConfirmVersionNameExist () {
                 this.showVersionNameExistDialog = false
-                this.releasePipeline(true)
+                // 已确认重复版本名；直接继续发布，避免再走 releasePipeline 因基线状态 return
+                this.skipVersionNameCheck = true
+                this.releaseConfirm()
             },
             handleCancelVersionNameExist () {
                 this.showVersionNameExistDialog = false
+                this.skipVersionNameCheck = false
             }
         }
     }

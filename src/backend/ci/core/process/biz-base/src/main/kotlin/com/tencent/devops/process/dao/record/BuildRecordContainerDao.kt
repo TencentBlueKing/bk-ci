@@ -206,7 +206,8 @@ class BuildRecordContainerDao {
         executeCount: Int,
         stageId: String? = null,
         matrixGroupId: String? = null,
-        buildStatusSet: Set<BuildStatus>? = null
+        buildStatusSet: Set<BuildStatus>? = null,
+        containerIds: Collection<String>? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -217,6 +218,9 @@ class BuildRecordContainerDao {
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
             matrixGroupId?.let { conditions.add(MATRIX_GROUP_ID.eq(matrixGroupId)) }
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
+            if (!containerIds.isNullOrEmpty()) {
+                conditions.add(CONTAINER_ID.`in`(containerIds))
+            }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
@@ -388,6 +392,21 @@ class BuildRecordContainerDao {
                 buildNum = modelRecord?.get(model.BUILD_NUM) ?: 0,
                 creator = modelRecord?.get(model.START_USER).orEmpty()
             )
+        }
+    }
+
+    fun fetchContainerRecords(
+        dslContext: DSLContext,
+        buildId: String,
+        containerIdList: List<String>,
+        executeCount: Int
+    ): List<BuildRecordContainer> {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(CONTAINER_ID.`in`(containerIdList))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetch(mapper)
         }
     }
 

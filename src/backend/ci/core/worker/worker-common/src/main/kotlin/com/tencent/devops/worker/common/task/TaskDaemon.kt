@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.BatScriptUtil
@@ -102,6 +103,7 @@ class TaskDaemon(
             executor.shutdownNow()
             if (taskId != null) {
                 TaskExecutorCache.invalidate(taskId)
+                Heartbeat.clearTaskProgress(taskId)
             }
         }
     }

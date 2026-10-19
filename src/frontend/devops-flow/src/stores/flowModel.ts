@@ -119,7 +119,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   }
 
   /** atomProp 运行时字段，不属于 model 持久化数据 */
-  const ATOM_PROP_RUNTIME_KEYS = ['logoUrl', 'os', 'buildLessRunFlag']
+  const ATOM_PROP_RUNTIME_KEYS = ['logoUrl', 'os', 'buildLessRunFlag', 'versionOsMap']
 
   /**
    * 加载 Flow 模型数据

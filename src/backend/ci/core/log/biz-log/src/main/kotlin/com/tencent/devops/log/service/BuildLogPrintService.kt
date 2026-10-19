@@ -34,11 +34,13 @@ import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogOriginHeavyEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.util.LogErrorCodeEnum
+import com.tencent.devops.log.util.LogTrafficKey
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -55,6 +57,7 @@ class BuildLogPrintService @Autowired constructor(
     private val storageProperties: StorageProperties,
     private val logTrafficStatsService: LogTrafficStatsService,
     private val logMetrics: LogMetrics,
+    private val logProjectIdResolver: LogProjectIdResolver,
     logServiceConfig: LogServiceConfig
 ) {
 
@@ -124,23 +127,47 @@ class BuildLogPrintService @Autowired constructor(
     }
 
     private fun enrichAndSend(event: ILogEvent, recordTraffic: Boolean) {
+        val enriched = resolveAndEnrichProjectId(event)
+        val trafficKey = LogTrafficKey.of(enriched.projectId, enriched.buildId)
+
         when {
-            // 已在 heavy 队列内的重试/转发，保持原 destination
-            event is LogOriginHeavyEvent -> sendWithMetrics(event)
-            event is LogOriginEvent && recordTraffic -> {
-                logTrafficStatsService.record(event.buildId, event.logs.size)
-                if (logTrafficStatsService.shouldRouteHeavy(event.buildId)) {
-                    sendWithMetrics(LogOriginHeavyEvent.from(event))
+            enriched is LogOriginHeavyEvent -> sendWithMetrics(enriched)
+            enriched is LogOriginEvent && recordTraffic -> {
+                logTrafficStatsService.record(trafficKey, enriched.logs.size)
+                if (logTrafficStatsService.shouldRouteHeavy(trafficKey)) {
+                    sendWithMetrics(LogOriginHeavyEvent.from(enriched))
                 } else {
-                    sendWithMetrics(event)
+                    sendWithMetrics(enriched)
                 }
             }
             else -> {
                 if (recordTraffic) {
-                    recordTrafficLines(event)
+                    recordTrafficLines(enriched, trafficKey)
                 }
-                sendWithMetrics(event)
+                sendWithMetrics(enriched)
             }
+        }
+    }
+
+    /**
+     * 上报入口记住 buildId 归属（首写优先、空位补全），再把解析结果填回事件。
+     * ES 存取仍只认 buildId；projectId 用于流量聚合，pipelineId 随 MQ 重试保留给后续补全。
+     */
+    private fun resolveAndEnrichProjectId(event: ILogEvent): ILogEvent {
+        val owner = logProjectIdResolver.resolve(
+            buildId = event.buildId,
+            reportedProjectId = event.projectId,
+            reportedPipelineId = event.pipelineId
+        )
+        if (owner.projectId == event.projectId && owner.pipelineId == event.pipelineId) {
+            return event
+        }
+        return when (event) {
+            is LogOriginEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogOriginHeavyEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogStorageEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            is LogStatusEvent -> event.copy(projectId = owner.projectId, pipelineId = owner.pipelineId)
+            else -> event
         }
     }
 
@@ -155,7 +182,7 @@ class BuildLogPrintService @Autowired constructor(
         }
     }
 
-    private fun recordTrafficLines(event: ILogEvent) {
+    private fun recordTrafficLines(event: ILogEvent, trafficKey: String) {
         val lines = when (event) {
             is LogOriginEvent -> event.logs.size
             is LogOriginHeavyEvent -> event.logs.size
@@ -163,7 +190,7 @@ class BuildLogPrintService @Autowired constructor(
             else -> 0
         }
         if (lines > 0) {
-            logTrafficStatsService.record(event.buildId, lines)
+            logTrafficStatsService.record(trafficKey, lines)
         }
     }
 

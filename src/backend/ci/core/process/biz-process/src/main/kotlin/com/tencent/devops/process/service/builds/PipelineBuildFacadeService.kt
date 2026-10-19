@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -97,7 +98,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_AGENT_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -119,6 +119,8 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.BuildRunningContext
+import com.tencent.devops.process.engine.service.record.BuildRunningInfoResolver
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -155,6 +157,7 @@ import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -182,7 +185,6 @@ import jakarta.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -219,7 +221,9 @@ class PipelineBuildFacadeService(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
-    private val createStreamService: CreateStreamTriggerSupportService
+    private val createStreamService: CreateStreamTriggerSupportService,
+    private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
+    private val buildRunningInfoResolver: BuildRunningInfoResolver
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -512,9 +516,9 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-            } else if (startType == StartType.SERVICE &&
+            } else if (branch.isNullOrBlank() && startType == StartType.SERVICE &&
                 readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-                // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
+                // 服务间的API触发允许执行分支版本，但草稿版本无正式版本，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // PAC流水线相关参数
@@ -846,7 +850,13 @@ class PipelineBuildFacadeService(
             if (!hasPermissionToCancelBuild(userId, projectId, pipelineId, buildId)) {
                 logger.warn("[$buildId]|User $userId has no permission to cancel build.")
                 // 根据不同的策略抛出不同的错误信息
-                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+                val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineVersion = buildInfo?.version
+                )
                 val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
                 if (cancelPolicy == BuildCancelPolicy.RESTRICTED) {
@@ -1126,6 +1136,16 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
+        creativeStreamImateStageReviewService.assertLock(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = isCancel,
+            buildStage = buildStage,
+            channelCode = buildInfo.channelCode
+        )
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
         if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
             reviewParamsCheck(
@@ -1136,7 +1156,12 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本/调试版本的并发配置生效
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo.version
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
@@ -1157,6 +1182,7 @@ class PipelineBuildFacadeService(
                     maxQueueSize = setting.maxQueueSize,
                     concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    concurrencySubGroup = buildInfo.concurrencySubGroup,
                     maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
                     // stage审核时暂不执行流水线并发组取消逻辑
                     cancelAllowed = false
@@ -1440,7 +1466,10 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = buildInfo.startUser,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.FAILED
+                    buildStatus = BuildStatus.FAILED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_SERVICE_SHUTDOWN
+                    )
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
@@ -1781,6 +1810,20 @@ class PipelineBuildFacadeService(
             )
             buildRecord.cancelBuildPerm = cancelBuildPerm
         }
+        // 运行态与终态卡片互斥。阶段准入挂起时记录表会先变成 STAGE_SUCCESS 并合成「审核中」，
+        // 历史表可能仍短暂停留在 RUNNING；此时再算运行态会把两张卡片叠在一起。
+        if (buildRecord.buildEndInfo == null) {
+            buildRecord.buildRunningInfo = buildRunningInfoResolver.resolve(
+                BuildRunningContext(
+                    buildInfo = buildInfo,
+                    model = buildRecord.model,
+                    executeCount = buildRecord.executeCount,
+                    queueTime = buildRecord.queueTime,
+                    startTime = buildRecord.startTime,
+                    triggerDesc = buildRecord.trigger
+                )
+            )
+        }
         return buildRecord
     }
 
@@ -1968,7 +2011,12 @@ class PipelineBuildFacadeService(
             retry = buildHistory.retry,
             errorInfoList = buildHistory.errorInfoList,
             buildNumAlias = buildHistory.buildNumAlias,
-            webhookInfo = buildHistory.webhookInfo
+            webhookInfo = buildHistory.webhookInfo,
+            imateStageReview = if (buildHistory.status == BuildStatus.STAGE_SUCCESS.name) {
+                creativeStreamImateStageReviewService.hint(projectId, pipelineId, buildId)
+            } else {
+                null
+            }
         )
     }
 
@@ -1984,7 +2032,7 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             concurrencyGroup = buildHistory.concurrencyGroup!!,
             status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
-        ).indexOfFirst { it.second == buildHistory.id } + 1
+        ).indexOfFirst { it.buildId == buildHistory.id } + 1
     } else {
         pipelineRuntimeService.getTotalBuildHistoryCount(
             projectId = projectId,
@@ -2655,9 +2703,12 @@ class PipelineBuildFacadeService(
                 val status = task["status"] ?: ""
                 val executeCount = task["executeCount"] as? Int ?: 1
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
-                redisOperation.addSetValue(cancelTaskSetKey, taskId)
-                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+                TaskUtils.recordCancelTaskId(
+                    redisOperation = redisOperation,
+                    buildId = buildId,
+                    containerId = containerId,
+                    taskId = taskId
+                )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "Cancelled by $userId",
@@ -2690,7 +2741,15 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.CANCELED,
-                    terminateFlag = finalTerminateFlag
+                    terminateFlag = finalTerminateFlag,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = if (finalTerminateFlag) {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_FORCE_TERMINATE
+                        } else {
+                            ProcessMessageCode.BK_BUILD_CANCEL_USER_MANUAL
+                        }
+                    )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
@@ -2711,14 +2770,19 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String
     ): Boolean {
-        // 获取流水线配置以检查取消策略
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        // #12697 按本次构建实际运行的版本读取设置,保证分支版本的取消策略生效
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+        val setting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = buildInfo?.version
+        )
         val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
         return when (cancelPolicy) {
             BuildCancelPolicy.RESTRICTED -> {
                 // 受限策略：仅触发人或管理员可取消
-                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return false
+                if (buildInfo == null) return false
                 val isTriggerUser = userId == buildInfo.triggerUser
                 val hasManagePermission = pipelinePermissionService.checkPipelinePermission(
                     userId = userId,
@@ -2757,17 +2821,21 @@ class PipelineBuildFacadeService(
         vmSeqId: String,
         nodeHashId: String?,
         executeCount: Int?,
+        createMode: Boolean?,
         simpleResult: SimpleResult
     ): Pair<String?, Boolean> {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
-            msg = "${
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId)
-                )
-            } $msg"
+            val link = if (createMode == true) {
+                "/console/environment/$projectCode/creative-stream/node/allNode?nodeHashId=$nodeHashId"
+            } else {
+                "/console/environment/$projectCode/pipeline/node/allNode?nodeHashId=$nodeHashId"
+            }
+            val linkTag = "<a target='_blank' href='$link'>${I18nUtil.getCodeLanMessage(
+                messageCode = BUILD_AGENT_DETAIL_LINK_ERROR
+            )}</a>"
+            msg = "$linkTag $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
@@ -3105,7 +3173,11 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo.executeCount,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelUser(
+                        operator = userId,
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_USER_RESTART
+                    )
                 )
                 return buildRestartPipeline(
                     projectId = projectId,
@@ -3479,10 +3551,12 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildInfo: BuildInfo
     ): String {
-        // 按原有的启动参数组装启动参数
+        // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.map {
-            startParameters.put(it.key, it.value.toString())
+        buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.forEach {
+            startParameters[it.key] = it.value.toString()
         }
         val startType = StartType.toStartType(buildInfo.trigger)
         // 发起新构建

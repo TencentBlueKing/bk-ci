@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -95,7 +96,8 @@ class PipelineVersionValidator @Autowired constructor(
         if (pipelineInfo == null) {
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
-            if (projectVO?.pipelineLimit != null) {
+            // codecc等无需注册鉴权的渠道不受项目流水线数量上限约束
+            if (ChannelCode.isNeedAuth(pipelineBasicInfo.channelCode) && projectVO?.pipelineLimit != null) {
                 val preCount =
                     pipelineRepositoryService.countByProjectIds(setOf(projectId), pipelineBasicInfo.channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {

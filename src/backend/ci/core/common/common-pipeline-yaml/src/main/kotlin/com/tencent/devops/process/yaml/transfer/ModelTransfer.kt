@@ -35,12 +35,13 @@ import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -67,10 +68,12 @@ import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.TriggerType
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -106,6 +109,8 @@ class ModelTransfer @Autowired constructor(
             concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
+            // YAML 是完整声明。不写 sub-group 用空白表示清空，避免沿用库里的旧标识。
+            concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
             runLockType = when {
                 yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
@@ -185,10 +190,13 @@ class ModelTransfer @Autowired constructor(
             desc = yamlInput.yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             stages = stageList,
             labels = emptyList(),
-            instanceFromTemplate = false,
+            instanceFromTemplate = yamlInput.yaml.checkForTemplateUse(),
             pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
+        model.publicVarGroups = yamlInput.yaml.formatVariableTemplates().map {
+            PublicVarGroupRef.create(groupName = it.name, versionName = it.version)
+        }
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
         val stageIndex = AtomicInteger(0)
@@ -332,7 +340,19 @@ class ModelTransfer @Autowired constructor(
         }
         yaml.notices = makeNoticesV3(modelInput)
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
-        yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
+        val variables = mutableMapOf<String, Any>()
+        modelInput.model.handlePublicVarInfo()
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        // 模板实例化流水线：仅输出公共变量组引用，不输出模板参数变量
+        if (modelInput.model.template == null) {
+            variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        }
+        yaml.variables = if (variables.isEmpty()) null else variables
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
@@ -485,14 +505,28 @@ class ModelTransfer @Autowired constructor(
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
             setting.runLockType == PipelineRunLockType.LOCK
         ) {
+            val subGroup = setting.concurrencySubGroup?.takeIf { it.isNotBlank() }
+            // ① 整组取消不输出队列字段；③④ 带 sub-group，仍然输出队列字段。
+            val groupWideCancel = setting.concurrencyCancelInProgress && subGroup == null
             return Concurrency(
                 group = setting.concurrencyGroup,
-                cancelInProgress = setting.concurrencyCancelInProgress.nullIfDefault(false),
-                queueLength = setting.maxQueueSize
-                    .nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE),
-                queueTimeoutMinutes = setting.waitQueueTimeMinute
-                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
-                maxParallel = null
+                cancelInProgress = if (subGroup != null) {
+                    setting.concurrencyCancelInProgress
+                } else {
+                    setting.concurrencyCancelInProgress.nullIfDefault(false)
+                },
+                queueLength = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.maxQueueSize.nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE)
+                },
+                queueTimeoutMinutes = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.waitQueueTimeMinute.nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE)
+                },
+                maxParallel = null,
+                subGroup = subGroup
             )
         }
         if (setting.runLockType == PipelineRunLockType.MULTIPLE) {
@@ -519,8 +553,13 @@ class ModelTransfer @Autowired constructor(
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
         val triggers = getTriggerContainer(modelInput)?.elements ?: return emptyList()
-        val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
-            ?.toPre(modelInput.version)
+        val baseTrigger = elementTransfer.baseTriggers2yaml(
+            elements = triggers,
+            aspectWrapper = modelInput.aspectWrapper,
+            channelCode = modelInput.channelCode,
+            userId = modelInput.userId,
+            projectId = modelInput.setting.projectId
+        )?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
             triggers, modelInput.setting.projectId, modelInput.aspectWrapper
         )

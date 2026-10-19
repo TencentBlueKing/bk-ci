@@ -50,6 +50,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
+import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
+import com.tencent.devops.process.engine.pojo.QueueRelatedBuild
 import com.tencent.devops.process.engine.pojo.builds.BuildHistoryQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
@@ -116,6 +118,7 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
+                        CONCURRENCY_SUB_GROUP,
                         VERSION_NAME,
                         YAML_VERSION,
                         EXECUTE_COUNT,
@@ -143,6 +146,7 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
+                        startBuildContext.concurrencySubGroup,
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
                         startBuildContext.executeCount,
@@ -175,6 +179,7 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
+                        CONCURRENCY_SUB_GROUP,
                         YAML_VERSION,
                         RESOURCE_MODEL,
                         EXECUTE_COUNT,
@@ -202,6 +207,7 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
+                        startBuildContext.concurrencySubGroup,
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
                         startBuildContext.executeCount,
@@ -232,6 +238,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+                .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
@@ -248,6 +255,7 @@ class PipelineBuildDao {
                 .set(QUEUE_TIME, retryInfo.nowTime)
                 .set(STATUS, retryInfo.status.ordinal)
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
+                .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
@@ -289,6 +297,112 @@ class PipelineBuildDao {
         } else normal
     }
 
+    /**
+     * 运行态排队列表专用：只查展示所需列，正式表与调试表合并。
+     *
+     * [pipelineId] 与 [concurrencyGroup] 二选一；并发组可跨流水线，不能再按 pipelineId 收窄。
+     */
+    fun listQueueRelatedBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        statusSet: Collection<BuildStatus>,
+        pipelineId: String? = null,
+        concurrencyGroup: String? = null
+    ): List<QueueRelatedBuild> {
+        require(pipelineId != null || concurrencyGroup != null) {
+            "listQueueRelatedBuilds requires pipelineId or concurrencyGroup"
+        }
+        val statuses = statusSet.map { it.ordinal }
+        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.select(
+                PROJECT_ID, PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS,
+                QUEUE_TIME, START_TIME, TRIGGER_USER, START_USER, TRIGGER, CHANNEL, WEBHOOK_TYPE, BUILD_MSG
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statuses))
+            pipelineId?.let { where.and(PIPELINE_ID.eq(it)) }
+            concurrencyGroup?.let { where.and(CONCURRENCY_GROUP.eq(it)) }
+            where.fetch { rec ->
+                toQueueRelatedBuild(
+                    projectId = rec.value1(),
+                    pipelineId = rec.value2(),
+                    buildId = rec.value3(),
+                    buildNum = rec.value4(),
+                    status = rec.value5(),
+                    queueTime = rec.value6(),
+                    startTime = rec.value7(),
+                    triggerUser = rec.value8(),
+                    startUser = rec.value9(),
+                    trigger = rec.value10(),
+                    channel = rec.value11(),
+                    webhookType = rec.value12(),
+                    buildMsg = rec.value13()
+                )
+            }
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val where = dslContext.select(
+                PROJECT_ID, PIPELINE_ID, BUILD_ID, BUILD_NUM, STATUS,
+                QUEUE_TIME, START_TIME, TRIGGER_USER, START_USER, TRIGGER, CHANNEL, WEBHOOK_TYPE, BUILD_MSG
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statuses))
+                .and(DELETE_TIME.isNull)
+            pipelineId?.let { where.and(PIPELINE_ID.eq(it)) }
+            concurrencyGroup?.let { where.and(CONCURRENCY_GROUP.eq(it)) }
+            where.fetch { rec ->
+                toQueueRelatedBuild(
+                    projectId = rec.value1(),
+                    pipelineId = rec.value2(),
+                    buildId = rec.value3(),
+                    buildNum = rec.value4(),
+                    status = rec.value5(),
+                    queueTime = rec.value6(),
+                    startTime = rec.value7(),
+                    triggerUser = rec.value8(),
+                    startUser = rec.value9(),
+                    trigger = rec.value10(),
+                    channel = rec.value11(),
+                    webhookType = rec.value12(),
+                    buildMsg = rec.value13()
+                )
+            }
+        }
+        if (debug.isEmpty()) return normal
+        if (normal.isEmpty()) return debug
+        val seen = normal.mapTo(HashSet()) { it.buildId }
+        return normal + debug.filter { it.buildId !in seen }
+    }
+
+    private fun toQueueRelatedBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildNum: Int?,
+        status: Int?,
+        queueTime: LocalDateTime?,
+        startTime: LocalDateTime?,
+        triggerUser: String?,
+        startUser: String?,
+        trigger: String?,
+        channel: String?,
+        webhookType: String?,
+        buildMsg: String?
+    ) = QueueRelatedBuild(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId,
+        buildNum = buildNum ?: 0,
+        status = status?.let { BuildStatus.values().getOrNull(it) } ?: BuildStatus.QUEUE,
+        queueTime = queueTime?.timestampmilli() ?: 0L,
+        startTime = startTime?.timestampmilli(),
+        triggerUser = triggerUser ?: startUser.orEmpty(),
+        trigger = trigger.orEmpty(),
+        channelCode = channel?.let { runCatching { ChannelCode.valueOf(it) }.getOrNull() },
+        webhookType = webhookType,
+        buildMsg = buildMsg
+    )
+
     fun countAllBuildWithStatus(
         dslContext: DSLContext,
         projectId: String,
@@ -316,21 +430,32 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         concurrencyGroup: String,
-        statusSet: List<BuildStatus>
-    ): List<Record2<String, String>> {
+        statusSet: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         val normal = with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM, CONCURRENCY_SUB_GROUP).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3(), record.value4())
+            }
         }
         val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM, CONCURRENCY_SUB_GROUP).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3(), record.value4())
+            }
         }
         return normal.plus(debug)
     }
@@ -339,26 +464,49 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statusSet: List<BuildStatus>
-    ): List<Record2<String, String>> {
+        statusSet: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         val normal = with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.isNull)
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+            val where = dslContext.select(PIPELINE_ID, BUILD_ID, BUILD_NUM).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
-                .fetch()
+                .and(CONCURRENCY_GROUP.isNull)
+            if (!excludeBuildId.isNullOrBlank()) {
+                where.and(BUILD_ID.ne(excludeBuildId))
+            }
+            where.orderBy(START_TIME.asc()).fetch().map { record ->
+                toConcurrencyGroupBuild(record.value1(), record.value2(), record.value3())
+            }
         }
         return normal.plus(debug)
     }
+
+    private fun toConcurrencyGroupBuild(
+        pipelineId: String,
+        buildId: String,
+        buildNum: Int?,
+        concurrencySubGroup: String? = null
+    ) = ConcurrencyGroupBuild(
+        pipelineId = pipelineId,
+        buildId = buildId,
+        buildNum = buildNum ?: 0,
+        concurrencySubGroup = concurrencySubGroup
+    )
 
     /**
      * 查询BuildInfo，兼容所有运行时调用，不排除已删除的调试记录
@@ -661,6 +809,46 @@ class PipelineBuildDao {
             debug == null -> release
             release.queueTime > debug.queueTime -> debug
             else -> release
+        }
+    }
+
+    /**
+     * 按排队时间正序取出并发组[concurrencyGroup]内流水线[pipelineId]处于[statusSet]的构建，最多[limit]个。
+     *
+     * 用于排队数量超限时的收敛淘汰：排在最前面的是排队最久的构建，按现有的语义应被优先淘汰。
+     */
+    fun listConcurrencyQueueBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>,
+        limit: Int
+    ): List<BuildInfo> {
+        val release = with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(mapper)
+        }
+        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .orderBy(QUEUE_TIME.asc(), BUILD_NUM.asc())
+                .limit(limit)
+                .fetch(debugMapper)
+        }
+        return if (debug.isEmpty()) {
+            release
+        } else {
+            release.plus(debug).sortedBy { it.queueTime }.take(limit)
         }
     }
 
@@ -1999,6 +2187,7 @@ class PipelineBuildDao {
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     buildMsg = t.buildMsg,
@@ -2037,8 +2226,8 @@ class PipelineBuildDao {
                     queueTime = t.queueTime?.timestampmilli() ?: 0L,
                     startUser = t.startUser,
                     triggerUser = t.triggerUser ?: t.startUser ?: "",
-                    startTime = t.startTime?.timestampmilli() ?: 0L,
-                    endTime = t.endTime?.timestampmilli() ?: 0L,
+                    startTime = t.startTime?.timestampmilli(),
+                    endTime = t.endTime?.timestampmilli(),
                     taskCount = t.taskCount,
                     firstTaskId = t.firstTaskId,
                     parentBuildId = t.parentBuildId,
@@ -2061,6 +2250,7 @@ class PipelineBuildDao {
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
                     concurrencyGroup = t.concurrencyGroup,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     webhookType = t.webhookType,
                     webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
                     artifactList = t.artifactInfo?.let { self ->

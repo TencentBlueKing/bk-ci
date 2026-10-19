@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -20,19 +21,19 @@ func TestDisk_Name(t *testing.T) {
 func TestDisk_Gather_IgnoreFilesystems(t *testing.T) {
 	// 构造 3 个 partition：ext4 正常、tmpfs 需忽略、overlay 需忽略
 	d := &Disk{
-		partitionsFn: func(all bool) ([]disk.PartitionStat, error) {
+		partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) {
 			return []disk.PartitionStat{
 				{Device: "/dev/sda1", Fstype: "ext4", Mountpoint: "/", Opts: []string{"rw"}},
 				{Device: "tmpfs", Fstype: "tmpfs", Mountpoint: "/tmp"},
 				{Device: "overlay", Fstype: "overlay", Mountpoint: "/var/lib/docker/overlay"},
 			}, nil
 		},
-		usageFn: func(path string) (*disk.UsageStat, error) {
+		usageFn: func(_ context.Context, path string) (*disk.UsageStat, error) {
 			return &disk.UsageStat{Total: 1000, Used: 300, Free: 700, UsedPercent: 30}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("Gather: %v", err)
 	}
@@ -94,13 +95,13 @@ func TestNormalizeDiskPathTag(t *testing.T) {
 func TestDisk_Gather_SkipsUsageError(t *testing.T) {
 	// /a 的 Usage 失败 → 跳过；/b 成功 → 保留
 	d := &Disk{
-		partitionsFn: func(all bool) ([]disk.PartitionStat, error) {
+		partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) {
 			return []disk.PartitionStat{
 				{Device: "/dev/sda1", Fstype: "ext4", Mountpoint: "/a"},
 				{Device: "/dev/sda2", Fstype: "ext4", Mountpoint: "/b"},
 			}, nil
 		},
-		usageFn: func(path string) (*disk.UsageStat, error) {
+		usageFn: func(_ context.Context, path string) (*disk.UsageStat, error) {
 			if path == "/a" {
 				return nil, errors.New("stale nfs")
 			}
@@ -108,7 +109,7 @@ func TestDisk_Gather_SkipsUsageError(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,14 +118,63 @@ func TestDisk_Gather_SkipsUsageError(t *testing.T) {
 	}
 }
 
+// TestDisk_Gather_SkipsNetworkFS 验证网络文件系统在调用 usageFn(statfs)
+// 之前就被跳过 —— 这是防卡死的核心：真实挂死的 NFS 会让 statfs 永久阻塞，
+// 所以绝不能对它发起 Usage。这里让 usageFn 在被网络盘调用时直接 fail。
+func TestDisk_Gather_SkipsNetworkFS(t *testing.T) {
+	cases := []string{"nfs", "nfs4", "cifs", "smbfs", "fuse.sshfs", "9p"}
+	for _, fs := range cases {
+		fs := fs
+		t.Run(fs, func(t *testing.T) {
+			d := &Disk{
+				partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) {
+					return []disk.PartitionStat{
+						{Device: "server:/export", Fstype: fs, Mountpoint: "/mnt/remote"},
+						{Device: "/dev/sda1", Fstype: "ext4", Mountpoint: "/"},
+					}, nil
+				},
+				usageFn: func(_ context.Context, path string) (*disk.UsageStat, error) {
+					if path == "/mnt/remote" {
+						t.Errorf("usageFn must NOT be called for network fs %q (would block on hung mount)", fs)
+					}
+					return &disk.UsageStat{Total: 100, Used: 10, Free: 90, UsedPercent: 10}, nil
+				},
+				nowFn: time.Now,
+			}
+			metrics, err := d.Gather(context.Background())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(metrics) != 1 || metrics[0].Tags[TagPath] != "/" {
+				t.Errorf("want only local / mount, got %+v", metrics)
+			}
+		})
+	}
+}
+
+func TestIsNetworkFS(t *testing.T) {
+	network := []string{"nfs", "nfs3", "nfs4", "cifs", "smbfs", "smb2", "afpfs", "fuse.sshfs", "fuse.s3fs", "9p", "glusterfs", "ceph", "webdav", "davfs2"}
+	local := []string{"ext4", "xfs", "btrfs", "apfs", "hfs", "ntfs", "vfat", "zfs"}
+	for _, fs := range network {
+		if !isNetworkFS(fs) {
+			t.Errorf("isNetworkFS(%q) = false, want true", fs)
+		}
+	}
+	for _, fs := range local {
+		if isNetworkFS(fs) {
+			t.Errorf("isNetworkFS(%q) = true, want false", fs)
+		}
+	}
+}
+
 func TestDisk_Gather_PartitionsErrorPropagates(t *testing.T) {
 	sentinel := errors.New("boom")
 	d := &Disk{
-		partitionsFn: func(all bool) ([]disk.PartitionStat, error) { return nil, sentinel },
-		usageFn:      func(path string) (*disk.UsageStat, error) { return nil, nil },
+		partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) { return nil, sentinel },
+		usageFn:      func(_ context.Context, path string) (*disk.UsageStat, error) { return nil, nil },
 		nowFn:        time.Now,
 	}
-	_, err := d.Gather()
+	_, err := d.Gather(context.Background())
 	if err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v", err)
 	}
@@ -132,15 +182,15 @@ func TestDisk_Gather_PartitionsErrorPropagates(t *testing.T) {
 
 func TestDisk_Gather_ZeroTotalSkipped(t *testing.T) {
 	d := &Disk{
-		partitionsFn: func(all bool) ([]disk.PartitionStat, error) {
+		partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) {
 			return []disk.PartitionStat{{Device: "x", Fstype: "ext4", Mountpoint: "/"}}, nil
 		},
-		usageFn: func(path string) (*disk.UsageStat, error) {
+		usageFn: func(_ context.Context, path string) (*disk.UsageStat, error) {
 			return &disk.UsageStat{Total: 0}, nil
 		},
 		nowFn: time.Now,
 	}
-	metrics, _ := d.Gather()
+	metrics, _ := d.Gather(context.Background())
 	if len(metrics) != 0 {
 		t.Errorf("zero-total mount should be skipped, got %d metrics", len(metrics))
 	}
@@ -148,10 +198,10 @@ func TestDisk_Gather_ZeroTotalSkipped(t *testing.T) {
 
 func TestDisk_Gather_FieldsPresent(t *testing.T) {
 	d := &Disk{
-		partitionsFn: func(all bool) ([]disk.PartitionStat, error) {
+		partitionsFn: func(_ context.Context, all bool) ([]disk.PartitionStat, error) {
 			return []disk.PartitionStat{{Device: "x", Fstype: "ext4", Mountpoint: "/"}}, nil
 		},
-		usageFn: func(path string) (*disk.UsageStat, error) {
+		usageFn: func(_ context.Context, path string) (*disk.UsageStat, error) {
 			return &disk.UsageStat{
 				Total: 1000, Used: 300, Free: 700, UsedPercent: 30,
 				InodesTotal: 100, InodesUsed: 20, InodesFree: 80, InodesUsedPercent: 20,
@@ -159,7 +209,7 @@ func TestDisk_Gather_FieldsPresent(t *testing.T) {
 		},
 		nowFn: time.Now,
 	}
-	metrics, _ := d.Gather()
+	metrics, _ := d.Gather(context.Background())
 	required := []string{
 		FieldTotal, FieldFree, FieldUsed, RenamedFieldInUse,
 		FieldInodesTotal, FieldInodesFree, FieldInodesUsed,

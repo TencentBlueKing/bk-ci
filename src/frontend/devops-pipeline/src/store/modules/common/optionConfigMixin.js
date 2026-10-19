@@ -155,6 +155,10 @@ const optionConfigMixin = {
                         name: this.$t('storeMap.atomOnlyFail')
                     },
                     {
+                        id: 'PRE_TASK_FAILED_ONLY_EXCEPT_SKIP',
+                        name: this.$t('storeMap.atomOnlyFailExceptSkip')
+                    },
+                    {
                         id: 'CUSTOM_VARIABLE_MATCH',
                         name: this.$t('storeMap.varMatch')
                     },

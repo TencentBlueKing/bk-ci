@@ -220,7 +220,9 @@ open class PipelineTimerService @Autowired constructor(
                 },
                 noScm = noScm,
                 taskId = taskId,
-                startParam = startParam?.let { JsonUtil.to(it, object : TypeReference<Map<String, String>>() {}) }
+                startParam = startParam?.let {
+                    JsonUtil.to(it, object : TypeReference<Map<String, String>>() {})
+                }
             )
         }
     }

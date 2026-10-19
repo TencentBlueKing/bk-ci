@@ -157,6 +157,8 @@ class MarketAtomEnvInfoDao {
             tAtom.HTML_TEMPLATE_VERSION,
             tAtom.CLASS_TYPE,
             tAtom.SERVICE_SCOPE,
+            // OS 是 OS_MAP 为空的旧插件记录还原 jobType -> OS 映射的兜底来源，二者需一并查出
+            tAtom.OS,
             tAtom.OS_MAP,
             tAtom.CREATE_TIME,
             tAtom.UPDATE_TIME

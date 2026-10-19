@@ -83,7 +83,7 @@ class PipelineTemplateResourceDraftVersionDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(VERSION.eq(version))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(DRAFT_VERSION.desc())
                 .limit(1)
                 .fetchOne(mapper)
         }

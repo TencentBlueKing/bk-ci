@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -75,6 +74,6 @@ class UserQualityIndicatorResourceImpl @Autowired constructor(
     }
 
     override fun delete(userId: String, projectId: String, indicatorId: String): Result<Boolean> {
-        return Result(indicatorService.userDelete(projectId, HashUtil.decodeIdToLong(indicatorId)))
+        return Result(indicatorService.userDelete(userId, projectId, HashUtil.decodeIdToLong(indicatorId)))
     }
 }

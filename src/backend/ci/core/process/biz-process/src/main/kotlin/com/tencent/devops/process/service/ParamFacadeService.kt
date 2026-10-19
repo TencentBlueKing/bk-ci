@@ -43,26 +43,23 @@ import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.Permission as PipelinePermission
 import com.tencent.devops.process.pojo.SubPipeline
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
+import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
-import java.lang.RuntimeException
 
 @Suppress("ALL")
 @Service
 class ParamFacadeService @Autowired constructor(
     private val client: Client,
     private val codeService: CodeService,
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) {
 
     fun filterParams(
@@ -71,7 +68,7 @@ class ParamFacadeService @Autowired constructor(
         pipelineId: String?,
         params: List<BuildFormProperty>,
         channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
-    ): List<BuildFormProperty> {
+    ): MutableList<BuildFormProperty> {
         return params.map {
             when {
                 it.type == BuildFormPropertyType.SVN_TAG && !it.repoHashId.isNullOrBlank() ->
@@ -98,7 +95,7 @@ class ParamFacadeService @Autowired constructor(
                     copyFormProperty(property = it, options = listOf())
                 else -> it
             }
-        }
+        }.toMutableList()
     }
 
     fun filterOptions(
@@ -353,7 +350,11 @@ class ParamFacadeService @Autowired constructor(
             sensitive = property.sensitive,
             constant = property.constant,
             fields = property.fields
-        )
+        ).apply {
+            varGroupName = property.varGroupName
+            varGroupVersion = property.varGroupVersion
+            removeFlag = property.removeFlag
+        }
     }
 
     private fun getPermissionCodelibList(
@@ -389,37 +390,21 @@ class ParamFacadeService @Autowired constructor(
     ): List<SubPipeline> {
         val watcher = Watcher("getHasPermissionPipelineList_$userId")
         try {
-            // 从权限中拉取有权限的流水线，若无userId则返回空值
-            watcher.start("perm_r_perm")
-            val hasPermissionList =
-                if (userId.isNullOrBlank()) {
-                    null
-                } else {
-                    pipelinePermissionService.getResourceByPermission(
-                        userId = userId,
-                        projectId = projectId,
-                        permission = AuthPermission.EXECUTE
-                    )
-                }
-            watcher.stop()
-
-            // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
-            watcher.start("s_r_summary")
-            val buildPipelineRecords =
-                pipelineRuntimeService.getBuildPipelineRecords(
-                    projectId = projectId,
-                    channelCode = channelCode,
-                    pipelineIds = hasPermissionList,
-                    page = 1,
-                    pageSize = 100
-                )
-            watcher.stop()
-
-            return buildPipelineRecords.map {
-                val pipelineId = it.pipelineId
-                val pipelineName = it.pipelineName
-                SubPipeline(pipelineName, pipelineId)
+            if (userId.isNullOrBlank()) {
+                return emptyList()
             }
+            watcher.start("s_r_info")
+            val records = pipelineListFacadeService.listPipelineIdAndName(
+                userId = userId,
+                projectId = projectId,
+                permission = PipelinePermission.EXECUTE,
+                excludePipelineId = null,
+                page = 1,
+                pageSize = 100,
+                channelCode = channelCode
+            ).records
+            watcher.stop()
+            return records.map { SubPipeline(it.pipelineName, it.pipelineId) }
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to get the permission pipeline list", t)
             return emptyList()

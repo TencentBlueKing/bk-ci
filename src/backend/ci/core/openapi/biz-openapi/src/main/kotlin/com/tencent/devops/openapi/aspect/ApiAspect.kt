@@ -27,12 +27,14 @@
 package com.tencent.devops.openapi.aspect
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -170,12 +172,18 @@ class ApiAspect(
         }
 
         if (projectId != null) {
-            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
-            val projectConsulTag = projectConsulTagCache.get(projectId) {
-                redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
-            }
-            if (!projectConsulTag.isNullOrEmpty()) {
-                bkTag.setGatewayTag(projectConsulTag)
+            val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+                ?: throw IllegalStateException("No active ServletRequestAttributes")
+            val request = attributes.request
+            val channelCode = request.getHeader(AUTH_HEADER_DEVOPS_CHANNEL)
+            if (channelCode != ChannelCode.CREATIVE_STREAM.name) {
+                // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
+                val projectConsulTag = projectConsulTagCache.get(projectId) {
+                    redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+                }
+                if (!projectConsulTag.isNullOrEmpty()) {
+                    bkTag.setGatewayTag(projectConsulTag)
+                }
             }
             permissionService.validProjectPermission(
                 appCode = appCode,

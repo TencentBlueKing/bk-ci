@@ -225,18 +225,21 @@ export default {
                 })
             this.handleChange(this.container, { elements })
         },
-        "container.locateActive"(val) {
+        "container.locateActive, container.locateHighlightActive"(val) {
             if (val) {
-                const ele = document.getElementById(this.container.id)
-                ele?.scrollIntoView?.({
-                    block: "center",
-                    inline: "center",
-                    behavior: "smooth",
-                })
+                this.scrollContainerIntoView()
             }
         },
     },
     methods: {
+        scrollContainerIntoView() {
+            const ele = document.getElementById(this.container.id)
+            ele?.scrollIntoView?.({
+                block: "center",
+                inline: "center",
+                behavior: "smooth",
+            })
+        },
         toggleShowAtom(show) {
             this.showAtomList = show ?? !this.showAtomList
             this.updateCruveConnectHeight()

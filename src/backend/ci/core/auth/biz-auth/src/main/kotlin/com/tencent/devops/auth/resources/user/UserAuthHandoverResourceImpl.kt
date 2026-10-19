@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserAuthHandoverResource
+import com.tencent.devops.auth.pojo.enum.HandoverQueryChannel
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.HandoverDetailsQueryReq
 import com.tencent.devops.auth.pojo.request.HandoverOverviewBatchUpdateReq
@@ -53,9 +54,7 @@ class UserAuthHandoverResourceImpl(
         queryRequest: HandoverOverviewQueryReq
     ): Result<SQLPage<HandoverOverviewVo>> {
         if (userId != queryRequest.memberId) {
-            throw PermissionForbiddenException(
-                message = "You have not permission to view other people's handover details!"
-            )
+            throw PermissionForbiddenException(message = HANDOVER_DETAIL_FORBIDDEN)
         }
 
         return Result(permissionHandoverApplicationService.listHandoverOverviews(queryRequest = queryRequest))
@@ -65,6 +64,11 @@ class UserAuthHandoverResourceImpl(
         userId: String,
         queryReq: ResourceType2CountOfHandoverQuery
     ): Result<List<ResourceType2CountVo>> {
+        validateHandoverApplicationAccess(
+            userId = userId,
+            queryChannel = queryReq.queryChannel,
+            flowNo = queryReq.flowNo
+        )
         return Result(permissionManageFacadeService.getResourceType2CountOfHandover(queryReq = queryReq))
     }
 
@@ -72,6 +76,11 @@ class UserAuthHandoverResourceImpl(
         userId: String,
         queryReq: HandoverDetailsQueryReq
     ): Result<SQLPage<HandoverAuthorizationDetailVo>> {
+        validateHandoverApplicationAccess(
+            userId = userId,
+            queryChannel = queryReq.queryChannel,
+            flowNo = queryReq.flowNo
+        )
         return Result(permissionManageFacadeService.listAuthorizationsOfHandover(queryReq = queryReq))
     }
 
@@ -79,23 +88,58 @@ class UserAuthHandoverResourceImpl(
         userId: String,
         queryReq: HandoverDetailsQueryReq
     ): Result<SQLPage<HandoverGroupDetailVo>> {
+        validateHandoverApplicationAccess(
+            userId = userId,
+            queryChannel = queryReq.queryChannel,
+            flowNo = queryReq.flowNo
+        )
         return Result(permissionManageFacadeService.listGroupsOfHandover(queryReq = queryReq))
     }
 
     override fun handleHanoverApplication(userId: String, request: HandoverOverviewUpdateReq): Result<Boolean> {
+        val requestWithOperator = request.copy(operator = userId)
         permissionResourceValidateService.validateUserProjectPermissionByChannel(
             userId = userId,
-            projectCode = request.projectCode,
+            projectCode = requestWithOperator.projectCode,
             operateChannel = OperateChannel.PERSONAL,
-            targetMemberId = request.operator
+            targetMemberId = requestWithOperator.operator
         )
-        return Result(permissionManageFacadeService.handleHanoverApplication(request = request))
+        return Result(
+            permissionManageFacadeService.handleHanoverApplication(request = requestWithOperator)
+        )
     }
 
     override fun batchHandleHanoverApplications(
         userId: String,
         request: HandoverOverviewBatchUpdateReq
     ): Result<Boolean> {
-        return Result(permissionManageFacadeService.batchHandleHanoverApplications(request = request))
+        return Result(
+            permissionManageFacadeService.batchHandleHanoverApplications(
+                request = request.copy(operator = userId)
+            )
+        )
+    }
+
+    private fun validateHandoverApplicationAccess(
+        userId: String,
+        queryChannel: HandoverQueryChannel,
+        flowNo: String?
+    ) {
+        if (queryChannel != HandoverQueryChannel.HANDOVER_APPLICATION) {
+            return
+        }
+        val overview = permissionHandoverApplicationService.getHandoverOverview(
+            flowNo = flowNo ?: throw PermissionForbiddenException(
+                message = HANDOVER_DETAIL_FORBIDDEN
+            )
+        )
+        if (userId != overview.applicant && userId != overview.approver) {
+            throw PermissionForbiddenException(message = HANDOVER_DETAIL_FORBIDDEN)
+        }
+    }
+
+    companion object {
+        private const val HANDOVER_DETAIL_FORBIDDEN =
+            "You have not permission to view other people's handover details!"
     }
 }

@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -68,12 +68,14 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.ElementTransfer
 import com.tencent.devops.process.yaml.transfer.ModelTransfer
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.TemplateModelTransfer
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.YamlIndexService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
@@ -109,7 +111,9 @@ class PipelineTransferYamlService @Autowired constructor(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val client: Client,
     private val yamlSchemaCheck: CodeSchemaCheck,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val transferCacheService: TransferCacheService
 ) {
 
     companion object {
@@ -260,6 +264,10 @@ class PipelineTransferYamlService @Autowired constructor(
                 invalidElement, invalidNameSpaceElement
             )
         )
+
+        // 清理因插件参数联动而被隐藏的无效参数，使返回的 YAML 为简化后的结果。
+        PipelineTransferAspectLoader.filterInvalidRelyParam(transferCacheService, aspects)
+
         val response = modelTransfer.model2yaml(
             ModelTransferInput(
                 userId = userId,
@@ -327,6 +335,17 @@ class PipelineTransferYamlService @Autowired constructor(
             channelCode = pipelineInfo?.channelCode ?: channelCode
         )
         val model = modelTransfer.yaml2Model(input)
+        pipelineInfo?.let {
+            publicVarGroupReferManageService.validateVarGroupReferences(
+                model = model,
+                projectId = projectId
+            )
+            publicVarGroupReferManageService.addPublicVarGroupsToParams(
+                model = model,
+                projectId = projectId,
+                userId = userId
+            )
+        }
         val setting = modelTransfer.yaml2Setting(input)
 
         logger.info(watcher.toString())
@@ -398,6 +417,13 @@ class PipelineTransferYamlService @Autowired constructor(
             templateType = Model::class.java
         )
         val model = templateModelTransfer.yaml2TemplateModel(input)
+        if (model is Model) {
+            publicVarGroupReferManageService.addPublicVarGroupsToParams(
+                model = model,
+                projectId = projectId,
+                userId = userId
+            )
+        }
         val setting = modelTransfer.yaml2Setting(input)
 
         logger.info(watcher.toString())

@@ -109,7 +109,6 @@ class StageTransfer @Autowired(required = false) constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
-
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
@@ -118,7 +117,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)).toMutableList()
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
@@ -288,11 +287,12 @@ class StageTransfer @Autowired(required = false) constructor(
 
         // 根据if设置stageController
         val stageControlOption = if (!finalStage) {
+            val ifField = stage.ifField
             val runCondition = when {
-                stage.ifField == null -> StageRunCondition.AFTER_LAST_FINISHED
-                !stage.ifField.expression.isNullOrBlank() -> StageRunCondition.CUSTOM_CONDITION_MATCH
-                stage.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> StageRunCondition.CUSTOM_VARIABLE_MATCH
-                stage.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH ->
+                ifField == null -> StageRunCondition.AFTER_LAST_FINISHED
+                !ifField.expression.isNullOrBlank() -> StageRunCondition.CUSTOM_CONDITION_MATCH
+                ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> StageRunCondition.CUSTOM_VARIABLE_MATCH
+                ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH ->
                     StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
 
                 else -> StageRunCondition.AFTER_LAST_FINISHED

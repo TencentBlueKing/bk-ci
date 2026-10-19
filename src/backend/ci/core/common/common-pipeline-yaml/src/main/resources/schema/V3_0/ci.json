@@ -230,7 +230,7 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
                   },
@@ -246,7 +246,22 @@
                       "type" : "string"
                     }
                   },
+                  "assignees" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
                   "report-commit-check" : {
+                    "type" : "boolean"
+                  },
+                  "report-quality-results" : {
                     "type" : "boolean"
                   },
                   "block-mr" : {
@@ -361,6 +376,9 @@
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
+                  "report-quality-results" : {
+                    "type" : "boolean"
+                  },
                   "webhook-queue" : {
                     "type" : "boolean"
                   },
@@ -454,6 +472,19 @@
                         "type" : "string"
                       }
                     },
+                    "nodes" : {
+                      "oneOf" : [ {
+                        "enum" : [ "all" ]
+                      }, {
+                        "type" : "string",
+                        "pattern" : "^ins-.+"
+                      }, {
+                        "type" : "array",
+                        "items" : {
+                          "type" : "string"
+                        }
+                      } ]
+                    },
                     "advance-cron" : {
                       "type" : "array"
                     },
@@ -516,6 +547,19 @@
                       "type" : "string"
                     }
                   },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  },
                   "advance-cron" : {
                     "type" : "array"
                   },
@@ -551,9 +595,39 @@
                     "type" : "array",
                     "uniqueItems" : true,
                     "items" : {
-                      "enum" : [ "open", "close", "reopen", "update" ]
+                      "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                     },
                     "additionalItems" : false
+                  },
+                  "assignees" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "assignees-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "labels-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
                   }
                 }
               } ]
@@ -887,6 +961,48 @@
                     "type" : "string",
                     "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
                   }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             },
@@ -910,6 +1026,48 @@
                   "items" : {
                     "type" : "string",
                     "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "owners-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "priorities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1124,7 +1282,7 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
+                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
                 },
@@ -1140,7 +1298,22 @@
                     "type" : "string"
                   }
                 },
+                "assignees" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
                 "report-commit-check" : {
+                  "type" : "boolean"
+                },
+                "report-quality-results" : {
                   "type" : "boolean"
                 },
                 "block-mr" : {
@@ -1255,6 +1428,9 @@
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
+                "report-quality-results" : {
+                  "type" : "boolean"
+                },
                 "webhook-queue" : {
                   "type" : "boolean"
                 },
@@ -1348,6 +1524,19 @@
                       "type" : "string"
                     }
                   },
+                  "nodes" : {
+                    "oneOf" : [ {
+                      "enum" : [ "all" ]
+                    }, {
+                      "type" : "string",
+                      "pattern" : "^ins-.+"
+                    }, {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string"
+                      }
+                    } ]
+                  },
                   "advance-cron" : {
                     "type" : "array"
                   },
@@ -1410,6 +1599,19 @@
                     "type" : "string"
                   }
                 },
+                "nodes" : {
+                  "oneOf" : [ {
+                    "enum" : [ "all" ]
+                  }, {
+                    "type" : "string",
+                    "pattern" : "^ins-.+"
+                  }, {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  } ]
+                },
                 "advance-cron" : {
                   "type" : "array"
                 },
@@ -1445,9 +1647,39 @@
                   "type" : "array",
                   "uniqueItems" : true,
                   "items" : {
-                    "enum" : [ "open", "close", "reopen", "update" ]
+                    "enum" : [ "open", "close", "reopen", "update", "assigned", "unassigned", "labeled", "unlabeled" ]
                   },
                   "additionalItems" : false
+                },
+                "assignees" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "assignees-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             } ]
@@ -1781,6 +2013,48 @@
                   "type" : "string",
                   "enum" : [ "create", "update", "delete", "status_change", "bug_link", "bug_unlink", "story_link", "story_unlink", "add_comment", "update_comment", "delete_comment" ]
                 }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
               }
             }
           },
@@ -1804,6 +2078,48 @@
                 "items" : {
                   "type" : "string",
                   "enum" : [ "create", "update", "delete", "status_change", "add_comment", "update_comment", "delete_comment" ]
+                }
+              },
+              "users" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "users-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "owners-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "priorities" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
                 }
               }
             }
@@ -2751,6 +3067,15 @@
                           },
                           "user" : {
                             "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -2888,13 +3213,16 @@
         "group" : {
           "type" : "string"
         },
+        "sub-group" : {
+          "type" : "string"
+        },
         "cancel-in-progress" : {
           "type" : "boolean"
         },
         "queue-length" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 20
+          "maximum" : 200
         },
         "queue-timeout-minutes" : {
           "type" : "integer",
@@ -3228,6 +3556,15 @@
                             }
                           },
                           "user" : {
+                            "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
                             "type" : "string"
                           }
                         }

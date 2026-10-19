@@ -28,14 +28,33 @@
 package com.tencent.devops.environment.pojo.enums
 
 enum class EnvType {
+    // 部署环境
     DEV,
     TEST,
     PROD,
+    // 构建环境
     BUILD,
-    CREATE;
+    // 创作流
+    CREATE,
+    // 云桌面
+    DEVX,
+    ;
 
     companion object {
-        fun noCreateMode(): List<EnvType> = listOf(DEV, TEST, PROD, BUILD)
+        fun noCreateMode(): List<EnvType> = listOf(DEV, TEST, PROD, BUILD, DEVX)
+
+        /**
+         * 环境类型对应可关联的节点类型
+         */
+        fun toNodeType(envType: String?): NodeType? {
+            return when (envType) {
+                DEV.name, TEST.name, PROD.name -> NodeType.CMDB
+                BUILD.name -> NodeType.THIRDPARTY
+                CREATE.name -> NodeType.CREATE
+                DEVX.name -> NodeType.DEVX
+                else -> null
+            }
+        }
     }
 }
 

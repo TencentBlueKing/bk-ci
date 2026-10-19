@@ -28,10 +28,18 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -84,5 +92,100 @@ class TaskUtilsTest : TestBase() {
                 genTask(taskId = taskId, vmContainer = genVmBuildContainer(id = firstContainerIdInt))
             )
         )
+    }
+
+    @Test
+    fun getCancelTaskIdRedisKey() {
+        Assertions.assertEquals(
+            "CANCEL_TASK_IDS_b1_c1",
+            TaskUtils.getCancelTaskIdRedisKey("b1", "c1", true)
+        )
+        Assertions.assertEquals(
+            "CANCEL_TASK_IDS_b1_c1_set",
+            TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)
+        )
+    }
+
+    /**
+     * #13581 Job 取消标记需要落到 Job 级 Redis 集合，且与具体插件 ID 解耦。
+     */
+    @Test
+    fun markAndCheckJobCancelFlag() {
+        val redisOperation = mockk<RedisOperation>()
+        val key = TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)
+        every { redisOperation.addSetValue(key, TaskUtils.JOB_CANCEL_FLAG) } returns true
+        every { redisOperation.expire(key, any(), any()) } just runs
+        every { redisOperation.hasKey(key) } returns true
+
+        TaskUtils.markJobCancelFlag(redisOperation, "b1", "c1")
+        Assertions.assertTrue(TaskUtils.isJobCancelFlag(redisOperation, "b1", "c1"))
+
+        verify { redisOperation.addSetValue(key, TaskUtils.JOB_CANCEL_FLAG) }
+        verify { redisOperation.expire(key, any(), any()) }
+    }
+
+    @Test
+    fun skipAgentClaimKeepsNormalPluginBlockedAndReleasesPost() {
+        val container = genVmBuildContainer()
+        val normal = genTask(taskId = "e-normal", vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "")
+        val post = genTask(
+            taskId = "e-post",
+            vmContainer = container,
+            elementAdditionalOptions = elementAdditionalOptions(
+                elementPostInfo = ElementPostInfo(
+                    postEntryParam = "",
+                    postCondition = "",
+                    parentElementId = "e-11",
+                    parentElementName = "Checkout Spark",
+                    parentElementJobIndex = 0
+                )
+            )
+        ).copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "")
+        val runningPost = post.copy(status = BuildStatus.RUNNING)
+        val evenCancel = genTask(
+            taskId = "e-even",
+            vmContainer = container,
+            elementAdditionalOptions = elementAdditionalOptions(
+                runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            )
+        ).copy(status = BuildStatus.RUNNING, taskAtom = "")
+        val shutdown = genTask(taskId = "stopVM-1", vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "dispatchVMShutdownTaskAtom", taskSeq = 1)
+        val endPoint = genTask(taskId = VMUtils.genEndPointTaskId(1), vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "", taskSeq = 1)
+
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(normal, jobCanceling = false))
+        Assertions.assertTrue(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(normal, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(post, jobCanceling = true))
+        Assertions.assertTrue(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(runningPost, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(evenCancel, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(shutdown, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(endPoint, jobCanceling = true))
+    }
+
+    @Test
+    fun isJobCancelFlagWhenKeyMissing() {
+        val redisOperation = mockk<RedisOperation>()
+        every { redisOperation.hasKey(any()) } returns false
+        Assertions.assertFalse(TaskUtils.isJobCancelFlag(redisOperation, "b1", "c1"))
+    }
+
+    @Test
+    fun clearBuildJobCancelFlagsDeletesOriginalKeys() {
+        val redisOperation = mockk<RedisOperation>()
+        every { redisOperation.delete(any<Collection<String>>(), any()) } just runs
+
+        TaskUtils.clearBuildJobCancelFlags(redisOperation, "b1", listOf("c1"))
+
+        verify {
+            redisOperation.delete(
+                match<Collection<String>> { keys ->
+                    keys.contains(TaskUtils.getCancelTaskIdRedisKey("b1", "c1", false)) &&
+                        keys.contains(TaskUtils.getCancelTaskIdRedisKey("b1", "c1", true))
+                },
+                any()
+            )
+        }
     }
 }

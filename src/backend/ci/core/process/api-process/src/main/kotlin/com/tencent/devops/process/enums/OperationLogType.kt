@@ -47,7 +47,8 @@ enum class OperationLogType(val description: String) {
     NORMAL_SAVE_OPERATION("普通保存操作"),
     PIPELINE_ARCHIVE("流水线归档操作"),
     DELETE_PIPELINE_VERSION("删除流水线版本：「P2.T1.2」"),
-    CROSS_PROJECT_COPY_TEMPLATE_VERSION("跨项目复制模板版本：「从源项目复制版本」");
+    CROSS_PROJECT_COPY_TEMPLATE_VERSION("跨项目复制模板版本：「从源项目复制版本」"),
+    CREATIVE_FLOW_SHARE_COPY("创作流分享复制：「从源项目复制创作流」");
 
     fun getI18n(language: String): String {
         return MessageUtil.getMessageByLocale(

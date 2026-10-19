@@ -53,6 +53,7 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
+    SET_CONCURRENCY_ARRIVAL_POLICY,
     SET_COMMON_SETTING,
     SET_CONTAINER_DETAIL,
     SET_CONTAINER_FETCHING,
@@ -80,6 +81,7 @@ import {
     SET_STORE_SEARCH,
     SET_TEMP_PARAM_SET,
     SET_TEMPLATE,
+    SET_TRIGGER_PARAMS,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -93,9 +95,10 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS,
     SAVE_PIPELINE_SNAPSHOT,
-    CLEAR_PIPELINE_SNAPSHOT,
-    UPDATE_WHOLE_ATOM_INPUT
+    CLEAR_PIPELINE_SNAPSHOT
 } from './constants'
 
 export default {
@@ -179,13 +182,24 @@ export default {
     },
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
-            pipelineSetting: null
+            pipelineSetting: null,
+            concurrencyArrivalPolicy: null
         })
     },
+    // 到达策略只存在前端，不落库。拉设置会重建 pipelineSetting，运行锁组件可能随之重建。
+    // 同一条流水线保留已选策略：标识还没填时，清空后会把「同一批 + 取消」推导成整组取消，必填校验失效。
+    // 换流水线才清空，交给组件按新设置重新推导。离开编辑页走 RESET，仍然清空。
     [PIPELINE_SETTING_MUTATION]: (state, pipelineSetting) => {
+        const saved = state.concurrencyArrivalPolicy
+        const samePipeline = saved && pipelineSetting && saved.pipelineId === pipelineSetting.pipelineId
         return Object.assign(state, {
-            pipelineSetting
+            pipelineSetting,
+            concurrencyArrivalPolicy: samePipeline ? saved : null
         })
+    },
+    [SET_CONCURRENCY_ARRIVAL_POLICY]: (state, concurrencyArrivalPolicy) => {
+        Vue.set(state, 'concurrencyArrivalPolicy', concurrencyArrivalPolicy)
+        return state
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { setting, param }) => {
         // 使用 Vue.set 或解构赋值确保响应式更新
@@ -445,6 +459,11 @@ export default {
             commonParams
         })
     },
+    [SET_TRIGGER_PARAMS]: (state, triggerParams) => {
+        return Object.assign(state, {
+            triggerParams
+        })
+    },
     [TOGGLE_ATOM_SELECTOR_POPUP]: (state, show) => {
         Vue.set(state, 'showAtomSelectorPopup', show)
         return state
@@ -560,6 +579,10 @@ export default {
     },
     [CLEAR_PIPELINE_SNAPSHOT]: (state) => {
         Vue.set(state, 'originalPipelineSnapshot', null)
+        return state
+    },
+    [UPDATE_PIPELINE_PUBLIC_VAR_GROUPS]: (state, publicVarGroups) => {
+        Object.assign(state.pipeline, { publicVarGroups })
         return state
     }
 }

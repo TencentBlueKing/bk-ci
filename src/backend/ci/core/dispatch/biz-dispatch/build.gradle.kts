@@ -44,4 +44,5 @@ dependencies {
     api("org.json:json")
     api("org.apache.commons:commons-exec")
     api(project(":core:auth:api-auth"))
+    testImplementation(project(":core:common:common-test"))
 }

@@ -298,9 +298,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countByCode(dslContext: DSLContext, atomCode: String, branchTestFlag: Boolean? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            when (branchTestFlag) {
+                null -> {}
+                false -> conditions.add(formalVersionFlagCondition())
+                true -> conditions.add(BRANCH_TEST_FLAG.eq(true))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -381,16 +388,6 @@ class AtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetchOne()
-        }
-    }
-
-    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
-                .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
@@ -1043,15 +1040,23 @@ class AtomDao : AtomBaseDao() {
         if (isExplicitNonBuildEnvJobType(param.jobType)) {
             return null
         }
+        val applyPipelineBuildLess = isPipelineBuildLessFlagApplicable(param)
         return when {
             !os.isNullOrBlank() && !os.equals(KEY_ALL, ignoreCase = true) -> {
                 val osMatch = buildJobTypeAwareOsMatch(tAtom, os, param.jobType, param.serviceScope)
                 if (param.fitOsFlag == false) {
-                    osMatch.not()
-                        .and(tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull))
+                    var condition = osMatch.not()
                         .and(tAtom.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
-                } else {
+                    if (applyPipelineBuildLess) {
+                        condition = condition.and(
+                            tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull)
+                        )
+                    }
+                    condition
+                } else if (applyPipelineBuildLess) {
                     osMatch.or(tAtom.BUILD_LESS_RUN_FLAG.eq(true))
+                } else {
+                    osMatch
                 }
             }
             os.equals(KEY_ALL, ignoreCase = true) && param.fitOsFlag == false -> {
@@ -1064,12 +1069,23 @@ class AtomDao : AtomBaseDao() {
     }
 
     /**
+     * BUILD_LESS_RUN_FLAG 仅表示 PIPELINE 范围内「无编译插件也可在 AGENT 环境运行」。
+     * 创作流双环境由 JOB_TYPE_MAP 同时包含 CREATIVE_STREAM / CLOUD_TASK 表达，不能复用该字段。
+     */
+    private fun isPipelineBuildLessFlagApplicable(param: AtomQueryParam): Boolean {
+        val jobTypeEnum = JobTypeEnum.parseOrNull(param.jobType)
+        return when {
+            jobTypeEnum != null -> jobTypeEnum == JobTypeEnum.AGENT
+            else -> param.serviceScope == null || param.serviceScope == ServiceScopeEnum.PIPELINE
+        }
+    }
+
+    /**
      * 解析 jobType 字符串的编译环境标识：true=编译环境，false=无编译环境，null=为空或无法解析。
      * 供 isExplicitNonBuildEnvJobType / resolveOsMapKey 等方法复用，避免重复 valueOf + isBuildEnv 调用。
      */
     private fun parseBuildEnvFlag(jobType: String?): Boolean? {
-        if (jobType.isNullOrBlank()) return null
-        return runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrNull()
+        return JobTypeEnum.parseOrNull(jobType)?.isBuildEnv()
     }
 
     private fun isExplicitNonBuildEnvJobType(jobType: String?): Boolean {
@@ -1084,7 +1100,8 @@ class AtomDao : AtomBaseDao() {
      * 性能策略：
      * - AGENT（或 jobType/scope 均为空）：只查 OS 字段（LIKE），与优化前一致，零开销
      * - 非 AGENT 编译环境 jobType（如 CREATIVE_STREAM）：用 JSON_EXTRACT + JSON_CONTAINS 精确定位
-     *   OS_MAP 中对应 jobType 的数组，避免 JSON_SEARCH 全路径遍历。同时 OR OS 字段兜底兼容。
+     *   OS_MAP 中对应 jobType 的数组，避免 JSON_SEARCH 全路径遍历。
+     *   仅当 OS_MAP 未填充时才回退到 OS 字段（兼容未迁移的旧插件）。
      */
     private fun buildJobTypeAwareOsMatch(
         tAtom: TAtom,
@@ -1102,7 +1119,9 @@ class AtomDao : AtomBaseDao() {
             DSL.inline("\$.$osMapKey"),
             DSL.inline(os)
         )
-        return osInMapCondition.or(tAtom.OS.contains(os))
+        val osMapPopulated = tAtom.OS_MAP.isNotNull.and(tAtom.OS_MAP.ne(""))
+        return osMapPopulated.and(osInMapCondition)
+            .or(osMapPopulated.not().and(tAtom.OS.contains(os)))
     }
 
     /**
@@ -1211,7 +1230,8 @@ class AtomDao : AtomBaseDao() {
     fun getRecentAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(formalVersionConditions(atomCode))
+                .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }

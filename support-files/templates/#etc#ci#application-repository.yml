@@ -36,9 +36,9 @@ scm:
     redirectAtomMarketUrl: __BK_CI_PUBLIC_URL__/console/store/atomList
     gitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codegit/commit
     public:  # TODO 无用配置, 待清理.
-      account: devops
-      email: devops@devops.com
-      secret: devops123
+      account: ""
+      email: ""
+      secret: ""
     queryCommitNumLimit:
       min: 1
       max: 10
@@ -74,6 +74,8 @@ tapd:
 
 aes:
   git: __BK_CI_REPOSITORY_AES_GIT__
-  aes:
-    scm:
-      props: __BK_CI_REPOSITORY_AES_SCM_PROPS__
+  used-git-keys: __BK_CI_REPOSITORY_USED_AES_GIT__
+  github: __BK_CI_REPOSITORY_AES_GITHUB__
+  used-github-keys: __BK_CI_REPOSITORY_USED_AES_GITHUB__
+  scm:
+    props: __BK_CI_REPOSITORY_AES_SCM_PROPS__

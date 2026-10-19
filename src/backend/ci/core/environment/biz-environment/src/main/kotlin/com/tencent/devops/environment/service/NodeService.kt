@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.LATEST_UPDATE_TIME
 import com.tencent.devops.common.api.constant.USAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -78,6 +79,7 @@ import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
@@ -233,10 +235,15 @@ class NodeService @Autowired constructor(
             null
         } else {
             val t = mutableSetOf<Long>()
-            data?.tags?.forEach { tag ->
+            data.tags?.forEach { tag ->
                 t.addAll(tag.tagValues ?: return@forEach)
             }
             t
+        }
+        val nodeIpList = if (data?.ipListSearch.isNullOrBlank()) {
+            null
+        } else {
+            parseIpList(data.ipListSearch)?.toSet()
         }
         val nodeRecordList =
             if (-1 != page) {
@@ -265,21 +272,22 @@ class NodeService @Autowired constructor(
                     sortType = sortType,
                     collation = collation,
                     tagValueIds = tagValues,
-                    operatorStatus = operatorStatus
+                    operatorStatus = operatorStatus,
+                    nodeIpList = nodeIpList
                 )
             } else {
                 nodeDao.listNodes(
                     dslContext = dslContext, projectId = projectId, nodeType = if (createMode == true) {
-                    NodeType.CREATE
-                } else {
-                    nodeType
-                }
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    }
                 )
             }
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val nodeResourceType = if (nodeType == NodeType.CREATE) {
+        val nodeResourceType = if (nodeType == NodeType.CREATE || createMode == true) {
             AuthResourceType.CREATIVE_STREAM_NODE
         } else {
             AuthResourceType.ENVIRONMENT_ENV_NODE
@@ -324,7 +332,8 @@ class NodeService @Autowired constructor(
                 collation = collation,
                 tagValueIds = tagValues,
                 nodeIds = authorizedNodeIds,
-                operatorStatus = operatorStatus
+                operatorStatus = operatorStatus,
+                nodeIpList = nodeIpList
             ).toLong()
         }
         if (-1 != page) {
@@ -364,8 +373,70 @@ class NodeService @Autowired constructor(
         )
     }
 
-    fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
-        return nodeDao.fetchProjectNodeCount(dslContext, projectId)
+    private fun parseIpList(input: String?): List<String>? {
+        if (input.isNullOrBlank()) {
+            return null
+        }
+
+        val result = LinkedHashSet<String>()
+        val current = StringBuilder()
+
+        fun flushCurrent() {
+            val ip = current.toString().trim()
+            if (ip.isNotEmpty()) {
+                result.add(ip)
+            }
+            current.clear()
+        }
+
+        for (ch in input) {
+            if (isIpSeparator(ch)) {
+                flushCurrent()
+            } else {
+                current.append(ch)
+            }
+        }
+
+        flushCurrent()
+
+        return result.toList()
+    }
+
+    private fun isIpSeparator(ch: Char): Boolean {
+        return ch.isWhitespace() ||
+                ch == ',' ||
+                ch == '，' ||
+                ch == ';' ||
+                ch == '；' ||
+                ch == '|'
+    }
+
+    fun fetchNodesCount(userId: String, projectId: String): Map<NodeType, Int> {
+        // 与 listNew 保持一致：非创作流节点按 ENVIRONMENT_ENV_NODE 鉴权，创作流节点按 CREATIVE_STREAM_NODE 鉴权
+        val result = mutableMapOf<NodeType, Int>()
+        val envNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+        )
+        if (envNodeIds.isNotEmpty()) {
+            nodeDao.fetchProjectNodeCount(dslContext, projectId, envNodeIds)
+                .filterKeys { it != NodeType.CREATE }
+                .forEach { (type, count) -> result[type] = count }
+        }
+        val createNodeIds = environmentPermissionService.listNodeByPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST,
+            resourceType = AuthResourceType.CREATIVE_STREAM_NODE
+        )
+        if (createNodeIds.isNotEmpty()) {
+            nodeDao.fetchProjectNodeCount(dslContext, projectId, createNodeIds)[NodeType.CREATE]?.let {
+                result[NodeType.CREATE] = it
+            }
+        }
+        return result
     }
 
     fun listNewExport(
@@ -393,7 +464,7 @@ class NodeService @Autowired constructor(
         val pageSize = 100
         var count = Long.MAX_VALUE
         val dataList = mutableListOf<Array<String?>>()
-        while (page * pageSize < count) {
+        while ((page - 1) * pageSize < count) {
             val res = listNew(
                 userId = userId,
                 projectId = projectId,
@@ -417,6 +488,7 @@ class NodeService @Autowired constructor(
                 createMode = createMode,
                 data = data
             )
+            if (res.records.isEmpty()) break
             count = res.count
             page++
             res.records.forEach { record ->
@@ -456,6 +528,7 @@ class NodeService @Autowired constructor(
         CsvUtil.setCsvResponse("$projectId-environment-nodes-data", bytes, response)
     }
 
+    @Deprecated("这个方法如果不传入 envId 那么得到的环境相关的结果不可控，后续修改尽量不使用这个方法")
     fun formatNodeWithPermissions(
         userId: String,
         projectId: String,
@@ -463,7 +536,7 @@ class NodeService @Autowired constructor(
         resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE,
         envId: Long?
     ): List<NodeWithPermission> {
-        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+        val nodeListResult = environmentPermissionService.listNodePermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
@@ -472,12 +545,12 @@ class NodeService @Autowired constructor(
         )
         if (nodeListResult.isEmpty()) return emptyList()
 
-        val isCreativeStreamNode = resourceType == AuthResourceType.CREATIVE_STREAM_NODE
-        val queryPermissions = if (isCreativeStreamNode) {
-            setOf(AuthPermission.VIEW, AuthPermission.EDIT)
-        } else {
-            setOf(AuthPermission.VIEW, AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
-        }
+        val queryPermissions = setOf(
+            AuthPermission.VIEW,
+            AuthPermission.USE,
+            AuthPermission.EDIT,
+            AuthPermission.DELETE
+        )
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId,
             projectId = projectId,
@@ -494,7 +567,7 @@ class NodeService @Autowired constructor(
         val canDeleteNodeIds = permissionMap[AuthPermission.DELETE]
             ?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         val thirdPartyAgentNodeIds = nodeListResult.filter {
-            it.nodeType == NodeType.THIRDPARTY.name
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
         }.map { it.nodeId }
         val thirdPartyAgentMap = if (thirdPartyAgentNodeIds.isNotEmpty()) {
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -572,6 +645,11 @@ class NodeService @Autowired constructor(
                 tags = tagMaps[it.nodeId],
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                createWorkspaceSource = if (thirdPartyAgent?.createWorkspaceName != null) {
+                    AgentProps.getSourceFromRecord(thirdPartyAgent.agentProps, OS.parse(thirdPartyAgent.os))
+                } else {
+                    null
+                },
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -621,7 +699,7 @@ class NodeService @Autowired constructor(
                 permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
             )
 
-            val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            val canViewNodeIds = environmentPermissionService.listNodePermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
@@ -643,7 +721,7 @@ class NodeService @Autowired constructor(
             } else {
                 emptyList()
             }
-            val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            val nodeListResult = environmentPermissionService.listNodePermission(
                 userId = userId,
                 projectId = projectId,
                 nodeRecordList = nodeRecordList,
@@ -719,6 +797,11 @@ class NodeService @Autowired constructor(
                 serverId = it.serverId,
                 envEnableNode = null,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName,
+                createWorkspaceSource = if (thirdPartyAgent?.createWorkspaceName != null) {
+                    AgentProps.getSourceFromRecord(thirdPartyAgent.agentProps, OS.parse(thirdPartyAgent.os))
+                } else {
+                    null
+                },
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -734,7 +817,7 @@ class NodeService @Autowired constructor(
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
 
-        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+        val canViewNodeIds = environmentPermissionService.listNodePermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList,
@@ -779,6 +862,7 @@ class NodeService @Autowired constructor(
                 serverId = it.serverId,
                 envEnableNode = null,
                 createWorkspaceId = null,
+                createWorkspaceSource = null,
                 operatorStatus = NodeOperatorStatus.valOf(it.operatorStatus)?.name
             )
         }
@@ -1068,7 +1152,7 @@ class NodeService @Autowired constructor(
             .addExtendData("targetProjectId", targetProjectId)
         logger.info(
             "transfer node success|userId=$userId|sourceProjectId=$sourceProjectId|" +
-                "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
+                    "targetProjectId=$targetProjectId|nodeHashId=$nodeHashId"
         )
         return true
     }
@@ -1245,7 +1329,8 @@ class NodeService @Autowired constructor(
                 osType = it.osType,
                 serverId = it.serverId,
                 envEnableNode = null,
-                createWorkspaceId = null
+                createWorkspaceId = null,
+                createWorkspaceSource = null
             )
         }
     }

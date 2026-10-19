@@ -55,6 +55,14 @@
           :title="t('viewSubPipeline')"
           @click.stop="handleSubPipelineAccess"
         />
+        <Logo
+          v-if="showExternalLink"
+          name="tiaozhuan"
+          class="sub-pipeline-jump-icon"
+          size="16"
+          :title="t('viewExternalLink')"
+          @click.stop="handleExternalLink"
+        />
       </p>
       <template v-if="isExecuting">
         <span class="atom-execounter">{{ execTime }}</span>
@@ -351,6 +359,14 @@ const hasSubPipelineAccessInfo = computed(() => {
   return !!(projectId && pipelineId && buildId);
 });
 
+const showExternalLink = computed(() => {
+  return (
+    reactiveData.isExecDetail
+    && !reactiveData.editable
+    && !!props.atom?.externalLink
+  );
+});
+
 const isLastQualityAtom = computed(() => {
   return props.atom.atomCode === QUALITY_OUT_ATOM_CODE && props.isLastAtom;
 });
@@ -545,6 +561,12 @@ const handleSubPipelineAccess = () => {
   });
 };
 
+const handleExternalLink = () => {
+  const url = props.atom?.externalLink;
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
+};
+
 const copyAtom = () => {
   const { id, stepId, ...restAttr } = props.atom;
   emit(COPY_EVENT_NAME, {
@@ -661,16 +683,20 @@ watch(isExecuting, (v) => {
   }
 });
 
+const scrollAtomIntoView = () => {
+  const ele = document.getElementById(props.atom.id);
+  ele?.scrollIntoView?.({
+    block: "center",
+    inline: "center",
+    behavior: "smooth",
+  });
+};
+
 watch(
-  () => props.atom.locateActive,
+  () => props.atom.locateActive || props.atom.locateHighlightActive,
   (val) => {
     if (val) {
-      const ele = document.getElementById(props.atom.id);
-      ele?.scrollIntoView?.({
-        block: "center",
-        inline: "center",
-        behavior: "smooth",
-      });
+      scrollAtomIntoView();
     }
   }
 );
@@ -881,7 +907,7 @@ onBeforeUnmount(() => {
 
   >.atom-name {
     display: inline-flex;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     align-items: center;
     width: auto;
     min-width: 0;

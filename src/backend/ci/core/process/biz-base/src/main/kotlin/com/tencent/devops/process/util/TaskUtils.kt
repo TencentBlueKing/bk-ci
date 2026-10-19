@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import java.util.concurrent.TimeUnit
 
 object TaskUtils {
 
@@ -62,7 +63,8 @@ object TaskUtils {
     private val failToRunBuildStatusList = listOf(
         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL, // 不管同一Job下前面任务成功/失败/取消都执行
         RunCondition.PRE_TASK_FAILED_BUT_CANCEL, // 不管同一Job下前面任务成功/失败都执行，除了取消不执行
-        RunCondition.PRE_TASK_FAILED_ONLY // 同一Job下前面任务有失败才执行
+        RunCondition.PRE_TASK_FAILED_ONLY, // 同一Job下前面任务有失败才执行（包含失败自动跳过）
+        RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP // 同一Job下前面任务有失败才执行（不包含失败自动跳过）
     )
 
     /**
@@ -99,8 +101,13 @@ object TaskUtils {
             if (isContainerFailed) { // 当前容器有失败的任务
                 runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
             } else {
-                // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
-                runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+                when (runCondition) {
+                    // 设置了[前置任务失败时才运行]并且有失败并继续的任务，允许执行
+                    RunCondition.PRE_TASK_FAILED_ONLY -> hasFailedTaskInInSuccessContainer
+                    // [不包括失败跳过]模式下，容器未失败则不允许执行（失败自动跳过不算真正失败）
+                    RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP -> false
+                    else -> true
+                }
             }
         }
         if (conditionFlag) {
@@ -166,7 +173,14 @@ object TaskUtils {
     fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
 
     /**
-     * 获取当前构建取消任务ID集合的redis键
+     * Job 级取消标记。不能用具体插件 taskId：插件执行很快时，取消瞬间可能没有 RUNNING 插件，
+     * 但 Agent 仍会继续认领后续插件，导致 Job 取消不掉。
+     */
+    const val JOB_CANCEL_FLAG = "JOB_CANCEL_FLAG"
+
+    /**
+     * 获取当前构建取消任务ID集合的redis键。
+     * 格式保持不变，供灰度/生产共用 Redis 时生产进程继续按原 Key 读取。
      */
     fun getCancelTaskIdRedisKey(
         buildId: String,
@@ -178,6 +192,115 @@ object TaskUtils {
         } else {
             "CANCEL_TASK_IDS_${buildId}_${containerId}_set"
         }
+    }
+
+    private fun jobCancelTtlSec(): Long = TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS)
+
+    /**
+     * 给已经在运行或即将领任务的 Job 写入取消标记。
+     */
+    fun markJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ) {
+        val key = getCancelTaskIdRedisKey(buildId, containerId, false)
+        redisOperation.addSetValue(key, JOB_CANCEL_FLAG)
+        redisOperation.expire(key, jobCancelTtlSec())
+    }
+
+    /**
+     * 当前 Job 是否处于取消中。只要取消集合还在（含 Job 标记或被记录的插件 ID），即视为取消中。
+     */
+    fun isJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ): Boolean {
+        return redisOperation.hasKey(getCancelTaskIdRedisKey(buildId, containerId, false))
+    }
+
+    /**
+     * Job 取消过程中，构建机是否应放弃认领 [task]。
+     *
+     * 普通插件必须放弃：插件很快结束时，构建机会立刻来领下一条，取消标记若挡不住，Job 会继续跑完。
+     * 以下仍要认领，否则队头停住，后面的关机插件无法调度：
+     * 即使取消也执行的插件、引擎已经选出且尚未开始的 post、引擎侧任务（关机等）、结束节点。
+     * 已经在跑的 post 不再下发，避免完成上报和认领交叉时把同一个 post 执行两遍。
+     */
+    fun shouldSkipAgentClaimWhenJobCanceling(
+        task: PipelineBuildTask,
+        jobCanceling: Boolean
+    ): Boolean {
+        if (!jobCanceling) {
+            return false
+        }
+        val options = task.additionalOptions
+        if (options?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+            return false
+        }
+        if (options?.elementPostInfo != null && !task.status.isRunning()) {
+            return false
+        }
+        if (task.taskAtom.isNotBlank()) {
+            return false
+        }
+        if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) {
+            return false
+        }
+        return true
+    }
+
+    /**
+     * 把正在运行的插件 ID 记入取消集合，供完成上报识别。
+     */
+    fun recordCancelTaskId(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String,
+        taskId: String
+    ) {
+        if (containerId.isBlank() || taskId.isBlank()) {
+            return
+        }
+        val key = getCancelTaskIdRedisKey(buildId, containerId, false)
+        redisOperation.addSetValue(key, taskId)
+        redisOperation.expire(key, jobCancelTtlSec())
+    }
+
+    /**
+     * 清理指定 Job 的取消集合和杀进程队列。
+     */
+    fun clearJobCancelFlag(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerId: String
+    ) {
+        redisOperation.delete(
+            listOf(
+                getCancelTaskIdRedisKey(buildId, containerId, false),
+                getCancelTaskIdRedisKey(buildId, containerId, true)
+            )
+        )
+    }
+
+    /**
+     * 同 buildId 重试前，清掉上一轮取消残留，避免新一轮领取误命中旧集合。
+     */
+    fun clearBuildJobCancelFlags(
+        redisOperation: RedisOperation,
+        buildId: String,
+        containerIds: Collection<String>
+    ) {
+        if (containerIds.isEmpty()) {
+            return
+        }
+        val keys = mutableListOf<String>()
+        containerIds.forEach { containerId ->
+            keys.add(getCancelTaskIdRedisKey(buildId, containerId, false))
+            keys.add(getCancelTaskIdRedisKey(buildId, containerId, true))
+        }
+        redisOperation.delete(keys)
     }
 
     /**

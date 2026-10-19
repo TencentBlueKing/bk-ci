@@ -30,7 +30,8 @@ export default function useUrlQuery (options = {}) {
         nodeHashId: '',
         // 分页参数
         page: 1,
-        pageSize: 10,
+        // pageSize 不设默认值：URL 无该参数时置空，由消费方决定回退值（如 localStorage 缓存）
+        pageSize: null,
         // 排序参数
         sortType: '',
         collation: '',
@@ -97,6 +98,36 @@ export default function useUrlQuery (options = {}) {
     }
 
     /**
+     * 使用 nodeTagList 将标签搜索中的 ID 还原为可读的名称
+     * 仅当 nodeTagList 已加载时生效，否则原样返回（由 watch 在加载完成后回填）
+     */
+    const resolveTagNames = (tagSearchValue) => {
+        if (!tagSearchValue?.length) return tagSearchValue
+
+        const nodeTagList = proxy.$store?.state?.environment?.nodeTagList || []
+        if (!nodeTagList.length) return tagSearchValue
+
+        // 以 String(tagKeyId) 为键建索引，避免对每个标签都线性遍历 nodeTagList（O(n*m) → O(n)）
+        const tagGroupMap = new Map(nodeTagList.map(g => [String(g.tagKeyId), g]))
+
+        return tagSearchValue.map(item => {
+            const group = tagGroupMap.get(String(item.id))
+            if (!group) return item
+
+            const values = (item.values || []).map(v => {
+                const found = group.tagValues?.find(t => String(t.tagValueId) === String(v.id))
+                return found ? { id: v.id, name: found.tagValueName } : v
+            })
+
+            return {
+                id: item.id,
+                name: group.tagKeyName,
+                values
+            }
+        })
+    }
+
+    /**
      * 从 URL query 解析查询参数
      */
     const parseFromUrlQuery = () => {
@@ -108,7 +139,8 @@ export default function useUrlQuery (options = {}) {
         queryParams.value.dateTimeRange = []
         queryParams.value.nodeHashId = ''
         queryParams.value.page = 1
-        queryParams.value.pageSize = 10
+        // URL 无 pageSize 时不写死默认值，置空让消费方自行回退（localStorage / 默认 10）
+        queryParams.value.pageSize = null
         queryParams.value.sortType = ''
         queryParams.value.collation = ''
 
@@ -143,21 +175,23 @@ export default function useUrlQuery (options = {}) {
         }
 
         // 解析标签搜索
-        // 从 { tagKey_tag1: 'val1,val2' } 转为 [{ id: 'tag1', values: [{ id: 'val1' }, { id: 'val2' }] }]
+        // 从 { tagKey_tag1: 'val1,val2' } 转为 [{ id: 'tag1', name: '标签名', values: [{ id: 'val1', name: '值名' }] }]
+        const rawTagSearchValue = []
         Object.keys(query).forEach(key => {
             if (key.startsWith('tagKey_')) {
                 const tagKeyId = key.replace('tagKey_', '')
                 const valueIds = query[key].split(',')
-                queryParams.value.tagSearchValue.push({
+                rawTagSearchValue.push({
                     id: tagKeyId,
-                    name: tagKeyId, // 这里可以根据需要从 nodeTagList 中查找对应的名称
+                    name: tagKeyId,
                     values: valueIds.map(id => ({
                         id: id,
-                        name: id // 这里可以根据需要从 nodeTagList 中查找对应的名称
+                        name: id
                     }))
                 })
             }
         })
+        queryParams.value.tagSearchValue = resolveTagNames(rawTagSearchValue)
 
         // 解析时间范围
         if (query.startTime && query.endTime) {
@@ -347,7 +381,7 @@ export default function useUrlQuery (options = {}) {
 
         // 处理分页
         params.page = queryParams.value.page
-        params.pageSize = queryParams.value.pageSize
+        params.pageSize = queryParams.value.pageSize || 10
 
         // 处理排序
         if (queryParams.value.sortType) {
@@ -384,6 +418,17 @@ export default function useUrlQuery (options = {}) {
             { immediate: true, deep: true }
         )
     }
+
+    // 标签名称依赖 nodeTagList，待其加载完成后回填显示名称（修复刷新后标签展示为 ID 的问题）
+    watch(
+        () => proxy.$store?.state?.environment?.nodeTagList,
+        (list) => {
+            if (list?.length && queryParams.value.tagSearchValue?.length) {
+                queryParams.value.tagSearchValue = resolveTagNames(queryParams.value.tagSearchValue)
+            }
+        },
+        { immediate: true }
+    )
 
     // 计算属性：是否有筛选条件
     const hasFilters = computed(() => {

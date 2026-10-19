@@ -10,9 +10,9 @@ import CodeEditor from '@/components/CodeEditor'
 import AtomPropertyPanel from '@/components/WorkflowOrchestration/AtomPropertyPanel'
 import AtomSelector from '@/components/WorkflowOrchestration/AtomSelector'
 import { DEFAULT_VERSION } from '@/hooks/useAtomVersion'
+import { useAuthoringBaseOS } from '@/hooks/useAuthoringBaseOS'
 import { useAtomStore } from '@/stores/atom'
 import { useFlowModelStore } from '@/stores/flowModel'
-import { useUIStore } from '@/stores/ui'
 import {
   diffAtomVersions,
   getAtomDefaultValue,
@@ -22,7 +22,6 @@ import {
 import { createDefaultContainer, createDefaultElement } from '@/utils/flowDefaults'
 import { randomLenString } from '@/utils/util'
 import { Button, Loading, Message } from 'bkui-vue'
-import { storeToRefs } from 'pinia'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -50,8 +49,7 @@ export default defineComponent({
 
     const flowModelStore = useFlowModelStore()
     const atomStore = useAtomStore()
-    const uiStore = useUIStore()
-    const { authoringBaseOS } = storeToRefs(uiStore)
+    const { authoringBaseOS } = useAuthoringBaseOS()
 
     const editorRef = ref<InstanceType<typeof CodeEditor> | null>(null)
 

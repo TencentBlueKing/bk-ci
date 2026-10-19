@@ -45,7 +45,7 @@ import java.time.ZoneOffset
  * AI 会话管理服务。
  *
  * 提供会话的创建、查询、更新、删除，以及会话消息查询。
- * 每个会话关联一个用户和可选的项目。
+ * 每个会话关联一个用户，以及可选的项目 / 流水线作用域。
  */
 @Service
 class AiSessionService @Autowired constructor(
@@ -58,15 +58,23 @@ class AiSessionService @Autowired constructor(
         userId: String,
         request: AiSessionCreate
     ): AiSessionInfo {
+        val projectId = blankToNull(request.projectId)
+        val pipelineId = blankToNull(request.pipelineId)
+        validateScope(projectId, pipelineId)
         val id = UUIDUtil.generate()
-        val title = request.title ?: DEFAULT_TITLE
+        val title = blankToNull(request.title) ?: DEFAULT_TITLE
         logger.info(
             "[Session] Creating: id={}, userId={}, " +
-                "projectId={}, title={}",
-            id, userId, request.projectId, title
+                "projectId={}, pipelineId={}, title={}",
+            id, userId, projectId, pipelineId, title
         )
         aiSessionDao.create(
-            dslContext, id, userId, request.projectId, title
+            dslContext = dslContext,
+            id = id,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            title = title
         )
         val record = aiSessionDao.getById(dslContext, id)
             ?: throw ErrorCodeException(
@@ -81,14 +89,18 @@ class AiSessionService @Autowired constructor(
      *
      * 由 AG-UI 协议驱动调用，保证对话请求始终有关联会话。
      * 新建会话时，若提供了 [firstUserMessage]，则截取前 [MAX_TITLE_LENGTH]
-     * 个字符作为会话标题，否则使用默认标题。
+     * 个字符作为会话标题，否则使用默认标题「新对话」。
      */
     fun ensureSession(
         sessionId: String,
         userId: String,
         projectId: String? = null,
+        pipelineId: String? = null,
         firstUserMessage: String? = null
     ) {
+        val normalizedProjectId = blankToNull(projectId)
+        val normalizedPipelineId = blankToNull(pipelineId)
+        validateScope(normalizedProjectId, normalizedPipelineId)
         val title = deriveTitle(firstUserMessage)
         val existing = aiSessionDao.getById(dslContext, sessionId)
         if (existing != null) {
@@ -103,12 +115,16 @@ class AiSessionService @Autowired constructor(
         }
         logger.info(
             "[Session] Auto-creating session from AG-UI: " +
-                "id={}, userId={}, projectId={}, title={}",
-            sessionId, userId, projectId, title ?: DEFAULT_TITLE
+                "id={}, userId={}, projectId={}, pipelineId={}, title={}",
+            sessionId, userId, normalizedProjectId, normalizedPipelineId, title ?: DEFAULT_TITLE
         )
         aiSessionDao.create(
-            dslContext, sessionId, userId,
-            projectId, title ?: DEFAULT_TITLE
+            dslContext = dslContext,
+            id = sessionId,
+            userId = userId,
+            projectId = normalizedProjectId,
+            pipelineId = normalizedPipelineId,
+            title = title ?: DEFAULT_TITLE
         )
     }
 
@@ -123,30 +139,44 @@ class AiSessionService @Autowired constructor(
 
     fun listSessions(
         userId: String,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String? = null
     ): List<AiSessionInfo> {
-        val result = aiSessionDao.listByUserAndProject(
-            dslContext, userId, projectId
+        val normalizedProjectId = blankToNull(projectId)
+        val normalizedPipelineId = blankToNull(pipelineId)
+        validateScope(normalizedProjectId, normalizedPipelineId)
+        val result = aiSessionDao.listByUserAndScope(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = normalizedProjectId,
+            pipelineId = normalizedPipelineId
         ).map { toSessionInfo(it) }
         logger.info(
             "[Session] List: userId={}, projectId={}, " +
-                "count={}",
-            userId, projectId, result.size
+                "pipelineId={}, count={}",
+            userId, normalizedProjectId, normalizedPipelineId, result.size
         )
         return result
     }
 
     fun getLatestSession(
         userId: String,
-        projectId: String?
+        projectId: String?,
+        pipelineId: String? = null
     ): AiSessionInfo? {
+        val normalizedProjectId = blankToNull(projectId)
+        val normalizedPipelineId = blankToNull(pipelineId)
+        validateScope(normalizedProjectId, normalizedPipelineId)
         val result = aiSessionDao.getLatest(
-            dslContext, userId, projectId
+            dslContext = dslContext,
+            userId = userId,
+            projectId = normalizedProjectId,
+            pipelineId = normalizedPipelineId
         )?.let { toSessionInfo(it) }
         logger.info(
             "[Session] GetLatest: userId={}, projectId={}, " +
-                "found={}",
-            userId, projectId, result != null
+                "pipelineId={}, found={}",
+            userId, normalizedProjectId, normalizedPipelineId, result != null
         )
         return result
     }
@@ -269,11 +299,25 @@ class AiSessionService @Autowired constructor(
             id = record.id,
             userId = record.userId,
             projectId = record.projectId,
+            pipelineId = record.pipelineId,
             title = record.title,
             createdTime = record.createdTime
                 .toInstant(ZoneOffset.ofHours(8)).toEpochMilli(),
             updatedTime = record.updatedTime
                 .toInstant(ZoneOffset.ofHours(8)).toEpochMilli()
         )
+    }
+
+    private fun validateScope(projectId: String?, pipelineId: String?) {
+        if (pipelineId != null && projectId == null) {
+            throw ErrorCodeException(
+                errorCode = AiMessageCode.SESSION_PIPELINE_REQUIRES_PROJECT,
+                defaultMessage = "Pipeline-level session requires projectId"
+            )
+        }
+    }
+
+    private fun blankToNull(value: String?): String? {
+        return value?.trim()?.takeIf { it.isNotEmpty() }
     }
 }

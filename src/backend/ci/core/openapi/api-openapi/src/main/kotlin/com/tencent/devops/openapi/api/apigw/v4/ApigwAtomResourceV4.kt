@@ -211,7 +211,7 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "支持的服务范围", required = false)
+        @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM（默认 PIPELINE）", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")
         serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
@@ -269,10 +269,10 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围：PIPELINE / QUALITY / CREATIVE_STREAM", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
-        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @Parameter(description = "job类型。流水线：AGENT（编译环境）/ AGENT_LESS（无编译环境）；创作流：CREATIVE_STREAM（创作任务）/ CLOUD_TASK（云任务）", required = false)
         @QueryParam("jobType")
         jobType: String?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
@@ -296,7 +296,13 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "是否适配操作系统标识", required = false)
         @QueryParam("fitOsFlag")
         fitOsFlag: Boolean? = true,
-        @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
+        @Parameter(
+            description = "编译环境下是否包含可在无编译环境运行的插件。" +
+                "PIPELINE+AGENT：true 同时匹配 BUILD_LESS_RUN_FLAG=true，false 排除；" +
+                "CREATIVE_STREAM：true 包含同时支持 CLOUD_TASK 的插件，false 仅返回只支持 CREATIVE_STREAM 的插件；" +
+                "null 不附加该条件。默认 true",
+            required = false
+        )
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
         @Parameter(description = "页码", required = false)

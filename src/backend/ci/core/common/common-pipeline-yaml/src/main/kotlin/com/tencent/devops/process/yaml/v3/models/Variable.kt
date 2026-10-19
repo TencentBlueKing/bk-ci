@@ -30,9 +30,14 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import io.swagger.v3.oas.annotations.media.Schema
 
 // @JsonDeserialize(using = IVariableDeserializer::class)
@@ -76,7 +81,7 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
     @get:JsonProperty("as-instance-input")
     @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
     var asInstanceInput: Boolean? = null,
@@ -186,6 +191,59 @@ data class VariableDatasource(
     @JsonProperty("item-target-url")
     val itemTargetUrl: String? = null
 )
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class VariableTemplate(val name: String, val version: String? = null) {
+    companion object {
+        /**
+         * 解析 YAML `variables.template`（公共变量组引用）。
+         *
+         * 不能依赖泛型做类型校验：`as? List<Map<String, String>>` / `filterIsInstance<Map<String, String>>()`
+         * 在泛型擦除后只校验到 List/Map，元素类型不符时不会被拦下，直到取值才抛 ClassCastException
+         * （典型用例 `version: 1` 会被 YAML 解析成 Int）。这里统一按 toString 取值。
+         *
+         * 结构不合规一律抛错，不做静默降级：静默丢弃引用会让流水线以"未引用任何变量组"的形态保存，
+         * 组内变量凭空消失且无任何提示。
+         */
+        fun parseList(raw: Any?): List<VariableTemplate> {
+            if (raw == null) return emptyList()
+            if (raw !is List<*>) {
+                throw YamlFormatException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                        params = arrayOf(
+                            VARIABLES_KEY, TEMPLATE_KEY, "List", raw::class.java.simpleName
+                        )
+                    )
+                )
+            }
+            return raw.map { item ->
+                if (item !is Map<*, *>) {
+                    throw YamlFormatException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                            params = arrayOf(
+                                VARIABLES_KEY, TEMPLATE_KEY, "an object with the name field",
+                                item?.let { it::class.java.simpleName } ?: "null"
+                            )
+                        )
+                    )
+                }
+                val name = item[NAME]?.toString()?.takeIf { it.isNotBlank() }
+                    ?: throw YamlFormatException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                            params = arrayOf(VARIABLES_KEY, TEMPLATE_KEY, "a non-empty variable group name", "empty")
+                        )
+                    )
+                VariableTemplate(name = name, version = item[VERSION]?.toString())
+            }
+        }
+
+        private const val VARIABLES_KEY = "variables"
+        private const val TEMPLATE_KEY = "template"
+    }
+}
 
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),

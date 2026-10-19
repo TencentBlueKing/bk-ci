@@ -30,6 +30,7 @@ export default {
         pipelineWithoutTrigger: null,
         pipelineYaml: '',
         pipelineSetting: null,
+        concurrencyArrivalPolicy: null,
         template: null,
         pipelineInfo: null,
         fetchingAtmoModal: false,

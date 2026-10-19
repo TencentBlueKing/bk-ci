@@ -44,13 +44,13 @@
             :label="$t('editPage.repoName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.repo-name }}'])"
             :required="true"
-            :is-error="!param.defaultValue['repo-name']"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.repoName`)"
+            :error-msg="errors.first(`pipelineParam.repoName`)"
         >
             <request-selector
                 v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
                 :disabled="disabled"
-                name="defaultValue"
+                name="repoName"
                 :value="param.defaultValue['repo-name']"
                 :handle-change="(name, value) => handleChangeCodeRepo(name, value)"
                 v-validate="'required'"
@@ -66,14 +66,14 @@
             :label="$t('editPage.branchName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.branch }}'])"
             :required="true"
-            :is-error="!param.defaultValue.branch"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.branchName`)"
+            :error-msg="errors.first(`pipelineParam.branchName`)"
             :key="param.defaultValue['repo-name']"
         >
             <request-selector
                 v-bind="getBranchOption(param.defaultValue['repo-name'])"
                 :disabled="disabled || !param.defaultValue"
-                name="defaultValue"
+                name="branchName"
                 :value="param.defaultValue.branch"
                 :handle-change="handleChangeBranch"
                 v-validate="'required'"
@@ -113,20 +113,22 @@
             :reset-default-val="handleResetDefaultVal"
         />
         <constraint-wraper
+            v-if="!isRepoParam(param.type)"
+            class="form-field bk-form-item"
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
-            :disabled="valueRequired"
+            :required="valueRequired"
+            :disabled="valueRequired || isPublicVar"
             @toggleConstraint="handleToggleConstraint"
         >
-            <template #constraint-area="{ props: { isOverride } }">
+            <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
                 <form-field
-                    v-if="!isRepoParam(param.type)"
                     :hide-colon="true"
                     :required="valueRequired"
                     :is-error="errors.has(`pipelineParam.defaultValue`)"
                     :error-msg="errors.first(`pipelineParam.defaultValue`)"
-                    :disabled="!isOverride"
+                    :disabled="isTemplateInstance && !isOverride"
                     :desc="valueRequired ? undefined : $t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)"
                 >
                     <template v-if="isSelectorParam(param.type)">
@@ -135,7 +137,7 @@
                             v-bind="remoteParamOption"
                             v-validate.initial="{ required: valueRequired }"
                             :popover-min-width="250"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isPublicVar || (disabled && !isOverride)"
                             name="defaultValue"
                             :multi-select="isMultipleParam(param.type)"
                             :data-vv-scope="'pipelineParam'"
@@ -153,7 +155,7 @@
                             v-validate="{ required: valueRequired }"
                             :data-vv-scope="'pipelineParam'"
                             :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="disabled && !isOverride"
+                            :disabled="isPublicVar || (disabled && !isOverride)"
                             show-select-all
                             :key="param.type"
                             :value="selectDefautVal"
@@ -164,14 +166,14 @@
                         v-if="isBooleanParam(param.type)"
                         name="defaultValue"
                         :list="boolList"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         :value="param.defaultValue"
                     >
                     </enum-input>
                     <vuex-input
                         v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isRepoParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -184,7 +186,7 @@
                         v-if="isFileParam(param.type)"
                         name="defaultValue"
                         :required="valueRequired"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :value="param.defaultValue"
                         :enable-version-control="param.enableVersionControl"
                         :random-sub-path="param.randomStringInPath"
@@ -192,7 +194,7 @@
                     />
                     <vuex-textarea
                         v-if="isTextareaParam(param.type)"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -205,7 +207,7 @@
                         :popover-min-width="250"
                         :url="getCodeUrl(param.scmType)"
                         v-bind="codelibOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -219,16 +221,27 @@
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
-                        :disabled="disabled && !isOverride"
+                        :disabled="isPublicVar || (disabled && !isOverride)"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
                         :value="param.defaultValue"
                         :handle-change="handleChange"
-                        :replace-key="param.replaceKey"
-                        :search-url="param.searchUrl"
+                        replace-key="{keyword}"
+                        :search-url="getSubPipelineSearchUrl()"
                     >
                     </request-selector>
+                    <p
+                        v-if="param.published"
+                        class="public-var-published-tips"
+                    >
+                        <logo
+                            size="12"
+                            class="warning-icon"
+                            name="warning-circle"
+                        />
+                        {{ param.constant ? $t('publicVar.constantDefaultValueChangeTips') : $t('publicVar.paramDefaultValueChangeTips') }}
+                    </p>
                 </form-field>
             </template>
         </constraint-wraper>
@@ -288,6 +301,7 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import EnumInput from '@/components/atomFormField/EnumInput'
@@ -337,6 +351,7 @@
 
     export default {
         components: {
+            Logo,
             SelectTypeParam,
             FormField,
             VuexInput,
@@ -351,6 +366,11 @@
         mixins: [validMixins],
         props: {
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            // 是否为公共变量组下的变量（查看态，禁止切换模板约束）
+            isPublicVar: {
                 type: Boolean,
                 default: false
             },
@@ -505,6 +525,12 @@
             getSearchUrl (type) {
                 return `${this.getCodeUrl(type)}&aliasName={keyword}`
             },
+            getSubPipelineSearchUrl () {
+                const { projectId, pipelineId } = this.$route.params
+                const query = `permission=EXECUTE&excludePipelineId=${pipelineId}` +
+                    '&pipelineName={keyword}&page=1&pageSize=100'
+                return `/process/api/user/pipelineInfos/${projectId}/idAndNames?${query}`
+            },
             getSearchBranchUrl () {
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue['repo-name']}`
             },
@@ -554,18 +580,19 @@
                 }
             },
             handleChangeCodeRepo (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     'repo-name': value,
                     branch: ''
                 })
             },
             handleChangeBranch (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     ...this.param.defaultValue,
                     branch: value
                 })
             },
             handleToggleConstraint (isOverride) {
+                if (!this.pipeline || this.isPublicVar) return
                 if (!isOverride) {
                     const param = this.pipeline.stages[0].containers[0].params.find(item => item.id === this.param.id)
                     this.handleChange('defaultValue', param.defaultValue)
@@ -573,7 +600,27 @@
                     this.handleChange('defaultValue', this.initParamItem.defaultValue)
                 }
                 
+            },
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleChange(key, properties)
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .public-var-published-tips {
+        font-size: 12px;
+        color: #979BA5;
+        .warning-icon {
+            display: inline-block;
+            vertical-align: -1px;
+            color: #f6b026;
+            font-size: 0;
+        }
+    }
+</style>

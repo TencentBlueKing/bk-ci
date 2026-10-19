@@ -79,7 +79,7 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
 
@@ -93,7 +93,8 @@ object TemplateInstanceUtil {
             templateId = templateResource.templateId,
             srcTemplateId = templateResource.srcTemplateId,
             template = template,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = overrideTemplateField,
+            publicVarGroups = templateModel.publicVarGroups
         )
     }
 
@@ -168,7 +169,7 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams,
+            params = pipelineParams.toMutableList(),
             templateParams = null
         )
     }
@@ -478,6 +479,7 @@ object TemplateInstanceUtil {
             setting.maxQueueSize = templateSetting.maxQueueSize
             setting.concurrencyGroup = templateSetting.concurrencyGroup
             setting.concurrencyCancelInProgress = templateSetting.concurrencyCancelInProgress
+            setting.concurrencySubGroup = templateSetting.concurrencySubGroup
             setting.maxConRunningQueueSize = templateSetting.maxConRunningQueueSize
         }
     }

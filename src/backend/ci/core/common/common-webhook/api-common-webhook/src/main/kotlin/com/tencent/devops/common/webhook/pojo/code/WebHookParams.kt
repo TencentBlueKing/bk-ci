@@ -62,6 +62,10 @@ data class WebHookParams(
     var includeCrTypes: String? = null,
     // issue事件action
     var includeIssueAction: String? = null,
+    // 事件包含的负责人
+    var includeAssignees: String? = null,
+    // 事件排除的负责人
+    var excludeAssignees: String? = null,
     // mr事件action
     var includeMrAction: String? = null,
     // note事件action

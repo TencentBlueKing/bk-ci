@@ -18,6 +18,7 @@ import './styles/global.css'
 import './styles/utils.css'
 import './styles/variables.css'
 
+
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
 import { AuthorityDirectiveV3, handleNoPermissionV3 } from 'bk-permission'
@@ -26,6 +27,7 @@ import { RouterView } from 'vue-router'
 import { FLOW_GROUP_TYPES } from './constants/flowGroup'
 import { ROUTE_NAMES } from './constants/routes'
 import { useAuthStore, useUIStore } from './stores'
+import { websocketRegister } from './utils/websocketRegister'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -177,3 +179,4 @@ const handleNoPermission = (permissionData: any) => {
 app.use(AuthorityDirectiveV3(handleNoPermission))
 
 app.mount('#app')
+websocketRegister.initialize(router)
