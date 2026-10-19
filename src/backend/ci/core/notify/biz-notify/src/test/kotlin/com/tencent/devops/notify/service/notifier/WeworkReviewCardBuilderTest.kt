@@ -36,13 +36,18 @@ class WeworkReviewCardBuilderTest {
         val second = plan.receiverCards.getValue("fayewang")
         assertNotEquals(first.taskId, second.taskId)
         assertEquals("流水线人工审核", first.mainTitle.title)
-        assertTrue(first.subTitleText!!.contains("项目: Royal流水线测试"))
-        assertTrue(first.subTitleText!!.contains("流水线: stage-review-notice"))
-        assertTrue(first.subTitleText!!.contains("构建号: #6"))
-        assertTrue(first.subTitleText!!.contains("审核说明: 重要审核XXX"))
-        assertEquals("触发人", first.horizontalContentList!!.single().keyname)
-        assertEquals(3, first.horizontalContentList!!.single().type)
-        assertNull(first.quoteArea)
+        val rows = first.horizontalContentList!!
+        assertEquals(listOf("项目", "流水线", "构建号", "审核阶段", "审核人", "触发人"), rows.map { it.keyname })
+        assertEquals("Royal流水线测试", rows[0].value)
+        assertEquals("stage-review-notice", rows[1].value)
+        assertEquals("#6", rows[2].value)
+        assertEquals("[1]Stage审核", rows[3].value)
+        assertEquals("royalhuang、fayewang", rows[4].value)
+        assertEquals("触发人", rows.last().keyname)
+        assertEquals(3, rows.last().type)
+        assertEquals("审核说明", first.quoteArea!!.title)
+        assertEquals("重要审核XXX", first.quoteArea!!.quoteText)
+        assertNull(first.subTitleText)
         assertEquals("通过", first.buttonList!![0].text)
         assertEquals(0, first.buttonList!![0].type)
         assertEquals("驳回", first.buttonList!![1].text)
@@ -53,8 +58,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("https://example.com/pc", first.buttonList!![2].url)
         assertNull(first.jumpList)
         assertNotNull(first.cardAction)
-        assertTrue(first.subTitleText!!.contains("审核人: royalhuang、fayewang（任一通过）"))
-        assertTrue(!first.subTitleText!!.contains("审批进度"))
+        assertTrue(rows.none { it.keyname == "进度" })
     }
 
     @Test
@@ -77,11 +81,12 @@ class WeworkReviewCardBuilderTest {
             title = "",
             redisOperation = null
         )
-        val waitingText = waiting!!.receiverCards.getValue("royalhuang").subTitleText!!
-        assertTrue(waitingText.contains("审批进度: 0/2"))
-        assertTrue(waitingText.contains("环节一: 待审核"))
-        assertTrue(waitingText.contains("环节二: 未开始"))
-        assertTrue(waitingText.contains("审核人: royalhuang、fayewang（任一通过）"))
+        val waitingCard = waiting!!.receiverCards.getValue("royalhuang")
+        assertEquals("0/2", waitingCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
+        assertEquals("royalhuang、fayewang", waitingCard.horizontalContentList!!.first { it.keyname == "审核人" }.value)
+        val waitingText = waitingCard.subTitleText!!
+        assertTrue(waitingText.contains("环节一 待审核"))
+        assertTrue(waitingText.contains("环节二 未开始"))
         assertTrue(!waitingText.contains("⏳"))
 
         val next = WeworkReviewCardBuilder.build(
@@ -101,11 +106,12 @@ class WeworkReviewCardBuilderTest {
             title = "",
             redisOperation = null
         )
-        val nextText = next!!.receiverCards.getValue("royalhuang").subTitleText!!
-        assertTrue(nextText.contains("审批进度: 1/2"))
-        assertTrue(nextText.contains("环节一: 已通过"))
-        assertTrue(nextText.contains("环节二: 待审核"))
-        assertTrue(!nextText.contains("审核人:"))
+        val nextCard = next!!.receiverCards.getValue("royalhuang")
+        assertEquals("1/2", nextCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
+        assertTrue(nextCard.horizontalContentList!!.none { it.keyname == "审核人" })
+        val nextText = nextCard.subTitleText!!
+        assertTrue(nextText.contains("环节一 已通过"))
+        assertTrue(nextText.contains("环节二 待审核"))
     }
 
     @Test
@@ -210,8 +216,8 @@ class WeworkReviewCardBuilderTest {
         )
         val card = plan!!.receiverCards.getValue("royalhuang")
         assertEquals(WeworkReviewCardConst.CARD_TYPE_BUTTON, card.cardType)
+        assertEquals("demo", card.horizontalContentList!!.first { it.keyname == "项目" }.value)
         assertTrue(card.subTitleText!!.contains("发布备注"))
-        assertTrue(card.subTitleText!!.contains("项目: demo"))
         assertEquals("确认提交", card.buttonList!![0].text)
         assertEquals("修改参数", card.buttonList!![1].text)
         assertTrue(card.buttonList!![1].url!!.contains("action=modify"))
@@ -233,10 +239,14 @@ class WeworkReviewCardBuilderTest {
             title = "",
             redisOperation = null
         )
-        val body = plan!!.receiverCards.getValue("royalhuang").subTitleText!!
-        assertTrue(body.length <= 256)
-        assertTrue(body.contains("流水线: a-very-long-pipeline-name-that-used-to-be-clipped"))
-        assertTrue(body.contains("审核说明:"))
+        val card = plan!!.receiverCards.getValue("royalhuang")
+        val pipeline = card.horizontalContentList!!.first { it.keyname == "流水线" }.value
+        assertTrue(pipeline.length <= 30)
+        assertTrue(pipeline.startsWith("a-very-long-pipeline"))
+        assertTrue(pipeline.endsWith("…"))
+        assertEquals("审核说明", card.quoteArea!!.title)
+        assertTrue(card.quoteArea!!.quoteText!!.length <= 112)
+        assertTrue(card.quoteArea!!.quoteText!!.startsWith("说明"))
     }
 
     @Test
