@@ -32,6 +32,7 @@
                         />
                     </bk-select>
                     <select-input
+                        v-if="!['EXISTS', 'NOT_EXISTS'].includes(parameter.operator)"
                         class="input-com"
                         v-model="parameter.value"
                         :name="`metadata-tigger-value-${index}`"
@@ -174,6 +175,9 @@
             },
             handleChangeOperator (operator, index) {
                 this.paramValues[index].operator = operator || DEFAULT_DISPLAY_CONDITION_OPERATOR
+                if (['EXISTS', 'NOT_EXISTS'].includes(this.paramValues[index].operator)) {
+                    this.paramValues[index].value = ''
+                }
                 this.updateParameters()
             },
             handleChangeValue (value, index) {

@@ -16,6 +16,11 @@ import SelectInput from './SelectInput'
 
 const { Option } = Select
 
+const NO_VALUE_OPERATORS = ['EXISTS', 'NOT_EXISTS']
+
+const isNoValueOperator = (operator: string | undefined) =>
+  !!operator && NO_VALUE_OPERATORS.includes(operator)
+
 const DEFAULT_DISPLAY_CONDITION_OPERATOR = 'EQ'
 
 const DISPLAY_CONDITION_OPERATORS = [
@@ -203,6 +208,9 @@ export default defineComponent({
     const handleChangeOperator = (operator: string, index: number) => {
       if (!paramValues.value[index]) return
       paramValues.value[index].operator = operator || DEFAULT_DISPLAY_CONDITION_OPERATOR
+      if (isNoValueOperator(paramValues.value[index].operator)) {
+        paramValues.value[index].value = ''
+      }
       updateParameters()
     }
 
@@ -298,17 +306,20 @@ export default defineComponent({
                   <Option key={option.id} value={option.id} label={option.name} />
                 ))}
               </Select>
-              <SelectInput
-                class={styles.inputCom}
-                name={`metadata-tigger-value-${index}`}
-                value={parameter.value}
-                placeholder={t('flow.content.valuePlaceholder')}
-                disabled={props.disabled}
-                options={getValueListByIndex(index)}
-                handleChange={(name: string, value: string) =>
-                  handleChangeValue(name, value, index)
-                }
-              />
+              {/*  */}
+              {!isNoValueOperator(parameter.operator) && (
+                <SelectInput
+                  class={styles.inputCom}
+                  name={`metadata-tigger-value-${index}`}
+                  value={parameter.value}
+                  placeholder={t('flow.content.valuePlaceholder')}
+                  disabled={props.disabled}
+                  options={getValueListByIndex(index)}
+                  handleChange={(name: string, value: string) =>
+                    handleChangeValue(name, value, index)
+                  }
+                />
+              )}
               {!props.disabled && (
                 <span class={styles.minusBtn} onClick={() => cutParam(index)}>
                   <SvgIcon name="minus-circle" size={16} />
