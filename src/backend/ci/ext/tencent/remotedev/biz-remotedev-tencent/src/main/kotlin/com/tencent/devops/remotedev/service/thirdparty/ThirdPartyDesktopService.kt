@@ -6,9 +6,12 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
@@ -484,9 +487,12 @@ class ThirdPartyDesktopService @Autowired constructor(
             throw illegal("envId can not be blank")
         }
         checkEnvBelong(verified, envId, "assignWorkspace")
+        // 注册接口返回的是 BCS environmentUid，而 createControl.assignWorkspace 按 listcgs 的 cgsId(zoneId.ip) 匹配
+        // 这里先在 listcgs 中按 envId 找到对应的 cgsId（重装 token 绑定的就是 cgsId，同样兼容）
+        val cgsId = resolveCgsId(envId)
         // createControl.assignWorkspace 会先给项目加配额再跳过已分配的 cgsId，必须在这里提前拦截
-        if (workspaceDao.getAvailableCgsWorkspace(dslContext = dslContext, cgsId = envId) > 0) {
-            logger.warn("assignWorkspace|cds already assigned|${info.userId}|$envId|reinstall=${info.reinstall}")
+        if (workspaceDao.getAvailableCgsWorkspace(dslContext = dslContext, cgsId = cgsId) > 0) {
+            logger.warn("assignWorkspace|cds already assigned|${info.userId}|$envId|$cgsId|reinstall=${info.reinstall}")
             throw forbidden("env $envId has already been assigned")
         }
         val assignKey = assignKey(verified.id)
@@ -494,14 +500,14 @@ class ThirdPartyDesktopService @Autowired constructor(
             logger.warn("assignWorkspace|already assigned|${info.userId}|$envId")
             throw forbidden("env $envId has already been assigned by this token")
         }
-        logger.info("assignWorkspace|${info.userId}|${info.projectId}|${info.os}|$envId")
+        logger.info("assignWorkspace|${info.userId}|${info.projectId}|${info.os}|$envId|$cgsId")
         try {
             createControl.assignWorkspace(
                 userId = info.userId,
                 data = OpProjectWorkspaceAssignData(
                     projectId = info.projectId,
                     owner = null,
-                    cgsIds = listOf(envId),
+                    cgsIds = listOf(cgsId),
                     ips = null,
                     repoId = null,
                     localDriver = null,
@@ -516,6 +522,28 @@ class ThirdPartyDesktopService @Autowired constructor(
             throw e
         }
         return true
+    }
+
+    /**
+     * 分配时 cdsId 有两种形态混用：
+     * cgsId：zoneId.ip（如 CQ12.28.164.247.187），重装 token 取自 T_WORKSPACE_WINDOWS.HOST_IP
+     * envId：BCS environmentUid（如 56385x8zru7lrvnv-1792409866669546025），注册接口返回
+     * 按格式判断后走不同匹配，统一解析成 listcgs 中的 cgsId；找不到则不分配，避免白加项目配额
+     */
+    private fun resolveCgsId(cdsId: String): String {
+        val byCgsId = CGS_ID_REGEX.matches(cdsId)
+        val startCloud = SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+        val cgs = if (byCgsId) {
+            startCloud.getCgsData(FetchWinPoolData(cgsIds = listOf(cdsId), ips = null)).data?.firstOrNull()
+        } else {
+            startCloud.realtimeStartCloudResourceList().data?.firstOrNull { it.envId == cdsId }
+        }
+        if (cgs == null) {
+            logger.warn("assignWorkspace|not found in listcgs|$cdsId|byCgsId=$byCgsId")
+            throw notFound("env $cdsId not found in resource pool, register may not be finished")
+        }
+        logger.info("assignWorkspace|resolveCgsId|$cdsId|byCgsId=$byCgsId|${cgs.cgsId}|${cgs.envId}|${cgs.status}")
+        return cgs.cgsId
     }
 
     private fun checkEnvBelong(verified: VerifiedToken, envId: String, action: String) {
@@ -606,6 +634,8 @@ class ThirdPartyDesktopService @Autowired constructor(
         const val SCRIPT_URL_KEY = "remotedev:thirdPartyDesktop:scriptUrl"
         const val API_HOST_KEY = "remotedev:thirdPartyDesktop:apiHost"
         private val ZONE_REGEX = Regex("^[A-Za-z]*\\d+$")
+        /* cgsId = zoneId.ipv4，如 CQ12.28.164.247.187 */
+        private val CGS_ID_REGEX = Regex("^[A-Za-z0-9_-]+\\.(\\d{1,3}\\.){3}\\d{1,3}$")
         private val GAME_ID_REGEX = Regex("^\\d{1,20}$")
         private val SAFE_URL_REGEX = Regex("^https?://[A-Za-z0-9._~:/?#\\[\\]@!&()*+,;=%-]+$")
         private const val DEFAULT_BINDING_EXPIRE_DAYS = 30L
