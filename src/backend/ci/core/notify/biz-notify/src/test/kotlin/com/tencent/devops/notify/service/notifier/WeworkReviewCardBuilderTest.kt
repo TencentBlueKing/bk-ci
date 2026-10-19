@@ -35,14 +35,13 @@ class WeworkReviewCardBuilderTest {
         val first = plan.receiverCards.getValue("royalhuang")
         val second = plan.receiverCards.getValue("fayewang")
         assertNotEquals(first.taskId, second.taskId)
-        assertEquals("流水线人工审核", first.mainTitle.title)
+        assertEquals("[Royal流水线测试]人工审核", first.mainTitle.title)
         val rows = first.horizontalContentList!!
-        assertEquals(listOf("项目", "流水线", "构建号", "审核阶段", "审核人", "触发人"), rows.map { it.keyname })
-        assertEquals("Royal流水线测试", rows[0].value)
-        assertEquals("stage-review-notice", rows[1].value)
-        assertEquals("#6", rows[2].value)
-        assertEquals("[1]Stage审核", rows[3].value)
-        assertEquals("royalhuang、fayewang", rows[4].value)
+        assertEquals(listOf("流水线", "构建号", "阶段名", "审核人", "触发人"), rows.map { it.keyname })
+        assertEquals("stage-review-notice", rows[0].value)
+        assertEquals("#6", rows[1].value)
+        assertEquals("Stage审核", rows[2].value)
+        assertEquals("royalhuang、fayewang", rows[3].value)
         assertEquals("触发人", rows.last().keyname)
         assertEquals(3, rows.last().type)
         assertEquals("审核说明", first.quoteArea!!.title)
@@ -53,7 +52,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("驳回", first.buttonList!![1].text)
         assertEquals(1, first.buttonList!![1].type)
         assertTrue(first.buttonList!![1].url!!.contains("action=reject"))
-        assertEquals("查看详情", first.buttonList!![2].text)
+        assertEquals("详情", first.buttonList!![2].text)
         assertEquals(1, first.buttonList!![2].type)
         assertEquals("https://example.com/pc", first.buttonList!![2].url)
         assertNull(first.jumpList)
@@ -70,13 +69,13 @@ class WeworkReviewCardBuilderTest {
                     "projectName" to "Royal流水线测试",
                     "pipelineName" to "stage-review-notice",
                     "reviewUrl" to "https://example.com/pc",
-                    "reviewStage" to "[1]Stage审核",
+                    "stageName" to "Stage审核",
                     "triggerUser" to "royalhuang",
                     "buildNum" to "10",
                     "reviewers" to "royalhuang,fayewang",
                     "reviewGroups" to """
-                        [{"name":"环节一","status":"","reviewers":["royalhuang","fayewang"]},
-                        {"name":"环节二","status":"","reviewers":["royalhuang"]}]
+                        [{"name":"首次审核","status":"","reviewers":["royalhuang","fayewang"]},
+                        {"name":"二次审核","status":"","reviewers":["royalhuang"]}]
                     """.trimIndent()
                 )
             ),
@@ -85,11 +84,12 @@ class WeworkReviewCardBuilderTest {
         )
         val waitingCard = waiting!!.receiverCards.getValue("royalhuang")
         assertEquals(
-            listOf("项目", "流水线", "构建号", "进度", "审核人", "触发人"),
+            listOf("流水线", "构建号", "阶段名", "审核流", "进度", "触发人"),
             waitingCard.horizontalContentList!!.map { it.keyname }
         )
-        assertEquals("0/2", waitingCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
-        assertEquals("royalhuang、fayewang", waitingCard.horizontalContentList!!.first { it.keyname == "审核人" }.value)
+        assertEquals("[Royal流水线测试]人工审核", waitingCard.mainTitle.title)
+        assertEquals("Stage审核", waitingCard.horizontalContentList!!.first { it.keyname == "阶段名" }.value)
+        assertEquals("首次审核、二次审核", waitingCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertNull(waitingCard.subTitleText)
 
         val next = WeworkReviewCardBuilder.build(
@@ -110,6 +110,7 @@ class WeworkReviewCardBuilderTest {
             redisOperation = null
         )
         val nextCard = next!!.receiverCards.getValue("royalhuang")
+        assertEquals("环节一、环节二", nextCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertEquals("1/2", nextCard.horizontalContentList!!.first { it.keyname == "进度" }.value)
         assertTrue(nextCard.horizontalContentList!!.none { it.keyname == "审核人" })
         assertNull(nextCard.subTitleText)
@@ -139,7 +140,7 @@ class WeworkReviewCardBuilderTest {
         assertTrue(card.buttonList!![0].url!!.contains("action=approve"))
         assertEquals("驳回", card.buttonList!![1].text)
         assertEquals(1, card.buttonList!![1].type)
-        assertEquals("查看详情", card.buttonList!![2].text)
+        assertEquals("详情", card.buttonList!![2].text)
     }
 
     @Test
@@ -222,7 +223,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("确认提交", card.buttonList!![0].text)
         assertEquals("修改参数", card.buttonList!![1].text)
         assertTrue(card.buttonList!![1].url!!.contains("action=modify"))
-        assertEquals("查看详情", card.buttonList!!.last().text)
+        assertEquals("详情", card.buttonList!!.last().text)
     }
 
     @Test
