@@ -1043,7 +1043,8 @@ class InitializeMatrixGroupStageCmd(
      * 只聚合不替换：buildContext 只输出上下文键，原始构建变量始终保留，
      * 与 CheckConditionalSkipContainerCmd 等运行时判断的用法保持一致。
      */
-    private fun buildConcurrencyVariables(commandContext: ContainerContext): Map<String, String> {
+    // 非 private：供单测直接覆盖变量解析（含聚合上下文）的各类场景
+    internal fun buildConcurrencyVariables(commandContext: ContainerContext): Map<String, String> {
         val container = commandContext.container
         return commandContext.variables.plus(
             pipelineContextService.buildContext(
@@ -1072,7 +1073,8 @@ class InitializeMatrixGroupStageCmd(
      * 跨Job引用必须使用完整表达式如 ${{ jobs.<jobId>.steps.<stepId>.outputs.<name> }}，
      * 裸名（如 ${{my_name}}）在任何上下文中都不存在，只能命中流水线入参/普通构建变量。
      */
-    private fun resolveMaxConcurrency(
+    // 非 private：供单测直接覆盖变量解析（含聚合上下文）的各类场景
+    internal fun resolveMaxConcurrency(
         option: MatrixControlOption,
         jobName: String,
         commandContext: ContainerContext,
