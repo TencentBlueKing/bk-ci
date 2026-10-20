@@ -165,6 +165,7 @@
       "renameSuccess": "Rename successful",
       "renameFailed": "Rename failed",
       "latest": "Latest",
+      "switchToLatest": "Switch to latest version",
       "executionInfo": "Execution Information",
       "executionRecord": "Execution Record",
       "triggerRecord": "Trigger Record",
