@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.task.market
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -596,7 +597,7 @@ open class MarketAtomTask : ITask() {
                 inputMap.forEach { (name, value) ->
                     logger.info("parseInputParams|name=$name|value=$value")
                     atomParams[name] = EnvReplacementParser.parse(
-                        value = JsonUtil.toJson(value),
+                        value = copyInputValue(value),
                         contextMap = variables,
                         dialect = dialect,
                         contextPair = customReplacement,
@@ -624,6 +625,18 @@ open class MarketAtomTask : ITask() {
             )
         }
         return atomParams
+    }
+
+    /**
+     * 表达式替换会递归写入 Map/List，先复制一份，避免修改原始插件模型或遇到只读集合。
+     */
+    private fun copyInputValue(value: Any): Any = when (value) {
+        is Map<*, *> -> JsonUtil.toMutableMap(JsonUtil.toJson(value, formatted = false))
+        is List<*> -> JsonUtil.to(
+            JsonUtil.toJson(value, formatted = false),
+            object : TypeReference<MutableList<Any?>>() {}
+        )
+        else -> value
     }
 
     private fun getAtomSensitiveConfMap(atomCode: String): Map<String, MutableMap<String, String>> {
