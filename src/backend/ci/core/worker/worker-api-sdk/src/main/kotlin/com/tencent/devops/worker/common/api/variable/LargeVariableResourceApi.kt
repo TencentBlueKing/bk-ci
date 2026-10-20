@@ -118,7 +118,7 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
             if (scope.projectId in repoReady) {
                 return
             }
-            val request = buildPost(path = "/ms/process/api/build/variable/repo")
+            val request = buildPost(path = "/ms/process/api/build/variable/repo/ensure")
             val response = request(request, "ensure variable repo failed")
             val result = objectMapper.readValue<Result<Boolean>>(response)
             if (result.isNotOk()) {
