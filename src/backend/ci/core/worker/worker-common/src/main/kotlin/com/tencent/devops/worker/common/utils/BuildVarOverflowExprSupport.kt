@@ -106,9 +106,13 @@ object BuildVarOverflowExprSupport {
      * 引用到的大变量按需从制品库加载。单个参数替换异常时退化为不加载大变量的替换。
      */
     fun replaceClassicTaskParams(buildTask: BuildTask): BuildTask {
-        if (buildTask.replaceVarOnWorker != true) return buildTask
         val params = buildTask.params
         if (params.isNullOrEmpty()) return buildTask
+        if (buildTask.replaceVarOnWorker != true) {
+            // 引擎侧已替换，这里只做体检：参数看着像 JSON 却解析不了，说明替换在引擎侧就把它拼坏了
+            params.forEach { (key, value) -> warnIfJsonUnparsable(key, value) }
+            return buildTask
+        }
         val variables = buildTask.buildVariable ?: emptyMap()
         // 大变量上下文不可用时只记录告警，仍按普通变量完成替换，不能让整个取任务流程中断
         val (overflowKeys, loader) = try {
@@ -125,6 +129,7 @@ object BuildVarOverflowExprSupport {
                 replaceClassicParamFallback(value, variables)
             }
             warnIfJsonBroken(key, value, result)
+            warnIfJsonUnparsable(key, result)
             result
         }
         return buildTask.copy(params = replaced)
@@ -167,6 +172,29 @@ object BuildVarOverflowExprSupport {
                 "|origin=${origin.take(PARAM_LOG_LIMIT)}|result=${result.take(PARAM_LOG_LIMIT)}"
         )
     }
+
+    /**
+     * 参数以 `{` / `[` 开头结尾却解析不了，插件按 JSON 读取时必然失败。
+     * 日志里带上出错位置附近的片段，便于直接看出是哪个变量值把引号提前闭合了。
+     */
+    private fun warnIfJsonUnparsable(key: String, value: String) {
+        val trimmed = value.trim()
+        val looksLikeJson = (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+            (trimmed.startsWith("[") && trimmed.endsWith("]"))
+        if (!looksLikeJson) return
+        try {
+            JsonUtil.to(trimmed, mapOrListTypeRef(trimmed))
+            return
+        } catch (ignore: Throwable) {
+            logger.warn(
+                "CLASSIC_PARAM_JSON_UNPARSABLE|key=$key|length=${value.length}|${ignore.message}" +
+                    "|head=${value.take(PARAM_LOG_LIMIT)}"
+            )
+        }
+    }
+
+    private fun mapOrListTypeRef(trimmed: String): TypeReference<*> =
+        if (trimmed.startsWith("{")) mapTypeRef else listTypeRef
 
     private fun replaceClassicParam(
         value: String,
