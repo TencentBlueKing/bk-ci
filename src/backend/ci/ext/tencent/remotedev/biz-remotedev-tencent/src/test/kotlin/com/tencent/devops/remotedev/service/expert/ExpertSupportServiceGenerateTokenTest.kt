@@ -1,12 +1,14 @@
 package com.tencent.devops.remotedev.service.expert
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.Test
 class ExpertSupportServiceGenerateTokenTest {
 
     private val dslContext: DSLContext = mockk(relaxed = true)
+    private val expertSupportDao: ExpertSupportDao = mockk()
     private val workspaceJoinDao: WorkspaceJoinDao = mockk()
     private val windowsResourceZoneDao: WindowsResourceZoneDao = mockk()
     private val tokenGenerator: ExpertSupportTokenGenerator = mockk()
@@ -35,7 +38,7 @@ class ExpertSupportServiceGenerateTokenTest {
         val realService = ExpertSupportService(
             dslContext = dslContext,
             client = mockk(relaxed = true),
-            expertSupportDao = mockk(relaxed = true),
+            expertSupportDao = expertSupportDao,
             workspaceCommon = mockk(relaxed = true),
             workspaceSharedDao = mockk(relaxed = true),
             workspaceDao = mockk(relaxed = true),
@@ -125,6 +128,40 @@ class ExpertSupportServiceGenerateTokenTest {
         assertThrows(ErrorCodeException::class.java) {
             service.generateUserSupportToken(userId, workspaceName)
         }
+    }
+
+    @Test
+    fun `generateUserSupportToken should store personal record when workspaceName is null`() {
+        assertPersonalSupport(workspaceName = null)
+    }
+
+    @Test
+    fun `generateUserSupportToken should store personal record when workspaceName is blank`() {
+        assertPersonalSupport(workspaceName = "  ")
+    }
+
+    private fun assertPersonalSupport(workspaceName: String?) {
+        every {
+            expertSupportDao.addSupport(
+                dslContext = dslContext,
+                projectId = "",
+                hostIp = "",
+                creator = userId,
+                status = ExpertSupportStatus.CREATE,
+                content = "瘦终端一键求助",
+                workspaceName = "",
+                city = "",
+                machineType = "",
+                info = any()
+            )
+        } returns 666L
+        every { tokenGenerator.generate(userId, 666L) } returns "personal-token"
+
+        val token = service.generateUserSupportToken(userId, workspaceName)
+
+        assertEquals("personal-token", token)
+        verify(exactly = 0) { workspaceJoinDao.fetchAnyWindowsWorkspace(any(), any()) }
+        verify(exactly = 0) { service.createSupportNew(any(), any()) }
     }
 
     private fun mockRecord(zoneId: String, hostIp: String, winConfigId: Int): WorkspaceRecordWithWindows {

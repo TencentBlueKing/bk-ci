@@ -51,9 +51,9 @@ interface UserExpertSupportResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间(实例)名称", required = true)
+        @Parameter(description = "工作空间(实例)名称，不传表示个人求助", required = false)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String?
     ): Result<String>
 
     @Operation(summary = "扩容磁盘大小")
