@@ -52,6 +52,7 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             ).third
         )
         with(element) {
+            params.includeUsers = EnvUtils.parseEnv(joinToString(element.includeUsers), variables)
             params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
                 ""
             } else {

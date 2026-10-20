@@ -12,7 +12,9 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
@@ -28,6 +30,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.param.GithubWebhookElementParams
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
 import io.mockk.mockk
@@ -194,6 +197,134 @@ class GithubPrTriggerHandlerTest {
         assertEquals("opened", params[PIPELINE_GIT_ACTION])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
+
+    @Test
+    fun shouldMatchIncludedUsersThroughElementParameterConversion() {
+        val cases = listOf<Triple<List<String>?, String?, Boolean>>(
+            Triple(null, null, true),
+            Triple(emptyList(), null, true),
+            Triple(listOf("author"), null, true),
+            Triple(listOf("alice"), null, false),
+            Triple(listOf("alice", "author"), null, true),
+            Triple(listOf("author"), "author", false),
+            Triple(null, "author", false),
+            Triple(listOf("author"), "alice", true)
+        )
+        for ((included, excluded, expected) in cases) {
+            val params = convertedUserParams(included, excluded)
+            assertEquals(expected, isMatch(event(action = "opened"), params), "included=$included excluded=$excluded")
+        }
+    }
+
+    @Test
+    fun shouldFilterEventOperatorInsteadOfPullRequestAuthorOrAssignee() {
+        val prEvent = event(action = "assigned", changedAssignee = alice)
+        every { prEvent.pullRequest.user } returns alice
+        assertTrue(isMatch(prEvent, convertedUserParams(listOf("author"), actions = listOf("assigned"))))
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("alice"), actions = listOf("assigned"))))
+    }
+
+    @Test
+    fun shouldResolveIncludedOperatorVariablesBeforeMatching() {
+        val params = convertedUserParams(listOf("\${prOperator}"), variables = mapOf("prOperator" to "author"))
+        assertTrue(isMatch(event(action = "opened"), params))
+    }
+
+    @Test
+    fun shouldRequireMergeActionAndThenApplyOperatorWhitelist() {
+        val prEvent = event(action = "closed")
+        every { prEvent.pullRequest.merged } returns true
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("author"))))
+        assertTrue(isMatch(prEvent, convertedUserParams(listOf("author"), actions = listOf("merge"))))
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("alice"), actions = listOf("merge"))))
+    }
+
+    @Test
+    fun shouldFilterDeserializedPullRequestPayloadBySender() {
+        val prEvent = deserializedPullRequestEvent()
+
+        assertEquals("alice", prEvent.sender.login)
+        assertEquals("author", prEvent.pullRequest.user.login)
+        assertTrue(handler.preMatch(prEvent).isMatch)
+        assertTrue(isMatch(prEvent, convertedUserParams(listOf("alice"))))
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("author"))))
+    }
+
+    @Test
+    fun shouldApplyUserListsAfterPayloadDeserializationAndParameterConversion() {
+        val cases = listOf<Triple<List<String>?, String?, Boolean>>(
+            Triple(listOf("alice"), null, true),
+            Triple(listOf("bob"), null, false),
+            Triple(listOf("bob", "alice"), null, true),
+            Triple(null, null, true),
+            Triple(emptyList(), null, true),
+            Triple(listOf("alice"), "alice", false),
+            Triple(null, "alice", false)
+        )
+        val prEvent = deserializedPullRequestEvent()
+        for ((included, excluded, expected) in cases) {
+            assertEquals(expected, isMatch(prEvent, convertedUserParams(included, excluded)))
+        }
+
+        val bobEvent = deserializedPullRequestEvent(senderLogin = "bob")
+        assertEquals(prEvent.pullRequest, bobEvent.pullRequest)
+        assertFalse(isMatch(bobEvent, convertedUserParams(listOf("alice"))))
+    }
+
+    @Test
+    fun shouldPreserveDefaultActionsForDeserializedPullRequestPayloads() {
+        for (action in listOf("opened", "reopened", "synchronize")) {
+            val prEvent = deserializedPullRequestEvent(action = action)
+            assertTrue(handler.preMatch(prEvent).isMatch)
+            assertTrue(isMatch(prEvent, convertedUserParams(listOf("alice"))))
+            assertFalse(isMatch(prEvent, convertedUserParams(listOf("bob"))))
+        }
+    }
+
+    @Test
+    fun shouldRequireConfiguredMergeActionForDeserializedPayload() {
+        val prEvent = deserializedPullRequestEvent(action = "closed", merged = true)
+
+        assertEquals("merge", prEvent.getRealAction())
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("alice"))))
+        assertTrue(isMatch(prEvent, convertedUserParams(listOf("alice"), actions = listOf("merge"))))
+        assertFalse(isMatch(prEvent, convertedUserParams(listOf("bob"), actions = listOf("merge"))))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun deserializedPullRequestEvent(
+        senderLogin: String = "alice",
+        action: String = "opened",
+        merged: Boolean = false
+    ): GithubPullRequestEvent {
+        val payload = ClassPathResource(
+            "com/tencent/devops/common/webhook/service/code/github/GithubPullRequestOpenedEvent.json"
+        ).inputStream.bufferedReader().use { it.readText() }
+        val request = JsonUtil.to<MutableMap<String, Any>>(payload)
+        val sender = request.getValue("sender") as MutableMap<String, Any>
+        val pullRequest = request.getValue("pull_request") as MutableMap<String, Any>
+        sender["login"] = senderLogin
+        request["action"] = action
+        pullRequest["merged"] = merged
+        return JsonUtil.to(JsonUtil.toJson(request), GithubPullRequestEvent::class.java)
+    }
+
+    private fun convertedUserParams(
+        included: List<String>?,
+        excluded: String? = null,
+        actions: List<String> = listOf("open", "reopen", "push-update"),
+        variables: Map<String, String> = emptyMap()
+    ) = GithubWebhookElementParams().getWebhookElementParams(
+        element = CodeGithubWebHookTriggerElement(
+            repositoryHashId = "repo-hash-id",
+            repositoryType = TriggerRepositoryType.ID,
+            eventType = CodeEventType.PULL_REQUEST,
+            includeUsers = included,
+            excludeUsers = excluded,
+            includeMrAction = actions
+        ),
+        variables = variables
+    )!!
 
     private fun isMatch(event: GithubPullRequestEvent, params: WebHookParams): Boolean {
         return handler.isMatch(
