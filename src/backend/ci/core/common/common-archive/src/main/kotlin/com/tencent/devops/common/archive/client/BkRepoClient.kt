@@ -231,16 +231,13 @@ class BkRepoClient constructor(
      * 仓库重名返回 [ERROR_REPO_EXISTED]，同样视为已存在。其它失败抛出，由调用方决定是否重试。
      */
     fun ensureVariableRepo(userId: String, projectId: String) {
-        if (!useBkRepo()) {
-            return
-        }
         try {
             createGenericRepo(userId = userId, projectId = projectId, repoName = REPO_VARIABLE, display = false)
-        } catch (e: RemoteServiceException) {
-            if (e.errorCode == ERROR_REPO_EXISTED) {
+        } catch (ignored: RemoteServiceException) {
+            if (ignored.errorCode == ERROR_REPO_EXISTED) {
                 return
             }
-            throw e
+            throw ignored
         }
     }
 

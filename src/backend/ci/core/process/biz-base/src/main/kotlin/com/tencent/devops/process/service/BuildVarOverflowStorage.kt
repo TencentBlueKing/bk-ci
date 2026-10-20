@@ -115,9 +115,6 @@ class BuildVarOverflowStorage @Autowired constructor(
      * 重名 251007 按已存在处理。确认失败不写入缓存。用制品库默认用户创建，避免构建触发人没有建仓权限。
      */
     fun ensureVariableRepo(projectId: String) {
-        if (!isEnabled()) {
-            return
-        }
         variableRepoReady.get(projectId) {
             bkRepoClient.ensureVariableRepo(REPO_CREATE_USER, projectId)
             true
