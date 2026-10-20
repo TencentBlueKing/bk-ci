@@ -177,6 +177,9 @@ interface UserPipelineInfoResource {
         channelCode: ChannelCode?,
         @Parameter(description = "流水线名称", required = false)
         @QueryParam("pipelineName")
-        pipelineName: String?
+        pipelineName: String?,
+        @Parameter(description = "已选中的流水线ID，第一页不包含时补充到最前面", required = false)
+        @QueryParam("selectedPipelineId")
+        selectedPipelineId: String?
     ): Result<Page<PipelineIdAndName>>
 }

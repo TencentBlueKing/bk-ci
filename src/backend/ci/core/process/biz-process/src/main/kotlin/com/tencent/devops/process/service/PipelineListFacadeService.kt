@@ -2338,7 +2338,8 @@ class PipelineListFacadeService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         pipelineName: String? = null,
-        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+        selectedPipelineId: String? = null
     ): SQLPage<PipelineIdAndName> {
         val authPermission = when (permission) {
             Permission.DEPLOY -> AuthPermission.DEPLOY
@@ -2380,7 +2381,30 @@ class PipelineListFacadeService @Autowired constructor(
         val records = pipelineInfoDao.listByCondition(dslContext, condition).map {
             PipelineIdAndName(it.pipelineId, it.pipelineName)
         }
-        return SQLPage(count = count, records = records)
+        // 选中项不在第一页时补到最前面，用于前端回显；count 和分页保持不变
+        val needQuerySelectedPipeline = sqlLimit?.offset == 0 &&
+            !selectedPipelineId.isNullOrBlank() &&
+            permissionIds.contains(selectedPipelineId) &&
+            records.none { it.pipelineId == selectedPipelineId }
+        val selectedPipelineRecords = if (needQuerySelectedPipeline) {
+            listOfNotNull(
+                pipelineInfoDao.getPipelineId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = selectedPipelineId!!
+                )?.takeIf { it.delete != true }?.let { PipelineIdAndName(it.pipelineId, it.pipelineName) }
+            )
+        } else {
+            emptyList()
+        }
+        return SQLPage(
+            count = count,
+            records = if (selectedPipelineRecords.isEmpty()) {
+                records
+            } else {
+                selectedPipelineRecords + records
+            }
+        )
     }
 
     fun listDisabledPipelines(
