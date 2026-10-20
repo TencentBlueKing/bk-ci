@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -100,6 +101,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -215,6 +217,15 @@ class PipelineRuntimeService @Autowired constructor(
         private const val BUILD_REMARK_MAX_LENGTH = 4096
         private const val NODE_INFO_CACHE_MAX_SIZE = 5000
         private const val NODE_INFO_CACHE_EXPIRE_MINUTES = 30L
+
+        /**
+         * #13581 需要写入 Job 取消标记的状态：Agent 已经在领任务或马上会领任务。
+         */
+        private val JOB_CANCEL_FLAG_STATUS_SET = setOf(
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
     }
 
     private data class NodeDisplayInfo(val name: String, val ip: String?)
@@ -245,7 +256,10 @@ class PipelineRuntimeService @Autowired constructor(
                         userId = userId,
                         buildId = build.buildId,
                         status = BuildStatus.TERMINATE,
-                        executeCount = build.executeCount
+                        executeCount = build.executeCount,
+                        buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_PIPELINE_DELETED
+                        )
                     )
                 )
             }
@@ -267,33 +281,35 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
-    /** 根据状态信息获取并发组构建列表
-     * @return Pair( PIPELINE_ID , BUILD_ID )
-     */
+    /** 根据状态信息获取并发组构建列表 */
     fun getBuildInfoListByConcurrencyGroup(
         projectId: String,
         concurrencyGroup: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroup(
             dslContext = dslContext,
             projectId = projectId,
             concurrencyGroup = concurrencyGroup,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildInfoListByConcurrencyGroupNull(
         projectId: String,
         pipelineId: String,
-        status: List<BuildStatus>
-    ): List<Pair<String, String>> {
+        status: List<BuildStatus>,
+        excludeBuildId: String? = null
+    ): List<ConcurrencyGroupBuild> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroupNull(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            statusSet = status
-        ).map { Pair(it.value1(), it.value2()) }
+            statusSet = status,
+            excludeBuildId = excludeBuildId
+        )
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
@@ -660,7 +676,8 @@ class PipelineRuntimeService @Autowired constructor(
                 artifactList = artifactList,
                 artifactQuality = artifactQuality,
                 remark = remark,
-                totalTime = if (startTime != null && endTime != null) {
+                // 调试历史把未开始的 startTime 兜成 0。排队中被取消时不能用结束时间去减 0，否则耗时变成时间戳。
+                totalTime = if ((startTime ?: 0L) > 0L && (endTime ?: 0L) > 0L) {
                     (endTime!! - startTime!!).takeIf { it > 0 }
                 } else null,
                 executeTime = executeTime,
@@ -765,9 +782,36 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        terminateFlag: Boolean = false
+        terminateFlag: Boolean = false,
+        buildEndInfo: BuildEndInfo? = null
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 心跳监控沿用历史范围，查询结果同时用于 #13581 打取消标记
+        val statusSet = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING,
+            BuildStatus.LOOP_WAITING,
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING
+        )
+        val containers = pipelineContainerService.listContainers(
+            projectId = projectId,
+            buildId = buildId,
+            statusSet = statusSet
+        )
+        // #13581 先同步给运行中的 Job 打取消标记，再发异步取消事件。
+        // Agent 认领插件是 HTTP 同步路径，若等 MQ 落地再标记，快插件已经切到下一步。
+        // QUEUE / DEPENDENT_WAITING / LOOP_WAITING 尚未真正运行，不写标，避免同 buildId 重试误命中残留 Key。
+        containers.forEach { container ->
+            if (container.status in JOB_CANCEL_FLAG_STATUS_SET) {
+                TaskUtils.markJobCancelFlag(
+                    redisOperation = redisOperation,
+                    buildId = buildId,
+                    containerId = container.containerId
+                )
+            }
+        }
         // 记录该构建取消人信息
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
@@ -787,7 +831,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 status = buildStatus,
                 actionType = actionType,
-                executeCount = executeCount
+                executeCount = executeCount,
+                buildEndInfo = buildEndInfo
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
@@ -799,19 +844,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
         // 给未结束的job发送心跳监控事件
-        val statusSet = setOf(
-            BuildStatus.QUEUE,
-            BuildStatus.QUEUE_CACHE,
-            BuildStatus.DEPENDENT_WAITING,
-            BuildStatus.LOOP_WAITING,
-            BuildStatus.PREPARE_ENV,
-            BuildStatus.RUNNING
-        )
-        val containers = pipelineContainerService.listContainers(
-            projectId = projectId,
-            buildId = buildId,
-            statusSet = statusSet
-        )
         containers.forEach { container ->
             pipelineEventDispatcher.dispatch(
                 PipelineContainerAgentHeartBeatEvent(
@@ -842,6 +874,14 @@ class PipelineRuntimeService @Autowired constructor(
         val lastTimeBuildTasks = pipelineTaskService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildContainers = pipelineContainerService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(context.projectId, context.buildId)
+        // 同 buildId 重试时先清掉上一轮取消集合，避免新一轮领取误命中旧 Key。
+        if (lastTimeBuildContainers.isNotEmpty()) {
+            TaskUtils.clearBuildJobCancelFlags(
+                redisOperation = redisOperation,
+                buildId = context.buildId,
+                containerIds = lastTimeBuildContainers.map { it.containerId }
+            )
+        }
 
         val buildInfo = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
         context.watcher.stop()
@@ -1140,7 +1180,8 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     newList
                 },
-                concurrencyGroup = context.concurrencyGroup
+                concurrencyGroup = context.concurrencyGroup,
+                concurrencySubGroup = context.concurrencySubGroup
             )
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
@@ -1344,6 +1385,16 @@ class PipelineRuntimeService @Autowired constructor(
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
         val modelRecord = if (context.retryOnRunningBuild) {
+            // 运行中重试复用同一执行次数的记录行，需清掉本次执行中已落库的终态详情
+            // （Agent失联、Job超时这类入口在构建运行中就会写入），否则构建结束时的
+            // IfAbsent 写入会被残留值挡住，页面展示的详情与最终状态不符
+            pipelineBuildRecordService.clearBuildEndInfo(
+                transactionContext = transactionContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                executeCount = context.executeCount
+            )
             null
         } else {
             BuildRecordModel(
@@ -2266,7 +2317,8 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         userId: String,
         groupName: String,
-        detailUrl: String
+        detailUrl: String,
+        reasonMessage: String? = null
     ) {
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
@@ -2279,13 +2331,18 @@ class PipelineRuntimeService @Autowired constructor(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
                 val containerId = task["containerId"]?.toString() ?: ""
                 // #7599 兼容短时间取消状态异常优化
-                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
-                redisOperation.addSetValue(cancelTaskSetKey, taskId)
-                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+                TaskUtils.recordCancelTaskId(
+                    redisOperation = redisOperation,
+                    buildId = buildId,
+                    containerId = containerId,
+                    taskId = taskId
+                )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = taskId,
                     containerHashId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1,
@@ -2295,8 +2352,10 @@ class PipelineRuntimeService @Autowired constructor(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = "QueueInterceptor",
                     containerHashId = "",
                     executeCount = 1,
@@ -2310,7 +2369,11 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo?.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_PRIORITY,
+                            reasonParams = listOf(groupName)
+                        )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {

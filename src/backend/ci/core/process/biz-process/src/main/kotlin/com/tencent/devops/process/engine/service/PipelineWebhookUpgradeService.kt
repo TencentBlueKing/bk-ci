@@ -43,7 +43,6 @@ import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -58,7 +57,8 @@ class PipelineWebhookUpgradeService(
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val client: Client,
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -138,9 +138,7 @@ class PipelineWebhookUpgradeService(
                 Pair(emptyList(), emptyMap())
             } else {
                 val triggerContainer = model.getTriggerContainer()
-                val params = triggerContainer.params.associate { param ->
-                    param.id to param.defaultValue.toString()
-                }
+                val params = pipelineRepositoryService.getTriggerParams(triggerContainer)
                 Pair(triggerContainer.elements.filterIsInstance<WebHookTriggerElement>(), params)
             }
             pipelines[pipelineId] = elements
@@ -401,11 +399,7 @@ class PipelineWebhookUpgradeService(
             return
         }
         val triggerContainer = model.getTriggerContainer()
-        val params = PipelineVarUtil.fillVariableMap(
-            triggerContainer.params.associate { param ->
-                param.id to param.defaultValue.toString()
-            }
-        )
+        val params = pipelineRepositoryService.getTriggerParams(triggerContainer)
         val elementMap =
             triggerContainer.elements.filterIsInstance<WebHookTriggerElement>().associateBy { it.id }
         val pipelineWebhooks = pipelineWebhookDao.listWebhook(

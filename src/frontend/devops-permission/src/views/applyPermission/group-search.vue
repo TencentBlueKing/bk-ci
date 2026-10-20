@@ -26,7 +26,6 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const bkEllipsis = resolveDirective('bk-ellipsis');
 const bkTooltips = resolveDirective('bk-tooltips');
 const showDetail = ref(false);
 const tableRef = ref();
@@ -299,14 +298,10 @@ const columns = [
   },
   {
     label: t('资源实例'),
-    render({ cell, row }) {
-      return withDirectives(h(
-        'div',
-        {
-          class: 'bk-ellipsis',
-        },
-        `${row.resourceTypeName}:${row.resourceName}`,
-      ), [[bkEllipsis]]);
+    field: 'resourceName',
+    showOverflowTooltip: true,
+    render({ row }) {
+      return `${row.resourceTypeName}:${row.resourceName}`;
     },
   },
   {
@@ -333,15 +328,8 @@ const columns = [
   },
   {
     label: t('描述'),
-    render({ cell, row }) {
-      return withDirectives(h(
-        'div',
-        {
-          class: 'bk-ellipsis',
-        },
-        row.description,
-      ), [[bkEllipsis]]);
-    },
+    field: 'description',
+    showOverflowTooltip: true,
   },
 ];
 
@@ -434,12 +422,6 @@ onMounted(() => {
 </style>
 
 <style lang="postcss">
-  .bk-ellipsis {
-    width: 100%;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
   .group-table {
     .hover-highlight td:nth-child(1) {
       .cell {
@@ -455,3 +437,4 @@ onMounted(() => {
     }
   }
 </style>
+

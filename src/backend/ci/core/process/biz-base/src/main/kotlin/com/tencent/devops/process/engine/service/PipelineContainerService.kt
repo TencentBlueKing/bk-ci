@@ -132,7 +132,8 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
-        statusSet: Set<BuildStatus>? = null
+        statusSet: Set<BuildStatus>? = null,
+        executeCount: Int? = null
     ): List<PipelineBuildContainer> {
         return pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
@@ -140,7 +141,8 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             stageId = stageId,
             containsMatrix = containsMatrix,
-            statusSet = statusSet
+            statusSet = statusSet,
+            executeCount = executeCount
         )
     }
 
@@ -175,6 +177,14 @@ class PipelineContainerService @Autowired constructor(
 
     fun listByBuildId(projectId: String, buildId: String, stageId: String? = null): List<PipelineBuildContainer> {
         return pipelineBuildContainerDao.listByBuildId(dslContext, projectId, buildId, stageId)
+    }
+
+    fun listByBuildIds(projectId: String, buildIds: Collection<String>): List<PipelineBuildContainer> {
+        return pipelineBuildContainerDao.listByBuildIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildIds = buildIds,
+        )
     }
 
     fun batchSave(transactionContext: DSLContext?, containerList: Collection<PipelineBuildContainer>) {

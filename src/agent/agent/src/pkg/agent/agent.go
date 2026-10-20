@@ -75,7 +75,8 @@ func Run(isDebug bool) {
 		}
 	}
 
-	// 数据采集
+	// 数据采集。每个 monitor input 独立运行且不重入；单项卡住时只跳过
+	// 该项的后续采集，不影响主链路（心跳/构建）和其他采集项。
 	safeGo("monitor", monitor.Collect)
 
 	// 定期清理

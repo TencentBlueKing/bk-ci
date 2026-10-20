@@ -73,13 +73,27 @@ class ImateStageReviewTest {
     @Test
     fun `taskId round trip includes projectId`() {
         val taskId = ImateStageReview.taskId("_royalhuang", "b-abc", "stage-2", 1)
-        assertEquals("cs-stage|_royalhuang|b-abc|stage-2|1", taskId)
+        assertEquals("cs-stage~_royalhuang~b-abc~stage-2~1", taskId)
         val parts = ImateStageReview.parseTaskId(taskId)!!
         assertEquals("_royalhuang", parts.projectId)
         assertEquals("b-abc", parts.buildId)
         assertEquals("stage-2", parts.stageId)
         assertEquals(1, parts.executeCount)
         assertNull(ImateStageReview.parseTaskId("not-a-task"))
+    }
+
+    @Test
+    fun `parseTaskId accepts legacy pipe and url-encoded separators`() {
+        val expected = ImateStageReview.TaskIdParts("_royalhuang", "b-abc", "stage-2", 1)
+        assertEquals(expected, ImateStageReview.parseTaskId("cs-stage|_royalhuang|b-abc|stage-2|1"))
+        assertEquals(
+            expected,
+            ImateStageReview.parseTaskId("cs-stage%7E_royalhuang%7Eb-abc%7Estage-2%7E1")
+        )
+        assertEquals(
+            expected,
+            ImateStageReview.parseTaskId("cs-stage%7C_royalhuang%7Cb-abc%7Cstage-2%7C1")
+        )
     }
 
     @Test

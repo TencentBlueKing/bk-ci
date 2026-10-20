@@ -32,9 +32,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_EXECUTE_COUNT
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import io.swagger.v3.oas.annotations.Operation
@@ -103,6 +107,27 @@ interface BuildBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @Operation(summary = "获取构建状态信息")
+    @GET
+    @Path("/{buildId}/status")
+    fun getBuildStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<String>
 
     @Operation(summary = "获取子流水线变量")
     @GET
@@ -192,4 +217,19 @@ interface BuildBuildResource {
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, Any>?>
+
+    @Operation(
+        summary = "查询互斥组当前任务列表",
+        description = "项目ID取自构建上下文，互斥组名称需传变量已替换后的运行时名称；返回空列表表示当前互斥组空闲",
+    )
+    @GET
+    @Path("/mutexGroup/tasks")
+    fun getMutexGroupTasks(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "互斥组名称", required = true)
+        @QueryParam("mutexGroupName")
+        mutexGroupName: String
+    ): Result<List<MutexGroupTaskInfo>>
 }

@@ -49,4 +49,6 @@ interface Project {
     enabled?: boolean
     logoAddr?: string
     gray?: boolean
+    favor?: boolean
+    projectScope?: number
 }

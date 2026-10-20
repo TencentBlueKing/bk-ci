@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.pojo
 
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -28,7 +29,8 @@ data class ThirdPartyAgentDispatchData(
     val singleNodeConcurrency: Int?,
     val allNodeConcurrency: Int?,
     val jobTimeoutMinutes: Int?,
-    val stageId: String?
+    val stageId: String?,
+    val createMode: Boolean?
 ) {
     fun isEnv() = dispatchType.isEnv()
     // 生成环境资源标识，需要添加共享项目信息
@@ -93,7 +95,8 @@ data class ThirdPartyAgentDispatchData(
         singleNodeConcurrency = dispatchMessage.event.singleNodeConcurrency,
         allNodeConcurrency = dispatchMessage.event.allNodeConcurrency,
         jobTimeoutMinutes = dispatchMessage.event.jobTimeoutMinutes,
-        stageId = dispatchMessage.event.stageId
+        stageId = dispatchMessage.event.stageId,
+        createMode = dispatchMessage.event.dispatchType is CreateAgentIdDispatchType
     )
 
     constructor(
@@ -125,7 +128,9 @@ data class ThirdPartyAgentDispatchData(
         singleNodeConcurrency = infoData.singleNodeConcurrency,
         allNodeConcurrency = infoData.allNodeConcurrency,
         jobTimeoutMinutes = infoData.jobTimeoutMinutes,
-        stageId = infoData.stageId
+        stageId = infoData.stageId,
+        // 先这样，未来创作流如果做的多了，考虑直接使用创作流的type作为dispatchType，就可以直接判断了
+        createMode = null
     )
 
     fun genSqlJsonData(): ThirdPartyAgentDispatchDataSqlJson {

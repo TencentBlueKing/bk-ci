@@ -325,9 +325,10 @@ class ScmOauthService @Autowired constructor(
                     context = context,
                     description = description,
                     block = block,
-                    targetBranch = targetBranch
+                    targetBranch = targetBranch,
+                    approvals = approvals
                 )
-                if (mrRequestId != null) {
+                if (mrRequestId != null && enableQualityReport != false) {
                     if (reportData.second.isEmpty()) return
                     val comment = QualityUtils.getQualityReport(
                         titleData = reportData.first,

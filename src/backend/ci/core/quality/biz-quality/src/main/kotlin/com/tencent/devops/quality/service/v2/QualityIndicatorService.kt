@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.redis.RedisLock
@@ -83,6 +85,7 @@ import com.tencent.devops.quality.constant.BK_TOOL_NAME_STANDARD
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_STYLECOP
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_WOODPECKER_SENSITIVE
 import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
+import com.tencent.devops.quality.constant.BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_DESC_KEY
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_ELEMENT_NAME_KEY
 import com.tencent.devops.quality.constant.QUALITY_INDICATOR_NAME_KEY
@@ -92,6 +95,7 @@ import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
+import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -116,7 +120,8 @@ class QualityIndicatorService @Autowired constructor(
     private val metadataService: QualityMetadataService,
     private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
     private val redisOperation: RedisOperation,
-    val commonConfig: CommonConfig
+    val commonConfig: CommonConfig,
+    private val qualityPermissionService: QualityPermissionService
 ) {
 
     private val encoder = Base64.getEncoder()
@@ -358,7 +363,8 @@ class QualityIndicatorService @Autowired constructor(
         )
     }
 
-    fun userDelete(userId: String, id: Long): Boolean {
+    fun userDelete(userId: String, projectId: String, id: Long): Boolean {
+        validateProjectRuleOperatePermission(userId, projectId, AuthPermission.DELETE)
         delete(userId, id)
         return true
     }
@@ -392,6 +398,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {
+        validateRulePermission(userId, projectId, AuthPermission.CREATE)
         checkCustomIndicatorExist(projectId, indicatorCreate.name, indicatorCreate.cnName)
         val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         indicatorDao.create(userId, indicatorUpdate, dslContext)
@@ -399,12 +406,39 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun userUpdate(userId: String, projectId: String, indicatorId: String, indicatorCreate: IndicatorCreate): Boolean {
+        validateProjectRuleOperatePermission(userId, projectId, AuthPermission.EDIT)
         val id = HashUtil.decodeIdToLong(indicatorId)
         checkCustomIndicatorExcludeExist(id, projectId, indicatorCreate.name, indicatorCreate.cnName)
         val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         indicatorDao.update(userId = userId, id = id, indicatorUpdate = indicatorUpdate, dslContext = dslContext)
         return true
+    }
+
+    private fun validateProjectRuleOperatePermission(userId: String, projectId: String, permission: AuthPermission) {
+        qualityPermissionService.validateProjectRuleOperatePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = permission,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
+                I18nUtil.getLanguage(userId),
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
+    }
+
+    private fun validateRulePermission(userId: String, projectId: String, permission: AuthPermission) {
+        qualityPermissionService.validateRulePermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = permission,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
+                I18nUtil.getLanguage(userId),
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        )
     }
 
     fun upsertIndicators(userId: String, projectId: String, indicatorCreateList: List<IndicatorCreate>): Boolean {

@@ -52,7 +52,8 @@
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import {
         SERVICE_RESOURCE_TYPE,
-        RES_TYPE_STORAGE_KEY
+        RES_TYPE_STORAGE_KEY,
+        ENV_TYPE_MAP
     } from '@/store/constants'
     import UseInstance from '@/hooks/useInstance'
     import Logo from '@/components/Logo'
@@ -77,7 +78,7 @@
                 {
                     value: SERVICE_RESOURCE_TYPE.CREATE,
                     label: proxy.$t('environment.creativeResource'),
-                    icon: 'color-logo-pipeline'
+                    icon: 'color-logo-creative'
                 }
             ])
             
@@ -100,11 +101,27 @@
                     activeValue.value = value
                     localStorage.setItem(RES_TYPE_STORAGE_KEY, value)
 
+                    // 切换资源类型时，保留当前所在页面（环境/节点），只更新 resType 参数；
+                    // 仅当处于环境详情页（envDetail）时，才重置 envType / envId / tabName，
+                    // 避免污染节点页（nodeList / setNodeTag）的路由参数。
+                    // 这里一次性完成 URL 更新，避免与 group_aside.vue 的 watch resType
+                    // 连续触发多次 replace 产生竞争；同时捕获 "Navigation cancelled" 异常，
+                    // 防止其冒泡到全局错误处理器。
+                    const currentName = proxy.$route.name
+                    const params = {
+                        ...proxy.$route.params,
+                        resType: value
+                    }
+                    if (currentName === 'envDetail') {
+                        params.envType = ENV_TYPE_MAP.ALL
+                        params.envId = undefined
+                        params.tabName = 'node'
+                    }
                     proxy.$router.replace({
-                        params: {
-                            ...proxy.$route.params,
-                            resType: value
-                        }
+                        name: currentName,
+                        params
+                    }).catch(err => {
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
                 isDropdownOpen.value = false

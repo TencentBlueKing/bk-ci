@@ -52,6 +52,8 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
+import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
@@ -102,6 +104,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
@@ -113,6 +116,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.VersionTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
@@ -245,6 +249,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    lateinit var storeRunInfoCacheManager: StoreRunInfoCacheManager
 
     @Autowired
     lateinit var client: Client
@@ -725,6 +732,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 version = record[tAtom.VERSION],
                 atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt()),
                 releaseType = releaseType?.name,
+                branchTestFlag = record[tAtom.BRANCH_TEST_FLAG] ?: false,
                 versionContent = record[tAtomVersionLog.CONTENT],
                 language = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
                     ?.language?.let { I18nUtil.getCodeLanMessage(it) },
@@ -860,6 +868,27 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        // 校验用户是否为该插件的成员，防止任意 atomCode 越权获取插件信息
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = GET_INFO_NO_PERMISSION,
+                params = arrayOf(atomCode)
+            )
+        }
+        return getNewestAtomByCode(userId = userId, atomCode = atomCode, serviceScope = serviceScope)
+    }
+
     /**
      * 安装插件到项目
      */
@@ -930,7 +959,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String?
     ): Result<Page<AtomVersionListItem>> {
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(
@@ -945,13 +975,24 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 params = arrayOf(atomCode)
             )
         }
-        val totalCount = atomDao.countByCode(dslContext, atomCode)
-        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
+        // 未传时按 ALL 处理
+        val versionTypeEnum = VersionTypeEnum.from(versionType)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(versionType ?: "")
+            )
+        val branchTestFlag = versionTypeEnum.branchTestFlag
+        val totalCount = atomDao.countByCode(dslContext, atomCode, branchTestFlag)
+        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize, branchTestFlag)
         val atomVersions = mutableListOf<AtomVersionListItem>()
         if (records != null) {
             val atomIds = records.map { it.id }
-            // 批量获取版本内容
-            val versionRecords = marketAtomVersionLogDao.getAtomVersions(dslContext, atomIds)
+            // 批量获取版本内容（含分支测试版本的版本日志）
+            val versionRecords = marketAtomVersionLogDao.getAtomVersions(
+                dslContext = dslContext,
+                atomIds = atomIds,
+                getTestVersionFlag = true
+            )
             val versionMap = mutableMapOf<String, String>()
             versionRecords?.forEach { versionRecord ->
                 versionMap[versionRecord.atomId] = versionRecord.content
@@ -964,8 +1005,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         name = it.name,
                         category = AtomCategoryEnum.getAtomCategory((it.categroy as Byte).toInt()),
                         version = it.version,
-                        versionContent = versionMap[it.id].toString(),
+                        versionContent = versionMap[it.id] ?: "",
                         atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
+                        branchTestFlag = it.branchTestFlag ?: false,
                         creator = it.creator,
                         createTime = DateTimeUtil.toDateTime(it.createTime)
                     )
@@ -1063,6 +1105,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             redisOperation.delete(StoreUtils.getStoreRunInfoKey(typeName, atomCode))
         }
+
+        // 插件参数定义被删除，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
         return Result(true)
     }
 
@@ -1158,6 +1204,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
     }
 
+    override fun getAtomInputProps(getAtomInputPropsRequest: GetAtomInputPropsRequest): Map<String, Map<String, Any>> =
+        atomPropsService.getAtomInputProps(getAtomInputPropsRequest)
+
     private fun updateAtomRunInfoCache(
         atomCode: String,
         atomVersion: String,
@@ -1168,11 +1217,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         if (!atomRunInfoJson.isNullOrEmpty()) {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
             updater(atomRunInfo)
-            redisOperation.hset(
-                key = atomRunInfoKey,
-                hashKey = atomVersion,
-                values = JsonUtil.toJson(atomRunInfo)
-            )
+            storeRunInfoCacheManager.setAtomRunInfo(atomCode, atomVersion, JsonUtil.toJson(atomRunInfo))
         }
     }
 }

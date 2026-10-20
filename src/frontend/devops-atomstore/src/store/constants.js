@@ -34,6 +34,7 @@ export const atomStatusMap = {
     TESTING: 'store.测试中',
     AUDITING: 'store.审核中',
     AUDIT_REJECT: 'store.审核驳回',
+    TESTED: 'store.测试结束',
     RELEASED: 'store.已发布',
     GROUNDING_SUSPENSION: 'store.上架中止',
     UNDERCARRIAGING: 'store.下架中',

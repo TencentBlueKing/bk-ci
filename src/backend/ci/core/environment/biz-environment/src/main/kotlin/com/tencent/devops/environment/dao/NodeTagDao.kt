@@ -232,6 +232,19 @@ class NodeTagDao {
         }
     }
 
+    fun deleteNodesUserTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>) {
+        if (nodeIds.isEmpty()) {
+            return
+        }
+        with(TNodeTags.T_NODE_TAGS) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .and(TAG_KEY_ID.gt(0L))
+                .execute()
+        }
+    }
+
     fun batchAddNodeTags(
         dslContext: DSLContext,
         projectId: String,

@@ -76,6 +76,7 @@ import {
     SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
+    SET_TRIGGER_PARAMS,
     SET_TEMP_PARAM_SET,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
@@ -455,7 +456,12 @@ export default {
     },
     requestTriggerParams: async ({ commit }, params) => {
         try {
-            const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+            let data = []
+            if (params?.length > 0) {
+                const res = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/trigger`, params)
+                data = res.data
+            }
+            commit(SET_TRIGGER_PARAMS, data)
             return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)

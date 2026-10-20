@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -26,14 +27,14 @@ import (
 type NetProto struct {
 	// protoCountersFn 为 gopsutil net.ProtoCounters 的注入点，便于测试。
 	// 传 nil 给 protocols 参数等价于采所有支持的协议。
-	protoCountersFn func(protocols []string) ([]gopsutilnet.ProtoCountersStat, error)
+	protoCountersFn func(ctx context.Context, protocols []string) ([]gopsutilnet.ProtoCountersStat, error)
 	nowFn           func() time.Time
 }
 
 // NewNetProto 返回默认 NetProto 采集器。
 func NewNetProto() *NetProto {
 	return &NetProto{
-		protoCountersFn: gopsutilnet.ProtoCounters,
+		protoCountersFn: gopsutilnet.ProtoCountersWithContext,
 		nowFn:           time.Now,
 	}
 }
@@ -47,8 +48,8 @@ func (np *NetProto) Name() string { return MeasurementNet }
 // 任何错误（文件不可读、解析失败）都吞掉返回 nil, nil——对齐 telegraf
 // 源码 `netprotos, _ := n.ps.NetProto()` 的忽略策略，避免因 snmp 不可用
 // 而阻断整个 monitor gather。
-func (np *NetProto) Gather() ([]Metric, error) {
-	stats, err := np.protoCountersFn(nil)
+func (np *NetProto) Gather(ctx context.Context) ([]Metric, error) {
+	stats, err := np.protoCountersFn(ctx, nil)
 	if err != nil || len(stats) == 0 {
 		return nil, nil
 	}

@@ -276,6 +276,9 @@
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
+                  "report-quality-results" : {
+                    "type" : "boolean"
+                  },
                   "block-mr" : {
                     "type" : "boolean"
                   },
@@ -386,6 +389,9 @@
                     }
                   },
                   "report-commit-check" : {
+                    "type" : "boolean"
+                  },
+                  "report-quality-results" : {
                     "type" : "boolean"
                   },
                   "webhook-queue" : {
@@ -1332,6 +1338,9 @@
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
+                "report-quality-results" : {
+                  "type" : "boolean"
+                },
                 "block-mr" : {
                   "type" : "boolean"
                 },
@@ -1442,6 +1451,9 @@
                   }
                 },
                 "report-commit-check" : {
+                  "type" : "boolean"
+                },
+                "report-quality-results" : {
                   "type" : "boolean"
                 },
                 "webhook-queue" : {
@@ -3075,6 +3087,15 @@
                           },
                           "user" : {
                             "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
+                            "type" : "string"
                           }
                         }
                       },
@@ -3212,6 +3233,9 @@
         "group" : {
           "type" : "string"
         },
+        "sub-group" : {
+          "type" : "string"
+        },
         "cancel-in-progress" : {
           "type" : "boolean"
         },
@@ -3228,7 +3252,7 @@
         "max-parallel" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 200
+          "maximum" : 500
         }
       }
     },
@@ -3552,6 +3576,15 @@
                             }
                           },
                           "user" : {
+                            "type" : "string"
+                          },
+                          "cpus" : {
+                            "anyOf": [
+                              { "type": "string" },
+                              { "type": "number" }
+                            ]
+                          },
+                          "memory" : {
                             "type" : "string"
                           }
                         }

@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
@@ -157,7 +158,9 @@ data class StartBuildContext(
     // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
     val retryMatrixGroupId: String? = null,
     // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
-    val retryMatrixContainerId: String? = null
+    val retryMatrixContainerId: String? = null,
+    // 同一批标识。null 未配置；空串表示配置了但启动时解析为空
+    val concurrencySubGroup: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -222,13 +225,43 @@ data class StartBuildContext(
             false
         } else if (stageRetry) {
             // Stage 失败重试：非目标且已完成（或已审过）的 Stage 跳过
-            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+            stageReallyFinished(stage) || hasCompletedStageReview(stage)
         } else if (!retryStartTaskId.isNullOrBlank() && !reachedRetryTargetStage && !isRetryTargetStage(stage)) {
             // 任务/Job/矩阵局部重试：重试点之前已完成（或已审过）的 Stage 整段跳过，禁止刷新以免清空 checkIn
-            BuildStatus.parse(stage.status).isFinish() || hasCompletedStageReview(stage)
+            stageReallyFinished(stage) || hasCompletedStageReview(stage)
         } else {
             false
         }
+    }
+
+    /**
+     * [stage]是否真的执行到了终态。
+     *
+     * 上一次构建被取消时，尚未下发的 Stage 同样会被标记为 CANCELED。这类 Stage 并没有执行过，
+     * 不能当作「已完成」而在重试时整段跳过：跳过后它既不会重跑、也不会写入本次执行次数的记录，
+     * 于是带着上一次残留的 CANCELED 参与 Stage 状态聚合，使构建无论重试多少次都停在取消态。
+     * #13407 已在 Job 层面处理过同一问题。
+     *
+     * 只有取消态需要甄别，失败/成功/跳过都必然已经执行或判定过。
+     */
+    private fun stageReallyFinished(stage: Stage): Boolean {
+        val status = BuildStatus.parse(stage.status)
+        if (!status.isFinish()) {
+            return false
+        }
+        return !status.isCancel() || stage.containers.any { containerEverRan(it) }
+    }
+
+    /**
+     * [container]在上一次执行中是否留下过状态。未下发的 Job 记录里状态为空，
+     * 取消流程也只会改写已启动的 Job（见 BuildCancelControl.cancelAllPendingTask），故可据此判定。
+     * 矩阵父容器自身可能无状态，需要下探子容器。
+     */
+    private fun containerEverRan(container: Container): Boolean {
+        if (!container.status.isNullOrBlank()) {
+            return true
+        }
+        return container.fetchGroupContainers()?.any { containerEverRan(it) } == true
     }
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
@@ -493,6 +526,14 @@ data class StartBuildContext(
                         )
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
+                    },
+                concurrencySubGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                    ?.let {
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        ConcurrencySubGroupPolicy.resolve(
+                            expression = it.concurrencySubGroup,
+                            variables = PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
                     },
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =

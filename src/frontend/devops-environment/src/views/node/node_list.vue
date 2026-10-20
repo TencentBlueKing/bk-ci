@@ -139,19 +139,12 @@
                 </CollapseLayout>
             </template>
         </section>
-        <third-construct
-            :construct-tool-conf="constructToolConf"
-            :construct-import-form="constructImportForm"
-            :connect-node-detail="connectNodeDetail"
-            :gateway-list="gatewayList"
-            :loading="dialogLoading"
-            :has-permission="hasPermission"
-            :empty-tips-config="emptyTipsConfig"
-            :confirm-fn="confirmFn"
-            :is-agent="isAgent"
-            :node-ip="nodeIp"
-            :request-dev-command="requestDevCommand"
-        ></third-construct>
+        <ImportThirdPartyDialog
+            :is-show.sync="importDialog.isShow"
+            :mode="importDialog.mode"
+            :node="importDialog.node"
+            :default-os="importDialog.defaultOs"
+        />
 
         <bk-dialog
             v-model="isShowEditMaxConcurrency"
@@ -296,7 +289,7 @@
 </template>
 
 <script>
-    import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import ImportThirdPartyDialog from '@/components/devops/environment/ImportThirdPartyDialog.vue'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
     import {
@@ -310,6 +303,11 @@
     import ListTable from './list_table.vue'
     import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
+    // 表格行高 / 表头高度 / 分页栏高度 / 表格上边距，用于按容器高度自适应每页条数
+    const ROW_HEIGHT = 42
+    const TABLE_HEADER_HEIGHT = 42
+    const PAGINATION_HEIGHT = 64
+    const TABLE_MARGIN_TOP = 20
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
@@ -318,7 +316,7 @@
     export default {
         components: {
             ListTable,
-            thirdConstruct,
+            ImportThirdPartyDialog,
             SearchSelect,
             CollapseLayout,
             NodeDetail
@@ -369,18 +367,14 @@
                 ALLNODE,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
-                nodeIp: '',
-                isAgent: false,
                 isMultipleBtn: false,
                 isEditNodeStatus: false,
                 isDropdownShow: false, // 导入菜单
                 showContent: false, // 内容显示
-                hasPermission: true, // 构建机权限
                 showTooltip: false,
                 curNodeDialog: '', // 当前弹窗节点
                 lastCliCKNode: {},
                 nodeList: [], // 节点列表
-                gatewayList: [], // 网关列表
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
                 failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
@@ -400,51 +394,12 @@
                     title: this.$t('environment.nodeInfo.emptyNode'),
                     desc: this.$t('environment.nodeInfo.emptyNodeTips')
                 },
-                // 构建机弹窗配置
-                constructToolConf: {
+                // 导入第三方构建机弹窗（import = 导入节点，reinstall = 重装 Agent）
+                importDialog: {
                     isShow: false,
-                    hasHeader: false,
-                    quickClose: false,
-                    importText: this.$t('environment.import')
-                },
-                // 构建机内容
-                constructImportForm: {
-                    model: 'Linux',
-                    location: '',
-                    link: '',
-                    loginName: '',
-                    loginPassword: '',
-                    installType: 'SERVICE',
-                    autoSwitchAccount: false
-                },
-                // 构建机信息
-                connectNodeDetail: {
-                    isConnectNode: false,
-                    hostname: '',
-                    status: 'UN_IMPORT',
-                    os: 'macOS 10.13.4'
-                },
-                makeMirrorConf: {
-                    isShow: false
-                },
-                // 权限配置
-                emptyTipsConfig: {
-                    title: this.$t('environment.noPermission'),
-                    desc: this.$t('environment.nodeInfo.noCreateNodePermissionTips'),
-                    btns: [
-                        {
-                            type: 'primary',
-                            size: 'normal',
-                            handler: this.changeProject,
-                            text: this.$t('environment.switchProject')
-                        },
-                        {
-                            type: 'success',
-                            size: 'normal',
-                            handler: this.goToApplyPerm,
-                            text: this.$t('environment.applyPermission')
-                        }
-                    ]
+                    mode: 'import',
+                    node: null,
+                    defaultOs: ''
                 },
                 searchValue: urlParams.searchValue || [],
                 paginationData: {
@@ -464,7 +419,6 @@
                 tagSearchValue: urlParams.tagSearchValue || [],
                 isBatchDropdownShow: false,
                 selectedNodes: [],
-                reInstallId: '',
                 isShowEditMaxConcurrency: false,
                 isShowResetImportUser: false,
                 parallelTaskCount: 0,
@@ -592,43 +546,39 @@
                 const str = this.filterData.filter((i, index) => index < 7).map(item => item.name).join(' / ')
                 return this.$t('environment.filterNodeBy', [str])
             },
-            installModeAsService () {
-                return this.constructImportForm.installType === 'SERVICE'
-            },
             batchMenuItems () {
-                const editPerm = {
-                    permissionData: {
-                        projectId: this.projectId,
-                        resourceType: this.currentResourceType,
-                        resourceCode: this.projectId,
-                        action: this.currentResourceAction.EDIT
-                    }
-                }
                 const cannotDeleteNodes = this.selectedNodes.filter(node => !node.canDelete)
                 const cannotDeleteNames = cannotDeleteNodes.map(node => node.displayName).filter(Boolean).join('、')
+                const cannotEditNodes = this.selectedNodes.filter(node => !node.canEdit)
+                const cannotEditNames = cannotEditNodes.map(node => node.displayName).filter(Boolean).join('、')
                 return [
                     {
                         key: 'thirdPartyBuildMachine',
                         textKey: 'environment.batchSetTag',
-                        handler: () => this.batchSetTag(),
-                        perm: editPerm
+                        tooltips: cannotEditNodes.length
+                            ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                            : '',
+                        disabled: cannotEditNodes.length > 0,
+                        handler: () => this.batchSetTag()
                     },
                     {
                         key: 'bulkEditMaxConcurrency',
                         textKey: 'environment.bulkEditMaxConcurrency',
-                        tooltips: this.$t('environment.未选择构建节点，不支持修改'),
-                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
-                        handler: () => this.batchSetMaxConcurrency(),
-                        perm: editPerm
+                        tooltips: cannotEditNodes.length
+                            ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                            : this.$t('environment.未选择构建节点，不支持修改'),
+                        disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) || cannotEditNodes.length > 0,
+                        handler: () => this.batchSetMaxConcurrency()
                     },
                     ...(!this.isCreateResType ? [
                         {
                             key: 'bulkResetImportUser',
                             textKey: 'environment.bulkResetImportUser',
-                            tooltips: this.$t('environment.未选择部署节点，不支持重置'),
-                            disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                            handler: () => this.batchResetImportUser(),
-                            perm: editPerm
+                            tooltips: cannotEditNodes.length
+                                ? this.$t('environment.cannotEditNodesTips', [cannotEditNames])
+                                : this.$t('environment.未选择部署节点，不支持重置'),
+                            disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB')) || cannotEditNodes.length > 0,
+                            handler: () => this.batchResetImportUser()
                         },
                         {
                             key: 'idcTestMachine',
@@ -713,6 +663,13 @@
                     this.syncCurrentTags()
                 }
             },
+            // 将 URL 解析得到的标签 ID 还原为可读名称
+            'queryParams.tagSearchValue': {
+                immediate: true,
+                handler (val) {
+                    this.tagSearchValue = this.resolveTagNames(val || [])
+                }
+            },
             '$route.params.nodeType' (newVal, oldVal) {
                 // 只有当 nodeType 真正发生变化时才处理
                 if (newVal !== oldVal) {
@@ -750,35 +707,11 @@
                 },
                 immediate: true
             },
-            // 构建机型变化
-            'constructImportForm.model' (val) {
-                if (val && !this.isAgent) {
-                    this.constructImportForm.link = ''
-                    this.constructImportForm.location = ''
-                    this.requestGateway()
-                }
-            },
-            'constructImportForm.installType' (val) {
-                this.constructImportForm.link = ''
-                this.requestDevCommand()
-            },
-            'constructImportForm.autoSwitchAccount' (val) {
-                this.constructImportForm.link = ''
-                this.requestDevCommand()
-            },
-            'constructImportForm.location' (val) {
-                if (val) {
-                    this.requestDevCommand()
-                }
-            },
-            'constructImportForm.loginPassword' (val) {
-                if (!val) {
-                    this.constructImportForm.link = ''
-                }
-            },
-            'constructImportForm.loginName' (val) {
-                if (!val) {
-                    this.constructImportForm.link = ''
+            // 导入弹窗关闭后刷新列表与计数（弹窗打开期间可能有新节点接入）
+            'importDialog.isShow' (v) {
+                if (!v) {
+                    this.requestList()
+                    this.requestGetCounts(this.projectId)
                 }
             },
             searchValue (val) {
@@ -811,13 +744,17 @@
         created () {
             const urlParams = getQueryString('type')
             if (urlParams) {
-                this.constructImportForm.model = urlParams
+                // URL 携带 OS 时透传给导入弹窗作为默认操作系统
+                this.importDialog.defaultOs = urlParams
                 this.toImportNode('construct')
             }
             webSocketMessage.installWsMessage(this.requestList)
             this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
+            await this.$nextTick()
+            // URL 与 localStorage 均无 pageSize 时，按容器高度自适应每页条数
+            this.applyAutoSizeLimit()
             await this.init()
         },
         methods: {
@@ -837,6 +774,7 @@
             },
             batchSetTag () {
                 if (!this.hasSelectedNode()) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 const currentNodeType = this.$route.params.nodeType || ALLNODE
                 localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                 this.$store.commit('environment/setSelectionTagList', this.selectedNodes)
@@ -850,6 +788,7 @@
             },
             batchSetMaxConcurrency (){
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowEditMaxConcurrency = true
             },
             async handleSetMaxConcurrency () {
@@ -890,6 +829,7 @@
             },
             batchResetImportUser (){
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'CMDB')) return
+                if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowResetImportUser = true
             },
             async handleChangeImportUser () {
@@ -988,6 +928,27 @@
                     this.currentNodeType = ''
                 }
             },
+            // 将标签搜索中以 ID 表示的名称还原为 nodeTagList 中的可读名称
+            resolveTagNames (tagArr) {
+                if (!tagArr?.length) return tagArr
+                if (!this.nodeTagList?.length) return tagArr
+
+                return tagArr.map(item => {
+                    const group = this.nodeTagList.find(g => String(g.tagKeyId) === String(item.id))
+                    if (!group) return item
+
+                    const values = (item.values || []).map(v => {
+                        const found = group.tagValues?.find(t => String(t.tagValueId) === String(v.id))
+                        return found ? { id: v.id, name: found.tagValueName } : v
+                    })
+
+                    return {
+                        id: item.id,
+                        name: group.tagKeyName,
+                        values
+                    }
+                })
+            },
             handleTagChange (val) {
                 if (val.length) {
                     const tags = val.map(item => {
@@ -1009,9 +970,8 @@
                 // 设置标志位，避免 searchValue watcher 触发额外请求
                 this.isNodeTypeChanging = true
                 
-                // 清除搜索和标签条件
+                // 清除搜索条件
                 this.searchValue = []
-                this.tagSearchValue = []
                 this.requestParams = {}
                 
                 // 重置分页到第一页
@@ -1021,9 +981,22 @@
                 // 同步当前标签和节点类型
                 await this.syncCurrentTags()
                 
+                // 与侧边栏选中标签联动：将选中标签回填到标签搜索框，并同步到 URL，
+                // 避免被 queryParams.tagSearchValue 的 watcher 重置为空
+                if (this.currentTags.length) {
+                    const syncedTag = this.resolveTagNames([{
+                        id: this.currentTags[0].tagKeyId,
+                        values: this.currentTags[0].tagValues.map(id => ({ id }))
+                    }])
+                    this.tagSearchValue = syncedTag
+                    this.updateTagSearchValue(syncedTag)
+                } else {
+                    this.tagSearchValue = []
+                    this.updateTagSearchValue(null)
+                }
+                
                 // 更新 URL 参数
                 this.updateSearchValue([])
-                this.updateTagSearchValue([])
                 
                 // 重新请求数据
                 await this.requestList()
@@ -1115,17 +1088,6 @@
                     this.tableLoading = false
                 }
             },
-            changeProject () {
-                this.$toggleProjectMenu(true)
-            },
-            goToApplyPerm () {
-                this.handleNoPermission({
-                    projectId: this.projectId,
-                    resourceType: this.currentResourceType,
-                    resourceCode: this.projectId,
-                    action: this.currentResourceAction.CREATE
-                })
-            },
             dropdownIsShow (isShow) {
                 if (isShow === 'show') {
                     this.isDropdownShow = true
@@ -1138,27 +1100,20 @@
             },
             
             /**
-             * 是否启动了构建机
+             * 是否启动了构建机（权限校验通过后打开导入第三方构建机弹窗）
+             * @param {Object} [node] 传入则为重装 Agent（reinstall），否则为导入节点（import）
              */
             async switchConstruct (node) {
                 let message, theme
-                this.dialogLoading.isLoading = true
-
                 try {
                     const res = await this.$store.dispatch('environment/hasConstructPermission', {
                         projectId: this.projectId
                     })
 
                     if (res) {
-                        this.constructToolConf.isShow = true
-                        if (node) {
-                            const gateway = node.gateway
-                            this.constructImportForm.model = node.osName.toUpperCase()
-                            this.requestGateway(gateway, node)
-                        } else {
-                            this.constructImportForm.model = 'LINUX'
-                            this.requestGateway()
-                        }
+                        this.importDialog.mode = node ? 'reinstall' : 'import'
+                        this.importDialog.node = node || null
+                        this.importDialog.isShow = true
                     } else {
                         message = this.$t('environment.nodeInfo.grayscalePublicBeta')
                         theme = 'warning'
@@ -1168,8 +1123,6 @@
                             theme
                         })
                     }
-
-                    this.dialogLoading.isLoading = false
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -1180,157 +1133,13 @@
                     })
                 }
             },
-            /**
-             * 获取网关列表
-             */
-            async requestGateway (gateway, node) {
-                try {
-                    this.gatewayList = await this.$store.dispatch('environment/requestGateway', {
-                        projectId: this.projectId,
-                        model: this.constructImportForm.model
-                    })
-                    this.constructImportForm.location = this.gatewayList[0]?.zoneName
-
-                    if (this.gatewayList.length && gateway && gateway === 'shenzhen') {
-                        this.constructImportForm.location = 'shenzhen'
-                    } else if (this.gatewayList.length && gateway && gateway !== 'shenzhen') {
-                        const isTarget = this.gatewayList.find(item => item.showName === gateway)
-                        if (isTarget) {
-                            this.constructImportForm.location = isTarget.zoneName
-                        }
-                    }
-                    
-                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
-                        this.getVmBuildDetail(node.nodeHashId)
-                    } else {
-                        this.requestDevCommand()
-                    }
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    if (err.httpStatus === 403) {
-                        this.hasPermission = false
-                    } else {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-                    }
-                }
-            },
-            /**
-             * 生成链接
-             */
-            async requestDevCommand () {
-                const { location, model, loginName, loginPassword, autoSwitchAccount, installType } = this.constructImportForm
-                if (!location && this.gatewayList.length) return
-                // 当OS为Windows时，生成安装命令的条件
-                // 1. 如果 installType 为 SERVICE, autoSwitchAccount 为 true 时，需填写 loginName, loginPassword 才可获取生成安装命令
-                // 2. 如果 installType 为 SERVICE, autoSwitchAccount 为 false 时, 直接获取生成安装命令
-                // 3. 如果 installType 为 TASK 时, 直接获取生成安装命令
-                if (model === 'WINDOWS') {
-                    if (this.installModeAsService && autoSwitchAccount && (!loginName || !loginPassword)) return
-                }
-                this.dialogLoading.isLoading = true
-
-                try {
-                    const res = await this.$store.dispatch('environment/requestDevCommand', {
-                        projectId: this.projectId,
-                        model: model,
-                        params: {
-                            zoneName: location,
-                            ...(
-                                model === 'WINDOWS' ? {
-                                    installType,
-                                } : {}
-                            ),
-                            ...(
-                                model === 'WINDOWS' && autoSwitchAccount && this.installModeAsService
-                                    ? {
-                                        loginName,
-                                        loginPassword
-                                    }
-                                    : {}
-                            ),
-                            ...(
-                                this.isAgent ? {
-                                    reInstallId: this.reInstallId
-                                }
-                                : {}
-                            )
-                        }
-                    })
-
-                    this.constructImportForm.link = res
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    if (err.httpStatus === 403) {
-                        this.hasPermission = false
-                    } else {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-                    }
-                } finally {
-                    this.dialogLoading.isLoading = false
-                }
-            },
-            async getVmBuildDetail (nodeHashId) {
-                try {
-                    const res = await this.$store.dispatch('environment/requestNodeDetail', {
-                        projectId: this.projectId,
-                        nodeHashId
-                    })
-                    if (res.os === 'WINDOWS' && res.agentUrl) {
-                        this.constructImportForm.agentId = res.agentId
-                    } else if (['MACOS', 'LINUX'].includes(res.os) && res.agentScript) {
-                        this.constructImportForm.agentId = res.agentId
-                    } else {
-                        this.requestDevCommand()
-                    }
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
             installAgent (node) {
                 if (['THIRDPARTY'].includes(node.nodeType)) {
-                    this.reInstallId = node.agentHashId
-                    this.nodeIp = node.ip
-                    this.isAgent = true
-                    this.constructToolConf.importText = this.$t('environment.confirm')
                     this.switchConstruct(node)
                 }
             },
-            async toImportNode (type) {
+            toImportNode (type) {
                 this.switchConstruct()
-            },
-            /**
-             * 构建机导入节点
-             */
-            async confirmFn () {
-                this.isAgent = false
-                this.dialogLoading.isLoading = false
-                this.dialogLoading.isShow = false
-                this.constructToolConf.isShow = false
-                this.constructImportForm.link = ''
-                this.constructImportForm.location = ''
-                this.constructImportForm.loginName = ''
-                this.constructImportForm.loginPassword = ''
-                this.constructImportForm.autoSwitchAccount = false
-                this.constructImportForm.installType = 'SERVICE'
-                this.constructToolConf.importText = this.$t('environment.import')
-                this.requestList()
-                await this.requestGetCounts(this.projectId)
             },
             handleSelectedChange (selection) {
                 this.selectedNodes = selection
@@ -1351,6 +1160,36 @@
                 this.requestList(this.requestParams)
             },
 
+            /**
+             * 按容器高度计算每页可展示条数（行高 42px）
+             * 容器为 .sub-view-port，需扣除筛选栏高度、表格上边距、表头及分页栏高度
+             */
+            calcPageSizeByHeight () {
+                const container = document.querySelector('.sub-view-port')
+                if (!container) return 0
+                const containerHeight = container.clientHeight
+                const filterEl = container.querySelector('.filter-bar')
+                const filterHeight = filterEl?.offsetHeight || 0
+                const calculatedHeight = containerHeight - filterHeight - TABLE_MARGIN_TOP
+                if (calculatedHeight <= 200) return 0
+                const tableBodyHeight = calculatedHeight - TABLE_HEADER_HEIGHT - PAGINATION_HEIGHT
+                return Math.max(1, Math.floor(tableBodyHeight / ROW_HEIGHT))
+            },
+
+            /**
+             * URL 与 localStorage 均无 pageSize 时，按窗口/容器高度自适应每页条数
+             */
+            applyAutoSizeLimit () {
+                if (this.queryParams.pageSize || localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) return
+                const rowCount = this.calcPageSizeByHeight()
+                if (rowCount && rowCount !== this.paginationData.limit) {
+                    this.paginationData.limit = rowCount
+                    // 将计算出的条数插入分页选项，保证下拉框能正确回显
+                    this.paginationData.limitList = [rowCount, ...this.paginationData.limitList.filter(item => item !== rowCount)]
+                        .sort((a, b) => a - b)
+                }
+            },
+
             handleSortChange ({ column, prop, order }) {
                 const orderMap = {
                     ascending: 'ASC',
@@ -1369,11 +1208,20 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
+                this.requestParams = {}
+                // 同步清空搜索/标签/时间筛选条件到 URL，否则标签筛选仍残留在 URL 中，
+                // 接口会继续按标签过滤，导致清空后列表仍然无数据返回
+                this.updateSearchValue([])
+                this.updateTagSearchValue([])
+                this.updateDateTimeRange('', '')
                 // 如果是 CreateResType，保持当前 nodeType 不变
                 if (this.isCreateResType) {
                     this.requestList()
-                } else {
+                } else if (this.$route.params.nodeType !== ALLNODE) {
+                    // 切换到全部节点会触发 handleNodeTypeChange 重新拉取列表
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                } else {
+                    this.requestList()
                 }
             },
 

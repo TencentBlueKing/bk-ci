@@ -16,6 +16,8 @@ func TestBuildUserDockerArgs(t *testing.T) {
 		Privileged: true,
 		Network:    []string{"bridge"},
 		User:       "root",
+		Cpus:       "1.5",
+		Memory:     "4g",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -34,6 +36,37 @@ func TestBuildUserDockerArgs(t *testing.T) {
 	}
 	if !foundVolume {
 		t.Fatal("expected --volume in args")
+	}
+	assertOptionValue(t, args, "--cpus", "1.5")
+	assertOptionValue(t, args, "--memory", "4g")
+}
+
+// assertOptionValue 断言 args 中存在 flag 且其紧随的值等于 want。
+func assertOptionValue(t *testing.T, args []string, flag, want string) {
+	t.Helper()
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == flag {
+			if args[i+1] != want {
+				t.Fatalf("%s = %q, want %q", flag, args[i+1], want)
+			}
+			return
+		}
+	}
+	t.Fatalf("expected %s in args, got %v", flag, args)
+}
+
+// 未设置 cpus / memory 时不应出现对应参数。
+func TestBuildUserDockerArgs_NoResourceLimit(t *testing.T) {
+	args, err := BuildUserDockerArgs(api.DockerOptions{
+		Network: []string{"bridge"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range args {
+		if a == "--cpus" || a == "--memory" {
+			t.Fatalf("unexpected resource-limit arg %q in %v", a, args)
+		}
 	}
 }
 
@@ -74,6 +107,35 @@ func TestHasCustomNetwork(t *testing.T) {
 	}
 	if !HasCustomNetwork(api.DockerOptions{Network: []string{"bridge"}}) {
 		t.Fatal("expected true")
+	}
+}
+
+func TestParseExtraDockerArgs(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+		want []string
+	}{
+		{"empty", "", nil},
+		{"blank", "   ", nil},
+		{"simple_flags", "--shm-size 256m --dns 8.8.8.8", []string{"--shm-size", "256m", "--dns", "8.8.8.8"}},
+		{"extra_spaces", "  --privileged   --rm ", []string{"--privileged", "--rm"}},
+		{"double_quoted_value", `--label "team=ci build"`, []string{"--label", "team=ci build"}},
+		{"single_quoted_value", `--label 'a b c'`, []string{"--label", "a b c"}},
+		{"equals_form", "--memory=512m", []string{"--memory=512m"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ParseExtraDockerArgs(tt.raw)
+			if len(got) != len(tt.want) {
+				t.Fatalf("ParseExtraDockerArgs(%q) = %v, want %v", tt.raw, got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Fatalf("ParseExtraDockerArgs(%q)[%d] = %q, want %q", tt.raw, i, got[i], tt.want[i])
+				}
+			}
+		})
 	}
 }
 

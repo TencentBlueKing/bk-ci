@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -46,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
@@ -82,7 +84,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.util.ShaUtils
 
 /**
  * 流水线Stage相关的服务
@@ -105,6 +109,9 @@ class PipelineStageService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
     }
+
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
 
     fun getStage(projectId: String, buildId: String, stageId: String?): PipelineBuildStage? {
         return pipelineBuildStageDao.get(dslContext, projectId, buildId, stageId)
@@ -298,6 +305,8 @@ class PipelineStageService @Autowired constructor(
                 suggest = reviewRequest?.suggest
             )
             if (startGroup == null) return false
+            // 先落审核结果。最后一组同意后记录仍会短暂处于 STAGE_SUCCESS，
+            // 读取侧不再把这种状态合成「执行成功」，因此这里不用推迟落库。
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
@@ -361,6 +370,12 @@ class PipelineStageService @Autowired constructor(
                         )
                     }
                 }
+                stageBuildRecordService.pushDetailRefresh(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = executeCount
+                )
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStageEvent(
                         source = BS_MANUAL_START_STAGE, projectId = projectId, pipelineId = pipelineId,
@@ -369,7 +384,7 @@ class PipelineStageService @Autowired constructor(
                     PipelineBuildReviewBroadCastEvent(
                         source = "stage($stageId) reviewed with PROCESSED", projectId = projectId,
                         pipelineId = pipelineId, buildId = buildId, userId = userId,
-                        stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                        stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                         status = BuildStatus.REVIEW_PROCESSED.name
                     ),
                     // stage 审核通过
@@ -520,7 +535,7 @@ class PipelineStageService @Autowired constructor(
                 PipelineBuildReviewBroadCastEvent(
                     source = "stage($stageId) reviewed with ABORT", projectId = projectId,
                     pipelineId = pipelineId, buildId = buildId, userId = userId,
-                    stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
+                    stageId = stageId, taskId = null, reviewType = BuildReviewType.STAGE_REVIEW,
                     status = BuildStatus.REVIEW_ABORT.name
                 ),
                 // stage 审核驳回
@@ -680,7 +695,9 @@ class PipelineStageService @Autowired constructor(
     ) {
         val checkIn = stage.checkIn ?: return
         val group = stage.checkIn?.groupToReview() ?: return
-        if (group.reviewers.find { it.isNotBlank() } == null) {
+        // 审核人 ID 去空白/换行，避免污染 markdown 通知正文与 chatid
+        val reviewers = StagePauseCheck.sanitizeIds(group.reviewers)
+        if (reviewers.isEmpty()) {
             /*如果审核人为空，则取消构建*/
             cancelStage(
                 userId = userId,
@@ -701,9 +718,15 @@ class PipelineStageService @Autowired constructor(
             )
             return
         }
+        val hasRequiredParams = checkIn.reviewParams?.any { it.required } == true
+        val stageReviewParams = checkIn.reviewParams ?: emptyList<ManualReviewParam>()
+        val signature = ShaUtils.sha256(
+            stage.projectId + stage.buildId + stage.stageId + (group.id ?: "") + (appSecret ?: "")
+        )
         val notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType)
         // 勾选企业微信群消息时，群通知通过 mentioned_list @审核人（与人工审核插件一致）
         val mentionReceivers = notifyType.contains(NotifyType.WEWORK_GROUP.name)
+        val reviewersText = reviewers.joinToString()
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "s(${stage.stageId}) waiting for REVIEW",
@@ -711,14 +734,17 @@ class PipelineStageService @Autowired constructor(
                 buildId = stage.buildId, userId = userId,
                 reviewType = BuildReviewType.STAGE_REVIEW,
                 status = BuildStatus.REVIEWING.name,
-                stageId = stage.stageId, taskId = null
+                stageId = stage.stageId, taskId = null,
+                reviewers = group.reviewers.filter { it.isNotBlank() },
+                hasReviewParams = !checkIn.reviewParams.isNullOrEmpty(),
+                stageSeq = stage.seq
             ),
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = userId, buildId = stage.buildId,
-                receivers = group.reviewers,
+                receivers = reviewers,
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
@@ -727,9 +753,27 @@ class PipelineStageService @Autowired constructor(
                 bodyParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
+                    "buildNum" to buildNum,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: ""),
-                    "reviewers" to group.reviewers.joinToString(),
+                    "reviewers" to reviewersText,
+                    "hasRequiredParams" to hasRequiredParams.toString(),
+                    "suggestRequired" to "false",
+                    "reviewParams" to JsonUtil.toJson(stageReviewParams, false),
+                    "triggerUser" to triggerUserId,
+                    "stageName" to (stage.name ?: ""),
+                    "reviewStage" to "[${stage.seq}]${stage.name?.takeIf { it.isNotBlank() } ?: "Stage审核"}",
+                    // 审核环节按顺序推进，环节内审核人是或签。卡片进度按环节而不是按人数计算。
+                    "reviewGroups" to JsonUtil.toJson(
+                        (checkIn.reviewGroups ?: emptyList()).map { item ->
+                            mapOf(
+                                "name" to item.name,
+                                "status" to item.status.orEmpty(),
+                                "reviewers" to StagePauseCheck.sanitizeIds(item.reviewers)
+                            )
+                        },
+                        false
+                    ),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
@@ -738,11 +782,29 @@ class PipelineStageService @Autowired constructor(
                 stageId = stage.stageId,
                 notifyType = notifyType,
                 markdownContent = checkIn.markdownContent,
-                mentionReceivers = mentionReceivers
+                mentionReceivers = mentionReceivers,
+                callbackData = mapOf(
+                    "reviewType" to "STAGE",
+                    "projectId" to stage.projectId,
+                    "pipelineId" to stage.pipelineId,
+                    "buildId" to stage.buildId,
+                    "stageId" to stage.stageId,
+                    "groupId" to (group.id ?: ""),
+                    "reviewUsers" to reviewers.joinToString(","),
+                    "hasRequiredParams" to hasRequiredParams.toString(),
+                    "signature" to signature
+                )
             )
         )
+        logger.info(
+            "reviewNotifyTrace|hop=engine.dispatch|" +
+                "buildId=${stage.buildId}|projectId=${stage.projectId}|pipelineId=${stage.pipelineId}|" +
+                "stageId=${stage.stageId}|groupId=${group.id}|notifyType=$notifyType|" +
+                "receivers=$reviewers|markdown=${checkIn.markdownContent}|" +
+                "hasRequiredParams=$hasRequiredParams|reviewDesc=${checkIn.reviewDesc}"
+        )
         // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
-        if (triggerUserId !in group.reviewers && !checkIn.notifyType.isNullOrEmpty()) {
+        if (triggerUserId !in reviewers && !checkIn.notifyType.isNullOrEmpty()) {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildNotifyEvent(
                     notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -761,7 +823,7 @@ class PipelineStageService @Autowired constructor(
                         "pipelineName" to pipelineName,
                         "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                         "reviewDesc" to (checkIn.reviewDesc ?: ""),
-                        "reviewers" to group.reviewers.joinToString()
+                        "reviewers" to reviewersText
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
                     stageId = stage.stageId,

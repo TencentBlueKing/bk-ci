@@ -36,6 +36,14 @@ import org.springframework.stereotype.Repository
 @Repository
 class UserLlmConfigDao {
 
+    fun listAll(dslContext: DSLContext): org.jooq.Result<TAiUserLlmConfigRecord> {
+        with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
+            return dslContext.selectFrom(this)
+                .orderBy(UPDATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun getByUserId(
         dslContext: DSLContext,
         userId: String
@@ -49,7 +57,8 @@ class UserLlmConfigDao {
 
     fun upsert(
         dslContext: DSLContext,
-        record: TAiUserLlmConfigRecord
+        record: TAiUserLlmConfigRecord,
+        aesKeySha: String
     ): Int {
         with(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) {
             return dslContext.insertInto(
@@ -70,7 +79,8 @@ class UserLlmConfigDao {
                 MAX_BACKOFF_SECONDS,
                 BACKOFF_MULTIPLIER,
                 CREATED_TIME,
-                UPDATED_TIME
+                UPDATED_TIME,
+                AES_KEY_SHA
             ).values(
                 record.userId,
                 record.baseUrl,
@@ -88,7 +98,8 @@ class UserLlmConfigDao {
                 record.maxBackoffSeconds,
                 record.backoffMultiplier,
                 record.createdTime,
-                record.updatedTime
+                record.updatedTime,
+                aesKeySha
             ).onDuplicateKeyUpdate()
                 .set(BASE_URL, record.baseUrl)
                 .set(MODEL_NAME, record.modelName)
@@ -105,6 +116,7 @@ class UserLlmConfigDao {
                 .set(MAX_BACKOFF_SECONDS, record.maxBackoffSeconds)
                 .set(BACKOFF_MULTIPLIER, record.backoffMultiplier)
                 .set(UPDATED_TIME, record.updatedTime)
+                .set(AES_KEY_SHA, aesKeySha)
                 .execute()
         }
     }

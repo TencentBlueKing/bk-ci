@@ -53,7 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -111,6 +111,8 @@ class ModelTransfer @Autowired constructor(
             concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
             // Cancel-In-Progress 配置group后默认为true
             concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress ?: false,
+            // YAML 是完整声明。不写 sub-group 用空白表示清空，避免沿用库里的旧标识。
+            concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
             runLockType = when {
                 yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
@@ -119,7 +121,7 @@ class ModelTransfer @Autowired constructor(
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
-            maxConRunningQueueSize = yaml.concurrency?.maxParallel ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+            maxConRunningQueueSize = yaml.concurrency?.maxParallel ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT,
             labels = yaml2Labels(yamlInput),
             pipelineAsCodeSettings = yamlSyntaxDialect2Setting(yaml.syntaxDialect),
             successSubscriptionList = yamlNotice2Setting(
@@ -190,7 +192,7 @@ class ModelTransfer @Autowired constructor(
             desc = yamlInput.yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             stages = stageList,
             labels = emptyList(),
-            instanceFromTemplate = false,
+            instanceFromTemplate = yamlInput.yaml.checkForTemplateUse(),
             pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
@@ -505,14 +507,28 @@ class ModelTransfer @Autowired constructor(
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
             setting.runLockType == PipelineRunLockType.LOCK
         ) {
+            val subGroup = setting.concurrencySubGroup?.takeIf { it.isNotBlank() }
+            // ① 整组取消不输出队列字段；③④ 带 sub-group，仍然输出队列字段。
+            val groupWideCancel = setting.concurrencyCancelInProgress && subGroup == null
             return Concurrency(
                 group = setting.concurrencyGroup,
-                cancelInProgress = setting.concurrencyCancelInProgress.nullIfDefault(false),
-                queueLength = setting.maxQueueSize
-                    .nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE),
-                queueTimeoutMinutes = setting.waitQueueTimeMinute
-                    .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
-                maxParallel = null
+                cancelInProgress = if (subGroup != null) {
+                    setting.concurrencyCancelInProgress
+                } else {
+                    setting.concurrencyCancelInProgress.nullIfDefault(false)
+                },
+                queueLength = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.maxQueueSize.nullIfDefault(VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE)
+                },
+                queueTimeoutMinutes = if (groupWideCancel) {
+                    null
+                } else {
+                    setting.waitQueueTimeMinute.nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE)
+                },
+                maxParallel = null,
+                subGroup = subGroup
             )
         }
         if (setting.runLockType == PipelineRunLockType.MULTIPLE) {
@@ -522,7 +538,7 @@ class ModelTransfer @Autowired constructor(
                 queueLength = null,
                 queueTimeoutMinutes = setting.waitQueueTimeMinute
                     .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
-                maxParallel = setting.maxConRunningQueueSize.nullIfDefault(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX)
+                maxParallel = setting.maxConRunningQueueSize.nullIfDefault(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT)
             )
         }
         return null
