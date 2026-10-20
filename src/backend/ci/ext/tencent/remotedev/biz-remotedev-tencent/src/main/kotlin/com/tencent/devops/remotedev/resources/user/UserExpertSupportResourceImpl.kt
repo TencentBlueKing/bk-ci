@@ -25,7 +25,7 @@ class UserExpertSupportResourceImpl @Autowired constructor(
         return Result(expertSupportService.fetchSupportConfig(ExpertSupportConfigType.ERROR).map { it.content })
     }
 
-    override fun generateUserSupportToken(userId: String, workspaceName: String): Result<String> {
+    override fun generateUserSupportToken(userId: String, workspaceName: String?): Result<String> {
         return Result(expertSupportService.generateUserSupportToken(userId, workspaceName))
     }
 

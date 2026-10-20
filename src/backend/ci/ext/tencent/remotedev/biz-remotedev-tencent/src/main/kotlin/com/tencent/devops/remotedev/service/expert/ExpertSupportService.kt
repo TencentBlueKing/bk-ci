@@ -105,12 +105,17 @@ class ExpertSupportService @Autowired constructor(
     private val expertSupportTokenGenerator: ExpertSupportTokenGenerator
 ) {
     /**
-     * 瘦终端一键求助：根据工作空间入库求助记录并返回离线 JWT token。
+     * 瘦终端一键求助：入库求助记录并返回离线 JWT token。
+     * workspaceName 为空表示个人求助，记录中工作空间相关字段置空。
      */
     fun generateUserSupportToken(
         userId: String,
-        workspaceName: String
+        workspaceName: String?
     ): String {
+        if (workspaceName.isNullOrBlank()) {
+            return expertSupportTokenGenerator.generate(userId, createPersonalSupport(userId))
+        }
+
         val record = workspaceJoinDao.fetchAnyWindowsWorkspace(
             dslContext = dslContext,
             workspaceName = workspaceName
@@ -133,6 +138,42 @@ class ExpertSupportService @Autowired constructor(
         )
 
         return expertSupportTokenGenerator.generate(userId, recordId)
+    }
+
+    private fun createPersonalSupport(userId: String): Long {
+        val (requestIp, clientVersion) = currentRequestClientInfo()
+        return expertSupportDao.addSupport(
+            dslContext = dslContext,
+            projectId = "",
+            hostIp = "",
+            creator = userId,
+            status = ExpertSupportStatus.CREATE,
+            content = SUPPORT_CONTENT_THIN_TERMINAL,
+            workspaceName = "",
+            city = "",
+            machineType = "",
+            info = SupRecordInfo(
+                requestIp = requestIp,
+                projectManager = null,
+                clientVersion = clientVersion,
+                machineStatus = null,
+                cdsVersion = null,
+                cdsRegion = null,
+                cdsStatus = null,
+                cdsPort = null,
+                agentStatus = null,
+                owner = null,
+                viewers = null
+            )
+        )
+    }
+
+    private fun currentRequestClientInfo(): Pair<String?, String?> {
+        val request = (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)?.request
+        val requestIp = request?.getHeader("X-Forwarded-For")?.split(",")
+            ?.firstOrNull { it.isNotBlank() }?.trim()
+        val clientVersion = request?.getHeader("Bk-Ci-Client-Version")
+        return Pair(requestIp, clientVersion)
     }
 
     /**
@@ -182,10 +223,7 @@ class ExpertSupportService @Autowired constructor(
             )
         }
 
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
-            ?.firstOrNull { it.isNotBlank() }?.trim()
-        val clientVersion = attributes?.request?.getHeader("Bk-Ci-Client-Version")
+        val (requestIp, clientVersion) = currentRequestClientInfo()
         val owner: String?
         var viewers: Set<String>? = null
         if (record.ownerType == WorkspaceOwnerType.PERSONAL) {
