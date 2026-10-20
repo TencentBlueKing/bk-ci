@@ -39,6 +39,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -90,4 +91,19 @@ interface BuildVarResource {
         @QueryParam("check")
         check: Boolean? = false
     ): Result<String?>
+
+    @Operation(summary = "确认大变量仓库存在，不存在时由服务端创建")
+    @Path("/repo/ensure")
+    @POST
+    fun ensureVariableRepo(
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String
+    ): Result<Boolean>
 }

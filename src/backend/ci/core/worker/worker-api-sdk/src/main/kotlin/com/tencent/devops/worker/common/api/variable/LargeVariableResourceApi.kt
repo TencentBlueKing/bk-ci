@@ -27,9 +27,11 @@
 
 package com.tencent.devops.worker.common.api.variable
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.BuildVarOverflowUtils.LargeVarRef
@@ -37,15 +39,15 @@ import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpRetryException
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipInputStream
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.slf4j.LoggerFactory
 
 /**
  * 大变量文件读写。上传通道与 [BkRepoReportResourceApi.uploadReport] 一致：
@@ -64,6 +66,7 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
     override fun isSupported(): Boolean = supported
 
     override fun upload(scope: LargeVariableScope, ref: LargeVarRef, content: ByteArray) {
+        ensureRepo(scope)
         val fullPath = BuildVarOverflowUtils.blobPath(scope.pipelineId, scope.buildId, ref)
         val body = content.toRequestBody(OctetMediaType)
         // 与报告上传一致：覆盖写、提交到边缘节点，不附带流水线元数据
@@ -100,6 +103,28 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         if (scope.buildId !in displayNameMarked && markDisplayName(scope)) {
             displayNameMarked.add(scope.buildId)
             displayNameMarked.retainAll(setOf(scope.buildId))
+        }
+    }
+
+    /**
+     * 直连上传前确认 variable 仓库存在。同一项目只向 process 确认一次。
+     * 创建仍由服务端 BkRepoClient.ensureVariableRepo 完成，构建机不再单独调制品库建仓接口。
+     */
+    private fun ensureRepo(scope: LargeVariableScope) {
+        if (scope.projectId in repoReady) {
+            return
+        }
+        synchronized(repoLock) {
+            if (scope.projectId in repoReady) {
+                return
+            }
+            val request = buildPost(path = "/ms/process/api/build/variable/repo")
+            val response = request(request, "ensure variable repo failed")
+            val result = objectMapper.readValue<Result<Boolean>>(response)
+            if (result.isNotOk()) {
+                throw RemoteServiceException("ensure variable repo failed: ${result.message ?: response}")
+            }
+            repoReady.add(scope.projectId)
         }
     }
 
@@ -274,5 +299,7 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
 
         private val tokens = ConcurrentHashMap<String, RepoToken>()
         private val tokenLock = Any()
+        private val repoReady = ConcurrentHashMap.newKeySet<String>()
+        private val repoLock = Any()
     }
 }
