@@ -12,7 +12,9 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
@@ -28,6 +30,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubRepository
 import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.param.GithubWebhookElementParams
 import com.tencent.devops.repository.pojo.Repository
 import io.mockk.every
 import io.mockk.mockk
@@ -194,6 +197,65 @@ class GithubPrTriggerHandlerTest {
         assertEquals("opened", params[PIPELINE_GIT_ACTION])
         assertEquals("bug", params[BK_REPO_GIT_WEBHOOK_MR_LABELS])
     }
+
+    @Test
+    fun shouldFilterIncludedPullRequestOperatorsAfterParameterConversion() {
+        val prEvent = deserializedPullRequestEvent()
+        assertEquals("alice", prEvent.sender.login)
+        assertEquals("author", prEvent.pullRequest.user.login)
+        assertTrue(handler.preMatch(prEvent).isMatch)
+        val cases = listOf<Triple<List<String>?, String?, Boolean>>(
+            Triple(null, null, true),
+            Triple(emptyList(), null, true),
+            Triple(listOf("alice"), null, true),
+            Triple(listOf("bob"), null, false),
+            Triple(listOf("bob", "alice"), null, true),
+            Triple(listOf("author"), null, false),
+            Triple(listOf("alice"), "alice", false),
+            Triple(null, "alice", false),
+            Triple(listOf("alice"), "bob", true)
+        )
+        for ((included, excluded, expected) in cases) {
+            assertEquals(expected, isMatch(prEvent, convertedUserParams(included, excluded)))
+        }
+
+        val bobEvent = deserializedPullRequestEvent(senderLogin = "bob")
+        assertEquals(prEvent.pullRequest, bobEvent.pullRequest)
+        assertFalse(isMatch(bobEvent, convertedUserParams(listOf("alice"))))
+    }
+
+    @Test
+    fun shouldResolveIncludedOperatorVariablesBeforeMatching() {
+        val prEvent = deserializedPullRequestEvent()
+        val params = convertedUserParams(listOf("\${prOperator}"), variables = mapOf("prOperator" to "alice"))
+        assertTrue(isMatch(prEvent, params))
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun deserializedPullRequestEvent(senderLogin: String = "alice"): GithubPullRequestEvent {
+        val payload = ClassPathResource(
+            "com/tencent/devops/common/webhook/service/code/github/GithubPullRequestOpenedEvent.json"
+        ).inputStream.bufferedReader().use { it.readText() }
+        val request = JsonUtil.to<MutableMap<String, Any>>(payload)
+        val sender = request.getValue("sender") as MutableMap<String, Any>
+        sender["login"] = senderLogin
+        return JsonUtil.to(JsonUtil.toJson(request), GithubPullRequestEvent::class.java)
+    }
+
+    private fun convertedUserParams(
+        included: List<String>?,
+        excluded: String? = null,
+        variables: Map<String, String> = emptyMap()
+    ) = GithubWebhookElementParams().getWebhookElementParams(
+        element = CodeGithubWebHookTriggerElement(
+            repositoryHashId = "repo-hash-id",
+            repositoryType = TriggerRepositoryType.ID,
+            eventType = CodeEventType.PULL_REQUEST,
+            includeUsers = included,
+            excludeUsers = excluded
+        ),
+        variables = variables
+    )!!
 
     private fun isMatch(event: GithubPullRequestEvent, params: WebHookParams): Boolean {
         return handler.isMatch(
