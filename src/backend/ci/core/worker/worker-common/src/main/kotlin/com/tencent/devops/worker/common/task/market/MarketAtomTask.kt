@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.task.market
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -630,12 +629,16 @@ open class MarketAtomTask : ITask() {
     /**
      * 表达式替换会递归写入 Map/List，先复制一份，避免修改原始插件模型或遇到只读集合。
      */
-    private fun copyInputValue(value: Any): Any = when (value) {
-        is Map<*, *> -> JsonUtil.toMutableMap(JsonUtil.toJson(value, formatted = false))
-        is List<*> -> JsonUtil.to(
-            JsonUtil.toJson(value, formatted = false),
-            object : TypeReference<MutableList<Any?>>() {}
-        )
+    private fun copyInputValue(value: Any?): Any? = when (value) {
+        is Map<*, *> -> LinkedHashMap<Any?, Any?>(value.size).apply {
+            value.forEach { (key, item) -> this[key] = copyInputValue(item) }
+        }
+        is List<*> -> ArrayList<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        is Set<*> -> LinkedHashSet<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
         else -> value
     }
 

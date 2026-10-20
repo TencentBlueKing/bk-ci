@@ -28,8 +28,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -132,17 +130,13 @@ object TaskUtil {
             prefetchTexts = taskParams.values
         )
         return taskParams.mapValues { (_, value) ->
-            if (dialect.supportUseExpression()) {
-                EnvReplacementParser.parse(
-                    value = value,
-                    contextMap = contextMap,
-                    dialect = dialect,
-                    overflowKeys = overflowKeys,
-                    overflowLoader = overflowLoader
-                )
-            } else {
-                ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).toString()
-            }
+            BuildVarOverflowExprSupport.replaceTaskParam(
+                value = value,
+                variables = contextMap,
+                dialect = dialect,
+                overflowKeys = overflowKeys,
+                loader = overflowLoader
+            )
         }
     }
 }

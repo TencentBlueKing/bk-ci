@@ -1,6 +1,5 @@
 package com.tencent.devops.worker.common.task
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.expression.ExecutionContext
@@ -72,6 +71,38 @@ internal class MarketAtomTaskTest {
         )
 
         val replaced = newReplacement(inputParam, variables, setOf("payload")) { payload }
+
+        Assertions.assertEquals(payload, replaced["simple"])
+        val struct = JsonUtil.toMap(replaced["struct"]!!)
+        Assertions.assertEquals(payload, struct["desc"])
+    }
+
+    @Test
+    fun nonJsonLargeVariableInAtomInputShouldKeepOuterJsonValid() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val variables = mapOf("payload" to overflowRef())
+        val inputParam = mapOf(
+            "simple" to "\${{ payload }}",
+            "struct" to mapOf("desc" to "\${{ payload }}")
+        )
+
+        val replaced = newReplacement(inputParam, variables, setOf("payload")) { payload }
+
+        Assertions.assertEquals(payload, replaced["simple"])
+        val struct = JsonUtil.toMap(replaced["struct"]!!)
+        Assertions.assertEquals(payload, struct["desc"])
+    }
+
+    @Test
+    fun normalJsonVariableInAtomInputShouldKeepOuterJsonValid() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val variables = mapOf("payload" to payload)
+        val inputParam = mapOf(
+            "simple" to "\${{ payload }}",
+            "struct" to mapOf("desc" to "\${{ payload }}")
+        )
+
+        val replaced = newReplacement(inputParam, variables)
 
         Assertions.assertEquals(payload, replaced["simple"])
         val struct = JsonUtil.toMap(replaced["struct"]!!)
@@ -162,12 +193,16 @@ internal class MarketAtomTaskTest {
         return atomParams
     }
 
-    private fun copyInputValue(value: Any): Any = when (value) {
-        is Map<*, *> -> JsonUtil.toMutableMap(JsonUtil.toJson(value, formatted = false))
-        is List<*> -> JsonUtil.to(
-            JsonUtil.toJson(value, formatted = false),
-            object : TypeReference<MutableList<Any?>>() {}
-        )
+    private fun copyInputValue(value: Any?): Any? = when (value) {
+        is Map<*, *> -> LinkedHashMap<Any?, Any?>(value.size).apply {
+            value.forEach { (key, item) -> this[key] = copyInputValue(item) }
+        }
+        is List<*> -> ArrayList<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        is Set<*> -> LinkedHashSet<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
         else -> value
     }
 

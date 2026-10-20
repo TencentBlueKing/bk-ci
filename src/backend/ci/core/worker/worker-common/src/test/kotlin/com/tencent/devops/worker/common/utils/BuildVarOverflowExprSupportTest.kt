@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.process.pojo.BuildTask
 import org.junit.jupiter.api.Assertions
@@ -65,6 +66,109 @@ class BuildVarOverflowExprSupportTest {
         Assertions.assertEquals(engineReplaced, workerReplaced)
     }
 
+    /** 带缩进的 JSON 文本参数走字符串替换路径，变量值仍只进入字符串叶子，结果必须仍是合法 JSON。 */
+    @Test
+    fun replaceOnWorkerKeepsFormattedJsonTextValid() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val formattedData = """
+            {
+              "input": {
+                "simple": "${'$'}{payload}",
+                "struct": { "desc": "${'$'}{payload}" }
+              }
+            }
+        """.trimIndent()
+
+        val replacedData = BuildVarOverflowExprSupport.replaceClassicTaskParams(
+            buildTask(
+                replaceVarOnWorker = true,
+                params = mapOf("data" to formattedData),
+                variables = mapOf("payload" to payload)
+            )
+        ).params!!["data"]!!
+
+        val input = (JsonUtil.toMap(replacedData)["input"] as Map<*, *>)
+        Assertions.assertEquals(payload, input["simple"])
+        Assertions.assertEquals(payload, (input["struct"] as Map<*, *>)["desc"])
+    }
+
+    /**
+     * 复现线上场景：经典方言 + 新构建机，插件 data 参数引用一个值本身是「带换行与转义引号的 JSON 文本」
+     * 的大变量。替换后 data 必须仍能被 [JsonUtil.toMutableMap] 解析（MarketAtomTask 读取入参的方式）。
+     */
+    @Test
+    fun replaceOnWorkerKeepsMarketDataJsonValidWhenValueIsFormattedJsonText() {
+        val modelText = "{\n  \"@type\": \"Model\",\n  \"name\": \"构建\\\"测试\\\"\",\n" +
+            "  \"desc\": \"必填 \${name} 与 \$x\",\n  \"stages\": [{\"id\": \"stage-1\"}]\n}"
+        val realValue = JsonUtil.toJson(mapOf("type" to "string", "value" to modelText), formatted = false)
+        val exprKey = "jobs.job_tl1.steps.mfKTO5.outputs.testResult1"
+        val data = "{\"input\":{\"desc\":\"\${{$exprKey}}\"}," +
+            "\"output\":{\"testResult\":\"string\"}}"
+
+        val replacedData = BuildVarOverflowExprSupport.replaceClassicTaskParams(
+            buildTask(
+                replaceVarOnWorker = true,
+                params = mapOf("data" to data),
+                variables = mapOf(exprKey to realValue)
+            )
+        ).params!!["data"]!!
+
+        // MarketAtomTask.execute 读取 data 的方式
+        val input = JsonUtil.toMutableMap(replacedData)["input"] as Map<*, *>
+        Assertions.assertEquals(realValue, input["desc"])
+    }
+
+    @Test
+    fun replaceOnWorkerKeepsMarketDataJsonValidWhenValueLooksLikeJson() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val buildVariables = mapOf("payload" to payload)
+        val rawData = mapOf(
+            "input" to mapOf(
+                "simple" to "\${payload}",
+                "struct" to mapOf("desc" to "\${payload}")
+            ),
+            "output" to emptyMap<String, Any>()
+        )
+
+        val replacedData = BuildVarOverflowExprSupport.replaceClassicTaskParams(
+            buildTask(
+                replaceVarOnWorker = true,
+                params = mapOf("data" to JsonUtil.toJson(rawData, false)),
+                variables = buildVariables
+            )
+        ).params!!["data"]!!
+
+        val dataMap = JsonUtil.toMutableMap(replacedData)
+        val input = dataMap["input"] as Map<*, *>
+        Assertions.assertEquals(payload, input["simple"])
+        Assertions.assertEquals(payload, (input["struct"] as Map<*, *>)["desc"])
+    }
+
+    /**
+     * 表达式方言下的任务参数替换（[BuildVarOverflowExprSupport.replaceTaskParam]）：
+     * 大变量真实值是非法 JSON 片段时，也只能落到字符串叶子上，外层参数 JSON 必须仍可解析。
+     */
+    @Test
+    fun replaceTaskParamKeepsContainerValidForExpressionDialect() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val reference = "__BK_OVF__:${payload.length}:1:${"a".repeat(64)}"
+        val data = JsonUtil.toJson(
+            mapOf("input" to mapOf("desc" to "\${{ testResult1 }}")),
+            formatted = false
+        )
+
+        val replaced = BuildVarOverflowExprSupport.replaceTaskParam(
+            value = data,
+            variables = mapOf("testResult1" to reference),
+            dialect = PipelineDialectType.CONSTRAINED.dialect,
+            overflowKeys = setOf("testResult1"),
+            loader = { payload }
+        )
+
+        val input = JsonUtil.toMap(replaced)["input"] as Map<*, *>
+        Assertions.assertEquals(payload, input["desc"])
+    }
+
     @Test
     fun skipWhenEngineAlreadyReplaced() {
         val params = mapOf("script" to "echo \${name}")
@@ -72,7 +176,11 @@ class BuildVarOverflowExprSupportTest {
         Assertions.assertSame(task, BuildVarOverflowExprSupport.replaceClassicTaskParams(task))
     }
 
-    private fun buildTask(replaceVarOnWorker: Boolean?, params: Map<String, String>) = BuildTask(
+    private fun buildTask(
+        replaceVarOnWorker: Boolean?,
+        params: Map<String, String>,
+        variables: Map<String, String> = this.variables
+    ) = BuildTask(
         buildId = "b-1",
         vmSeqId = "1",
         status = BuildTaskStatus.DO,
