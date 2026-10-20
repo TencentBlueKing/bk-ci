@@ -27,7 +27,9 @@ import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopCdsKeyResp
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenInfo
 import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
+import com.tencent.devops.remotedev.service.CoffeeAIProjectScope
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -76,7 +78,8 @@ class ThirdPartyDesktopService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDao: WorkspaceDao,
     private val configCacheService: ConfigCacheService,
-    private val projectStartAppLinkDao: ProjectStartAppLinkDao
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao,
+    private val remotedevProjectService: RemotedevProjectService
 ) {
 
     /* 第三方云桌面 token 有效期（秒），默认 1 小时 */
@@ -108,7 +111,7 @@ class ThirdPartyDesktopService @Autowired constructor(
     /**
      * 生成第三方机器注册云桌面的安装命令：签发一次性 token 后拼进对应系统的命令模板
      * 目前只有 WINDOWS 有脚本，其他系统返回空命令且不签发 token
-     * gameId 取项目在 T_PROJECT_START_APP_LINK 中映射的 START appid，查不到报错
+     * gameId 取项目在 T_PROJECT_START_APP_LINK 中映射的 START appid，查不到报错（个人项目会先按需注册）
      */
     fun genInstallCommand(
         userId: String,
@@ -125,7 +128,8 @@ class ThirdPartyDesktopService @Autowired constructor(
         if (!ZONE_REGEX.matches(zone)) {
             throw illegal("zoneId $zoneId is illegal, must end with digits, e.g. GZ11")
         }
-        val gameId = projectStartAppLinkDao.getAppId(dslContext, projectId)?.toString()
+        val gameId = (projectStartAppLinkDao.getAppId(dslContext, projectId)
+            ?: initPersonalProjectApp(userId, projectId))?.toString()
         if (gameId.isNullOrBlank() || !GAME_ID_REGEX.matches(gameId)) {
             logger.warn("genInstallCommand|gameId not found|$userId|$projectId|$gameId")
             throw notFound("project $projectId has no gameId mapping")
@@ -142,6 +146,48 @@ class ThirdPartyDesktopService @Autowired constructor(
         )
         logger.info("genInstallCommand|$userId|$projectId|$zone|$os|$gameId|$host|$url")
         return ThirdPartyDesktopInstallCommandResp(command = command, expireTime = tokenResp.expireTime)
+    }
+
+    /**
+     * 个人项目创建时没有注册 START 应用，首次生成安装命令时补齐，团队项目返回 null（仍需走开通流程）
+     */
+    private fun initPersonalProjectApp(userId: String, projectId: String): Long? {
+        if (!CoffeeAIProjectScope.isPersonalProject(projectId)) {
+            return null
+        }
+        // 必须在注册应用前校验，不能借此给他人的个人项目注册 START 应用
+        if (!permissionService.checkUserVisitPermission(userId = userId, projectCode = projectId)) {
+            logger.warn("initPersonalProjectApp|$userId is not member of project $projectId")
+            throw forbidden("user $userId is not member of project $projectId")
+        }
+        val lockKey = initAppKey(projectId)
+        if (!redisOperation.setIfAbsent(lockKey, userId, INIT_APP_LOCK_SECONDS)) {
+            logger.warn("initPersonalProjectApp|initializing|$userId|$projectId")
+            throw forbidden("project $projectId is initializing, please retry later")
+        }
+        try {
+            projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { return it }
+            logger.info("initPersonalProjectApp|$userId|$projectId")
+            val ok = remotedevProjectService.enableRemotedev(
+                userId = userId,
+                projectId = projectId,
+                enable = true,
+                quota = null,
+                rewriteManages = null
+            )
+            if (!ok) {
+                logger.error("initPersonalProjectApp|enableRemotedev failed|$userId|$projectId")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = PARAMETER_ILLEGAL_ERROR,
+                    defaultMessage = "init start app for project $projectId failed, please retry",
+                    params = arrayOf("gameId", "init start app for project $projectId failed, please retry")
+                )
+            }
+        } finally {
+            redisOperation.delete(lockKey)
+        }
+        return projectStartAppLinkDao.getAppId(dslContext, projectId)
     }
 
     /**
@@ -619,6 +665,8 @@ class ThirdPartyDesktopService @Autowired constructor(
 
     private fun bindingKey(cdsId: String) = "$REDIS_KEY_PREFIX:binding:$cdsId"
 
+    private fun initAppKey(projectId: String) = "$REDIS_KEY_PREFIX:init_app:$projectId"
+
     private fun unauthorized(msg: String) = ErrorCodeException(
         statusCode = Response.Status.UNAUTHORIZED.statusCode,
         errorCode = PARAMETER_ILLEGAL_ERROR,
@@ -666,6 +714,8 @@ class ThirdPartyDesktopService @Autowired constructor(
         private const val REGISTERING = "REGISTERING"
         /* 分配并发锁兜底过期，正常在 finally 中释放 */
         private const val ASSIGN_LOCK_SECONDS = 120L
+        /* 个人项目注册 START 应用并发锁兜底过期，正常在 finally 中释放 */
+        private const val INIT_APP_LOCK_SECONDS = 60L
 
         /* 24 字节随机数，base64url 无填充后固定 32 位 */
         private const val TOKEN_BYTES = 24
