@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.yaml.PipelineYamlSyncDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
@@ -129,6 +130,27 @@ class PipelineYamlSyncService @Autowired constructor(
             syncStatus = RepoYamlSyncStatusEnum.FAILED,
             reason = reason,
             reasonDetail = JsonUtil.toJson(reasonDetail)
+        )
+        updateYamlSyncStatus(projectId = projectId, repoHashId = repoHashId, syncFileInfo = syncFileInfo)
+    }
+
+    /**
+     * 文件已同步，但 yaml-branch 定时未登记。状态保持成功，原因写在同步记录里。
+     */
+    fun noteYamlBranchSchedule(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        notes: List<String>
+    ) {
+        if (notes.isEmpty()) {
+            return
+        }
+        val syncFileInfo = PipelineYamlSyncInfo(
+            filePath = filePath,
+            syncStatus = RepoYamlSyncStatusEnum.SUCCEED,
+            reason = "YAML_BRANCH_SCHEDULE_SKIPPED",
+            reasonDetail = JsonUtil.toJson(PipelineTriggerFailedMsg(notes.joinToString("；")))
         )
         updateYamlSyncStatus(projectId = projectId, repoHashId = repoHashId, syncFileInfo = syncFileInfo)
     }
