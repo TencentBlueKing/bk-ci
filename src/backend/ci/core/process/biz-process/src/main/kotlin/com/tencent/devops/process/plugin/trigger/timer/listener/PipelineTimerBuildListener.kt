@@ -147,7 +147,7 @@ class PipelineTimerBuildListener @Autowired constructor(
         taskId: String,
         version: Int? = null
     ): String? {
-        with(event) {
+        return with(event) {
             try {
                 when (timerChannelCode) {
                     ChannelCode.CREATIVE_STREAM -> {
@@ -155,23 +155,22 @@ class PipelineTimerBuildListener @Autowired constructor(
                             params = params,
                             taskId = taskId
                         )
+                        null
                     }
 
-                    else -> {
-                        return timerTriggerPipeline(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            params = params,
-                            channelCode = timerChannelCode,
-                            taskId = taskId,
-                            version = version
-                        )
-                    }
+                    else -> timerTriggerPipeline(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = params,
+                        channelCode = timerChannelCode,
+                        taskId = taskId,
+                        version = version
+                    )
                 }
-                return null
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
+                null
             } catch (e: PermissionForbiddenException) {
                 logger.warn("[$pipelineId]|TimerTrigger no permission|event=$this|msg=${e.message}")
                 // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
@@ -181,6 +180,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     pipelineId = pipelineId,
                     reasonDetail = PipelineTriggerFailedMsg(e.defaultMessage ?: e.message ?: "")
                 )
+                null
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
                 // 保存触发失败事件
@@ -202,8 +202,8 @@ class PipelineTimerBuildListener @Autowired constructor(
                         }
                     }
                 )
+                null
             }
-            null
         }
     }
 
