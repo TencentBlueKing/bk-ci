@@ -298,7 +298,7 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>> {
-        return Result(windowsResourceConfigService.getAllType(true, null))
+        return Result(windowsResourceConfigService.getAllDisplayType())
     }
 
     override fun createPersonalWorkspace(
