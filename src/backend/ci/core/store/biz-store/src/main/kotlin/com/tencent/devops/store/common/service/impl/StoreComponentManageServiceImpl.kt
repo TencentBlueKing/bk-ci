@@ -301,7 +301,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
     override fun installComponent(
         userId: String,
         channelCode: ChannelCode,
-        installStoreReq: InstallStoreReq
+        installStoreReq: InstallStoreReq,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("installComponent params:[$userId|$installStoreReq]")
         // 检查安装组件请求合法性
@@ -326,10 +327,11 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            installStoreReq = installStoreReq,
             storeId = storeBaseInfo.storeId,
+            installStoreReq = installStoreReq,
             publicFlag = storeBaseInfo.publicFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
     }
 

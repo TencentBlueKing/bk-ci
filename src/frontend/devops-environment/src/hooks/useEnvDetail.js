@@ -1,5 +1,4 @@
 import { computed, ref } from 'vue'
-import { convertTime } from '@/utils/util'
 import useInstance from './useInstance'
 import { ENV_TYPE_MAP } from '@/store/constants'
 
@@ -129,10 +128,7 @@ export default function useEnvDetail () {
                 params
             })
 
-            relatedProjectList.value = res.records.map(record => ({
-                ...record,
-                updateTime: convertTime(record.updateTime * 1000)
-            })) ?? []
+            relatedProjectList.value = res.records ?? []
             return res
         } catch (e) {
             throw e

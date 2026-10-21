@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.CommonServiceUtils
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
@@ -150,7 +151,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         os: String?
     ): Result<Boolean> {
         logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
-        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val atomCount = atomDao.countByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
         if (atomCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -158,12 +164,15 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
-            ?: return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
-            )
+        val atomRecord = atomDao.getNewestAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        ) ?: return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode),
+            language = I18nUtil.getLanguage(userId)
+        )
         if (atomRecord.classType != atomCode) {
             // 校验用户是否是该插件的开发成员
             val flag = storeMemberDao.isStoreMember(
@@ -186,12 +195,15 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     atomRecord
                 } else {
-                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
-                        ?: return I18nUtil.generateResponseDataObject(
-                            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                            params = arrayOf(atomCode),
-                            language = I18nUtil.getLanguage(userId)
-                        )
+                    atomDao.getMaxVersionAtomByCode(
+                        dslContext = dslContext,
+                        atomCode = atomCode,
+                        tenantId = tenantId
+                    ) ?: return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = arrayOf(atomCode),
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 },
                 releaseType = releaseType,
                 osList = osList,
@@ -271,7 +283,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             version = version,
             releaseType = releaseType,
             taskDataMap = taskDataMap,
-            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
         return Result(true)
     }

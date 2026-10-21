@@ -51,16 +51,18 @@ class UserMarketImageResourceImpl @Autowired constructor(
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
     }
 
-    override fun delete(userId: String, imageCode: String): Result<Boolean> {
+    override fun delete(userId: String, tenantId: String?, imageCode: String): Result<Boolean> {
         return imageService.delete(
             userId = userId,
             imageCode = imageCode,
-            interfaceName = "/user/market/image/imageCodes/{imageCode},delete"
+            interfaceName = "/user/market/image/imageCodes/{imageCode},delete",
+            tenantId = tenantId
         )
     }
 
     override fun updateImageBaseInfo(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
@@ -70,12 +72,14 @@ class UserMarketImageResourceImpl @Autowired constructor(
             userId = userId,
             imageCode = imageCode,
             imageBaseInfoUpdateRequest = imageBaseInfoUpdateRequest,
-            interfaceName = "/user/market/baseInfo/images/{imageCode},put"
+            interfaceName = "/user/market/baseInfo/images/{imageCode},put",
+            tenantId = tenantId
         )
     }
 
     override fun getImageVersionListByCode(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         page: Int?,
         pageSize: Int?
@@ -85,12 +89,14 @@ class UserMarketImageResourceImpl @Autowired constructor(
             imageCode = imageCode,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/imageCodes/{imageCode}/version/list"
+            interfaceName = "/user/market/image/imageCodes/{imageCode}/version/list",
+            tenantId = tenantId
         )
     }
 
     override fun searchImage(
         userId: String,
+        tenantId: String?,
         keyword: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
@@ -116,21 +122,29 @@ class UserMarketImageResourceImpl @Autowired constructor(
             recommendFlag = recommendFlag,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/list"
+            interfaceName = "/user/market/image/list",
+            tenantId = tenantId
         )
     }
 
-    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketImageMain>> {
+    override fun mainPageList(
+        userId: String,
+        tenantId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<MarketImageMain>> {
         return imageService.mainPageList(
             userId = userId,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/list/main"
+            interfaceName = "/user/market/image/list/main",
+            tenantId = tenantId
         )
     }
 
     override fun getMyImageList(
         userId: String,
+        tenantId: String?,
         imageName: String?,
         page: Int?,
         pageSize: Int?
@@ -140,26 +154,29 @@ class UserMarketImageResourceImpl @Autowired constructor(
             imageName = imageName,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/desk/image/list"
+            interfaceName = "/user/market/desk/image/list",
+            tenantId = tenantId
         )
     }
 
-    override fun getImageDetailById(userId: String, imageId: String): Result<ImageDetail> {
+    override fun getImageDetailById(userId: String, tenantId: String?, imageId: String): Result<ImageDetail> {
         return Result(
             imageService.getImageDetailById(
                 userId = userId,
                 imageId = imageId,
-                interfaceName = "/user/market/image/imageIds/{imageId}"
+                interfaceName = "/user/market/image/imageIds/{imageId}",
+                tenantId = tenantId
             )
         )
     }
 
-    override fun getImageDetailByCode(userId: String, imageCode: String): Result<ImageDetail> {
+    override fun getImageDetailByCode(userId: String, tenantId: String?, imageCode: String): Result<ImageDetail> {
         return Result(
             imageService.getLatestImageDetailByCode(
                 userId = userId,
                 imageCode = imageCode,
-                interfaceName = "/user/market/image/imageCodes/{imageCode}"
+                interfaceName = "/user/market/image/imageCodes/{imageCode}",
+                tenantId = tenantId
             )
         )
     }

@@ -12,6 +12,17 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
+    -- 定时触发 IANA 时区；列可空，存量空值调度回落 Asia/Shanghai
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                    AND COLUMN_NAME = 'TIME_ZONE') THEN
+        ALTER TABLE `T_PIPELINE_TIMER`
+            ADD COLUMN `TIME_ZONE` varchar(64) DEFAULT NULL
+                COMMENT '定时触发IANA时区，空值调度回落Asia/Shanghai' AFTER `START_PARAM`;
+    END IF;
+
     -- 1. 为 T_TEMPLATE_INSTANCE_BASE 表添加多个字段
     --    通过检查第一个字段`PAC`是否存在来判断是否需要执行整个ALTER语句
     IF NOT EXISTS(SELECT 1

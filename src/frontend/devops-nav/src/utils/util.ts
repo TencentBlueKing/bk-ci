@@ -50,6 +50,10 @@ export function urlJoin (...args): string {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function addRoutePrefix (path: string): string {
+    return window.PUBLIC_URL_PREFIX + path
+}
+
 export function queryStringify (query: ObjectMap): string {
     return Object.keys(query).map((key: string) => query[key] ? `${key}=${query[key]}` : key).join('&')
 }
@@ -62,7 +66,9 @@ export function updateRecentVisitServiceList (path: string): void {
     try {
         const recentVisitService: string | null = localStorage.getItem('recentVisitService')
         const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
-        const serviceReg: RegExp = /^\/(console\/)?([\w\-]+)\/?/
+        const prefix = window.PUBLIC_URL_PREFIX || ''
+        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const serviceReg: RegExp = new RegExp(`^${escapedPrefix}/(console/)?([\\w\\-]+)/?`)
         const serviceMatch: object | null = path.match(serviceReg)
         const serviceKey: string = serviceMatch ? serviceMatch[2] : ''
 
@@ -146,7 +152,7 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = /^\/(console\/)?([^\/]+)\/?/
+    const serviceAliasREG = new RegExp(`^\/(${window.getRoutePrefix().slice(1)}/)?([^\/]+)\/?`)
     const execRes = serviceAliasREG.exec(path) || []
     return execRes[2] || path
 }
@@ -180,7 +186,7 @@ export function ifShowNotice (currentNotice) {
 }
 
 export function showLoginPopup () {
-    const successUrl = `${window.location.origin}/console/static/login_done.html`
+    const successUrl = `${window.location.origin}${window.getRoutePrefix()}/console/static/login_done.html`
 
     // 系统的登录页地址
     const siteLoginUrl = window.getLoginUrl()

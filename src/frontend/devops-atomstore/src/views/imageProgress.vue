@@ -60,7 +60,7 @@
                                 >
                                     <a
                                         target="_blank"
-                                        :href="`/console/pipeline/${imageDetail.projectCode}`"
+                                        :href="getPipelineTestUrl(imageDetail.projectCode)"
                                     > {{ $t('store.测试') }} </a>
                                 </span>
                             </div>
@@ -231,6 +231,10 @@
                 'requestImagePassTest',
                 'requestRecheckImage'
             ]),
+
+            getPipelineTestUrl (projectCode) {
+                return `${window.getRoutePrefix()}/pipeline/${projectCode}`
+            },
 
             readLog () {
                 this.sideSliderConfig.show = true

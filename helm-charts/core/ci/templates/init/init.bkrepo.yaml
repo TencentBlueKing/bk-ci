@@ -12,6 +12,7 @@ metadata:
     "helm.sh/hook-weight": "-3"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+  ttlSecondsAfterFinished: 60
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
@@ -22,72 +23,72 @@ spec:
           image: {{ include "bkci-backend.image" . }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/file/
+          {{ $tenantId := "default" }}
+          {{ $projectHead := "" }}
+          {{- if .Values.config.bkTenantEnabled }}
+            {{ $tenantId = "system" }}
+            {{ $projectHead = "system." }}
+          {{- end }}
           command:
             - "/bin/bash"
             - "-c"
             - |
-              # 创建制品库
-              REPO_QUERY_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/project/list"
+              # 定义通用函数
+              function check_repo_project_exists() {
+                local project_name=$1
+                curl -s -XGET "$REPO_QUERY_PROJECT_PATH/{{ $projectHead }}$project_name" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep "data"|grep "true"
+              }
+
+              function check_repo_generic_exists() {
+                local project_name=$1
+                local repo_name=$2
+                curl -s -XGET "$REPO_QUERY_GENERIC_PATH/{{ $projectHead }}$project_name/$repo_name/generic" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep -q "projectId"
+              }
+
+              function create_repo_project() {
+                local project_name=$1
+                curl -X POST "$REPO_CREATE_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"name": "'$project_name'", "displayName": "'$project_name'", "description": "'$project_name'"}'
+              }
+
+              function create_repo_generic() {
+                local project_name=$1
+                local repo_name=$2
+                curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"projectId": "'{{ $projectHead }}$project_name'", "name": "'$repo_name'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$repo_name'"}'
+              }
+
+              # 初始化路径变量
+              REPO_QUERY_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/project/exist/"
               REPO_QUERY_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/info/"
               REPO_CREATE_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/api/repository/api/project"
               REPO_CREATE_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/create"
               REPO_INIT_GENERIC_METADATA_PATH="{{ .Values.config.bkRepoApiUrl }}/generic/"
-              create_repo_project_name_init_plugintransfer_project_generic (){
-                  for i in bk-store bkcdn
-                  do
-                      ret=0
-                      echo "CI project is $i -------------------------------------------------->"
-                      # 蓝盾bk-store项目存在，Repo项目及项目的处理逻辑
-                      if [[ ! -z $(curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep displayName|awk -F\" '{print $(NF-1)}'|grep $i) ]] ; then
-                          echo "$ret. Repo project $i exist , ${ret}st check success"
-                          for j in plugin static
-                          do
-                              ((ret++))
-                              if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
-                                  echo "$ret. Repo project $i $j generic exist , ${ret}st check success"
-                              else
-                                  echo "$ret. Repo project $i $j generic not exist , 1st create it now ......"
-                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
-                                  if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
-                                      echo "$ret. Repo project $i $j generic ${ret}st create success"
-                                  else
-                                      echo "$ret. Repo project $i $j generic ${ret}st create failed"
-                                  fi
-                              
-                              fi
-                          done
 
-                      # 蓝盾bk-store项目不存在，Repo项目及仓库的处理逻辑
-                      else
-                          echo "$ret. Repo project $i not exist , ${ret}nd create $i project now ......"
-                          curl -X POST "$REPO_CREATE_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"name": "'$i'", "displayName": "'$i'", "description": "'$i'"}'
-                          if [[ ! -z $(curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep displayName|awk -F\" '{print $(NF-1)}'|grep $i) ]] ; then
-                              echo "$ret. Repo project $i create success , ${ret}nd check success"
-
-                              for j in plugin static
-                              do  
-                                  ((ret++))
-                                  curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -d '{"projectId": "'$i'", "name": "'$j'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$j'"}'
-                                  if [[ ! -z $(curl -s -XGET "$REPO_QUERY_GENERIC_PATH"/$i/$j/generic -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }}|grep projectId) ]] ; then
-                                      echo "$ret. Repo project $i $j generic ${ret}nd create success"
-                                  else
-                                      echo "$ret. Repo project $i $j generic ${ret}nd create failed"
-                                  fi
-                              done
-                          else
-                              echo "$ret. Repo project $i create failed , exit now" && exit 7 
-                          fi
-                      fi
-                      echo -e ""
+              # 创建制品库项目和仓库
+              for project in bk-store bkcdn; do
+                echo "Processing project: $project"
+                if check_repo_project_exists "$project"; then
+                  echo "Project $project already exists."
+                  for repo in plugin static; do
+                    if check_repo_generic_exists "$project" "$repo"; then
+                      echo "Generic repo $repo in project $project already exists."
+                    else
+                      echo "Creating generic repo $repo in project $project..."
+                      create_repo_generic "$project" "$repo"
+                    fi
                   done
-              }
-              create_repo_project_name_init_plugintransfer_project_generic || return $?
+                else
+                  echo "Creating project $project..."
+                  create_repo_project "$project"
+                  for repo in plugin static; do
+                    echo "Creating generic repo $repo in project $project..."
+                    create_repo_generic "$project" "$repo"
+                  done
+                fi
+              done
 
               # 迁移图片到制品库
-              for k in $(find ./png -maxdepth 1 -type f)
-              do
-                  curl -s -X PUT $REPO_INIT_GENERIC_METADATA_PATH/bk-store/static/file/$k -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H \"X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}\" -H \"X-BKREPO-OVERWRITE: true\" --upload-file ${k}
-                  echo -e ""
+              for image in $(find ./png -maxdepth 1 -type f); do
+                curl -s -X PUT "$REPO_INIT_GENERIC_METADATA_PATH/{{ $projectHead }}bk-store/static/file/$image" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "X-BKREPO-OVERWRITE: true" -H "X-BK-TENANT-ID: {{ $tenantId }}" --upload-file "$image"
               done
 
               # 生成jwt_token
@@ -96,16 +97,16 @@ spec:
 
               # 打开制品库入口
               services="project"
-              for service in $services
-              do
-                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
-                do 
-                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
-                  sleep 2;
+              for service in $services; do
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > /dev/null; do
+                  echo "Waiting for {{ include "bkci.names.fullname" . }}-$service..."
+                  sleep 2
                 done
-                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+                echo "{{ include "bkci.names.fullname" . }}-$service is available."
               done
-              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo" -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
+
+              # 更新制品库入口
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo" -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}

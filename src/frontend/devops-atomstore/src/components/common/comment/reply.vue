@@ -8,7 +8,8 @@
             class="comment-photo"
         >
         <h5 class="commenter-info">
-            <span>{{ comment.commenter }}</span><span>{{ comment.commenterDept }}</span>
+            <bk-user-display-name :user-id="comment.commenter" />
+            <span>{{ comment.commenterDept }}</span>
         </h5>
         <p class="comment-content">{{ comment.commentContent }}</p>
         <h5 class="comment-static">

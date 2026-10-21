@@ -73,7 +73,12 @@ class OpTemplateResourceImpl @Autowired constructor(
         )
     }
 
-    override fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean> {
-        return opTemplateService.approveTemplate(userId, templateId, approveReq)
+    override fun approveTemplate(
+        userId: String,
+        tenantId: String?,
+        templateId: String,
+        approveReq: ApproveReq
+    ): Result<Boolean> {
+        return opTemplateService.approveTemplate(userId, templateId, approveReq, tenantId)
     }
 }

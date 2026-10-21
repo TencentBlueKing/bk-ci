@@ -101,6 +101,18 @@ config = {
         special_domain = {},
         auto_prefix = ""
     },
+    tenant = {
+        -- 未传、空串或非 true 都按单租户启动，避免占位符被渲染成空后 Lua 语法错误
+        enabled = ("__BK_TENANT_ENABLED__" == "true")
+    },
+    bk_login = {
+        host = "__BK_PAAS_PRIVATE_URL__",
+        path = "__BK_LOGIN_PATH__"
+    },
+    apigw = {
+        app_code = "__BK_CI_APP_CODE__",
+        app_secret = "__BK_CI_APP_TOKEN__"
+    },
     external_auth = {
         base_url = "",
         token = ""

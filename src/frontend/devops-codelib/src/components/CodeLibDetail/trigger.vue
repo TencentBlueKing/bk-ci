@@ -385,7 +385,7 @@
                 this.searchValue = []
             },
             handleToPipeline (row) {
-                window.open(`/console/pipeline/${row.projectId}/${row.pipelineId}`, '__blank')
+                window.open(`${window.getRoutePrefix()}/pipeline/${row.projectId}/${row.pipelineId}`, '__blank')
             }
         }
     }

@@ -45,6 +45,6 @@ data class OPActivityVO(
     val status: String,
     @get:Schema(title = "创建人")
     val creator: String,
-    @get:Schema(title = "创建时间")
-    val createTime: String
+    @get:Schema(title = "创建时间（毫秒时间戳）")
+    val createTime: Long?
 )

@@ -62,7 +62,8 @@ class AtomReplaceServiceImpl @Autowired constructor(
     override fun replacePipelineAtom(
         userId: String,
         projectId: String?,
-        atomReplaceRequest: AtomReplaceRequest
+        atomReplaceRequest: AtomReplaceRequest,
+        tenantId: String?
     ): Result<String> {
         logger.info("replacePipelineAtom userId:$userId,projectId:$projectId,atomReplaceRequest:$atomReplaceRequest")
         val fromAtomCode = atomReplaceRequest.fromAtomCode
@@ -83,7 +84,8 @@ class AtomReplaceServiceImpl @Autowired constructor(
                 fromAtomCode = fromAtomCode,
                 fromAtomVersion = fromAtomVersion,
                 versionInfo = versionInfo,
-                toAtomCode = toAtomCode
+                toAtomCode = toAtomCode,
+                tenantId = tenantId
             )
             val fromAtomHtmlVersion = fromAtomRecord.htmlTemplateVersion
             val toAtomHtmlVersion = toAtomRecord.htmlTemplateVersion
@@ -159,7 +161,8 @@ class AtomReplaceServiceImpl @Autowired constructor(
         fromAtomCode: String,
         fromAtomVersion: String,
         versionInfo: AtomVersionReplaceInfo,
-        toAtomCode: String
+        toAtomCode: String,
+        tenantId: String?
     ): Pair<TAtomRecord, TAtomRecord> {
         val atomStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
@@ -170,7 +173,8 @@ class AtomReplaceServiceImpl @Autowired constructor(
             dslContext = dslContext,
             atomCode = fromAtomCode,
             version = fromAtomVersion,
-            atomStatusList = atomStatusList
+            atomStatusList = atomStatusList,
+            tenantId = tenantId
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("$fromAtomCode:$fromAtomVersion")
@@ -180,7 +184,8 @@ class AtomReplaceServiceImpl @Autowired constructor(
             dslContext = dslContext,
             atomCode = toAtomCode,
             version = toAtomVersion,
-            atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
+            atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte()),
+            tenantId = tenantId
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("$toAtomCode:$toAtomVersion")

@@ -62,20 +62,21 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         fakeList
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+    override fun getUserProjectsAvailable(userId: String, tenantId: String?): Map<String, String> {
         return authProjectApi.getUserProjectsAvailable(
             serviceCode = projectAuthServiceCode,
             userId = userId,
+            tenantId = tenantId,
             supplier = supplierForPermission
         )
     }
 
-    override fun getUserProjects(userId: String): List<String> {
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = supplierForPermission
-        )
+            tenantId = tenantId
+        ) { projectDao.listProjectCodes(dslContext, tenantId) }
     }
 
     override fun modifyResource(
@@ -109,9 +110,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         authResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
-            resourceList = projectList,
             projectCode = BK_DEVOPS_SCOPE,
-            user = authProjectCreateInfo.userId
+            user = authProjectCreateInfo.userId,
+            resourceList = projectList,
+            tenantId = authProjectCreateInfo.projectCreateInfo.tenantId
         )
         return ""
     }
@@ -135,6 +137,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun filterProjects(
         userId: String,
         permission: AuthPermission,
-        resourceType: String?
-    ): List<String>? = supplierForPermission()
+        resourceType: String?,
+        tenantId: String?
+    ): List<String>? = projectDao.listProjectCodes(dslContext, tenantId)
 }

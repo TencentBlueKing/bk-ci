@@ -95,7 +95,7 @@
                         prop="latestBuildStartTime"
                     >
                         <template slot-scope="props">
-                            <span>{{ !props.row.latestBuildStartTime ? '-' : localConvertTime(props.row.latestBuildStartTime) }}</span>
+                            <time-display :value="props.row.latestBuildStartTime" />
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -121,9 +121,12 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             isShow: {
                 type: Boolean,
@@ -285,12 +288,6 @@
             toSearchPipeline () {
                 this.pagination.current = 1
                 this.requestList(this.pagination.current, this.pagination.limit, true)
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp)
             },
             confirm () {
                 this.$emit('comfire', this.localSelected)

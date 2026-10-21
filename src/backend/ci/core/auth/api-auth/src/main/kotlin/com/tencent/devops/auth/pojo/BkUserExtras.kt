@@ -9,5 +9,8 @@ data class BkUserExtras(
     val gender: String?,
     @get:Schema(title = "postName")
     @JsonProperty("postname")
-    val postName: String?
+    val postName: String?,
+    @get:Schema(title = "用户时区（IANA）")
+    @JsonProperty("time_zone")
+    val timeZone: String? = null
 )

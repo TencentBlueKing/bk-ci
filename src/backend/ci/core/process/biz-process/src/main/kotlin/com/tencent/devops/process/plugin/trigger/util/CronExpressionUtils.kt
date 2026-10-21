@@ -7,7 +7,6 @@
  *
  * A copy of the MIT License is included in this file.
  *
- *
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
@@ -40,21 +39,24 @@ object CronExpressionUtils {
      * 计算cron表达式接下来的执行时间
      * @param cron cron表达式
      * @param numTimes 输出几次
+     * @param timeZone IANA 时区；空则回落 Asia/Shanghai
      */
     fun getRecentTriggerTime(
         cron: String,
-        numTimes: Int = 2
+        numTimes: Int = 2,
+        timeZone: String? = null
     ): List<Date> {
         val trigger = CronTriggerImpl()
         trigger.cronExpression = cron
+        trigger.timeZone = TimerTimeZoneUtils.toQuartzTimeZone(timeZone)
         return TriggerUtils.computeFireTimes(trigger, null, numTimes)
     }
 
     /**
      * 为了防止流水线执行太频繁，需要控制cron表达式执行时间间隔，不能秒级执行
      */
-    fun isValidTimeInterval(cron: String): Boolean {
-        val recentTriggerTimes = getRecentTriggerTime(cron)
+    fun isValidTimeInterval(cron: String, timeZone: String? = null): Boolean {
+        val recentTriggerTimes = getRecentTriggerTime(cron, timeZone = timeZone)
         // 如果最近2次执行时间为空，表示表达式已经不会运行
         if (recentTriggerTimes.isEmpty() || recentTriggerTimes.size == 1) {
             return true

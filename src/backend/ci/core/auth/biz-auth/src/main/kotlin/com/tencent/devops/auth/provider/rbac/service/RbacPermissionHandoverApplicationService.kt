@@ -31,13 +31,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 class RbacPermissionHandoverApplicationService(
@@ -77,8 +78,17 @@ class RbacPermissionHandoverApplicationService(
                 handoverDetailDTOs = details.map { it.copy(flowNo = flowNo) }
             )
         }
-        val handoverFromCnName = deptService.getMemberInfo(overview.applicant, ManagerScopesEnum.USER).displayName
-        val handoverToCnName = deptService.getMemberInfo(overview.approver, ManagerScopesEnum.USER).displayName
+        val tenantId = TenantUtils.getTenantIdByEnglishName(overview.projectCode)
+        val handoverFromCnName = deptService.getMemberInfo(
+            memberId = overview.applicant,
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
+        ).displayName
+        val handoverToCnName = deptService.getMemberInfo(
+            memberId = overview.approver,
+            memberType = ManagerScopesEnum.USER,
+            tenantId = tenantId
+        ).displayName
         val resourceType2CountOfHandover = getResourceType2CountOfHandoverApplication(flowNo)
         val handoverOverviewTableBuilder = StringBuilder()
         resourceType2CountOfHandover.forEach {
@@ -128,7 +138,8 @@ class RbacPermissionHandoverApplicationService(
                 titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(
                     bkHandoverGroups.plus("，").plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
                 )
-                handoverOverviewContentOfEmail = """<span class="num"> $groupCount </span>$bkHandoverGroups，<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
+                handoverOverviewContentOfEmail =
+                    """<span class="num"> $groupCount </span>$bkHandoverGroups，<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(
                     bkHandoverGroups.plus("，").plus(authorizationCount).plus(bkHandoverAuthorizations)
                 )
@@ -136,14 +147,17 @@ class RbacPermissionHandoverApplicationService(
 
             groupCount > 0 -> {
                 titleOfApplication = titleOfApplication.plus(" $groupCount ").plus(bkHandoverGroups)
-                handoverOverviewContentOfEmail = """<span class="num"> $groupCount </span>$bkHandoverGroups""".trimMargin()
+                handoverOverviewContentOfEmail =
+                    """<span class="num"> $groupCount </span>$bkHandoverGroups""".trimMargin()
                 handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(groupCount).plus(bkHandoverGroups)
             }
 
             else -> {
                 titleOfApplication = titleOfApplication.plus(" $authorizationCount ").plus(bkHandoverAuthorizations)
-                handoverOverviewContentOfEmail = """<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
-                handoverOverviewContentOfRtx = handoverOverviewContentOfRtx.plus(authorizationCount).plus(bkHandoverAuthorizations)
+                handoverOverviewContentOfEmail =
+                    """<span class="num"> $authorizationCount </span>$bkHandoverAuthorizations""".trimMargin()
+                handoverOverviewContentOfRtx =
+                    handoverOverviewContentOfRtx.plus(authorizationCount).plus(bkHandoverAuthorizations)
             }
         }
         return Triple(titleOfApplication, handoverOverviewContentOfEmail, handoverOverviewContentOfRtx)
@@ -356,13 +370,15 @@ class RbacPermissionHandoverApplicationService(
         ).map { it.copy(approver = flowNo2Approver[it.flowNo]) }
     }
 
-    private val handoverApplicationUrl = "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
+    private val handoverApplicationUrl =
+        "${config.devopsHostGateway}/console/permission/my-handover?type=handoverToMe&flowNo=%s"
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionHandoverApplicationService::class.java)
         private const val FLOW_NO_PREFIX = "REQ"
         private const val FLOW_NO_KEY = "AUTH:HANDOVER:FLOW:NO:%s"
-        private const val HANDOVER_APPLICATION_TABLE_OF_EMAIL = "<tr><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td></tr>"
+        private const val HANDOVER_APPLICATION_TABLE_OF_EMAIL =
+            "<tr><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td><td style=\"font-size: 12px;\">%s</td></tr>"
         private const val HANDOVER_APPLICATION_TEMPLATE_CODE = "BK_PERMISSIONS_HANDOVER_APPLICATION"
     }
 }

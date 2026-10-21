@@ -45,10 +45,10 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class AuthProjectService @Autowired constructor(
@@ -126,11 +126,17 @@ class AuthProjectService @Autowired constructor(
         return result.buildFetchInstanceResult(entityList)
     }
 
-    fun searchProjectInstances(keyword: String, page: PageInfoDTO?, token: String): SearchInstanceResponseDTO {
+    fun searchProjectInstances(
+        keyword: String,
+        tenantId: String?,
+        page: PageInfoDTO?,
+        token: String
+    ): SearchInstanceResponseDTO {
         logger.info("searchInstance keyword[$keyword] page[$page]")
         authTokenApi.checkToken(token)
         val projectRecords = projectService.searchProjectByProjectName(
             projectName = keyword,
+            tenantId = tenantId,
             limit = page!!.limit.toInt(),
             offset = page!!.offset.toInt()
         )

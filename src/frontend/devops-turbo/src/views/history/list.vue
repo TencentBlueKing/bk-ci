@@ -70,7 +70,7 @@
                             {{ props.row.pipelineName }}
                             <a
                                 @click.stop
-                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.devopsBuildId}`"
+                                :href="pipelineHref"
                                 target="_blank"
                                 class="g-turbo-click-text"
                             ><logo
@@ -173,6 +173,9 @@
         },
 
         computed: {
+            pipelineHref () {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${this.pipelineId}/detail/${this.devopsBuildId}`
+            },
             filterList () {
                 const clientIpList = {};
                 (this.clientIpInfo || []).forEach((clientIp) => {

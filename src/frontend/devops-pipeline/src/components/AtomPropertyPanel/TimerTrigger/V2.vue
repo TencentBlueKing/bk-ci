@@ -1,5 +1,18 @@
 <template>
     <div class="bk-form bk-form-vertical">
+        <form-field
+            :required="true"
+            :label="$t('editPage.timerTimeZone')"
+            :desc="$t('editPage.timerTimeZoneDesc')"
+        >
+            <time-zone-select
+                name="timeZone"
+                :value="element.timeZone"
+                :disabled="disabled"
+                :handle-change="handleChange"
+                :placeholder="$t('editPage.timerTimeZonePlaceholder')"
+            />
+        </form-field>
         <template v-for="(obj, key) in fieldsMap">
             <form-field
                 v-if="!obj.hidden && rely(obj, element)"
@@ -17,6 +30,7 @@
                     :element="element"
                     :disabled="disabled || !checkCanOverride(obj)"
                     :handle-change="handleChange"
+                    :time-zone="element.timeZone"
                     v-bind="obj"
                 />
             </form-field>
@@ -30,11 +44,13 @@
     import validMixins from '../../validMixins'
     import atomMixin from '../atomMixin'
     import CodelibSelector from './CodelibSelector'
+    import TimeZoneSelect from './TimeZoneSelect'
     export default {
         components: {
             TimerCronTab,
             BranchParameterArray,
-            CodelibSelector
+            CodelibSelector,
+            TimeZoneSelect
         },
         mixins: [atomMixin, validMixins],
         computed: {
@@ -44,7 +60,7 @@
             fieldsMap () {
                 return Object.keys(this.atomPropsModel).reduce((acc, key) => {
                     // exclude ['agentType', 'agentHashIdList']
-                    if (!['nodeType', 'nodes'].includes(key)) {
+                    if (!['nodeType', 'nodes', 'timeZone'].includes(key)) {
                         acc[key] = this.atomPropsModel[key]
                     }
                     return acc

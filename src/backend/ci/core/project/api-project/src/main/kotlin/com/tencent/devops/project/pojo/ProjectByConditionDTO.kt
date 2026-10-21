@@ -15,5 +15,7 @@ data class ProjectByConditionDTO(
     @get:Schema(title = "bgId")
     val bgId: Long? = null,
     @get:Schema(title = "remotedev管理员")
-    val remotedevManager: String? = null
+    val remotedevManager: String? = null,
+    @get:Schema(title = "租户ID")
+    val tenantId: String?,
 )

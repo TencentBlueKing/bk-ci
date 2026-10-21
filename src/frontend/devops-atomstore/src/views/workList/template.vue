@@ -153,10 +153,13 @@
                     :label="$t('store.修改时间')"
                     prop="updateTime"
                     :min-width="150"
-                    :formatter="timeFormatter"
                     show-overflow-tooltip
                     sortable
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-if="allRenderColumnMap.operate"
                     :label="$t('store.操作')"
@@ -180,7 +183,7 @@
                             <a
                                 target="_blank"
                                 style="color:#3c96ff;"
-                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/instanceList`"
+                                :href="getTemplateInstanceListUrl(props.row)"
                             > {{ $t('store.源模板') }} </a>
                         </span>
                         <span
@@ -266,17 +269,19 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import { mapActions } from 'vuex'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            SearchSelect
+            SearchSelect,
+            TimeDisplay
         },
 
         data () {
             return {
                 templateStatusMap: templateStatusList,
                 isSearch: false,
-                itemUrl: '/console/pm',
+                itemUrl: window.getRoutePrefix() + '/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
                 renderList: [],
@@ -472,6 +477,9 @@
                 'deleteTemplate',
                 'requestTemplateList'
             ]),
+            getTemplateInstanceListUrl (row) {
+                return `${window.getRoutePrefix()}/pipeline/${row.projectCode}/template/${row.templateCode}/instanceList`
+            },
             async requestList () {
                 this.isLoading = true
                 const page = this.pagination.current

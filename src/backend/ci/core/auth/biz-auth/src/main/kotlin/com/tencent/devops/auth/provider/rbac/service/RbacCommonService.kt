@@ -16,9 +16,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 @Suppress("MagicNumber", "LongParameterList")
 class RbacCommonService(

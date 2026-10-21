@@ -39,6 +39,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,7 +108,8 @@ class PermissionSubsetManagerService @Autowired constructor(
             .build()
         return iamV2ManagerService.createSubsetManager(
             gradeManagerId,
-            createSubsetManagerDTO
+            createSubsetManagerDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
         ).also {
             logger.info("create iam subset manager success|$name|$projectCode|$userId|$gradeManagerId|$it")
         }
@@ -147,7 +149,11 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         // TODO 流水线组一期不创建拥有者
         val syncPerm = resourceType != AuthResourceType.PIPELINE_GROUP.value
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(subsetManagerId)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(
+            subsetManagerId,
+            tenantId
+        )
         val updateSubsetManagerDTO = UpdateSubsetManagerDTO.builder()
             .name(name)
             .members(subsetManagerDetail.members)
@@ -160,13 +166,14 @@ class PermissionSubsetManagerService @Autowired constructor(
             .build()
         iamV2ManagerService.updateSubsetManager(
             subsetManagerId,
-            updateSubsetManagerDTO
+            updateSubsetManagerDTO,
+            tenantId
         )
         return true
     }
 
-    fun deleteSubsetManager(subsetManagerId: String) {
-        iamV2ManagerService.deleteSubsetManager(subsetManagerId)
+    fun deleteSubsetManager(subsetManagerId: String, tenantId: String?) {
+        iamV2ManagerService.deleteSubsetManager(subsetManagerId, tenantId)
     }
 
     /**
@@ -252,6 +259,6 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceCode = resourceCode
         )
         // 删除二级管理员本身
-        deleteSubsetManager(subsetManagerId.toString())
+        deleteSubsetManager(subsetManagerId.toString(), TenantUtils.getTenantIdByEnglishName(projectCode))
     }
 }
