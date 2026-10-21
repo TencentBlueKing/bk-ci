@@ -18,7 +18,12 @@
             v-if="yamlBranchInactive"
             class="yaml-branch-inactive"
         >
-            {{ $t('editPage.yamlBranchInactive') }}
+            <logo
+                name="close-circle"
+                size="14"
+                class="yaml-branch-inactive-icon"
+            />
+            {{ $t('editPage.yamlBranchInactive', [currentYamlBranch]) }}
         </p>
     </div>
 </template>
@@ -26,13 +31,15 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Logo from '@/components/Logo'
     import yamlBranchMixin from './yamlBranchMixin'
 
     export default {
         name: 'yaml-branch-field',
         components: {
             VuexInput,
-            FormField
+            FormField,
+            Logo
         },
         mixins: [yamlBranchMixin],
         props: {
@@ -61,9 +68,14 @@
 
 <style lang="scss" scoped>
     .yaml-branch-inactive {
-        margin: -8px 0 16px;
+        display: flex;
+        align-items: flex-start;
         color: #ea3636;
         font-size: 12px;
         line-height: 20px;
+    }
+    .yaml-branch-inactive-icon {
+        flex-shrink: 0;
+        margin: 3px 4px 0 0;
     }
 </style>
