@@ -360,8 +360,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_JOB_ID_FORMAT = "2101250" // 流水线Job:{0}的jobId为空或长度超过{1}位
     const val ERROR_PIPELINE_JOB_CONTROL_NODECURR = "2101251" // 流水线Job:{0}的单节点或总结点并发配置需要为小于1000的正整数
     const val ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN = "2101252" // 定时触发分支{0}未知错误
-    // 分支定时触发未找到可执行的分支版本，本次不执行
-    const val ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION = "2101284"
     const val BK_YAML_BRANCH_TIMER_EMPTY = "bkYamlBranchTimerEmpty" // yaml-branch 为空，未登记定时
     const val BK_YAML_BRANCH_TIMER_WILDCARD = "bkYamlBranchTimerWildcard" // yaml-branch 不支持通配，未登记定时：{0}
     const val BK_YAML_BRANCH_TIMER_DEFAULT_BRANCH = "bkYamlBranchTimerDefaultBranch" // yaml-branch 写在默认分支上，未登记定时
@@ -404,7 +402,8 @@ object ProcessMessageCode {
 
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
-
+    // 分支定时触发未找到可执行的分支版本，本次不执行
+    const val ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION = "2101284"
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
 
     // URL[{0}]中存在高危端口号
