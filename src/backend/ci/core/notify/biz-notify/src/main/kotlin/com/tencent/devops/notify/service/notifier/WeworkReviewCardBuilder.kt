@@ -7,9 +7,12 @@
  */
 package com.tencent.devops.notify.service.notifier
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.notify.constant.NotifyMessageCode
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardSendPlan
@@ -37,9 +40,12 @@ object WeworkReviewCardBuilder {
 
     private val logger = LoggerFactory.getLogger(WeworkReviewCardBuilder::class.java)
 
-    /** horizontal_content_list 最多 6 条，keyname 建议不超过 5 字，value 按双列展示截到 30 字。 */
+    /**
+     * horizontal_content_list 最多 6 条。中文 keyname 建议不超过 5 字，
+     * 英文标签更长，这里只做 16 字保护，避免翻译被截成残词。value 截到 30 字。
+     */
     private const val LIST_LIMIT = 6
-    private const val KEY_LIMIT = 5
+    private const val KEY_LIMIT = 16
     private const val VALUE_LIMIT = 30
 
     /** button_interaction 的 sub_title_text、引用文案建议不超过 112 字。 */
@@ -49,6 +55,12 @@ object WeworkReviewCardBuilder {
     /** main_title.title 建议不超过 26 字，desc 建议不超过 30 字 */
     private const val TITLE_LIMIT = 26
     private const val TITLE_DESC_LIMIT = 30
+
+    /** 环节状态只用于挑选当前审核，不展示在卡片上。 */
+    private const val STATE_PASSED = "已通过"
+    private const val STATE_ABORTED = "已驳回"
+    private const val STATE_WAITING = "待审核"
+    private const val STATE_IDLE = "未开始"
 
     private val REVIEW_CARD_TEMPLATE_CODES = setOf(
         "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
@@ -131,9 +143,7 @@ object WeworkReviewCardBuilder {
         val triggerUser = body["triggerUser"].orEmpty().ifBlank { titles["triggerUser"].orEmpty() }
         val isStage = callback["reviewType"] == WeworkReviewCardConst.REVIEW_TYPE_STAGE ||
             request.templateCode.contains("STAGE")
-        val reviewStage = body["reviewStage"].orEmpty().ifBlank {
-            if (isStage) "Stage审核" else "人工审核"
-        }
+        val reviewStage = body["reviewStage"].orEmpty()
         val stageName = body["stageName"].orEmpty()
         val reviewUsers = (body["reviewers"] ?: callback["reviewUsers"].orEmpty())
             .split(",", ";", "、", "\n")
@@ -142,23 +152,45 @@ object WeworkReviewCardBuilder {
             .distinct()
         // 同一环节的多名审核人是或签，不按人数会签。进度只在存在多个审核环节时展示。
         val reviewGroups = parseReviewGroups(body["reviewGroups"].orEmpty())
-        val mainTitleText = reviewTitle(projectName)
-        val mainDesc = when (scene) {
-            CardScene.D -> "通过和驳回都需要填写意见"
-            CardScene.C2 -> "请确认参数，修改请前往蓝盾"
-            CardScene.B, CardScene.C1 -> "请选择审核参数后通过"
-            else -> if (isStage) {
-                "Stage 已完成，需要您审核后继续"
-            } else {
-                "当前构建需要您审核后继续"
-            }
-        }
+        val fallbackCopy = CardCopy(receiverLanguage(receivers.first()))
         val fallback = buildString {
-            appendLine(title.ifBlank { "项目【$projectName】下的流水线【$pipelineName】#$buildNum 构建待审核" })
-            appendLine(mainDesc)
-            if (reviewDesc.isNotBlank()) appendLine("审核说明: $reviewDesc")
-            if (reviewUrl.isNotBlank()) appendLine("电脑端点击 $reviewUrl")
-            if (reviewAppUrl.isNotBlank()) appendLine("手机端点击 $reviewAppUrl")
+            appendLine(
+                title.ifBlank {
+                    fallbackCopy.t(
+                        NotifyMessageCode.BK_REVIEW_CARD_FALLBACK_TITLE,
+                        "项目【$projectName】下的流水线【$pipelineName】#$buildNum 构建待审核",
+                        arrayOf(projectName, pipelineName, buildNum)
+                    )
+                }
+            )
+            appendLine(mainDesc(scene, isStage, fallbackCopy))
+            if (reviewDesc.isNotBlank()) {
+                appendLine(
+                    fallbackCopy.t(
+                        NotifyMessageCode.BK_REVIEW_CARD_FALLBACK_NOTE,
+                        "审核说明: $reviewDesc",
+                        arrayOf(reviewDesc)
+                    )
+                )
+            }
+            if (reviewUrl.isNotBlank()) {
+                appendLine(
+                    fallbackCopy.t(
+                        NotifyMessageCode.BK_REVIEW_CARD_FALLBACK_PC,
+                        "电脑端点击 $reviewUrl",
+                        arrayOf(reviewUrl)
+                    )
+                )
+            }
+            if (reviewAppUrl.isNotBlank()) {
+                appendLine(
+                    fallbackCopy.t(
+                        NotifyMessageCode.BK_REVIEW_CARD_FALLBACK_APP,
+                        "手机端点击 $reviewAppUrl",
+                        arrayOf(reviewAppUrl)
+                    )
+                )
+            }
         }
 
         val receiverCards = linkedMapOf<String, WeworkTemplateCard>()
@@ -177,9 +209,12 @@ object WeworkReviewCardBuilder {
                 value = JsonUtil.toJson(perCallback, false),
                 expiredInSecond = WeworkReviewCardConst.REDIS_TTL_SECONDS
             )
+            val copy = CardCopy(receiverLanguage(receiver))
             val card = buildCard(
                 taskId = taskId,
                 scene = scene,
+                copy = copy,
+                isStage = isStage,
                 pipelineName = pipelineName,
                 buildNum = buildNum,
                 reviewStage = reviewStage,
@@ -188,9 +223,9 @@ object WeworkReviewCardBuilder {
                 reviewDesc = reviewDesc,
                 reviewUrl = reviewUrl,
                 reviewAppUrl = reviewAppUrl,
-                mainTitleText = mainTitleText,
-                mainDesc = mainDesc,
-                reviewParams = reviewParams,
+                mainTitleText = reviewTitle(projectName, copy),
+                mainDesc = mainDesc(scene, isStage, copy),
+                reviewParams = reviewParams.map { it.localize(copy) },
                 reviewUsers = reviewUsers.ifEmpty { receivers },
                 reviewGroups = reviewGroups,
                 iconUrl = body["cardIconUrl"]
@@ -210,6 +245,8 @@ object WeworkReviewCardBuilder {
     private fun buildCard(
         taskId: String,
         scene: CardScene,
+        copy: CardCopy,
+        isStage: Boolean,
         pipelineName: String,
         buildNum: String,
         reviewStage: String,
@@ -226,6 +263,8 @@ object WeworkReviewCardBuilder {
         iconUrl: String?
     ): WeworkTemplateCard {
         val layout = layout(
+            copy = copy,
+            isStage = isStage,
             pipelineName = pipelineName,
             buildNum = buildNum,
             reviewStage = reviewStage,
@@ -242,7 +281,7 @@ object WeworkReviewCardBuilder {
         val approveUrl = WeworkReviewCardConst.appendUrlAction(detailUrl, WeworkReviewCardConst.ACTION_APPROVE)
         val modifyUrl = WeworkReviewCardConst.appendUrlAction(detailUrl, WeworkReviewCardConst.ACTION_MODIFY)
         val source = WeworkTemplateCardSource(
-            desc = "蓝盾流水线",
+            desc = copy.t(NotifyMessageCode.BK_REVIEW_CARD_SOURCE, "蓝盾流水线"),
             descColor = 3,
             iconUrl = iconUrl?.takeIf { it.isNotBlank() }
         )
@@ -260,7 +299,7 @@ object WeworkReviewCardBuilder {
                 horizontalContentList = layout.rows,
                 cardAction = cardAction,
                 buttonSelection = reviewParams.first().toButtonSelection(),
-                buttonList = agreeAndRejectButtons(taskId, rejectUrl, detailUrl, withParams = true),
+                buttonList = agreeAndRejectButtons(copy, taskId, rejectUrl, detailUrl, withParams = true),
                 taskId = taskId
             )
             CardScene.C1 -> WeworkTemplateCard(
@@ -270,11 +309,11 @@ object WeworkReviewCardBuilder {
                 subTitleText = layout.subTitle,
                 quoteArea = layout.quote,
                 horizontalContentList = layout.rows,
-                jumpList = detailJumps(reviewUrl, reviewAppUrl, rejectUrl),
+                jumpList = detailJumps(copy, reviewUrl, reviewAppUrl, rejectUrl),
                 cardAction = WeworkTemplateCardAction(type = 1, url = rejectUrl),
                 selectList = reviewParams.map { it.toSelect() },
                 submitButton = WeworkTemplateCardSubmitButton(
-                    text = "参数确认无误，提交",
+                    text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_SUBMIT, "参数确认无误，提交"),
                     key = WeworkReviewCardConst.buttonKey(
                         WeworkReviewCardConst.ACTION_APPROVE_WITH_PARAMS,
                         taskId
@@ -291,9 +330,10 @@ object WeworkReviewCardBuilder {
                 horizontalContentList = layout.rows,
                 cardAction = cardAction,
                 buttonList = withDetail(
+                    copy,
                     listOf(
                         WeworkTemplateCardButton(
-                            text = "确认提交",
+                            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_CONFIRM, "确认提交"),
                             style = 1,
                             type = 0,
                             key = WeworkReviewCardConst.buttonKey(
@@ -302,13 +342,13 @@ object WeworkReviewCardBuilder {
                             )
                         ),
                         WeworkTemplateCardButton(
-                            text = "修改参数",
+                            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_EDIT, "修改参数"),
                             style = 3,
                             type = 1,
                             url = modifyUrl
                         ),
                         WeworkTemplateCardButton(
-                            text = "驳回",
+                            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_REJECT, "驳回"),
                             style = 4,
                             type = 1,
                             url = rejectUrl
@@ -327,15 +367,16 @@ object WeworkReviewCardBuilder {
                 horizontalContentList = layout.rows,
                 cardAction = cardAction,
                 buttonList = withDetail(
+                    copy,
                     listOf(
                         WeworkTemplateCardButton(
-                            text = "通过",
+                            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_PASS, "通过"),
                             style = 1,
                             type = 1,
                             url = approveUrl
                         ),
                         WeworkTemplateCardButton(
-                            text = "驳回",
+                            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_REJECT, "驳回"),
                             style = 4,
                             type = 1,
                             url = rejectUrl
@@ -353,7 +394,7 @@ object WeworkReviewCardBuilder {
                 quoteArea = layout.quote,
                 horizontalContentList = layout.rows,
                 cardAction = cardAction,
-                buttonList = agreeAndRejectButtons(taskId, rejectUrl, detailUrl, withParams = false),
+                buttonList = agreeAndRejectButtons(copy, taskId, rejectUrl, detailUrl, withParams = false),
                 taskId = taskId
             )
         }
@@ -363,12 +404,13 @@ object WeworkReviewCardBuilder {
      * 按钮交互型不渲染 jump_list。详情做成最后一个按钮。三个按钮同一行时「查看详情」会被截成「查看...」。
      */
     private fun withDetail(
+        copy: CardCopy,
         buttons: List<WeworkTemplateCardButton>,
         detailUrl: String
     ): List<WeworkTemplateCardButton> {
         if (detailUrl.isBlank()) return buttons
         return buttons + WeworkTemplateCardButton(
-            text = "详情",
+            text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_DETAIL, "详情"),
             style = 3,
             type = 1,
             url = detailUrl
@@ -376,6 +418,7 @@ object WeworkReviewCardBuilder {
     }
 
     private fun agreeAndRejectButtons(
+        copy: CardCopy,
         taskId: String,
         rejectUrl: String,
         detailUrl: String,
@@ -387,15 +430,16 @@ object WeworkReviewCardBuilder {
             WeworkReviewCardConst.ACTION_AGREE
         }
         return withDetail(
+            copy,
             listOf(
                 WeworkTemplateCardButton(
-                    text = "通过",
+                    text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_PASS, "通过"),
                     style = 1,
                     type = 0,
                     key = WeworkReviewCardConst.buttonKey(action, taskId)
                 ),
                 WeworkTemplateCardButton(
-                    text = "驳回",
+                    text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_REJECT, "驳回"),
                     style = 4,
                     type = 1,
                     url = rejectUrl
@@ -407,16 +451,32 @@ object WeworkReviewCardBuilder {
 
     /** 多项选择型没有 button_list，驳回和详情仍走 jump_list（最多 3 个）。 */
     private fun detailJumps(
+        copy: CardCopy,
         reviewUrl: String,
         reviewAppUrl: String,
         rejectUrl: String
     ): List<WeworkTemplateCardJump> {
-        val jumps = mutableListOf(WeworkTemplateCardJump(title = "驳回并填写意见", url = rejectUrl))
+        val jumps = mutableListOf(
+            WeworkTemplateCardJump(
+                title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_REJECT_COMMENT, "驳回并填写意见"),
+                url = rejectUrl
+            )
+        )
         if (reviewUrl.isNotBlank()) {
-            jumps.add(WeworkTemplateCardJump(title = "电脑端查看详情", url = reviewUrl))
+            jumps.add(
+                WeworkTemplateCardJump(
+                    title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESKTOP, "电脑端查看详情"),
+                    url = reviewUrl
+                )
+            )
         }
         if (reviewAppUrl.isNotBlank() && jumps.size < 3) {
-            jumps.add(WeworkTemplateCardJump(title = "手机端查看详情", url = reviewAppUrl))
+            jumps.add(
+                WeworkTemplateCardJump(
+                    title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_MOBILE, "手机端查看详情"),
+                    url = reviewAppUrl
+                )
+            )
         }
         return jumps.take(3)
     }
@@ -437,6 +497,8 @@ object WeworkReviewCardBuilder {
      * 阶段名是流水线 Stage 名称，审核流只展示当前待审核环节。列表最多 6 行，这两行优先保留。
      */
     private fun layout(
+        copy: CardCopy,
+        isStage: Boolean,
         pipelineName: String,
         buildNum: String,
         reviewStage: String,
@@ -451,42 +513,53 @@ object WeworkReviewCardBuilder {
         val states = groupStates(reviewGroups)
         val reviewers = currentReviewers(states, reviewUsers)
         val rows = mutableListOf<WeworkTemplateCardHorizontalContent>()
-        addRow(rows, "流水线", pipelineName)
+        addRow(rows, copy.t(NotifyMessageCode.BK_REVIEW_CARD_PIPELINE, "流水线"), pipelineName)
         val buildLabel = buildNum.removePrefix("#")
         if (buildLabel.isNotBlank() && buildLabel != "-") {
-            addRow(rows, "构建号", "#$buildLabel")
+            addRow(rows, copy.t(NotifyMessageCode.BK_REVIEW_CARD_BUILD, "构建号"), "#$buildLabel")
         }
+        val stageKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_STAGE, "阶段名")
+        val flowKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_FLOW, "审核流")
+        val triggerKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_TRIGGER, "触发人")
         val extras = mutableListOf<WeworkTemplateCardHorizontalContent>()
-        val stageLabel = stageDisplayName(stageName, reviewStage)
+        val stageLabel = stageDisplayName(copy, isStage, stageName, reviewStage)
         if (stageLabel.isNotBlank()) {
-            extras.add(contentRow("阶段名", stageLabel))
+            extras.add(contentRow(stageKey, stageLabel))
         }
-        val flow = currentFlowName(reviewGroups, states)
+        val flow = currentFlowName(copy, reviewGroups, states)
         if (flow.isNotBlank()) {
-            extras.add(contentRow("审核流", flow))
+            extras.add(contentRow(flowKey, flow))
         }
         if (states.size > 1) {
-            val done = states.count { it.second == "已通过" }
-            extras.add(contentRow("进度", "$done/${states.size}"))
+            val done = states.count { it.second == STATE_PASSED }
+            extras.add(contentRow(copy.t(NotifyMessageCode.BK_REVIEW_CARD_PROGRESS, "进度"), "$done/${states.size}"))
         }
         if (reviewers.size > 1) {
-            extras.add(contentRow("审核人", reviewers.joinToString("、")))
+            extras.add(
+                contentRow(
+                    copy.t(NotifyMessageCode.BK_REVIEW_CARD_REVIEWERS, "审核人"),
+                    reviewers.joinToString("、")
+                )
+            )
         }
         if (triggerUser.isNotBlank()) {
             extras.add(
                 contentRow(
-                    key = "触发人",
+                    key = triggerKey,
                     value = triggerUser,
                     type = 3,
                     userid = WeworkReviewCardConst.weworkUserId(triggerUser)
                 )
             )
         }
-        pickRows(extras, LIST_LIMIT - rows.size).forEach { row ->
+        pickRows(extras, LIST_LIMIT - rows.size, setOf(stageKey, flowKey, triggerKey)).forEach { row ->
             addRow(rows, row.keyname, row.value, row.type, row.userid)
         }
         val quote = reviewDesc.takeIf { it.isNotBlank() }?.let {
-            WeworkTemplateCardQuoteArea(title = "审核说明", quoteText = clip(it, QUOTE_LIMIT))
+            WeworkTemplateCardQuoteArea(
+                title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明"),
+                quoteText = clip(it, QUOTE_LIMIT)
+            )
         }
         return CardLayout(
             rows = rows.takeIf { it.isNotEmpty() },
@@ -495,20 +568,45 @@ object WeworkReviewCardBuilder {
         )
     }
 
-    private fun reviewTitle(projectName: String): String {
-        val name = projectName.trim()
-        if (name.isBlank()) return "流水线人工审核"
-        val wrapped = "<$name>人工审核"
-        if (wrapped.length <= TITLE_LIMIT) return wrapped
-        val keep = TITLE_LIMIT - ">人工审核".length - 2
-        if (keep <= 0) return "人工审核"
-        return "<${name.take(keep)}…>人工审核"
+    private fun mainDesc(scene: CardScene, isStage: Boolean, copy: CardCopy): String {
+        return when (scene) {
+            CardScene.D -> copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESC_COMMENT, "通过和驳回都需要填写意见")
+            CardScene.C2 -> copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESC_CONFIRM, "请确认参数，修改请前往蓝盾")
+            CardScene.B, CardScene.C1 -> copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESC_SELECT, "请选择审核参数后通过")
+            else -> if (isStage) {
+                copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESC_STAGE, "Stage 已完成，需要您审核后继续")
+            } else {
+                copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESC_BUILD, "当前构建需要您审核后继续")
+            }
+        }
     }
 
-    private fun stageDisplayName(stageName: String, reviewStage: String): String {
+    private fun reviewTitle(projectName: String, copy: CardCopy): String {
+        val name = projectName.trim()
+        val suffix = copy.t(NotifyMessageCode.BK_REVIEW_CARD_TITLE_SUFFIX, "人工审核")
+        if (name.isBlank()) return copy.t(NotifyMessageCode.BK_REVIEW_CARD_TITLE_DEFAULT, "流水线人工审核")
+        val wrapped = "<$name>$suffix"
+        if (wrapped.length <= TITLE_LIMIT) return wrapped
+        val keep = TITLE_LIMIT - suffix.length - 3
+        if (keep <= 0) return suffix
+        return "<${name.take(keep)}…>$suffix"
+    }
+
+    private fun stageDisplayName(
+        copy: CardCopy,
+        isStage: Boolean,
+        stageName: String,
+        reviewStage: String
+    ): String {
         val named = stageName.trim()
         if (named.isNotBlank()) return named
-        return reviewStage.trim().replace(Regex("^\\[\\d+]"), "")
+        val fromReview = reviewStage.trim().replace(Regex("^\\[\\d+]"), "")
+        if (fromReview.isNotBlank()) return fromReview
+        return if (isStage) {
+            copy.t(NotifyMessageCode.BK_REVIEW_CARD_STAGE_FALLBACK, "Stage审核")
+        } else {
+            copy.t(NotifyMessageCode.BK_REVIEW_CARD_ATOM_FALLBACK, "人工审核")
+        }
     }
 
     /**
@@ -516,13 +614,14 @@ object WeworkReviewCardBuilder {
      */
     private fun pickRows(
         extras: List<WeworkTemplateCardHorizontalContent>,
-        room: Int
+        room: Int,
+        pinned: Set<String>
     ): List<WeworkTemplateCardHorizontalContent> {
         if (room <= 0) return emptyList()
-        val pinned = setOf("阶段名", "审核流", "触发人")
+        val pinnedKeys = pinned.map { it.take(KEY_LIMIT) }.toSet()
         val picked = linkedSetOf<String>()
-        extras.filter { it.keyname in pinned }.take(room).forEach { picked.add(it.keyname) }
-        extras.filter { it.keyname !in pinned }.take(room - picked.size).forEach { picked.add(it.keyname) }
+        extras.filter { it.keyname in pinnedKeys }.take(room).forEach { picked.add(it.keyname) }
+        extras.filter { it.keyname !in pinnedKeys }.take(room - picked.size).forEach { picked.add(it.keyname) }
         return extras.filter { it.keyname in picked }
     }
 
@@ -563,13 +662,21 @@ object WeworkReviewCardBuilder {
     }
 
     private fun currentFlowName(
+        copy: CardCopy,
         groups: List<ReviewGroupStep>,
         states: List<Pair<ReviewGroupStep, String>>
     ): String {
-        val waiting = states.firstOrNull { it.second == "待审核" }?.first?.name?.trim().orEmpty()
-        if (waiting.isNotBlank()) return waiting
-        if (groups.size == 1) return groups.first().name.trim()
+        val waiting = states.firstOrNull { it.second == STATE_WAITING }?.first
+        if (waiting != null) return displayGroupName(copy, waiting)
+        if (groups.size == 1) return displayGroupName(copy, groups.first())
         return ""
+    }
+
+    private fun displayGroupName(copy: CardCopy, group: ReviewGroupStep): String {
+        val named = group.name.trim()
+        if (named.isNotBlank()) return named
+        val seq = "${group.index + 1}"
+        return copy.t(NotifyMessageCode.BK_REVIEW_CARD_GROUP, "审核环节$seq", arrayOf(seq))
     }
 
     private fun currentReviewers(
@@ -577,7 +684,7 @@ object WeworkReviewCardBuilder {
         reviewUsers: List<String>
     ): List<String> {
         if (states.size <= 1) return reviewUsers
-        val waiting = states.firstOrNull { it.second == "待审核" }?.first?.reviewers.orEmpty()
+        val waiting = states.firstOrNull { it.second == STATE_WAITING }?.first?.reviewers.orEmpty()
         return waiting.ifEmpty { reviewUsers }
     }
 
@@ -590,13 +697,13 @@ object WeworkReviewCardBuilder {
             val aborted = group.status.equals("ABORT", true) ||
                 group.status.equals("REVIEW_ABORT", true)
             val state = when {
-                passed -> "已通过"
-                aborted -> "已驳回"
+                passed -> STATE_PASSED
+                aborted -> STATE_ABORTED
                 !waitingAssigned -> {
                     waitingAssigned = true
-                    "待审核"
+                    STATE_WAITING
                 }
-                else -> "未开始"
+                else -> STATE_IDLE
             }
             group to state
         }
@@ -624,9 +731,10 @@ object WeworkReviewCardBuilder {
                     else -> value?.toString().orEmpty().split(",", ";", "、", "\n")
                 }.map { WeworkReviewCardConst.weworkUserId(it) }.filter { it.isNotBlank() }.distinct()
                 ReviewGroupStep(
-                    name = item["name"]?.toString().orEmpty().ifBlank { "审核环节${index + 1}" },
+                    name = item["name"]?.toString().orEmpty(),
                     status = item["status"]?.toString().orEmpty(),
-                    reviewers = reviewers
+                    reviewers = reviewers,
+                    index = index
                 )
             }
         } catch (ignored: Exception) {
@@ -638,7 +746,8 @@ object WeworkReviewCardBuilder {
     private data class ReviewGroupStep(
         val name: String,
         val status: String,
-        val reviewers: List<String>
+        val reviewers: List<String>,
+        val index: Int
     )
 
     private fun parseReviewParams(raw: String): List<ReviewCardParam> {
@@ -673,7 +782,7 @@ object WeworkReviewCardBuilder {
             valueType = valueType.lowercase(),
             required = item["required"]?.toString().equals("true", ignoreCase = true),
             options = if (valueType.equals("boolean", ignoreCase = true) && options.isEmpty()) {
-                listOf("true" to "是", "false" to "否")
+                listOf("true" to "true", "false" to "false")
             } else {
                 options
             }
@@ -721,6 +830,16 @@ object WeworkReviewCardBuilder {
             selectedId = selectedId().ifBlank { null }
         )
 
+        fun localize(copy: CardCopy): ReviewCardParam {
+            if (!valueType.equals("boolean", ignoreCase = true)) return this
+            return copy(
+                options = listOf(
+                    "true" to copy.t(NotifyMessageCode.BK_REVIEW_CARD_YES, "是"),
+                    "false" to copy.t(NotifyMessageCode.BK_REVIEW_CARD_NO, "否")
+                )
+            )
+        }
+
         fun toStoreMap(): Map<String, Any> = mapOf(
             "key" to key,
             "title" to title,
@@ -729,5 +848,28 @@ object WeworkReviewCardBuilder {
             "required" to required,
             "options" to options.map { mapOf("key" to it.first, "value" to it.second) }
         )
+    }
+
+    private class CardCopy(private val language: String) {
+        fun t(code: String, defaultMessage: String, params: Array<String>? = null): String {
+            return try {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = code,
+                    language = language,
+                    params = params,
+                    defaultMessage = defaultMessage
+                ).ifBlank { defaultMessage }
+            } catch (ignored: Throwable) {
+                defaultMessage
+            }
+        }
+    }
+
+    private fun receiverLanguage(userId: String): String {
+        return try {
+            I18nUtil.getLanguage(userId)
+        } catch (ignored: Throwable) {
+            DEFAULT_LOCALE_LANGUAGE
+        }
     }
 }
