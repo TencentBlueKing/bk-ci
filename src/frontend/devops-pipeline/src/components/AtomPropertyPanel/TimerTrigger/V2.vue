@@ -48,7 +48,8 @@
         mixins: [atomMixin, validMixins, yamlBranchMixin],
         computed: {
             disabled () {
-                return this.element?.disabled ?? false
+                // $props.disabled 为面板只读态（atomMixin 中声明的 prop，被本 computed 遮蔽）；element.disabled 为触发器停用开关
+                return this.$props.disabled || this.element?.disabled === true
             },
             fieldsMap () {
                 return Object.keys(this.atomPropsModel).reduce((acc, key) => {
