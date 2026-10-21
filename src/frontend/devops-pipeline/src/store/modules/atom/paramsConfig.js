@@ -353,8 +353,8 @@ export const CODE_LIB_OPTION = {
 }
 
 export const SUB_PIPELINE_OPTION = {
-    url: '/process/api/user/pipelineInfos/{projectId}/idAndNames' +
-        '?permission=EXECUTE&excludePipelineId={pipelineId}&page=1&pageSize=100',
+    url: '/process/api/user/pipelineInfos/{projectId}/idAndNames'
+        + '?permission=EXECUTE&excludePipelineId={pipelineId}&page=1&pageSize=100',
     paramId: 'pipelineName',
     paramName: 'pipelineName',
     searchable: true
