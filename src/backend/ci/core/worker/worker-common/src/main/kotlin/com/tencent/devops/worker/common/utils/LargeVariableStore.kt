@@ -187,14 +187,14 @@ object LargeVariableStore {
         return value
     }
 
-    /** 单任务直接在当前线程执行；失败 / 超时的任务结果为 null 并被过滤。 */
+    /**
+     * 失败 / 超时的任务结果为 null 并被过滤。
+     *
+     * 单任务也必须走线程池：直接在当前线程 call() 会绕过 [TASK_TIMEOUT_SECONDS]，
+     * 制品库卡住时整个插件会被无限期挂起，而"只有一个大变量"恰恰是最常见的场景。
+     */
     private fun <K> runParallel(tasks: Map<K, Callable<String?>>): Map<K, String> {
-        if (tasks.size == 1) {
-            val (key, task) = tasks.entries.first()
-            return runCatching { task.call() }
-                .onFailure { logger.warn("LARGE_VAR_TASK_FAIL|key=$key|${it.message}") }
-                .getOrNull()?.let { mapOf(key to it) } ?: emptyMap()
-        }
+        if (tasks.isEmpty()) return emptyMap()
         val futures = tasks.mapValues { (_, task) -> executor.submit(task) }
         val result = LinkedHashMap<K, String>(tasks.size)
         futures.forEach { (key, future) ->

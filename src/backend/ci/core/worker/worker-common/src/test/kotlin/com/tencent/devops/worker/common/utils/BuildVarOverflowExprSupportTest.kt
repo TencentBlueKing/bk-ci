@@ -118,6 +118,31 @@ class BuildVarOverflowExprSupportTest {
         Assertions.assertEquals(realValue, input["desc"])
     }
 
+    /**
+     * 根因回归：`data` 的字符串值里带**裸控制字符**（换行/制表符）时，fge 的严格解析器会判定非法、
+     * 而插件侧的 Jackson 能正常解析。若按前者判定就会退化成文本拼接，把大变量原样拼进 JSON。
+     * 这里断言这类参数仍按结构替换，结果对 [JsonUtil.toMutableMap] 保持可解析。
+     */
+    @Test
+    fun replaceOnWorkerKeepsJsonValidWhenParamContainsRawControlChars() {
+        val modelText = "{\n  \"@type\": \"Model\",\n  \"name\": \"构建-并行打包\"\n}"
+        // 引擎对字符串型参数是原样下发，裸换行/制表符会保留在参数文本里
+        val data = "{\"input\":{\"desc\":\"\${payload}\",\"note\":\"line1\nline2\tend\"}," +
+            "\"output\":{\"testResult\":\"string\"}}"
+
+        val replacedData = BuildVarOverflowExprSupport.replaceClassicTaskParams(
+            buildTask(
+                replaceVarOnWorker = true,
+                params = mapOf("data" to data),
+                variables = mapOf("payload" to modelText)
+            )
+        ).params!!["data"]!!
+
+        val input = JsonUtil.toMutableMap(replacedData)["input"] as Map<*, *>
+        Assertions.assertEquals(modelText, input["desc"])
+        Assertions.assertEquals("line1\nline2\tend", input["note"])
+    }
+
     @Test
     fun replaceOnWorkerKeepsMarketDataJsonValidWhenValueLooksLikeJson() {
         val payload = "{\"first\":1}{\"second\":2}"

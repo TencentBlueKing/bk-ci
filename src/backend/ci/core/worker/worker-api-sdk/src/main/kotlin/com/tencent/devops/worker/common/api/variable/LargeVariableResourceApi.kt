@@ -100,9 +100,13 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         if (codeNode != null && codeNode.asText() != "0") {
             throw RemoteServiceException("upload large variable failed: $response")
         }
-        if (scope.buildId !in displayNameMarked && markDisplayName(scope)) {
-            displayNameMarked.add(scope.buildId)
+        // add() 只有第一个线程返回 true，先占位再请求；并发上传时不会重复调用 markDisplayName。
+        // 标记失败则撤销占位，交给后续上传重试。
+        if (displayNameMarked.add(scope.buildId)) {
             displayNameMarked.retainAll(setOf(scope.buildId))
+            if (!markDisplayName(scope)) {
+                displayNameMarked.remove(scope.buildId)
+            }
         }
     }
 

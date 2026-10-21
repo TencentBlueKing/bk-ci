@@ -28,7 +28,8 @@
 package com.tencent.devops.worker.common.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonSchemaUtil
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectReader
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
@@ -110,7 +111,7 @@ object BuildVarOverflowExprSupport {
         if (params.isNullOrEmpty()) return buildTask
         if (buildTask.replaceVarOnWorker != true) {
             // 引擎侧已替换，这里只做体检：参数看着像 JSON 却解析不了，说明替换在引擎侧就把它拼坏了
-            params.forEach { (key, value) -> warnIfJsonUnparsable(key, value) }
+            params.forEach { (key, value) -> warnIfJsonBroken(key, value, value) }
             return buildTask
         }
         val variables = buildTask.buildVariable ?: emptyMap()
@@ -129,7 +130,6 @@ object BuildVarOverflowExprSupport {
                 replaceClassicParamFallback(value, variables)
             }
             warnIfJsonBroken(key, value, result)
-            warnIfJsonUnparsable(key, result)
             result
         }
         return buildTask.copy(params = replaced)
@@ -162,39 +162,36 @@ object BuildVarOverflowExprSupport {
     }
 
     /**
-     * 替换前是合法 JSON、替换后不再是,说明变量值被未转义地拼进了参数文本。
-     * 插件(如 MarketAtomTask 解析 data)后续解析必然失败,这里提前把现场打出来便于定位。
+     * 替换结果体检：参数看着像 JSON 却解析不了，说明变量值被未转义地拼进了参数文本，
+     * 插件（如 MarketAtomTask 解析 data）后续解析必然失败，这里提前把现场打出来。
+     *
+     * 只有在**结果已经坏掉**时才回头解析原值判定责任方，正常构建下每个参数至多多一次解析。
+     *
+     * 与 [BuildTask.toString] 一样不打印参数内容：任务参数可能含敏感信息，也可能很大。
+     * Jackson 的报错消息本身已带出错行列且不含原文（`INCLUDE_SOURCE_IN_LOCATION` 关闭），足够定位。
      */
     private fun warnIfJsonBroken(key: String, origin: String, result: String) {
-        if (result === origin || parseJsonContainer(origin) == null || parseJsonContainer(result) != null) return
+        val error = jsonParseError(result) ?: return
+        val stage = if (jsonParseError(origin) != null) "CLAIM" else "WORKER"
         logger.warn(
-            "CLASSIC_PARAM_JSON_BROKEN|key=$key|originLength=${origin.length}|resultLength=${result.length}" +
-                "|origin=${origin.take(PARAM_LOG_LIMIT)}|result=${result.take(PARAM_LOG_LIMIT)}"
+            "CLASSIC_PARAM_JSON_BROKEN|stage=$stage|key=$key|originLength=${origin.length}" +
+                "|resultLength=${result.length}|$error"
         )
     }
 
-    /**
-     * 参数以 `{` / `[` 开头结尾却解析不了，插件按 JSON 读取时必然失败。
-     * 日志里带上出错位置附近的片段，便于直接看出是哪个变量值把引号提前闭合了。
-     */
-    private fun warnIfJsonUnparsable(key: String, value: String) {
+    /** @return 解析失败原因；不像 JSON 或能正常解析时返回 null */
+    private fun jsonParseError(value: String): String? {
         val trimmed = value.trim()
-        val looksLikeJson = (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
-            (trimmed.startsWith("[") && trimmed.endsWith("]"))
-        if (!looksLikeJson) return
-        try {
-            JsonUtil.to(trimmed, mapOrListTypeRef(trimmed))
-            return
+        val isObject = trimmed.startsWith("{") && trimmed.endsWith("}")
+        val isArray = trimmed.startsWith("[") && trimmed.endsWith("]")
+        if (!isObject && !isArray) return null
+        return try {
+            strictReader(isObject).readValue<Any?>(trimmed)
+            null
         } catch (ignore: Throwable) {
-            logger.warn(
-                "CLASSIC_PARAM_JSON_UNPARSABLE|key=$key|length=${value.length}|${ignore.message}" +
-                    "|head=${value.take(PARAM_LOG_LIMIT)}"
-            )
+            ignore.message ?: ignore.javaClass.name
         }
     }
-
-    private fun mapOrListTypeRef(trimmed: String): TypeReference<*> =
-        if (trimmed.startsWith("{")) mapTypeRef else listTypeRef
 
     private fun replaceClassicParam(
         value: String,
@@ -202,16 +199,21 @@ object BuildVarOverflowExprSupport {
         overflowKeys: Set<String>,
         loader: ((String) -> String?)?
     ): String {
-        val origin: Any = restoreContainerParam(value)
+        // compressed 必须在替换前算：ObjectReplaceEnvVarUtil 会原地修改容器
+        val param = asContainerParam(value)
+        val origin: Any = param?.node ?: value
         val (target, context) = if (loader != null && value.contains("\${{")) {
             val result = BuildVarOverflowUtils.rewriteOverflowRefs(origin, overflowKeys, loader)
             val context = if (result.synthVars.isEmpty()) variables else variables.plus(result.synthVars)
-            result.value to context
+            (result.value ?: origin) to context
         } else {
             origin to variables
         }
         val replaced = ObjectReplaceEnvVarUtil.replaceEnvVar(target, context) ?: return value
-        return replaced as? String ?: JsonUtil.toJson(replaced, formatted = false)
+        if (param == null) return replaced as? String ?: JsonUtil.toJson(replaced, formatted = false)
+        // 引擎压缩下发的 Map/List 参数按压缩输出；JSON 文本型字符串参数按缩进输出，
+        // 与 ObjectReplaceEnvVarUtil 处理 JSON 字符串时的 toJson(dataObj, true) 保持一致
+        return JsonUtil.toJson(replaced, formatted = !param.compressed)
     }
 
     private fun replaceClassicParamFallback(
@@ -230,35 +232,55 @@ object BuildVarOverflowExprSupport {
     }
 
     /**
-     * 还原"引擎压缩序列化下发的 Map/List 参数"为可变容器；其余情况返回原字符串。
-     *
-     * 逐字比对不可省：JSON 文本型的**字符串**参数由替换器按带缩进格式输出，
-     * 若把它当成容器压缩输出，结果就会与引擎侧不一致。
+     * @property node      解析出的可变容器
+     * @property compressed 是否与「引擎压缩序列化」的结果逐字相同。
+     *   为 true 说明这是引擎按 Map/List 下发的参数；为 false 说明它只是**内容恰好是 JSON 文本的字符串参数**
+     *   （引擎对字符串参数原样下发，不会重新序列化），两者的输出格式不同，必须区分。
      */
-    private fun restoreContainerParam(value: String): Any {
-        val container = parseJsonContainer(value) ?: return value
-        if (JsonUtil.toJson(container, formatted = false) == value) return container
-        // 能解析成容器却与压缩序列化结果不一致，说明是 JSON 文本型字符串参数，按字符串路径处理
-        logger.info("PARAM_NOT_COMPRESSED_CONTAINER|length=${value.length}")
-        return value
+    private class ContainerParam(val node: Any, val compressed: Boolean)
+
+    private fun asContainerParam(value: String): ContainerParam? {
+        val node = parseJsonContainer(value) ?: return null
+        return ContainerParam(node, JsonUtil.toJson(node, formatted = false) == value)
     }
 
+    /**
+     * 表达式方言用：仅还原「引擎压缩下发的 Map/List 参数」为容器，其余情况返回原字符串，
+     * 保持 [EnvReplacementParser] 对文本参数的历史替换语义不变。
+     */
+    private fun restoreContainerParam(value: String): Any {
+        val param = asContainerParam(value) ?: return value
+        return if (param.compressed) param.node else value
+    }
+
+    /**
+     * 解析 JSON 容器参数。
+     *
+     * 必须与 [JsonUtil]（插件读取入参所用）保持同一套解析口径，不能用 `JsonSchemaUtil.validateJson`：
+     * 后者基于 fge 的严格解析器，会拒绝字符串值里的**裸控制字符**（换行/制表符），而 [JsonUtil] 显式开启了
+     * `ALLOW_UNESCAPED_CONTROL_CHARS`。两者不一致时，本该按结构替换的参数会退化成文本拼接，
+     * 把变量值原样拼进 JSON，插件再解析必然失败。
+     *
+     * `FAIL_ON_TRAILING_TOKENS` 不可省：默认配置下 `{"a":1}{"b":2}` 会被静默截断成第一个对象。
+     */
     private fun parseJsonContainer(value: String): Any? {
         val trimmed = value.trim()
         val isObject = trimmed.startsWith("{") && trimmed.endsWith("}")
         val isArray = trimmed.startsWith("[") && trimmed.endsWith("]")
-        // validateJson 不可省：Jackson 默认允许尾部多余内容，`{"a":1}{"b":2}` 会被静默截断成第一个对象
-        if ((!isObject && !isArray) || !JsonSchemaUtil.validateJson(trimmed)) return null
+        if (!isObject && !isArray) return null
         return try {
-            if (isObject) JsonUtil.to(trimmed, mapTypeRef) else JsonUtil.to(trimmed, listTypeRef)
+            strictReader(isObject).readValue(trimmed)
         } catch (ignore: Throwable) {
             null
         }
     }
 
-    // 参数可能很大，排障日志只截取开头，避免刷爆构建机日志
-    private const val PARAM_LOG_LIMIT = 1000
+    private fun strictReader(isObject: Boolean) = if (isObject) mapReader else listReader
 
-    private val mapTypeRef = object : TypeReference<LinkedHashMap<String, Any?>>() {}
-    private val listTypeRef = object : TypeReference<ArrayList<Any?>>() {}
+    // ObjectReader 不可变且线程安全，复用即可；不能直接改 JsonUtil 的共享 mapper 配置
+    private val mapReader: ObjectReader = strictReaderFor(object : TypeReference<LinkedHashMap<String, Any?>>() {})
+    private val listReader: ObjectReader = strictReaderFor(object : TypeReference<ArrayList<Any?>>() {})
+
+    private fun strictReaderFor(typeRef: TypeReference<*>): ObjectReader =
+        JsonUtil.getObjectMapper().readerFor(typeRef).with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
 }
