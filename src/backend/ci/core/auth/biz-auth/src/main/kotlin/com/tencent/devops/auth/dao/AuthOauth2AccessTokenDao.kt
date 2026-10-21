@@ -50,7 +50,8 @@ class AuthOauth2AccessTokenDao {
         accessToken: String,
         refreshToken: String? = null,
         expiredTime: Long,
-        scopeId: Int
+        scopeId: Int,
+        aesKeySha: String
     ): Int {
         return with(TAuthOauth2AccessToken.T_AUTH_OAUTH2_ACCESS_TOKEN) {
             dslContext.insertInto(
@@ -62,7 +63,8 @@ class AuthOauth2AccessTokenDao {
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 EXPIRED_TIME,
-                SCOPE_ID
+                SCOPE_ID,
+                AES_KEY_SHA
             ).values(
                 clientId,
                 userName,
@@ -71,7 +73,8 @@ class AuthOauth2AccessTokenDao {
                 accessToken,
                 refreshToken,
                 expiredTime,
-                scopeId
+                scopeId,
+                aesKeySha
             ).execute()
         }
     }

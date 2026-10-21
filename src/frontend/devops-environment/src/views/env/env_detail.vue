@@ -11,7 +11,25 @@
                 >
                     {{ currentEnv?.name || '--' }}
                 </span>
-                <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                <bk-popover
+                    v-if="relatedNodesTipList.length"
+                    theme="dark"
+                >
+                    <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                    <div
+                        slot="content"
+                        class="env-node-tip"
+                    >
+                        <div
+                            v-for="(item, index) in relatedNodesTipList"
+                            :key="index"
+                            class="env-node-tip-item"
+                        >
+                            {{ item }}
+                        </div>
+                    </div>
+                </bk-popover>
+                <bk-tag v-else>{{ envNodeTypeDisplayName }}</bk-tag>
                 <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 <span
                     v-if="!isCreateResType"
@@ -139,6 +157,18 @@
                 }
                 return envNodeTypeMap[currentEnv.value?.envNodeType]
             })
+            // 已关联节点（动态关联以标签规则表示）的 tips 内容，格式为 keyName:valueName
+            const relatedNodesTipList = computed(() => {
+                const tags = currentEnv.value?.tags || []
+                return tags.map(tag => {
+                    const values = (tag.tagValues || [])
+                        .map(v => v.tagValueName)
+                        .filter(Boolean)
+                        .join(', ')
+                    const keyName = tag.tagKeyName || tag.tagKeyId || ''
+                    return values ? `${keyName}: ${values}` : keyName
+                }).filter(Boolean)
+            })
             const osDisplayName = computed(() => {
                 const os = currentEnv.value?.os
                 return os ? (OS_LABEL_MAP[os] || os) : ''
@@ -157,6 +187,14 @@
                     name: 'node',
                     label: proxy.$t('environment.node')
                 },
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
+                    {
+                        name: 'buildTask',
+                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
+                            ? proxy.$t('environment.relatedCreativeFlow')
+                            : proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
                         name: 'variable',
@@ -177,14 +215,6 @@
                 //         label: proxy.$t('environment.settings')
                 //     }
                 // ] : []),
-                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
-                    {
-                        name: 'buildTask',
-                        label: currentEnv.value?.envType === ENV_TYPE_MAP.CREATE
-                            ? proxy.$t('environment.relatedCreativeFlow')
-                            : proxy.$t('environment.nodeInfo.buildTask')
-                    }
-                ] : []),
                 ...(!isPersonalProject.value ? [{
                     name: 'auth',
                     label: proxy.$t('environment.authManage')
@@ -210,7 +240,7 @@
                             tabName: newTab
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -237,7 +267,7 @@
                             tabName: 'node'
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             }, {
@@ -257,7 +287,7 @@
                             tabName: tabActive.value
                         }
                     }).catch(err => {
-                        throw err
+                        console.warn('路由导航被取消:', err?.message || err)
                     })
                 }
             })
@@ -292,6 +322,7 @@
                 envDetailLoaded,
                 envTypeDisplayName,
                 envNodeTypeDisplayName,
+                relatedNodesTipList,
                 osDisplayName,
                 isCreateResType,
                 handleCreateEnv
@@ -367,6 +398,14 @@
     }
     .bk-tab-section {
         display: none !important;
+    }
+}
+.env-node-tip {
+    max-width: 320px;
+    text-align: left;
+    line-height: 20px;
+    .env-node-tip-item {
+        white-space: nowrap;
     }
 }
 </style>

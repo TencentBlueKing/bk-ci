@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -43,6 +44,11 @@ class TPACommonUtil @Autowired constructor(
     }
 
     fun log(dispatchData: ThirdPartyAgentDispatchData, logMessage: String) {
+        if (DispatchLogBuffer.append(
+                dispatchData.buildId, dispatchData.vmSeqId, dispatchData.containerHashId,
+                dispatchData.executeCount, dispatchData.jobId, logMessage
+            )
+        ) return
         buildLogPrinter.addLine(
             buildId = dispatchData.buildId,
             message = logMessage,
@@ -71,6 +77,11 @@ class TPACommonUtil @Autowired constructor(
     }
 
     fun logWarn(dispatchData: ThirdPartyAgentDispatchData, logMessage: String) {
+        if (DispatchLogBuffer.append(
+                dispatchData.buildId, dispatchData.vmSeqId, dispatchData.containerHashId,
+                dispatchData.executeCount, dispatchData.jobId, logMessage, yellow = true
+            )
+        ) return
         buildLogPrinter.addYellowLine(
             buildId = dispatchData.buildId,
             message = logMessage,
@@ -100,6 +111,11 @@ class TPACommonUtil @Autowired constructor(
     }
 
     fun logDebug(dispatchData: ThirdPartyAgentDispatchData, message: String) {
+        if (DispatchLogBuffer.append(
+                dispatchData.buildId, dispatchData.vmSeqId, dispatchData.containerHashId,
+                dispatchData.executeCount, dispatchData.jobId, message, logType = LogType.DEBUG
+            )
+        ) return
         buildLogPrinter.addDebugLine(
             buildId = dispatchData.buildId,
             message = message,
@@ -144,7 +160,11 @@ class TPACommonUtil @Autowired constructor(
         } else {
             data.projectId
         }
-        val link = "$host/console/environment/$projectId/pipeline/node/allNode?nodeHashId=$nodeHashId"
+        val link = if (data.createMode == true) {
+            "$host/console/environment/$projectId/creative-stream/node/allNode?nodeHashId=$nodeHashId"
+        } else {
+            "$host/console/environment/$projectId/pipeline/node/allNode?nodeHashId=$nodeHashId"
+        }
         val msg = if (nodeHashId.isNullOrBlank()) {
             ""
         } else {
@@ -158,6 +178,11 @@ class TPACommonUtil @Autowired constructor(
         data: ThirdPartyAgentDispatchData,
         message: String
     ) {
+        if (DispatchLogBuffer.append(
+                data.buildId, data.vmSeqId, data.containerHashId,
+                data.executeCount, data.jobId, message, red = true
+            )
+        ) return
         buildLogPrinter.addRedLine(
             buildId = data.buildId,
             message = message,
@@ -218,8 +243,10 @@ class TPACommonUtil @Autowired constructor(
                 )
             )
         } catch (e: Throwable) {
-            logger.error("updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
-                    "|$createTime|$endTime|error", e)
+            logger.error(
+                "updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
+                        "|$createTime|$endTime|error", e
+            )
         }
     }
 

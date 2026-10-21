@@ -54,6 +54,7 @@ export default function useTemplateConstraint () {
                 'runLockType',
                 'waitQueueTimeMinute',
                 'concurrencyCancelInProgress',
+                'concurrencySubGroup',
                 'concurrencyGroup'
             ].reduce((acc, cur) => {
                 acc[cur] = setting[cur]

@@ -39,6 +39,7 @@ class UpgradeServiceTest {
         every { mockAgentPropsScope.getAgentVersion() } returns "curr-test-go-version"
         every { mockAgentPropsScope.getJdkVersion(os, arch) } returns "curr-test-jdk-version"
         every { mockAgentPropsScope.getDockerInitFileMd5(os) } returns "curr-docker-init-file-md5"
+        every { mockAgentPropsScope.checkInReleaseVersion(any()) } returns false
 
         every { mockAgentScope.checkCanUpgrade(agentId) } returns false
         every { mockAgentScope.checkLockUpgrade(any(), any()) } returns false

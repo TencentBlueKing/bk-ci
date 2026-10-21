@@ -393,9 +393,9 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, UPDATE_STARTUP_INFO, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual, isParamValueEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -617,6 +617,18 @@
                     }
                 })
             },
+            /**
+             * 用选中的版本详情填充 activePipelineVersion
+             * 避免依赖分页下拉列表反查，保证 isReleaseVersion / isBranchVersion 等判定准确
+             */
+            setActiveVersionInfo (pipelineRes) {
+                if (!pipelineRes) return
+                this.selectPipelineVersion({
+                    ...pipelineRes,
+                    version: pipelineRes.version,
+                    status: pipelineRes.versionStatus
+                })
+            },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
                     const values = this.getExecuteParams(this.pipelineId)
@@ -629,7 +641,7 @@
                         ...p,
                         isChanged: isObject(p.defaultValue)
                             ? !isShallowEqual(p.defaultValue, p.value)
-                            : p.defaultValue !== p.value,
+                            : !isParamValueEqual(p.defaultValue, p.value),
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
@@ -814,6 +826,7 @@
                             this.branchVersion = branchInfo.version
                             this.isBranchVersion = false
                             this.expireReleasedVersion = false
+                            this.setActiveVersionInfo(pipelineRes)
                         } else {
                             // 分支使用 PAC 分支编排接口
                             const [res, branchPipelineRes] = await Promise.all([
@@ -829,6 +842,7 @@
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
                             this.isBranchVersion = true
+                            this.setActiveVersionInfo(pipelineRes)
                             if (branchPipelineRes) {
                                 const { version, latestVersion, versionStatus = '' } = branchPipelineRes
                                 this.expireReleasedVersion = versionStatus === 'RELEASED' && version !== latestVersion
@@ -844,6 +858,7 @@
                         // 非 PAC 分支模式下清空 branchVersion
                         this.branchVersion = null
                         this.isBranchVersion = false
+                        this.setActiveVersionInfo(pipelineRes)
                     }
 
                     this.pipelineModel = {
@@ -852,6 +867,8 @@
                     }
                     this.setPipelineSkipProp(this.pipelineModel.stages, this.checkTotal)
                     bus.$emit(UPDATE_PREVIEW_PIPELINE_NAME, this.pipelineModel?.name)
+                    // 通知预览头部当前所选版本是否允许手动触发
+                    bus.$emit(UPDATE_STARTUP_INFO, this.startupInfo?.canManualStartup)
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
                     this.pacError = { show: false, type: '', message: '' }

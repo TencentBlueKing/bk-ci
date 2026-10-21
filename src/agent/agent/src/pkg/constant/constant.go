@@ -38,6 +38,10 @@ const (
 	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
 	// DevopsAgentDockerCapAdd 启动docker时的capadd参数，为空则不添加
 	DevopsAgentDockerCapAdd = "DEVOPS_AGENT_DOCKER_CAP_ADD"
+	// DevopsAgentDockerRunArgs 启动docker容器时追加的额外参数，
+	// 用法与 docker 命令一致，可指定任意 flags，支持用单/双引号包裹带空格的值，
+	// 例如：--shm-size 256m --dns 8.8.8.8 --label "team=ci build"，为空则不追加
+	DevopsAgentDockerRunArgs = "DEVOPS_AGENT_DOCKER_RUN_ARGS"
 	// DevopsAgentContainerRuntime 容器运行时命令，默认 docker，可切换为 podman
 	DevopsAgentContainerRuntime = "DEVOPS_AGENT_CONTAINER_RUNTIME"
 

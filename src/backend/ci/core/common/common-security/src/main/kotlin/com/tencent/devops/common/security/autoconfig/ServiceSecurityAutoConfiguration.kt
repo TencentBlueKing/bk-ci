@@ -28,9 +28,16 @@
 package com.tencent.devops.common.security.autoconfig
 
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.crypto.CryptoKeyRefreshExecutor
+import com.tencent.devops.common.security.crypto.CryptoKeyRefreshProperties
+import com.tencent.devops.common.security.crypto.CryptoKeyRefreshWriter
+import com.tencent.devops.common.security.crypto.OpCryptoKeyRefreshResource
 import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
@@ -46,6 +53,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 @EnableScheduling
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@EnableConfigurationProperties(CryptoKeyRefreshProperties::class)
 class ServiceSecurityAutoConfiguration {
     companion object {
         const val JWT_MANAGER_SCHEDULER = "jwtManagerScheduler"
@@ -75,4 +83,23 @@ class ServiceSecurityAutoConfiguration {
         scheduler.initialize()
         return scheduler
     }
+
+    @Bean
+    fun cryptoKeyRefreshExecutor(
+        redisOperation: RedisOperation,
+        properties: CryptoKeyRefreshProperties
+    ) = CryptoKeyRefreshExecutor(redisOperation, properties)
+
+    @Bean
+    @ConditionalOnWebApplication
+    fun opCryptoKeyRefreshResource(
+        @Value("\${spring.application.name:}")
+        applicationName: String,
+        executor: CryptoKeyRefreshExecutor,
+        writers: List<CryptoKeyRefreshWriter>
+    ) = OpCryptoKeyRefreshResource(
+        applicationName = applicationName,
+        executor = executor,
+        writers = writers
+    )
 }

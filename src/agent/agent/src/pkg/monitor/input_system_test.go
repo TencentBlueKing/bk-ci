@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"testing"
@@ -21,14 +22,14 @@ func TestSystem_Name(t *testing.T) {
 
 func TestSystem_Gather_HasNCPUsAndUptime(t *testing.T) {
 	s := &System{
-		loadAvgFn: func() (*load.AvgStat, error) {
+		loadAvgFn: func(_ context.Context) (*load.AvgStat, error) {
 			return &load.AvgStat{Load1: 0.5, Load5: 0.3, Load15: 0.1}, nil
 		},
-		uptimeFn: func() (uint64, error) { return 3600, nil },
-		usersFn:  func() ([]host.UserStat, error) { return []host.UserStat{{}, {}}, nil },
+		uptimeFn: func(_ context.Context) (uint64, error) { return 3600, nil },
+		usersFn:  func(_ context.Context) ([]host.UserStat, error) { return []host.UserStat{{}, {}}, nil },
 		nowFn:    time.Now,
 	}
-	metrics, err := s.Gather()
+	metrics, err := s.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,12 +55,12 @@ func TestSystem_Gather_HasNCPUsAndUptime(t *testing.T) {
 func TestSystem_Gather_AllSubQueriesFail(t *testing.T) {
 	e := errors.New("nope")
 	s := &System{
-		loadAvgFn: func() (*load.AvgStat, error) { return nil, e },
-		uptimeFn:  func() (uint64, error) { return 0, e },
-		usersFn:   func() ([]host.UserStat, error) { return nil, e },
+		loadAvgFn: func(_ context.Context) (*load.AvgStat, error) { return nil, e },
+		uptimeFn:  func(_ context.Context) (uint64, error) { return 0, e },
+		usersFn:   func(_ context.Context) ([]host.UserStat, error) { return nil, e },
 		nowFn:     time.Now,
 	}
-	_, err := s.Gather()
+	_, err := s.Gather(context.Background())
 	if err == nil {
 		t.Error("all-failure should return error")
 	}
@@ -68,12 +69,12 @@ func TestSystem_Gather_AllSubQueriesFail(t *testing.T) {
 func TestSystem_Gather_PartialFailureStillProduces(t *testing.T) {
 	// load 失败但 uptime 成功 → 保留 uptime
 	s := &System{
-		loadAvgFn: func() (*load.AvgStat, error) { return nil, errors.New("x") },
-		uptimeFn:  func() (uint64, error) { return 12345, nil },
-		usersFn:   func() ([]host.UserStat, error) { return nil, errors.New("x") },
+		loadAvgFn: func(_ context.Context) (*load.AvgStat, error) { return nil, errors.New("x") },
+		uptimeFn:  func(_ context.Context) (uint64, error) { return 12345, nil },
+		usersFn:   func(_ context.Context) ([]host.UserStat, error) { return nil, errors.New("x") },
 		nowFn:     time.Now,
 	}
-	metrics, err := s.Gather()
+	metrics, err := s.Gather(context.Background())
 	if err != nil {
 		t.Fatalf("partial failure should succeed: %v", err)
 	}

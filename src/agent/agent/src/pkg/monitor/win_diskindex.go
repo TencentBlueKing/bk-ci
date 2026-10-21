@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// win_diskindex.go 通过 DeviceIoControl(IOCTL_DISK_PERFORMANCE) 查询
+// win_diskindex.go 通过 DeviceIoControl(IOCTL_STORAGE_GET_DEVICE_NUMBER) 查询
 // Windows 物理盘号，用于组装与 telegraf win_perf_counters PhysicalDisk
 // 一致的 instance tag 格式 "<DiskIndex> <DriveLetter>:"（例如 "0 C:"）。
 //
@@ -101,7 +101,7 @@ func refreshDiskIndexCacheLocked() (map[string]uint32, error) {
 }
 
 // scanAllDriveIndices 通过 GetLogicalDriveStrings 枚举所有盘符，对每个
-// DRIVE_FIXED 盘打开 \\.\<letter>: 设备，调用 IOCTL_DISK_PERFORMANCE
+// DRIVE_FIXED 盘打开 \\.\<letter>: 设备，调用 IOCTL_STORAGE_GET_DEVICE_NUMBER
 // 读取 StorageDeviceNumber。返回 {"C:": 0, "D:": 1, ...}。
 // 部分盘符 ioctl 失败（权限/非 NTFS）时跳过，不让整体失败。
 func scanAllDriveIndices() (map[string]uint32, error) {
@@ -116,6 +116,12 @@ func scanAllDriveIndices() (map[string]uint32, error) {
 			continue
 		}
 		letter := string(rune(v)) + ":"
+		root, perr := windows.UTF16PtrFromString(letter + "\\")
+		if perr != nil || windows.GetDriveType(root) != windows.DRIVE_FIXED {
+			// 网络映射盘必须在 CreateFile / DeviceIoControl 之前跳过；
+			// 可移动盘、光驱等也不属于 PhysicalDisk 实例映射范围。
+			continue
+		}
 		idx, qerr := ioctlDiskPerformance(letter)
 		if qerr != nil {
 			// 单盘失败（例如 USB 外接盘被占用）不中断整体

@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.BatchFetchContainerRecordResp
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -533,6 +534,27 @@ class ContainerBuildRecordService(
             executeCount = executeCount
         ).map { it.containerId }
         return containerIdList.indexOf(containerId)
+    }
+
+    fun batchFetchContainerStatus(
+        buildId: String,
+        containerIdList: List<String>,
+        executeCount: Int
+    ): List<BatchFetchContainerRecordResp> {
+        return recordContainerDao.fetchContainerRecords(
+            dslContext = dslContext,
+            buildId = buildId,
+            containerIdList = containerIdList,
+            executeCount = executeCount
+        ).map {
+            BatchFetchContainerRecordResp(
+                containerId = it.containerId,
+                status = it.status,
+                executeCount = it.executeCount,
+                startTime = it.startTime,
+                endTime = it.endTime
+            )
+        }
     }
 
     companion object {

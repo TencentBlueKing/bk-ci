@@ -498,6 +498,8 @@ object ProcessMessageCode {
     // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
     const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101374"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
+    // 获取Fork仓库YAML失败：PR触发人[{0}]尚未完成OAUTH授权或没有仓库[{1}]读取权限
+    const val ERROR_PAC_FORK_YAML_OAUTH = "2101375"
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
@@ -815,6 +817,13 @@ object ProcessMessageCode {
     const val BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE = "bkMergeTemplateYamlUpdateTitle" // 修改模版发布mr标题
     const val BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE = "bkMergeTemplateInstanceYamlTitle" // 模版实例化标题
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
+    const val BK_CONCURRENCY_SUB_GROUP_EMPTY = "bkConcurrencySubGroupEmpty" // 同一批标识启动时为空
+    // {0} 是触发取代的构建链接。拦截器提前取消和启动时的权威去重都会传入。
+    const val BK_CONCURRENCY_SUB_GROUP_REPLACED = "bkConcurrencySubGroupReplaced"
+    // 启动时的队列对账没有单一触发构建，文案不能带占位符。
+    const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL = "bkConcurrencyQueueSizeCancel"
+    // 拦截器满员挤出能指向当前构建。与上面拆开，避免对账日志打出未替换的 {0}。
+    const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD = "bkConcurrencyQueueSizeCancelByBuild"
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
@@ -933,4 +942,84 @@ object ProcessMessageCode {
 
     // Job构建环境操作系统不适配插件的明细项：Job[{0}]（{1}）中的 {2} 需要 {3}
     const val BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM = "bkAtomJobOsIncompatibleItem"
+
+    // 构建机容器发生重启，构建进程已中断
+    const val BK_BUILD_CONTAINER_RESTARTED = "bkBuildContainerRestarted"
+
+    // 用户手动取消构建
+    const val BK_BUILD_CANCEL_USER_MANUAL = "bkBuildCancelUserManual"
+    // {0} 处在途均已停止
+    const val BK_BUILD_CANCEL_USER_IN_FLIGHT_STOPPED = "bkBuildCancelUserInFlightStopped"
+    // 用户强制终止构建
+    const val BK_BUILD_CANCEL_USER_FORCE_TERMINATE = "bkBuildCancelUserForceTerminate"
+    // 用户重启构建，原构建被取消
+    const val BK_BUILD_CANCEL_USER_RESTART = "bkBuildCancelUserRestart"
+    // 系统服务端取消构建
+    const val BK_BUILD_CANCEL_SYSTEM_SERVICE_SHUTDOWN = "bkBuildCancelSystemServiceShutdown"
+    // 排队已满，新构建入队导致排队中的构建被自动取消
+    const val BK_BUILD_CANCEL_SYSTEM_QUEUE_FULL = "bkBuildCancelSystemQueueFull"
+    // 并发组[{0}]互斥，新构建入队导致排队中的构建被自动取消
+    const val BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_GROUP = "bkBuildCancelSystemConcurrencyGroup"
+    // 并发组[{0}]中有更高优先级的构建等待执行
+    const val BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_PRIORITY = "bkBuildCancelSystemConcurrencyPriority"
+    // 流水线编排模型不存在，无法启动构建
+    const val BK_BUILD_CANCEL_SYSTEM_MODEL_NOT_FOUND = "bkBuildCancelSystemModelNotFound"
+    // 流水线被删除，运行中的构建被终止
+    const val BK_BUILD_CANCEL_SYSTEM_PIPELINE_DELETED = "bkBuildCancelSystemPipelineDeleted"
+    // 构建机 Agent 异常退出，与节点失联
+    const val BK_BUILD_CANCEL_SYSTEM_HEARTBEAT_TIMEOUT = "bkBuildCancelSystemHeartbeatTimeout"
+    // 所属 Job 超过执行时限 {0}m，步骤被终止
+    const val BK_BUILD_CANCEL_SYSTEM_JOB_EXEC_TIMEOUT = "bkBuildCancelSystemJobExecTimeout"
+    // Job 排队超时，已被系统终止
+    const val BK_BUILD_CANCEL_SYSTEM_JOB_QUEUE_TIMEOUT = "bkBuildCancelSystemJobQueueTimeout"
+    // 本次构建随父流水线取消而终止
+    const val BK_BUILD_CANCEL_PARENT_PIPELINE = "bkBuildCancelParentPipeline"
+
+    // ---- 构建终态(失败/超时/成功)原因 ----
+    // 子流水线执行失败
+    const val BK_BUILD_END_FAIL_SUB_PIPELINE = "bkBuildEndFailSubPipeline"
+    // 已启用 Fastkill，因「{0}」失败被终止
+    const val BK_BUILD_END_FAIL_FAST_KILL = "bkBuildEndFailFastKill"
+    // 已启用 Fastkill，因同阶段其他 Job 失败被终止(定位不到引发终止的Job时使用)
+    const val BK_BUILD_END_FAIL_FAST_KILL_STAGE = "bkBuildEndFailFastKillStage"
+    // Job 互斥组[{0}]未开启排队，被其他构建占用后直接终止
+    const val BK_BUILD_END_FAIL_MUTEX_QUEUE_DISABLED = "bkBuildEndFailMutexQueueDisabled"
+    // Job 互斥组[{0}]排队失败(排队超时或队列已满)，已被终止
+    const val BK_BUILD_END_FAIL_MUTEX_QUEUE = "bkBuildEndFailMutexQueue"
+    // Job 异常结束，未产生插件错误信息（Job 失败但归不出具体成因时的兜底文案）
+    const val BK_BUILD_END_FAIL_JOB_ABORTED = "bkBuildEndFailJobAborted"
+    // 暂停执行期间被终止（执行前暂停后选择终止，插件常无 errorMsg）
+    const val BK_BUILD_END_FAIL_PAUSE_TERMINATED = "bkBuildEndFailPauseTerminated"
+    // 执行前暂停被终止后的位置状态文案，对齐编排图「暂停/终止」
+    const val BK_BUILD_END_STATUS_PAUSE_TERMINATED = "bkBuildEndStatusPauseTerminated"
+    // 步骤执行失败（插件失败但未留下错误信息时的兜底文案）
+    const val BK_BUILD_END_FAIL_PLUGIN = "bkBuildEndFailPlugin"
+    // 质量红线未达标(无指标详情时的兜底文案)
+    const val BK_BUILD_END_FAIL_QUALITY = "bkBuildEndFailQuality"
+    // {0} 超过阈值 {1}（阈值为上限的指标，如代码坏味道数）
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATOR_EXCEED = "bkBuildEndFailQualityIndicatorExceed"
+    // {0} 未达到阈值 {1}（阈值为下限的指标，如覆盖率）
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATOR_BELOW = "bkBuildEndFailQualityIndicatorBelow"
+    // {0} 等 {1} 项质量红线指标未达标
+    const val BK_BUILD_END_FAIL_QUALITY_INDICATORS = "bkBuildEndFailQualityIndicators"
+    // 本步骤超过执行时限 {0}m
+    const val BK_BUILD_END_TIMEOUT_STEP = "bkBuildEndTimeoutStep"
+    // 阶段准入审核被驳回，后续阶段不再执行
+    const val BK_BUILD_END_STAGE_REVIEW_ABORT = "bkBuildEndStageReviewAbort"
+
+    // ---- 构建运行态(排队中/执行中)详情 ----
+    // 执行前暂停无固定处理人名单，由是否具备执行权限决定
+    const val BK_BUILD_RUNNING_HANDLER_EXECUTE_PERM = "bkBuildRunningHandlerExecutePerm"
+    // 无Job在运行且存在等待中的Job时的当前阶段提示
+    const val BK_BUILD_RUNNING_JOB_QUEUING = "bkBuildRunningJobQueuing"
+    // 无Job在运行且存在待人工处理项时的当前阶段提示
+    const val BK_BUILD_RUNNING_PENDING_MANUAL = "bkBuildRunningPendingManual"
+    // 构建机复用互斥，等待被依赖的节点 {0} 调度到具体节点后再进行复用调度
+    const val BK_BUILD_RUNNING_AGENT_REUSE_WAIT = "bkBuildRunningAgentReuseWait"
+    // 手动触发（运行态卡片补全 START_TYPE_MANUAL 的「手动」）
+    const val BK_BUILD_RUNNING_TRIGGER_MANUAL = "bkBuildRunningTriggerManual"
+    // 定时触发
+    const val BK_BUILD_RUNNING_TRIGGER_TIMER = "bkBuildRunningTriggerTimer"
+    // 流水线触发
+    const val BK_BUILD_RUNNING_TRIGGER_PIPELINE = "bkBuildRunningTriggerPipeline"
 }

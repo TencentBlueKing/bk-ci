@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
@@ -97,6 +98,15 @@ interface MarketAtomService {
     ): Result<AtomVersion?>
 
     /**
+     * 根据标识获取最新版本信息，并校验用户是否为该插件的成员
+     */
+    fun getNewestAtomByCodeWithPermissionCheck(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<AtomVersion?>
+
+    /**
      * 安装插件到项目
      */
     fun installAtom(
@@ -123,7 +133,8 @@ interface MarketAtomService {
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        versionType: String? = null
     ): Result<Page<AtomVersionListItem>>
 
     /**
@@ -201,4 +212,9 @@ interface MarketAtomService {
         kProperty: String,
         props: String? = null
     )
+
+    /**
+     * 批量获得插件参数定义（task.json 的 input 部分）
+     */
+    fun getAtomInputProps(getAtomInputPropsRequest: GetAtomInputPropsRequest): Map<String, Map<String, Any>>
 }

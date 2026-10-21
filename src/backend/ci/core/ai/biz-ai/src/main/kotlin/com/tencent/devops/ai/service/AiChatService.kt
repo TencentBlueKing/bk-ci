@@ -158,11 +158,13 @@ class AiChatService @Autowired constructor(
             val firstUserMsg = input.messages
                 ?.lastOrNull { it.role == ROLE_USER }
                 ?.content
+            val chatContext = AiChatContext.getContext()
             aiSessionService.ensureSession(
                 sessionId = threadId,
                 userId = userId,
                 firstUserMessage = firstUserMsg,
-                projectId = AiChatContext.getContext().projectId
+                projectId = chatContext.projectId,
+                pipelineId = chatContext.pipelineId
             )
             AiChatContext.setThreadId(threadId)
             sessionContext.bindContext(threadId, userId, AiChatContext.getContext())

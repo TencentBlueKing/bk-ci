@@ -4,6 +4,7 @@
 package monitor
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestDiskIO_TwinSample_BasicRate(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return map[string]disk.IOCountersStat{
@@ -58,7 +59,7 @@ func TestDiskIO_TwinSample_BasicRate(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +116,7 @@ func TestDiskIO_TwinSample_CounterReset(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return map[string]disk.IOCountersStat{
@@ -131,7 +132,7 @@ func TestDiskIO_TwinSample_CounterReset(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +157,7 @@ func TestDiskIO_TwinSample_NewDeviceOnlyInSecond(t *testing.T) {
 	clk := newFakeClock()
 	calls := 0
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return map[string]disk.IOCountersStat{
@@ -172,7 +173,7 @@ func TestDiskIO_TwinSample_NewDeviceOnlyInSecond(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +205,7 @@ func TestDiskIO_TwinSample_NewDeviceOnlyInSecond(t *testing.T) {
 func TestDiskIO_TwinSample_NoSleepInTest(t *testing.T) {
 	clk := newFakeClock()
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{
 				"0 C:": {Name: "0 C:", ReadBytes: 1, WriteBytes: 2},
 			}, nil
@@ -213,7 +214,7 @@ func TestDiskIO_TwinSample_NoSleepInTest(t *testing.T) {
 		sleepFn: clk.Sleep,
 	}
 	start := time.Now()
-	_, _ = d.Gather()
+	_, _ = d.Gather(context.Background())
 	// 留足余量；关键是远小于 rateSampleInterval(1s)
 	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
 		t.Errorf("Gather took %v; fake sleepFn should avoid real 1s sleep", elapsed)
@@ -223,11 +224,11 @@ func TestDiskIO_TwinSample_NoSleepInTest(t *testing.T) {
 func TestDiskIO_TwinSample_FirstSampleErrPropagates(t *testing.T) {
 	sentinel := errors.New("boom-first")
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) { return nil, sentinel },
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) { return nil, sentinel },
 		nowFn:        time.Now,
 		sleepFn:      func(time.Duration) {},
 	}
-	if _, err := d.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := d.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v, want wrap of sentinel", err)
 	}
 }
@@ -236,7 +237,7 @@ func TestDiskIO_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 	sentinel := errors.New("boom-second")
 	calls := 0
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			calls++
 			if calls == 1 {
 				return map[string]disk.IOCountersStat{"0 C:": {Name: "0 C:"}}, nil
@@ -246,7 +247,7 @@ func TestDiskIO_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 		nowFn:   time.Now,
 		sleepFn: func(time.Duration) {},
 	}
-	if _, err := d.Gather(); err == nil || !errors.Is(err, sentinel) {
+	if _, err := d.Gather(context.Background()); err == nil || !errors.Is(err, sentinel) {
 		t.Errorf("err = %v, want wrap of sentinel", err)
 	}
 }
@@ -255,13 +256,13 @@ func TestDiskIO_TwinSample_SecondSampleErrPropagates(t *testing.T) {
 func TestDiskIO_TwinSample_NonPositiveDt(t *testing.T) {
 	frozen := time.Unix(1_700_000_000, 0)
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{"0 C:": {Name: "0 C:"}}, nil
 		},
 		nowFn:   func() time.Time { return frozen },
 		sleepFn: func(time.Duration) {},
 	}
-	if _, err := d.Gather(); err == nil {
+	if _, err := d.Gather(context.Background()); err == nil {
 		t.Error("want error on non-positive dt, got nil")
 	}
 }
@@ -271,7 +272,7 @@ func TestDiskIO_TwinSample_NonPositiveDt(t *testing.T) {
 func TestDiskIO_TwinSample_InstanceWithDiskIndex(t *testing.T) {
 	clk := newFakeClock()
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{
 				"C:": {Name: "C:", ReadBytes: 1, WriteBytes: 2},
 				"D:": {Name: "D:", ReadBytes: 3, WriteBytes: 4},
@@ -290,7 +291,7 @@ func TestDiskIO_TwinSample_InstanceWithDiskIndex(t *testing.T) {
 		},
 	}
 
-	metrics, err := d.Gather()
+	metrics, err := d.Gather(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +309,7 @@ func TestDiskIO_TwinSample_InstanceWithDiskIndex(t *testing.T) {
 func TestDiskIO_TwinSample_InstanceFallbackOnError(t *testing.T) {
 	clk := newFakeClock()
 	d := &DiskIO{
-		ioCountersFn: func() (map[string]disk.IOCountersStat, error) {
+		ioCountersFn: func(_ context.Context) (map[string]disk.IOCountersStat, error) {
 			return map[string]disk.IOCountersStat{
 				"C:": {Name: "C:", ReadBytes: 1, WriteBytes: 2},
 			}, nil
@@ -319,7 +320,7 @@ func TestDiskIO_TwinSample_InstanceFallbackOnError(t *testing.T) {
 			return 0, errors.New("access denied")
 		},
 	}
-	metrics, _ := d.Gather()
+	metrics, _ := d.Gather(context.Background())
 	if len(metrics) != 1 {
 		t.Fatalf("want 1 metric, got %d", len(metrics))
 	}

@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { convertTime } from '@/utils/util'
 import useInstance from './useInstance'
+import { ENV_TYPE_MAP } from '@/store/constants'
 
 const currentEnv = ref({})
 
@@ -12,6 +13,8 @@ export default function useEnvDetail () {
     const projectId = computed(() => proxy.$route.params?.projectId)
     const envList = computed(() => proxy.$store.getters['environment/getEnvList'] || [])
     const isBuiltInEnv = computed(() => envHashId.value?.startsWith('-'))
+    // 是否为构建环境类型的环境
+    const isBuildEnv = computed(() => currentEnv.value?.envType === ENV_TYPE_MAP.BUILD)
     const isPersonalProject = computed(() => {
         // 个人项目
         const projectList = proxy.$store.state.projectList || []
@@ -230,6 +233,7 @@ export default function useEnvDetail () {
         envDetailLoaded,
         envList,
         isBuiltInEnv,
+        isBuildEnv,
         isPersonalProject,
         operateLogList,
         operateLogPagination,

@@ -92,6 +92,8 @@ data class WebHookTriggerElementChanger(
     val includeNoteTypes: List<String>? = null,
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
+    @get:Schema(title = "是否回写质量红线报告")
+    val enableQualityReport: Boolean? = true,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "事件包含的负责人")
@@ -147,6 +149,7 @@ data class WebHookTriggerElementChanger(
         includeNoteComment = data.includeNoteComment,
         includeNoteTypes = data.includeNoteTypes,
         enableCheck = data.enableCheck,
+        enableQualityReport = data.enableQualityReport,
         includeIssueAction = data.includeIssueAction,
         includeMrAction = data.includeMrAction,
         includePushAction = data.includePushAction,
@@ -186,6 +189,7 @@ data class WebHookTriggerElementChanger(
         includeNoteComment = data.data.input.includeNoteComment,
         includeNoteTypes = data.data.input.includeNoteTypes,
         enableCheck = data.data.input.enableCheck,
+        enableQualityReport = data.data.input.enableQualityReport,
         includeIssueAction = data.data.input.includeIssueAction,
         includeMrAction = data.data.input.includeMrAction,
         includePushAction = data.data.input.includePushAction,
