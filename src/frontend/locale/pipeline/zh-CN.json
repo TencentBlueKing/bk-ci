@@ -883,6 +883,8 @@
     "stopBuild": "终止构建",
     "reBuild": "重新构建",
     "fileUnit": "<b>{0}</b>个文件",
+    "fileFolderUnit": "<b>{0}</b>个文件， <b>{1}</b>个目录",
+    "folderUnit": "<b>{0}</b>个目录",
     "completedLog": "完整日志",
     "artifactList": "制品列表",
     "showAll": "显示全部",

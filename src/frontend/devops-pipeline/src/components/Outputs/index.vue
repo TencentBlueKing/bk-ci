@@ -857,7 +857,7 @@
             },
             getValuesByKey (data, key) {
                 for (const item of data) {
-                    if (key.includes(item.key)) {
+                    if (item.key === key) {
                         return item.value
                     }
                 }

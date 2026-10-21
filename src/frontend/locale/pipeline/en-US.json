@@ -886,6 +886,8 @@
     "stopBuild": "cancel",
     "reBuild": "Re-run",
     "fileUnit": "{0} files",
+    "fileFolderUnit": "{0} files, {1} folders",
+    "folderUnit": "{0} folders",
     "completedLog": "full-log",
     "artifactList": "Artifacts",
     "showAll": "Show all",
