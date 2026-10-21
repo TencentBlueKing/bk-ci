@@ -353,8 +353,8 @@ export const CODE_LIB_OPTION = {
 }
 
 export const SUB_PIPELINE_OPTION = {
-    url: '/process/api/user/pipelineInfos/{projectId}/idAndNames' +
-        '?permission=EXECUTE&excludePipelineId={pipelineId}&page=1&pageSize=100',
+    url: '/process/api/user/pipelineInfos/{projectId}/idAndNames'
+        + '?permission=EXECUTE&excludePipelineId={pipelineId}&page=1&pageSize=100',
     paramId: 'pipelineName',
     paramName: 'pipelineName',
     searchable: true
@@ -425,3 +425,17 @@ export const getParamsGroupByLabel = (list) => {
         sortedCategories
     }
 }
+
+export const DEFAULT_DISPLAY_CONDITION_OPERATOR = '=='
+
+export const DISPLAY_CONDITION_OPERATORS = [
+    { id: DEFAULT_DISPLAY_CONDITION_OPERATOR, name: DEFAULT_DISPLAY_CONDITION_OPERATOR },
+    { id: '>=', name: '>=' },
+    { id: '<=', name: '<=' },
+    { id: '>', name: '>' },
+    { id: '<', name: '<' },
+    { id: 'IN', name: 'in' },
+    { id: 'CONTAINS', name: 'Contains' },
+    { id: 'STARTS_WITH', name: 'StartWith' },
+    { id: 'ENDS_WITH', name: 'EndWith' }
+]
