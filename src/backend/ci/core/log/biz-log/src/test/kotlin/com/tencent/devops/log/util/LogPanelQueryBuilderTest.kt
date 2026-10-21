@@ -57,6 +57,39 @@ class LogPanelQueryBuilderTest {
     }
 
     @Test
+    fun backfillKeepsLateRowsNearCursorWhenWindowExceedsPageSize() {
+        val window = (1..4000).map { line(it.toLong(), 10_000L + it, "line-$it") }
+        val selected = LogPanelQueryBuilder.selectBackfillNearCursor(window)
+        assertEquals(LogPanelQueryBuilder.BACKFILL_MAX, selected.size)
+        assertEquals(1001L, selected.first().lineNo)
+        assertEquals(4000L, selected.last().lineNo)
+        assertTrue(selected.any { it.lineNo == 3990L })
+        assertFalse(selected.any { it.lineNo == 1L })
+        val oldestPage = window.take(LogPanelQueryBuilder.MAX_PAGE_SIZE)
+        assertFalse(oldestPage.any { it.lineNo == 3990L })
+    }
+
+    @Test
+    fun backfillPrefersTimestampNearCursorOverSmallerLineNo() {
+        val older = (1..1000).map { line(it.toLong(), it.toLong(), "old-$it") }
+        val late = line(50, 50_000L, "late-near-cursor")
+        val selected = LogPanelQueryBuilder.selectBackfillNearCursor(older + late, limit = 100)
+        assertTrue(selected.any { it.message == "late-near-cursor" })
+        assertEquals("late-near-cursor", selected.last().message)
+    }
+
+    @Test
+    fun backfillSameTimestampPrefersHigherLineNo() {
+        val lines = listOf(
+            line(1, 100, "a"),
+            line(2, 100, "b"),
+            line(3, 100, "c")
+        )
+        val selected = LogPanelQueryBuilder.selectBackfillNearCursor(lines, limit = 2)
+        assertEquals(listOf(2L, 3L), selected.map { it.lineNo })
+    }
+
+    @Test
     fun mergeByLineNoInsertsLateVisibleRowsInOrder() {
         val shown = line(11834, 2000, "fetch-764")
         val late = line(11831, 1500, "finish-dist")

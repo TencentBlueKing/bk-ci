@@ -149,7 +149,14 @@ class LogPanelEsDao(
                 val backfillQuery = baseFilter(buildId, tag, subTag, containerHashId, executeCount, levels)
                 backfillQuery.must(QueryBuilders.rangeQuery("lineNo").lte(lookback.cursorLineNo))
                 backfillQuery.must(QueryBuilders.rangeQuery("timestamp").gte(lookback.backfillFromTimestamp))
-                val (backfill, _) = executeSearch(buildId, indexName, backfillQuery, pageSize, desc = false)
+                // 降序截断等价于 selectBackfillNearCursor：留下时间窗里靠近游标的一页。
+                val (backfill, _) = executeSearch(
+                    buildId,
+                    indexName,
+                    backfillQuery,
+                    LogPanelQueryBuilder.BACKFILL_MAX,
+                    desc = true
+                )
                 merged = LogPanelQueryBuilder.mergeByLineNo(backfill + lines)
             }
         }

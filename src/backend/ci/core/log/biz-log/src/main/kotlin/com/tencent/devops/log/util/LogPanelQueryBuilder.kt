@@ -36,7 +36,10 @@ object LogPanelQueryBuilder {
      * 运行中 ES 近实时：后写的 lineNo 可能先可搜。after 若只查 lineNo > cursor，
      * 游标会跨过尚未 refresh 的行，后续永远拉不回来。
      * lineNo 是构建全局号，按插件过滤后本来就不连续，不能用“号段空洞”当缺失。
-     * 回填改为：cursor 之前、且 timestamp >= sinceTimestamp - lookback 的行，由前端按 lineNo 合并。
+     * 回填范围：cursor 之前、且 timestamp >= sinceTimestamp - lookback。
+     * 窗口里经常已有超过 pageSize 的行。按时间升序截断会留下最老的一页，
+     * 靠近游标的延迟行进不了结果，下次 sinceTimestamp 前移后也不会再被查到。
+     * 所以回填按 timestamp、lineNo 降序取 [BACKFILL_MAX] 条，再交给前端按 lineNo 合并。
      */
     data class AfterLookback(
         val cursorLineNo: Long,
@@ -58,6 +61,27 @@ object LogPanelQueryBuilder {
             cursorLineNo = cursorLineNo,
             backfillFromTimestamp = (sinceTimestamp - window).coerceAtLeast(0L)
         )
+    }
+
+    /**
+     * 与 ES 回填查询一致：timestamp、lineNo 降序保留最靠近游标的 [limit] 条，再按时间、行号升序返回。
+     * 行数不超过 limit 时不丢行。
+     */
+    fun selectBackfillNearCursor(
+        lines: List<LogPanelLine>,
+        limit: Int = BACKFILL_MAX
+    ): List<LogPanelLine> {
+        if (limit <= 0 || lines.isEmpty()) {
+            return emptyList()
+        }
+        val nearest = if (lines.size <= limit) {
+            lines
+        } else {
+            lines.sortedWith(
+                compareByDescending<LogPanelLine> { it.timestamp }.thenByDescending { it.lineNo }
+            ).take(limit)
+        }
+        return nearest.sortedWith(compareBy({ it.timestamp }, { it.lineNo }))
     }
 
     fun mergeByLineNo(primary: List<LogPanelLine>): List<LogPanelLine> {
