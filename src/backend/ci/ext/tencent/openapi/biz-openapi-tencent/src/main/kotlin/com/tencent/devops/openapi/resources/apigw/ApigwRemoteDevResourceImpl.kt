@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -74,6 +75,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import java.time.LocalDateTime
@@ -571,7 +573,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             userId = userId,
             workspaceName = workspaceName,
             ip = ip,
-            workspaceProperty = workspaceProperty
+            workspaceProperty = workspaceProperty,
+            projectId = null
+        )
+    }
+
+    override fun modifyWorkspacePropertyProject(
+        userId: String,
+        workspaceName: String?,
+        ip: String?,
+        projectId: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        logger.info("modifyWorkspacePropertyProject $projectId|$userId|$workspaceName|$ip|$workspaceProperty")
+        return client.get(ServiceRemoteDevResource::class).modifyWorkspaceProperty(
+            userId = userId,
+            workspaceName = workspaceName,
+            ip = ip,
+            workspaceProperty = workspaceProperty,
+            projectId = projectId
         )
     }
 
@@ -1142,6 +1162,23 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("getClientLatestVersion |$appCode|$type|$os")
         return client.get(ServiceRemoteDevResource::class).getClientLatestVersion(
             type = type,
+            os = os
+        )
+    }
+
+    override fun genThirdPartyDesktopInstallCommand(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        zoneId: String,
+        os: OS
+    ): Result<ThirdPartyDesktopInstallCommandResp> {
+        logger.info("genThirdPartyDesktopInstallCommand |$appCode|$userId|$projectId|$zoneId|$os")
+        return client.get(ServiceRemoteDevResource::class).genThirdPartyDesktopInstallCommand(
+            userId = userId,
+            projectId = projectId,
+            zoneId = zoneId,
             os = os
         )
     }

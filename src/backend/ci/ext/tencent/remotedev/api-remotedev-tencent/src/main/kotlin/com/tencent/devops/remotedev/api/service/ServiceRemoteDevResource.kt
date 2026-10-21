@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -63,6 +64,8 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.v3.oas.annotations.Operation
@@ -601,7 +604,10 @@ interface ServiceRemoteDevResource {
         @QueryParam("ip")
         ip: String?,
         @Parameter(description = "备注名称", required = true)
-        workspaceProperty: WorkspaceProperty
+        workspaceProperty: WorkspaceProperty,
+        @Parameter(description = "项目ID(项目英文名)，不为空时校验项目管理员权限", required = false)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<Boolean>
 
     @Operation(summary = "工作空间扩展硬盘回调")
@@ -1232,4 +1238,34 @@ interface ServiceRemoteDevResource {
         @QueryParam("os")
         os: ClientOS
     ): Result<ClientLatestVersion>
+
+    @Operation(summary = "生成第三方机器注册云桌面的安装命令（内含一次性token），目前仅支持WINDOWS，其他系统返回空命令")
+    @POST
+    @Path("/third_party_desktop/install_command")
+    fun genThirdPartyDesktopInstallCommand(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "地域，需以数字结尾，如 GZ11", required = true)
+        @QueryParam("zoneId")
+        zoneId: String,
+        @Parameter(description = "操作系统，WINDOWS/LINUX/MACOS，目前仅WINDOWS会返回命令", required = true)
+        @QueryParam("os")
+        os: OS
+    ): Result<ThirdPartyDesktopInstallCommandResp>
+
+    @Operation(summary = "重装场景：根据已注册的cdsId生成第三方云桌面token，有效期1小时，可获取cdskey，cds未分配时可分配")
+    @POST
+    @Path("/third_party_desktop/reinstall_token")
+    fun genThirdPartyDesktopReinstallToken(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "已注册云桌面的cdsId(即envId/cgsId)", required = true)
+        @QueryParam("cdsId")
+        cdsId: String
+    ): Result<ThirdPartyDesktopTokenResp>
 }

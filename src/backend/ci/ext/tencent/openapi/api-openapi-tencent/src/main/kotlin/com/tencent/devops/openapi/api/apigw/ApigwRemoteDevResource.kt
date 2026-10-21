@@ -33,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -73,6 +74,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.v3.oas.annotations.Operation
@@ -790,6 +792,26 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
         ip: String?,
+        @Parameter(description = "备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
+
+    @Operation(summary = "修改工作空间属性-项目", tags = ["v4_app_remotedev_modify_property_project"])
+    @POST
+    @Path("/modify_property_project")
+    fun modifyWorkspacePropertyProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "实例IP", required = true)
+        @QueryParam("ip")
+        ip: String?,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "备注名称", required = true)
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
@@ -1706,4 +1728,31 @@ interface ApigwRemoteDevResource {
         @QueryParam("os")
         os: ClientOS
     ): Result<ClientLatestVersion>
+
+    @Operation(
+        summary = "生成第三方机器注册云桌面的安装命令，目前仅支持WINDOWS，其他系统返回空命令",
+        tags = ["v4_app_remotedev_third_party_desktop_install_command"]
+    )
+    @POST
+    @Path("/third_party_desktop/install_command")
+    fun genThirdPartyDesktopInstallCommand(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "地域，需以数字结尾，如 GZ11", required = true)
+        @QueryParam("zoneId")
+        zoneId: String,
+        @Parameter(description = "操作系统，WINDOWS/LINUX/MACOS，目前仅WINDOWS会返回命令", required = true)
+        @QueryParam("os")
+        os: OS
+    ): Result<ThirdPartyDesktopInstallCommandResp>
 }

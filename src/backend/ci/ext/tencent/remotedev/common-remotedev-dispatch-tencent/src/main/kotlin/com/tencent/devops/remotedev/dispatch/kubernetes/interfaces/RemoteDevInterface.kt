@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.RegisterVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
@@ -196,5 +197,12 @@ interface RemoteDevInterface {
 
     fun createCvm(
         data: CreateCvmData
+    ): CreateCvmResp?
+
+    /**
+     * 注册第三方机器为云桌面
+     */
+    fun registerVm(
+        data: RegisterVmData
     ): CreateCvmResp?
 }

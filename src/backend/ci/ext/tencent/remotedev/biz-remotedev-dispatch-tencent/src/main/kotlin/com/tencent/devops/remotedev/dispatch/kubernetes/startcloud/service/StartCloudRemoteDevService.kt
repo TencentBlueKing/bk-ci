@@ -57,6 +57,7 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.RegisterVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
@@ -404,6 +405,15 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun createCvm(data: CreateCvmData): CreateCvmResp? {
         val res = workspaceBcsClient.createCvm(data) ?: return null
+        return CreateCvmResp(
+            taskID = res.taskID,
+            environmentUid = res.environmentUid,
+            taskUid = res.taskUid
+        )
+    }
+
+    override fun registerVm(data: RegisterVmData): CreateCvmResp? {
+        val res = workspaceBcsClient.registerVm(data) ?: return null
         return CreateCvmResp(
             taskID = res.taskID,
             environmentUid = res.environmentUid,

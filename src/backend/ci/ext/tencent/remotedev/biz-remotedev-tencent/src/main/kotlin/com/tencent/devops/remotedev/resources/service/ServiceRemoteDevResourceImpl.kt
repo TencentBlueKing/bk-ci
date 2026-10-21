@@ -43,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientLatestVersion
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
@@ -77,6 +78,8 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
 import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopInstallCommandResp
+import com.tencent.devops.remotedev.pojo.thirdparty.ThirdPartyDesktopTokenResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
@@ -107,6 +110,7 @@ import com.tencent.devops.remotedev.service.projectworkspace.StartWorkspaceHandl
 import com.tencent.devops.remotedev.service.projectworkspace.StopWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.UpgradeWorkspaceHandler
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
+import com.tencent.devops.remotedev.service.thirdparty.ThirdPartyDesktopService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
@@ -158,7 +162,8 @@ class ServiceRemoteDevResourceImpl(
     private val coffeeAIService: CoffeeAIService,
     private val openClawService: OpenClawService,
     private val templateWorkspaceAssignService: TemplateWorkspaceAssignService,
-    private val clientUpgradeService: ClientUpgradeService
+    private val clientUpgradeService: ClientUpgradeService,
+    private val thirdPartyDesktopService: ThirdPartyDesktopService
 ) : ServiceRemoteDevResource {
     companion object {
         private const val MAX_REFRESH_SIZE = 100
@@ -679,8 +684,12 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         workspaceName: String?,
         ip: String?,
-        workspaceProperty: WorkspaceProperty
+        workspaceProperty: WorkspaceProperty,
+        projectId: String?
     ): Result<Boolean> {
+        if (projectId != null) {
+            permissionService.checkUserManager(userId, projectId)
+        }
         return Result(
             workspaceService.modifyWorkspaceProperty(
                 userId = userId,
@@ -1165,5 +1174,28 @@ class ServiceRemoteDevResourceImpl(
     ): Result<ClientLatestVersion> {
         val version = clientUpgradeService.getLatestVersion(type, os).ifBlank { null }
         return Result(ClientLatestVersion(version = version))
+    }
+
+    override fun genThirdPartyDesktopInstallCommand(
+        userId: String,
+        projectId: String,
+        zoneId: String,
+        os: OS
+    ): Result<ThirdPartyDesktopInstallCommandResp> {
+        return Result(
+            thirdPartyDesktopService.genInstallCommand(
+                userId = userId,
+                projectId = projectId,
+                zoneId = zoneId,
+                os = os
+            )
+        )
+    }
+
+    override fun genThirdPartyDesktopReinstallToken(
+        userId: String,
+        cdsId: String
+    ): Result<ThirdPartyDesktopTokenResp> {
+        return Result(thirdPartyDesktopService.genReinstallToken(userId = userId, cdsId = cdsId))
     }
 }
