@@ -137,6 +137,8 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 			vars = append(vars, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
+	// 最后追加，确保容器收到的是 agent IP 而不是同名下发变量。
+	vars = append(vars, "BK_CI_AGENT_IP="+config.GAgentEnv.GetAgentIp())
 	return vars
 }
 

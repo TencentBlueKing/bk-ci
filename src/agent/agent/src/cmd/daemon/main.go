@@ -32,7 +32,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,7 +40,9 @@ import (
 
 	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 
+	"github.com/TencentBlueKing/bk-ci/agent/internal/stderrlog"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/agentcli"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
@@ -103,16 +104,27 @@ func main() {
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
 
-	watch()
+	// 整个 daemon 共用一个落盘协程。磁盘卡住时只丢弃溢出的诊断日志，
+	// 不能阻塞 agent stderr，也不能每次重启 agent 都新增卡住的落盘协程。
+	stderrSink := stderrlog.NewSink(&lumberjack.Logger{
+		Filename:   filepath.Join(workDir, "logs", "devopsAgent_stderr.log"),
+		MaxSize:    10,
+		MaxAge:     7,
+		MaxBackups: 3,
+		LocalTime:  true,
+	})
+	defer stderrSink.Close()
+
+	watch(stderrSink)
 	systemutil.KeepProcessAlive()
 }
 
-func watch() {
+func watch(stderrSink *stderrlog.Sink) {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 
 	// first check immediately
 	totalLock.Lock()
-	doCheckAndLaunchAgent()
+	doCheckAndLaunchAgent(stderrSink)
 	totalLock.Unlock()
 
 	checkTimeTicker := time.NewTicker(agentCheckGap)
@@ -124,12 +136,12 @@ func watch() {
 				continue
 			}
 
-			doCheckAndLaunchAgent()
+			doCheckAndLaunchAgent(stderrSink)
 		}
 	}
 }
 
-func doCheckAndLaunchAgent() {
+func doCheckAndLaunchAgent(stderrSink *stderrlog.Sink) {
 	// 使用可执行文件所在目录作为可信基准，与 main() 中 Chdir 的来源一致，
 	// 避免因 CWD 被外部修改导致启动不受控的二进制文件。
 	workDir := systemutil.GetExecutableDir()
@@ -155,7 +167,7 @@ func doCheckAndLaunchAgent() {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(filepath.Join(workDir, config.AgentFileClientLinux))
+	process, err := launch(filepath.Join(workDir, config.AgentFileClientLinux), stderrSink)
 	if err != nil {
 		logs.WithError(err).Error("launch agent failed")
 		return
@@ -167,7 +179,7 @@ func doCheckAndLaunchAgent() {
 	logs.Infof("success to launch agent, pid: %d", process.Pid)
 }
 
-func launch(agentPath string) (*os.Process, error) {
+func launch(agentPath string, stderrSink *stderrlog.Sink) (*os.Process, error) {
 	cmd := exec.Command(agentPath)
 	cmd.Dir = systemutil.GetExecutableDir()
 
@@ -197,44 +209,35 @@ func launch(agentPath string) (*os.Process, error) {
 		return nil, errors.Wrap(err, "chmod agent file failed")
 	}
 
-	// 获取 agent 的错误输出，这样有助于打印出崩溃的堆栈方便排查问题
-	stdErr, errstd := cmd.StderrPipe()
-	if errstd != nil {
-		logs.WithError(errstd).Error("get agent stderr pipe error")
-	}
-
-	if err = cmd.Start(); err != nil {
-		if stdErr != nil {
-			stdErr.Close()
-		}
+	// stderr 必须从启动起持续消费，不能等 agent 退出后再读取。
+	// 使用独立管道所有权，兼容 Go 1.19，并限制后代继承写端时的排空等待。
+	child, err := stderrlog.Start(cmd, stderrSink)
+	if err != nil {
 		return nil, errors.Wrap(err, "start agent failed")
 	}
 
 	go func() {
-		// 无论进程如何退出，都需要关闭管道，防止文件描述符泄漏。
-		// pipe 建立失败时（errstd != nil）stdErr 为 nil，Close 调用需跳过。
-		if errstd == nil && stdErr != nil {
-			defer stdErr.Close()
+		report, err := child.Wait()
+		if exiterr, ok := err.(*exec.ExitError); ok && exiterr.ExitCode() == constant.DaemonExitCode {
+			logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
+			systemutil.ExitProcess(constant.DaemonExitCode)
 		}
-
-		if err := cmd.Wait(); err != nil {
-			if exiterr, ok := err.(*exec.ExitError); ok {
-				if exiterr.ExitCode() == constant.DaemonExitCode {
-					logs.Warnf("exit code %d daemon exit", constant.DaemonExitCode)
-					systemutil.ExitProcess(constant.DaemonExitCode)
-				}
+		if report.ReadError != nil {
+			logs.WithError(report.ReadError).Warnf("read agent stderr failed, pid: %d", cmd.Process.Pid)
+		}
+		if report.DrainTimedOut {
+			logs.Warnf("agent stderr drain timed out after exit, pid: %d; a descendant may still hold stderr", cmd.Process.Pid)
+		}
+		if stats := stderrSink.Stats(); stats.DroppedBytes > 0 || stats.WriteErrors > 0 {
+			logs.Warnf("agent stderr log lifetime stats: droppedBytes=%d, writeErrors=%d, lastError=%v",
+				stats.DroppedBytes, stats.WriteErrors, stats.LastError)
+		}
+		if err != nil {
+			logs.WithError(err).Errorf("agent process error, pid: %d", cmd.Process.Pid)
+			if report.Tail != "" {
+				logs.Errorf("agent process error out, pid: %d, last %d of %d stderr bytes:\n%s",
+					cmd.Process.Pid, len(report.Tail), report.TotalBytes, report.Tail)
 			}
-			logs.WithError(err).Error("agent process error")
-			// pipe 建立失败时无法读取 stderr，直接返回
-			if errstd != nil {
-				return
-			}
-			out, err := io.ReadAll(stdErr)
-			if err != nil {
-				logs.WithError(err).Error("read agent stderr out error")
-				return
-			}
-			logs.Error("agent process error out", string(out))
 		}
 	}()
 
