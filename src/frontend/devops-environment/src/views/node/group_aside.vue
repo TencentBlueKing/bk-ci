@@ -251,7 +251,13 @@
         CREATIVE_NODE_RESOURCE_TYPE
     } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import {
+        ENV_ACTIVE_NODE_TYPE,
+        ALLNODE,
+        SERVICE_RESOURCE_TYPE,
+        NODE_SOURCE,
+        CREATE_NODE_SOURCE_FILTERS
+    } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
@@ -280,12 +286,19 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            ...mapState('environment', ['nodeTagList', 'nodeCount']),
+            ...mapState('environment', ['nodeTagList', 'nodeCount', 'nodeSourceCount']),
             ulMaxHeight () {
                 return window.innerHeight * 0.8 - 184
             },
             nodeGroup () {
                 const { CMDB = 0, THIRDPARTY = 0, CREATE = 0 } = this.nodeCount || {}
+                const {
+                    [NODE_SOURCE.IEG_IMATE]: imateCount = 0,
+                    [NODE_SOURCE.REMOTEDEV]: remoteDevCount = 0,
+                    [NODE_SOURCE.CLOUD_DESKTOP_NODE]: desktopCount = 0
+                } = this.nodeSourceCount || {}
+                // 数字同事 = 个人 REMOTEDEV + 团队 IEG_IMATE
+                const digitalColleagueCount = imateCount + remoteDevCount
                 const totalCount = this.isCreateResType ? CREATE : CMDB + THIRDPARTY
                 return [
                     {
@@ -295,6 +308,10 @@
                             ...(this.currentResType === SERVICE_RESOURCE_TYPE.PIPELINE ? [
                                 { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
                                 { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
+                            ] : []),
+                            ...(this.isCreateResType ? [
+                                { id: NODE_SOURCE.IEG_IMATE, name: this.$t('environment.digitalTwin'), nodeCount: digitalColleagueCount },
+                                { id: NODE_SOURCE.CLOUD_DESKTOP_NODE, name: this.$t('environment.cloudDesktop'), nodeCount: desktopCount }
                             ] : [])
                         ]
                     },
@@ -370,7 +387,7 @@
             this.init()
         },
         methods: {
-            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts', 'requestNodeSourceCounts']),
             async init () {
                 this.getNodeTypeCount()
                 await this.getTagTypeList()
@@ -378,6 +395,7 @@
             },
             refreshSidebarData () {
                 this.getTagTypeList()
+                this.getNodeTypeCount()
             },
             isTagValueId (value) {
                 if (!value) return false
@@ -415,7 +433,12 @@
                 }
             },
             async getNodeTypeCount () {
-                await this.requestGetCounts(this.projectId)
+                // 节点计数与创作流分类计数并行，互不阻塞
+                const tasks = [this.requestGetCounts(this.projectId)]
+                if (this.isCreateResType) {
+                    tasks.push(this.requestNodeSourceCounts(this.projectId))
+                }
+                await Promise.all(tasks)
             },
             getTagValues () {
                 return this.nodeTagList?.flatMap(group =>
@@ -430,7 +453,7 @@
                 })
                 this.isLoading = false
                 const nodeType = this.$route.params.nodeType
-                const validNodeTypes = ['allNode', 'THIRDPARTY', 'CMDB']
+                const validNodeTypes = ['allNode', 'THIRDPARTY', 'CMDB', ...CREATE_NODE_SOURCE_FILTERS]
                 const isValidNodeType = validNodeTypes.includes(nodeType) || this.getTagValues().includes(nodeType)
                 if (this.$route.name === 'nodeList' && !isValidNodeType) {
                     this.handleNodeClick(ALLNODE)

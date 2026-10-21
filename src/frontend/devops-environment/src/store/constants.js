@@ -26,12 +26,38 @@ export const SERVICE_RESOURCE_TYPE = {
     CREATE: 'creative-stream'
 }
 
-// 创作流节点工作空间类型
+/**
+ * 创作流节点 createWorkspaceSource / nodeSource 枚举
+ * - REMOTEDEV / IEG_IMATE：同属「数字同事」，走同一套数字同事鉴权
+ * - DEVCLOUD：TEG iMate Linux
+ * - CLOUD_DESKTOP_NODE：创作流「云桌面」节点，权限与普通云桌面一致
+ */
 export const CREATE_WORKSPACE_TYPE = {
-    REMOTEDEV: 'REMOTEDEV', // 普通云桌面
+    REMOTEDEV: 'REMOTEDEV', // 个人项目数字同事（老创作流云桌面节点）
     DEVCLOUD: 'DEVCLOUD', // TEG iMate Linux
-    IEG_IMATE: 'IEG_IMATE' // IEG iMate linux/windows 云桌面
+    IEG_IMATE: 'IEG_IMATE', // 团队项目数字同事（共享到团队项目时产生）
+    CLOUD_DESKTOP_NODE: 'CLOUD_DESKTOP_NODE' // 创作流云桌面节点
 }
+
+/** 与 CREATE_WORKSPACE_TYPE 同值，创作流左侧分类路由 id 与此同名 */
+export const NODE_SOURCE = {
+    REMOTEDEV: 'REMOTEDEV',
+    DEVCLOUD: 'DEVCLOUD',
+    IEG_IMATE: 'IEG_IMATE',
+    CLOUD_DESKTOP_NODE: 'CLOUD_DESKTOP_NODE'
+}
+
+/** 数字同事：个人 REMOTEDEV + 团队 IEG_IMATE，同一套鉴权 */
+export const DIGITAL_COLLEAGUE_SOURCES = [
+    NODE_SOURCE.REMOTEDEV,
+    NODE_SOURCE.IEG_IMATE
+]
+
+/** 创作流左侧分类过滤 id（不含全部节点）；数字同事侧以 IEG_IMATE 为代表分类 */
+export const CREATE_NODE_SOURCE_FILTERS = [
+    NODE_SOURCE.IEG_IMATE,
+    NODE_SOURCE.CLOUD_DESKTOP_NODE
+]
 export const ENV_TYPE_MAP = {
     ALL: 'ALL',
     BUILD: 'BUILD',

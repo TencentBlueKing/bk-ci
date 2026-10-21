@@ -2,32 +2,155 @@
     <div class="node-overview-container">
         <div class="overview-main">
             <div class="overview-section">
-                <div class="node-basic-info info-grid">
-                    <div
-                        v-for="field in basicInfoFields"
-                        :key="field.key"
-                        class="info-item"
-                    >
-                        <span class="info-label">{{ field.label }}:</span>
-                        <span class="info-value">{{ getFieldValue(field) }}</span>
+                <!-- 创作流：ID + 所属环境 -->
+                <div
+                    v-if="isCreateResType"
+                    class="basic-rows"
+                >
+                    <div class="info-item">
+                        <span class="info-label">{{ workspaceIdLabel }}:</span>
+                        <span
+                            class="info-value"
+                            :class="{ 'is-copyable': !!workspaceId }"
+                        >
+                            {{ workspaceId || '-' }}
+                            <button
+                                v-if="workspaceId"
+                                type="button"
+                                class="id-copy"
+                                @click="handleCopy(workspaceId)"
+                            >
+                                {{ $t('environment.copy') }}
+                            </button>
+                        </span>
+                    </div>
+                    <div class="info-item env-row">
+                        <span class="info-label">{{ $t('environment.belongingEnv') }}:</span>
+                        <div class="env-list">
+                            <bk-tag
+                                v-for="env in envRelations"
+                                :key="env.envHashId || env.envName"
+                                class="env-tag"
+                                size="small"
+                            >
+                                <a
+                                    class="env-open"
+                                    :href="env.url || 'javascript:;'"
+                                    :target="env.url ? '_blank' : undefined"
+                                    rel="noopener noreferrer"
+                                    @click="openEnv(env, $event)"
+                                >
+                                    <span class="env-name">
+                                        {{ env.envName }}
+                                        <span
+                                            v-if="env.strategyType"
+                                            class="env-kind"
+                                        > · {{ env.strategyType === 'dynamic' ? $t('environment.dynamic') : $t('environment.static') }}</span>
+                                    </span>
+                                    <svg
+                                        class="env-jump"
+                                        viewBox="0 0 1024 1024"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M864 128H496v64h291.2L361.6 617.6l44.8 44.8L832 236.8V528h64V160c0-17.6-14.4-32-32-32z" />
+                                        <path d="M832 704v128H192V192h126.4V128H160c-17.6 0-32 14.4-32 32v704c0 17.6 14.4 32 32 32h704c17.6 0 32-14.4 32-32V704h-64z" />
+                                    </svg>
+                                </a>
+                            </bk-tag>
+                            <span
+                                v-if="!envRelations.length"
+                                class="env-empty"
+                            >{{ $t('environment.notInAnyEnv') }}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="section-header mt10">
-                    <span class="section-title">{{ $t('environment.buildAgent') }}</span>
-                </div>
-                <div class="agent-info info-grid">
+
+                <!-- 已释放/已销毁：仅保留上方两行 -->
+                <template v-if="!isNeutralCreateNode">
+                    <!-- 流水线：基本信息 -->
                     <div
-                        v-for="field in agentInfoFields"
-                        :key="field.key"
-                        class="info-item"
+                        v-if="!isCreateResType"
+                        class="node-basic-info info-grid"
                     >
-                        <span class="info-label">{{ getFieldLabel(field) }}:</span>
-                        <span class="info-value">{{ getFieldValue(field) }}</span>
+                        <div
+                            v-for="field in basicInfoFields"
+                            :key="field.key"
+                            class="info-item"
+                        >
+                            <span class="info-label">{{ field.label }}:</span>
+                            <span class="info-value">{{ getFieldValue(field) }}</span>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- 数字分身：入驻的云桌面 -->
+                    <template v-if="isCreateResType && isDigitalTwinNode">
+                        <div class="section-header">
+                            <span class="section-title">{{ $t('environment.residentCloudDesktop') }}</span>
+                        </div>
+                        <div class="info-grid">
+                            <div
+                                v-for="field in cloudDesktopFields"
+                                :key="field.key"
+                                class="info-item"
+                            >
+                                <span class="info-label">{{ field.label }}:</span>
+                                <span
+                                    class="info-value"
+                                    :class="{ 'is-copyable': field.copy && getFieldValue(field) !== '-' }"
+                                >
+                                    {{ getFieldValue(field) }}
+                                    <button
+                                        v-if="field.copy && getFieldValue(field) !== '-'"
+                                        type="button"
+                                        class="id-copy"
+                                        @click="handleCopy(getFieldValue(field))"
+                                    >
+                                        {{ $t('environment.copy') }}
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Agent 区块 -->
+                    <div
+                        class="section-header"
+                        :class="{ 'is-first': !isCreateResType }"
+                    >
+                        <span class="section-title">
+                            {{ isCreateResType ? $t('environment.creationAgent') : $t('environment.buildAgent') }}
+                        </span>
+                    </div>
+                    <div class="info-grid">
+                        <div
+                            v-for="field in agentInfoFields"
+                            :key="field.key"
+                            class="info-item"
+                        >
+                            <span class="info-label">{{ getFieldLabel(field) }}:</span>
+                            <span
+                                class="info-value"
+                                :class="{ 'is-copyable': field.copy && getFieldValue(field) !== '-' }"
+                            >
+                                {{ getFieldValue(field) }}
+                                <button
+                                    v-if="field.copy && getFieldValue(field) !== '-'"
+                                    type="button"
+                                    class="id-copy"
+                                    @click="handleCopy(getFieldValue(field))"
+                                >
+                                    {{ $t('environment.copy') }}
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                </template>
             </div>
-            <div class="node-overview-title">{{ '机器负载' }}</div>
-            <node-overview-chart></node-overview-chart>
+
+            <template v-if="!isNeutralCreateNode">
+                <div class="node-overview-title">{{ $t('environment.nodeLoad') }}</div>
+                <node-overview-chart></node-overview-chart>
+            </template>
         </div>
     </div>
 </template>
@@ -36,6 +159,7 @@
     import { computed } from 'vue'
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useInstance from '@/hooks/useInstance'
+    import useResourceType from '@/hooks/useResourceType'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
 
     export default {
@@ -44,10 +168,33 @@
             nodeOverviewChart
         },
         setup () {
-            const { currentNode } = useNodeDetail()
+            // 所属环境已在 fetchNodeDetail 内拉取完毕，页面 loading 与此对齐
+            const { currentNode, nodeEnvRelations } = useNodeDetail()
             const { proxy } = useInstance()
+            const {
+                isCreateResType: checkCreate,
+                isDigitalTwin,
+                isNeutralStatusNode,
+                isCloudDesktop
+            } = useResourceType()
 
-            // 基本信息字段配置
+            const envRelations = computed(() => nodeEnvRelations.value || [])
+
+            const isCreateResType = computed(() => checkCreate(proxy.$route))
+            const isDigitalTwinNode = computed(() => isDigitalTwin(currentNode.value))
+            const isNeutralCreateNode = computed(() => {
+                return isCreateResType.value && isNeutralStatusNode(currentNode.value)
+            })
+
+            const workspaceId = computed(() => currentNode.value?.createWorkspaceId || '')
+            const workspaceIdLabel = computed(() => {
+                if (isCloudDesktop(currentNode.value)) {
+                    return proxy.$t('environment.cloudDesktopIdLabel')
+                }
+                return proxy.$t('environment.digitalTwinId')
+            })
+
+            // 基本信息字段配置（流水线）
             const basicInfoFields = computed(() => [
                 { label: proxy.$t('environment.nodeInfo.hostName'), key: 'hostname' },
                 { label: proxy.$t('environment.nodeInfo.os'), key: 'osName' },
@@ -56,34 +203,126 @@
                 { label: proxy.$t('environment.envInfo.creationTime'), key: 'createdTime' }
             ])
 
-            // Agent 信息字段配置
-            const agentInfoFields = computed(() => [
-                { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
-                { label: proxy.$t('environment.nodeUsage'), key: 'usage', staticValue: proxy.$t('environment.build') },
-                { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
-                { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
-                { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
-                { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' }
+            // 入驻的云桌面：createWorkspaceId / displayName / osName / ip 取节点列表
+            const formatOsName = (name) => {
+                if (!name) return '-'
+                const text = String(name).trim()
+                if (!text) return '-'
+                return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
+            }
+            const cloudDesktopFields = computed(() => [
+                {
+                    label: proxy.$t('environment.cloudDesktopIdLabel'),
+                    key: 'createWorkspaceId',
+                    copy: true,
+                    dynamicValue: () => currentNode.value?.createWorkspaceId || '-'
+                },
+                {
+                    label: proxy.$t('environment.nodeInfo.displayName'),
+                    key: 'displayName',
+                    dynamicValue: () => currentNode.value?.displayName || '-'
+                },
+                {
+                    label: proxy.$t('environment.nodeInfo.os'),
+                    key: 'osName',
+                    dynamicValue: () => formatOsName(
+                        currentNode.value?.osName || currentNode.value?.os
+                    )
+                },
+                {
+                    label: 'IP',
+                    key: 'ip',
+                    dynamicValue: () => currentNode.value?.ip || '-'
+                }
             ])
 
-            // 获取字段标签
+            // Agent 信息：创作流按 Agent ID → 版本 → Worker → 路径 → 心跳 → 启动用户 → 用途(最后)
+            const agentInfoFields = computed(() => {
+                if (isCreateResType.value) {
+                    return [
+                        {
+                            label: 'Agent ID',
+                            key: 'agentId',
+                            copy: true,
+                            dynamicValue: () => currentNode.value?.agentId || currentNode.value?.agentHashId || '-'
+                        },
+                        { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
+                        { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
+                        { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
+                        { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
+                        { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' },
+                        {
+                            label: proxy.$t('environment.nodeUsage'),
+                            key: 'usage',
+                            dynamicValue: () => currentNode.value?.usage
+                                || currentNode.value?.nodeUsage
+                                || '-'
+                        }
+                    ]
+                }
+                return [
+                    { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
+                    { label: proxy.$t('environment.nodeUsage'), key: 'usage', staticValue: proxy.$t('environment.build') },
+                    { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
+                    { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
+                    { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
+                    { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' }
+                ]
+            })
+
             const getFieldLabel = (field) => {
                 return field.dynamicLabel ? field.dynamicLabel() : field.label
             }
 
-            // 获取字段值
             const getFieldValue = (field) => {
                 if (field.staticValue) return field.staticValue
                 if (field.dynamicValue) return field.dynamicValue() || '-'
                 return currentNode.value?.[field.key] || '-'
             }
 
+            const handleCopy = async (value) => {
+                if (!value || value === '-') return
+                try {
+                    await navigator.clipboard.writeText(value)
+                    proxy.$bkMessage({
+                        theme: 'success',
+                        message: proxy.$t('environment.copySuccess')
+                    })
+                } catch (e) {
+                    const input = document.createElement('input')
+                    input.value = value
+                    document.body.appendChild(input)
+                    input.select()
+                    document.execCommand('copy')
+                    document.body.removeChild(input)
+                    proxy.$bkMessage({
+                        theme: 'success',
+                        message: proxy.$t('environment.copySuccess')
+                    })
+                }
+            }
+
+            const openEnv = (env, event) => {
+                if (!env?.url) {
+                    event.preventDefault()
+                }
+            }
+
             return {
                 currentNode,
                 basicInfoFields,
                 agentInfoFields,
+                cloudDesktopFields,
                 getFieldLabel,
-                getFieldValue
+                getFieldValue,
+                isCreateResType,
+                isDigitalTwinNode,
+                isNeutralCreateNode,
+                workspaceId,
+                workspaceIdLabel,
+                envRelations,
+                handleCopy,
+                openEnv
             }
         }
     }
@@ -93,7 +332,7 @@
 .node-overview-container {
     height: 100%;
     overflow-y: auto;
-    
+
     .overview-main {
         display: flex;
         flex-direction: column;
@@ -105,101 +344,182 @@
         background: #FAFBFD;
         border-radius: 2px;
         padding: 16px;
+    }
 
-        .node-basic-info {
-            background: transparent;
-            margin-bottom: 16px;
+    .basic-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        & + .section-header {
+            margin-top: 16px;
+        }
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin: 16px 0;
+
+        &.is-first {
+            margin-top: 0;
         }
 
-        .section-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-            
-            .status-indicator {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                margin-right: 8px;
-                
-                &.status-normal {
-                    background: #2DCB56;
-                }
-                
-                &.status-exception {
-                    background: #EA3636;
-                }
-            }
-            
-            .section-title {
-                font-size: 14px;
-                font-weight: 700;
-                color: #63656E;
-                position: relative;
-                padding-left: 12px;
-                
-                &::before {
-                    content: '';
-                    position: absolute;
-                    left: 0;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    width: 4px;
-                    height: 16px;
-                    background: #A3C5FD;
-                    border-radius: 1px;
-                }
-            }
-        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #63656E;
+            position: relative;
+            padding-left: 12px;
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px 24px;
-        }
-
-        .info-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px 24px;
-            margin-bottom: 16px;
-
-            &.three-cols {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            
-            .info-label {
-                font-size: 12px;
-                color: #979BA5;
-                min-width: 100px;
-                flex-shrink: 0;
-                line-height: 20px;
-                text-align: right;
-            }
-            
-            .info-value {
-                font-size: 12px;
-                color: #313238;
-                word-break: break-all;
-                line-height: 20px;
-                margin-left: 5px;
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 4px;
+                height: 16px;
+                background: #A3C5FD;
+                border-radius: 1px;
             }
         }
     }
-    .node-overview-title {
-        font-weight: 700;
-        font-size: 14px;
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px 24px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        align-items: center;
+
+        .info-label {
+            font-size: 12px;
+            color: #979BA5;
+            min-width: 100px;
+            flex-shrink: 0;
+            line-height: 20px;
+            text-align: right;
+        }
+
+        .info-value {
+            font-size: 12px;
+            color: #63656E;
+            line-height: 20px;
+            margin-left: 8px;
+            word-break: break-all;
+
+            &.is-copyable {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+        }
+    }
+
+    .id-copy {
+        display: none;
+        border: 0;
+        padding: 0;
+        background: none;
+        color: #3A84FF;
+        font-size: 12px;
+        line-height: 20px;
+        cursor: pointer;
+    }
+
+    .info-value.is-copyable:hover .id-copy {
+        display: inline;
+    }
+
+
+    .info-item.env-row {
+        .info-label {
+            height: 22px;
+            line-height: 22px;
+        }
+    }
+
+    .env-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        margin-left: 8px;
+    }
+
+    .env-tag {
+        margin: 0 !important;
+        height: 22px;
+        line-height: 20px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .env-open {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 4px;
+        margin: 0 -4px;
+        border-radius: 2px;
         color: #63656E;
-        margin-top: 20px;
+        cursor: pointer;
+        line-height: 20px;
+
+        .env-name {
+            font-size: 12px;
+            line-height: 20px;
+            color: #63656E;
+        }
+
+        .env-kind {
+            color: #979BA5;
+        }
+
+        .env-jump {
+            width: 12px;
+            height: 12px;
+            display: block;
+            fill: #63656E;
+            flex: none;
+        }
+
+        &:hover {
+            color: #3A84FF;
+            background: #E1ECFF;
+
+            .env-name {
+                color: #3A84FF;
+            }
+
+            // 静态/动态保持灰色，不跟名称一起变蓝
+            .env-kind {
+                color: #979BA5;
+            }
+
+            .env-jump {
+                fill: #3A84FF;
+            }
+        }
+    }
+
+    .env-empty {
+        font-size: 12px;
+        color: #63656E;
+        line-height: 22px;
+    }
+
+    .node-overview-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #63656E;
     }
 }
 </style>

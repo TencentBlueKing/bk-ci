@@ -1,6 +1,8 @@
 import { computed, ref, reactive } from 'vue'
 import { convertTime } from '@/utils/util'
 import useInstance from './useInstance'
+import { fetchNodeRelations, invalidateNodeRelationsCache } from './useNodeRelations'
+import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
 
 const currentNode = ref({})
 const agentOfflineData = reactive({
@@ -8,34 +10,138 @@ const agentOfflineData = reactive({
     loading: false
 })
 const nodeEnvsList = ref([]) // 节点环境变量列表
+/** 概览「所属环境」，与详情一并加载，供页面 loading 收敛 */
+const nodeEnvRelations = ref([])
 
 export default function useNodeDetail () {
     const { proxy } = useInstance()
     const nodeHashId = computed(() => proxy.$route.query?.nodeHashId)
     const projectId = computed(() => proxy.$route.params?.projectId)
-    const nodeDetailLoaded = ref(false) // 节点详情是否加载完成
-   
+    const nodeDetailLoaded = ref(false) // 节点详情 + 所属环境是否都加载完成
+
+    const isCreateResType = () => proxy.$route.params?.resType === SERVICE_RESOURCE_TYPE.CREATE
+
     /**
-     * 获取节点详情
+     * 创作流：按详情 envIds 拉所属环境；流水线跳过
      */
-    const fetchNodeDetail = async () => {
+    const fetchEnvRelations = async () => {
+        if (!isCreateResType()) {
+            nodeEnvRelations.value = []
+            return []
+        }
+        const hashId = currentNode.value?.nodeHashId || nodeHashId.value
+        if (!hashId) {
+            nodeEnvRelations.value = []
+            return []
+        }
+        try {
+            invalidateNodeRelationsCache(hashId)
+            const relations = await fetchNodeRelations({
+                projectId: projectId.value,
+                nodeHashId: hashId,
+                isCreateResType: true,
+                envIds: Array.isArray(currentNode.value?.envIds)
+                    ? currentNode.value.envIds
+                    : [],
+                store: proxy.$store,
+                resType: SERVICE_RESOURCE_TYPE.CREATE,
+                force: true
+            })
+            nodeEnvRelations.value = relations.environments || []
+            return nodeEnvRelations.value
+        } catch (e) {
+            console.error('fetchEnvRelations failed', e)
+            nodeEnvRelations.value = []
+            return []
+        }
+    }
+
+    /**
+     * thirdPartyAgentDetail 不含 createWorkspaceSource / createWorkspaceId，
+     * 需用列表行数据补齐，供详情头部分类标签与概览使用。
+     */
+    const mergeListNodeMeta = (detail, listNode) => {
+        const base = detail && typeof detail === 'object' ? { ...detail } : {}
+        if (!listNode || typeof listNode !== 'object') {
+            if (!base.nodeHashId && (base.nodeId || nodeHashId.value)) {
+                base.nodeHashId = base.nodeId || nodeHashId.value
+            }
+            if (!base.nodeStatus && base.status) {
+                base.nodeStatus = base.status
+            }
+            return base
+        }
+        // 列表侧 createWorkspaceSource / nodeStatus 对「已释放/已销毁」标签更可靠，优先保留
+        const listStatus = listNode.nodeStatus || listNode.status
+        const detailStatus = base.nodeStatus || base.status
+        return {
+            ...base,
+            nodeHashId: base.nodeHashId || listNode.nodeHashId || base.nodeId || nodeHashId.value,
+            nodeStatus: listStatus || detailStatus,
+            status: listStatus || detailStatus || base.status,
+            createWorkspaceSource: listNode.createWorkspaceSource
+                || listNode.nodeSource
+                || base.createWorkspaceSource,
+            // 入驻云桌面四字段以节点列表为准
+            createWorkspaceId: listNode.createWorkspaceId || base.createWorkspaceId,
+            displayName: listNode.displayName || base.displayName,
+            osName: listNode.osName || listNode.os || base.osName || base.os,
+            ip: listNode.ip || base.ip,
+            // 权限与列表一致（详情对已释放/已销毁常无 canEdit，清理会被误判无权限）
+            canEdit: listNode.canEdit ?? base.canEdit,
+            canDelete: listNode.canDelete ?? base.canDelete,
+            canView: listNode.canView ?? base.canView,
+            // 所属环境：详情 thirdPartyAgentDetail.envIds（envHashId 数组）
+            envIds: Array.isArray(base.envIds) ? base.envIds : (listNode.envIds || [])
+        }
+    }
+
+    /**
+     * 获取节点详情，并等待所属环境等关联接口完成后再结束 loading
+     * @param {Object} [listNode] 列表行，用于补齐创作流节点类型字段
+     */
+    const fetchNodeDetail = async (listNode) => {
         if (!nodeHashId.value) return
         try {
             nodeDetailLoaded.value = false
+            nodeEnvRelations.value = []
             const res = await proxy.$store.dispatch('environment/requestNodeDetail', {
                 projectId: projectId.value,
                 nodeHashId: nodeHashId.value
             })
-            currentNode.value = res ?? {}
+            currentNode.value = mergeListNodeMeta(res ?? {}, listNode)
+            // 所属环境（及内部 requestEnvDetail）完成后再放开页面 loading
+            await fetchEnvRelations()
             nodeDetailLoaded.value = true
-            return res
+            return currentNode.value
         } catch (e) {
+            // 已释放/已销毁节点详情接口可能失败，回退列表行以保证分类/中性标签可展示
+            if (listNode) {
+                currentNode.value = mergeListNodeMeta({}, listNode)
+                await fetchEnvRelations()
+                nodeDetailLoaded.value = true
+                return currentNode.value
+            }
             nodeDetailLoaded.value = false
+            nodeEnvRelations.value = []
             proxy.$bkMessage({
                 message: e.message || proxy.$t('environment.fetchNodeDetailFailed'),
                 theme: 'error'
             })
             throw e
+        }
+    }
+
+    /**
+     * 列表数据到达后，补齐创作流字段；若 envIds 变化则补拉所属环境（不打断页面 loading）
+     */
+    const applyListNodeMeta = async (listNode) => {
+        if (!listNode || !currentNode.value) return
+        const prevEnvIds = (currentNode.value.envIds || []).join(',')
+        currentNode.value = mergeListNodeMeta(currentNode.value, listNode)
+        const nextEnvIds = (currentNode.value.envIds || []).join(',')
+        if (isCreateResType() && prevEnvIds !== nextEnvIds) {
+            await fetchEnvRelations()
         }
     }
 
@@ -223,9 +329,12 @@ export default function useNodeDetail () {
         agentOfflineData,
         nodeEnvsList,
         nodeDetailLoaded,
+        nodeEnvRelations,
 
         // function
         fetchNodeDetail,
+        fetchEnvRelations,
+        applyListNodeMeta,
         updateDisplayName,
         deleteNode,
         setNodeTag,

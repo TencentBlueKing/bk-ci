@@ -161,6 +161,20 @@ const actions = {
             console.error(err)
         }
     },
+    /**
+     * 创作流各节点来源（数字分身/云桌面）数量
+     */
+    async requestNodeSourceCounts ({ commit }, projectId) {
+        try {
+            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodeSourceCounts`)
+            commit('setNodeSourceCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+            commit('setNodeSourceCount', {})
+            return {}
+        }
+    },
     createdNodeTag ({ commit }, { projectId, params }) {
         return request.post(`${prefix}/user/nodetag/create?projectId=${projectId}`, params).then(response => {
             return response

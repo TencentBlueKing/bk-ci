@@ -14,6 +14,7 @@
                         <bk-button
                             v-if="!isCreateResType"
                             :key="projectId"
+                            class="mr10"
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -134,7 +135,10 @@
                         @show-detail="handleShowNodeDetail"
                     />
                     <template slot="flod">
-                        <node-detail :install-agent="installAgent" />
+                        <node-detail
+                            :install-agent="installAgent"
+                            :list-node="detailListNode"
+                        />
                     </template>
                 </CollapseLayout>
             </template>
@@ -308,7 +312,14 @@
     const TABLE_HEADER_HEIGHT = 42
     const PAGINATION_HEIGHT = 64
     const TABLE_MARGIN_TOP = 20
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import {
+        ENV_ACTIVE_NODE_TYPE,
+        ALLNODE,
+        SERVICE_RESOURCE_TYPE,
+        NODE_SOURCE,
+        CREATE_NODE_SOURCE_FILTERS
+    } from '@/store/constants'
+    import useResourceType from '@/hooks/useResourceType'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
     import useUrlQuery from '@/hooks/useUrlQuery'
@@ -474,13 +485,27 @@
                                     name: this.$t('environment.build')
                                 }
                             ]
+                        },
+                        {
+                            name: this.$t('environment.nodeInfo.importer'),
+                            id: 'createdUser'
                         }
-                    ] : [])
-                    ,
-                    {
-                        name: this.$t('environment.nodeInfo.importer'),
-                        id: 'createdUser'
-                    },
+                    ] : [
+                        {
+                            name: this.$t('environment.nodeSourceType'),
+                            id: 'nodeSource',
+                            children: [
+                                {
+                                    id: NODE_SOURCE.IEG_IMATE,
+                                    name: this.$t('environment.digitalTwin')
+                                },
+                                {
+                                    id: NODE_SOURCE.CLOUD_DESKTOP_NODE,
+                                    name: this.$t('environment.cloudDesktop')
+                                }
+                            ]
+                        }
+                    ]),
                     {
                         name: this.$t('environment.status'),
                         id: 'nodeStatus',
@@ -637,6 +662,12 @@
             },
             isCreateResType () {
                 return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            // 当前详情对应的列表行（补齐详情接口缺失的 createWorkspaceSource）
+            detailListNode () {
+                const id = this.queryParams?.nodeHashId
+                if (!id || !this.nodeList?.length) return null
+                return this.nodeList.find(n => n.nodeHashId === id) || null
             },
             currentResourceType () {
                 return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
@@ -920,8 +951,10 @@
                 if (!this.$route.params.nodeType) return
             
                 const nodeType = this.$route.params.nodeType
-                if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
-                    this.currentNodeType = nodeType !== ALLNODE ? nodeType : ''
+                const typeFilters = ['allNode', 'THIRDPARTY', 'CMDB', ...CREATE_NODE_SOURCE_FILTERS]
+                if (typeFilters.includes(nodeType)) {
+                    // 创作流分类走 nodeSource，不写入 currentNodeType
+                    this.currentNodeType = (!this.isCreateResType && nodeType !== ALLNODE) ? nodeType : ''
                     this.currentTags = []
                 } else {
                     this.currentTags = this.findTagByValueId(nodeType)
@@ -1009,7 +1042,10 @@
                 this.tagSearchValue = []
                 this.currentTags = []
                 this.updateTagSearchValue(null)
-                if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
+                const routeNodeType = this.$route.params.nodeType
+                const isTypeFilter = ['allNode', 'THIRDPARTY', 'CMDB', ...CREATE_NODE_SOURCE_FILTERS].includes(routeNodeType)
+                // 仅当当前路由是「标签值」而非节点类型/分类时，才回退到全部节点
+                if (!this.currentNodeType && !isTypeFilter) {
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
                     this.requestList()
@@ -1054,6 +1090,8 @@
                     // 获取标签参数（优先使用 URL 参数）
                     const tagParams = this.getTagRequestParams()
                     
+                    const { toListQuery } = useResourceType()
+                    const typeQuery = toListQuery(this.$route.params.nodeType, this.isCreateResType)
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: {
@@ -1061,9 +1099,7 @@
                             ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                             page: this.paginationData.current,
                             pageSize: this.paginationData.limit,
-                            ...(this.isCreateResType ? {
-                                nodeType: 'CREATE'
-                            }: {})
+                            ...typeQuery
                         },
                         ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
                     })
@@ -1427,7 +1463,7 @@
     }
 
     .batch-menu {
-        margin: 0 8px;
+        margin-right: 8px;
 
         .disabled {
             color: #C4C6CC !important;
