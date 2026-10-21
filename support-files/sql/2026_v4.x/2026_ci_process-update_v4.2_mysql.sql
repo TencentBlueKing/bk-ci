@@ -82,7 +82,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION'
                     AND COLUMN_NAME = 'VERSION') THEN
         ALTER TABLE T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
-            ADD COLUMN `VERSION` int(11) NOT NULL DEFAULT '1' COMMENT '流水线版本号';
+            ADD COLUMN `VERSION` bigint(20) NOT NULL DEFAULT '1' COMMENT '流水线版本号';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -118,8 +118,18 @@ BEGIN
             ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`);
     END IF;
 
-    ## 以前缺失补刀 feat：草稿并发修改交互优化 #10553 setting增加version字段 --- END
+    ## 清理错误的索引 不然可能会引起archive_process校验不过
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.statistics
+    WHERE
+        TABLE_SCHEMA = db
+        AND TABLE_NAME = 'T_PIPELINE_FAVOR'
+        AND INDEX_NAME = 'IDX_CREATE_USER'
+) THEN
+ALTER TABLE T_PIPELINE_FAVOR DROP INDEX `IDX_CREATE_USER` ;
 
+END IF;
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
