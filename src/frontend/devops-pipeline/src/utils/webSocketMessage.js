@@ -21,11 +21,15 @@ export default {
     onReconnect: () => {},
 
     installWsMessage (callBack) {
+        this.unInstallWsMessage()
+        let origin = window.location.origin
+        try { origin = new URL(document.referrer).origin } catch (_) {}
         this.callBack = (res) => {
+            if (res.source !== window.parent || res.origin !== origin) return
             const type = res?.data?.webSocketType
-            console.log('webSocket Receive data', res?.data)
             if (type === 'IFRAME' && res.data?.message) {
-                const message = JSON.parse(res.data.message)
+                let message
+                try { message = JSON.parse(res.data.message) } catch (_) { return }
                 if (message === 'WEBSOCKET_RECONNECT') {
                     console.log('webSocket reconnect', this.onReconnect)
                     this.onReconnect?.()

@@ -25,7 +25,7 @@ export default defineComponent({
       (data) => executeDetailStore.updateFromWebSocket(data),
       WS_ID,
     )
-    websocketRegister.registerOnReconnect(() => initExecuteDetail(), WS_ID)
+    websocketRegister.registerOnReconnect(() => executeDetailStore.silentRefreshExecuteDetail(), WS_ID)
 
     onUnmounted(() => {
       websocketRegister.unInstallWsMessage(WS_ID)

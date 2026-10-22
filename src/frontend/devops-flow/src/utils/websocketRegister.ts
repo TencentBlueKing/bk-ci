@@ -2,6 +2,7 @@ import SockJS from 'sockjs-client'
 import { Stomp } from 'stompjs/lib/stomp.js'
 import type { RouteLocationNormalized, Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { watchRealtime } from '../../../common-lib/websocket/bridge'
 
 type MessageCallback = (data: any) => void
 
@@ -36,6 +37,27 @@ class FlowWebSocket {
   private hasConnected = false
   private shouldReconnect = true
   private isRegistered = false
+  private readonly realtimeTasks: Record<string, { dispose: () => void }> = {}
+  private readonly explicitTopics: Record<string, string[]> = {}
+
+  private refreshTask(id: string) {
+    this.realtimeTasks[id]?.dispose()
+    const route = this.currentRoute
+    const callback = this.reconnectCallbacks[id]
+    if (!route || !callback) return
+    const { projectId, flowId, buildNo } = route.params
+    const count = Number(route.query.executeCount)
+    const topics = this.explicitTopics[id] || (buildNo
+      ? [`pr:${projectId}:${flowId}:${buildNo}:${count > 0 ? `attempt:${count}` : 'latest'}`]
+      : flowId ? [`ph:${projectId}:${flowId}`] : [])
+    this.realtimeTasks[id] = watchRealtime({ topics, load: callback, interval: buildNo ? 1000 : 3000 })
+    if (topics.length) this.disconnect(false)
+  }
+
+  setTopics(id: string, topics: string[]) {
+    this.explicitTopics[id] = topics
+    this.refreshTask(id)
+  }
 
   initialize(router: Router) {
     router.afterEach((to, from) => this.syncRoute(to, from))
@@ -55,9 +77,13 @@ class FlowWebSocket {
 
   registerOnReconnect(callback: () => void, id: string) {
     this.reconnectCallbacks[id] = callback
+    this.refreshTask(id)
   }
 
   unInstallWsMessage(id: string) {
+    this.realtimeTasks[id]?.dispose()
+    delete this.realtimeTasks[id]
+    delete this.explicitTopics[id]
     delete this.callbacks[id]
     delete this.reconnectCallbacks[id]
   }
@@ -65,19 +91,26 @@ class FlowWebSocket {
   private syncRoute(to: RouteLocationNormalized, from?: RouteLocationNormalized) {
     if (to.meta.websocket) {
       this.currentRoute = to
-      this.shouldReconnect = true
-      this.connect()
-      this.registerCurrentRoute()
+      Object.keys(this.reconnectCallbacks).forEach(id => this.refreshTask(id))
+      if (!Object.keys(this.realtimeTasks).length) {
+        this.shouldReconnect = true
+        this.connect()
+        this.registerCurrentRoute()
+      }
       return
     }
 
     if (from?.meta.websocket) this.logout(from)
     this.currentRoute = undefined
+    Object.values(this.realtimeTasks).forEach(task => task.dispose())
+    Object.keys(this.realtimeTasks).forEach(id => delete this.realtimeTasks[id])
+    this.disconnect(false)
     this.isRegistered = false
   }
 
   private connect() {
     if (
+      Object.keys(this.realtimeTasks).length > 0 ||
       this.isConnecting ||
       this.stompClient?.connected ||
       !this.shouldReconnect ||
@@ -214,6 +247,7 @@ const flowWebSocket = new FlowWebSocket()
  * @param id        Unique key so the registration can be removed later.
  */
 export const websocketRegister = {
+  setTopics: (id: string, topics: string[]) => flowWebSocket.setTopics(id, topics),
   initialize: (router: Router) => flowWebSocket.initialize(router),
   installWsMessage: (callback: MessageCallback, id: string) =>
     flowWebSocket.installWsMessage(callback, id),

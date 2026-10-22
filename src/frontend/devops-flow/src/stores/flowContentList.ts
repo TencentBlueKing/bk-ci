@@ -393,13 +393,16 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 加载内容表格数据
    */
+  let listRequestGeneration = 0
   async function fetchFlowList(params: ContentTableParams,  isRecycleBin = false) {
+    const generation = ++listRequestGeneration
     tableLoading.value = true
     try {
       const response = isRecycleBin
         ? await getRecycleTableData(params)
         : await getContentTableData(params)
 
+      if (generation !== listRequestGeneration) return response
       flowTableList.value = response.records.map(processContentItem)
       pagination.value = {
         count: response.count,
@@ -412,7 +415,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       console.error('Failed to load content table data:', error)
       throw error
     } finally {
-      tableLoading.value = false
+      if (generation === listRequestGeneration) tableLoading.value = false
     }
   }
 

@@ -29,6 +29,8 @@ class StreamWebSocket {
     }
 
     connect () {
+        if (this.isConnecting || this.stompClient?.connected || !navigator.onLine) return
+        clearTimeout(this.retryTimer)
         const socket = new SockJS(`${WEBSOCKET_URL_PREFIX}/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
@@ -43,22 +45,19 @@ class StreamWebSocket {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
             }
-        }, (err) => {
-            if (this.connectErrTime <= 8) {
-                this.connectErrTime++
-                const time = Math.random() * 60000
-                console.log(`websocket connection error: ${err.message}`)
-                setTimeout(() => this.connect(), time)
-            } else {
-                this.isConnecting = false
-                window.mainComponent.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
-            }
+        }, () => {
+            this.isConnecting = false
+            clearTimeout(this.retryTimer)
+            const delay = Math.min(60000, 1000 * 2 ** Math.min(this.connectErrTime++, 6))
+            this.retryTimer = setTimeout(() => this.connect(), delay * (0.8 + Math.random() * 0.4))
         })
     }
 
     handleMessage (res) {
-        const data = JSON.parse(res.body) || {}
-        window.postMessage(data)
+        try {
+            const data = JSON.parse(res.body) || {}
+            window.postMessage(data, window.location.origin)
+        } catch (_) {}
     }
 
     changeRoute (router) {
