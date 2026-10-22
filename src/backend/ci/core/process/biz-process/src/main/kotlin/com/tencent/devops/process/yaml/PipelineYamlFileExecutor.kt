@@ -106,6 +106,14 @@ class PipelineYamlFileExecutor @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath
             )
+            if (yamlBranchScheduleNotes.isNotEmpty()) {
+                pipelineYamlSyncService.noteYamlBranchSchedule(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    notes = yamlBranchScheduleNotes
+                )
+            }
         } catch (ignored: Exception) {
             val (reason, reasonDetail) = YamlTriggerExceptionUtil.getReasonDetail(exception = ignored)
             syncFailed(reason = reason, reasonDetail = reasonDetail)

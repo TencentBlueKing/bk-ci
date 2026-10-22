@@ -122,6 +122,12 @@ data class PipelineYamlFileEvent(
     @JsonIgnore
     val isTemplate = GitActionCommon.isTemplateFile(filePath)
 
+    /**
+     * yaml-branch 未登记原因。只在本次处理过程中使用，不进入 MQ。
+     */
+    @JsonIgnore
+    var yamlBranchScheduleNotes: List<String> = emptyList()
+
     constructor(
         repository: Repository,
         yamlDiff: PipelineYamlDiff,
