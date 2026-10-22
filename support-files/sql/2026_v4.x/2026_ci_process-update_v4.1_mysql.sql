@@ -106,6 +106,20 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_INFO'
+                    AND COLUMN_NAME = 'LOCK_USER') THEN
+        ALTER TABLE `T_PIPELINE_INFO`
+            ADD COLUMN `LOCK_USER` varchar(64) DEFAULT NULL COMMENT 'UI禁用操作人',
+            ADD COLUMN `LOCK_REASON` varchar(255) DEFAULT NULL COMMENT 'UI禁用原因',
+            ADD COLUMN `LOCK_TIME` timestamp NULL DEFAULT NULL COMMENT 'UI禁用操作时间',
+            ADD COLUMN `YAML_LOCKED` bit(1) DEFAULT b'0' COMMENT 'YAML是否禁用',
+            ADD COLUMN `YAML_LOCK_USER` varchar(64) DEFAULT NULL COMMENT 'YAML禁用操作人',
+            ADD COLUMN `YAML_LOCK_TIME` timestamp NULL DEFAULT NULL COMMENT 'YAML禁用操作时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_YAML_INFO'
                     AND COLUMN_NAME = 'DEFAULT_BRANCH_YAML_EXIST') THEN
         ALTER TABLE `T_PIPELINE_YAML_INFO`
