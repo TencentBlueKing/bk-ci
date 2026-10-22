@@ -411,33 +411,44 @@ class LuceneClient internal constructor(
         val directory = openWritableDirectory(index, buildId)
         var writer: IndexWriter? = null
         return try {
-            writer = IndexWriter(directory, newWriterConfig())
-            if (deterministicId) {
-                documents.forEach { document ->
-                    val docId = document.get(LuceneIndexUtils.FIELD_DOC_ID)
-                    if (docId.isNullOrBlank()) {
-                        writer?.addDocument(document)
-                    } else {
-                        writer?.updateDocument(Term(LuceneIndexUtils.FIELD_DOC_ID, docId), document)
-                    }
-                }
-            } else {
-                writer.addDocuments(documents)
-            }
-            writer.commit()
+            val opened = IndexWriter(directory, newWriterConfig())
+            writer = opened
+            writeDocuments(opened, documents, deterministicId)
+            opened.commit()
             documents.size
         } catch (fail: Exception) {
-            val opened = writer
+            rollbackQuietly(writer)
             writer = null
-            if (opened != null) {
-                runCatching { opened.rollback() }
-            }
             logger.error("[$buildId] batch index log ${documents.size} failed", fail)
             throw fail
         } finally {
             runCatching { writer?.close() }
             runCatching { directory.close() }
         }
+    }
+
+    private fun writeDocuments(writer: IndexWriter, documents: List<Document>, deterministicId: Boolean) {
+        if (!deterministicId) {
+            writer.addDocuments(documents)
+            return
+        }
+        documents.forEach { document -> upsertDocument(writer, document) }
+    }
+
+    private fun upsertDocument(writer: IndexWriter, document: Document) {
+        val docId = document.get(LuceneIndexUtils.FIELD_DOC_ID)
+        if (docId.isNullOrBlank()) {
+            writer.addDocument(document)
+            return
+        }
+        writer.updateDocument(Term(LuceneIndexUtils.FIELD_DOC_ID, docId), document)
+    }
+
+    private fun rollbackQuietly(writer: IndexWriter?) {
+        if (writer == null) {
+            return
+        }
+        runCatching { writer.rollback() }
     }
 
     private fun <T> withWriteLock(index: String, buildId: String, action: () -> T): T {
