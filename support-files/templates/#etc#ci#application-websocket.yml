@@ -6,7 +6,7 @@ server:
 
 websocket:
   v2:
-    enabled: ${BK_CI_WEBSOCKET_V2_ENABLED:false}
+    enabled: ${BK_CI_WEBSOCKET_V2_ENABLED:true}
     namespace: ${BK_CI_WEBSOCKET_V2_NAMESPACE:default}
     allowed-origins: ${BK_CI_WEBSOCKET_V2_ORIGINS:}
     max-connections: 10000
