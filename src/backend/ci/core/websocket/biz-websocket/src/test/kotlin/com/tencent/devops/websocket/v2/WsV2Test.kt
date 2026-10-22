@@ -1,5 +1,6 @@
 package com.tencent.devops.websocket.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.websocket.v2.WsInvalidation
@@ -77,6 +78,14 @@ class WsV2Test {
         properties.allowedOrigins = listOf("")
         headers.origin = "https://ci.example.test"
         assertTrue(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+        headers.set("X-Forwarded-Proto", "http")
+        headers.set("X-Forwarded-Host", "ci.example.test:80")
+        assertTrue(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+        headers.set(AUTH_HEADER_DEVOPS_ORIGINAL_HOST, "ci.example.test")
+        headers.set("X-Forwarded-Host", "proxy.internal")
+        assertTrue(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+        headers.origin = "https://ci.example.test:8443"
+        assertFalse(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
     }
 
     @Test

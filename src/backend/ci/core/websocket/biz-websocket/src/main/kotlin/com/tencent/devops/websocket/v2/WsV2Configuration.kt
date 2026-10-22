@@ -1,5 +1,6 @@
 package com.tencent.devops.websocket.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.websocket.v2.WsV2Properties
 import com.tencent.devops.common.websocket.v2.WsV2RabbitConfiguration
@@ -87,17 +88,36 @@ class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : Handsha
 
     private fun samePublicOrigin(request: ServerHttpRequest, origin: String): Boolean {
         val source = URI(origin)
-        val scheme = headerValue(request, "X-Forwarded-Proto") ?: request.uri.scheme
-        val host = headerValue(request, "X-Forwarded-Host") ?: headerValue(request, "Host") ?: return false
-        val target = URI("$scheme://$host")
-        return source.scheme in setOf("http", "https") &&
-            source.scheme.equals(target.scheme, true) &&
-            source.host.equals(target.host, true) &&
-            port(source) == port(target)
+        if (source.scheme !in setOf("http", "https") || source.host.isNullOrBlank()) return false
+        // 网关只监听 HTTP，浏览器页面是 HTTPS。沿用网关已经写入的原始主机，只核对主机。
+        val rawHost = headerValue(request, AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
+            ?: headerValue(request, "X-Forwarded-Host")
+            ?: headerValue(request, "Host")
+            ?: return false
+        val (host, explicitPort) = splitHost(rawHost) ?: return false
+        if (!source.host.equals(host, ignoreCase = true)) return false
+        val originPort = if (source.port >= 0) source.port else if (source.scheme == "https") 443 else 80
+        if (explicitPort == null) return originPort == 80 || originPort == 443
+        return explicitPort == originPort ||
+            (explicitPort == 80 && originPort == 443) ||
+            (explicitPort == 443 && originPort == 80)
     }
 
     private fun headerValue(request: ServerHttpRequest, name: String): String? =
         request.headers.getFirst(name)?.substringBefore(",")?.trim()?.takeIf { it.isNotEmpty() }
 
-    private fun port(uri: URI) = if (uri.port >= 0) uri.port else if (uri.scheme == "https") 443 else 80
+    private fun splitHost(value: String): Pair<String, Int?>? {
+        if (value.startsWith("[")) {
+            val end = value.indexOf(']')
+            if (end <= 1) return null
+            val host = value.substring(1, end)
+            if (value.length == end + 1) return host to null
+            if (!value.startsWith("]:", end)) return null
+            return host to (value.substring(end + 2).toIntOrNull() ?: return null)
+        }
+        val colon = value.lastIndexOf(':')
+        if (colon <= 0 || value.indexOf(':') != colon) return value to null
+        val port = value.substring(colon + 1).toIntOrNull() ?: return value to null
+        return value.substring(0, colon) to port
+    }
 }
