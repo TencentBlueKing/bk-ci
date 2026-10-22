@@ -44,6 +44,7 @@ import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.lucene.LuceneClient
+import com.tencent.devops.log.lucene.LuceneLogQuery
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
@@ -51,10 +52,10 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.LogDownloadHeader
 import com.tencent.devops.log.util.LuceneIndexUtils
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 import kotlin.math.ceil
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "ReturnCount")
@@ -191,26 +192,31 @@ class LogServiceLuceneImpl constructor(
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
-            val logs = luceneClient.fetchLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                before = end,
-                start = start,
-                size = null,
-                jobId = jobId,
-                stepId = stepId
+            val page = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    startLineNo = start,
+                    endLineNo = end,
+                    size = num,
+                    reverse = !fromStart
+                )
             )
             if (!fromStart) {
-                logs.reverse()
+                page.logs.reverse()
             }
-            queryLogs.logs.addAll(logs)
+            queryLogs.logs.addAll(page.logs)
         } catch (ignore: Exception) {
             logger.error("Query more logs between lines failed, buildId: $buildId", ignore)
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -280,16 +286,23 @@ class LogServiceLuceneImpl constructor(
         jobId: String?,
         stepId: String?
     ): Response {
+        val index = indexService.getBuildIndexName(buildId)
+        if (index.isNullOrBlank()) {
+            return Response.status(Response.Status.NOT_FOUND).build()
+        }
         val fileStream = luceneClient.fetchDocumentsStreaming(
-            buildId = buildId,
-            debug = false,
-            logType = null,
-            tag = tag,
-            subTag = subTag,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
+            index = index,
+            query = luceneQuery(
+                buildId = buildId,
+                debug = false,
+                logType = null,
+                tag = tag,
+                subTag = subTag,
+                containerHashId = containerHashId,
+                executeCount = executeCount,
+                jobId = jobId,
+                stepId = stepId
+            )
         )
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
@@ -408,20 +421,28 @@ class LogServiceLuceneImpl constructor(
             jobId = jobId,
             stepId = stepId
         )
-        val logSize = luceneClient.fetchLogsCount(
-            buildId = buildId,
-            debug = debug,
-            logType = logType,
-            tag = tag,
-            subTag = subTag,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
-        )
+        val index = indexService.getBuildIndexName(buildId)
+        val logSize = if (index.isNullOrBlank()) {
+            0L
+        } else {
+            luceneClient.count(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
+                )
+            )
+        }
         val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
         val pageLog = Page(
-            count = logSize.toLong(),
+            count = logSize,
             page = page,
             pageSize = pageSize,
             totalPages = totalPage,
@@ -464,21 +485,26 @@ class LogServiceLuceneImpl constructor(
         )
         if (index.isNullOrBlank()) return queryLogs
         try {
-            val logs = luceneClient.fetchAllLogsInPage(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                page = page,
-                pageSize = pageSize,
-                jobId = jobId,
-                stepId = stepId
+            val endLineNo = pageSize.toLong() * page
+            val beginLineNo = endLineNo - pageSize + 1
+            val pageHits = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    startLineNo = beginLineNo,
+                    endLineNo = endLineNo,
+                    size = pageSize
+                )
             )
-            queryLogs.logs.addAll(logs)
-//            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
+            queryLogs.logs.addAll(pageHits.logs)
         } catch (ignore: Exception) {
             logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -510,31 +536,30 @@ class LogServiceLuceneImpl constructor(
             stepId = stepId
         )
         if (index.isNullOrBlank()) return queryLogs
-        val logSize = luceneClient.fetchLogsCount(
-            buildId = buildId,
-            debug = debug,
-            logType = logType,
-            tag = tag,
-            subTag = subTag,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            jobId = jobId,
-            stepId = stepId
-        )
-        val logs = luceneClient.fetchLogs(
-            buildId = buildId,
-            debug = debug,
-            logType = logType,
-            tag = tag,
-            subTag = subTag,
-            containerHashId = containerHashId,
-            executeCount = executeCount,
-            start = (logSize - size).toLong(),
-            jobId = jobId,
-            stepId = stepId
-        )
-        queryLogs.logs = logs
-        queryLogs.hasMore = logSize > queryLogs.logs.size
+        try {
+            val pageHits = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    size = size,
+                    reverse = true
+                )
+            )
+            pageHits.logs.reverse()
+            queryLogs.logs = pageHits.logs
+            queryLogs.hasMore = pageHits.totalHits > pageHits.logs.size
+        } catch (ignore: Exception) {
+            logger.warn("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            queryLogs.status = LogStatus.FAIL.status
+        }
         return queryLogs
     }
 
@@ -563,33 +588,25 @@ class LogServiceLuceneImpl constructor(
         logger.info("[$index|$buildId|$tag|$subTag|$containerHashId|$executeCount] doQueryInitLogs")
         if (index.isNullOrBlank()) return queryLogs
         try {
-            val size = luceneClient.fetchLogsCount(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
-            )
-            val logs = luceneClient.fetchInitLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId,
-                reverse = reverse
+            val pageHits = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    size = Constants.NORMAL_MAX_LINES,
+                    reverse = reverse == true
+                )
             )
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            queryLogs.logs.addAll(logs)
-//            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
-            queryLogs.hasMore = size > logs.size
+            queryLogs.logs.addAll(pageHits.logs)
+            queryLogs.hasMore = pageHits.totalHits > pageHits.logs.size
         } catch (ignore: Exception) {
             logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -624,23 +641,26 @@ class LogServiceLuceneImpl constructor(
         if (index.isNullOrBlank()) return moreLogs
         try {
             val startTime = System.currentTimeMillis()
-            val logs = luceneClient.fetchLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                start = start,
-                size = Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES,
-                jobId = jobId,
-                stepId = stepId
+            val pageHits = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    startLineNo = start,
+                    size = Constants.NORMAL_MAX_LINES
+                )
             )
 
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            moreLogs.logs.addAll(logs)
-            moreLogs.hasMore = moreLogs.logs.size >= Constants.SCROLL_MAX_LINES * Constants.SCROLL_MAX_TIMES
+            moreLogs.logs.addAll(pageHits.logs)
+            moreLogs.hasMore = pageHits.totalHits > pageHits.logs.size
         } catch (ignore: Exception) {
             logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             moreLogs.status = LogStatus.FAIL.status
@@ -677,34 +697,27 @@ class LogServiceLuceneImpl constructor(
 
         try {
             val startTime = System.currentTimeMillis()
-            val logSize = luceneClient.fetchLogsCount(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
+            val pageHits = luceneClient.search(
+                index,
+                luceneQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    logType = logType,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId,
+                    endLineNo = before,
+                    size = size,
+                    reverse = true
+                )
             )
-            val logs = luceneClient.fetchLogs(
-                buildId = buildId,
-                debug = debug,
-                logType = logType,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                before = before,
-                size = size,
-                jobId = jobId,
-                stepId = stepId
-            )
-
+            pageHits.logs.reverse()
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            queryLogs.logs.addAll(logs)
-            queryLogs.hasMore = queryLogs.logs.size >= logSize
+            queryLogs.logs.addAll(pageHits.logs)
+            queryLogs.hasMore = pageHits.totalHits > pageHits.logs.size
         } catch (ignore: Exception) {
             logger.error("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
@@ -734,7 +747,12 @@ class LogServiceLuceneImpl constructor(
         )
         val indexName = indexService.getBuildIndexName(buildId)
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
-        val (status, msg) = if (indexService.getBuildIndexName(buildId) == null) {
+        // 行号仍是初始值时索引目录还没落下，不能当成已清理。
+        // 已经写过日志但热目录和冷目录都不在，才是清理任务删掉了。
+        val indexReady = !indexName.isNullOrBlank() && luceneClient.indexExists(indexName)
+        val hadLogs = indexService.getLastLineNum(buildId) > 1L
+        val cleaned = indexName.isNullOrBlank() || (!indexReady && hadLogs)
+        val (status, msg) = if (cleaned) {
             Pair(
                 LogStatus.CLEAN,
                 I18nUtil.getCodeLanMessage(LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED)
@@ -759,7 +777,11 @@ class LogServiceLuceneImpl constructor(
         val logDocuments = logMessages.map {
             LuceneIndexUtils.getDocumentObject(buildId, it)
         }
-        val lines = luceneClient.indexBatchLog(buildId, logDocuments)
+        val lines = luceneClient.indexBatchLog(
+            buildId = buildId,
+            documents = logDocuments,
+            deterministicId = indexService.isLineNumReliable(buildId)
+        )
         val endTime = System.currentTimeMillis()
         logger.info("[$buildId] it takes ${(endTime - startTime)} ms to do add $lines lines in lucene file.")
         return lines
@@ -820,7 +842,40 @@ class LogServiceLuceneImpl constructor(
 
     private fun prepareIndex(buildId: String): Boolean {
         val index = indexService.getIndexName(buildId)
+        luceneClient.ensureIndex(index)
         indexCache.put(index, true)
         return true
+    }
+
+    private fun luceneQuery(
+        buildId: String,
+        debug: Boolean,
+        logType: LogType?,
+        tag: String?,
+        subTag: String?,
+        containerHashId: String?,
+        executeCount: Int?,
+        jobId: String?,
+        stepId: String?,
+        startLineNo: Long? = null,
+        endLineNo: Long? = null,
+        size: Int = Constants.NORMAL_MAX_LINES,
+        reverse: Boolean = false
+    ): LuceneLogQuery {
+        return LuceneLogQuery(
+            buildId = buildId,
+            debug = debug,
+            logType = logType,
+            tag = tag,
+            subTag = subTag,
+            containerHashId = containerHashId,
+            executeCount = executeCount,
+            jobId = jobId,
+            stepId = stepId,
+            startLineNo = startLineNo,
+            endLineNo = endLineNo,
+            size = size,
+            reverse = reverse
+        )
     }
 }
