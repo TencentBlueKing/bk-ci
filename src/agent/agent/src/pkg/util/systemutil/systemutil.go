@@ -236,23 +236,38 @@ func GetAgentIp(ignoreIps []string) string {
 
 func resolveAgentIP(ignoreIps []string) string {
 	fallbackIp := "127.0.0.1"
+	selection := agentIPSelection{}
 	routeIp, err := getLocalIp()
+	selection.routeIP = routeIp
 	if err == nil {
 		if !shouldIgnoreIP(routeIp, ignoreIps) {
 			fallbackIp = routeIp
 		}
 	} else {
-		logs.Warn("failed to get ip by udp", err)
+		// 暂存路由探测错误，结合最终选址结果统一记录，避免每轮重复输出 WARN。
+		selection.reason = fmt.Sprintf("failed to get ip by udp: %v", err)
 	}
 
 	candidates, err := listAgentIPCandidates(routeIp, ignoreIps)
 	if err != nil || len(candidates) == 0 {
+		// 回退时也记录实际返回的地址和原因，确保从正常选址进入回退、
+		// 或从回退恢复到同一 IP 时，都能被日志状态比较识别。
+		selection.fallback = true
+		selection.candidate.ip = fallbackIp
+		if err != nil {
+			selection.reason += fmt.Sprintf("; list interfaces failed: %v", err)
+		} else {
+			selection.reason += "; no eligible interface addresses"
+		}
+		selection.reason = strings.TrimPrefix(selection.reason, "; ")
+		agentIPStatus.record(agentIPNow(), selection)
 		return fallbackIp
 	}
 
 	selected := candidates[0]
-	logs.Infof("select agent ip=%s routeIp=%s iface=%s desc=%s virtual=%t score=%d",
-		selected.ip, routeIp, selected.ifaceName, selected.description, selected.isVirtual, selected.score)
+	// 保存完整选址快照，让路由、网卡及评分变化与 IP 变化一样及时可见。
+	selection.candidate = selected
+	agentIPStatus.record(agentIPNow(), selection)
 	return selected.ip
 }
 

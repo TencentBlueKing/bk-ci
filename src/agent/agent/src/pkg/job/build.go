@@ -231,6 +231,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			return true
 		})
 	}
+	// 使用 agent 当前识别的 IP，避免被同名下发变量覆盖。
+	goEnv["BK_CI_AGENT_IP"] = config.GAgentEnv.GetAgentIp()
 	// #5806 定义临时目录
 	tmpDir, tmpMkErr := systemutil.MkBuildTmpDir()
 	if tmpMkErr != nil {
