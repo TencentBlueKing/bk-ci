@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_ticket
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.26
 
 **文档描述：** devops_ci_ticket的数据库文档
 | 表名                  | 说明       |
@@ -40,6 +40,7 @@
 |  18   | CERT_CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 证书创建时间  |
 |  19   | CERT_UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 证书更新时间  |
 |  20   | CREDENTIAL_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 凭证ID  |
+|  21   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_CERT_ENTERPRISE</a>
 
@@ -59,6 +60,7 @@
 |  8   | CERT_UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  9   | CERT_EXPIRE_DATE |   datetime   | 19 |   0    |    N     |  N   |   2019-08-0100:00:00    | 证书过期时间  |
 |  10   | CERT_CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   2019-08-0100:00:00    | 证书创建时间  |
+|  11   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_CERT_TLS</a>
 
@@ -80,6 +82,7 @@
 |  10   | CERT_CLIENT_KEY_FILE |   blob   | 65535 |   0    |    Y     |  N   |       | Base64编码的加密后的证书内容  |
 |  11   | CERT_CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   2019-08-0100:00:00    | 证书创建时间  |
 |  12   | CERT_UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 证书更新时间  |
+|  13   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_CREDENTIAL</a>
 
@@ -103,3 +106,4 @@
 |  12   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
 |  13   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
 |  14   | ALLOW_ACROSS_PROJECT |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  15   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |

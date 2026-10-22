@@ -118,7 +118,7 @@
                             />
                             <div class="task-title-content">
                                 <span class="task-name">
-                                    <bk-tag v-if="getJobStageLabel(task)">{{ getJobStageLabel(task) }}</bk-tag>
+                                    <!-- <bk-tag v-if="getJobStageLabel(task)">{{ getJobStageLabel(task) }}</bk-tag> -->
                                     {{ task.jobName }}
                                 </span>
                                 <span class="task-pipeline-name">

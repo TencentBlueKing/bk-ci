@@ -92,6 +92,9 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                         if (containsEmptyTaskId) {
                             logger.info("contains empty taskId, save again|$projectId|$pipelineId")
                             timerList.forEach {
+                                if (it.taskId?.startsWith("y-") == true) {
+                                    return@forEach
+                                }
                                 val result = pipelineTimerService.deleteTimer(
                                     projectId = projectId,
                                     pipelineId = pipelineId,

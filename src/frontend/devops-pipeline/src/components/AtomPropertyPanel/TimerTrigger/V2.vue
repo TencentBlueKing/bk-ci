@@ -21,6 +21,12 @@
                 />
             </form-field>
         </template>
+        <yaml-branch-field
+            :element="element"
+            :disabled="disabled"
+            :errors="errors"
+            :handle-update-element="handleUpdateElement"
+        />
     </div>
 </template>
 
@@ -30,21 +36,25 @@
     import validMixins from '../../validMixins'
     import atomMixin from '../atomMixin'
     import CodelibSelector from './CodelibSelector'
+    import YamlBranchField from './YamlBranchField'
+    import yamlBranchMixin from './yamlBranchMixin'
     export default {
         components: {
             TimerCronTab,
             BranchParameterArray,
-            CodelibSelector
+            CodelibSelector,
+            YamlBranchField
         },
-        mixins: [atomMixin, validMixins],
+        mixins: [atomMixin, validMixins, yamlBranchMixin],
         computed: {
             disabled () {
-                return this.element?.disabled ?? false
+                // $props.disabled 为面板只读态（atomMixin 中声明的 prop，被本 computed 遮蔽）；element.disabled 为触发器停用开关
+                return this.$props.disabled || this.element?.disabled === true
             },
             fieldsMap () {
                 return Object.keys(this.atomPropsModel).reduce((acc, key) => {
                     // exclude ['agentType', 'agentHashIdList']
-                    if (!['nodeType', 'nodes'].includes(key)) {
+                    if (!['nodeType', 'nodes'].includes(key) && !(key === 'branches' && this.showYamlBranch)) {
                         acc[key] = this.atomPropsModel[key]
                     }
                     return acc

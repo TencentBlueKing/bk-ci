@@ -216,6 +216,14 @@
                     }
                 ]
             },
+            arrivalPolicyLabel () {
+                const subGroup = (this.basicInfo?.concurrencySubGroup || '').trim()
+                const cancel = !!this.basicInfo?.concurrencyCancelInProgress
+                if (subGroup) {
+                    return this.$t(cancel ? 'settings.arrivalCancelBatch' : 'settings.arrivalKeepBatch')
+                }
+                return this.$t(cancel ? 'settings.arrivalCancelGroup' : 'settings.arrivalQueue')
+            },
             parallelSettingRows () {
                 const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
                 if (runLockType === 'group_lock') {
@@ -227,10 +235,18 @@
                         },
                         {
                             key: 'concurrencyCancelInProgress',
-                            label: 'settings.stopWhenNewCome',
-                            value: this.$t(this.basicInfo?.concurrencyCancelInProgress ? 'true' : 'false')
+                            label: 'settings.arrivalPolicy',
+                            value: this.arrivalPolicyLabel
                         },
-                        ...(!this.basicInfo?.concurrencyCancelInProgress
+                        ...(this.basicInfo?.concurrencySubGroup
+                            ? [{
+                                key: 'concurrencySubGroup',
+                                label: 'settings.subGroup',
+                                value: this.basicInfo.concurrencySubGroup
+                            }]
+                            : []
+                        ),
+                        ...(!(this.basicInfo?.concurrencyCancelInProgress && !this.basicInfo?.concurrencySubGroup)
                             ? [
                                 {
                                     key: 'maxQueueSize',

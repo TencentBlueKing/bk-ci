@@ -511,7 +511,8 @@ class PipelineYamlService(
                 pathWithNamespace = repository.projectName,
                 webUrl = homePage,
                 filePath = filePath,
-                status = pipelineYamlInfo.status
+                status = pipelineYamlInfo.status,
+                defaultBranch = pipelineYamlInfo.defaultBranch
             )
         } else {
             PipelineYamlVo(
@@ -521,7 +522,8 @@ class PipelineYamlService(
                 webUrl = homePage,
                 filePath = filePath,
                 fileUrl = "$homePage/blob/${pipelineYamlVersion.commitId}/$filePath",
-                status = pipelineYamlInfo.status
+                status = pipelineYamlInfo.status,
+                defaultBranch = pipelineYamlInfo.defaultBranch
             )
         }
     }
