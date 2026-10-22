@@ -41,7 +41,9 @@ import io.agentscope.core.tool.mcp.McpClientBuilder
 import io.agentscope.core.tool.mcp.McpClientWrapper
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.ZoneOffset
@@ -54,8 +56,14 @@ import java.time.ZoneOffset
 @Service
 class AiMcpServerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val dao: AiMcpServerConfigDao
+    private val dao: AiMcpServerConfigDao,
+    private val accessTokenProvider: ObjectProvider<McpUserAccessTokenProvider>
 ) {
+    /**
+     * CodeCC 首次生成修复建议可能超过原有 15 秒，其余既有 MCP 继续使用原超时。
+     */
+    @Value("\${ai.codecc.mcp-timeout-seconds:60}")
+    private var codeccMcpTimeoutSeconds: Long = DEFAULT_CODECC_MCP_TIMEOUT_SECONDS
 
     fun createSystem(request: AiMcpServerCreate): AiMcpServerInfo {
         val id = UUIDUtil.generate()
@@ -215,20 +223,24 @@ class AiMcpServerService @Autowired constructor(
     /**
      * 根据配置创建 MCP 客户端。
      * 每次调用都会新建连接，避免多实例间缓存不一致。
+     *
+     * @param operator 当前会话用户。仅当某个配置头显式包含 `{{userId}}` 或 `{{accessToken}}` 时才使用，
+     *        未声明占位符的既有 MCP 配置保持完全不变
      */
-    fun createClient(config: AiMcpServerInfo): McpClientWrapper {
+    fun createClient(config: AiMcpServerInfo, operator: String? = null): McpClientWrapper {
         logger.info(
             "[McpServer] Building MCP client: name={}, " +
-                    "transport={}, url={}",
+                    "transport={}, url={}, operator={}",
             config.serverName,
             config.transportType,
-            config.serverUrl
+            config.serverUrl,
+            operator
         )
-        return buildMcpClient(config)
+        return buildMcpClient(config, operator)
     }
 
-    private fun buildMcpClient(config: AiMcpServerInfo): McpClientWrapper {
-        val headers = parseHeaders(config.headers)
+    private fun buildMcpClient(config: AiMcpServerInfo, operator: String?): McpClientWrapper {
+        val headers = resolveHeaders(config, operator, ::loadAccessToken)
         val builder = McpClientBuilder.create(config.serverName)
 
         when (config.transportType) {
@@ -249,7 +261,14 @@ class AiMcpServerService @Autowired constructor(
         }
 
         headers.forEach { (k, v) -> builder.header(k, v) }
-        builder.timeout(Duration.ofSeconds(MCP_TIMEOUT_SECONDS))
+        val timeoutSeconds = if (config.bindAgent == CODECC_AGENT) {
+            codeccMcpTimeoutSeconds.coerceIn(MIN_MCP_TIMEOUT_SECONDS, MAX_MCP_TIMEOUT_SECONDS)
+        } else {
+            DEFAULT_MCP_TIMEOUT_SECONDS
+        }
+        builder.timeout(
+            Duration.ofSeconds(timeoutSeconds)
+        )
 
         return builder.buildAsync().block()
             ?: throw ErrorCodeException(
@@ -258,6 +277,19 @@ class AiMcpServerService @Autowired constructor(
                     "Failed to build MCP client",
                 params = arrayOf(config.serverName)
             )
+    }
+
+    private fun loadAccessToken(userId: String): String? {
+        val provider = accessTokenProvider.ifAvailable ?: run {
+            logger.warn("[McpServer] No McpUserAccessTokenProvider, userId={}", userId)
+            return null
+        }
+        return try {
+            provider.getAccessToken(userId)
+        } catch (e: Exception) {
+            logger.warn("[McpServer] Failed to get access token: userId={}, reason={}", userId, e.message)
+            null
+        }
     }
 
     private fun checkOwnership(userId: String, serverId: String) {
@@ -296,8 +328,65 @@ class AiMcpServerService @Autowired constructor(
         const val TRANSPORT_SSE = "SSE"
         const val TRANSPORT_STREAMABLE_HTTP = "STREAMABLE_HTTP"
 
-        /** MCP 客户端连接超时（秒） */
-        private const val MCP_TIMEOUT_SECONDS = 15L
+        private const val UNKNOWN_OPERATOR = "unknown"
+        private const val USER_ID_PLACEHOLDER = "{{userId}}"
+        private const val ACCESS_TOKEN_PLACEHOLDER = "{{accessToken}}"
+        private const val MAX_OPERATOR_LENGTH = 128
+
+        /**
+         * 令牌会被插入到 X-Bkapi-Authorization 的 JSON 字符串中，只接受不含引号、反斜杠等字符的值，
+         * 防止通过令牌内容注入额外的认证字段
+         */
+        private val ACCESS_TOKEN_PATTERN = Regex("^[A-Za-z0-9._~+/=-]{1,4096}$")
+
+        private const val CODECC_AGENT = "codecc_agent"
+        private const val DEFAULT_MCP_TIMEOUT_SECONDS = 15L
+        private const val DEFAULT_CODECC_MCP_TIMEOUT_SECONDS = 60L
+        private const val MIN_MCP_TIMEOUT_SECONDS = 5L
+        private const val MAX_MCP_TIMEOUT_SECONDS = 300L
+
+        /**
+         * 组装 MCP 请求头。
+         *
+         * 只有显式写入 `{{userId}}` / `{{accessToken}}` 的 header 才注入会话用户身份。
+         * 这样 CodeCC 可以在 X-Bkapi-Authorization 中以用户 access_token 完成网关认证，
+         * iWiki 等既有 MCP 的静态 PAT/header 不会被改写或附加额外字段。
+         *
+         * @param accessTokenLoader 按会话用户获取 access_token，仅在配置声明 `{{accessToken}}` 时调用
+         */
+        fun resolveHeaders(
+            config: AiMcpServerInfo,
+            operator: String?,
+            accessTokenLoader: ((String) -> String?)? = null
+        ): Map<String, String> {
+            val headers = parseHeaders(config.headers)
+            val needsUser = headers.values.any { it.contains(USER_ID_PLACEHOLDER) }
+            val needsAccessToken = headers.values.any { it.contains(ACCESS_TOKEN_PLACEHOLDER) }
+            if (!needsUser && !needsAccessToken) {
+                return headers
+            }
+            val safeOperator = operator
+                ?.replace(Regex("[\\r\\n\\u0000-\\u001F]"), " ")
+                ?.trim()
+                ?.take(MAX_OPERATOR_LENGTH)
+                ?.takeIf { it.isNotEmpty() && it != UNKNOWN_OPERATOR }
+                ?: throw IllegalStateException(
+                    "MCP config ${config.serverName} requires an authenticated user"
+                )
+            val safeAccessToken = if (needsAccessToken) {
+                accessTokenLoader?.invoke(safeOperator)?.trim()?.takeIf { ACCESS_TOKEN_PATTERN.matches(it) }
+                    ?: throw IllegalStateException(
+                        "MCP config ${config.serverName} requires a valid access token of user $safeOperator"
+                    )
+            } else {
+                null
+            }
+            return headers.mapValues { (_, value) ->
+                var resolved = value.replace(USER_ID_PLACEHOLDER, safeOperator)
+                safeAccessToken?.let { resolved = resolved.replace(ACCESS_TOKEN_PLACEHOLDER, it) }
+                resolved
+            }
+        }
 
         fun parseHeaders(headersJson: String?): Map<String, String> {
             if (headersJson.isNullOrBlank()) return emptyMap()
