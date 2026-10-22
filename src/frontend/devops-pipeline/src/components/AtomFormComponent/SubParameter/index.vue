@@ -49,6 +49,7 @@
                             class="input-com"
                             :disabled="disabled"
                             :value="parameter.key"
+                            searchable
                             :placeholder="keyPlaceholder"
                             @change="(val) => handleChangeKey(val, index)"
                         >
