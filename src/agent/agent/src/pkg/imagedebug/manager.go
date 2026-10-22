@@ -74,6 +74,6 @@ func NewManager(conf *ConsoleProxyConfig, doneChan *OnceChan[struct{}]) Manager 
 func (m *manager) Start() error {
 	m.runner = dockercli.NewRunner("", func(format string, args ...interface{}) {
 		imageDebugLogs.Infof(format, args...)
-	})
+	}).WithRuntime(m.conf.ContainerRuntime)
 	return nil
 }

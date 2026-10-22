@@ -27,6 +27,9 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.pipeline.type.agent.AgentDockerConfig
+import com.tencent.devops.environment.api.ServiceDockerConfigResource
+
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.enums.AgentStatus
@@ -118,6 +121,10 @@ class ThirdPartyAgentService @Autowired constructor(
     ) {
         with(dispatchData) {
             try {
+                val containerConfig = if (dispatchType.dockerInfo != null && envId == null) {
+                    client.get(ServiceDockerConfigResource::class)
+                        .get(agent.agentId).data
+                } else agent.dockerConfig
                 thirdPartyAgentBuildDao.add(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -125,7 +132,9 @@ class ThirdPartyAgentService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
-                    thirdPartyAgentWorkspace = dispatchType.workspace ?: "",
+                    thirdPartyAgentWorkspace = if (dispatchType.dockerInfo?.options?.mountWorkspace == false) {
+                        "__NO_MOUNT__"
+                    } else dispatchType.workspace ?: "",
                     pipelineName = pipelineName,
                     buildNum = buildNo,
                     taskName = taskName,
@@ -135,7 +144,8 @@ class ThirdPartyAgentService @Autowired constructor(
                         ThirdPartyAgentDockerInfoDispatch(
                             agentId = id,
                             secretKey = secretKey,
-                            info = it
+                            info = it.copy(options = (containerConfig ?:
+                                AgentDockerConfig()).applyTo(it.options))
                         )
                     },
                     executeCount = executeCount,
@@ -319,7 +329,10 @@ class ThirdPartyAgentService @Autowired constructor(
                         dockerInfo.credential?.user = userName
                         dockerInfo.credential?.password = password
                     }
-                    buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                    buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo).copy(
+                        containerRuntime = client.get(ServiceDockerConfigResource::class)
+                            .get(agentId).data?.containerRuntime ?: "docker"
+                    )
                     buildDockerInfo.credential?.errMsg = errMsg
                 }
 

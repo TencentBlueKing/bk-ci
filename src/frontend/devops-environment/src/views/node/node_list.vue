@@ -1,6 +1,12 @@
 <template>
     <div class="node-list-wrapper">
         <router-view />
+        <batch-docker-config
+            :value="showDockerConfig"
+            :nodes="selectedNodes"
+            :project-id="projectId"
+            @close="showDockerConfig = false"
+        />
         <section
             class="sub-view-port"
             v-bkloading="{
@@ -407,9 +413,12 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useUrlQuery from '@/hooks/useUrlQuery'
     import NodeDetail from './node_detail.vue'
+    import BatchDockerConfig from '@/components/BatchDockerConfig.vue'
+    import { osOf } from '@/components/devops/environment/import-third-party/constants'
     import importIMetaNode from '@/components/devops/environment/import-IMeta-node.vue'
     export default {
         components: {
+            BatchDockerConfig,
             ImportThirdPartyDialog,
             configManageNode,
             makeMirrorDialog,
@@ -537,6 +546,7 @@
                 isDropdownShow: false,
                 isBatchDropdownShow: false,
                 selectedNodes: [],
+                showDockerConfig: false,
                 isShowEditMaxConcurrency: false,
                 isShowResetImportUser: false,
                 parallelTaskCount: 0,
@@ -707,6 +717,19 @@
                         handler: () => this.batchSetMaxConcurrency()
                     },
                     ...(!this.isCreateResType ? [
+                        {
+                            key: 'dockerConfig',
+                            textKey: '批量修改 CPU、内存上限',
+                            disabled: !this.selectedNodes.length || cannotEditNodes.length > 0
+                                || !this.selectedNodes.some(node => node.nodeType === 'THIRDPARTY'
+                                    && osOf(node) === 'LINUX'),
+                            tooltips: !this.selectedNodes.length ? '请选择节点'
+                                : cannotEditNodes.length ? `${cannotEditNames}无编辑权限，请重新选择节点`
+                                    : '未选择 Linux 构建节点，不支持修改',
+                            handler: () => {
+                                this.showDockerConfig = true
+                            }
+                        },
                         {
                             key: 'bulkResetImportUser',
                             textKey: 'environment.bulkResetImportUser',

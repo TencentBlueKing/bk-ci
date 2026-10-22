@@ -43,50 +43,58 @@
                 </span>
             </div>
 
-            <!-- docker构建最大并发数（仅支持 Docker 的操作系统展示，当前为 LINUX） -->
-            <div
-                class="setting-item"
-                v-if="supportDocker"
+            <docker-config
+                v-if="supportDocker && nodeHashId"
+                scope="NODE"
+                :project-id="projectId"
+                :resource-id="nodeHashId"
+                :creation-node="currentNode.nodeType === 'CREATE'"
             >
-                <span class="setting-label">docker构建最大并发数：</span>
-                <span class="setting-value">
-                    <!-- 非编辑状态 -->
-                    <template v-if="editingField !== 'docker'">
-                        {{ currentNode.dockerParallelTaskCount ?? '-' }}
-                        <i
-                            class="bk-icon icon-edit-line edit-icon"
-                            @click="handleStartEdit('docker')"
-                        ></i>
-                    </template>
+                <!-- docker构建最大并发数（仅支持 Docker 的操作系统展示，当前为 LINUX） -->
+                <div
+                    class="setting-item"
+                    v-if="supportDocker"
+                >
+                    <span class="setting-label">最大并发数：</span>
+                    <span class="setting-value">
+                        <!-- 非编辑状态 -->
+                        <template v-if="editingField !== 'docker'">
+                            {{ currentNode.dockerParallelTaskCount ?? '-' }}
+                            <i
+                                class="bk-icon icon-edit-line edit-icon"
+                                @click="handleStartEdit('docker')"
+                            ></i>
+                        </template>
                     
-                    <!-- 编辑状态 -->
-                    <template v-else>
-                        <bk-input
-                            class="info-input"
-                            v-model="editingValue"
-                            type="number"
-                            :min="0"
-                            :max="100"
-                            :disabled="isSaving"
-                            ref="editInput"
-                        />
-                        <i
-                            v-if="!isSaving"
-                            class="bk-icon icon-check-line save-icon"
-                            @click="handleSaveEdit"
-                        />
-                        <i
-                            v-else
-                            class="bk-icon icon-circle-2-1 loading-icon"
-                        />
-                        <i
-                            class="bk-icon icon-close-line cancel-icon"
-                            :class="{ disabled: isSaving }"
-                            @click="!isSaving && handleCancelEdit()"
-                        />
-                    </template>
-                </span>
-            </div>
+                        <!-- 编辑状态 -->
+                        <template v-else>
+                            <bk-input
+                                class="info-input"
+                                v-model="editingValue"
+                                type="number"
+                                :min="0"
+                                :max="100"
+                                :disabled="isSaving"
+                                ref="editInput"
+                            />
+                            <i
+                                v-if="!isSaving"
+                                class="bk-icon icon-check-line save-icon"
+                                @click="handleSaveEdit"
+                            />
+                            <i
+                                v-else
+                                class="bk-icon icon-circle-2-1 loading-icon"
+                            />
+                            <i
+                                class="bk-icon icon-close-line cancel-icon"
+                                :class="{ disabled: isSaving }"
+                                @click="!isSaving && handleCancelEdit()"
+                            />
+                        </template>
+                    </span>
+                </div>
+            </docker-config>
         </div>
         <div class="env-params-content">
             <p class="title">{{ $t('environment.environmentVariable') }}</p>
@@ -101,15 +109,19 @@
     import useInstance from '@/hooks/useInstance'
     import { DOCKER_SUPPORTED_OS, osOf } from '@/components/devops/environment/import-third-party/constants'
     import EnvParam from './EnvParam'
+    import DockerConfig from '@/components/DockerConfig.vue'
 
     export default {
         name: 'NodeSettings',
         components: {
-            EnvParam
+            EnvParam,
+            DockerConfig
         },
         setup () {
             const {
                 currentNode,
+                nodeHashId,
+                projectId,
                 fetchNodeDetail,
                 saveParallelTaskCount,
                 saveDockerParallelTaskCount
@@ -117,7 +129,8 @@
             const { proxy } = useInstance()
 
             // 仅支持 Docker 构建的操作系统（当前为 LINUX）展示 docker 构建最大并发数
-            const supportDocker = computed(() => DOCKER_SUPPORTED_OS.includes(osOf(currentNode.value)))
+            const supportDocker = computed(() => DOCKER_SUPPORTED_OS.includes(osOf(currentNode.value))
+                && ['THIRDPARTY', 'CREATE'].includes(currentNode.value.nodeType))
 
             const isSaving = ref(false)
             const editingField = ref(null)
@@ -201,6 +214,8 @@
 
             return {
                 currentNode,
+                nodeHashId,
+                projectId,
                 supportDocker,
                 isSaving,
                 editingField,

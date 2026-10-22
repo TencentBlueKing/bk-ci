@@ -26,7 +26,8 @@ data class DispatchStrategyConfig(
     val enabled: Boolean,
     val priority: Int,
     val createdUser: String,
-    val updatedUser: String
+    val updatedUser: String,
+    val resourceRemaining: ResourceRemaining? = null
 ) {
     companion object {
         fun buildDefaults(projectId: String, envId: Long, userId: String): List<DispatchStrategyConfig> {
@@ -97,7 +98,8 @@ data class DispatchEnvStrategyVO(
     @get:Schema(title = "创建者")
     val createdUser: String,
     @get:Schema(title = "修改者")
-    val updatedUser: String
+    val updatedUser: String,
+    val resourceRemaining: ResourceRemaining? = null
 ) {
     constructor(c: DispatchStrategyConfig, label: List<LabelSelectorVO>?) : this(
         id = c.id!!, projectId = c.projectId, envId = c.envId,
@@ -105,7 +107,7 @@ data class DispatchEnvStrategyVO(
         strategyName = c.strategyName, scope = c.scope, nodeRule = c.nodeRule,
         labelSelector = label,
         enabled = c.enabled, priority = c.priority,
-        createdUser = c.createdUser, updatedUser = c.updatedUser
+        createdUser = c.createdUser, updatedUser = c.updatedUser, resourceRemaining = c.resourceRemaining
     )
 }
 
@@ -118,7 +120,8 @@ data class DispatchEnvStrategyCreateReq(
     @get:Schema(title = "节点规则", required = true)
     val nodeRule: NodeRule?,
     @get:Schema(title = "标签选择器", required = false)
-    val labelSelector: List<LabelSelector>?
+    val labelSelector: List<LabelSelector>?,
+    val resourceRemaining: ResourceRemaining? = null
 )
 
 @Schema(title = "更新调度策略请求")
@@ -132,7 +135,10 @@ data class DispatchEnvStrategyUpdateReq(
     @get:Schema(title = "标签选择器", required = false)
     val labelSelector: List<LabelSelector>? = null,
     @get:Schema(title = "是否启用", required = false)
-    val enabled: Boolean? = null
+    val enabled: Boolean? = null,
+    val resourceRemaining: ResourceRemaining? = null,
+    // Explicit clear distinguishes removal from enabled-only PATCH requests.
+    val clearResourceRemaining: Boolean = false
 )
 
 @Schema(title = "策略排序请求")

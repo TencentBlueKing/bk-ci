@@ -1,5 +1,7 @@
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.process.yaml.pojo.DockerOptionsYamlMixin
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.io.IOContext
@@ -565,6 +567,7 @@ object TransferMapper {
             .stringQuotingChecker(CustomStringQuotingChecker()).build()
     ).setSerializationInclusion(JsonInclude.Include.NON_NULL).apply {
         registerKotlinModule()
+        addMixIn(DockerOptions::class.java, DockerOptionsYamlMixin::class.java)
         registerModule(
             SimpleModule("yamlUnderscoreNumber").addDeserializer(
                 Any::class.java, UnderscoreNumberUntypedDeserializer()

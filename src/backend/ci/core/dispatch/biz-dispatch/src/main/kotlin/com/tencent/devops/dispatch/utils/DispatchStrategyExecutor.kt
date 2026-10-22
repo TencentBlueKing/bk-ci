@@ -1,5 +1,8 @@
 package com.tencent.devops.dispatch.utils
 
+import com.tencent.devops.environment.pojo.ResourceRemaining
+import com.tencent.devops.environment.pojo.AgentResourceSnapshot
+
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.LabelSelector
 import com.tencent.devops.environment.pojo.enums.LabelOp
@@ -74,7 +77,12 @@ class DispatchStrategyExecutor(
                 continue
             }
 
-            val filtered = filterByLabels(lv, candidates, strategy.labelSelector)
+            val resourceCandidates = filterByResources(lv, candidates, strategy.resourceRemaining)
+            if (resourceCandidates.isEmpty()) {
+                pipelineLog("$lv All ${candidates.size} agents filtered out by resource thresholds, skip")
+                continue
+            }
+            val filtered = filterByLabels(lv, resourceCandidates, strategy.labelSelector)
             if (filtered.isEmpty()) {
                 pipelineLog("$lv All ${candidates.size} agents filtered out by labels, skip")
                 continue
@@ -108,6 +116,40 @@ class DispatchStrategyExecutor(
             }
 
             StrategyScope.ALL -> input.allAgents
+        }
+    }
+
+    private fun filterByResources(
+        logTag: String,
+        agents: List<ThirdPartyAgent>,
+        threshold: ResourceRemaining?
+    ): List<ThirdPartyAgent> {
+        if (threshold == null) return agents
+        val now = System.currentTimeMillis()
+        return agents.filter { agent ->
+            val snapshot = agent.resourceSnapshot
+            val fields = listOf(
+                Triple("CPU", threshold.cpu, snapshot?.cpu to snapshot?.cpuTime),
+                Triple("内存", threshold.memory, snapshot?.memory to snapshot?.memoryTime),
+                Triple("磁盘", threshold.disk, snapshot?.disk to snapshot?.diskTime)
+            )
+            var passed = true
+            fields.forEach { (name, minimum, sample) ->
+                if (minimum != null) {
+                    val value = AgentResourceSnapshot.fresh(
+                        sample.first, sample.second, now
+                    )
+                    if (value == null) {
+                        pipelineLog(
+                            "$logTag 节点 ${agent.hostname} 未取到$name 剩余（阈值 $minimum%），本策略不按此项排除。"
+                        )
+                    } else if (value < minimum) {
+                        pipelineLog("$logTag 节点 ${agent.hostname} 的$name 剩余 $value%，低于 $minimum%，本策略跳过。")
+                        passed = false
+                    }
+                }
+            }
+            passed
         }
     }
 

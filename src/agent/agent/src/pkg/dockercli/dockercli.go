@@ -77,6 +77,16 @@ func NewRunnerWithEvent(workDir string, eventf EventLogFunc) *Runner {
 	}
 }
 
+// WithRuntime pins this runner to the task's engine. Empty retains compatibility
+// with older servers; explicit Docker/Podman overrides machine environment variables.
+// A runner belongs to one task, so changing node settings cannot switch a running task.
+func (r *Runner) WithRuntime(binary string) *Runner {
+	if binary != "" {
+		r.binary = binary
+	}
+	return r
+}
+
 func (r *Runner) Binary() string {
 	return r.binary
 }

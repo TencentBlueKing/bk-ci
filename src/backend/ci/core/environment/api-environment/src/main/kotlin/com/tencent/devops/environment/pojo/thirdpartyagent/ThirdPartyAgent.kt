@@ -27,6 +27,9 @@
 
 package com.tencent.devops.environment.pojo.thirdpartyagent
 
+import com.tencent.devops.environment.pojo.AgentResourceSnapshot
+import com.tencent.devops.common.pipeline.type.agent.AgentDockerConfig
+
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.environment.pojo.enums.AgentType
 import io.swagger.v3.oas.annotations.media.Schema
@@ -60,5 +63,7 @@ data class ThirdPartyAgent(
     @get:Schema(title = "agent版本")
     val masterVersion: String?,
     @get:Schema(title = "agent类型")
-    val agentType: AgentType? = null
+    val agentType: AgentType? = null,
+    val resourceSnapshot: AgentResourceSnapshot? = null,
+    val dockerConfig: AgentDockerConfig? = null
 )

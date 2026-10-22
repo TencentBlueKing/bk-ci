@@ -24,6 +24,10 @@ const (
 )
 
 func newBuildDockerRunner(buildInfo *api.ThirdPartyBuildInfo) *dockercli.Runner {
+	engine := ""
+	if buildInfo.DockerBuildInfo != nil {
+		engine = buildInfo.DockerBuildInfo.ContainerRuntime
+	}
 	return dockercli.NewRunnerWithEvent(systemutil.GetWorkDir(), func(entry dockercli.LogEntry) {
 		msg := entry.Message
 		switch entry.Level {
@@ -37,7 +41,7 @@ func newBuildDockerRunner(buildInfo *api.ThirdPartyBuildInfo) *dockercli.Runner 
 			logs.Infof("DOCKER_JOB|%s", msg)
 		}
 		postLog(false, "[docker] "+msg, buildInfo, mapDockerRunnerLogLevel(entry.Level))
-	})
+	}).WithRuntime(engine)
 }
 
 func mapDockerRunnerLogLevel(level dockercli.LogLevel) api.LogType {

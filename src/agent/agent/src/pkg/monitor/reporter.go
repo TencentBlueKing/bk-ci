@@ -115,9 +115,16 @@ func (r *Reporter) Report(ctx context.Context, metrics []Metric) error {
 
 	// 上报使用独立的 30 秒总超时。即使 Collect 使用的是长生命周期
 	// context，后端无响应或响应体迟迟不结束也不会永久占住本轮采集。
-	reportCtx, cancel := context.WithTimeout(ctx, reportTimeout)
-	defer cancel()
-
+	// Stream telemetry still goes to InfluxDB. The optional snapshot uses its own
+	// bounded context, so an unavailable endpoint cannot consume this sink's deadline.
+	if isStream {
+		snapshotCtx, snapshotCancel := context.WithTimeout(ctx, 5*time.Second)
+		r.reportResourceSnapshot(snapshotCtx, gateway, metrics)
+		snapshotCancel()
+	}
+	// Give the primary sink its full timeout after the optional snapshot attempt.
+	reportCtx, primaryCancel := context.WithTimeout(ctx, reportTimeout)
+	defer primaryCancel()
 	status, respBody, err := r.doPost(reportCtx, url, headers, body)
 	if err != nil {
 		return errors.Wrap(err, "reporter: POST failed")
@@ -129,6 +136,30 @@ func (r *Reporter) Report(ctx context.Context, metrics []Metric) error {
 	logs.Debugf("monitor|report ok: metrics=%d, status=%d, stream=%v",
 		len(metrics), status, isStream)
 	return nil
+}
+
+func (r *Reporter) reportResourceSnapshot(ctx context.Context, gateway string, metrics []Metric) {
+	selected := make([]Metric, 0, 4)
+	for _, metric := range metrics {
+		if metric.Name == "mem" || metric.Name == "disk" ||
+			((metric.Name == "cpu" || metric.Name == "cpu_detail" || metric.Name == "win_cpu") &&
+				(metric.Tags["cpu"] == "cpu-total" || metric.Tags["instance"] == "_Total" ||
+					metric.Tags["instance"] == "cpu-total")) {
+			selected = append(selected, metric)
+		}
+	}
+	if len(selected) == 0 {
+		return
+	}
+	body, err := r.encodeJSON(selected)
+	if err != nil {
+		logs.WithError(err).Warn("monitor|encode scheduling snapshot failed")
+		return
+	}
+	status, _, err := r.doPost(ctx, gateway+ReportPathMetrics, r.buildHeaders(ContentTypeJSON), body)
+	if err != nil || status < 200 || status >= 300 {
+		logs.Warnf("monitor|scheduling snapshot failed: status=%d error=%v", status, err)
+	}
 }
 
 // encodeJSON 把 metrics 序列化成后端 TelegrafMulData 期望的对象结构

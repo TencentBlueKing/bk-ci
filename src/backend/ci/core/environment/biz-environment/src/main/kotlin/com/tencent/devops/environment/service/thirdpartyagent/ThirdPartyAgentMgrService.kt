@@ -27,6 +27,9 @@
 
 package com.tencent.devops.environment.service.thirdpartyagent
 
+import com.tencent.devops.environment.service.DockerConfigService
+import com.tencent.devops.environment.dao.thirdpartyagent.AgentResourceSnapshotDao
+
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -805,6 +808,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return agentInfo
     }
 
+    @Autowired
+    private lateinit var dockerConfigService: DockerConfigService
+
+    @Autowired
+    private lateinit var resourceSnapshotDao: AgentResourceSnapshotDao
+
     fun getAgentByDisplayName(projectId: String, displayName: String): AgentResult<ThirdPartyAgent?> {
         val nodes = nodeDao.getByDisplayName(
             dslContext = dslContext,
@@ -841,7 +850,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
-                masterVersion = agentRecord.masterVersion
+                masterVersion = agentRecord.masterVersion,
+                dockerConfig = dockerConfigService.forAgents(agentRecord.projectId, listOf(node.nodeId))[node.nodeId]
             )
         )
     }
@@ -1140,6 +1150,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nodeIds = nodeIdMap.keys,
             projectId = projectId
         )
+        val snapshots = resourceSnapshotDao.list(dslContext, agents.map { it.id })
+        val dockerConfigs = dockerConfigService.forAgents(projectId, agents.mapNotNull { it.nodeId }, envId)
         return agents.map {
             val nodeId = if (it.nodeId != null) {
                 HashUtil.encodeLongId(it.nodeId)
@@ -1160,7 +1172,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     createTime = it.createdTime.timestamp(),
                     parallelTaskCount = it.parallelTaskCount,
                     dockerParallelTaskCount = it.dockerParallelTaskCount,
-                    masterVersion = it.masterVersion
+                    masterVersion = it.masterVersion,
+                    resourceSnapshot = snapshots[it.id].takeIf { _ -> it.status == AgentStatus.IMPORT_OK.status },
+                    dockerConfig = dockerConfigs[it.nodeId]
                 ),
                 enableNode = nodeIdMap[it.nodeId] ?: true,
                 nodeDisplayName = nodeDisplayNameMap?.get(it.nodeId)
@@ -1307,7 +1321,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         agentRecord.detectOs = startInfo.detectOS
         agentRecord.version = startInfo.version ?: ""
         agentRecord.masterVersion = startInfo.masterVersion ?: ""
-        thirdPartyAgentDao.saveAgent(dslContext, agentRecord)
+        thirdPartyAgentDao.saveAgent(dslContext, agentRecord, invalidateSnapshot = true)
 
         if (agentRecord.nodeId == null) {
             return status

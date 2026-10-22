@@ -59,12 +59,13 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId         string        `json:"agentId"`
-	SecretKey       string        `json:"secretKey"`
-	Image           string        `json:"image"`
-	Credential      Credential    `json:"credential"`
-	Options         DockerOptions `json:"options"`
-	ImagePullPolicy string        `json:"imagePullPolicy"`
+	AgentId          string        `json:"agentId"`
+	SecretKey        string        `json:"secretKey"`
+	Image            string        `json:"image"`
+	Credential       Credential    `json:"credential"`
+	Options          DockerOptions `json:"options"`
+	ImagePullPolicy  string        `json:"imagePullPolicy"`
+	ContainerRuntime string        `json:"containerRuntime"`
 }
 
 type ImagePullPolicyEnum string
@@ -217,16 +218,17 @@ type LogMessage struct {
 }
 
 type ImageDebug struct {
-	ProjectId   string        `json:"projectId"`
-	BuildId     string        `json:"buildId"`
-	VmSeqId     string        `json:"vmSeqId"`
-	Workspace   string        `json:"workspace"`
-	PipelineId  string        `json:"pipelineId"`
-	DebugUserId string        `json:"debugUserId"`
-	DebugId     int64         `json:"debugId"`
-	Image       string        `json:"image"`
-	Credential  Credential    `json:"credential"`
-	Options     DockerOptions `json:"options"`
+	ProjectId        string        `json:"projectId"`
+	BuildId          string        `json:"buildId"`
+	VmSeqId          string        `json:"vmSeqId"`
+	Workspace        string        `json:"workspace"`
+	PipelineId       string        `json:"pipelineId"`
+	DebugUserId      string        `json:"debugUserId"`
+	DebugId          int64         `json:"debugId"`
+	Image            string        `json:"image"`
+	Credential       Credential    `json:"credential"`
+	Options          DockerOptions `json:"options"`
+	ContainerRuntime string        `json:"containerRuntime"`
 }
 
 type ImageDebugFinish struct {

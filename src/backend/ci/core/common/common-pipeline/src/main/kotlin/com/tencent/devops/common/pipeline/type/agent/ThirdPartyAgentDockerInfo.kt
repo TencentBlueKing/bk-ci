@@ -1,5 +1,7 @@
 package com.tencent.devops.common.pipeline.type.agent
 
+import com.fasterxml.jackson.annotation.JsonAlias
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.api.util.EnvUtils
@@ -85,8 +87,17 @@ data class DockerOptions(
     var network: List<String>?,
     var user: String?,
     var cpus: String?,
-    var memory: String?
+    var memory: String?,
+    // null is the historical default. Only false is persisted by the editor.
+    @get:JsonInclude(JsonInclude.Include.CUSTOM, valueFilter = MountWorkspaceDefaultFilter::class)
+    @JsonAlias("mount-workspace")
+    var mountWorkspace: Boolean? = null
 )
+
+class MountWorkspaceDefaultFilter {
+    override fun equals(other: Any?): Boolean = other == null || other == true
+    override fun hashCode(): Int = 0
+}
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -107,7 +118,8 @@ data class ThirdPartyAgentDockerInfoDispatch(
     val image: String,
     val credential: Credential?,
     val options: DockerOptions?,
-    val imagePullPolicy: String?
+    val imagePullPolicy: String?,
+    val containerRuntime: String = "docker"
 ) {
     constructor(agentId: String, secretKey: String, info: ThirdPartyAgentDockerInfo) : this(
         agentId, secretKey, info.image, info.credential, info.options, info.imagePullPolicy

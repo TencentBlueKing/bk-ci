@@ -1,5 +1,7 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.environment.pojo.ResourceRemaining
+
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
@@ -24,13 +26,14 @@ class EnvDispatchStrategyDao {
             return dslContext.insertInto(
                 this, PROJECT_ID, ENV_ID, STRATEGY_TYPE, DEFAULT_STRATEGY_CODE,
                 STRATEGY_NAME, SCOPE, NODE_RULE, LABEL_SELECTOR, ENABLED, PRIORITY,
-                CREATED_USER, UPDATED_USER, CREATED_TIME, UPDATED_TIME
+                CREATED_USER, UPDATED_USER, CREATED_TIME, UPDATED_TIME, RESOURCE_REMAINING
             ).values(
                 config.projectId, config.envId, config.strategyType.name,
                 config.defaultStrategyCode?.name, config.strategyName,
                 config.scope.name, config.nodeRule?.name,
                 config.labelSelector?.let { JsonUtil.toJson(it) },
-                config.enabled, config.priority, config.createdUser, config.updatedUser, now, now
+                config.enabled, config.priority, config.createdUser, config.updatedUser, now, now,
+                config.resourceRemaining?.let { JsonUtil.toJson(it) }
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -41,7 +44,7 @@ class EnvDispatchStrategyDao {
             val insert = dslContext.insertInto(
                 this, PROJECT_ID, ENV_ID, STRATEGY_TYPE, DEFAULT_STRATEGY_CODE,
                 STRATEGY_NAME, SCOPE, NODE_RULE, LABEL_SELECTOR, ENABLED, PRIORITY,
-                CREATED_USER, UPDATED_USER, CREATED_TIME, UPDATED_TIME
+                CREATED_USER, UPDATED_USER, CREATED_TIME, UPDATED_TIME, RESOURCE_REMAINING
             )
             configs.forEach { config ->
                 insert.values(
@@ -49,7 +52,8 @@ class EnvDispatchStrategyDao {
                     config.defaultStrategyCode?.name, config.strategyName,
                     config.scope.name, config.nodeRule?.name,
                     config.labelSelector?.let { JsonUtil.toJson(it) },
-                    config.enabled, config.priority, config.createdUser, config.updatedUser, now, now
+                    config.enabled, config.priority, config.createdUser, config.updatedUser, now, now,
+                config.resourceRemaining?.let { JsonUtil.toJson(it) }
                 )
             }
             insert.execute()
@@ -64,7 +68,9 @@ class EnvDispatchStrategyDao {
         nodeRule: NodeRule?,
         labelSelector: List<LabelSelector>?,
         enabled: Boolean?,
-        updatedUser: String
+        updatedUser: String,
+        resourceRemaining: ResourceRemaining? = null,
+        clearResourceRemaining: Boolean = false
     ) {
         with(TEnvDispatchStrategy.T_ENV_DISPATCH_STRATEGY) {
             val step = dslContext.update(this)
@@ -75,6 +81,9 @@ class EnvDispatchStrategyDao {
             nodeRule?.let { step.set(NODE_RULE, it.name) }
             if (labelSelector != null) {
                 step.set(LABEL_SELECTOR, JsonUtil.toJson(labelSelector))
+            }
+            if (resourceRemaining != null || clearResourceRemaining) {
+                step.set(RESOURCE_REMAINING, resourceRemaining?.let { JsonUtil.toJson(it) })
             }
             enabled?.let { step.set(ENABLED, it) }
             step.where(ID.eq(id)).execute()
@@ -178,7 +187,10 @@ class EnvDispatchStrategyRecordMapper :
                     JsonUtil.to(json, object : TypeReference<List<LabelSelector>>() {})
                 },
                 enabled = it.enabled, priority = it.priority,
-                createdUser = it.createdUser, updatedUser = it.updatedUser
+                createdUser = it.createdUser, updatedUser = it.updatedUser,
+                resourceRemaining = it.resourceRemaining?.let { json ->
+                    JsonUtil.to(json, ResourceRemaining::class.java)
+                }
             )
         }
     }

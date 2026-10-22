@@ -70,6 +70,12 @@
                 </template>
             </span>
         </div>
+        <docker-config
+            v-if="currentEnv.envType === 'BUILD' && !isCreateResType && !envHashId.startsWith('-')"
+            scope="ENV"
+            :project-id="projectId"
+            :resource-id="envHashId"
+        />
     </div>
 </template>
 
@@ -84,9 +90,11 @@
     import useEnvAside from '@/hooks/useEnvAside'
     import { convertTime } from '@/utils/util'
     import { OS_LABEL_MAP } from '@/store/constants'
+    import DockerConfig from '@/components/DockerConfig.vue'
     
     export default {
         name: 'BasicInfo',
+        components: { DockerConfig },
         setup () {
             const { proxy } = useInstance()
             const {

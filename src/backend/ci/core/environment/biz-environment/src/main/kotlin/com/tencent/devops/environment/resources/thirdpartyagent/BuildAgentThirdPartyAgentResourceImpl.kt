@@ -218,8 +218,14 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         secretKey: String,
         data: String
     ): Result<Boolean> {
+        checkParam(projectId, agentId, secretKey)
+        agentResourceSnapshotService.report(projectId, agentId, secretKey, data)
         return Result(agentMetricService.reportAgentMetrics(data))
     }
+
+    @Autowired
+    private lateinit var agentResourceSnapshotService:
+        com.tencent.devops.environment.service.thirdpartyagent.AgentResourceSnapshotService
 
     private fun checkParam(
         projectId: String,

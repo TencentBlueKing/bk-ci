@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.yaml.v2.parsers.template
 
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.process.yaml.pojo.DockerOptionsYamlMixin
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
@@ -44,7 +46,7 @@ import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 object TemplateYamlMapper {
     private val objectMapper = ObjectMapper(
         YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
-    ).registerKotlinModule().setFilterProvider(
+    ).registerKotlinModule().addMixIn(DockerOptions::class.java, DockerOptionsYamlMixin::class.java).setFilterProvider(
         SimpleFilterProvider().addFilter(
             YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAll()
         )

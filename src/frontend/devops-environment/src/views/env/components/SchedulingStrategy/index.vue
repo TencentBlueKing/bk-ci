@@ -286,6 +286,12 @@
                     conditions.push(...strategy.conditions)
                 }
 
+                Object.entries(strategy.resourceRemaining || {}).forEach(([key, value]) => {
+                    if (value != null) conditions.push({
+                        type: 'resource', label: `${{ cpu: 'CPU', memory: '内存', disk: '磁盘' }[key]} 剩余不低于 ${value}%`
+                    })
+                })
+
                 // labelSelector 转换为前端 labels 格式
                 // 接口返回的格式: { tagKeyId, tagKeyName, op, values: string[] }
                 // 前端格式: { key, keyName, operator, value, valueName }
@@ -493,7 +499,7 @@
                     idleNode: proxy.$t('environment.scheduling.idleNode'),
                     availableNode: proxy.$t('environment.scheduling.availableNode')
                 }
-                return labelMap[condition.type] || condition.type
+                return condition.label || labelMap[condition.type] || condition.type
             }
 
             // 获取条件描述

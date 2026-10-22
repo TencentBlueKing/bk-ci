@@ -42,7 +42,8 @@ data class ThirdPartyBuildDockerInfo(
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,
     val options: DockerOptions?,
-    val imagePullPolicy: String?
+    val imagePullPolicy: String?,
+    val containerRuntime: String = "docker"
 ) {
     constructor(input: ThirdPartyAgentDockerInfoDispatch) : this(
         agentId = input.agentId,
@@ -58,9 +59,11 @@ data class ThirdPartyBuildDockerInfo(
             network = input.options?.network?.filter { it.isNotBlank() }?.ifEmpty { null },
             user = input.options?.user?.ifBlank { null },
             cpus = input.options?.cpus?.ifBlank { null },
-            memory = input.options?.memory?.ifBlank { null }
+            memory = input.options?.memory?.ifBlank { null },
+            mountWorkspace = input.options?.mountWorkspace
         ),
-        imagePullPolicy = input.imagePullPolicy
+        imagePullPolicy = input.imagePullPolicy,
+        containerRuntime = input.containerRuntime
     )
 }
 

@@ -344,10 +344,11 @@
 
             <form-field
                 :label="$t('editPage.workspace')"
+                :desc="dockerWorkspaceDescription"
                 v-if="isThirdParty && !isPCGBuildType"
             >
                 <vuex-input
-                    :disabled="!editable"
+                    :disabled="!editable || workspaceMountDisabled"
                     name="workspace"
                     :value="container.dispatchType.workspace"
                     :handle-change="changeBuildResource"
@@ -792,9 +793,21 @@
             isEnableDocker () {
                 return this.isLinuxOsDockerImage && Object.keys(this.dockerInfo).length > 0
             },
+            workspaceMountDisabled () {
+                return this.isEnableDocker && (this.dockerInfo.options?.mountWorkspace === false
+                || this.container.dispatchType.workspace === '__NO_MOUNT__')
+            },
+            dockerWorkspaceDescription () {
+                if (!this.isEnableDocker) return ''
+                const path = this.isExtendTx
+                    ? '/data/landun/workspace' : '/data/devops/workspace'
+                return this.workspaceMountDisabled
+                    ? `已关闭挂载工作空间，此路径本次不会进入容器。需要这份目录时，在 Volumes 或 Mounts 中挂到 ${path}。`
+                    : `此目录会挂到容器内的 ${path}。不填也会挂载，使用构建机为本 Job 准备的目录。`
+            },
             workspacePlaceholder () {
                 return this.isEnableDocker
-                    ? this.$t('editPage.dockerWorkspaceTips')
+                    ? '不填则挂载构建机上为本 Job 准备的目录'
                     : this.$t('editPage.workspaceTips')
             },
             linuxOsDockerBuildImageType () {

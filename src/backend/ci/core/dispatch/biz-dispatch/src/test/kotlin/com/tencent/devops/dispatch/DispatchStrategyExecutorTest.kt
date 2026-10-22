@@ -1,5 +1,8 @@
 package com.tencent.devops.dispatch
 
+import com.tencent.devops.environment.pojo.ResourceRemaining
+import com.tencent.devops.environment.pojo.AgentResourceSnapshot
+
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.LabelSelector
@@ -82,6 +85,34 @@ class DispatchStrategyExecutorTest {
         tagKeys = tagKeys,
         isDockerBuilder = docker
     )
+
+    @Test
+    fun resourceThresholdsAreInclusiveAndLocalToEachStrategy() {
+        val now = System.currentTimeMillis()
+        val agent = buildAgent("1").copy(resourceSnapshot =
+            AgentResourceSnapshot(20.0, now, 40.0, now, 8.0, now))
+        val cpu = buildStrategy(StrategyScope.ALL, NodeRule.IDLE).copy(resourceRemaining =
+            ResourceRemaining(cpu = 20))
+        assertNotNull(DispatchStrategyExecutor(input(listOf(agent))).execute(listOf(cpu)) { true })
+        val disk = cpu.copy(resourceRemaining = ResourceRemaining(cpu = 20, disk = 10))
+        assertNull(DispatchStrategyExecutor(input(listOf(agent))).execute(listOf(disk)) { true })
+        assertNotNull(DispatchStrategyExecutor(input(listOf(agent))).execute(
+            listOf(disk, cpu.copy(resourceRemaining = null))) { true })
+    }
+
+    @Test
+    fun missingMetricDoesNotMaskAnotherInsufficientMetricAndStaleMetricsFailOpen() {
+        val now = System.currentTimeMillis()
+        val agent = buildAgent("1").copy(resourceSnapshot =
+            AgentResourceSnapshot(disk = 8.0, diskTime = now))
+        val strategy = buildStrategy(StrategyScope.ALL, NodeRule.IDLE).copy(resourceRemaining =
+            ResourceRemaining(cpu = 20, disk = 10))
+        assertNull(DispatchStrategyExecutor(input(listOf(agent))).execute(listOf(strategy)) { true })
+        val expired = agent.copy(resourceSnapshot = agent.resourceSnapshot!!.copy(diskTime = now - 181000))
+        assertNotNull(DispatchStrategyExecutor(input(listOf(expired))).execute(listOf(strategy)) { true })
+        assertNull(DispatchStrategyExecutor(input(listOf(expired), running = mapOf("1" to 4)))
+            .execute(listOf(strategy.copy(nodeRule = NodeRule.AVAILABLE))) { true })
+    }
 
     // ========== 基本策略匹配 ==========
 

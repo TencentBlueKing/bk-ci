@@ -242,83 +242,63 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun delete(
-        dslContext: DSLContext,
-        id: Long,
-        projectId: String
-    ): Int {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.deleteFrom(this)
-                .where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
+    fun delete(dslContext: DSLContext, id: Long, projectId: String): Int =
+        dslContext.transactionResult { configuration ->
+            val tx = DSL.using(configuration)
+            val count = with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+                tx.deleteFrom(this).where(ID.eq(id)).and(PROJECT_ID.eq(projectId)).execute()
+            }
+            AgentResourceSnapshotDao.delete(tx, projectId, listOf(id))
+            count
         }
-    }
 
     fun updateStatus(
-        dslContext: DSLContext,
-        id: Long,
-        nodeId: Long?,
-        projectId: String,
-        status: AgentStatus
-    ): Int {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            val step = dslContext.update(this)
-                .set(STATUS, status.status)
-            if (nodeId != null) {
-                step.set(NODE_ID, nodeId)
-            }
-            return step.where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
+        dslContext: DSLContext, id: Long, nodeId: Long?, projectId: String, status: AgentStatus
+    ): Int = changeStatus(dslContext, projectId, setOf(id), nodeId, status, null)
 
     fun updateStatus(
-        dslContext: DSLContext,
-        id: Long,
-        nodeId: Long?,
-        projectId: String,
-        status: AgentStatus,
-        expectStatus: AgentStatus
-    ): Int {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            val step = dslContext.update(this)
-                .set(STATUS, status.status)
-            if (nodeId != null) {
-                step.set(NODE_ID, nodeId)
-            }
-            return step.where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
-                .and(STATUS.eq(expectStatus.status))
-                .execute()
-        }
-    }
+        dslContext: DSLContext, id: Long, nodeId: Long?, projectId: String,
+        status: AgentStatus, expectStatus: AgentStatus
+    ): Int = changeStatus(dslContext, projectId, setOf(id), nodeId, status, expectStatus)
 
     fun batchUpdateStatus(
-        dslContext: DSLContext,
-        projectId: String,
-        ids: Set<Long>,
-        status: AgentStatus
-    ): Int {
+        dslContext: DSLContext, projectId: String, ids: Set<Long>, status: AgentStatus
+    ): Int = changeStatus(dslContext, projectId, ids, null, status, null)
+
+    private fun changeStatus(
+        dslContext: DSLContext, projectId: String, ids: Set<Long>, nodeId: Long?,
+        status: AgentStatus, expectStatus: AgentStatus?
+    ): Int = dslContext.transactionResult { configuration ->
+        val tx = DSL.using(configuration)
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.update(this)
-                .set(STATUS, status.status)
-                .where(PROJECT_ID.eq(projectId)).let { where ->
-                    if (ids.isNotEmpty()) {
-                        where.and(ID.`in`(ids))
-                    }
-                    where
-                }
-                .execute()
+            val condition = PROJECT_ID.eq(projectId)
+                .and(if (ids.isEmpty()) DSL.trueCondition() else ID.`in`(ids))
+                .and(expectStatus?.let { STATUS.eq(it.status) } ?: DSL.trueCondition())
+            val changed = tx.select(ID, STATUS).from(this).where(condition).forUpdate().fetch()
+                .filter { it.value2() != status.status }.map { it.value1() }
+            val update = tx.update(this).set(STATUS, status.status)
+            if (nodeId != null) update.set(NODE_ID, nodeId)
+            val count = update.where(condition).execute()
+            AgentResourceSnapshotDao.invalidate(tx, projectId, changed)
+            count
         }
     }
 
     fun saveAgent(
         dslContext: DSLContext,
-        agentRecode: TEnvironmentThirdpartyAgentRecord
+        agentRecode: TEnvironmentThirdpartyAgentRecord,
+        invalidateSnapshot: Boolean = false
     ) {
-        dslContext.executeUpdate(agentRecode)
+        val statusChanged = agentRecode.original().status != agentRecode.status
+        if (!statusChanged && !invalidateSnapshot) {
+            dslContext.executeUpdate(agentRecode)
+            return
+        }
+        dslContext.transaction { configuration ->
+            val tx = DSL.using(configuration)
+            tx.executeUpdate(agentRecode)
+            AgentResourceSnapshotDao.invalidate(tx, agentRecode.projectId, listOf(agentRecode.id))
+        }
     }
 
     fun getAgent(

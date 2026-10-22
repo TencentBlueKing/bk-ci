@@ -164,20 +164,9 @@ func CreateDebugContainer(
 ) error {
 	runner := dockercli.NewRunner(systemutil.GetWorkDir(), func(format string, args ...interface{}) {
 		imageDebugLogs.Infof(format, args...)
-	})
+	}).WithRuntime(debugInfo.ContainerRuntime)
 
-	// 先判断本地是否存在已经运行的容器
-	containerId, ok, err := checkLoclRunningContainer(ctx, runner, debugInfo.BuildId, debugInfo.VmSeqId)
-	if err != nil {
-		return errors.Wrap(err, "check local running container error")
-	}
-	if ok {
-		imageDebugLogs.Infof("use local exist container %s", containerId)
-		containerReady.C <- containerId
-		containerReady.SafeClose()
-		return nil
-	}
-
+	// Debugging uses a separate container with the same task-level mount configuration.
 	if debugInfo.Credential.ErrMsg != "" {
 		imageDebugLogs.Error("get docker cred error ", debugInfo.Credential.ErrMsg)
 		return errors.New(i18n.Localize("GetDockerCertError", map[string]interface{}{"err": debugInfo.Credential.ErrMsg}))
@@ -391,17 +380,17 @@ func CreateExecServer(
 	}
 
 	conf := &ConsoleProxyConfig{
-		Address:        "0.0.0.0",
-		Port:           port,
-		ServCert:       &CertConfig{},
-		DockerEndpoint: dockercli.RuntimeSocketFromBinary(dockercli.RuntimeBinary()),
-		Privilege:      false,
-		Cmd:            []string{"/bin/bash"},
-		Tty:            true,
-		Ips:            []string{},
-		IsAuth:         true,
-		AuthToken:      token,
-		IsOneSeesion:   true,
+		Address:          "0.0.0.0",
+		Port:             port,
+		ServCert:         &CertConfig{},
+		ContainerRuntime: debugInfo.ContainerRuntime,
+		Privilege:        false,
+		Cmd:              []string{"/bin/bash"},
+		Tty:              true,
+		Ips:              []string{},
+		IsAuth:           true,
+		AuthToken:        token,
+		IsOneSeesion:     true,
 	}
 
 	backend := NewManager(conf, debugDone)

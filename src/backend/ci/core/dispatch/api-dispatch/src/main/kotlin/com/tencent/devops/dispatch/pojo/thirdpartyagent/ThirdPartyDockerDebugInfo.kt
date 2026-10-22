@@ -21,5 +21,6 @@ data class ThirdPartyDockerDebugInfo(
     val debugId: Long,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,
-    val options: DockerOptions?
+    val options: DockerOptions?,
+    val containerRuntime: String = "docker"
 )

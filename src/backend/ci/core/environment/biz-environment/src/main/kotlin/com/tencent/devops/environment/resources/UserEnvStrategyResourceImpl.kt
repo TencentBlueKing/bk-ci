@@ -52,6 +52,7 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             scope = request.scope,
             nodeRule = request.nodeRule,
             labelSelector = request.labelSelector,
+            resourceRemaining = request.resourceRemaining,
             envOperateOrigin = EnvOperateOrigin.WEB
         )
         return Result(id)
@@ -75,6 +76,9 @@ class UserEnvStrategyResourceImpl @Autowired constructor(
             nodeRule = request.nodeRule,
             labelSelector = request.labelSelector,
             enabled = request.enabled,
+            resourceRemaining = request.resourceRemaining,
+            clearResourceRemaining = request.clearResourceRemaining,
+            expectedEnvId = envId,
             envOperateOrigin = EnvOperateOrigin.WEB
         )
         return Result(true)

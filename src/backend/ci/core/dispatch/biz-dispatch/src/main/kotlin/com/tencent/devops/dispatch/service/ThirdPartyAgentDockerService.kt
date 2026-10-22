@@ -1,5 +1,7 @@
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.environment.api.ServiceDockerConfigResource
+
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -146,7 +148,9 @@ class ThirdPartyAgentDockerService @Autowired constructor(
                         debugId = debug.id,
                         image = buildDockerInfo.image,
                         credential = buildDockerInfo.credential,
-                        options = buildDockerInfo.options
+                        options = buildDockerInfo.options,
+                        containerRuntime = client.get(ServiceDockerConfigResource::class)
+                            .get(agentId).data?.containerRuntime ?: "docker"
                     )
                 )
             } finally {

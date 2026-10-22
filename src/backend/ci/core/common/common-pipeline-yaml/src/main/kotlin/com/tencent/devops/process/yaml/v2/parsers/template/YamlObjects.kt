@@ -268,7 +268,11 @@ object YamlObjects {
                     },
                     user = getNullValue("user", optionsMap),
                     cpus = getNullValue("cpus", optionsMap),
-                    memory = getNullValue("memory", optionsMap)
+                    memory = getNullValue("memory", optionsMap),
+                    mountWorkspace = optionsMap["mount-workspace"]?.let {
+                        require(it is Boolean) { "mount-workspace must be a boolean" }
+                        (it as Boolean).takeIf { value -> !value }
+                    }
                 )
             },
             imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)

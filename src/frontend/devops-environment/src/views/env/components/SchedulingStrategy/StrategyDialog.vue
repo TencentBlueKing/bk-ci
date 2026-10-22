@@ -68,6 +68,39 @@
                 </div>
             </div>
 
+            <div class="form-section">
+                <bk-checkbox v-model="formData.resourceEnabled">资源剩余</bk-checkbox>
+                <div
+                    v-if="formData.resourceEnabled"
+                    class="sub-options"
+                >
+                    <div
+                        v-for="field in resourceFields"
+                        :key="field.key"
+                        style="margin: 12px 0"
+                    >
+                        <span v-bk-tooltips="field.tip">{{ field.name }}剩余不低于</span>
+                        <bk-input
+                            v-model="formData.resourceRemaining[field.key]"
+                            placeholder="请输入"
+                        >
+                            <template slot="append"><span style="padding: 0 8px">%</span></template>
+                        </bk-input>
+                        <p
+                            v-if="resourceErrors[field.key]"
+                            style="color: #ea3636"
+                        >
+                            {{ resourceErrors[field.key] }}
+                        </p>
+                    </div>
+                    <p
+                        v-if="resourceErrors.empty"
+                        style="color: #ea3636"
+                    >
+                        资源剩余至少填写一项
+                    </p>
+                </div>
+            </div>
             <!-- 标签选项 -->
             <div class="form-section labels-form-section">
                 <bk-checkbox
@@ -238,6 +271,12 @@
             const tagKeyList = ref([])
             const tagValuesMap = ref({})
             const nameError = ref('')
+            const resourceErrors = ref({})
+            const resourceFields = [
+                { key: 'cpu', name: 'CPU ', tip: '整机当前未占用的比例。低于所填剩余时不再分配。不填则不按 CPU 排除。' },
+                { key: 'memory', name: '内存', tip: '当前还能分给新任务的比例，系统缓存不算占用。不填则不按内存排除。' },
+                { key: 'disk', name: '磁盘', tip: '构建机工作目录所在磁盘的剩余比例，其他磁盘不参与。不填则不按磁盘排除。' }
+            ]
 
             // 操作符列表
             const operatorList = [
@@ -279,6 +318,8 @@
                 affinityEnabled: false,
                 nodeLoadEnabled: false,
                 nodeLoadType: 'idleNode',
+                resourceEnabled: false,
+                resourceRemaining: {},
                 labelsEnabled: false,
                 labels: []
             }
@@ -335,6 +376,8 @@
                     affinityEnabled: conditions.some(c => c.type === 'affinity'),
                     nodeLoadEnabled: conditions.some(c => c.type === 'idleNode' || c.type === 'availableNode'),
                     nodeLoadType: conditions.find(c => c.type === 'idleNode' || c.type === 'availableNode')?.type || 'idleNode',
+                    resourceEnabled: !!data.resourceRemaining,
+                    resourceRemaining: { ...data.resourceRemaining },
                     labelsEnabled: !!(labels && labels.length),
                     labels: labels.map(l => ({
                         key: l.key,
@@ -349,6 +392,7 @@
             const resetForm = () => {
                 formData.value = {
                     ...defaultFormData,
+                    resourceRemaining: {},
                     labels: []
                 }
             }
@@ -470,6 +514,21 @@
 
             // 确认提交
             const handleConfirm = async () => {
+                resourceErrors.value = {}
+                const remaining = {}
+                if (formData.value.resourceEnabled) {
+                    resourceFields.forEach(({ key }) => {
+                        const value = formData.value.resourceRemaining[key]
+                        if (value === '' || value == null) return
+                        if (!/^[1-9][0-9]?$/.test(String(value))) {
+                            resourceErrors.value[key] = '请输入 1 到 99 的整数'
+                        } else {
+                            remaining[key] = Number(value)
+                        }
+                    })
+                    if (!Object.keys(remaining).length) resourceErrors.value.empty = true
+                    if (Object.keys(resourceErrors.value).length) return
+                }
                 // 表单验证
                 if (formData.value.labelsEnabled) {
                     const invalidLabel = formData.value.labels.find(l => !l.key || !l.value)
@@ -482,13 +541,14 @@
                     }
                 }
 
-                if (!formData.value.affinityEnabled && !formData.value.nodeLoadEnabled && !formData.value.labelsEnabled) {
-                    proxy.$bkMessage({
-                        theme: 'warning',
-                        message: proxy.$t('environment.scheduling.atLeastOneCondition')
-                    })
-                    return
-                }
+                if (![formData.value.affinityEnabled, formData.value.nodeLoadEnabled,
+                      formData.value.labelsEnabled, formData.value.resourceEnabled].some(Boolean)) {
+                          proxy.$bkMessage({
+                              theme: 'warning',
+                              message: proxy.$t('environment.scheduling.atLeastOneCondition')
+                          })
+                          return
+                      }
 
                 try {
                     isSaving.value = true
@@ -510,6 +570,8 @@
                         strategyName: (formData.value.strategyName || '').trim(),
                         enabled: formData.value.enabled !== false,
                         labelSelector,
+                        resourceRemaining: formData.value.resourceEnabled ? remaining : null,
+                        clearResourceRemaining: !formData.value.resourceEnabled,
                         scope: formData.value.affinityEnabled ? 'PRE_BUILD' : 'ALL',
                         ...(formData.value.nodeLoadEnabled ? { nodeRule: formData.value.nodeLoadType === 'idleNode' ? 'IDLE' : 'AVAILABLE' } : {})
                     }
@@ -535,6 +597,8 @@
                 tagKeyList,
                 operatorList,
                 nameError,
+                resourceFields,
+                resourceErrors,
 
                 // function
                 handleLabelKeyChange,

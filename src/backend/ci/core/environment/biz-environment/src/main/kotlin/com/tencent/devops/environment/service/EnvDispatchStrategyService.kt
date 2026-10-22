@@ -1,5 +1,7 @@
 package com.tencent.devops.environment.service
 
+import com.tencent.devops.environment.pojo.ResourceRemaining
+
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -118,8 +120,10 @@ class EnvDispatchStrategyService @Autowired constructor(
         scope: StrategyScope,
         nodeRule: NodeRule?,
         labelSelector: List<LabelSelector>?,
-        envOperateOrigin: EnvOperateOrigin
+        envOperateOrigin: EnvOperateOrigin,
+        resourceRemaining: ResourceRemaining? = null
     ): Long {
+        resourceRemaining?.validate()
         // 初始化前确认下是不是构建环境，只有构建环境有
         if (envDao.get(dslContext, projectId, envId).envType != EnvType.BUILD.name) {
             return -1
@@ -182,7 +186,8 @@ class EnvDispatchStrategyService @Autowired constructor(
                 enabled = true,
                 priority = maxPriority + 1,
                 createdUser = userId,
-                updatedUser = userId
+                updatedUser = userId,
+                resourceRemaining = resourceRemaining
             )
             val result = envDispatchStrategyDao.create(dslContext, config)
             envOperateLogService.addOperateLog(
@@ -211,11 +216,21 @@ class EnvDispatchStrategyService @Autowired constructor(
         nodeRule: NodeRule? = null,
         labelSelector: List<LabelSelector>? = null,
         enabled: Boolean? = null,
-        envOperateOrigin: EnvOperateOrigin
+        envOperateOrigin: EnvOperateOrigin,
+        resourceRemaining: ResourceRemaining? = null,
+        clearResourceRemaining: Boolean = false,
+        expectedEnvId: Long? = null
     ) {
         val existing = envDispatchStrategyDao.getById(dslContext, id)
             ?: throw InvalidParamException("Strategy not found: $id")
+        require(existing.projectId == projectId && (expectedEnvId == null || existing.envId == expectedEnvId)) {
+            "Strategy does not belong to this environment"
+        }
+        resourceRemaining?.validate()
         if (existing.strategyType == StrategyType.DEFAULT) {
+            if (resourceRemaining != null || clearResourceRemaining) {
+                throw InvalidParamException("Default strategy only allows toggling enabled")
+            }
             if (strategyName != null || scope != null || nodeRule != null || labelSelector != null) {
                 throw InvalidParamException("Default strategy only allows toggling enabled")
             }
@@ -256,7 +271,9 @@ class EnvDispatchStrategyService @Autowired constructor(
             nodeRule = nodeRule,
             labelSelector = labelSelector,
             enabled = enabled,
-            updatedUser = userId
+            updatedUser = userId,
+            resourceRemaining = resourceRemaining,
+            clearResourceRemaining = clearResourceRemaining
         )
         envOperateLogService.addOperateLog(
             projectId = projectId,

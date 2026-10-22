@@ -116,6 +116,23 @@
                 </enum-input>
             </form-field>
 
+            <form-field>
+                <atom-checkbox
+                    :value="mountWorkspace"
+                    text="挂载工作空间"
+                    name="mountWorkspace"
+                    :handle-change="changeMountWorkspace"
+                    :disabled="!editable"
+                />
+                <p>
+                    开启时：构建机上的工作空间会挂进容器，容器内路径为 {{ dockerWorkspace }}。
+                    写进这个目录的文件留在构建机上，不随容器删除。
+                </p>
+                <p>
+                    关闭时：构建机上的工作空间不进入容器，已填的指定工作空间本次也不使用。
+                    容器内 {{ dockerWorkspace }} 上的文件在容器结束时删除。
+                </p>
+            </form-field>
             <form-field
                 label="Volumes"
             >
@@ -146,12 +163,12 @@
             </form-field>
             <form-field
                 :label="$t('editPage.dockerCpuLimit')"
-                :desc="$t('editPage.dockerCpuLimitDesc')"
+                :desc="$t('editPage.dockerCpuLimitDesc') + ' 未填写时：选择构建环境时，以环境为准。直接选择节点时，以节点为准。'"
                 :is-error="!isCpuLimitValid"
                 :error-msg="$t('editPage.dockerCpuLimitInvalid')"
             >
                 <bk-input
-                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    placeholder="沿用节点或环境"
                     :value="buildCpuLimit"
                     :disabled="!editable"
                     @change="(val) => changeOptions('cpus', val)"
@@ -159,12 +176,12 @@
             </form-field>
             <form-field
                 :label="$t('editPage.dockerMemoryLimit')"
-                :desc="$t('editPage.dockerMemoryLimitDesc')"
+                :desc="$t('editPage.dockerMemoryLimitDesc') + ' 未填写时：选择构建环境时，以环境为准。直接选择节点时，以节点为准。'"
                 :is-error="!isMemoryLimitValid"
                 :error-msg="$t('editPage.dockerMemoryLimitInvalid')"
             >
                 <bk-input
-                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    placeholder="沿用节点或环境"
                     :value="buildMemoryLimit"
                     :disabled="!editable"
                     @change="(val) => changeOptions('memory', val)"
@@ -284,6 +301,13 @@
             buildImage () {
                 return this.container.dispatchType?.dockerInfo?.image ?? ''
             },
+            mountWorkspace () {
+                return this.dockerInfo.options?.mountWorkspace !== false
+                    && this.container.dispatchType.workspace !== '__NO_MOUNT__'
+            },
+            dockerWorkspace () {
+                return this.isExtendTx ? '/data/landun/workspace' : '/data/devops/workspace'
+            },
             buildVolumes () {
                 return this.container.dispatchType?.dockerInfo?.options?.volumes ?? []
             },
@@ -373,6 +397,17 @@
             }
         },
         methods: {
+            changeMountWorkspace (name, value) {
+                const dispatchType = this.container.dispatchType
+                this.handleContainerChange('dispatchType', {
+                    ...dispatchType,
+                    workspace: value && dispatchType.workspace === '__NO_MOUNT__' ? '' : dispatchType.workspace,
+                    dockerInfo: {
+                        ...dispatchType.dockerInfo,
+                        options: { ...dispatchType.dockerInfo.options, mountWorkspace: value ? undefined : false }
+                    }
+                })
+            },
             handleeEnableDockerChange () {
                 this.enableDocker = !this.enableDocker
                 let { dispatchType } = this.container

@@ -11,17 +11,18 @@ type CertConfig struct {
 
 // ConsoleProxyConfig Config is a configuration
 type ConsoleProxyConfig struct {
-	Address        string
-	Port           int
-	ServCert       *CertConfig
-	DockerEndpoint string
-	Privilege      bool
-	Cmd            []string
-	Tty            bool
-	Ips            []string
-	IsAuth         bool
-	AuthToken      string
-	IsOneSeesion   bool
+	Address          string
+	Port             int
+	ServCert         *CertConfig
+	ContainerRuntime string
+	DockerEndpoint   string
+	Privilege        bool
+	Cmd              []string
+	Tty              bool
+	Ips              []string
+	IsAuth           bool
+	AuthToken        string
+	IsOneSeesion     bool
 }
 
 // NewConsoleProxyConfig create a config object
