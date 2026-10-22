@@ -2,7 +2,7 @@
 websocket:
   v2:
     enabled: ${BK_CI_WEBSOCKET_V2_ENABLED:true}
-    namespace: ${BK_CI_WEBSOCKET_V2_NAMESPACE:default}
+    namespace: ${BK_CI_WEBSOCKET_V2_NAMESPACE:${NAMESPACE:default}}
 
 spring:
   datasource:

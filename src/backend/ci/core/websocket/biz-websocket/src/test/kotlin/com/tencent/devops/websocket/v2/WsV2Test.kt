@@ -59,6 +59,27 @@ class WsV2Test {
     }
 
     @Test
+    fun `empty origins follow the forwarded public host`() {
+        val properties = WsV2Properties()
+        val interceptor = WsV2HandshakeInterceptor(properties)
+        val headers = HttpHeaders()
+        val request = mockk<ServerHttpRequest>()
+        every { request.headers } returns headers
+        val response = mockk<ServerHttpResponse>(relaxed = true)
+        val handler = mockk<WebSocketHandler>()
+        headers.set(AUTH_HEADER_DEVOPS_USER_ID, "test-user")
+        headers.origin = "https://ci.example.test"
+        headers.set("X-Forwarded-Proto", "https,http")
+        headers.set("X-Forwarded-Host", "ci.example.test,proxy.internal")
+        assertTrue(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+        headers.origin = "https://other.example.test"
+        assertFalse(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+        properties.allowedOrigins = listOf("")
+        headers.origin = "https://ci.example.test"
+        assertTrue(interceptor.beforeHandshake(request, response, handler, mutableMapOf()))
+    }
+
+    @Test
     fun `subscriptions isolate generations and forbidden topics and release bindings`() {
         val broker = FakeBroker()
         val properties = WsV2Properties().apply { mergeWindowMs = 10 }

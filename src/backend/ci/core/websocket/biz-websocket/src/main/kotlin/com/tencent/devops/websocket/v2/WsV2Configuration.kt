@@ -46,7 +46,8 @@ class WsV2Configuration {
         override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
             registry.addHandler(handler, "/ws/v2")
                 .addInterceptors(WsV2HandshakeInterceptor(properties))
-                .setAllowedOrigins(*properties.allowedOrigins.toTypedArray())
+                // 容器层不按固定域名拦截。经过网关后请求主机是服务自身地址，固定名单无法覆盖多套域名。
+                .setAllowedOriginPatterns("*")
         }
     }
 }
@@ -64,17 +65,11 @@ class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : Handsha
             return false
         }
         val origin = request.headers.origin
+        val configured = properties.allowedOrigins.map { it.trim() }.filter { it.isNotEmpty() }
         val allowed = try {
             if (origin == null || origin == "null") false
-            else if (properties.allowedOrigins.isNotEmpty()) origin in properties.allowedOrigins
-            else {
-                val source = URI(origin)
-                val scheme = request.headers.getFirst("X-Forwarded-Proto") ?: request.uri.scheme
-                val host = request.headers.getFirst("X-Forwarded-Host") ?: request.headers.getFirst("Host")
-                val target = URI("$scheme://$host")
-                source.scheme in setOf("http", "https") && source.scheme == target.scheme &&
-                    source.host.equals(target.host, true) && port(source) == port(target)
-            }
+            else if (configured.isNotEmpty()) origin in configured
+            else samePublicOrigin(request, origin)
         } catch (ignored: Exception) {
             false
         }
@@ -92,6 +87,20 @@ class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : Handsha
         wsHandler: WebSocketHandler,
         exception: Exception?
     ) = Unit
+
+    private fun samePublicOrigin(request: ServerHttpRequest, origin: String): Boolean {
+        val source = URI(origin)
+        val scheme = headerValue(request, "X-Forwarded-Proto") ?: request.uri.scheme
+        val host = headerValue(request, "X-Forwarded-Host") ?: headerValue(request, "Host") ?: return false
+        val target = URI("$scheme://$host")
+        return source.scheme in setOf("http", "https") &&
+            source.scheme.equals(target.scheme, true) &&
+            source.host.equals(target.host, true) &&
+            port(source) == port(target)
+    }
+
+    private fun headerValue(request: ServerHttpRequest, name: String): String? =
+        request.headers.getFirst(name)?.substringBefore(",")?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun port(uri: URI) = if (uri.port >= 0) uri.port else if (uri.scheme == "https") 443 else 80
 }
