@@ -39,12 +39,20 @@ export default {
             let showIcon = true
             switch (true) {
                 case container.timeCost !== undefined: {
-                    const { totalCost, executeCost, systemCost } = container.timeCost
+                    const { totalCost, executeCost, systemCost, waitCost = 0, queueCost = 0 } = container.timeCost
+                    const parts = [
+                        `${this.t("userTime")}：${convertMStoString(executeCost)}`,
+                        `${this.t("systemTime")}：${convertMStoString(systemCost)}`
+                    ]
+                    if (waitCost > 0) {
+                        parts.push(`${this.t("waitTime")}：${convertMStoString(waitCost)}`)
+                    }
+                    if (queueCost > 0) {
+                        parts.push(`${this.t("queueTime")}：${convertMStoString(queueCost)}`)
+                    }
                     tooltip = {
                         delay: [300, 0],
-                        content: `${this.t("userTime")}：${convertMStoString(
-                            executeCost
-                        )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`,
+                        content: parts.join(" + "),
                     }
                     content = convertMStoString(totalCost)
                     showIcon = false

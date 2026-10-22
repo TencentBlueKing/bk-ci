@@ -78,16 +78,22 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        executeCount: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
-        logger.info("OPENAPI_BUILD_V3|$userId|detail|$projectId|$pipelineId|$buildId")
+        logger.info(
+            "OPENAPI_BUILD_V3|$userId|detail|$projectId|$pipelineId|$buildId|" +
+                "executeCount=$executeCount|archiveFlag=$archiveFlag"
+        )
         return client.get(ServiceBuildResource::class).getBuildRecordByExecuteCount(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = null,
-            channelCode = apiGatewayUtil.getChannelCode()
+            executeCount = executeCount,
+            channelCode = apiGatewayUtil.getChannelCode(),
+            archiveFlag = archiveFlag
         )
     }
 
