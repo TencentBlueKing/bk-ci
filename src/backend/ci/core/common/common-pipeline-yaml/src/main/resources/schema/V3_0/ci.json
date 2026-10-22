@@ -3699,10 +3699,19 @@
                 "fast-kill" : {
                   "type" : "boolean"
                 },
-                "max-parallel" : {
-                  "type" : "integer",
-                  "minimum" : 0,
-                  "maximum" : 50
+                "max-parallel": {
+                  "description": "允许的最大并发数，不超过 50，支持变量表达式（变量须含 ${} 或 ${{}} 占位符）",
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 50
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "\\$(?:\\{\\{.*?\\}\\}|\\{[^{}]+\\})"
+                    }
+                  ]
                 }
               }
             },

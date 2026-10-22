@@ -107,6 +107,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.MatrixConcurrencyCheckService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
@@ -170,7 +171,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val publicVarGroupService: PublicVarGroupService,
-    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver,
+    private val matrixConcurrencyCheckService: MatrixConcurrencyCheckService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -630,7 +632,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                         instanceFromTemplate = false,
                         labels = model.labels,
                         defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
-                    )
+                    ).also {
+                        // 最大并发数支持变量，从模板创建流水线时用实例参数解析后严格校验，不通过则创建失败
+                        matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+                            projectId = projectId,
+                            pipelineName = it.name,
+                            model = it
+                        )
+                    }
                 } else {
                     model
                 }
