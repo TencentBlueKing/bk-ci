@@ -31,30 +31,62 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.IntPoint
-import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.LongPoint
+import org.apache.lucene.document.SortedNumericDocValuesField
 import org.apache.lucene.document.StoredField
 import org.apache.lucene.document.StringField
 
 object LuceneIndexUtils {
 
+    const val FIELD_BUILD_ID = "buildId"
+    const val FIELD_MESSAGE = "message"
+    const val FIELD_TIMESTAMP = "timestamp"
+    const val FIELD_TAG = "tag"
+    const val FIELD_SUB_TAG = "subTag"
+    const val FIELD_CONTAINER_HASH_ID = "containerHashId"
+    const val FIELD_JOB_ID = "jobId"
+    const val FIELD_STEP_ID = "stepId"
+    const val FIELD_LOG_TYPE = "logType"
+    const val FIELD_EXECUTE_COUNT = "executeCount"
+    const val FIELD_LINE_NO = "lineNo"
+    const val FIELD_DOC_ID = "docId"
+
+    /**
+     * 日志正文只存储、不建倒排。
+     * StringField 的 term 上限是 32766 字节，超长日志行会让 IndexWriter 直接失败。
+     * timestamp / lineNo 同时写 Point（范围）、SortedNumericDocValues（排序）和 StoredField（回读）。
+     * 只存成字符串再按数值排序，会在查询时抛出 docvalues 类型错误。
+     */
     fun getDocumentObject(
         buildId: String,
         logMessage: LogMessageWithLineNo
     ): Document {
+        val executeCount = logMessage.executeCount ?: 1
         val doc = Document()
-        doc.add(StringField("buildId", buildId, Field.Store.YES))
-        doc.add(StringField("message", logMessage.message, Field.Store.YES))
-        doc.add(StringField("timestamp", logMessage.timestamp.toString(), Field.Store.YES))
-        doc.add(StringField("tag", logMessage.tag, Field.Store.YES))
-        doc.add(StringField("subTag", logMessage.subTag ?: "", Field.Store.YES))
-        doc.add(StringField("containerHashId", logMessage.containerHashId, Field.Store.YES))
-        doc.add(StringField("jobId", logMessage.jobId, Field.Store.YES))
-        doc.add(StringField("stepId", logMessage.stepId, Field.Store.YES))
-        doc.add(StringField("logType", logMessage.logType.name, Field.Store.YES))
-        doc.add(IntPoint("executeCount", logMessage.executeCount ?: 1))
-        doc.add(StoredField("executeCount", logMessage.executeCount ?: 1))
-        doc.add(NumericDocValuesField("lineNo", logMessage.lineNo))
-        doc.add(StoredField("lineNo", logMessage.lineNo))
+        doc.add(StringField(FIELD_DOC_ID, docId(buildId, executeCount, logMessage.lineNo), Field.Store.YES))
+        addExact(doc, FIELD_BUILD_ID, buildId)
+        doc.add(StoredField(FIELD_MESSAGE, logMessage.message))
+        doc.add(SortedNumericDocValuesField(FIELD_TIMESTAMP, logMessage.timestamp))
+        doc.add(StoredField(FIELD_TIMESTAMP, logMessage.timestamp))
+        addExact(doc, FIELD_TAG, logMessage.tag)
+        addExact(doc, FIELD_SUB_TAG, logMessage.subTag)
+        addExact(doc, FIELD_CONTAINER_HASH_ID, logMessage.containerHashId)
+        addExact(doc, FIELD_JOB_ID, logMessage.jobId)
+        addExact(doc, FIELD_STEP_ID, logMessage.stepId)
+        addExact(doc, FIELD_LOG_TYPE, logMessage.logType.name)
+        doc.add(IntPoint(FIELD_EXECUTE_COUNT, executeCount))
+        doc.add(StoredField(FIELD_EXECUTE_COUNT, executeCount))
+        doc.add(LongPoint(FIELD_LINE_NO, logMessage.lineNo))
+        doc.add(SortedNumericDocValuesField(FIELD_LINE_NO, logMessage.lineNo))
+        doc.add(StoredField(FIELD_LINE_NO, logMessage.lineNo))
         return doc
+    }
+
+    fun docId(buildId: String, executeCount: Int, lineNo: Long): String {
+        return "$buildId|$executeCount|$lineNo"
+    }
+
+    private fun addExact(doc: Document, name: String, value: String?) {
+        doc.add(StringField(name, value ?: "", Field.Store.YES))
     }
 }
