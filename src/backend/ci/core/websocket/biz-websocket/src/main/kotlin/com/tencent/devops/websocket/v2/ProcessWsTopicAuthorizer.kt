@@ -6,12 +6,10 @@ import com.tencent.devops.common.websocket.v2.WsTopic
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.api.service.ServicePipelinePermissionResource
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(prefix = "websocket.v2", name = ["enabled"], havingValue = "true")
 class ProcessWsTopicAuthorizer {
     @Bean
     @ConditionalOnMissingBean(WsTopicAuthorizer::class)

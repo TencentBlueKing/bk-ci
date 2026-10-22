@@ -1,11 +1,14 @@
 package com.tencent.devops.common.websocket.v2
 
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties("websocket.v2")
 class WsV2Properties {
-    var enabled: Boolean = false
-    var namespace: String = "default"
+    var namespace: String = KubernetesUtils.getNamespace().ifBlank { "default" }
+        set(value) {
+            field = KubernetesUtils.getNamespace().ifBlank { value.ifBlank { "default" } }
+        }
     var allowedOrigins: List<String> = emptyList()
     var maxConnections: Int = 10000
     var maxTopics: Int = 128

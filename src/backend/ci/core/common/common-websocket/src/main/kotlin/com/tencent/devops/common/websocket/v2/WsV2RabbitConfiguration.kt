@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.amqp.CachingConnectionFactoryConfigurer
 import org.springframework.boot.autoconfigure.amqp.RabbitConnectionFactoryBeanConfigurer
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.bind.Binder
 import org.springframework.context.annotation.Bean
@@ -21,7 +20,6 @@ import org.springframework.core.env.Environment
 import org.springframework.core.io.ResourceLoader
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(prefix = "websocket.v2", name = ["enabled"], havingValue = "true")
 @EnableConfigurationProperties(WsV2Properties::class)
 class WsV2RabbitConfiguration {
     @Bean("websocketV2ConnectionFactory", destroyMethod = "destroy")

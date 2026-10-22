@@ -7,15 +7,13 @@ import com.tencent.devops.common.websocket.v2.WsInvalidationPublisher
 import com.tencent.devops.common.websocket.v2.WsTopic
 import com.tencent.devops.common.websocket.v2.WsV2RabbitConfiguration
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(prefix = "websocket.v2", name = ["enabled"], havingValue = "true")
 @Import(WsV2RabbitConfiguration::class)
 class PipelineWebSocketV2Configuration {
-    @EventConsumer(defaultConcurrency = 2, enabledProperty = "websocket.v2.enabled")
+    @EventConsumer(defaultConcurrency = 2)
     fun pipelineWebsocketV2InvalidationConsumer(publisher: WsInvalidationPublisher) =
         ScsConsumerBuilder.build<PipelineBuildWebSocketPushEvent> { event ->
             topics(event).forEach { publisher.publish(WsInvalidation(it)) }

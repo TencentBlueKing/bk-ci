@@ -5,7 +5,6 @@ import com.tencent.devops.common.websocket.v2.WsV2Properties
 import com.tencent.devops.common.websocket.v2.WsV2RabbitConfiguration
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -20,7 +19,6 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 import java.net.URI
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(prefix = "websocket.v2", name = ["enabled"], havingValue = "true")
 @Import(WsV2RabbitConfiguration::class)
 class WsV2Configuration {
     @Bean
@@ -38,7 +36,6 @@ class WsV2Configuration {
 
     @Configuration(proxyBeanMethods = false)
     @EnableWebSocket
-    @ConditionalOnProperty(prefix = "websocket.v2", name = ["enabled"], havingValue = "true")
     class Endpoint(
         private val handler: WsV2Handler,
         private val properties: WsV2Properties

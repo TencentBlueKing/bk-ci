@@ -6,9 +6,6 @@ server:
 
 websocket:
   v2:
-    enabled: ${BK_CI_WEBSOCKET_V2_ENABLED:true}
-    namespace: ${BK_CI_WEBSOCKET_V2_NAMESPACE:${NAMESPACE:default}}
-    # 留空时按本次请求的对外主机做同源校验，多套域名不用逐个填写
     allowed-origins: ${BK_CI_WEBSOCKET_V2_ORIGINS:}
     max-connections: 10000
     max-topics: 128

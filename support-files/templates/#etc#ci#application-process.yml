@@ -1,9 +1,4 @@
 # 服务配置文件模板
-websocket:
-  v2:
-    enabled: ${BK_CI_WEBSOCKET_V2_ENABLED:true}
-    namespace: ${BK_CI_WEBSOCKET_V2_NAMESPACE:${NAMESPACE:default}}
-
 spring:
   datasource:
     # 数据源配置（勿随便变更配置项的顺序）
