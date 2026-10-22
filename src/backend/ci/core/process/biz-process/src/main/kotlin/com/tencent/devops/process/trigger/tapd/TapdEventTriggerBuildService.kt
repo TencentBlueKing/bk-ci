@@ -102,7 +102,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
             logger.info("tapd trigger event not found|$eventId|$projectId|$pipelineId")
             return@with
         }
-        val body = (triggerEvent.eventBody as? GenericWebhookEventBody)?.body ?: run {
+        val body = (triggerEvent.eventBody as? GenericWebhookEventBody)?.bodyAsMap() ?: run {
             logger.info("tapd trigger event body is empty|$eventId|$projectId|$pipelineId")
             return@with
         }
@@ -113,8 +113,14 @@ class TapdEventTriggerBuildService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        if (pipelineInfo.locked == true) return@with
         context.pipelineInfo = pipelineInfo
+        // 锁定时抛异常，由外层 catch 走 fireError 记录触发事件，避免静默丢弃
+        if (pipelineInfo.locked == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK,
+                params = arrayOf(pipelineId)
+            )
+        }
 
         // 3. 取流水线资源版本
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
