@@ -88,7 +88,9 @@ class DispatchService constructor(
         vmSeqId: String,
         message: String,
         executeCount: Int?,
-        jobId: String
+        jobId: String,
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         buildLogPrinter.addLine(
             buildId = buildId,
@@ -97,7 +99,9 @@ class DispatchService constructor(
             containerHashId = containerHashId,
             executeCount = executeCount ?: 1,
             jobId = jobId,
-            stepId = VMUtils.genStartVMTaskId(vmSeqId)
+            stepId = VMUtils.genStartVMTaskId(vmSeqId),
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
@@ -107,7 +111,9 @@ class DispatchService constructor(
         vmSeqId: String,
         message: String,
         executeCount: Int?,
-        jobId: String?
+        jobId: String?,
+        projectId: String? = null,
+        pipelineId: String? = null
     ) {
         buildLogPrinter.addRedLine(
             buildId = buildId,
@@ -116,7 +122,9 @@ class DispatchService constructor(
             containerHashId = containerHashId,
             executeCount = executeCount ?: 1,
             jobId = jobId,
-            stepId = VMUtils.genStartVMTaskId(vmSeqId)
+            stepId = VMUtils.genStartVMTaskId(vmSeqId),
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 

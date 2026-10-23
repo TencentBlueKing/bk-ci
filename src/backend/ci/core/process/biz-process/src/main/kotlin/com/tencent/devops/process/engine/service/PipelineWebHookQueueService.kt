@@ -185,7 +185,9 @@ class PipelineWebHookQueueService @Autowired constructor(
                                 containerHashId = "",
                                 executeCount = 1,
                                 jobId = null,
-                                stepId = null
+                                stepId = null,
+                                projectId = projectId,
+                                pipelineId = pipelineId
                             )
                             client.get(ServiceBuildResource::class).serviceShutdown(
                                 pipelineId = pipelineId,

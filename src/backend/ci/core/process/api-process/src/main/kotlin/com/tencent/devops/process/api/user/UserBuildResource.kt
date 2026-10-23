@@ -44,6 +44,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
+import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildReplayResult
@@ -263,6 +264,24 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @Operation(summary = "获取当前构建的互斥组排队情况")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/concurrencyQueue")
+    fun getConcurrencyQueue(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<ConcurrencyQueueView>
 
     @Operation(summary = "根据执行次数获取构建详情")
     @GET
