@@ -137,7 +137,7 @@
                             v-bind="remoteParamOption"
                             v-validate.initial="{ required: valueRequired }"
                             :popover-min-width="250"
-                            :disabled="isPublicVar || (disabled && !isOverride)"
+                            :disabled="disabled && !isOverride"
                             name="defaultValue"
                             :multi-select="isMultipleParam(param.type)"
                             :data-vv-scope="'pipelineParam'"
@@ -155,7 +155,7 @@
                             v-validate="{ required: valueRequired }"
                             :data-vv-scope="'pipelineParam'"
                             :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="isPublicVar || (disabled && !isOverride)"
+                            :disabled="disabled && !isOverride"
                             show-select-all
                             :key="param.type"
                             :value="selectDefautVal"
@@ -166,14 +166,14 @@
                         v-if="isBooleanParam(param.type)"
                         name="defaultValue"
                         :list="boolList"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         :handle-change="handleChange"
                         :value="param.defaultValue"
                     >
                     </enum-input>
                     <vuex-input
                         v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isRepoParam(param.type)"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -186,7 +186,7 @@
                         v-if="isFileParam(param.type)"
                         name="defaultValue"
                         :required="valueRequired"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         :value="param.defaultValue"
                         :enable-version-control="param.enableVersionControl"
                         :random-sub-path="param.randomStringInPath"
@@ -194,7 +194,7 @@
                     />
                     <vuex-textarea
                         v-if="isTextareaParam(param.type)"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         :handle-change="handleChange"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
@@ -207,7 +207,7 @@
                         :popover-min-width="250"
                         :url="getCodeUrl(param.scmType)"
                         v-bind="codelibOption"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -221,7 +221,7 @@
                         v-if="isSubPipelineParam(param.type)"
                         :popover-min-width="250"
                         v-bind="subPipelineOption"
-                        :disabled="isPublicVar || (disabled && !isOverride)"
+                        :disabled="disabled && !isOverride"
                         name="defaultValue"
                         v-validate="{ required: valueRequired }"
                         :data-vv-scope="'pipelineParam'"
@@ -369,7 +369,7 @@
                 type: Boolean,
                 default: false
             },
-            // 是否为公共变量组下的变量（查看态，禁止切换模板约束）
+            // 是否为公共变量（新增/编辑态也复用此表单；仅用于禁止切换模板约束，不禁用默认值编辑）
             isPublicVar: {
                 type: Boolean,
                 default: false
