@@ -1,7 +1,7 @@
 <template>
     <ul class="trigger-event-list">
         <li
-            v-for="(event, index) in events"
+            v-for="(event, index) in displayEvents"
             :key="index"
             class="trigger-event-item"
         >
@@ -18,24 +18,25 @@
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
                 <em
-                    v-if="event.buildNum"
-                >
-                    <a
-                        v-if="getBuildNumLink(event.buildNum)"
-                        class="text-link"
-                        :href="getBuildNumLink(event.buildNum).href"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {{ getBuildNumLink(event.buildNum).text }}
-                    </a>
-                    <span v-else>{{ event.buildNum }}</span>
-                </em>
-                <em
                     v-bk-overflow-tips
-                    v-else-if="Array.isArray(event.reasonDetailList)"
+                    v-if="event.reasonSegments.length"
                 >
-                    {{ event.reasonDetailList.join(' | ') }}
+                    <template
+                        v-for="(seg, segIndex) in event.reasonSegments"
+                    >
+                        <a
+                            v-if="seg.type === 'link'"
+                            :key="`link-${segIndex}`"
+                            class="text-link"
+                            :href="seg.href"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >{{ seg.text }}</a>
+                        <span
+                            v-else
+                            :key="`text-${segIndex}`"
+                        >{{ seg.text }}</span>
+                    </template>
                 </em>
             </p>
             <bk-button
@@ -67,7 +68,7 @@
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
-    import { BUILD_NUM_LINK_REG, safeUrl, toText } from './eventDescConfig'
+    import { parseAnchors } from './eventDescConfig'
     import EventDesc from './EventDesc.vue'
 
     export default {
@@ -99,6 +100,12 @@
             },
             canExecute () {
                 return this.pipelineInfo?.permissions?.canExecute ?? true
+            },
+            displayEvents () {
+                return this.events.map(event => ({
+                    ...event,
+                    reasonSegments: this.parseEventSegments(event)
+                }))
             }
         },
         inject: ['updateList'],
@@ -107,13 +114,14 @@
                 'reTriggerEvent'
             ]),
             convertTime,
-            getBuildNumLink (buildNum) {
-                const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
-                if (!match) {
-                    return null
+            parseEventSegments (event) {
+                if (event.buildNum) {
+                    return parseAnchors(event.buildNum)
                 }
-                const href = safeUrl(match[1])
-                return href ? { href, text: match[2] } : null
+                if (Array.isArray(event.reasonDetailList)) {
+                    return parseAnchors(event.reasonDetailList.join(' | '))
+                }
+                return []
             },
             async triggerEvent (event) {
                 try {

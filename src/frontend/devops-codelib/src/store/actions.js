@@ -608,7 +608,7 @@ const actions = {
         atomCode,
         queryOfflineFlag = false
     }) {
-        const version = atomCode === 'codeGitWebHookTrigger' ? '2.*' : '1.*'
+        const version = ['codeGitWebHookTrigger', 'codeTGitWebHookTrigger'].includes(atomCode) ? '2.*' : '1.*'
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
     },
 
