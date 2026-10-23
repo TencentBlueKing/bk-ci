@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.interceptor
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -39,7 +38,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
@@ -101,13 +99,7 @@ class QueueInterceptor @Autowired constructor(
         return when {
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
-                Response(
-                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ERROR_PIPELINE_SUMMARY_NOT_FOUND,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
+                Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt())
 
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -125,17 +117,11 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser
                 )
 
-            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= min(
-                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
-                task.maxConRunningQueueSize
-            ) ->
-                Response(
-                    status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = BK_MAX_PARALLEL,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${min(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
-                )
+            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >=
+                    PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                ->
+                // 重要说明： BuildStartContro.checkRunningCountWithLimit才是真正判断并发执行的逻辑，此处仅做队列满员判定（兼容以前错误的 max 函数逻辑）
+                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt())
 
             else -> Response(data = BuildStatus.RUNNING)
         }
@@ -160,13 +146,7 @@ class QueueInterceptor @Autowired constructor(
                 Response(data = BuildStatus.RUNNING)
 
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
-                Response(
-                    status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ERROR_PIPELINE_QUEUE_FULL,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
+                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt())
 
             queueCount >= task.maxQueueSize -> {
                 // 满员时挤掉最早排队的构建并放行当前构建，maxQueueSize是排队队列的容量而非新构建的准入门槛。
