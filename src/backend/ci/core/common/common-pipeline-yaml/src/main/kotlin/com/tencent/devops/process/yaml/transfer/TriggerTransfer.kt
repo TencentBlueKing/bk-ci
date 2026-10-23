@@ -291,6 +291,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     blockMr = git.block.nullIfDefault(false),
                     webhookQueue = git.webhookQueue.nullIfDefault(false),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    reportQualityResults = git.enableQualityReport.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     action = git.includeMrAction,
                     custom = if (git.enableThirdFilter == true) CustomFilter(
@@ -314,6 +315,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     users = git.includeUsers.nonEmptyOrNull(),
                     usersIgnore = git.excludeUsers.nonEmptyOrNull(),
                     reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    reportQualityResults = git.enableQualityReport.nullIfDefault(true),
                     pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
                     skipWip = git.skipWip.nullIfDefault(false),
                     labels = git.includeLabels?.disjoin(),
@@ -761,7 +763,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         repositoryType = repositoryType,
                         repoHashId = timer.repoId,
                         repoName = timer.repoName,
-                        branches = timer.branches,
+                        branches = timer.branches?.takeIf { timer.yamlBranch.isNullOrBlank() },
+                        yamlBranch = timer.yamlBranch,
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
                         noScm = timer.always != true,
@@ -1128,6 +1131,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             block = mr.blockMr,
             webhookQueue = mr.webhookQueue,
             enableCheck = mr.reportCommitCheck,
+            enableQualityReport = mr.reportQualityResults,
             pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                 ?: PathFilterType.NamePrefixFilter,
             includeMrAction = includeMrAction,
@@ -1179,6 +1183,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     block = mr.blockMr,
                     webhookQueue = mr.webhookQueue,
                     enableCheck = mr.reportCommitCheck,
+                    enableQualityReport = mr.reportQualityResults,
                     pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     includeMrAction = includeMrAction,

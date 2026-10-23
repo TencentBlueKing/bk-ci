@@ -136,6 +136,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             }
             params.fromBranches = EnvUtils.parseEnv(fromBranches ?: "", variables)
             params.webhookQueue = webhookQueue ?: false
+            params.skipWip = skipWip ?: false
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)

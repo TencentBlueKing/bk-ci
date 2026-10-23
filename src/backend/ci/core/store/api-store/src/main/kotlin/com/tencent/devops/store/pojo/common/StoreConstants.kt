@@ -70,6 +70,7 @@ const val ATOM_OUTPUT = "output" // 插件输出
 const val ATOM_NAMESPACE = "namespace" // 插件命名空间
 const val ATOM_UPLOAD_ID_KEY_PREFIX = "ATOM_UPLOAD_ID" // 插件包上传ID值Key前缀
 const val STORE_PUBLIC_FLAG_KEY_PREFIX = "STORE_PUBLIC_FLAG_KEY" // 公共组件Key前缀
+const val STORE_ATOM_TASK_JSON_KEY_PREFIX = "STORE_ATOM_TASK_JSON_KEY" // 插件task.json参数定义缓存Key前缀
 const val STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX = "STORE_NORMAL_PROJECT_RUN_INFO_KEY" // 组件对应普通项目的运行时信息Key前缀
 const val STORE_LATEST_TEST_FLAG_KEY_PREFIX = "STORE_LATEST_TEST_FLAG"
 const val STORE_BRANCH_TEST_LOCK_KEY_PREFIX = "STORE_BRANCH_TEST_LOCK" // 分支测试版本操作分布式锁Key前缀

@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -44,6 +45,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
+import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
@@ -53,6 +55,7 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.trigger.scm.listener.PipelineYamlChangeContext
+import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
@@ -90,7 +93,8 @@ class PipelineYamlFileManager @Autowired constructor(
     private val pipelineYamlViewService: PipelineYamlViewService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val pipelineYamlFileService: PipelineYamlFileService,
-    private val pipelineYamlResourceManager: PipelineYamlResourceManager
+    private val pipelineYamlResourceManager: PipelineYamlResourceManager,
+    private val pipelineYamlBranchTimerService: PipelineYamlBranchTimerService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
@@ -682,6 +686,7 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|create pipeline|$eventId|" +
                     "$projectId|$repoHashId|$filePath|$ref|$pipelineId|$version|${deployPipelineResult.versionName}"
         )
+        reconcileYamlBranchTimer(deployPipelineResult)
         return deployPipelineResult
     }
 
@@ -884,6 +889,7 @@ class PipelineYamlFileManager @Autowired constructor(
             userId = userId,
             resourceType = resourceType
         )
+        reconcileYamlBranchTimer(deployPipelineResult)
         logger.info(
             "[PAC_PIPELINE]|update pipeline version|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|" +
@@ -1098,6 +1104,14 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline branch version|$eventId|" +
                 "$projectId|$repoHashId|$filePath|$ref|${commit?.commitId}|$pipelineId"
         )
+        if (!isTemplate) {
+            pipelineYamlBranchTimerService.deleteBranch(
+                userId = authUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = ref
+            )
+        }
         pipelineYamlResourceManager.updateBranchAction(
             userId = userId,
             projectId = projectId,
@@ -1328,7 +1342,25 @@ class PipelineYamlFileManager @Autowired constructor(
             creator = userId,
             userId = userId
         )
+        reconcileYamlBranchTimer(deployPipelineResult)
         return deployPipelineResult
+    }
+
+    private fun PipelineYamlFileEvent.reconcileYamlBranchTimer(result: DeployPipelineResult) {
+        if (isTemplate) {
+            return
+        }
+        yamlBranchScheduleNotes = pipelineYamlBranchTimerService.reconcile(
+            userId = authUser,
+            projectId = projectId,
+            pipelineId = result.pipelineId,
+            version = result.version,
+            branch = ref,
+            defaultBranch = defaultBranch,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            channelCode = ChannelCode.BS
+        )
     }
 
     private fun PipelineYamlFileEvent.deleteOldYamlPipeline(

@@ -13,8 +13,7 @@ class AiOverviewService @Autowired constructor(
     private val skillService: AiSkillService,
     private val externalAgentService: ExternalAgentService,
     private val promptService: AiPromptService,
-    private val userLlmConfigService: UserLlmConfigService,
-    private val projectService: AiProjectService
+    private val userLlmConfigService: UserLlmConfigService
 ) {
 
     fun getOverview(): AiOverviewVO {
@@ -32,8 +31,7 @@ class AiOverviewService @Autowired constructor(
                 externalAgents = externalAgentService.listAllForOp().size,
                 userPrompts = promptService.listAllForOp().size,
                 userLlmConfigs = userLlmConfigService.listAllForOp().size
-            ),
-            projectCount = projectService.getProjectListForOp().size
+            )
         )
     }
 }

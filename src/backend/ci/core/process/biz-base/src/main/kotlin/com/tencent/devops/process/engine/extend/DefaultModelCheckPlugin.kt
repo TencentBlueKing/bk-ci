@@ -59,6 +59,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NO
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.service.PipelineRepositoryService.Companion.checkParam
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -218,6 +219,7 @@ open class DefaultModelCheckPlugin constructor(
     override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
         setting.successSubscriptionList?.checkSubscriptionList()
         setting.failSubscriptionList?.checkSubscriptionList()
+        setting.checkParam()
     }
 
     private fun List<Subscription>.checkSubscriptionList() {

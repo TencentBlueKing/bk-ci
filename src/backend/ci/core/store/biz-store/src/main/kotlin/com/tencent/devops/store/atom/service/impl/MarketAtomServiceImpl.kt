@@ -52,6 +52,7 @@ import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -103,6 +104,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
+import com.tencent.devops.store.pojo.atom.GetAtomInputPropsRequest
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomDaoQuery
@@ -1103,6 +1105,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             redisOperation.delete(StoreUtils.getStoreRunInfoKey(typeName, atomCode))
         }
+
+        // 插件参数定义被删除，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
         return Result(true)
     }
 
@@ -1197,6 +1203,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", ignored)
         }
     }
+
+    override fun getAtomInputProps(getAtomInputPropsRequest: GetAtomInputPropsRequest): Map<String, Map<String, Any>> =
+        atomPropsService.getAtomInputProps(getAtomInputPropsRequest)
 
     private fun updateAtomRunInfoCache(
         atomCode: String,
