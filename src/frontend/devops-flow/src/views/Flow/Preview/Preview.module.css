@@ -164,7 +164,7 @@
 /* Pipeline preview section */
 .pipelinePreviewSection {
   min-height: 200px;
-  overflow: visible;
+  overflow-x: auto;
   background: var(--bg-tertiary);
   padding: var(--spacing-lg);
 }

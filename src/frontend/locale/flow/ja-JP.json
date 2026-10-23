@@ -164,6 +164,7 @@
       "renameSuccess": "リネーム成功",
       "renameFailed": "リネーム失敗",
       "latest": "最新",
+      "switchToLatest": "最新バージョンに切り替える",
       "executionInfo": "実行情報",
       "executionRecord": "実行記録",
       "triggerRecord": "トリガー記録",

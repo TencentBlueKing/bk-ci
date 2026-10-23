@@ -4,15 +4,20 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  transition: margin-right var(--transition-slow) ease;
 }
 
-/* 当变量面板展开时，主内容区域右侧留出空间 */
-.withVariablePanel {
-  margin-right: 480px;
-}
 .uiModeWrapper {
   padding: 0 var(--spacing-lg);
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  transition: width var(--transition-slow) ease;
+}
+
+/* 变量面板展开时，滚动区域宽度减去面板宽度 */
+.uiModeWrapper.withVariablePanel {
+  width: calc(100% - 480px);
 }
 
 /* modelContent样式已移动到layout.module.css中的flexDetailContent */
