@@ -410,7 +410,7 @@
     "voice": "Voice",
     "concurrentMaxConcurrency": "Maximum Concurrency",
     "concurrentTimeout": "Queue Timeout for Exceeding Limit",
-    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200",
+    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 500",
     "maxConcurrencyPlaceholder": "Default to system settings when not specified",
     "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
     "clearTheValue": "Clear the value and continue running",

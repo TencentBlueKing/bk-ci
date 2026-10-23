@@ -403,7 +403,7 @@
     "voice": "音声",
     "concurrentMaxConcurrency": "最大並行数",
     "concurrentTimeout": "タイムアウト時のキューイング、キューイングタイムアウト時間",
-    "maxConRunningQueueSizeTips": "最大並行数の範囲は1～200です",
+    "maxConRunningQueueSizeTips": "最大並行数の範囲は1～500です",
     "maxConcurrencyPlaceholder": "デフォルトはシステム設定に従います",
     "whenVariableExceedsLength": "パイプライン変数の値が長すぎる場合(>4K)",
     "clearTheValue": "値をクリアし、実行を続行",
