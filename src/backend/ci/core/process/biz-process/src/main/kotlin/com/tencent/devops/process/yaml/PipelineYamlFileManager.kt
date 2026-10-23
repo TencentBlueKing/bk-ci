@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.trigger.scm.listener.PipelineYamlChangeContext
-import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
