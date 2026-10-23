@@ -3083,7 +3083,7 @@ class PipelineBuildFacadeService(
             )
         }
         if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
-            val replayEventId = pipelineTriggerEventService.getTriggerDetail(
+            val replayEventId = pipelineTriggerEventService.getBuildTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
@@ -3395,7 +3395,7 @@ class PipelineBuildFacadeService(
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         return when (StartType.toStartType(buildInfo.trigger)) {
             StartType.WEB_HOOK -> {
-                pipelineTriggerEventService.getTriggerDetail(
+                pipelineTriggerEventService.getBuildTriggerDetail(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId
