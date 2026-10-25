@@ -562,6 +562,8 @@
     "agentStatusVersion": "Agent Status(Version)",
     "digitalTwin": "Digital Twin",
     "cloudDesktop": "Cloud Desktop",
+    "digitalTwinEnv": "Digital Twin Environment",
+    "cloudDesktopEnv": "Cloud Desktop Environment",
     "nodeSourceType": "Node Type",
     "released": "Released",
     "destroyed": "Destroyed",

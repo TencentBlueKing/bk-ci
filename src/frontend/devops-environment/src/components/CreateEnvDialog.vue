@@ -48,6 +48,24 @@
             </bk-form-item>
             <bk-form-item
                 v-if="isCreateResType"
+                :label="$t('environment.envInfo.envType')"
+                class="env-type-item"
+                required
+                property="nodeSource"
+                error-display-type="normal"
+            >
+                <bk-radio-group v-model="envParams.nodeSource">
+                    <bk-radio
+                        v-for="item in createEnvSourceOptions"
+                        :key="item.value"
+                        :value="item.value"
+                    >
+                        <div class="mr10">{{ item.label }}</div>
+                    </bk-radio>
+                </bk-radio-group>
+            </bk-form-item>
+            <bk-form-item
+                v-if="isCreateResType"
                 label="OS"
                 required
                 property="os"
@@ -117,7 +135,13 @@
     import { computed, watch } from 'vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useInstance from '@/hooks/useInstance'
-    import { ENV_TYPE_MAP, OS_LABEL_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
+    import {
+        ENV_TYPE_MAP,
+        OS_LABEL_MAP,
+        SERVICE_RESOURCE_TYPE,
+        NODE_SOURCE,
+        CREATE_NODE_SOURCE_FILTERS
+    } from '@/store/constants'
     
     export default {
         name: 'CreateEnvDialog',
@@ -145,6 +169,10 @@
                     value
                 }))
             ))
+            const createEnvSourceOptions = computed(() => ([
+                { value: NODE_SOURCE.IEG_IMATE, label: proxy.$t('environment.digitalTwinEnv') },
+                { value: NODE_SOURCE.CLOUD_DESKTOP_NODE, label: proxy.$t('environment.cloudDesktopEnv') }
+            ]))
             const formRules = computed(() => {
                 const rules = {
                     name: [
@@ -156,6 +184,13 @@
                     ]
                 }
                 if (isCreateResType.value) {
+                    rules.nodeSource = [
+                        {
+                            required: true,
+                            message: proxy.$t('environment.fieldCannotEmpty'),
+                            trigger: 'change'
+                        }
+                    ]
                     rules.os = [
                         {
                             required: true,
@@ -173,12 +208,12 @@
                 }
             }
 
-            function onSuccess (envId, envType) {
+            function onSuccess (envId, envType, nodeSource) {
                 proxy.$bkMessage({
                     theme: 'success',
                     message: proxy.$t('environment.successfullyAdded')
                 })
-                proxy.$emit('success', envId, envType)
+                proxy.$emit('success', envId, envType, nodeSource)
             }
             function onError (err) {
                 proxy.$bkMessage({
@@ -190,8 +225,13 @@
             
             watch(isShow, (val) => {
                 if (val && isCreateResType.value) {
+                    const routeEnvType = proxy.$route.params.envType
                     envParams.value.envType = ENV_TYPE_MAP.CREATE
                     envParams.value.os = ''
+                    // 在左侧某个分类下新建时默认选中该分类
+                    envParams.value.nodeSource = CREATE_NODE_SOURCE_FILTERS.includes(routeEnvType)
+                        ? routeEnvType
+                        : NODE_SOURCE.IEG_IMATE
                 }
             })
             return {
@@ -201,6 +241,7 @@
                 formRules,
                 envTypeEnums,
                 osTypeOptions,
+                createEnvSourceOptions,
                 isCreateResType,
 
                 // function

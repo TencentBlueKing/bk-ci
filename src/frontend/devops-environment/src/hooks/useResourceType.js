@@ -65,6 +65,24 @@ export default function useResourceType () {
     }
 
     /**
+     * 创作流环境分类文案 key（环境 nodeSource 与节点同枚举）
+     */
+    const getEnvSourceLabelKey = (envOrSource) => {
+        const source = typeof envOrSource === 'string'
+            ? envOrSource
+            : envOrSource?.nodeSource || ''
+        switch (source) {
+            case NODE_SOURCE.REMOTEDEV:
+            case NODE_SOURCE.IEG_IMATE:
+                return 'environment.digitalTwinEnv'
+            case NODE_SOURCE.CLOUD_DESKTOP_NODE:
+                return 'environment.cloudDesktopEnv'
+            default:
+                return ''
+        }
+    }
+
+    /**
      * 路由 nodeType 是否为创作流分类过滤值
      */
     const getNodeTypeFilterId = (routeNodeType) => {
@@ -165,6 +183,7 @@ export default function useResourceType () {
         getNodeSourceOf,
         getNodeSourceLabelKey,
         getNodeSourceLabel,
+        getEnvSourceLabelKey,
         getNodeTypeFilterId,
         toListQuery,
         getAgentStatus,

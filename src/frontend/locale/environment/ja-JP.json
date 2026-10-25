@@ -557,6 +557,8 @@
     "agentStatusVersion": "Agent 状態(バージョン)",
     "digitalTwin": "デジタルツイン",
     "cloudDesktop": "クラウドデスクトップ",
+    "digitalTwinEnv": "デジタルツイン環境",
+    "cloudDesktopEnv": "クラウドデスクトップ環境",
     "nodeSourceType": "ノードタイプ",
     "released": "解放済み",
     "destroyed": "破棄済み",

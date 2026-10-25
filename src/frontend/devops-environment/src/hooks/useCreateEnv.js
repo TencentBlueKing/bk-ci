@@ -8,6 +8,7 @@ const defaultCreateEnvParam = (envType = 'BUILD') => {
         envType,
         name: '',
         os: '',
+        nodeSource: '',
         // createdUser: '',
         source: 'EXISTING',
         envVars: []
@@ -38,6 +39,7 @@ export default function useCreateEnv (onSuccess, onError) {
             const params = { ...envParams.value }
             if (params.envType !== ENV_TYPE_MAP.CREATE) {
                 delete params.os
+                delete params.nodeSource
             }
             const res = await proxy.$store.dispatch('environment/createNewEnv', {
                 projectId,
@@ -45,7 +47,7 @@ export default function useCreateEnv (onSuccess, onError) {
             })
             
             closeCreateEnvDialog()
-            onSuccess?.(res, envParams.value.envType)
+            onSuccess?.(res, envParams.value.envType, params.nodeSource)
 
         } catch (err) {
             console.error(err)

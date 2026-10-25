@@ -559,6 +559,8 @@
     "agentStatusVersion": "Agent 状态(版本)",
     "digitalTwin": "数字分身",
     "cloudDesktop": "云桌面",
+    "digitalTwinEnv": "数字分身环境",
+    "cloudDesktopEnv": "云桌面环境",
     "nodeSourceType": "节点类型",
     "released": "已释放",
     "destroyed": "已销毁",

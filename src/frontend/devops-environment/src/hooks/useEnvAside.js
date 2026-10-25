@@ -4,7 +4,8 @@ import useEnvDetail from './useEnvDetail'
 
 import {
     ENV_TYPE_MAP,
-    SERVICE_RESOURCE_TYPE
+    SERVICE_RESOURCE_TYPE,
+    CREATE_NODE_SOURCE_FILTERS
 } from '@/store/constants'
 
 const envList = ref([])
@@ -48,13 +49,27 @@ export default function useEnvAside () {
     // 计算环境总数
     const totalEnvCount = computed(() => {
         if (!envCountData.value) return 0
+        // 创作流总数以 CREATE 为准，避免后端追加分类计数后重复累加
+        if (isCreateResType.value && envCountData.value[ENV_TYPE_MAP.CREATE] !== undefined) {
+            return envCountData.value[ENV_TYPE_MAP.CREATE]
+        }
         return Object.values(envCountData.value).reduce((sum, count) => sum + (count || 0), 0)
     })
+    // 路由 envType 在创作流下承载分类（nodeSource），流水线下为环境类型
+    const buildEnvTypeQuery = () => {
+        if (!envType.value || envType.value === ENV_TYPE_MAP.ALL) return {}
+        if (isCreateResType.value) {
+            return CREATE_NODE_SOURCE_FILTERS.includes(envType.value)
+                ? { nodeSource: envType.value }
+                : {}
+        }
+        return { envType: envType.value }
+    }
     const fetchEnvList = async () => {
         isLoading.value = true
         try {
             const params = {
-                ...(envType.value !== ENV_TYPE_MAP.ALL ? { envType: envType.value } : {}),
+                ...buildEnvTypeQuery(),
                 ...(envName.value ? { envName: envName.value } : {}),
                 ...(isCreateResType.value ? { createMode: true } : {})
             }
