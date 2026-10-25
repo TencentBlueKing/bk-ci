@@ -568,7 +568,7 @@
     "removeItem": "削除{0}個",
     "noSelectNode": "ノードが選択されていません",
     "noSetLabel": "関連ラベルが設定されていません",
-    "searchNodePlaceholder": "ノードを検索、Enterキーで検索",
+    "searchNodePlaceholder": "複数のIPを一括検索でき、スペース・カンマ・セミコロン・改行・{'|'} で区切れます",
     "labelKey": "ラベル(key)",
     "labelValue": "値(value)",
     "pleaseSelectLabelKey": "ラベルキーを選択してください",

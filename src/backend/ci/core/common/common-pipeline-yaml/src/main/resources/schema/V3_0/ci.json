@@ -472,6 +472,9 @@
                         "type" : "string"
                       }
                     },
+                    "yaml-branch" : {
+                      "type" : "string"
+                    },
                     "nodes" : {
                       "oneOf" : [ {
                         "enum" : [ "all" ]
@@ -546,6 +549,9 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "yaml-branch" : {
+                    "type" : "string"
                   },
                   "nodes" : {
                     "oneOf" : [ {
@@ -1524,6 +1530,9 @@
                       "type" : "string"
                     }
                   },
+                  "yaml-branch" : {
+                    "type" : "string"
+                  },
                   "nodes" : {
                     "oneOf" : [ {
                       "enum" : [ "all" ]
@@ -1598,6 +1607,9 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "yaml-branch" : {
+                  "type" : "string"
                 },
                 "nodes" : {
                   "oneOf" : [ {
@@ -3232,7 +3244,7 @@
         "max-parallel" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 200
+          "maximum" : 500
         }
       }
     },

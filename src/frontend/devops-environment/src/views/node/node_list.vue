@@ -460,7 +460,7 @@
                     },
                     {
                         name: 'IP',
-                        id: 'nodeIp',
+                        id: 'ipListSearch',
                         default: true
                     },
                     {
@@ -772,11 +772,18 @@
             searchValue (val) {
                 // 如果是 handleNodeTypeChange 触发的清空，跳过请求
                 if (this.isNodeTypeChanging) return
-                
+
+                // IP 支持批量输入（空格、中英文逗号/分号、| 分隔），拆分、去重并过滤空串
+                const normalized = this.normalizeIpSearchValue(val)
+                if (normalized !== val) {
+                    this.searchValue = normalized
+                    return
+                }
+
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
-                            this.requestParams[i.id] = i.values[0].id.trim()
+                            this.requestParams[i.id] = i.values.map(v => v.id.trim()).filter(Boolean).join(',')
                         } else {
                             this.requestParams[i.id] = i.id
                         }
@@ -814,6 +821,29 @@
         },
         methods: {
             ...mapActions('environment', ['requestGetCounts']),
+            // 将 IP 筛选（ipListSearch）中的批量输入按分隔符（空格、中英文逗号/分号、|）拆分为多个值，去重并过滤空字符串
+            normalizeIpSearchValue (val) {
+                let changed = false
+                const result = val
+                    .map(item => {
+                        if (item.id !== 'ipListSearch' || !item.values || item.values.length !== 1) return item
+                        const raw = item.values[0].id
+                        if (typeof raw !== 'string' || !/[\s,，;；|]/.test(raw)) return item
+                        const tokens = [...new Set(
+                            raw.split(/[\s,，;；|]+/).map(token => token.trim()).filter(Boolean)
+                        )]
+                        // 解析结果为空（仅分隔符）时移除该筛选条件
+                        if (!tokens.length) {
+                            changed = true
+                            return null
+                        }
+                        if (tokens.length === 1 && tokens[0] === raw) return item
+                        changed = true
+                        return { ...item, values: tokens.map(token => ({ id: token, name: token })) }
+                    })
+                    .filter(Boolean)
+                return changed ? result : val
+            },
             batchDropdown () {
                 this.isBatchDropdownShow = !this.isBatchDropdownShow
             },
@@ -1123,14 +1153,16 @@
             async requestList (params = this.requestParams) {
                 try {
                     this.tableLoading = true
-                    
+
                     // 获取标签参数（优先使用 URL 参数）
                     const tagParams = this.getTagRequestParams()
-                    
+
+                    // IP 搜索统一走 ipListSearch（请求体，后端按分隔符解析后精确 IN 查询）
+                    const { ipListSearch, ...restParams } = params
                     const { toListQuery } = useResourceType()
                     const typeQuery = toListQuery(this.$route.params.nodeType, this.isCreateResType)
                     const listParams = {
-                        ...params,
+                        ...restParams,
                         ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                         page: this.paginationData.current,
                         pageSize: this.paginationData.limit,
@@ -1144,7 +1176,8 @@
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: listParams,
-                        ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
+                        ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {}),
+                        ipListSearch
                     })
 
                     this.paginationData.count = res.count
@@ -1349,9 +1382,12 @@
 
             async handleExportCSV () {
                 try {
+                    // 导出接口使用 nodeIp 参数（支持逗号分隔多 IP），这里做字段映射
+                    const { ipListSearch, ...restParams } = this.requestParams
+                    const params = { ...restParams, ...(ipListSearch ? { nodeIp: ipListSearch } : {}) }
                     const res = await this.$store.dispatch('environment/exportNodeListCSV', {
                         projectId: this.projectId,
-                        params: this.requestParams
+                        params
                     })
                     this.downloadCsv(res)
                 } catch (e) {

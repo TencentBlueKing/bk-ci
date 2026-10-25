@@ -75,6 +75,61 @@ BEGIN
             ADD COLUMN `CONCURRENCY_SUB_GROUP` varchar(255) DEFAULT NULL COMMENT '同一批标识，启动时解析后的值';
     END IF;
 
+    ## 以前缺失补刀 feat：草稿并发修改交互优化 #10553 setting增加version字段 --- START
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION'
+                    AND COLUMN_NAME = 'VERSION') THEN
+        ALTER TABLE T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
+            ADD COLUMN `VERSION` bigint(20) NOT NULL DEFAULT '1' COMMENT '流水线版本号';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_DRAFT_VERSION'
+                    AND COLUMN_NAME = 'VERSION') THEN
+        ALTER TABLE T_PIPELINE_SETTING_DRAFT_VERSION
+            ADD COLUMN `VERSION` int(11) NOT NULL DEFAULT '1' COMMENT '流水线版本号';
+    END IF;
+
+    -- 仅当主键仍包含旧列 SETTING_VERSION 时才修改(避免重复执行报错)
+    IF EXISTS(SELECT 1
+              FROM information_schema.KEY_COLUMN_USAGE
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION'
+                AND COLUMN_NAME = 'SETTING_VERSION'
+                AND CONSTRAINT_NAME = 'PRIMARY') THEN
+        ALTER TABLE T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION
+            DROP PRIMARY KEY,
+            ADD PRIMARY KEY (`PROJECT_ID`, `TEMPLATE_ID`, `VERSION`, `DRAFT_VERSION`);
+    END IF;
+
+    -- 仅当主键仍包含旧列 SETTING_VERSION 时才修改(避免重复执行报错)
+    IF EXISTS(SELECT 1
+              FROM information_schema.KEY_COLUMN_USAGE
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_SETTING_DRAFT_VERSION'
+                AND COLUMN_NAME = 'SETTING_VERSION'
+                AND CONSTRAINT_NAME = 'PRIMARY') THEN
+        ALTER TABLE T_PIPELINE_SETTING_DRAFT_VERSION
+            DROP PRIMARY KEY,
+            ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`);
+    END IF;
+
+    ## 清理错误的索引 不然可能会引起archive_process校验不过
+IF EXISTS (
+    SELECT 1
+    FROM information_schema.statistics
+    WHERE
+        TABLE_SCHEMA = db
+        AND TABLE_NAME = 'T_PIPELINE_FAVOR'
+        AND INDEX_NAME = 'IDX_CREATE_USER'
+) THEN
+ALTER TABLE T_PIPELINE_FAVOR DROP INDEX `IDX_CREATE_USER` ;
+
+END IF;
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

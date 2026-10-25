@@ -50,7 +50,7 @@ export default function useUrlQuery (options = {}) {
         if (queryParams.value.searchValue?.length) {
             queryParams.value.searchValue.forEach(item => {
                 if (item.values && item.values.length > 0) {
-                    query[item.id] = item.values[0].id
+                    query[item.id] = item.values.map(v => v.id.trim()).filter(Boolean).join(',')
                 } else if (item.id) {
                     query[item.id] = item.id
                 }
@@ -146,7 +146,7 @@ export default function useUrlQuery (options = {}) {
 
         // 解析搜索条件
         // 从 { displayName: '123' } 转为 [{ id: 'displayName', values: [{ id: '123', name: '123' }] }]
-        const searchKeys = ['keywords', 'nodeIp', 'displayName', 'osName', 'nodeType', 'nodeSource', 'createdUser', 'nodeStatus', 'agentVersion', 'parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal', 'lastModifiedUser', 'latestBuildPipelineId']
+        const searchKeys = ['keywords', 'displayName', 'osName', 'nodeType', 'nodeSource', 'createdUser', 'nodeStatus', 'agentVersion', 'parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal', 'lastModifiedUser', 'latestBuildPipelineId']
         searchKeys.forEach(key => {
             if (query[key]) {
                 queryParams.value.searchValue.push({
@@ -159,6 +159,20 @@ export default function useUrlQuery (options = {}) {
                 })
             }
         })
+
+        // IP 批量搜索（URL 使用 ipListSearch 字段，兼容旧的 nodeIp 参数），恢复为多个筛选值
+        const ipListSearch = query.ipListSearch || query.nodeIp
+        if (ipListSearch) {
+            queryParams.value.searchValue.push({
+                id: 'ipListSearch',
+                name: 'ipListSearch',
+                values: ipListSearch
+                    .split(',')
+                    .map(v => v.trim())
+                    .filter(Boolean)
+                    .map(token => ({ id: token, name: token }))
+            })
+        }
 
         // 解析标签搜索
         // 从 { tagKey_tag1: 'val1,val2' } 转为 [{ id: 'tag1', name: '标签名', values: [{ id: 'val1', name: '值名' }] }]
@@ -352,7 +366,7 @@ export default function useUrlQuery (options = {}) {
         if (queryParams.value.searchValue?.length) {
             queryParams.value.searchValue.forEach(item => {
                 if (item.values && item.values.length > 0) {
-                    params[item.id] = item.values[0].id.trim()
+                    params[item.id] = item.values.map(v => v.id.trim()).filter(Boolean).join(',')
                 } else if (item.id) {
                     params[item.id] = item.id
                 }

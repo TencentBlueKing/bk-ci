@@ -145,8 +145,9 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId, params, tags }) {
+    requestNodeList ({ commit }, { projectId, params, tags, ipListSearch }) {
         const { query, body } = splitNodeFetchParams(params, tags)
+        if (ipListSearch) body.ipListSearch = ipListSearch
         const queryString = new URLSearchParams(query).toString()
         return request.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${queryString}`, body).then(response => {
             return response

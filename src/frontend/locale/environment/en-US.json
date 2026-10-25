@@ -573,7 +573,7 @@
     "removeItem": "Remove {0} items",
     "noSelectNode": "No node selected",
     "noSetLabel": "No associated label set",
-    "searchNodePlaceholder": "Search for the node, press Enter to search",
+    "searchNodePlaceholder": "Enter multiple IPs for batch query, separated by spaces, commas, semicolons, line breaks or {'|'}",
     "labelKey": "label(key)",
     "labelValue": "value",
     "pleaseSelectLabelKey": "Please select the label key",

@@ -79,7 +79,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -655,7 +654,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, String> = emptyMap(),
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        version: Int? = null
     ): String? {
 
         if (checkPermission) {
@@ -682,14 +682,20 @@ class PipelineBuildFacadeService(
         try {
             // 定时触发不存在调试的情况
             val (pipeline, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
+                projectId, pipelineId, version
             )
             if (pipeline.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
-            if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-            )
+            if (version == null && pipeline.latestVersionStatus?.isNotReleased() == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
+            }
+            if (version != null && resource.status != VersionStatus.BRANCH) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION,
+                    params = arrayOf(version.toString())
+                )
+            }
 
             /**
              * 验证流水线参数构建启动参数
@@ -713,7 +719,7 @@ class PipelineBuildFacadeService(
                 channelCode = pipeline.channelCode,
                 isMobile = false,
                 resource = resource,
-                signPipelineVersion = null,
+                signPipelineVersion = version,
                 frequencyLimit = false
             ).id
         } finally {
@@ -1170,6 +1176,8 @@ class PipelineBuildFacadeService(
             )
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
+            setting.correctAndPadding()
+            val maxConRunningQueueSize = setting.maxConRunningQueueSize!!
             runLock.lock()
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
@@ -1183,7 +1191,7 @@ class PipelineBuildFacadeService(
                     concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
                     concurrencySubGroup = buildInfo.concurrencySubGroup,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    maxConRunningQueueSize = maxConRunningQueueSize,
                     // stage审核时暂不执行流水线并发组取消逻辑
                     cancelAllowed = false
                 )

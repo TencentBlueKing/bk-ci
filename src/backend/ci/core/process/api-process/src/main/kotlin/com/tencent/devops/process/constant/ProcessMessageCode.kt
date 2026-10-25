@@ -360,6 +360,14 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_JOB_ID_FORMAT = "2101250" // 流水线Job:{0}的jobId为空或长度超过{1}位
     const val ERROR_PIPELINE_JOB_CONTROL_NODECURR = "2101251" // 流水线Job:{0}的单节点或总结点并发配置需要为小于1000的正整数
     const val ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN = "2101252" // 定时触发分支{0}未知错误
+    const val BK_YAML_BRANCH_TIMER_EMPTY = "bkYamlBranchTimerEmpty" // yaml-branch 为空，未登记定时
+    const val BK_YAML_BRANCH_TIMER_WILDCARD = "bkYamlBranchTimerWildcard" // yaml-branch 不支持通配，未登记定时：{0}
+    const val BK_YAML_BRANCH_TIMER_DEFAULT_BRANCH = "bkYamlBranchTimerDefaultBranch" // yaml-branch 写在默认分支上，未登记定时
+    // yaml-branch（{0}）与当前分支（{1}）不一致，未登记定时
+    const val BK_YAML_BRANCH_TIMER_MISMATCH = "bkYamlBranchTimerMismatch"
+    const val BUILD_MSG_YAML_BRANCH_TIME = "bkBuildMsgYamlBranchTime" // {0} 分支上的定时触发
+    // 分支 {0} 或该分支上的流水线文件不存在，本次不执行
+    const val BK_PIPELINE_TIMER_YAML_FILE_MISSING = "bkPipelineTimerYamlFileMissing"
     const val ERROR_PIPELINE_CONDITION_EXPRESSION_TOO_LONG = "2101253" // 自定义条件表达式{0}的长度超过{1}位
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
@@ -394,7 +402,8 @@ object ProcessMessageCode {
 
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
-
+    // 分支定时触发未找到可执行的分支版本，本次不执行
+    const val ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION = "2101284"
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
 
     // URL[{0}]中存在高危端口号
@@ -495,13 +504,15 @@ object ProcessMessageCode {
     // 模型变量引用表达式不合规：单花括号不得以 context 前缀开头；双花括号须以前缀开头或为合法表达式函数。不合规项：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101371"
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101372" // 模板草稿版本编排[{0}]记录不存在
-    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
-    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101374"
     const val ERROR_PIPELINE_IS_NOT_PAC = "2101373" // [{0}]不是PAC流水线
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101374" // 模板草稿版本设置[{0}]不存在
     // 获取Fork仓库YAML失败：PR触发人[{0}]尚未完成OAUTH授权或没有仓库[{1}]读取权限
     const val ERROR_PAC_FORK_YAML_OAUTH = "2101375"
-    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101378" // 模板草稿版本设置[{0}]不存在
+    // 分支版本[{0}]不存在, 目标分支不存在或流水线引用的Yaml文件[{1}]在分支[{0}]不存在或已被删除
+    // 注意: 前端执行预览页(preview.vue)依赖该错误码值展示错误页, 不要修改
+    const val ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND = "2101378"
     // 分支版本[{0}]不存在, 请检查分支版本是否被成功创建
+    // 注意: 前端执行预览页(preview.vue)依赖该错误码值展示错误页, 不要修改
     const val ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101379"
     const val ERROR_TEMPLATE_VERSION_HAS_DELETED = "2101380" // 模板版本[{0}]已删除
 

@@ -1,11 +1,11 @@
 # Where component owners are known, add them here.
-/.github @irwinsun @mingshewhe @stubenhuang 
+/.github @irwinsun @mingshewhe @stubenhuang @mingshewhe
 /CODEOWNERS @irwinsun @zanyzhao @stubenhuang 
-/docs @zanyzhao @irwinsun @stubenhuang 
+/docs @zanyzhao @irwinsun @stubenhuang @mingshewhe
 /*.md @zanyzhao @irwinsun @mingshewhe
-/scripts @fighter-liu @irwinsun @stubenhuang
-/src/agent @irwinsun @tangruotian
-/src/gateway @stubenhuang @irwinsun
-/src/frontend @lockiechen @terlinhe
+/scripts @fighter-liu @irwinsun @stubenhuang @mingshewhe
+/src/agent @irwinsun @tangruotian @mingshewhe
+/src/gateway @stubenhuang @irwinsun @mingshewhe
+/src/frontend @lockiechen @terlinhe @irwinsun
 /support-files @irwinsun @mingshewhe @stubenhuang
-/src/backend/ci @irwinsun @mingshewhe @stubenhuang @carlyin0801 @royalhuang @randychen2046 @tangruotian
+/src/backend/ci @irwinsun @mingshewhe @stubenhuang @carlyin0801 @royalhuang @yongyiduan @tangruotian @fcfang123
