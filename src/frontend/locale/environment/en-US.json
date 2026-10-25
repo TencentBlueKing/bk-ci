@@ -556,6 +556,7 @@
     "offlineTime": "Offline time period",
     "offlineDuration": "Offline duration",
     "nodeUsage": "Node Usage",
+    "cpuCores": "CPU Cores",
     "buildAgent": "Build Agent",
     "agentNormal": "Agent Normal",
     "agentAbnormal": "Agent Abnormal",

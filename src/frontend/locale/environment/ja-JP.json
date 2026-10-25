@@ -551,6 +551,7 @@
     "offlineTime": "オフライン期間",
     "offlineDuration": "オフライン時間",
     "nodeUsage": "ノード用途",
+    "cpuCores": "CPUコア数",
     "buildAgent": "ビルドAgent",
     "agentNormal": "Agent 正常",
     "agentAbnormal": "Agent 異常",

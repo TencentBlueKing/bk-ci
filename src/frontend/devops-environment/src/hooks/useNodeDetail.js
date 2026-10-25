@@ -22,29 +22,26 @@ export default function useNodeDetail () {
     const isCreateResType = () => proxy.$route.params?.resType === SERVICE_RESOURCE_TYPE.CREATE
 
     /**
-     * 创作流：按详情 envIds 拉所属环境；流水线跳过
+     * 按详情 envIds 拉所属环境（创作流 / 流水线概览共用）
      */
     const fetchEnvRelations = async () => {
-        if (!isCreateResType()) {
-            nodeEnvRelations.value = []
-            return []
-        }
         const hashId = currentNode.value?.nodeHashId || nodeHashId.value
         if (!hashId) {
             nodeEnvRelations.value = []
             return []
         }
+        const isCreate = isCreateResType()
         try {
             invalidateNodeRelationsCache(hashId)
             const relations = await fetchNodeRelations({
                 projectId: projectId.value,
                 nodeHashId: hashId,
-                isCreateResType: true,
+                isCreateResType: isCreate,
                 envIds: Array.isArray(currentNode.value?.envIds)
                     ? currentNode.value.envIds
                     : [],
                 store: proxy.$store,
-                resType: SERVICE_RESOURCE_TYPE.CREATE,
+                resType: isCreate ? SERVICE_RESOURCE_TYPE.CREATE : SERVICE_RESOURCE_TYPE.PIPELINE,
                 force: true
             })
             nodeEnvRelations.value = relations.environments || []

@@ -2,86 +2,92 @@
     <div class="node-overview-container">
         <div class="overview-main">
             <div class="overview-section">
-                <!-- 创作流：ID + 所属环境 -->
-                <div
-                    v-if="isCreateResType"
-                    class="basic-rows"
-                >
-                    <div class="info-item">
-                        <span class="info-label">{{ workspaceIdLabel }}:</span>
-                        <span
-                            class="info-value"
-                            :class="{ 'is-copyable': !!workspaceId }"
-                        >
-                            {{ workspaceId || '-' }}
-                            <button
-                                v-if="workspaceId"
-                                type="button"
-                                class="id-copy"
-                                @click="handleCopy(workspaceId)"
-                            >
-                                {{ $t('environment.copy') }}
-                            </button>
-                        </span>
-                    </div>
-                    <div class="info-item env-row">
-                        <span class="info-label">{{ $t('environment.belongingEnv') }}:</span>
-                        <div class="env-list">
-                            <bk-tag
-                                v-for="env in envRelations"
-                                :key="env.envHashId || env.envName"
-                                class="env-tag"
-                                size="small"
-                            >
-                                <a
-                                    class="env-open"
-                                    :href="env.url || 'javascript:;'"
-                                    :target="env.url ? '_blank' : undefined"
-                                    rel="noopener noreferrer"
-                                    @click="openEnv(env, $event)"
-                                >
-                                    <span class="env-name">
-                                        {{ env.envName }}
-                                        <span
-                                            v-if="env.strategyType"
-                                            class="env-kind"
-                                        > · {{ env.strategyType === 'dynamic' ? $t('environment.dynamic') : $t('environment.static') }}</span>
-                                    </span>
-                                    <svg
-                                        class="env-jump"
-                                        viewBox="0 0 1024 1024"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M864 128H496v64h291.2L361.6 617.6l44.8 44.8L832 236.8V528h64V160c0-17.6-14.4-32-32-32z" />
-                                        <path d="M832 704v128H192V192h126.4V128H160c-17.6 0-32 14.4-32 32v704c0 17.6 14.4 32 32 32h704c17.6 0 32-14.4 32-32V704h-64z" />
-                                    </svg>
-                                </a>
-                            </bk-tag>
-                            <span
-                                v-if="!envRelations.length"
-                                class="env-empty"
-                            >{{ $t('environment.notInAnyEnv') }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 已释放/已销毁：仅保留上方两行 -->
-                <template v-if="!isNeutralCreateNode">
-                    <!-- 流水线：基本信息 -->
-                    <div
-                        v-if="!isCreateResType"
-                        class="node-basic-info info-grid"
-                    >
+                <!-- 基本信息：创作流 ID + 所属环境；流水线 机器 / 规格 / 所属环境 / 创建信息 -->
+                <div class="basic-rows">
+                    <template v-for="block in basicBlocks">
                         <div
-                            v-for="field in basicInfoFields"
-                            :key="field.key"
+                            v-if="block.type === 'id'"
+                            :key="block.key"
                             class="info-item"
                         >
-                            <span class="info-label">{{ field.label }}:</span>
-                            <span class="info-value">{{ getFieldValue(field) }}</span>
+                            <span class="info-label">{{ workspaceIdLabel }}:</span>
+                            <span
+                                class="info-value"
+                                :class="{ 'is-copyable': !!workspaceId }"
+                            >
+                                {{ workspaceId || '-' }}
+                                <button
+                                    v-if="workspaceId"
+                                    type="button"
+                                    class="id-copy"
+                                    @click="handleCopy(workspaceId)"
+                                >
+                                    {{ $t('environment.copy') }}
+                                </button>
+                            </span>
                         </div>
-                    </div>
+                        <div
+                            v-else-if="block.type === 'env'"
+                            :key="`env-${block.key}`"
+                            class="info-item env-row"
+                        >
+                            <span class="info-label">{{ $t('environment.belongingEnv') }}:</span>
+                            <div class="env-list">
+                                <bk-tag
+                                    v-for="env in envRelations"
+                                    :key="env.envHashId || env.envName"
+                                    class="env-tag"
+                                    size="small"
+                                >
+                                    <a
+                                        class="env-open"
+                                        :href="env.url || 'javascript:;'"
+                                        :target="env.url ? '_blank' : undefined"
+                                        rel="noopener noreferrer"
+                                        @click="openEnv(env, $event)"
+                                    >
+                                        <span class="env-name">
+                                            {{ env.envName }}
+                                            <span
+                                                v-if="env.strategyType"
+                                                class="env-kind"
+                                            > · {{ env.strategyType === 'dynamic' ? $t('environment.dynamic') : $t('environment.static') }}</span>
+                                        </span>
+                                        <svg
+                                            class="env-jump"
+                                            viewBox="0 0 1024 1024"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M864 128H496v64h291.2L361.6 617.6l44.8 44.8L832 236.8V528h64V160c0-17.6-14.4-32-32-32z" />
+                                            <path d="M832 704v128H192V192h126.4V128H160c-17.6 0-32 14.4-32 32v704c0 17.6 14.4 32 32 32h704c17.6 0 32-14.4 32-32V704h-64z" />
+                                        </svg>
+                                    </a>
+                                </bk-tag>
+                                <span
+                                    v-if="!envRelations.length"
+                                    class="env-empty"
+                                >{{ $t('environment.notInAnyEnv') }}</span>
+                            </div>
+                        </div>
+                        <div
+                            v-else
+                            :key="block.key"
+                            class="info-grid"
+                        >
+                            <div
+                                v-for="field in block.fields"
+                                :key="field.key"
+                                class="info-item"
+                            >
+                                <span class="info-label">{{ field.label }}:</span>
+                                <span class="info-value">{{ getFieldValue(field) }}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
 
+                <!-- 已释放/已销毁：仅保留上方基本信息 -->
+                <template v-if="!isNeutralCreateNode">
                     <!-- 数字分身：入驻的云桌面 -->
                     <template v-if="isCreateResType && isDigitalTwinNode">
                         <div class="section-header">
@@ -113,10 +119,7 @@
                     </template>
 
                     <!-- Agent 区块 -->
-                    <div
-                        class="section-header"
-                        :class="{ 'is-first': !isCreateResType }"
-                    >
+                    <div class="section-header">
                         <span class="section-title">
                             {{ isCreateResType ? $t('environment.creationAgent') : $t('environment.buildAgent') }}
                         </span>
@@ -161,6 +164,7 @@
     import useInstance from '@/hooks/useInstance'
     import useResourceType from '@/hooks/useResourceType'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
+    const DEPLOYMENT_NODE_TYPES = ['CC', 'CMDB', 'TSTACK', 'UNKNOWN', 'OTHER']
 
     export default {
         name: 'NodeOverview',
@@ -194,14 +198,58 @@
                 return proxy.$t('environment.digitalTwinId')
             })
 
-            // 基本信息字段配置（流水线）
-            const basicInfoFields = computed(() => [
-                { label: proxy.$t('environment.nodeInfo.hostName'), key: 'hostname' },
-                { label: proxy.$t('environment.nodeInfo.os'), key: 'osName' },
-                { label: 'IP', key: 'ip' },
-                { label: proxy.$t('environment.envInfo.creator'), key: 'createdUser' },
-                { label: proxy.$t('environment.envInfo.creationTime'), key: 'createdTime' }
-            ])
+            // 流水线节点用途：部署类节点 → 部署，其余（第三方构建机等）→ 构建
+            const usageDisplay = computed(() => {
+                const nodeType = currentNode.value?.nodeType
+                if (!nodeType) return '-'
+                return DEPLOYMENT_NODE_TYPES.includes(nodeType)
+                    ? proxy.$t('environment.deploy')
+                    : proxy.$t('environment.build')
+            })
+            // 硬件规格无数据时后端返回空串或 "0"
+            const formatSpec = (value) => {
+                const text = String(value ?? '').trim()
+                return text && text !== '0' ? text : '-'
+            }
+
+            // 基本信息分块：创作流 ID + 所属环境；流水线 机器 / 规格 / 所属环境 / 创建信息
+            const basicBlocks = computed(() => {
+                if (isCreateResType.value) {
+                    return [
+                        { type: 'id', key: 'id' },
+                        { type: 'env', key: 'env' }
+                    ]
+                }
+                return [
+                    {
+                        type: 'grid',
+                        key: 'machine',
+                        fields: [
+                            { label: proxy.$t('environment.nodeInfo.hostName'), key: 'hostname' },
+                            { label: proxy.$t('environment.nodeInfo.os'), key: 'osName' },
+                            { label: 'IP', key: 'ip' },
+                            { label: proxy.$t('environment.nodeInfo.usage'), key: 'usage', dynamicValue: () => usageDisplay.value }
+                        ]
+                    },
+                    {
+                        type: 'grid',
+                        key: 'spec',
+                        fields: [
+                            { label: proxy.$t('environment.cpuCores'), key: 'ncpus', dynamicValue: () => formatSpec(currentNode.value?.ncpus) },
+                            { label: proxy.$t('environment.nodeInfo.ram'), key: 'memTotal', dynamicValue: () => formatSpec(currentNode.value?.memTotal) }
+                        ]
+                    },
+                    { type: 'env', key: 'env' },
+                    {
+                        type: 'grid',
+                        key: 'audit',
+                        fields: [
+                            { label: proxy.$t('environment.envInfo.creator'), key: 'createdUser' },
+                            { label: proxy.$t('environment.envInfo.creationTime'), key: 'createdTime' }
+                        ]
+                    }
+                ]
+            })
 
             // 入驻的云桌面：createWorkspaceId / displayName / osName / ip 取节点列表
             const formatOsName = (name) => {
@@ -236,38 +284,31 @@
                 }
             ])
 
-            // Agent 信息：创作流按 Agent ID → 版本 → Worker → 路径 → 心跳 → 启动用户 → 用途(最后)
+            // Agent 信息：Agent ID → 版本 → Worker → 路径 → 心跳 → 启动用户；创作流末尾追加用途
             const agentInfoFields = computed(() => {
-                if (isCreateResType.value) {
-                    return [
-                        {
-                            label: 'Agent ID',
-                            key: 'agentId',
-                            copy: true,
-                            dynamicValue: () => currentNode.value?.agentId || currentNode.value?.agentHashId || '-'
-                        },
-                        { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
-                        { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
-                        { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
-                        { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
-                        { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' },
-                        {
-                            label: proxy.$t('environment.nodeUsage'),
-                            key: 'usage',
-                            dynamicValue: () => currentNode.value?.usage
-                                || currentNode.value?.nodeUsage
-                                || '-'
-                        }
-                    ]
-                }
-                return [
+                const fields = [
+                    {
+                        label: 'Agent ID',
+                        key: 'agentId',
+                        copy: true,
+                        dynamicValue: () => currentNode.value?.agentId || currentNode.value?.agentHashId || '-'
+                    },
                     { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
-                    { label: proxy.$t('environment.nodeUsage'), key: 'usage', staticValue: proxy.$t('environment.build') },
                     { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
                     { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
                     { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
                     { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' }
                 ]
+                if (isCreateResType.value) {
+                    fields.push({
+                        label: proxy.$t('environment.nodeUsage'),
+                        key: 'usage',
+                        dynamicValue: () => currentNode.value?.usage
+                            || currentNode.value?.nodeUsage
+                            || '-'
+                    })
+                }
+                return fields
             })
 
             const getFieldLabel = (field) => {
@@ -275,7 +316,6 @@
             }
 
             const getFieldValue = (field) => {
-                if (field.staticValue) return field.staticValue
                 if (field.dynamicValue) return field.dynamicValue() || '-'
                 return currentNode.value?.[field.key] || '-'
             }
@@ -310,7 +350,7 @@
 
             return {
                 currentNode,
-                basicInfoFields,
+                basicBlocks,
                 agentInfoFields,
                 cloudDesktopFields,
                 getFieldLabel,
@@ -360,10 +400,6 @@
         display: flex;
         align-items: center;
         margin: 16px 0;
-
-        &.is-first {
-            margin-top: 0;
-        }
 
         .section-title {
             font-size: 14px;
