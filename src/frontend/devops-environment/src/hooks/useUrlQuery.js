@@ -146,7 +146,7 @@ export default function useUrlQuery (options = {}) {
 
         // 解析搜索条件
         // 从 { displayName: '123' } 转为 [{ id: 'displayName', values: [{ id: '123', name: '123' }] }]
-        const searchKeys = ['keywords', 'nodeIp', 'displayName', 'osName', 'nodeType', 'nodeSource', 'createdUser', 'nodeStatus', 'agentVersion', 'lastModifiedUser', 'latestBuildPipelineId']
+        const searchKeys = ['keywords', 'nodeIp', 'displayName', 'osName', 'nodeType', 'nodeSource', 'createdUser', 'nodeStatus', 'agentVersion', 'parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal', 'lastModifiedUser', 'latestBuildPipelineId']
         searchKeys.forEach(key => {
             if (query[key]) {
                 queryParams.value.searchValue.push({

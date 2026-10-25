@@ -528,6 +528,26 @@
                         name: this.$t('environment.nodeInfo.agentVersion'),
                         id: 'agentVersion'
                     },
+                    ...(this.showAgentCapacity ? [
+                        {
+                            name: this.$t('environment.buildConcurrencyLimit'),
+                            id: 'parallelTaskCount',
+                            remoteMethod: (keyword) => this.limitSearchOptions(keyword)
+                        },
+                        {
+                            name: this.$t('environment.dockerBuildConcurrencyLimit'),
+                            id: 'dockerParallelTaskCount',
+                            remoteMethod: (keyword) => this.limitSearchOptions(keyword)
+                        },
+                        {
+                            name: this.$t('environment.cpuCores'),
+                            id: 'ncpus'
+                        },
+                        {
+                            name: this.$t('environment.nodeInfo.ram'),
+                            id: 'memTotal'
+                        }
+                    ] : []),
                     {
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
@@ -663,6 +683,10 @@
             isCreateResType () {
                 return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
             },
+            showAgentCapacity () {
+                if (this.isCreateResType) return true
+                return (this.$route.params.nodeType || ALLNODE) !== 'CMDB'
+            },
             // 当前详情对应的列表行（补齐详情接口缺失的 createWorkspaceSource）
             detailListNode () {
                 const id = this.queryParams?.nodeHashId
@@ -792,6 +816,19 @@
             ...mapActions('environment', ['requestGetCounts']),
             batchDropdown () {
                 this.isBatchDropdownShow = !this.isBatchDropdownShow
+            },
+            limitSearchOptions (keyword) {
+                const presets = [
+                    { id: '0', name: this.$t('environment.concurrencyUnlimited') },
+                    { id: 'default', name: this.$t('environment.concurrencyDefault') }
+                ]
+                const text = String(keyword || '').trim()
+                if (/^\d+$/.test(text)) {
+                    if (text === '0') return Promise.resolve(presets)
+                    return Promise.resolve([{ id: text, name: text }, ...presets])
+                }
+                if (!text) return Promise.resolve(presets)
+                return Promise.resolve(presets.filter(item => item.name.includes(text)))
             },
             hasSelectedNode (){
                 if (!this.selectedNodes.length) {
@@ -1092,15 +1129,21 @@
                     
                     const { toListQuery } = useResourceType()
                     const typeQuery = toListQuery(this.$route.params.nodeType, this.isCreateResType)
+                    const listParams = {
+                        ...params,
+                        ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
+                        page: this.paginationData.current,
+                        pageSize: this.paginationData.limit,
+                        ...typeQuery
+                    }
+                    if (!this.showAgentCapacity) {
+                        ['parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal'].forEach((key) => {
+                            delete listParams[key]
+                        })
+                    }
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
-                        params: {
-                            ...params,
-                            ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
-                            page: this.paginationData.current,
-                            pageSize: this.paginationData.limit,
-                            ...typeQuery
-                        },
+                        params: listParams,
                         ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
                     })
 
