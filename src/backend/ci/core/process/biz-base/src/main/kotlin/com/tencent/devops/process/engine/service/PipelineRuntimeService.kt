@@ -863,6 +863,15 @@ class PipelineRuntimeService @Autowired constructor(
         var afterRetryStage = false
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
         val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
+        // 任务/Stage级重试时context.variables不含构建已有变量，按变量指定的dependOn需合并后解析
+        val dependOnVariables by lazy {
+            if (lastTimeBuildContainers.isNotEmpty() && !context.retryStartTaskId.isNullOrBlank()) {
+                buildVariableService.getAllVariable(context.projectId, context.pipelineId, context.buildId)
+                    .plus(context.variables)
+            } else {
+                context.variables
+            }
+        }
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             // 先标记是否已到达重试目标 Stage，后续跳过/禁止重置 checkIn 都依赖该标记
             if (context.isRetryTargetStage(stage)) {
@@ -903,7 +912,9 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
-            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+            if (stage.containers.any { DependOnUtils.enableDependOn(it) }) {
+                DependOnUtils.initDependOn(stage = stage, params = dependOnVariables)
+            }
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理

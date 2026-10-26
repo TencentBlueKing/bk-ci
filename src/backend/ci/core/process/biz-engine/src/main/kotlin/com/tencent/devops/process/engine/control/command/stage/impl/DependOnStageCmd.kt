@@ -50,10 +50,14 @@ class DependOnStageCmd(
                 jobControlOption = container.controlOption.jobControlOption
             )
         }
+        // 审核参数在CheckPauseReviewStageCmd中只写入DB，未刷新到commandContext.variables
+        val reviewVariables = stage.checkIn?.takeIf { it.manualTrigger == true }?.reviewParams
+            ?.mapNotNull { param -> param.value?.let { param.key to it.toString() } }
+            ?.toMap() ?: emptyMap()
         try {
             DependOnUtils.initDependOn(
                 jobs = jobs,
-                params = commandContext.variables
+                params = commandContext.variables.plus(reviewVariables)
             )
         } catch (e: ErrorCodeException) {
             if (e.errorCode != ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE) {
