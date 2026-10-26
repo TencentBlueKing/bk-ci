@@ -33,7 +33,7 @@
                         </span>
                     </template>
                     <template v-else>
-                        {{ isInstanceCreateType ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
+                        {{ isInstancePublishAsCreate ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
                         <bk-popover
                             theme="light"
                             :tippy-options="{
@@ -557,11 +557,20 @@
     import ReleaseTaskStatus from '@/components/Template/ReleaseTaskStatus'
     import ReleaseConflictDialog from './ReleaseConflictDialog'
     import {
+        INSTANCE_OPERATE_TYPE,
         RELEASE_STATUS,
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        isInstancePublishAsCreate as isPublishAsCreate,
+        isPacSwitcherDisabled,
+        isScmTypeDisabled,
+        isYamlCodeLibDisabled,
+        shouldBackfillInstanceRepo,
+        shouldSyncInheritedPac
+    } from '@/utils/templateInstancePac'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM, DRAFT_STATUS } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -788,6 +797,15 @@
             templateInstanceEnablePac () {
                 return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
+            // 复制与新增共用发布：不继承原实例 PAC。升级仍按实例是否已开启 PAC 锁定。
+            isInstancePublishAsCreate () {
+                return isPublishAsCreate({
+                    isTemplateInstanceMode: this.isTemplateInstanceMode,
+                    isInstanceCreateType: this.isInstanceCreateType,
+                    routeType: this.$route.params?.type,
+                    copyType: INSTANCE_OPERATE_TYPE.COPY
+                })
+            },
             // 首个实例已绑定的 PAC 仓库信息，用于模板实例模式回显
             firstInstancePacInfo () {
                 const firstInstance = this.instanceList[0] ?? {}
@@ -797,15 +815,30 @@
                 }
             },
             disabledPacSwitcher () {
-                return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
+                return isPacSwitcherDisabled({
+                    isTemplateInstanceMode: this.isTemplateInstanceMode,
+                    isPublishAsCreate: this.isInstancePublishAsCreate,
+                    templateRefType: this.templateRefType,
+                    templateInstanceEnablePac: this.templateInstanceEnablePac,
+                    pacEnabled: this.pacEnabled
+                })
             },
             disabledScmType () {
-                if (this.isTemplateInstanceMode) return this.templateInstanceEnablePac
-                // 当前草稿开启 PAC，或历史上已绑定仓库（yamlInfo 存在），代码库源均不可修改
-                return this.pacEnabled || !!this.yamlInfo
+                return isScmTypeDisabled({
+                    isTemplateInstanceMode: this.isTemplateInstanceMode,
+                    isPublishAsCreate: this.isInstancePublishAsCreate,
+                    templateInstanceEnablePac: this.templateInstanceEnablePac,
+                    pacEnabled: this.pacEnabled,
+                    hasYamlInfo: !!this.yamlInfo
+                })
             },
             disabledYamlCodeLib () {
-                return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
+                return isYamlCodeLibDisabled({
+                    isTemplateInstanceMode: this.isTemplateInstanceMode,
+                    isPublishAsCreate: this.isInstancePublishAsCreate,
+                    templateInstanceEnablePac: this.templateInstanceEnablePac,
+                    pacEnabled: this.pacEnabled
+                })
             },
             renderInstanceList () {
                 return this.instanceList.map(i => ({
@@ -862,7 +895,10 @@
             },
             templateInstanceEnablePac: {
                 handler: function (val) {
-                    if (!this.isTemplateInstanceMode) return
+                    if (!shouldSyncInheritedPac({
+                        isTemplateInstanceMode: this.isTemplateInstanceMode,
+                        isPublishAsCreate: this.isInstancePublishAsCreate
+                    })) return
                     this.releaseParams.enablePac = val
                     const firstInstance = this.instanceList[0]
                     this.releaseParams.repoHashId = firstInstance?.repoHashId
@@ -873,7 +909,10 @@
             // 实例详情（含 scmType/repoHashId）可能晚于侧栏初始化返回，此时 templateInstanceEnablePac 布尔值不变、上方 watcher 不会触发，这里补充回填
             firstInstancePacInfo: {
                 handler: function ({ repoHashId, scmType }) {
-                    if (!this.isTemplateInstanceMode || !this.templateInstanceEnablePac) return
+                    if (!shouldSyncInheritedPac({
+                        isTemplateInstanceMode: this.isTemplateInstanceMode,
+                        isPublishAsCreate: this.isInstancePublishAsCreate
+                    }) || !this.templateInstanceEnablePac) return
                     if (repoHashId) {
                         this.releaseParams.repoHashId = repoHashId
                     }
@@ -1028,7 +1067,11 @@
                 try {
                     this.isLoading = true
                     const enablePac = this.releaseParams.enablePac
-                    if (this.isTemplateInstanceMode && enablePac) {
+                    if (shouldBackfillInstanceRepo({
+                        isTemplateInstanceMode: this.isTemplateInstanceMode,
+                        enablePac,
+                        isPublishAsCreate: this.isInstancePublishAsCreate
+                    })) {
                         this.releaseParams.repoHashId = this.instanceList[0]?.repoHashId ?? ''
                     }
                     if (this.isTemplateInstanceMode && this.templateRefType === 'PATH') {
