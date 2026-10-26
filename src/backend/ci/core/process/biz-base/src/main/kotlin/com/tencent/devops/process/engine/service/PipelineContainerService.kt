@@ -803,8 +803,12 @@ class PipelineContainerService @Autowired constructor(
                                 controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
                                 /*重试时重置互斥组名称，以便变量更改时能生效*/
                                 controlOption.mutexGroup?.runtimeMutexGroup = null
-                                /*重试时清空dependOn映射，Stage启动时用最新变量重算*/
-                                controlOption.jobControlOption.dependOnContainerId2JobIds = null
+                                /*运行中重试不会重新进入Stage启动，不能清空，需用模型中按最新变量算好的dependOn映射*/
+                                controlOption.jobControlOption.dependOnContainerId2JobIds = when (container) {
+                                    is VMBuildContainer -> container.jobControlOption?.dependOnContainerId2JobIds
+                                    is NormalContainer -> container.jobControlOption?.dependOnContainerId2JobIds
+                                    else -> null
+                                }
                                 updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer

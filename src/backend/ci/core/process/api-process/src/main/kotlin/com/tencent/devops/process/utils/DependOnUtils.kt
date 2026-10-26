@@ -100,12 +100,8 @@ object DependOnUtils {
      * 前端通过jobId声明依赖关系,流水线真正运行是通过containerId
      */
     fun initDependOn(stage: Stage, params: Map<String, String>) {
-        val allJobId2JobMap = mutableMapOf<String, Container>()
         val jobs = mutableListOf<DependOnJob>()
         stage.containers.forEach container@{ c ->
-            if (!c.jobId.isNullOrBlank()) {
-                allJobId2JobMap[c.jobId!!] = c
-            }
             val jobControlOption = when (c) {
                 is VMBuildContainer -> c.jobControlOption
                 is NormalContainer -> c.jobControlOption
@@ -120,24 +116,14 @@ object DependOnUtils {
                 )
             )
         }
-        initDependOn(
-            jobs = jobs,
-            params = params,
-            displayName = { jobId ->
-                getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
-            }
-        )
+        initDependOn(jobs = jobs, params = params)
     }
 
     /**
      * 按给定变量解析 dependOn，并做循环依赖校验。
      * 解析不到任何已存在 jobId 时会清空旧映射，避免沿用启动期过期结果。
      */
-    fun initDependOn(
-        jobs: List<DependOnJob>,
-        params: Map<String, String>,
-        displayName: (String) -> String = { it }
-    ) {
+    fun initDependOn(jobs: List<DependOnJob>, params: Map<String, String>) {
         val allJobId2JobMap = jobs.filter { !it.jobId.isNullOrBlank() }.associateBy { it.jobId!! }
         if (allJobId2JobMap.isEmpty()) {
             return
@@ -172,8 +158,7 @@ object DependOnUtils {
             dsf(
                 jobId = jobId,
                 dependOnMap = cycleCheckJobMap,
-                visited = visited,
-                displayName = displayName
+                visited = visited
             )
         }
     }
@@ -262,8 +247,7 @@ object DependOnUtils {
     private fun dsf(
         jobId: String,
         dependOnMap: Map<String, List<String>>,
-        visited: MutableMap<String, Int>,
-        displayName: (String) -> String
+        visited: MutableMap<String, Int>
     ): Boolean {
         if (visited[jobId] == 1) {
             return true
@@ -277,13 +261,12 @@ object DependOnUtils {
             if (dsf(
                     jobId = dependOnJobId,
                     dependOnMap = dependOnMap,
-                    visited = visited,
-                    displayName = displayName
+                    visited = visited
                 )
             ) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE,
-                    params = arrayOf(displayName(jobId), displayName(dependOnJobId))
+                    params = arrayOf(jobId, dependOnJobId)
                 )
             }
         }
