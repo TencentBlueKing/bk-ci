@@ -115,6 +115,10 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             path = eventScope
         )
         if (callbackUrl.isBlank()) {
+            logger.warn(
+                "skip register artifact webhook and subscription|callbackUrl is blank|" +
+                    "$projectId|$pipelineId|$taskId|eventSource=$eventSource"
+            )
             return
         }
         registerBkRepoWebhookIfAbsent(
@@ -392,9 +396,15 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         }
     }
 
+    /**
+     * 镜像仓库监听 PACKAGE_METADATA_SAVED，而不是包版本事件 VERSION_CREATED：
+     * 镜像上传时包版本与元数据分开写入、不在同一事务，VERSION_CREATED 到达时
+     * 元数据（pipelineId/buildId 等）可能尚未保存，无法做来源流水线、元数据等条件匹配；
+     * 元数据保存事件到达时元数据已落库，可拿到完整的来源信息。
+     */
     private fun buildTriggers(repository: ArtifactRepositoryType): List<BkRepoEventType> {
         return when (repository) {
-            ArtifactRepositoryType.IMAGE -> listOf(BkRepoEventType.VERSION_CREATED)
+            ArtifactRepositoryType.IMAGE -> listOf(BkRepoEventType.PACKAGE_METADATA_SAVED)
             else -> listOf(BkRepoEventType.NODE_CREATED)
         }
     }

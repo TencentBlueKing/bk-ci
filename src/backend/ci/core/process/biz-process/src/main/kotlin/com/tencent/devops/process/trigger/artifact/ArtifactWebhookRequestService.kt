@@ -12,8 +12,9 @@ import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactEvent
+import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.METADATA_PIPELINE_ID
 import com.tencent.devops.process.pojo.trigger.artifact.NodeArtifactEvent
-import com.tencent.devops.process.pojo.trigger.artifact.PackageVersionArtifactEvent
+import com.tencent.devops.process.pojo.trigger.artifact.PackageMetadataArtifactEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.artifact.handler.ArtifactEventHandlerManager
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -47,7 +48,15 @@ class ArtifactWebhookRequestService(
         val rawEventType = requestEvent.eventType
         logger.info("Receive ArtifactWebhookRequestEvent|$rawEventType")
         val artifactEvent = parseEvent(rawEventType, rawBody) ?: return
-        // bkrepo 原始事件类型(NODE_CREATED/VERSION_CREATED 等)转换为产品语义事件，与订阅落库保持一致
+        if (artifactEvent is PackageMetadataArtifactEvent && !hasPipelineIdMetadata(artifactEvent)) {
+            logger.info(
+                "skip package metadata event without pipelineId metadata|" +
+                    "${artifactEvent.getAssociationId()}|${artifactEvent.packageKey}|" +
+                    artifactEvent.packageVersion.name
+            )
+            return
+        }
+        // bkrepo 原始事件类型(NODE_CREATED/PACKAGE_METADATA_SAVED 等)转换为产品语义事件，与订阅落库保持一致
         val eventType = convertToTriggerEventType(rawEventType).name
         logger.info("parse artifact event|$eventType|${JsonUtil.toJson(artifactEvent, false)}")
         val eventSource = artifactEvent.getAssociationId()
@@ -151,8 +160,8 @@ class ArtifactWebhookRequestService(
 
     private fun parseEvent(eventType: String, rawBody: String): ArtifactEvent? {
         val clazz: Class<out ArtifactEvent> = when (BkRepoEventType.fromValue(eventType)) {
-            BkRepoEventType.VERSION_CREATED ->
-                PackageVersionArtifactEvent::class.java
+            BkRepoEventType.PACKAGE_METADATA_SAVED ->
+                PackageMetadataArtifactEvent::class.java
 
             BkRepoEventType.NODE_CREATED,
             BkRepoEventType.NODE_RENAMED,
@@ -178,6 +187,15 @@ class ArtifactWebhookRequestService(
     }
 
     /**
+     * 镜像元数据可能分多次保存，只有带来源流水线ID的元数据才视为流水线产出的制品到达。
+     */
+    private fun hasPipelineIdMetadata(event: PackageMetadataArtifactEvent): Boolean {
+        return event.packageVersion.packageMetadata.any {
+            it.key == METADATA_PIPELINE_ID && !it.value?.toString().isNullOrBlank()
+        }
+    }
+
+    /**
      * 将 bkrepo 原始事件类型转换为产品语义的制品触发事件类型。
      *
      * 当前产品仅定义「制品到达」一种，节点/包版本类事件统一转换为 [ArtifactTriggerEventType.ARRIVED]；
@@ -193,7 +211,7 @@ class ArtifactWebhookRequestService(
             BkRepoEventType.NODE_DOWNLOADED,
             BkRepoEventType.METADATA_SAVED,
             BkRepoEventType.METADATA_DELETED,
-            BkRepoEventType.VERSION_CREATED -> ArtifactTriggerEventType.ARRIVED
+            BkRepoEventType.PACKAGE_METADATA_SAVED -> ArtifactTriggerEventType.ARRIVED
 
             else -> ArtifactTriggerEventType.ARRIVED
         }

@@ -35,7 +35,10 @@ enum class BkRepoEventType {
     METADATA_DELETED,
 
     // VERSION（容器镜像 / 包制品）
-    VERSION_CREATED;
+    VERSION_CREATED,
+
+    // PACKAGE METADATA（容器镜像 / 包制品的版本元数据）
+    PACKAGE_METADATA_SAVED;
 
     companion object {
         @JsonCreator

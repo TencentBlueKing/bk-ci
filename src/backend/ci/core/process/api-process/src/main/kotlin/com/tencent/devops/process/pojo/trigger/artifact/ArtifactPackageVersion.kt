@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * 制品包版本信息（bkrepo webhook payload 中的 packageVersion 对象）
  *
- * 对应 bkrepo PackageVersion，容器镜像 / 包制品版本创建（VERSION_CREATED）时上报。
+ * 对应 bkrepo PackageVersion，容器镜像 / 包制品版本元数据保存（PACKAGE_METADATA_SAVED）时上报。
  */
 @Schema(title = "制品包版本信息")
 @JsonIgnoreProperties(ignoreUnknown = true)

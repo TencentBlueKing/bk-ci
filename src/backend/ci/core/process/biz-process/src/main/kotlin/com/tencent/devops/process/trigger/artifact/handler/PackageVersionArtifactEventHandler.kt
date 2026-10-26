@@ -18,7 +18,7 @@ import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.METADATA_BUILD_NO
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.METADATA_DOCKER_MANIFEST_DIGEST
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.METADATA_PIPELINE_ID
-import com.tencent.devops.process.pojo.trigger.artifact.PackageVersionArtifactEvent
+import com.tencent.devops.process.pojo.trigger.artifact.PackageMetadataArtifactEvent
 import com.tencent.devops.process.trigger.artifact.ArtifactWebhookUtils
 import com.tencent.devops.process.trigger.artifact.condition.ArtifactConditionChain
 import com.tencent.devops.process.trigger.artifact.condition.ImageNameCondition
@@ -33,20 +33,20 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import org.springframework.stereotype.Service
 
 /**
- * 包版本事件处理器（容器镜像 / 包制品，触发形态 image）
+ * 包版本元数据事件处理器（容器镜像 / 包制品，触发形态 image）
  *
  * 条件链：[防循环, 镜像名, tag, 监听流水线(可选), 元数据]
  */
 @Service
-class PackageVersionArtifactEventHandler(
+class PackageMetadataArtifactEventHandler(
     private val pipelineCacheService: PipelineCacheService,
     private val pipelineUrlBean: PipelineUrlBean
 ) : ArtifactEventHandler {
 
-    override fun support(event: ArtifactEvent): Boolean = event is PackageVersionArtifactEvent
+    override fun support(event: ArtifactEvent): Boolean = event is PackageMetadataArtifactEvent
 
     override fun getEventDesc(event: ArtifactEvent): I18Variable {
-        val pkgEvent = event as PackageVersionArtifactEvent
+        val pkgEvent = event as PackageMetadataArtifactEvent
         val metadata = metadataOf(pkgEvent)
         val pipelineId = metadata[METADATA_PIPELINE_ID]?.toString().orEmpty()
         val buildId = metadata[METADATA_BUILD_ID]?.toString().orEmpty()
@@ -74,7 +74,7 @@ class PackageVersionArtifactEventHandler(
         triggerParams: ArtifactTriggerParam,
         event: ArtifactEvent
     ): WebhookMatchResult {
-        val pkgEvent = event as PackageVersionArtifactEvent
+        val pkgEvent = event as PackageMetadataArtifactEvent
         val packageVersion = pkgEvent.packageVersion
         val metadata = metadataOf(pkgEvent)
         val factParam = ArtifactFactParam(
@@ -107,7 +107,7 @@ class PackageVersionArtifactEventHandler(
      * 镜像事件输出：注入 image_name / image_tag / digest，不注入 path、dir、items。
      */
     override fun outputs(event: ArtifactEvent): Map<String, Any> {
-        val pkgEvent = event as PackageVersionArtifactEvent
+        val pkgEvent = event as PackageMetadataArtifactEvent
         val metadata = metadataOf(pkgEvent)
         val result = mutableMapOf<String, Any>(
             CI_ARTIFACT_COUNT to 1,
@@ -130,11 +130,11 @@ class PackageVersionArtifactEventHandler(
         return result
     }
 
-    private fun metadataOf(event: PackageVersionArtifactEvent): Map<String, Any?> {
+    private fun metadataOf(event: PackageMetadataArtifactEvent): Map<String, Any?> {
         return event.packageVersion.packageMetadata.associate { (it.key ?: "") to it.value }
     }
 
-    private fun imageName(event: PackageVersionArtifactEvent): String {
+    private fun imageName(event: PackageMetadataArtifactEvent): String {
         return event.packageKey.removePrefix(DOCKER_PACKAGE_KEY_PREFIX)
     }
 }
