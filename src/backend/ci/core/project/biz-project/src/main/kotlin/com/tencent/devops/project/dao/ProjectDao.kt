@@ -356,6 +356,7 @@ class ProjectDao {
                 .where(CREATOR.eq(creator))
                 .and(PROJECT_SCOPE.eq(ProjectScopeType.PERSONAL.value))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .and(CHANNEL.eq(ProjectChannelCode.PREBUILD.name))
                 .orderBy(CREATED_AT.desc())
                 .limit(1)
                 .fetchOne()

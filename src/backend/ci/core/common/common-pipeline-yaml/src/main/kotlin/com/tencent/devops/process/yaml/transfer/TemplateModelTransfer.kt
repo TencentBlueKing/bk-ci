@@ -358,7 +358,7 @@ class TemplateModelTransfer @Autowired constructor(
         val triggerV3: MutableList<IPreTriggerOn> = scmTrigger.flatMap { (scmType, triggerOns) ->
             triggerOns.map { pre ->
                 val preV3 = pre.toPre(version) as PreTriggerOnV3
-                if (!preV3.repoName.isNullOrBlank()) {
+                if (!preV3.repoName.isNullOrBlank() || scmType != ScmType.CODE_GIT) {
                     preV3.type = scmType.alis
                 }
                 preV3

@@ -243,6 +243,7 @@
   "bkTimingStartEventDesc": "{user} 定时触发",
   "bkEventReplayDesc": "事件 [{event}] 由 {user} 重放",
   "bkRepoEnablePacEventDesc": "{user} 开启PAC",
+  "bkRepoDisablePacEventDesc": "{user} 关闭PAC",
   "bkArtifactFileArrivedEventDesc": "制品 [{name}] {size}到达，来源 {pipeline}, by {user}，{repo}",
   "bkArtifactFolderArrivedEventDesc": "制品目录 [{name}] {size}到达，来源 {pipeline}，by {user}，{repo}",
   "bkArtifactImageArrivedEventDesc": "镜像: [{name}] 到达，来源: {pipeline}, by {user}",
@@ -292,5 +293,6 @@
   "bkYamlPipelineDeleteVersionFailed": "流水线 [{pipeline} | {version}] 版本删除失败",
   "bkYamlPipelineDeleteFailed": "流水线 [{pipeline}] 删除失败",
   "bkYamlPipelineCloseFailed": "流水线 [{pipeline}] 更新实例化状态失败",
-  "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支"
+  "bkYamlInstancePullRequestClosed": "MR [{mr}]已关闭，变更未发布到默认分支",
+  "oauth仅支持Tgit域名": "oauth仅支持git.tencent.com域名"
 }

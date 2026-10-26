@@ -44,7 +44,8 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         params: Map<String, String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        version: Int?
     ): Result<String?> {
 
         val buildId = pipelineBuildFacadeService.timerTriggerPipelineBuild(
@@ -52,7 +53,8 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             parameters = params,
-            checkPermission = ChannelCode.isNeedAuth(channelCodeHeader ?: channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCodeHeader ?: channelCode),
+            version = version
         )
 
         return Result(buildId)

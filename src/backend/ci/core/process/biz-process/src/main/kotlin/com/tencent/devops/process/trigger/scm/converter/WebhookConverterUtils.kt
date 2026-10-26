@@ -28,7 +28,7 @@
 package com.tencent.devops.process.trigger.scm.converter
 
 import com.tencent.devops.process.pojo.trigger.WebhookChangeFiles
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.scm.api.pojo.Change
 
@@ -97,8 +97,8 @@ object WebhookConverterUtils {
      */
     private fun getRemovedCiFiles(renamedOldFiles: Map<String, String>): List<String> {
         return renamedOldFiles.filter { (oldFile, newFile) ->
-            GitActionCommon.isCiFile(oldFile) &&
-                    !GitActionCommon.isCiFile(newFile)
+            YamlFileUtils.isCiFile(oldFile) &&
+                    !YamlFileUtils.isCiFile(newFile)
         }.map { it.key }
     }
 }

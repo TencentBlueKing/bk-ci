@@ -1010,7 +1010,15 @@ object ScriptYmlUtils {
                     is List<*> -> JsonUtil.anyTo(schedules, object : TypeReference<List<SchedulesRule>>() {})
                     else -> null
                 }
-            }.getOrNull()?.onEach { schedule ->
+            }.getOrNull()?.also { schedules ->
+                schedules.forEach { schedule ->
+                    if (!schedule.yamlBranch.isNullOrBlank() && !schedule.branches.isNullOrEmpty()) {
+                        throw YamlFormatException(
+                            "同一条 schedules 不能同时配置 branches 和 yaml-branch"
+                        )
+                    }
+                }
+            }?.onEach { schedule ->
                 initScheduleCron(schedule)
             }
         }

@@ -245,6 +245,7 @@
     "bkTimingStartEventDesc": "Timer triggered by {user}",
     "bkEventReplayDesc": "Event [{event}] replayed by {user}",
     "bkRepoEnablePacEventDesc": "Enable PAC by {user}",
+    "bkRepoDisablePacEventDesc": "Disable PAC by {user}",
     "bkArtifactFileArrivedEventDesc": "Artifact [{name}] {size}arrived, source {pipeline}, by {user}, {repo}",
     "bkArtifactFolderArrivedEventDesc": "Artifact directory [{name}] {size}arrived, source {pipeline}, by {user}, {repo}",
     "bkArtifactImageArrivedEventDesc": "Image: [{name}] arrived, source: {pipeline}, by {user}",
@@ -294,5 +295,6 @@
     "bkYamlPipelineDeleteVersionFailed": "Pipeline [{pipeline} | {version}] version deletion failed",
     "bkYamlPipelineDeleteFailed": "Pipeline [{pipeline}] deletion failed",
     "bkYamlPipelineCloseFailed": "Pipeline [{pipeline}] failed to update instantiation status",
-    "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch"
+    "bkYamlInstancePullRequestClosed": "MR [{mr}] has been closed, changes not published to default branch",
+    "oauth仅支持Tgit域名": "OAUTH only supports the git.tencent.com domain"
 }

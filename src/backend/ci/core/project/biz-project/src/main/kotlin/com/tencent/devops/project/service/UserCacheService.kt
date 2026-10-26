@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.user.UserFullDepartment
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -70,17 +71,18 @@ class UserCacheService @Autowired constructor(
             )
         } else {
             UserDeptDetail(
-                userId = userRecord["USER_ID"] as String,
-                bgName = userRecord["BG_NAME"] as String,
-                bgId = (userRecord["BG_ID"] as Int).toString(),
-                deptName = userRecord["DEPT_NAME"] as String,
-                deptId = (userRecord["DEPT_ID"] as Int).toString(),
-                centerName = userRecord["CENTER_NAME"] as String,
-                centerId = (userRecord["CENTER_ID"] as Int).toString(),
-                groupId = (userRecord["GROYP_ID"] as Int).toString(),
-                groupName = userRecord["GROUP_NAME"] as String,
-                businessLineId = (userRecord["BUSINESS_LINE_ID"] as? Int)?.toString(),
-                businessLineName = userRecord["BUSINESS_LINE_NAME"] as? String
+                userId = userRecord.userId,
+                bgName = userRecord.bgName,
+                bgId = userRecord.bgId?.toString() ?: "",
+                deptName = userRecord.deptName,
+                deptId = userRecord.deptId?.toString() ?: "",
+                centerName = userRecord.centerName,
+                centerId = userRecord.centerId?.toString() ?: "",
+                groupId = userRecord.groypId?.toString() ?: "",
+                groupName = userRecord.groupName,
+                businessLineId = userRecord.businessLineId?.toString() ?: "",
+                businessLineName = userRecord.businessLineName,
+                fullDepartments = UserFullDepartment.fromJson(userRecord.fullDepartments)
             )
         }
     }

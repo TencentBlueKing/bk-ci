@@ -487,6 +487,9 @@
                         "type" : "string"
                       }
                     },
+                    "yaml-branch" : {
+                      "type" : "string"
+                    },
                     "nodes" : {
                       "oneOf" : [ {
                         "enum" : [ "all" ]
@@ -561,6 +564,9 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "yaml-branch" : {
+                    "type" : "string"
                   },
                   "nodes" : {
                     "oneOf" : [ {
@@ -1549,6 +1555,9 @@
                       "type" : "string"
                     }
                   },
+                  "yaml-branch" : {
+                    "type" : "string"
+                  },
                   "nodes" : {
                     "oneOf" : [ {
                       "enum" : [ "all" ]
@@ -1623,6 +1632,9 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "yaml-branch" : {
+                  "type" : "string"
                 },
                 "nodes" : {
                   "oneOf" : [ {

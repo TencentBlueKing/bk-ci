@@ -47,10 +47,10 @@ class TGitTokenDao {
     fun saveAccessToken(
         dslContext: DSLContext,
         userId: String,
-        oauthUserId: String,
         token: GitToken,
         aesKeySha: String
     ): Int {
+        val now = LocalDateTime.now()
         with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
             return dslContext.insertInto(
                 this,
@@ -61,25 +61,34 @@ class TGitTokenDao {
                 TOKEN_TYPE,
                 EXPIRES_IN,
                 CREATE_TIME,
+                OPERATOR,
                 AES_KEY_SHA
             )
                 .values(
                     userId,
-                    oauthUserId,
+                    userId,
                     token.accessToken,
                     token.refreshToken,
                     token.tokenType,
                     token.expiresIn,
-                    LocalDateTime.now(),
+                    now,
+                    token.operator ?: userId,
                     aesKeySha
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
                 .set(REFRESH_TOKEN, token.refreshToken)
-                .set(OAUTH_USER_ID, oauthUserId)
+                .set(OAUTH_USER_ID, userId)
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
-                .set(CREATE_TIME, LocalDateTime.now())
+                .set(CREATE_TIME, now)
+                .let {
+                    // 避免空值覆盖操作人
+                    if (!token.operator.isNullOrBlank()) {
+                        it.set(OPERATOR, token.operator)
+                    }
+                    it
+                }
                 .set(AES_KEY_SHA, aesKeySha)
                 .execute()
         }
@@ -90,6 +99,15 @@ class TGitTokenDao {
             return dslContext.deleteFrom(this)
                 .where(USER_ID.eq(userId))
                 .execute()
+        }
+    }
+
+    fun listToken(dslContext: DSLContext, operator: String): List<TRepositoryTgitTokenRecord> {
+        with(TRepositoryTgitToken.T_REPOSITORY_TGIT_TOKEN) {
+            return dslContext.selectFrom(this)
+                .where(OPERATOR.eq(operator))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
         }
     }
 }
