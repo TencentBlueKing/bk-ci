@@ -47,7 +47,6 @@ import java.io.InputStream
 import java.net.HttpRetryException
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
-import java.util.zip.ZipInputStream
 
 /**
  * 大变量文件读写。上传通道与 [BkRepoReportResourceApi.uploadReport] 一致：
@@ -59,7 +58,8 @@ import java.util.zip.ZipInputStream
  * 与报告上传的差异：令牌类型是 [TokenType.ALL] 而不是 UPLOAD，因为同一个令牌还要下载。
  * 文件不带 pipelineId / buildId 元数据，也不带后缀。上传成功后给流水线、构建目录设置展示名，失败不影响上传。
  *
- * 批量下载没有临时令牌形态，统一经构建网关；失败或缺失的文件由调用方逐个下载兜底。
+ * 只提供单文件读写：一次预取多个大变量时由调用方并行调用 [download]，不走制品库的 zip 批量下载接口
+ * （该接口没有临时令牌形态，必须整段路径由构建机自行拼装后经构建网关下发，收敛不了访问范围）。
  */
 class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi {
 
@@ -148,19 +148,6 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         return fetch(request, "download large variable failed") { readBounded(it) }
     }
 
-    override fun batchDownload(scope: LargeVariableScope, refs: Collection<LargeVarRef>): Map<String, ByteArray> {
-        if (refs.isEmpty()) return emptyMap()
-        val distinctRefs = refs.distinctBy { it.digest }
-        val wanted = distinctRefs.mapTo(HashSet()) { it.digest }
-        val paths = distinctRefs.map { BuildVarOverflowUtils.blobPath(scope.pipelineId, scope.buildId, it) }
-        val request = buildPost(
-            path = "/bkrepo/api/build/generic/batch/${scope.projectId}/${BuildVarOverflowUtils.REPO_NAME}",
-            requestBody = getJsonRequest(mapOf("paths" to paths)),
-            headers = mapOf(BKREPO_UID to scope.userId)
-        )
-        return fetch(request, "batch download large variables failed") { unzip(it, wanted) } ?: emptyMap()
-    }
-
     /** 404 返回 null，其它非 2xx 抛异常。 */
     private fun <T> fetch(request: Request, errorMessage: String, reader: (InputStream) -> T): T? {
         requestForResponse(request).use { response ->
@@ -174,21 +161,6 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
             }
             return response.body!!.byteStream().use(reader)
         }
-    }
-
-    private fun unzip(input: InputStream, wanted: Set<String>): Map<String, ByteArray> {
-        val result = HashMap<String, ByteArray>(wanted.size)
-        ZipInputStream(input).use { zip ->
-            while (result.size < wanted.size) {
-                val entry = zip.nextEntry ?: break
-                // 条目名可能是完整路径或相对路径，文件名即摘要
-                val digest = entry.name.substringAfterLast('/')
-                if (!entry.isDirectory && digest in wanted && digest !in result) {
-                    result[digest] = readBounded(zip)
-                }
-            }
-        }
-        return result
     }
 
     /**

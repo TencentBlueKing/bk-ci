@@ -62,10 +62,4 @@ interface LargeVariableSDKApi : WorkerRestApiSDK {
 
     /** 文件不存在返回 null；内容超过大变量上限时抛异常。 */
     fun download(scope: LargeVariableScope, ref: LargeVarRef): ByteArray?
-
-    /**
-     * 批量下载（制品库打包为 zip 流返回）。
-     * @return digest -> 文件内容；缺失的不在结果中，由调用方单个兜底
-     */
-    fun batchDownload(scope: LargeVariableScope, refs: Collection<LargeVarRef>): Map<String, ByteArray>
 }

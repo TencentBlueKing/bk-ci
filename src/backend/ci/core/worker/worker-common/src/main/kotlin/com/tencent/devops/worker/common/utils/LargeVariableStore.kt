@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory
 /**
  * 构建机侧大变量读写：上传插件输出的大变量、按引用串下载真实值。
  *
- * - 多个值并行上传 / 并行兜底下载；同一批引用优先走制品库批量下载接口；
+ * - 多个值并行上传 / 并行下载，并发度 [MAX_PARALLEL]；
  * - 引用串携带内容摘要，本地按摘要做有界 LRU 缓存，同一 Job 内重复引用只下载一次；
  * - 所有方法不抛异常，失败由调用方按"保留引用串 / 丢弃变量"降级。
  */
@@ -126,8 +126,12 @@ object LargeVariableStore {
     }
 
     /**
-     * 预取一批引用到本地缓存：先批量下载，缺失部分并行单个下载。
-     * 单个引用无需预取，直接由 [load] 按需加载；预取总量不超过缓存容量，超出部分预取了也会被淘汰，留给 [load]。
+     * 并行预取一批引用到本地缓存，随后的 [load] 直接命中缓存。
+     *
+     * 单个引用无需预取，直接由 [load] 按需加载（两者都是一次下载，预取反而多一次线程切换）；
+     * 预取总量不超过缓存容量，超出部分预取了也会被淘汰，留给 [load]。
+     *
+     * 失败的引用不做处理：[load] 会在真正用到时重试，仍失败再按保留引用串降级。
      */
     fun prefetch(scope: LargeVariableScope, references: Collection<String>) {
         var budget = CACHE_MAX_CHARS
@@ -141,18 +145,7 @@ object LargeVariableStore {
             }
             .toList()
         if (missing.size <= 1) return
-        val fetched = try {
-            api.batchDownload(scope, missing)
-        } catch (ignore: Throwable) {
-            logger.warn("LARGE_VAR_BATCH_DOWNLOAD_FAIL|count=${missing.size}|${ignore.message}")
-            emptyMap()
-        }
-        val remaining = missing.filter { ref -> fetched[ref.digest]?.let { verifyAndCache(ref, it) } == null }
-        if (remaining.isNotEmpty()) {
-            runParallel(
-                remaining.associate { ref -> ref.digest to Callable<String?> { load(scope, ref) } }
-            )
-        }
+        runParallel(missing.associate { ref -> ref.digest to Callable<String?> { load(scope, ref) } })
     }
 
     private fun uploadOne(scope: LargeVariableScope, executeCount: Int, value: String): String {
