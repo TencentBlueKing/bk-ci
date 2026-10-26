@@ -16,6 +16,7 @@ import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.
 import com.tencent.devops.process.pojo.trigger.artifact.NodeArtifactEvent
 import com.tencent.devops.process.pojo.trigger.artifact.PackageMetadataArtifactEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerRateLimiter
 import com.tencent.devops.process.trigger.artifact.handler.ArtifactEventHandlerManager
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.trigger.event.ArtifactWebhookRequestEvent
@@ -24,6 +25,7 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -41,8 +43,15 @@ class ArtifactWebhookRequestService(
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val eventHandlerManager: ArtifactEventHandlerManager
+    private val eventHandlerManager: ArtifactEventHandlerManager,
+    private val pipelineTriggerRateLimiter: PipelineTriggerRateLimiter
 ) {
+    @Value("\${external.webhook.artifact.rate-limit.window-seconds:$DEFAULT_RATE_LIMIT_WINDOW_SECONDS}")
+    private val rateLimitWindowSeconds: Long = DEFAULT_RATE_LIMIT_WINDOW_SECONDS
+
+    @Value("\${external.webhook.artifact.rate-limit.max-count:$DEFAULT_RATE_LIMIT_MAX_COUNT}")
+    private val rateLimitMaxCount: Int = DEFAULT_RATE_LIMIT_MAX_COUNT
+
     fun handleRequest(requestEvent: ArtifactWebhookRequestEvent) {
         val rawBody = requestEvent.request.body
         val rawEventType = requestEvent.eventType
@@ -70,6 +79,20 @@ class ArtifactWebhookRequestService(
         )
         if (subscribers.isEmpty()) {
             logger.info("no pipelines subscribed|eventSource=$eventSource|eventScopes=$eventScopes")
+            return
+        }
+        // 同一仓库瞬间大量上传会触发大量构建，按仓库限流，超限直接丢弃
+        val acquired = pipelineTriggerRateLimiter.tryAcquire(
+            triggerType = PipelineTriggerType.ARTIFACT.name,
+            limitKey = eventSource,
+            maxCount = rateLimitMaxCount,
+            windowSeconds = rateLimitWindowSeconds
+        )
+        if (!acquired) {
+            logger.warn(
+                "artifact webhook rate limited, skip trigger|eventSource=$eventSource|" +
+                    "limit=$rateLimitMaxCount/${rateLimitWindowSeconds}s|eventType=$rawEventType"
+            )
             return
         }
         subscribers.groupBy { it.projectId }
@@ -269,5 +292,7 @@ class ArtifactWebhookRequestService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ArtifactWebhookRequestService::class.java)
+        private const val DEFAULT_RATE_LIMIT_WINDOW_SECONDS = 60L
+        private const val DEFAULT_RATE_LIMIT_MAX_COUNT = 100
     }
 }
