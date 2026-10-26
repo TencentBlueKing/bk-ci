@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.v3.models.job
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
@@ -197,6 +198,10 @@ data class RunsOn(
     @JsonProperty("queue-timeout-minutes")
     var queueTimeoutMinutes: Int? = null,
     var needs: Map<String, String>? = null,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @get:Schema(title = "docker-build")
+    @JsonProperty("docker-build")
+    val dockerBuild: DockerBuild? = null,
     @JsonIgnore
     @get:Schema(title = "跨库分享的projectId, 不序列化出去。只参与内部计算。")
     var envProjectId: String? = null
@@ -205,6 +210,12 @@ data class RunsOn(
         poolName == null && nodeName == null && lockResourceWith == null
         )
 }
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class DockerBuild(
+    val enabled: Boolean? = null,
+    val version: String? = null
+)
 
 enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),
