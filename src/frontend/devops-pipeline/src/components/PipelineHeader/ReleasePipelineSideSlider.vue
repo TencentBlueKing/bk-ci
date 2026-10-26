@@ -565,6 +565,7 @@
     import { RESOURCE_TYPE } from '@/utils/permission'
     import {
         isInstancePublishAsCreate as isPublishAsCreate,
+        resolveReleasePipelineId,
         isPacSwitcherDisabled,
         isScmTypeDisabled,
         isYamlCodeLibDisabled,
@@ -1127,7 +1128,13 @@
                             params: {
                                 ...this.releaseParams,
                                 useTemplateSettings: this.useTemplateSettings,
-                                instanceReleaseInfos: this.instanceList,
+                                instanceReleaseInfos: this.instanceList.map(item => ({
+                                    ...item,
+                                    pipelineId: resolveReleasePipelineId(
+                                        item.pipelineId,
+                                        this.$route.params?.type === INSTANCE_OPERATE_TYPE.COPY
+                                    )
+                                })),
                                 customVersionName: this.customVersionName?.trim()
                             }
                         })

@@ -27,6 +27,10 @@ export function applyInstancePacBinding (pipelineDetail, isCopy) {
     }
 }
 
+export function resolveReleasePipelineId (pipelineId, isCopy) {
+    return isCopy ? '' : pipelineId
+}
+
 export function isInstancePublishAsCreate ({
     isTemplateInstanceMode,
     isInstanceCreateType,
