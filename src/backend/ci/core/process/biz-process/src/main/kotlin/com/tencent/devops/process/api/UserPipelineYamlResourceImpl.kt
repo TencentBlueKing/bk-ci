@@ -28,12 +28,19 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineYamlResource
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
@@ -41,7 +48,9 @@ import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 @RestResource
 class UserPipelineYamlResourceImpl(
     private val pipelineYamlSyncService: PipelineYamlSyncService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : UserPipelineYamlResource {
 
     override fun countYamlPipeline(userId: String, projectId: String, repoHashId: String): Result<Long> {
@@ -82,6 +91,38 @@ class UserPipelineYamlResourceImpl(
             pipelineYamlSyncService.listSyncFailedYaml(
                 projectId = projectId,
                 repoHashId = repoHashId
+            )
+        )
+    }
+
+    override fun getVersionYamlInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<PipelineYamlVo?> {
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineYamlFacadeService.getPipelineYamlInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
             )
         )
     }

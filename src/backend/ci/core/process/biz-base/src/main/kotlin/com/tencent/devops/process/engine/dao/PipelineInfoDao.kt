@@ -984,7 +984,7 @@ class PipelineInfoDao {
             dslContext.select(PIPELINE_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(LOCKED.eq(true).or(YAML_LOCKED.eq(true)))
+                .and(LOCKED.eq(true))
                 .and(DELETE.eq(false))
                 .fetch(PIPELINE_ID, String::class.java)
         }
