@@ -456,7 +456,8 @@
                 'setSwitchingPipelineVersion',
                 'setShowVariable',
                 'requestPipelineSummary',
-                'requestTemplateSummary'
+                'requestTemplateSummary',
+                'togglePropertyPanel'
             ]),
             ...mapActions({
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
@@ -594,6 +595,11 @@
                     const cacheKey = `pac_branch_${this.$route.params.projectId}_${this.$route.params.pipelineId}`
                     sessionStorage.setItem(cacheKey, this.activePipelineVersion.versionName)
                 }
+                // 执行预览页不会拉取插件/触发器数据，若属性面板处于打开状态则先关闭，避免跳转后侧边栏空白
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
                 this.$router.push({
                     name: 'executePreview',
                     query,
