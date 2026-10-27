@@ -22,11 +22,10 @@ export class RealtimeConnection {
                 this.hiddenTimer = setTimeout(() => { this.hidden = true; this.disconnect() }, 60000)
             } else {
                 this.hidden = false
-                this.notifyAll('sync')
                 this.connect()
             }
         }
-        this.onOnline = () => { this.retry = 0; this.connect(); this.notifyAll('sync') }
+        this.onOnline = () => { this.retry = 0; this.connect() }
         this.onOffline = () => this.disconnect()
         document.addEventListener('visibilitychange', this.onVisibility)
         window.addEventListener('online', this.onOnline)
@@ -210,6 +209,7 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
     let lastStarted = 0
     let failureCount = 0
     let forbidden = false
+    let deferred = false
     const schedule = (delay) => {
         if (disposed || forbidden || timer) return
         timer = setTimeout(run, Math.max(0, delay))
@@ -217,7 +217,11 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
     const run = async () => {
         timer = null
         if (disposed || forbidden || running) return
-        if (document.hidden || !navigator.onLine) { schedule(pollingInterval); return }
+        if (document.hidden || !navigator.onLine) {
+            deferred = true
+            return
+        }
+        deferred = false
         const version = dirty
         running = true
         lastStarted = Date.now()
@@ -254,7 +258,10 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
         timer = null
         if (!running) schedule(Math.max(0, interval - (Date.now() - lastStarted)))
     }
-    const visible = () => { if (!document.hidden) refresh('invalidate') }
+    const visible = () => {
+        if (document.hidden || !deferred) return
+        refresh('invalidate')
+    }
     document.addEventListener('visibilitychange', visible)
     window.addEventListener('online', visible)
     schedule(0)

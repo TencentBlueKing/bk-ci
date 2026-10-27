@@ -100,17 +100,21 @@ test('dirty during a snapshot triggers one trailing query, never concurrent quer
     assert.deepEqual(applied, ['first'])
 })
 
-test('live connections still reconcile when the last event is lost', async t => {
+test('idle task does not query again until another push arrives', async t => {
     browser(t)
     t.mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'], now: 100000 })
     let calls = 0
-    const task = createRefreshTask({ load: async () => ++calls, liveInterval: 10000, pollingInterval: 5000 })
+    const task = createRefreshTask({ load: async () => ++calls, pollingInterval: 5000 })
     t.cleanup(() => task.dispose())
     task.refresh('sync')
     t.mock.timers.tick(0)
     await flush()
     assert.equal(calls, 1)
-    t.mock.timers.tick(12001)
+    t.mock.timers.tick(120000)
+    await flush()
+    assert.equal(calls, 1)
+    task.refresh('invalidate')
+    t.mock.timers.tick(0)
     await flush()
     assert.equal(calls, 2)
 })
