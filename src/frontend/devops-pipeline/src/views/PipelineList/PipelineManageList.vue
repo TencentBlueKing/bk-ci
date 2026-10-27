@@ -227,8 +227,13 @@
         <disable-dialog
             v-model="pipelineActionState.isDisableDialogShow"
             v-bind="pipelineActionState.activePipeline"
-            @close="closeDisableDialog"
             :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
+            :yaml-locked="pipelineActionState.activePipeline?.yamlLock"
+            :lock-user="pipelineActionState.activePipeline?.lockUser"
+            :lock-time="pipelineActionState.activePipeline?.lockTime"
+            :lock-reason="pipelineActionState.activePipeline?.lockReason"
+            :yaml-info="pipelineActionState.activePipeline?.yamlInfo"
+            @close="closeDisableDialog"
             @done="refresh"
         />
         <archive-dialog
