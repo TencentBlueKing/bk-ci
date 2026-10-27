@@ -97,6 +97,28 @@ export function isParamValueEqual (a, b) {
     return String(a) === String(b)
 }
 
+function normalizeJsonArrayValue (value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim().startsWith('[')) {
+        try {
+            const parsed = JSON.parse(value)
+            return Array.isArray(parsed) ? parsed : value
+        } catch (e) {
+            return value
+        }
+    }
+    return value
+}
+
+export function stableSerialize (value) {
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableSerialize(item)).join(',')}]`
+    }
+    if (isObject(value)) {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableSerialize(value[key])}`).join(',')}}`
+    }
+    return JSON.stringify(value)
+}
 
 export function isInArray (ele, array) {
     for (const item of array) {
