@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -92,7 +93,8 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver,
-    private val client: Client
+    private val client: Client,
+    private val matrixConcurrencyCheckService: MatrixConcurrencyCheckService
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineSettingFacadeService::class.java)
@@ -399,6 +401,15 @@ class PipelineSettingFacadeService @Autowired constructor(
                     message = "Need edit permission"
                 )
             }
+        }
+        // 最大并发数支持变量，批量更新模型同样需要解析校验，避免绕过最大并发数的有效性要求
+        pipelineModelVersionList.forEach { pipelineModelVersion ->
+            val model = JsonUtil.to(pipelineModelVersion.model, Model::class.java)
+            matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+                projectId = pipelineModelVersion.projectId,
+                pipelineName = model.name,
+                model = model
+            )
         }
         pipelineRepositoryService.batchUpdatePipelineModel(
             userId = userId,

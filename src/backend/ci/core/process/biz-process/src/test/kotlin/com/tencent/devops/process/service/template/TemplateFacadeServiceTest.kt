@@ -99,6 +99,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
             pipelineTemplateResourceService = mockk(relaxed = true),
             pipelineEventDispatcher = mockk(relaxed = true),
             publicVarGroupReferManageService = mockk(relaxed = true),
+            matrixConcurrencyCheckService = mockk(relaxed = true)
         )
     }
 

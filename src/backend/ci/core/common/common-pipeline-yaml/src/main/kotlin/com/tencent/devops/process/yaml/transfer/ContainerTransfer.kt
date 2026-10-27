@@ -61,6 +61,7 @@ import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MUTEX_TI
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.utils.YamlMaxParallelParser
 import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.job.Container3
@@ -392,18 +393,22 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 json.remove("include")
                 json.remove("exclude")
 
+                val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
                 return MatrixControlOption(
                     strategyStr = YamlUtil.toYaml(json),
                     includeCaseStr = include,
                     excludeCaseStr = exclude,
                     fastKill = fastKill,
-                    maxConcurrency = maxParallel
+                    maxConcurrency = maxConcurrency,
+                    maxConcurrencyVar = maxConcurrencyVar
                 )
             } else {
+                val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
                 return MatrixControlOption(
                     strategyStr = matrix.toString(),
                     fastKill = fastKill,
-                    maxConcurrency = maxParallel
+                    maxConcurrency = maxConcurrency,
+                    maxConcurrencyVar = maxConcurrencyVar
                 )
             }
         }
@@ -431,12 +436,14 @@ class ContainerTransfer @Autowired(required = false) constructor(
             } else {
                 exclude.toString()
             }
+            val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
             return MatrixControlOption(
                 strategyStr = strategyStr,
                 includeCaseStr = includeCaseStr,
                 excludeCaseStr = excludeCaseStr,
                 fastKill = fastKill,
-                maxConcurrency = maxParallel
+                maxConcurrency = maxConcurrency,
+                maxConcurrencyVar = maxConcurrencyVar
             )
         }
     }
@@ -552,7 +559,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
             include = matrixControlOption.convertMatrixToYamlInclude(),
             exclude = matrixControlOption.convertMatrixToYamlExclude(),
             fastKill = matrixControlOption.fastKill,
-            maxParallel = matrixControlOption.maxConcurrency
+            maxParallel = YamlMaxParallelParser.format(
+                maxConcurrencyVar = matrixControlOption.maxConcurrencyVar,
+                maxConcurrency = matrixControlOption.maxConcurrency
+            )
         )
     }
 }
