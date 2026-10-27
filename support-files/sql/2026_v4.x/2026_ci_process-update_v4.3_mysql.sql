@@ -21,6 +21,15 @@ BEGIN
             ADD COLUMN `YAML_BRANCH` varchar(255) DEFAULT NULL COMMENT 'PAC 非默认分支定时：到点按该分支 YAML 执行';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                    AND INDEX_NAME = 'idx_proj_pipeline') THEN
+        ALTER TABLE `T_PIPELINE_BUILD_STAGE`
+            ADD INDEX `idx_proj_pipeline` (`PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
