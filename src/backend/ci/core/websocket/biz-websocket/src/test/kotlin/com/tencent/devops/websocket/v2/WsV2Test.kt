@@ -6,14 +6,18 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.websocket.v2.WsInvalidation
 import com.tencent.devops.common.websocket.v2.WsTopic
 import com.tencent.devops.common.websocket.v2.WsV2Properties
+import com.tencent.devops.common.websocket.v2.WsV2PublishMetrics
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.http.HttpHeaders
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
@@ -122,6 +126,62 @@ class WsV2Test {
         } finally {
             handler.shutdown()
         }
+    }
+
+    @Test
+    fun `connection limit is visible to metrics without dropping an accepted session`() {
+        val properties = WsV2Properties().apply {
+            maxConnections = 1
+            mergeWindowMs = 60_000
+        }
+        val rejected = mutableListOf<String>()
+        val metrics = object : WsV2Instrumentation {
+            override fun connectionRejected(reason: String) {
+                rejected += reason
+            }
+        }
+        val handler = WsV2Handler(properties, FakeBroker(), WsTopicAuthorizer { _, _ -> emptySet() }, metrics)
+        try {
+            handler.afterConnectionEstablished(session("one"))
+            handler.afterConnectionEstablished(session("two"))
+            assertEquals(listOf("capacity"), rejected)
+            assertEquals(1, handler.connectionCount())
+        } finally {
+            handler.shutdown()
+        }
+    }
+
+    @Test
+    fun `prometheus counters keep only bounded labels`() {
+        val registry = SimpleMeterRegistry()
+        val handlers = mockk<ObjectProvider<WsV2Handler>>()
+        val brokers = mockk<ObjectProvider<WsSubscriptionBroker>>()
+        every { handlers.getIfAvailable() } returns null
+        every { brokers.getIfAvailable() } returns null
+        val metrics = WsV2Metrics(registry, WsV2Properties(), handlers, brokers)
+        metrics.registerGauges()
+        metrics.overload("binding_limit")
+        metrics.handshakeRejected("origin")
+        assertEquals(0.0, registry.get("websocket_v2_connections").gauge().value())
+        assertEquals(10000.0, registry.get("websocket_v2_connections_limit").gauge().value())
+        assertEquals(1.0, registry.get("websocket_v2_overload_total").tag("reason", "binding_limit").counter().count())
+        assertEquals(1.0, registry.get("websocket_v2_handshake_rejected_total").tag("reason", "origin").counter().count())
+        val publish = WsV2PublishMetrics(registry)
+        publish.record { }
+        assertThrows(IllegalStateException::class.java) { publish.record<Unit> { throw IllegalStateException("down") } }
+        publish.nack()
+        assertEquals(1.0, registry.get("websocket_v2_publish_total").tag("success", "true").counter().count())
+        assertEquals(1.0, registry.get("websocket_v2_publish_total").tag("success", "false").counter().count())
+        assertEquals(1.0, registry.get("websocket_v2_publish_nack_total").counter().count())
+        assertEquals(0.0, registry.get("websocket_v2_publish_inflight").gauge().value())
+    }
+
+    private fun session(id: String): WebSocketSession {
+        val socket = mockk<WebSocketSession>(relaxed = true)
+        every { socket.id } returns id
+        every { socket.isOpen } returns true
+        every { socket.attributes } returns mutableMapOf(WsV2Handler.USER_ATTRIBUTE to "test-user")
+        return socket
     }
 
     private fun await(condition: () -> Boolean) {

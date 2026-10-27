@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit
 
 class WsV2RabbitSubscriber(
     private val factory: ConnectionFactory,
-    private val properties: WsV2Properties
+    private val properties: WsV2Properties,
+    private val metrics: WsV2Instrumentation = WsV2Instrumentation.NONE
 ) : WsSubscriptionBroker {
     private val monitor = Any()
     private val references = linkedMapOf<String, Int>()
@@ -39,6 +40,8 @@ class WsV2RabbitSubscriber(
         this.onMessage = onMessage
         this.onReset = onReset
     }
+
+    override fun bindingCount(): Int = synchronized(monitor) { references.size }
 
     override fun bind(keys: Set<String>) = synchronized(monitor) {
         check(ready) { "Websocket broker is unavailable" }
@@ -96,16 +99,25 @@ class WsV2RabbitSubscriber(
                 activeChannel.basicQos(128)
                 activeChannel.addShutdownListener { ready = false }
                 activeChannel.basicConsume(queue, false, DeliverCallback { _, delivery ->
+                    val started = System.nanoTime()
+                    var result = "invalid"
                     try {
-                        if (delivery.body.size <= properties.maxFrameBytes) {
+                        if (delivery.body.size > properties.maxFrameBytes) {
+                            result = "oversize"
+                        } else {
                             val event = JsonUtil.getObjectMapper(false).readValue(delivery.body, WsInvalidation::class.java)
                             if (WsTopic.routingKey(event.topic) == delivery.envelope.routingKey) {
                                 onMessage(delivery.envelope.routingKey, event)
+                                result = "delivered"
+                            } else {
+                                result = "ignored"
                             }
                         }
                     } catch (exception: Exception) {
+                        result = "invalid"
                         logger.warn("Invalid websocket v2 broker message", exception)
                     } finally {
+                        metrics.brokerConsumed(result, System.nanoTime() - started)
                         try {
                             activeChannel.basicAck(delivery.envelope.deliveryTag, false)
                         } catch (exception: Exception) {
@@ -116,8 +128,10 @@ class WsV2RabbitSubscriber(
                 ready = true
             }
             onReset()
+            metrics.brokerRecovered(true)
         } catch (exception: Exception) {
             ready = false
+            metrics.brokerRecovered(false)
             logger.warn("Websocket v2 broker recovery failed", exception)
         }
     }

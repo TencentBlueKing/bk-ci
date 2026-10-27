@@ -25,32 +25,38 @@ class WsV2Configuration {
     @Bean
     fun websocketV2Subscriber(
         @Qualifier("websocketV2ConnectionFactory") factory: ConnectionFactory,
-        properties: WsV2Properties
-    ): WsSubscriptionBroker = WsV2RabbitSubscriber(factory, properties)
+        properties: WsV2Properties,
+        metrics: WsV2Instrumentation
+    ): WsSubscriptionBroker = WsV2RabbitSubscriber(factory, properties, metrics)
 
     @Bean
     fun websocketV2Handler(
         properties: WsV2Properties,
         broker: WsSubscriptionBroker,
-        authorizer: WsTopicAuthorizer
-    ) = WsV2Handler(properties, broker, authorizer)
+        authorizer: WsTopicAuthorizer,
+        metrics: WsV2Instrumentation
+    ) = WsV2Handler(properties, broker, authorizer, metrics)
 
     @Configuration(proxyBeanMethods = false)
     @EnableWebSocket
     class Endpoint(
         private val handler: WsV2Handler,
-        private val properties: WsV2Properties
+        private val properties: WsV2Properties,
+        private val metrics: WsV2Instrumentation
     ) : WebSocketConfigurer {
         override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
             registry.addHandler(handler, "/ws/v2")
-                .addInterceptors(WsV2HandshakeInterceptor(properties))
+                .addInterceptors(WsV2HandshakeInterceptor(properties, metrics))
                 // 容器层不按固定域名拦截。经过网关后请求主机是服务自身地址，固定名单无法覆盖多套域名。
                 .setAllowedOriginPatterns("*")
         }
     }
 }
 
-class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : HandshakeInterceptor {
+class WsV2HandshakeInterceptor(
+    private val properties: WsV2Properties,
+    private val metrics: WsV2Instrumentation = WsV2Instrumentation.NONE
+) : HandshakeInterceptor {
     override fun beforeHandshake(
         request: ServerHttpRequest,
         response: ServerHttpResponse,
@@ -59,6 +65,7 @@ class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : Handsha
     ): Boolean {
         val userId = request.headers.getFirst(AUTH_HEADER_DEVOPS_USER_ID)
         if (userId.isNullOrBlank() || userId.length > 256) {
+            metrics.handshakeRejected("unauthorized")
             response.setStatusCode(HttpStatus.UNAUTHORIZED)
             return false
         }
@@ -72,6 +79,7 @@ class WsV2HandshakeInterceptor(private val properties: WsV2Properties) : Handsha
             false
         }
         if (!allowed) {
+            metrics.handshakeRejected("origin")
             response.setStatusCode(HttpStatus.FORBIDDEN)
             return false
         }

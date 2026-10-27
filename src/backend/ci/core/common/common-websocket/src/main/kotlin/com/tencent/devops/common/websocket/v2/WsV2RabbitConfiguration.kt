@@ -7,6 +7,7 @@ import org.springframework.amqp.core.MessageDeliveryMode
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.RabbitConnectionFactoryBean
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.amqp.CachingConnectionFactoryConfigurer
@@ -43,14 +44,21 @@ class WsV2RabbitConfiguration {
     }
 
     @Bean
+    fun websocketV2PublishMetrics(meterRegistry: MeterRegistry) = WsV2PublishMetrics(meterRegistry)
+
+    @Bean
     fun websocketV2Publisher(
         @Qualifier("websocketV2ConnectionFactory") factory: CachingConnectionFactory,
-        properties: WsV2Properties
+        properties: WsV2Properties,
+        metrics: WsV2PublishMetrics
     ): WsInvalidationPublisher {
         val template = RabbitTemplate(factory)
         val declared = java.util.concurrent.atomic.AtomicBoolean(false)
         template.setConfirmCallback { _, acknowledged, cause ->
-            if (!acknowledged) logger.warn("Websocket v2 publish rejected: {}", cause)
+            if (!acknowledged) {
+                metrics.nack()
+                logger.warn("Websocket v2 publish rejected: {}", cause)
+            }
         }
         return WsInvalidationPublisher { event ->
             val messageProperties = MessageProperties().apply {
@@ -58,23 +66,25 @@ class WsV2RabbitConfiguration {
                 deliveryMode = MessageDeliveryMode.NON_PERSISTENT
                 expiration = properties.queueTtlMs.toString()
             }
-            try {
-                if (!declared.get()) synchronized(declared) {
-                    if (!declared.get()) {
-                        template.execute { channel ->
-                            channel.exchangeDeclare(properties.exchangeName(), "direct", true)
-                            true
+            metrics.record {
+                try {
+                    if (!declared.get()) synchronized(declared) {
+                        if (!declared.get()) {
+                            template.execute { channel ->
+                                channel.exchangeDeclare(properties.exchangeName(), "direct", true)
+                                true
+                            }
+                            declared.set(true)
                         }
-                        declared.set(true)
                     }
+                    template.send(
+                        properties.exchangeName(), WsTopic.routingKey(event.topic),
+                        Message(JsonUtil.toJson(event, false).toByteArray(Charsets.UTF_8), messageProperties)
+                    )
+                } catch (exception: Exception) {
+                    declared.set(false)
+                    throw exception
                 }
-                template.send(
-                    properties.exchangeName(), WsTopic.routingKey(event.topic),
-                    Message(JsonUtil.toJson(event, false).toByteArray(Charsets.UTF_8), messageProperties)
-                )
-            } catch (exception: Exception) {
-                declared.set(false)
-                throw exception
             }
         }
     }

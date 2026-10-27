@@ -24,7 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class WsV2Handler(
     private val properties: WsV2Properties,
     private val broker: WsSubscriptionBroker,
-    private val authorizer: WsTopicAuthorizer
+    private val authorizer: WsTopicAuthorizer,
+    private val metrics: WsV2Instrumentation = WsV2Instrumentation.NONE
 ) : TextWebSocketHandler() {
     private data class Subscription(val topic: WsTopic, val generation: String)
     private data class Target(val connectionId: String, val topic: String)
@@ -77,11 +78,19 @@ class WsV2Handler(
             userId, ConcurrentWebSocketSessionDecorator(session, properties.sendTimeoutMs, properties.maxPendingBytes)
         ) else null
         synchronized(connections) {
-            if (state == null || stopping || !broker.ready || connections.size >= properties.maxConnections) {
+            val reason = when {
+                state == null -> "unauthenticated"
+                stopping -> "stopping"
+                !broker.ready -> "broker_down"
+                connections.size >= properties.maxConnections -> "capacity"
+                else -> null
+            }
+            if (reason != null) {
+                metrics.connectionRejected(reason)
                 session.close(CloseStatus(1013, "Try again later"))
                 return
             }
-            connections[session.id] = state
+            connections[session.id] = requireNotNull(state)
         }
         session.textMessageSizeLimit = properties.maxFrameBytes
         send(requireNotNull(state), mapOf(
@@ -94,7 +103,7 @@ class WsV2Handler(
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         val state = connections[session.id] ?: return
         if (message.payloadLength > properties.maxFrameBytes) {
-            close(state, CloseStatus.TOO_BIG_TO_PROCESS)
+            close(state, CloseStatus.TOO_BIG_TO_PROCESS, "policy")
             return
         }
         state.lastSeen = System.currentTimeMillis()
@@ -104,7 +113,7 @@ class WsV2Handler(
                 state.operationCount = 0
             }
             if (++state.operationCount > 64) {
-                close(state, CloseStatus.POLICY_VIOLATION)
+                close(state, CloseStatus.POLICY_VIOLATION, "policy")
                 return
             }
         }
@@ -112,11 +121,11 @@ class WsV2Handler(
     }
 
     override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-        connections[session.id]?.let { close(it, status) }
+        connections[session.id]?.let { close(it, status, "client") }
     }
 
     override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
-        connections[session.id]?.let { close(it, CloseStatus.SERVER_ERROR) }
+        connections[session.id]?.let { close(it, CloseStatus.SERVER_ERROR, "transport") }
     }
 
     private fun process(state: Connection, payload: String) {
@@ -169,7 +178,12 @@ class WsV2Handler(
                         if (value !in state.subscriptions) {
                             try {
                                 broker.bind(topic.routingKeys())
+                            } catch (exception: IllegalArgumentException) {
+                                metrics.overload("binding_limit")
+                                rejected[value] = "UNAVAILABLE"
+                                return@forEach
                             } catch (exception: Exception) {
+                                metrics.overload("broker_down")
                                 rejected[value] = "UNAVAILABLE"
                                 return@forEach
                             }
@@ -222,17 +236,17 @@ class WsV2Handler(
         try {
             val now = System.currentTimeMillis()
             connections.values.forEach { state ->
-                if (now - state.lastSeen > properties.heartbeatMs * 2 ||
-                    (state.writeStarted > 0 && now - state.writeStarted > properties.sendTimeoutMs)
-                ) {
-                    close(state, CloseStatus.SESSION_NOT_RELIABLE)
+                val stale = now - state.lastSeen > properties.heartbeatMs * 2
+                val sendTimedOut = state.writeStarted > 0 && now - state.writeStarted > properties.sendTimeoutMs
+                if (stale || sendTimedOut) {
+                    close(state, CloseStatus.SESSION_NOT_RELIABLE, if (sendTimedOut) "send_timeout" else "heartbeat")
                     return@forEach
                 }
                 if (now - state.lastPing >= properties.heartbeatMs) {
                     state.lastPing = now
                     send(state, mapOf("op" to "ping", "nonce" to now.toString()))
                     if (!broker.ready) {
-                        close(state, CloseStatus.SERVICE_RESTARTED)
+                        close(state, CloseStatus.SERVICE_RESTARTED, "broker_down")
                         return@forEach
                     }
                 }
@@ -278,7 +292,8 @@ class WsV2Handler(
         synchronized(state) {
             if (state.closed.get()) return
             if (state.input.size >= 32) {
-                close(state, CloseStatus(1013, "Try again later"))
+                metrics.overload("input_queue")
+                close(state, CloseStatus(1013, "Try again later"), "overload")
                 return
             }
             state.input.addLast(action)
@@ -294,10 +309,10 @@ class WsV2Handler(
                     action()
                 } catch (exception: IllegalArgumentException) {
                     send(state, mapOf("op" to "error", "code" to "INVALID_REQUEST"))
-                    close(state, CloseStatus.POLICY_VIOLATION)
+                    close(state, CloseStatus.POLICY_VIOLATION, "policy")
                 } catch (exception: Exception) {
                     logger.warn("Websocket v2 request failed", exception)
-                    close(state, CloseStatus.SERVER_ERROR)
+                    close(state, CloseStatus.SERVER_ERROR, "server")
                 }
             }
         }
@@ -310,10 +325,12 @@ class WsV2Handler(
             if (state.output.size >= properties.maxPendingFrames ||
                 state.outputBytes + message.payloadLength > properties.maxPendingBytes
             ) {
-                close(state, CloseStatus(1013, "Try again later"))
+                metrics.overload("output_queue")
+                close(state, CloseStatus(1013, "Try again later"), "overload")
                 return
             }
             state.output.addLast(message)
+            if (fields["op"] == "invalidate") metrics.invalidationsSent(1)
             state.outputBytes += message.payloadLength
             if (state.writing) return
             state.writing = true
@@ -325,11 +342,14 @@ class WsV2Handler(
                     state.outputBytes -= item.payloadLength
                     item
                 }
+                val started = System.nanoTime()
                 try {
                     state.writeStarted = System.currentTimeMillis()
                     state.socket.sendMessage(next)
+                    metrics.sendCompleted(System.nanoTime() - started, true)
                 } catch (exception: Exception) {
-                    close(state, CloseStatus.SESSION_NOT_RELIABLE)
+                    metrics.sendCompleted(System.nanoTime() - started, false)
+                    close(state, CloseStatus.SESSION_NOT_RELIABLE, "send_failed")
                 } finally {
                     state.writeStarted = 0
                 }
@@ -341,12 +361,14 @@ class WsV2Handler(
         try {
             (if (sending) senders else workers).execute(action)
         } catch (exception: RejectedExecutionException) {
-            close(state, CloseStatus(1013, "Try again later"))
+            metrics.overload(if (sending) "sender_queue" else "worker_queue")
+            close(state, CloseStatus(1013, "Try again later"), "overload")
         }
     }
 
-    private fun close(state: Connection, status: CloseStatus) {
+    private fun close(state: Connection, status: CloseStatus, reason: String) {
         if (!state.closed.compareAndSet(false, true)) return
+        metrics.connectionClosed(reason)
         connections.remove(state.socket.id, state)
         synchronized(state) {
             state.subscriptions.keys.toList().forEach { removeSubscription(state, it) }
@@ -365,10 +387,30 @@ class WsV2Handler(
     fun shutdown() {
         stopping = true
         timer.shutdownNow()
-        connections.values.toList().forEach { close(it, CloseStatus.SERVICE_RESTARTED) }
+        connections.values.toList().forEach { close(it, CloseStatus.SERVICE_RESTARTED, "stopping") }
         workers.shutdownNow()
         senders.shutdownNow()
     }
+
+    fun connectionCount(): Int = connections.size
+
+    fun routeCount(): Int = routes.size
+
+    fun workerActiveCount(): Int = workers.activeCount
+
+    fun workerQueueSize(): Int = workers.queue.size
+
+    fun senderActiveCount(): Int = senders.activeCount
+
+    fun senderQueueSize(): Int = senders.queue.size
+
+    fun pendingFrameCount(): Int = connections.values.sumOf { synchronized(it) { it.output.size } }
+
+    fun pendingByteCount(): Int = connections.values.sumOf { synchronized(it) { it.outputBytes } }
+
+    fun dirtyTopicCount(): Int = connections.values.sumOf { synchronized(it) { it.dirty.size } }
+
+    fun slowWriteCount(): Int = connections.values.count { it.writeStarted > 0L }
 
     companion object {
         const val USER_ATTRIBUTE = "bk.websocket.v2.user"
