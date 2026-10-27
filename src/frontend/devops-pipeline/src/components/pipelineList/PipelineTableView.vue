@@ -553,7 +553,7 @@
                             }"
                             @click="execPipeline(props.row)"
                         >
-                            {{ (props.row.lock || props.row.yamlLock) ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
+                            {{ (props.row.lock || props.row.yamlLocked) ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
                         </bk-button>
                     </span>
                     <ext-menu
@@ -855,7 +855,7 @@
             // 执行按钮 tooltip：PAC 流水线禁用态展示与详情页一致的禁用明细（禁用人/时间/原因）
             getExecBtnTooltips (row) {
                 const isPageLocked = !!row.lock
-                const isYamlLocked = !!row.yamlLock
+                const isYamlLocked = !!row.yamlLocked
                 if (!isPageLocked && !isYamlLocked) {
                     return row.canManualStartup
                         ? { disabled: true }
@@ -885,14 +885,14 @@
                     { label: this.$t('submitTimeLabel'), value: convertTime(row.yamlLockTime) }
                 ]
                 // 页面与 YAML 均禁用，分组展示两者明细
-                if (row.lock && row.yamlLock) {
+                if (row.lock && row.yamlLocked) {
                     return [
                         { title: this.$t('pageDisabledLabel'), items: pageItems },
                         { title: this.$t('yamlDisabledLabel'), items: yamlItems }
                     ]
                 }
                 // 仅 YAML 声明禁用，额外展示禁用来源
-                if (row.yamlLock) {
+                if (row.yamlLocked) {
                     return [{
                         items: [
                             { label: this.$t('disabledSourceLabel'), value: this.$t('yamlDisabledSourceDesc') },
@@ -906,7 +906,7 @@
             getPipelineDisabledTooltipHtml (row) {
                 return `<div class="pipeline-disabled-tooltip">
                     <p class="disabled-tooltip-title">${this.$t('pacPipelineLockTips')}</p>
-                    ${row.lock && row.yamlLock ? `<p class="disabled-tooltip-sub-title">${this.$t('resolveBothDisabledTips')}</p>` : ''}
+                    ${row.lock && row.yamlLocked ? `<p class="disabled-tooltip-sub-title">${this.$t('resolveBothDisabledTips')}</p>` : ''}
                     ${this.getPipelineDisabledTooltipGroups(row).map(group => `
                         ${group.title ? `<p class="disabled-tooltip-group-title">${group.title}</p>` : ''}
                         ${group.items.map(item => `<p class="disabled-tooltip-item"><span class="item-label">${item.label}</span><span class="item-value">${item.value}</span></p>`).join('')}

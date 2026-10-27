@@ -228,7 +228,7 @@
             v-model="pipelineActionState.isDisableDialogShow"
             v-bind="pipelineActionState.activePipeline"
             :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
-            :yaml-locked="pipelineActionState.activePipeline?.yamlLock"
+            :yaml-locked="pipelineActionState.activePipeline?.yamlLocked"
             :lock-user="pipelineActionState.activePipeline?.lockUser"
             :lock-time="pipelineActionState.activePipeline?.lockTime"
             :lock-reason="pipelineActionState.activePipeline?.lockReason"
