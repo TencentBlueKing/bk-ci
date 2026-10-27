@@ -84,24 +84,27 @@ class WsV2RabbitSubscriber(
 
     private fun unbindOnBroker(keys: Set<String>) {
         val activeChannel = channel
-        keys.forEach { key ->
-            val remove = synchronized(monitor) {
-                val count = references[key] ?: return@forEach
-                if (count > 1) {
-                    references[key] = count - 1
-                    false
-                } else {
-                    references.remove(key)
-                    ready
-                }
+        keys.forEach { key -> releaseBinding(activeChannel, key) }
+    }
+
+    private fun releaseBinding(activeChannel: Channel?, key: String) {
+        if (!dropReference(key) || activeChannel == null) return
+        try {
+            activeChannel.queueUnbind(queueName, properties.exchangeName(), key)
+        } catch (ignored: Exception) {
+            forget(activeChannel)
+        }
+    }
+
+    private fun dropReference(key: String): Boolean {
+        synchronized(monitor) {
+            val count = references[key] ?: return false
+            if (count > 1) {
+                references[key] = count - 1
+                return false
             }
-            if (remove && activeChannel != null) {
-                try {
-                    activeChannel.queueUnbind(queueName, properties.exchangeName(), key)
-                } catch (exception: Exception) {
-                    if (!activeChannel.isOpen && channel === activeChannel) ready = false
-                }
-            }
+            references.remove(key)
+            return ready
         }
     }
 
