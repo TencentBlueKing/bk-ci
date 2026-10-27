@@ -121,14 +121,16 @@ object DependOnUtils {
 
     /**
      * 按给定变量解析 dependOn，并做循环依赖校验。
-     * 解析不到任何已存在 jobId 时会清空旧映射，避免沿用启动期过期结果。
+     * 解析出的 jobId 在本Stage均不存在时会清空旧映射，避免沿用启动期过期结果。
+     * @return containerId 与本Stage中找不到的依赖jobId列表
      */
-    fun initDependOn(jobs: List<DependOnJob>, params: Map<String, String>) {
+    fun initDependOn(jobs: List<DependOnJob>, params: Map<String, String>): Map<String, List<String>> {
         val allJobId2JobMap = jobs.filter { !it.jobId.isNullOrBlank() }.associateBy { it.jobId!! }
         if (allJobId2JobMap.isEmpty()) {
-            return
+            return emptyMap()
         }
 
+        val unresolvedJobIds = mutableMapOf<String, List<String>>()
         val cycleCheckJobMap = mutableMapOf<String, List<String>>()
         jobs.forEach job@{ job ->
             val dependOnJobIds = getDependOnJobIds(
@@ -146,11 +148,18 @@ object DependOnUtils {
                 cycleCheckJobMap[job.jobId!!] = dependOnJobIds
             }
             val containerId2JobIds = mutableMapOf<String, String>()
+            val notFoundJobIds = mutableListOf<String>()
             dependOnJobIds.forEach { dependOnJobId ->
-                val dependOnJob = allJobId2JobMap[dependOnJobId] ?: return@forEach
+                val dependOnJob = allJobId2JobMap[dependOnJobId] ?: run {
+                    notFoundJobIds.add(dependOnJobId)
+                    return@forEach
+                }
                 containerId2JobIds[dependOnJob.containerId] = dependOnJobId
             }
             job.jobControlOption.dependOnContainerId2JobIds = containerId2JobIds.takeIf { it.isNotEmpty() }
+            if (notFoundJobIds.isNotEmpty()) {
+                unresolvedJobIds[job.containerId] = notFoundJobIds
+            }
         }
 
         val visited = mutableMapOf<String, Int>()
@@ -161,6 +170,7 @@ object DependOnUtils {
                 visited = visited
             )
         }
+        return unresolvedJobIds
     }
 
     fun enableDependOn(container: Container): Boolean {

@@ -14,6 +14,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.TestTool
 import io.mockk.every
 import io.mockk.justRun
@@ -31,6 +32,7 @@ class DependOnStageCmdTest {
     private val buildLogPrinter = mockk<BuildLogPrinter>(relaxed = true)
     private val cmd = DependOnStageCmd(
         pipelineContainerService = pipelineContainerService,
+        pipelineTaskService = mockk<PipelineTaskService>(relaxed = true),
         buildLogPrinter = buildLogPrinter
     )
 
