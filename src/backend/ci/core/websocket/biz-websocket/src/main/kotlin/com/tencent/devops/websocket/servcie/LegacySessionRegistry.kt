@@ -57,6 +57,23 @@ class LegacySessionRegistry(private val redisOperation: RedisOperation) {
             (socketId == null || connection.socket.id == socketId)
     }
 
+    fun logout(sessionId: String, userId: String): Boolean {
+        val connection = connections[sessionId] ?: return false
+        if (connection.userId != userId) return false
+        var released = false
+        withSessionLock(sessionId) {
+            if (connections[sessionId] === connection &&
+                redisOperation.get(ownerKey(sessionId)) == connection.token
+            ) {
+                clean(sessionId, userId)
+                connections.remove(sessionId, connection)
+                released = true
+            }
+        }
+        if (released && connection.socket.isOpen) connection.socket.close(CloseStatus.NORMAL)
+        return released
+    }
+
     fun pageChanged(sessionId: String, page: String?) {
         connections[sessionId]?.page = page
     }
@@ -65,31 +82,37 @@ class LegacySessionRegistry(private val redisOperation: RedisOperation) {
     fun refreshConnections() {
         connections.forEach { (sessionId, connection) ->
             try {
-                if (!connection.socket.isOpen) {
-                    disconnected(sessionId, connection.socket.id)
-                } else {
-                    val renewed = redisOperation.execute(
-                        RENEW_SCRIPT, listOf(ownerKey(sessionId)), connection.token, LEASE_SECONDS.toString()
-                    ) == 1L
-                    if (!renewed) {
-                        connection.socket.close(CloseStatus.SERVICE_RESTARTED)
-                    } else {
-                        redisOperation.zadd(EXPIRY_KEY, sessionId,
-                            (System.currentTimeMillis() + LEASE_SECONDS * 1000).toDouble())
-                        if (System.currentTimeMillis() - connection.lastIndexRefresh > 120000) {
-                            withSessionLock(sessionId) {
-                                if (connections[sessionId] === connection &&
-                                    redisOperation.get(ownerKey(sessionId)) == connection.token
-                                ) renew(sessionId, connection)
-                            }
-                        }
-                    }
-                }
+                refreshConnection(sessionId, connection)
             } catch (exception: Exception) {
                 logger.warn("Unable to renew legacy websocket session", exception)
             }
         }
         expireConnections()
+    }
+
+    private fun refreshConnection(sessionId: String, connection: Connection) {
+        if (!connection.socket.isOpen) {
+            disconnected(sessionId, connection.socket.id)
+            return
+        }
+        val renewed = redisOperation.execute(
+            RENEW_SCRIPT, listOf(ownerKey(sessionId)), connection.token, LEASE_SECONDS.toString()
+        ) == 1L
+        if (!renewed) {
+            connection.socket.close(CloseStatus.SERVICE_RESTARTED)
+            return
+        }
+        redisOperation.zadd(
+            EXPIRY_KEY,
+            sessionId,
+            (System.currentTimeMillis() + LEASE_SECONDS * 1000).toDouble()
+        )
+        if (System.currentTimeMillis() - connection.lastIndexRefresh <= 120000) return
+        withSessionLock(sessionId) {
+            if (connections[sessionId] === connection &&
+                redisOperation.get(ownerKey(sessionId)) == connection.token
+            ) renew(sessionId, connection)
+        }
     }
 
     fun expireConnections() {

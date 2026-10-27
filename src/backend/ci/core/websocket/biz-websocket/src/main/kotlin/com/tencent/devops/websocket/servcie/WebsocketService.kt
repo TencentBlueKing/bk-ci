@@ -132,7 +132,10 @@ class WebsocketService @Autowired constructor(
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
-            if (sessionRegistry.isManaged(sessionId)) return
+            if (sessionRegistry.isManaged(sessionId)) {
+                sessionRegistry.logout(sessionId, userId)
+                return
+            }
             if (WsRedisUtils.getUserBySession(redisOperation, sessionId)?.let { it != userId } == true) return
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
             WsRedisUtils.deleteUserSessionBySession(redisOperation, sessionId)
@@ -148,7 +151,7 @@ class WebsocketService @Autowired constructor(
         sessionId: String
     ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
-        if (sessionRegistry.isManaged(sessionId)) return Result(true)
+        if (sessionRegistry.isManaged(sessionId)) return Result(sessionRegistry.logout(sessionId, userId))
         if (WsRedisUtils.getUserBySession(redisOperation, sessionId)?.let { it != userId } == true) return Result(false)
         val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(userId, sessionId, null)

@@ -11,6 +11,7 @@ import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import java.util.UUID
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -21,8 +22,8 @@ class WsV2RabbitSubscriber(
 ) : WsSubscriptionBroker {
     private val monitor = Any()
     private val references = linkedMapOf<String, Int>()
-    private var channel: Channel? = null
-    private var queueName: String? = null
+    @Volatile private var channel: Channel? = null
+    @Volatile private var queueName: String? = null
     @Volatile private var stopping = false
     @Volatile override var ready = false
         private set
@@ -43,39 +44,90 @@ class WsV2RabbitSubscriber(
 
     override fun bindingCount(): Int = synchronized(monitor) { references.size }
 
-    override fun bind(keys: Set<String>) = synchronized(monitor) {
-        check(ready) { "Websocket broker is unavailable" }
-        require(references.size + keys.count { it !in references } <= properties.maxBindings) { "Binding limit" }
-        val activeChannel = requireNotNull(channel)
-        try {
-            keys.filter { it !in references }.forEach { key ->
-                activeChannel.queueBind(queueName, properties.exchangeName(), key)
-            }
-            keys.forEach { references[it] = (references[it] ?: 0) + 1 }
-        } catch (exception: Exception) {
-            ready = false
-            throw exception
-        }
+    override fun bind(keys: Set<String>) {
+        onBroker { bindOnBroker(keys) }
     }
 
     override fun unbind(keys: Set<String>) {
+        onBroker { unbindOnBroker(keys) }
+    }
+
+    private fun bindOnBroker(keys: Set<String>) {
+        val activeChannel: Channel
+        val missing: List<String>
         synchronized(monitor) {
-            keys.forEach { key ->
+            check(ready) { "Websocket broker is unavailable" }
+            require(references.size + keys.count { it !in references } <= properties.maxBindings) { "Binding limit" }
+            activeChannel = requireNotNull(channel)
+            missing = keys.filter { it !in references }
+        }
+        try {
+            missing.forEach { key ->
+                activeChannel.queueBind(queueName, properties.exchangeName(), key)
+            }
+        } catch (exception: Exception) {
+            missing.forEach { key ->
+                try {
+                    activeChannel.queueUnbind(queueName, properties.exchangeName(), key)
+                } catch (ignored: Exception) {
+                    logger.debug("Rollback of websocket v2 binding failed")
+                }
+            }
+            if (!activeChannel.isOpen) ready = false
+            throw exception
+        }
+        synchronized(monitor) {
+            if (channel !== activeChannel || !ready) throw IllegalStateException("Websocket broker is unavailable")
+            keys.forEach { references[it] = (references[it] ?: 0) + 1 }
+        }
+    }
+
+    private fun unbindOnBroker(keys: Set<String>) {
+        val activeChannel = channel
+        keys.forEach { key ->
+            val remove = synchronized(monitor) {
                 val count = references[key] ?: return@forEach
                 if (count > 1) {
                     references[key] = count - 1
+                    false
                 } else {
                     references.remove(key)
-                    if (ready) {
-                        try {
-                            channel?.queueUnbind(queueName, properties.exchangeName(), key)
-                        } catch (exception: Exception) {
-                            ready = false
-                        }
-                    }
+                    ready
+                }
+            }
+            if (remove && activeChannel != null) {
+                try {
+                    activeChannel.queueUnbind(queueName, properties.exchangeName(), key)
+                } catch (exception: Exception) {
+                    if (!activeChannel.isOpen && channel === activeChannel) ready = false
                 }
             }
         }
+    }
+
+    private fun acknowledge(activeChannel: Channel, deliveryTag: Long) {
+        try {
+            timer.execute { confirm(activeChannel, deliveryTag) }
+        } catch (ignored: Exception) {
+            forget(activeChannel)
+        }
+    }
+
+    private fun confirm(activeChannel: Channel, deliveryTag: Long) {
+        try {
+            activeChannel.basicAck(deliveryTag, false)
+        } catch (ignored: Exception) {
+            forget(activeChannel)
+        }
+    }
+
+    private fun forget(activeChannel: Channel) {
+        if (!activeChannel.isOpen && channel === activeChannel) ready = false
+    }
+
+    private fun <T> onBroker(block: () -> T): T {
+        if (Thread.currentThread().name == BROKER_THREAD) return block()
+        return timer.submit(Callable { block() }).get()
     }
 
     private fun recover() {
@@ -105,7 +157,8 @@ class WsV2RabbitSubscriber(
                         if (delivery.body.size > properties.maxFrameBytes) {
                             result = "oversize"
                         } else {
-                            val event = JsonUtil.getObjectMapper(false).readValue(delivery.body, WsInvalidation::class.java)
+                            val event = JsonUtil.getObjectMapper(false)
+                                .readValue(delivery.body, WsInvalidation::class.java)
                             if (WsTopic.routingKey(event.topic) == delivery.envelope.routingKey) {
                                 onMessage(delivery.envelope.routingKey, event)
                                 result = "delivered"
@@ -118,11 +171,7 @@ class WsV2RabbitSubscriber(
                         logger.warn("Invalid websocket v2 broker message", exception)
                     } finally {
                         metrics.brokerConsumed(result, System.nanoTime() - started)
-                        try {
-                            activeChannel.basicAck(delivery.envelope.deliveryTag, false)
-                        } catch (exception: Exception) {
-                            ready = false
-                        }
+                        acknowledge(activeChannel, delivery.envelope.deliveryTag)
                     }
                 }, CancelCallback { ready = false })
                 ready = true
@@ -140,14 +189,19 @@ class WsV2RabbitSubscriber(
     fun shutdown() {
         stopping = true
         ready = false
-        timer.shutdownNow()
-        synchronized(monitor) {
-            try { channel?.abort() } catch (ignored: Exception) { logger.debug("Broker channel already closed") }
-            references.clear()
+        try {
+            onBroker {
+                try { channel?.abort() } catch (ignored: Exception) { logger.debug("Broker channel already closed") }
+                synchronized(monitor) { references.clear() }
+            }
+        } catch (ignored: Exception) {
+            logger.debug("Broker thread already stopped")
         }
+        timer.shutdownNow()
     }
 
     companion object {
+        private const val BROKER_THREAD = "websocket-v2-broker"
         private val logger = LoggerFactory.getLogger(WsV2RabbitSubscriber::class.java)
     }
 }

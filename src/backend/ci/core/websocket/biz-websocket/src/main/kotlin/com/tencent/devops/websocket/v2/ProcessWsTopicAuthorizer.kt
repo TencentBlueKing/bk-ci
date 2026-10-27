@@ -2,7 +2,6 @@ package com.tencent.devops.websocket.v2
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.websocket.v2.WsTopic
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.api.service.ServicePipelinePermissionResource
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

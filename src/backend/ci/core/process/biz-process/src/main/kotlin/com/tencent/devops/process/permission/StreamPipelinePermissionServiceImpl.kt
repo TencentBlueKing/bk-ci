@@ -114,8 +114,18 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         authPermissions: Set<AuthPermission>,
         pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
-        return authPermissions.associateWith {
-            pipelineIds
+        val granted = HashMap<AuthPermission, Boolean>()
+        return authPermissions.associateWith { permission ->
+            pipelineIds.filter { pipelineId ->
+                granted.getOrPut(permission) {
+                    checkPipelinePermission(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        permission = permission
+                    )
+                }
+            }
         }
     }
 

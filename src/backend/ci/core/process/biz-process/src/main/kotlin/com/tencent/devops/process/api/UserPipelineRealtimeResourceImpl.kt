@@ -8,6 +8,7 @@ import com.tencent.devops.process.api.user.UserPipelineRealtimeResource
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.service.PipelineListFacadeService
@@ -20,13 +21,24 @@ class UserPipelineRealtimeResourceImpl(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineInfoDao: PipelineInfoDao
 ) : UserPipelineRealtimeResource {
-    override fun status(userId: String, projectId: String, pipelineIds: Set<String>): Result<Map<String, PipelineStatus>> {
+    override fun status(
+        userId: String,
+        projectId: String,
+        pipelineIds: Set<String>
+    ): Result<Map<String, PipelineStatus>> {
         require(userId.isNotBlank() && projectId.isNotBlank() && pipelineIds.size in 1..128)
         require(pipelineIds.all { it.length in 1..128 })
+        val existing = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).map { it.pipelineId }.toSet()
+        if (existing.isEmpty()) return Result(emptyMap())
         val allowed = pipelinePermissionService.filterPipelines(
-            userId, projectId, setOf(AuthPermission.VIEW), pipelineIds.toList()
+            userId, projectId, setOf(AuthPermission.VIEW), existing.toList()
         )[AuthPermission.VIEW].orEmpty().toSet()
         if (allowed.isEmpty()) return Result(emptyMap())
         val pipelines = pipelineListFacadeService.getPipelineStatus(userId, projectId, allowed)
@@ -59,7 +71,9 @@ class UserPipelineRealtimeResourceImpl(
                 runningBuildCount = pipeline.runningBuildCount,
                 hasCollect = pipeline.hasCollect,
                 lastBuildTotalCount = tasks.sumOf { it.value3() },
-                lastBuildFinishCount = tasks.filter { it.value2() == BuildStatus.SUCCEED.ordinal }.sumOf { it.value3() },
+                lastBuildFinishCount = tasks
+                    .filter { it.value2() == BuildStatus.SUCCEED.ordinal }
+                    .sumOf { it.value3() },
                 trigger = build?.trigger,
                 latestBuildStageStatus = build?.stageStatus
             )

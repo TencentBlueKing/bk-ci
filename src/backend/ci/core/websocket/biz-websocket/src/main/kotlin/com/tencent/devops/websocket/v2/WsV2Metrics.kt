@@ -54,14 +54,20 @@ class WsV2Metrics(
         gauge("websocket_v2_sender_queue_capacity", "Sender queue capacity; a full queue rejects the connection") {
             properties.taskCapacity
         }
-        gauge("websocket_v2_pending_frames", "Frames queued on open sockets because the client is slower than the flush") {
+        gauge(
+            "websocket_v2_pending_frames",
+            "Frames queued on open sockets because the client is slower than the flush"
+        ) {
             handler()?.pendingFrameCount() ?: 0
         }
         gauge("websocket_v2_pending_bytes", "Bytes queued on open sockets") { handler()?.pendingByteCount() ?: 0 }
         gauge("websocket_v2_dirty_topics", "Topics coalesced in the merge window and not yet flushed") {
             handler()?.dirtyTopicCount() ?: 0
         }
-        gauge("websocket_v2_slow_writes", "Sockets currently blocked inside a send") { handler()?.slowWriteCount() ?: 0 }
+        gauge(
+            "websocket_v2_slow_writes",
+            "Sockets currently blocked inside a send"
+        ) { handler()?.slowWriteCount() ?: 0 }
     }
 
     override fun connectionRejected(reason: String) = count("websocket_v2_connection_rejected_total", "reason", reason,

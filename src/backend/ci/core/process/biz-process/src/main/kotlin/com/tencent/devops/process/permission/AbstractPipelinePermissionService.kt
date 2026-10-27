@@ -154,8 +154,15 @@ abstract class AbstractPipelinePermissionService constructor(
         authPermissions: Set<AuthPermission>,
         pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
-        return authPermissions.associateWith {
-            pipelineIds
+        return authPermissions.associateWith { permission ->
+            pipelineIds.filter { pipelineId ->
+                checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = permission
+                )
+            }
         }
     }
 

@@ -69,7 +69,12 @@ class WsV2Handler(
     init {
         properties.validate()
         broker.listen(::invalidate, ::reset)
-        timer.scheduleWithFixedDelay(::tickSafely, properties.mergeWindowMs, properties.mergeWindowMs, TimeUnit.MILLISECONDS)
+        timer.scheduleWithFixedDelay(
+            ::tickSafely,
+            properties.mergeWindowMs,
+            properties.mergeWindowMs,
+            TimeUnit.MILLISECONDS
+        )
     }
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
@@ -235,41 +240,58 @@ class WsV2Handler(
     private fun tickSafely() {
         try {
             val now = System.currentTimeMillis()
-            connections.values.forEach { state ->
-                val stale = now - state.lastSeen > properties.heartbeatMs * 2
-                val sendTimedOut = state.writeStarted > 0 && now - state.writeStarted > properties.sendTimeoutMs
-                if (stale || sendTimedOut) {
-                    close(state, CloseStatus.SESSION_NOT_RELIABLE, if (sendTimedOut) "send_timeout" else "heartbeat")
-                    return@forEach
-                }
-                if (now - state.lastPing >= properties.heartbeatMs) {
-                    state.lastPing = now
-                    send(state, mapOf("op" to "ping", "nonce" to now.toString()))
-                    if (!broker.ready) {
-                        close(state, CloseStatus.SERVICE_RESTARTED, "broker_down")
-                        return@forEach
-                    }
-                }
-                val frames = synchronized(state) {
-                    val pending = state.dirty.mapNotNull { (topic, event) ->
-                        state.subscriptions[topic]?.let { subscription -> mapOf(
-                            "op" to "invalidate", "topic" to topic, "generation" to subscription.generation,
-                            "eventId" to event.eventId, "emittedAt" to event.emittedAt, "epoch" to epoch
-                        ) }
-                    }
-                    state.dirty.clear()
-                    pending
-                }
-                frames.forEach { send(state, it) }
-                if (now - state.lastAuthorization >= properties.authorizationTtlMs &&
-                    state.authorizing.compareAndSet(false, true)
-                ) {
-                    submitInput(state) { reauthorize(state) }
-                }
-            }
+            connections.values.forEach { state -> maintain(state, now) }
         } catch (exception: Exception) {
             logger.warn("Websocket v2 maintenance failed", exception)
         }
+    }
+
+    private fun maintain(state: Connection, now: Long) {
+        if (closeIfStale(state, now) || ping(state, now)) return
+        pendingFrames(state).forEach { send(state, it) }
+        if (now - state.lastAuthorization >= properties.authorizationTtlMs &&
+            state.authorizing.compareAndSet(false, true)
+        ) {
+            submitInput(state) { reauthorize(state) }
+        }
+    }
+
+    private fun closeIfStale(state: Connection, now: Long): Boolean {
+        val stale = now - state.lastSeen > properties.heartbeatMs * 2
+        val sendTimedOut = state.writeStarted > 0 && now - state.writeStarted > properties.sendTimeoutMs
+        if (!stale && !sendTimedOut) return false
+        val reason = if (sendTimedOut) "send_timeout" else "heartbeat"
+        close(state, CloseStatus.SESSION_NOT_RELIABLE, reason)
+        return true
+    }
+
+    private fun ping(state: Connection, now: Long): Boolean {
+        if (now - state.lastPing < properties.heartbeatMs) return false
+        state.lastPing = now
+        send(state, mapOf("op" to "ping", "nonce" to now.toString()))
+        if (broker.ready) return false
+        close(state, CloseStatus.SERVICE_RESTARTED, "broker_down")
+        return true
+    }
+
+    private fun pendingFrames(state: Connection): List<Map<String, Any>> {
+        return synchronized(state) {
+            val pending = state.dirty.mapNotNull { (topic, event) -> frame(state, topic, event) }
+            state.dirty.clear()
+            pending
+        }
+    }
+
+    private fun frame(state: Connection, topic: String, event: WsInvalidation): Map<String, Any>? {
+        val subscription = state.subscriptions[topic] ?: return null
+        return mapOf(
+            "op" to "invalidate",
+            "topic" to topic,
+            "generation" to subscription.generation,
+            "eventId" to event.eventId,
+            "emittedAt" to event.emittedAt,
+            "epoch" to epoch
+        )
     }
 
     private fun reauthorize(state: Connection) {

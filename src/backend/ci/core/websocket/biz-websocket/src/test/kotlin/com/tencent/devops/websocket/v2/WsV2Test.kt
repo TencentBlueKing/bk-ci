@@ -110,13 +110,18 @@ class WsV2Test {
         }
         try {
             handler.afterConnectionEstablished(socket)
-            handler.handleMessage(socket, TextMessage("""{"v":2,"op":"sub","requestId":"r1","generation":"g1","topics":["ps:p:allowed","ps:p:denied"]}"""))
+            handler.handleMessage(socket, TextMessage(
+                """{"v":2,"op":"sub","requestId":"r1","generation":"g1","topics":["ps:p:allowed","ps:p:denied"]}"""
+            ))
             await { messages.any { it.contains("sub_ack") } }
-            val ack = messages.map { JsonUtil.getObjectMapper(false).readTree(it) }.first { it.path("op").asText() == "sub_ack" }
+            val ack = messages.map { JsonUtil.getObjectMapper(false).readTree(it) }
+                .first { it.path("op").asText() == "sub_ack" }
             assertEquals(listOf("ps:p:allowed"), ack.path("accepted").map { it.asText() })
             assertEquals("FORBIDDEN", ack.path("rejected").path("ps:p:denied").asText())
             assertEquals(1, broker.keys.size)
-            handler.handleMessage(socket, TextMessage("""{"v":2,"op":"unsub","requestId":"old","generation":"stale","topics":["ps:p:allowed"]}"""))
+            handler.handleMessage(socket, TextMessage(
+                """{"v":2,"op":"unsub","requestId":"old","generation":"stale","topics":["ps:p:allowed"]}"""
+            ))
             await { messages.any { it.contains("unsub_ack") } }
             assertEquals(1, broker.keys.size)
             broker.message(WsTopic.routingKey("ps:p:allowed"), WsInvalidation("ps:p:allowed"))
@@ -165,7 +170,10 @@ class WsV2Test {
         assertEquals(0.0, registry.get("websocket_v2_connections").gauge().value())
         assertEquals(10000.0, registry.get("websocket_v2_connections_limit").gauge().value())
         assertEquals(1.0, registry.get("websocket_v2_overload_total").tag("reason", "binding_limit").counter().count())
-        assertEquals(1.0, registry.get("websocket_v2_handshake_rejected_total").tag("reason", "origin").counter().count())
+        assertEquals(
+            1.0,
+            registry.get("websocket_v2_handshake_rejected_total").tag("reason", "origin").counter().count()
+        )
         val publish = WsV2PublishMetrics(registry)
         publish.record { }
         assertThrows(IllegalStateException::class.java) { publish.record<Unit> { throw IllegalStateException("down") } }
