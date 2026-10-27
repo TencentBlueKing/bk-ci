@@ -39,4 +39,8 @@ dependencies {
     api("org.apache.logging.log4j:log4j-core")
     api("org.apache.logging.log4j:log4j-api")
     api("com.github.ben-manes.caffeine:caffeine")
+    api("org.apache.lucene:lucene-core")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine")
 }
