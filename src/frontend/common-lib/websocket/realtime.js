@@ -234,14 +234,13 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
             const status = error?.status || error?.httpStatus || error?.response?.status || error?.code
             if (Number(status) === 401 || Number(status) === 403) forbidden = true
             if (!disposed) onError(error)
-        } finally {
-            running = false
-            if (disposed || forbidden) return
-            if (failureCount) {
-                schedule(jitter(Math.min(60000, pollingInterval * 2 ** Math.min(failureCount - 1, 3))))
-            } else if (version !== dirty) {
-                schedule(Math.max(0, interval - (Date.now() - lastStarted)))
-            }
+        }
+        running = false
+        if (disposed || forbidden) return
+        if (failureCount) {
+            schedule(jitter(Math.min(60000, pollingInterval * 2 ** Math.min(failureCount - 1, 3))))
+        } else if (version !== dirty) {
+            schedule(Math.max(0, interval - (Date.now() - lastStarted)))
         }
     }
     const refresh = (type = 'invalidate') => {
