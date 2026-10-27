@@ -438,16 +438,19 @@ class BuildLogQueryService @Autowired constructor(
         tag: String?,
         executeCount: Int?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogStatus> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         return Result(
             logStatusService.getStorageMode(
                 buildId = buildId,
@@ -504,17 +507,20 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Response {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            // 日志下载与页面查看同一 VIEW 动作，不走制品 DOWNLOAD
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                // 日志下载与页面查看同一 VIEW 动作，不走制品 DOWNLOAD
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
