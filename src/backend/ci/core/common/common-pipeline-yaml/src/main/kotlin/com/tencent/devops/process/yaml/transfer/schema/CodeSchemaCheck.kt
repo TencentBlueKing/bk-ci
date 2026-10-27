@@ -227,6 +227,12 @@ class CodeSchemaCheck @Autowired constructor(
                 messageCode = CommonMessageCode.YAML_SCHEMA_RANGE,
                 params = listOf(path, msg.type, firstArg)
             )
+            // oneOf/anyOf 的原始报错是英文且会把各分支错误混在一起，单独给一条友好提示；
+            // 各分支的具体原因（类型/格式等）已作为同组错误一并列出
+            "oneOf", "anyOf" -> PipelineTransferValidateDetail(
+                messageCode = CommonMessageCode.YAML_SCHEMA_ONE_OF,
+                params = listOf(path)
+            )
             else -> PipelineTransferValidateDetail(
                 messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG,
                 params = listOf("$path ${msg.message}")
