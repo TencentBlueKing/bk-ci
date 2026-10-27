@@ -30,6 +30,23 @@ BEGIN
             ADD INDEX `idx_proj_pipeline` (`PROJECT_ID`, `PIPELINE_ID`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TRIGGER_DETAIL'
+                    AND INDEX_NAME = 'IDX_PROJECT_PIPELINE_CREATE_TIME') THEN
+        ALTER TABLE T_PIPELINE_TRIGGER_DETAIL
+            ADD INDEX `IDX_PROJECT_PIPELINE_CREATE_TIME` (`PROJECT_ID`, `PIPELINE_ID`, `CREATE_TIME`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.statistics
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TRIGGER_DETAIL'
+                AND INDEX_NAME = 'IDX_PROJECT_PIPELINE_ID') THEN
+        ALTER TABLE T_PIPELINE_TRIGGER_DETAIL DROP INDEX `IDX_PROJECT_PIPELINE_ID`;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
