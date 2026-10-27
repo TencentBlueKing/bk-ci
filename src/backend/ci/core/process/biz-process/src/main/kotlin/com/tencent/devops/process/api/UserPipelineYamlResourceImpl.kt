@@ -119,7 +119,7 @@ class UserPipelineYamlResourceImpl(
             )
         )
         return Result(
-            pipelineYamlFacadeService.getPipelineYamlInfo(
+            pipelineYamlFacadeService.getPipelineYamlVo(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version
