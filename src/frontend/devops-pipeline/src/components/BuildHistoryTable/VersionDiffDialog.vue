@@ -4,6 +4,7 @@
         header-position="left"
         :title="$t('pipelineVersionChnaged', [buildNum])"
         :width="640"
+        :show-footer="false"
         @confirm="handleClose"
         :before-close="handleClose"
     >
@@ -76,6 +77,11 @@
                     </bk-table-column>
                 </bk-table>
             </template>
+        </div>
+        <div class="build-pipeline-version-diff-dialog-footer">
+            <bk-button @click="handleClose">
+                {{ $t('close') }}
+            </bk-button>
         </div>
     </bk-dialog>
 </template>
@@ -218,5 +224,10 @@
                 @include ellipsis();
             }
         }
+    }
+    .build-pipeline-version-diff-dialog-footer {
+        text-align: right;
+        margin-top: 24px;
+        padding-bottom: 10px;
     }
 </style>
