@@ -22,6 +22,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_STAGE'
+                    AND INDEX_NAME = 'idx_proj_pipeline') THEN
+        ALTER TABLE `T_PIPELINE_BUILD_STAGE`
+            ADD INDEX `idx_proj_pipeline` (`PROJECT_ID`, `PIPELINE_ID`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_TRIGGER_DETAIL'
