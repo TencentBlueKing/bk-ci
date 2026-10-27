@@ -41,6 +41,7 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
             "detailShortOuterUrl" to detailUrl
         )
         commandContext.notifyValue.putAll(urlMap)
+        commandContext.channelCode = channelCode
     }
 
     /**
