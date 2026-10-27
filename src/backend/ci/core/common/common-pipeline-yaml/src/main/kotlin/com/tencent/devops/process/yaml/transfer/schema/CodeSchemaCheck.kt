@@ -9,14 +9,11 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
-import com.networknt.schema.ValidationMessage
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
-import com.tencent.devops.process.yaml.transfer.PipelineTransferValidateDetail
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import org.slf4j.LoggerFactory
@@ -173,81 +170,12 @@ class CodeSchemaCheck @Autowired constructor(
         if (messages.isNullOrEmpty()) return
         // 原始报错（含 schema 内部路径等技术细节）保留到服务端日志，便于排查
         logger.warn("YAML_SCHEMA_INVALID|rawMessages=$messages")
-        val details = messages.map { toValidateDetail(it) }
+        val details = YamlSchemaMessageMapper.toDetails(messages)
         throw PipelineTransferException(
             errorCode = YAML_NOT_VALID,
             params = arrayOf(messages.toString()),
             validateDetails = details
         )
-    }
-
-    private fun toValidateDetail(msg: ValidationMessage): PipelineTransferValidateDetail {
-        val path = msg.instanceLocation?.toString()?.ifBlank { "$" } ?: "$"
-        val firstArg = msg.arguments?.firstOrNull()?.toString().orEmpty()
-        return when (msg.type) {
-            "required" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_REQUIRED,
-                params = listOf(path, firstArg)
-            )
-            "additionalProperties" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD,
-                params = listOf(path, firstArg)
-            )
-            "not" -> {
-                val forbidden = extractForbiddenFields(msg.message)
-                if (forbidden.isNotBlank()) {
-                    PipelineTransferValidateDetail(
-                        messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_FIELD,
-                        params = listOf(path, forbidden)
-                    )
-                } else {
-                    PipelineTransferValidateDetail(
-                        messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG,
-                        params = listOf(path)
-                    )
-                }
-            }
-            "enum" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_ENUM,
-                params = listOf(path, msg.arguments?.joinToString(", ").orEmpty())
-            )
-            "type" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_TYPE,
-                params = listOf(path, firstArg)
-            )
-            "pattern" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_PATTERN,
-                params = listOf(path, firstArg)
-            )
-            "minLength", "maxLength" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_LENGTH,
-                params = listOf(path, msg.type, firstArg)
-            )
-            "minimum", "maximum" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_RANGE,
-                params = listOf(path, msg.type, firstArg)
-            )
-            // oneOf/anyOf 的原始报错是英文且会把各分支错误混在一起，单独给一条友好提示；
-            // 各分支的具体原因（类型/格式等）已作为同组错误一并列出
-            "oneOf", "anyOf" -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_ONE_OF,
-                params = listOf(path)
-            )
-            else -> PipelineTransferValidateDetail(
-                messageCode = CommonMessageCode.YAML_SCHEMA_UNSUPPORTED_CONFIG,
-                params = listOf("$path ${msg.message}")
-            )
-        }
-    }
-
-    /**
-     * Try to extract the forbidden field list from the raw message of the `not` keyword.
-     * Typical form: `must not be valid to the schema "xxx" : {"required":["variables"]}`
-     */
-    private fun extractForbiddenFields(message: String?): String {
-        if (message.isNullOrBlank()) return ""
-        val regex = """"required"\s*:\s*\[([^]]*)]""".toRegex()
-        return regex.find(message)?.groupValues?.get(1)?.replace("\"", "").orEmpty()
     }
 
     private fun JsonNode.version(): String? {
