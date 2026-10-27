@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.BuildVarOverflowUtils.LargeVarRef
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
@@ -238,8 +237,9 @@ class LargeVariableResourceApi : AbstractBuildResourceApi(), LargeVariableSDKApi
         while (true) {
             val n = input.read(buffer)
             if (n < 0) break
-            if (out.size() + n > PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES) {
-                throw RemoteServiceException("large variable exceeds $PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES bytes")
+            val maxBytes = BuildVarOverflowUtils.largeValueMaxBytes()
+            if (out.size() + n > maxBytes) {
+                throw RemoteServiceException("large variable exceeds $maxBytes bytes")
             }
             out.write(buffer, 0, n)
         }

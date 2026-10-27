@@ -72,10 +72,12 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.dao.record.BuildRecordVarPath
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -96,6 +98,7 @@ import com.tencent.devops.process.pojo.task.PipelineFailTaskDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -124,6 +127,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
+    private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val client: Client,
     private val pipelineInfoService: PipelineInfoService,
@@ -154,6 +158,9 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
+
+        /** 单次执行快照进 `MODEL_VAR` 的大变量引用串条数上限。 */
+        const val LARGE_VARIABLES_MAX = 200
     }
 
     fun batchSave(
@@ -841,6 +848,47 @@ class PipelineBuildRecordService @Autowired constructor(
         BuildStatus.parse(status).isFinish() &&
             !BuildStatus.parse(status).isSkip()
 
+    /**
+     * 把本次执行结束时变量表里还在的大变量引用串快照进即将写回的 `MODEL_VAR`。
+     *
+     * 变量表是分区表、只留最近约四周，且每个 key 只有当前值；构建记录留存更久，
+     * 所以回显要靠这份快照，不能靠变量表。存的是引用串不是正文，文件在制品库里。
+     *
+     * 不按执行次数筛：重试只重跑失败的部分，上一次执行产出、这次没被覆盖的值
+     * 同样是本次执行结束时的状态。每次执行各有一行记录，互不覆盖。
+     *
+     * 只在构建结束、取消这两处本来就要整段写 `MODEL_VAR` 的地方调用：不额外加锁，
+     * 不多一次更新，构建运行期间的状态刷新完全不受影响。条数超过 [LARGE_VARIABLES_MAX]
+     * 时只留前面的并告警——`MODEL_VAR` 每次看构建详情都会整列读出，不能无上限地涨。
+     */
+    private fun appendPipelineLargeVariables(
+        modelVar: MutableMap<String, Any>,
+        dsl: DSLContext,
+        projectId: String,
+        buildId: String
+    ) {
+        val refs = try {
+            pipelineBuildVarDao.getOverflowVars(
+                dslContext = dsl,
+                projectId = projectId,
+                buildId = buildId,
+                referencePrefix = BuildVarOverflowUtils.OVERFLOW_PREFIX,
+                limit = LARGE_VARIABLES_MAX + 1
+            )
+        } catch (ignored: Exception) {
+            // 快照只是回显增强，查不到不能影响构建收尾
+            logger.warn("ENGINE|$buildId|LARGE_VAR|read overflow variables failed", ignored)
+            return
+        }
+        if (refs.isEmpty()) return
+        if (refs.size > LARGE_VARIABLES_MAX) {
+            logger.warn("ENGINE|$buildId|LARGE_VAR|too many references, keep $LARGE_VARIABLES_MAX")
+        }
+        modelVar[BuildRecordVarPath.BK_LARGE_VARIABLES] = refs.entries
+            .take(LARGE_VARIABLES_MAX)
+            .associate { it.key to it.value }
+    }
+
     fun buildCancel(
         projectId: String,
         pipelineId: String,
@@ -910,6 +958,7 @@ class PipelineBuildRecordService @Autowired constructor(
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
             buildEndInfo?.let { modelVar[BuildEndInfo.MODEL_VAR_KEY] = it }
+            appendPipelineLargeVariables(modelVar, context, projectId, buildId)
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
@@ -1001,6 +1050,7 @@ class PipelineBuildRecordService @Autowired constructor(
             val modelVar = mutableMapOf<String, Any>()
             timeCost = recordModel.generateBuildTimeCost(recordStages)
             timeCost?.let { modelVar[Model::timeCost.name] = it }
+            appendPipelineLargeVariables(modelVar, context, projectId, buildId)
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),

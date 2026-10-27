@@ -38,7 +38,6 @@ import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -137,6 +136,7 @@ class TaskDaemon(
 
         val allEnv = getAllEnv()
         val buildResult = mutableMapOf<String, String>()
+        LargeVariableStore.ensureLargeValueLimit()
         val sensitiveKeys = getSensitiveKeys().toMutableSet()
         if (allEnv.isNotEmpty()) {
             val largeValues = mutableMapOf<String, String>()
@@ -147,14 +147,18 @@ class TaskDaemon(
                 }
                 if (value.length <= PARAM_MAX_LENGTH) {
                     buildResult[key] = value
-                } else if (key !in sensitiveKeys && !BuildVarOverflowUtils.exceedsLargeValueLimit(value) &&
+                } else if (!BuildVarOverflowUtils.exceedsLargeValueLimit(value) &&
                     LargeVariableStore.isSupported()
                 ) {
+                    // 敏感值也要能传给后续插件，同样存入制品库；日志侧由 SensitiveValueService 覆盖
+                    if (key in sensitiveKeys) {
+                        SensitiveValueService.addSensitiveValue(value)
+                    }
                     largeValues[key] = value
                 } else {
                     LoggerService.addWarnLine(
                         "Warning, assignment to variable [$key] failed, " +
-                            "more than ${valueLimitText(key in sensitiveKeys)}(len=${value.length})"
+                            "more than ${valueLimitText()}(len=${value.length})"
                     )
                 }
             }
@@ -220,14 +224,14 @@ class TaskDaemon(
     companion object {
         /**
          * 变量值直接上报的最大字符数，与 DB VALUE 列 varchar(4000) 对齐；
-         * 超过的非敏感值（不超过 [PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES]）作为大变量存入制品库。
+         * 超过的非敏感值（不超过 [BuildVarOverflowUtils.largeValueMaxBytes]）作为大变量存入制品库。
          */
         const val PARAM_MAX_LENGTH = PIPELINE_VARIABLES_STRING_LENGTH_MAX
 
         /** 变量值上限的展示文案：可存入制品库时为大变量上限，否则为直接上报上限。 */
-        fun valueLimitText(sensitive: Boolean): String =
-            if (!sensitive && LargeVariableStore.isSupported()) {
-                "${PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES / 1024}KB"
+        fun valueLimitText(): String =
+            if (LargeVariableStore.isSupported()) {
+                "${BuildVarOverflowUtils.largeValueMaxBytes() / 1024}KB"
             } else {
                 "$PARAM_MAX_LENGTH characters"
             }

@@ -703,7 +703,7 @@ open class MarketAtomTask : ITask() {
                     }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
-                    // 大变量入参只在日志里展示引用串，避免把 512KB 级真实值刷进构建日志；
+                    // 大变量入参只在日志里展示引用串，避免把 256KB 级真实值刷进构建日志；
                     // 插件通过 input.json 拿到的仍是真实值，不受此展示截断影响。
                     val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
                         "__BK_OVF__:${value.length}"

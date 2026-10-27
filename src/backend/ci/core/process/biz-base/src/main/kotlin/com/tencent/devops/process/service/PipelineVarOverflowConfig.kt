@@ -27,8 +27,11 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX
+import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Component
@@ -49,7 +52,7 @@ class PipelineVarOverflowConfig {
      * 懒加载器内 Caffeine 缓存允许保留的最大字符数（maximumWeight，weigher=string.length）。
      * 这是"单次表达式求值会话内**实际驻留**内存"的主要决定因素，
      * 单 Pod 峰值驻留 ≈ 并发会话数 × cacheMax。
-     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（4M）。
+     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX]（1M）。
      */
     @Value("\${pipeline.variables.lazyLoad.cacheMax:$PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX}")
     val lazyLoadCacheMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_CACHE_MAX.toLong()
@@ -57,10 +60,26 @@ class PipelineVarOverflowConfig {
     /**
      * 单会话总加载字节硬上限（字符数）。超过抛
      * [BuildVarOverflowBudgetExceededException]，把潜在 OOM 转为明确的用户用法错误。
-     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（8M）。
+     * 默认 [PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX]（2M）。
      */
     @Value("\${pipeline.variables.lazyLoad.budgetMax:$PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX}")
     val lazyLoadBudgetMax: Long = PIPELINE_VARIABLES_LAZY_LOAD_BUDGET_MAX.toLong()
+
+    /**
+     * 大变量单值上限（UTF-8 字节）。默认 [PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES]（256KB）。
+     * 构建机需用同名环境变量或 `.agent.properties` 配成同一个值，否则上传端和下载端会不一致。
+     */
+    @Value("\${pipeline.variables.largeValueMaxBytes:$PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES}")
+    val largeValueMaxBytes: Int = PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+
+    /** 非正数视为未配置，回落到默认上限。 */
+    fun effectiveLargeValueMaxBytes(): Int =
+        largeValueMaxBytes.takeIf { it > 0 } ?: PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+
+    @PostConstruct
+    fun publishLargeValueMaxBytes() {
+        BuildVarOverflowUtils.applyLargeValueMaxBytes(effectiveLargeValueMaxBytes())
+    }
 
     /**
      * 启动构建时是否校验流水线定义的启动参数值长度（不超过

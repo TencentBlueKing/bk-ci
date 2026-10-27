@@ -124,7 +124,7 @@ interface UserBuildResource {
 
     @Operation(summary = "按变量名获取构建运行期变量真实值（大变量按需加载，供日志点击查询等）")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/variables/{varName}")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/variables/value")
     fun getBuildVariableValue(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -139,8 +139,32 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String,
         @Parameter(description = "变量名", required = true)
-        @PathParam("varName")
+        @QueryParam("key")
         varName: String,
+        @Parameter(
+            description = "执行次数。和下面的组件 id 一起用来回看该组件这一次执行时的内容；不传则取变量表中该变量的当前值",
+            required = false
+        )
+        @QueryParam("executeCount")
+        executeCount: Int? = null,
+        @Parameter(
+            description = "插件 id。同名变量在不同插件上各自保留，查看某个插件的输出时传入",
+            required = false
+        )
+        @QueryParam("taskId")
+        taskId: String? = null,
+        @Parameter(
+            description = "Job id（containerId）。查看某个 Job 上的同名变量时传入；同时传了 taskId 时以插件为准",
+            required = false
+        )
+        @QueryParam("containerId")
+        containerId: String? = null,
+        @Parameter(
+            description = "Stage id。查看某个 Stage 上的同名变量时传入；同时传了 taskId 或 containerId 时以更细的组件为准",
+            required = false
+        )
+        @QueryParam("stageId")
+        stageId: String? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

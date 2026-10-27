@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
@@ -39,6 +40,8 @@ import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record19
@@ -189,6 +192,37 @@ class BuildRecordTaskDao {
                 conditions.add(POST_INFO.isNull)
             }
             return dslContext.selectFrom(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    /**
+     * 从指定插件、指定一次执行的记录里取出某个大变量的引用串。
+     * 定位键是 `(buildId, executeCount, taskId)`，只查这一行。
+     */
+    fun getLargeVariableReference(
+        dslContext: DSLContext,
+        query: LargeVariableRecordQuery
+    ): String? {
+        val taskId = (query.scope as? LargeVariableScope.Task)?.taskId ?: return null
+        val jsonPath = BuildRecordVarPath.largeVariable(
+            BuildRecordVarPath.BK_LARGE_VARIABLES, query.varName
+        ) ?: return null
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val reference = JooqUtils.jsonExtract(
+                t1 = TASK_VAR,
+                t2 = jsonPath,
+                removeDoubleQuotes = true
+            )
+            return dslContext.select(reference)
+                .from(this)
+                .where(
+                    PROJECT_ID.eq(query.projectId)
+                        .and(PIPELINE_ID.eq(query.pipelineId))
+                        .and(BUILD_ID.eq(query.buildId))
+                        .and(EXECUTE_COUNT.eq(query.executeCount))
+                        .and(TASK_ID.eq(taskId))
+                )
+                .fetchOne(reference)
         }
     }
 

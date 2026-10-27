@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -365,6 +366,8 @@ object Runner {
                 .filter { it.sensitive == true }
                 .map { it.value.toString() }
                 .filterNot { it.isBlank() }
+                // 敏感大变量下发的是引用串，不是密文本身，真实值在按需加载时再登记
+                .filterNot { BuildVarOverflowUtils.isOverflowReference(it) }
                 .toList()
                 .takeIf { it.isNotEmpty() }
                 ?.let { SensitiveValueService.addSensitiveValues(it) }

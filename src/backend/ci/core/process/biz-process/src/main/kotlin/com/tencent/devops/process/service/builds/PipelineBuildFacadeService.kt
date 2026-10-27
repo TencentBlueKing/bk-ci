@@ -142,6 +142,8 @@ import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
@@ -430,13 +432,22 @@ class PipelineBuildFacadeService(
     /**
      * 按变量名获取构建运行期变量真实值（大变量从制品库按需下载，敏感变量脱敏）。
      * 供日志「查看完整值」等场景使用。
+     *
+     * 带了 [executeCount] 时，先按 [LargeVariableScope] 取该次执行的引用串。取不到（返回 null）
+     * 就用变量表里的当前值：最后一次写入，不区分执行次数。都不带组件 id 时按流水线级处理，
+     * 构建结束后从模型记录取这一次的引用串；还没结束时同样退回变量表。
      */
+    @Suppress("LongParameterList")
     fun getBuildVariableValue(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         varName: String,
+        executeCount: Int? = null,
+        taskId: String? = null,
+        containerId: String? = null,
+        stageId: String? = null,
         archiveFlag: Boolean? = false
     ): String? {
         val userPipelinePermissionCheckStrategy =
@@ -448,11 +459,26 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        // 指定执行次数时，引用串从该次执行的记录里取；null 则下面退回变量表当前值
+        val reference = executeCount?.let {
+            taskBuildRecordService.getLargeVariableReference(
+                query = LargeVariableRecordQuery(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = it,
+                    varName = varName,
+                    scope = LargeVariableScope.of(taskId, containerId, stageId)
+                ),
+                queryDslContext = queryDslContext
+            )
+        }
         return buildVariableService.getVariableValue(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             varName = varName,
+            reference = reference,
             queryDslContext = queryDslContext,
             maskSensitive = true
         )

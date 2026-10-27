@@ -31,7 +31,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -48,7 +47,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class BuildVarOverflowStorage @Autowired constructor(
-    private val bkRepoClient: BkRepoClient
+    private val bkRepoClient: BkRepoClient,
+    private val pipelineVarOverflowConfig: PipelineVarOverflowConfig
 ) {
 
     /** 制品库为 bkrepo 时才支持大变量；否则沿用 4K 上限的历史行为。 */
@@ -155,7 +155,7 @@ class BuildVarOverflowStorage @Autowired constructor(
         if (!isEnabled()) return null
         val path = BuildVarOverflowUtils.blobPath(pipelineId, buildId, ref)
         return try {
-            val output = BoundedByteArrayOutputStream(PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES)
+            val output = BoundedByteArrayOutputStream(pipelineVarOverflowConfig.effectiveLargeValueMaxBytes())
             bkRepoClient.downloadFile(
                 userId = userId.orSystem(),
                 projectId = projectId,

@@ -64,7 +64,11 @@ object BuildVarOverflowUtils {
 
     private const val MAIN_TABLE_MAX_LENGTH: Int = PIPELINE_VARIABLES_STRING_LENGTH_MAX
 
-    private const val LARGE_VALUE_MAX_BYTES: Int = PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+    /** 与 process 配置、构建机环境变量使用同一个键。 */
+    const val LARGE_VALUE_MAX_BYTES_CONFIG = "pipeline.variables.largeValueMaxBytes"
+
+    @Volatile
+    private var largeValueMaxBytesOverride: Int? = null
 
     private val HEX = "0123456789abcdef".toCharArray()
 
@@ -110,12 +114,31 @@ object BuildVarOverflowUtils {
     fun shouldOverflow(rawValue: String): Boolean =
         rawValue.length > MAIN_TABLE_MAX_LENGTH && !isOverflowReference(rawValue)
 
-    /** 是否超过大变量单值上限 [PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES]（按 UTF-8 字节计）。 */
-    fun exceedsLargeValueLimit(rawValue: String): Boolean {
+    /**
+     * 当前生效的大变量单值上限（UTF-8 字节）。
+     * 已由 process 配置或构建机环境写入时用那个值，否则读同名系统属性 / 环境变量，再否则用默认值。
+     */
+    fun largeValueMaxBytes(): Int {
+        largeValueMaxBytesOverride?.let { return it }
+        val raw = System.getProperty(LARGE_VALUE_MAX_BYTES_CONFIG)
+            ?: System.getenv(LARGE_VALUE_MAX_BYTES_CONFIG)
+        return raw?.trim()?.toIntOrNull()?.takeIf { it > 0 } ?: PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+    }
+
+    /** 写入当前进程生效的单值上限。非正数忽略。 */
+    fun applyLargeValueMaxBytes(maxBytes: Int) {
+        if (maxBytes > 0) largeValueMaxBytesOverride = maxBytes
+    }
+
+    /** 是否超过大变量单值上限（按 UTF-8 字节计）。[maxBytes] 默认取 [largeValueMaxBytes]。 */
+    fun exceedsLargeValueLimit(
+        rawValue: String,
+        maxBytes: Int = largeValueMaxBytes()
+    ): Boolean {
         // 每个 char 编码后 1~3 字节（代理对 2 char 共 4 字节），先用字符数做无分配的快速判定
-        if (rawValue.length > LARGE_VALUE_MAX_BYTES) return true
-        if (rawValue.length.toLong() * 3 <= LARGE_VALUE_MAX_BYTES) return false
-        return utf8Length(rawValue) > LARGE_VALUE_MAX_BYTES
+        if (rawValue.length > maxBytes) return true
+        if (rawValue.length.toLong() * 3 <= maxBytes) return false
+        return utf8Length(rawValue) > maxBytes
     }
 
     /** 不分配内存地计算字符串的 UTF-8 编码字节数。 */

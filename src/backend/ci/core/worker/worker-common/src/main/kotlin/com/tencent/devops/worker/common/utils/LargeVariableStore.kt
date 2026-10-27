@@ -32,6 +32,8 @@ import com.tencent.devops.process.utils.BuildVarOverflowUtils.LargeVarRef
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.variable.LargeVariableSDKApi
 import com.tencent.devops.worker.common.api.variable.LargeVariableScope
@@ -60,6 +62,30 @@ object LargeVariableStore {
     private const val TASK_TIMEOUT_SECONDS = 300L
 
     private val api by lazy { ApiFactory.create(LargeVariableSDKApi::class) }
+
+    @Volatile
+    private var limitReady = false
+
+    /**
+     * 把构建机上的单值上限写进当前进程。读同名环境变量、JVM 参数，再读 `.agent.properties`。
+     * 读不到或文件不存在时保持默认值。
+     */
+    fun ensureLargeValueLimit() {
+        if (limitReady) return
+        synchronized(this) {
+            if (limitReady) return
+            val raw = runCatching {
+                AgentEnv.getEnvProp(BuildVarOverflowUtils.LARGE_VALUE_MAX_BYTES_CONFIG)
+            }.getOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+                ?: runCatching {
+                    AgentEnv.getProperty(BuildVarOverflowUtils.LARGE_VALUE_MAX_BYTES_CONFIG)
+                }.getOrNull()
+            val maxBytes = raw?.trim()?.toIntOrNull()?.takeIf { it > 0 }
+                ?: PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
+            BuildVarOverflowUtils.applyLargeValueMaxBytes(maxBytes)
+            limitReady = true
+        }
+    }
 
     private val executor: ExecutorService by lazy {
         Executors.newFixedThreadPool(MAX_PARALLEL) { r ->
@@ -103,6 +129,7 @@ object LargeVariableStore {
      * @return key -> 引用串；上传失败的 key 不在结果中
      */
     fun store(scope: LargeVariableScope, executeCount: Int, values: Map<String, String>): Map<String, String> {
+        ensureLargeValueLimit()
         if (values.isEmpty()) return emptyMap()
         val count = executeCount.coerceAtLeast(1)
         return runParallel(values.mapValues { (_, value) -> Callable<String?> { uploadOne(scope, count, value) } })
@@ -110,6 +137,7 @@ object LargeVariableStore {
 
     /** 按引用串加载真实值；不是合法引用或加载失败返回 null。 */
     fun load(scope: LargeVariableScope, reference: String): String? {
+        ensureLargeValueLimit()
         val ref = BuildVarOverflowUtils.parseReference(reference) ?: return null
         return load(scope, ref)
     }
@@ -134,6 +162,7 @@ object LargeVariableStore {
      * 失败的引用不做处理：[load] 会在真正用到时重试，仍失败再按保留引用串降级。
      */
     fun prefetch(scope: LargeVariableScope, references: Collection<String>) {
+        ensureLargeValueLimit()
         var budget = CACHE_MAX_CHARS
         val missing = references.asSequence()
             .mapNotNull { BuildVarOverflowUtils.parseReference(it) }

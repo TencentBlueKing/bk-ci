@@ -153,6 +153,8 @@ class BuildVariableService @Autowired constructor(
      * 单变量按需获取真实值：大变量从制品库下载，下载失败时退化为引用串。
      * 若需要在一次会话中多次访问大变量，请改用 [newOverflowLoader]。
      *
+     * @param reference 指定要读的大变量引用串（来自构建日志的 `output(overflow)` 行），
+     *   用于按**执行次数**回看内容，见 [resolveOverflowTarget]；为空或格式非法时按 [varName] 取当前值
      * @param maskSensitive 面向用户展示时传 true，敏感变量返回 [HIDDEN_SYMBOL]
      */
     @Suppress("LongParameterList")
@@ -161,18 +163,19 @@ class BuildVariableService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         varName: String,
+        reference: String? = null,
         queryDslContext: DSLContext? = null,
         maskSensitive: Boolean = false
     ): String? {
         // 落库统一新变量名，兼容旧名 / 预置上下文名（含前缀映射）后单点查询，避免漏查。
         val storedKey = PipelineVarUtil.resolveStoredVarKey(varName)
         val queryContext = queryDslContext ?: commonDslContext
-        val value = if (maskSensitive) {
+        val stored = if (maskSensitive) {
             val param = sequenceOf(varName, storedKey).distinct().firstNotNullOfOrNull { key ->
                 pipelineBuildVarDao.getVarsWithType(queryContext, projectId, buildId, key).firstOrNull()
-            } ?: return null
-            if (param.sensitive == true) return HIDDEN_SYMBOL
-            param.value.toString()
+            }
+            if (param?.sensitive == true) return HIDDEN_SYMBOL
+            param?.value?.toString()
         } else {
             val varMap = pipelineBuildVarDao.getVars(
                 dslContext = queryContext,
@@ -182,12 +185,30 @@ class BuildVariableService @Autowired constructor(
             )
             varMap[varName] ?: varMap[storedKey]
         }
+        val value = resolveOverflowTarget(reference = reference, stored = stored) ?: return null
         if (!BuildVarOverflowUtils.isOverflowReference(value)) return value
         return newOverflowLoader(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
-            .load(value!!) ?: run {
+            .load(value) ?: run {
             LOG.warn("$buildId|LARGE_VAR_MISS|key=$varName|ref=$value|keep reference")
             value
         }
+    }
+
+    /**
+     * 决定这次要读的值：给了合法引用串就按它读，否则读变量表里的当前值。
+     *
+     * 引用串自带执行次数与内容摘要，文件路径完全由它拼出。变量表每个 key 只保留最后一次写入的值，
+     * 重试会把它覆盖掉，分区表的保留期也可能短于构建记录；而构建日志按执行次数分开保存，
+     * 引用串就印在那一次的 `output(overflow)` 行里。所以认引用串既能按执行次数回看，
+     * 也能在变量表那一行已经不在时仍然取到内容。
+     *
+     * 越权读不成立：文件只在**本次构建目录**下解析，而本接口已校验调用者对该流水线有查看权限
+     * （见 `BuildVarOverflowStorage.download`、`BuildVarOverflowUtils.blobPath`）。
+     * 敏感变量也拿不到：敏感值从不上传（见 [toStoredValue]），且上面已先按变量名做过脱敏判定。
+     */
+    private fun resolveOverflowTarget(reference: String?, stored: String?): String? {
+        if (reference != null && BuildVarOverflowUtils.parseReference(reference) != null) return reference
+        return stored
     }
 
     fun getAllVariableWithType(projectId: String, buildId: String): List<BuildParameters> {
@@ -297,7 +318,6 @@ class BuildVariableService @Autowired constructor(
                 buildId = buildId,
                 key = name,
                 rawValue = value.toString(),
-                sensitive = null,
                 scope = { uploadScope(projectId, pipelineId, buildId) }
             )
         ) ?: return
@@ -459,7 +479,6 @@ class BuildVariableService @Autowired constructor(
                     buildId = buildId,
                     key = param.key,
                     rawValue = raw,
-                    sensitive = param.sensitive,
                     scope = { target }
                 )
             )?.let {
@@ -476,20 +495,25 @@ class BuildVariableService @Autowired constructor(
         val buildId: String,
         val key: String,
         val rawValue: String,
-        val sensitive: Boolean?,
         val scope: () -> BuildVarOverflowStorage.UploadScope
     )
 
     /**
      * 计算变量入库值：≤ 4K 原样返回；> 4K 上传制品库后返回引用串；
-     * 敏感值、制品库非 bkrepo、超过 512KB 或上传失败时返回 null（丢弃 + WARN，与历史 4K 截断行为一致）。
+     * 制品库非 bkrepo、超过 256KB 或上传失败时返回 null（丢弃 + WARN，与历史 4K 截断行为一致）。
+     *
+     * 敏感值同样走制品库，否则超长的敏感变量传不到后续插件。脱敏不依赖「不上传」：
+     * 变量表记下 SENSITIVE 后，[getVariableValue] 在下载之前就返回 [HIDDEN_SYMBOL]，
+     * 构建日志侧由 Worker 的 SensitiveValueService 覆盖。
      */
     private fun toStoredValue(value: LargeValue): String? {
         if (!BuildVarOverflowUtils.shouldOverflow(value.rawValue)) return value.rawValue
         val reason = when {
-            value.sensitive == true -> "sensitive"
             !buildVarOverflowStorage.isEnabled() -> "storageDisabled"
-            BuildVarOverflowUtils.exceedsLargeValueLimit(value.rawValue) -> "exceedsLargeValueLimit"
+            BuildVarOverflowUtils.exceedsLargeValueLimit(
+                value.rawValue,
+                pipelineVarOverflowConfig.effectiveLargeValueMaxBytes()
+            ) -> "exceedsLargeValueLimit"
             else -> null
         }
         if (reason == null) {

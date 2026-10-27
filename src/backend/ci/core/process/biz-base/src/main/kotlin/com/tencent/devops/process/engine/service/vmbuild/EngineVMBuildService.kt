@@ -107,6 +107,7 @@ import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
@@ -1041,7 +1042,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType = errorType,
             errorCode = result.errorCode,
             errorMsg = result.message,
-            atomVersion = result.elementVersion
+            atomVersion = result.elementVersion,
+            // 大变量引用串随插件执行记录一起留痕，供按执行次数回看内容（见 TaskBuildRecordService.taskEnd）
+            largeVariables = result.buildResult
+                .filterValues { BuildVarOverflowUtils.isOverflowReference(it) }
+                .takeIf { it.isNotEmpty() }
         )
         val (updateTaskStatusInfos, recordTask) = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->

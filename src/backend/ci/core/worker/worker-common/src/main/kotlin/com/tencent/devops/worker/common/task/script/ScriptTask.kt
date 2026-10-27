@@ -39,7 +39,6 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
@@ -278,7 +277,7 @@ open class ScriptTask : ITask() {
      * 开启「变量值超长时失败」时校验脚本写出的变量，存在超限值时返回 false。
      *
      * 不支持大变量时，超过 4000 字符即失败，文案与改造前一致；
-     * 支持时，不超过 512KB（UTF-8 字节）的值交给制品库，超过才失败。
+     * 支持时，不超过 256KB（UTF-8 字节）的值交给制品库，超过才失败。
      * 开关关闭、或没有超 4000 的值时直接返回，不查询制品库。
      */
     private fun failIfVariableInvalidCheck(
@@ -288,6 +287,7 @@ open class ScriptTask : ITask() {
         if (!failIfVariableInvalid) {
             return true
         }
+        LargeVariableStore.ensureLargeValueLimit()
         var largeVariableSupported: Boolean? = null
         var valid = true
         variables.forEach { (key, value) ->
@@ -322,7 +322,7 @@ open class ScriptTask : ITask() {
         }
         return arrayOf(
             key,
-            PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES.toString(),
+            BuildVarOverflowUtils.largeValueMaxBytes().toString(),
             BuildVarOverflowUtils.utf8Length(value).toString()
         )
     }

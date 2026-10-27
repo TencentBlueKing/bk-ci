@@ -92,6 +92,33 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
+    /**
+     * 取这次构建里值为大变量引用串的变量，最多 [limit] 条。
+     *
+     * 只按主键前缀 BUILD_ID 定位本次构建的行，再在这些行上筛前缀，不会扫到别的构建。
+     * 引用串不含下划线通配歧义的问题由 jOOQ 的 startsWith 转义处理。
+     */
+    fun getOverflowVars(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        referencePrefix: String,
+        limit: Int
+    ): Map<String, String> {
+        with(T_PIPELINE_BUILD_VAR) {
+            return dslContext.select(KEY, VALUE)
+                .from(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(VALUE.startsWith(referencePrefix))
+                )
+                .limit(limit)
+                .fetch()
+                .associate { it[KEY] to it[VALUE] }
+        }
+    }
+
     fun getVars(
         dslContext: DSLContext,
         projectId: String,

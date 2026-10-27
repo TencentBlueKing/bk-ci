@@ -36,6 +36,8 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.utils.BuildVarOverflowUtils
+import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
 
 /**
@@ -69,12 +71,26 @@ object BuildVarOverflowExprSupport {
         if (referenced.size > 1) {
             LargeVariableStore.prefetch(scope, referenced.mapNotNull { variables[it] })
         }
+        val sensitiveKeys = sensitiveKeys()
         val loader: (String) -> String? = { key ->
-            BuildVarOverflowUtils.resolveStoredKey(key, variables)
-                ?.let { variables[it] }
+            val storedKey = BuildVarOverflowUtils.resolveStoredKey(key, variables)
+            storedKey?.let { variables[it] }
                 ?.let { reference -> LargeVariableStore.load(scope, reference) ?: reference }
+                ?.also { value ->
+                    // 敏感大变量下发时只是引用串，真实值要到这里才拿得到，补登记以便后续日志脱敏
+                    if (storedKey in sensitiveKeys) SensitiveValueService.addSensitiveValue(value)
+                }
         }
         return overflowKeys to loader
+    }
+
+    /** 本次构建里被标记为敏感的变量名；构建上下文未就绪时为空集。 */
+    private fun sensitiveKeys(): Set<String> {
+        val variablesWithType = LoggerService.buildVariables?.variablesWithType ?: return emptySet()
+        return variablesWithType.asSequence()
+            .filter { it.sensitive == true }
+            .map { it.key }
+            .toSet()
     }
 
     /**
