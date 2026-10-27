@@ -203,6 +203,126 @@ class CodeSchemaCheckTest {
         }
     }
 
+    @Test
+    fun `test matrix strategy max-parallel variants should pass`() {
+        // 留空(默认5)、空白串、变量表达式、合法数字，均应通过校验
+        val validYaml = """
+            version: v3.0
+            name: matrix-max-parallel-valid
+            on:
+              manual: enabled
+            stages:
+              - name: stage-1
+                jobs:
+                  job1:
+                    name: build-1
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo hi
+                    strategy:
+                      matrix:
+                        cpu: [amd64]
+                      max-parallel:
+                  job2:
+                    name: build-2
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo hi
+                    strategy:
+                      matrix:
+                        cpu: [amd64]
+                      max-parallel: "${'$'}{{variables.max_parallel}}"
+                  job3:
+                    name: build-3
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo hi
+                    strategy:
+                      matrix:
+                        cpu: [amd64]
+                      max-parallel: 2
+        """.trimIndent()
+
+        Assertions.assertDoesNotThrow {
+            codeSchemaCheck.check(validYaml)
+        }
+    }
+
+    @Test
+    fun `test matrix strategy max-parallel with output variable should pass`() {
+        // 引用其它 Job 步骤输出变量的表达式同样应通过
+        val validYaml = """
+            version: v3.0
+            name: matrix-max-parallel-output-var
+            on:
+              manual: enabled
+            stages:
+              - name: stage-1
+                jobs:
+                  job1:
+                    name: build-1
+                    runs-on:
+                      pool-name: docker
+                    steps:
+                      - uses: linuxScript@1.*
+                        with:
+                          script: echo hi
+                    strategy:
+                      matrix:
+                        cpu: [amd64]
+                      max-parallel: "${'$'}{{jobs.job_gDV.steps.dCWF9N.outputs.my_name}}"
+        """.trimIndent()
+
+        Assertions.assertDoesNotThrow {
+            codeSchemaCheck.check(validYaml)
+        }
+    }
+
+    @Test
+    fun `test matrix strategy max-parallel with invalid values should throw exception`() {
+        // 0 / 超上限 / 非数字非变量的脏值，均应被拦截
+        listOf(
+            "0" to "below minimum",
+            "51" to "above maximum",
+            "abc" to "not a number nor a variable"
+        ).forEach { (value, _) ->
+            val invalidYaml = """
+                version: v3.0
+                name: matrix-max-parallel-invalid-$value
+                on:
+                  manual: enabled
+                stages:
+                  - name: stage-1
+                    jobs:
+                      job1:
+                        name: build-1
+                        runs-on:
+                          pool-name: docker
+                        steps:
+                          - uses: linuxScript@1.*
+                            with:
+                              script: echo hi
+                        strategy:
+                          matrix:
+                            cpu: [amd64]
+                          max-parallel: $value
+            """.trimIndent()
+
+            assertThrows<PipelineTransferException> {
+                codeSchemaCheck.check(invalidYaml)
+            }
+        }
+    }
+
     /**
      * 从资源文件读取内容
      */
