@@ -27,8 +27,8 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.util.script.OomAwareExecutor
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteStreamHandler
 import org.apache.commons.exec.Executor
 import org.slf4j.LoggerFactory
@@ -38,7 +38,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
-class CommandLineExecutor : DefaultExecutor() {
+class CommandLineExecutor : OomAwareExecutor() {
 
     private val executor = Executors.newSingleThreadExecutor()
 

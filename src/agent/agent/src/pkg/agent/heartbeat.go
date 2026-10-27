@@ -33,6 +33,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -111,6 +112,13 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 		}
 	}
 
+	// 心跳返回完整环境快照；空/nil 也要清除缓存中的旧开关。
+	// 这里只影响下一次重启，当前构建的策略保持不变。
+	if changed, err := oomprotect.PersistServerEnv(systemutil.GetWorkDir(), heartbeatResponse.Envs); err != nil {
+		logs.Errorf("persist OOM protection setting: %v", err)
+	} else if changed {
+		logs.Info("OOM protection setting changed; restart daemon and agent to apply")
+	}
 	if configChanged {
 		_ = config.GAgentConfig.SaveConfig()
 	}

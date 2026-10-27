@@ -65,6 +65,14 @@ func writeEnvSnapshot(workDir string) {
 	dest := filepath.Join(workDir, ".env")
 
 	existing := loadExistingUserVars(dest)
+	// 此开关是用户配置，不加入 snapshotVars：普通 start 时 shell 没有导出变量，
+	// 也必须保留用户手工写入 .env 的值；显式 export 时才更新该键。
+	if value, ok := os.LookupEnv("DEVOPS_AGENT_OOM_PROTECT"); ok {
+		if existing == nil {
+			existing = make(map[string]string)
+		}
+		existing["DEVOPS_AGENT_OOM_PROTECT"] = value
+	}
 	for k, v := range existing {
 		if isSnapshotVar(k) {
 			continue

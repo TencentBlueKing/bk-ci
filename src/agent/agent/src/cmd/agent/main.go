@@ -40,6 +40,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
@@ -92,6 +93,10 @@ func main() {
 	logs.Info("work dir: ", systemutil.GetWorkDir())
 
 	envs.LoadEnvFiles(workDir)
+	// 失败时保留心跳，接单入口通过 Ready 检查阻止无保护的构建。
+	if err := oomprotect.Init(workDir); err != nil {
+		logs.Errorf("OOM protection unavailable; normal builds disabled: %v", err)
+	}
 
 	go envs.InitEnvPolling()
 
