@@ -202,14 +202,13 @@ export class RealtimeConnection {
     }
 }
 
-export function createRefreshTask ({ load, apply = () => {}, onError = () => {}, interval = 1000, liveInterval = 45000, pollingInterval = 15000 }) {
+export function createRefreshTask ({ load, apply = () => {}, onError = () => {}, interval = 1000, pollingInterval = 15000 }) {
     let disposed = false
     let dirty = 0
     let running = false
     let timer = null
     let lastStarted = 0
     let failureCount = 0
-    let live = false
     let forbidden = false
     const schedule = (delay) => {
         if (disposed || forbidden || timer) return
@@ -233,16 +232,16 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
             if (!disposed) onError(error)
         } finally {
             running = false
-            if (!disposed && !forbidden) {
-                const wait = failureCount
-                    ? jitter(Math.min(60000, pollingInterval * 2 ** Math.min(failureCount - 1, 3)))
-                    : version !== dirty ? Math.max(0, interval - (Date.now() - lastStarted)) : jitter(live ? liveInterval : pollingInterval)
-                schedule(wait)
+            if (disposed || forbidden) return
+            if (failureCount) {
+                schedule(jitter(Math.min(60000, pollingInterval * 2 ** Math.min(failureCount - 1, 3))))
+            } else if (version !== dirty) {
+                schedule(Math.max(0, interval - (Date.now() - lastStarted)))
             }
         }
     }
     const refresh = (type = 'invalidate') => {
-        if (disposed) return
+        if (disposed || type === 'polling') return
         if (type === 'forbidden') {
             forbidden = true
             clearTimeout(timer)
@@ -250,8 +249,6 @@ export function createRefreshTask ({ load, apply = () => {}, onError = () => {},
             onError(Object.assign(new Error('Forbidden'), { status: 403 }))
             return
         }
-        if (type === 'sync') live = true
-        if (type === 'polling') live = false
         dirty++
         clearTimeout(timer)
         timer = null
