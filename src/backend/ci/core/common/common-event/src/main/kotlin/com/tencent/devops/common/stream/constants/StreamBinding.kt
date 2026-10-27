@@ -184,8 +184,6 @@ object StreamBinding {
 
     const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
 
-    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
-
     // TAPD webhook 请求事件
     const val TAPD_WEBHOOK_REQUEST_EVENT = "engine.pipeline.tapd.webhook.event"
 
