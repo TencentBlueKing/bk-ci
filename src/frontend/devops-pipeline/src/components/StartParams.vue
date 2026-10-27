@@ -80,6 +80,7 @@
 <script>
     import ParamSet from '@/components/ParamSet.vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { isParamValueEqual } from '@/utils/util'
     import { mapActions, mapGetters } from 'vuex'
     export default {
         components: {
@@ -166,10 +167,7 @@
             },
             isDefaultDiff ({ key, value }) {
                 const defaultValue = this.defaultParamMap[key]
-                if (typeof defaultValue === 'boolean') {
-                    return defaultValue.toString() !== value.toString()
-                }
-                return defaultValue !== value
+                return !isParamValueEqual(defaultValue, value)
             },
             isOverflow () {
                 try {

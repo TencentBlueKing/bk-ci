@@ -67,6 +67,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
+import com.tencent.devops.store.common.utils.StoreRunInfoCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
@@ -148,6 +149,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
+
+    @Autowired
+    private lateinit var storeRunInfoCacheManager: StoreRunInfoCacheManager
 
     @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
     private val maxInputNum: Int = 100
@@ -800,7 +804,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             ATOM_POST_ENTRY_PARAM to postEntryParam,
             ATOM_POST_CONDITION to postCondition
         )
-        val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
@@ -829,20 +832,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             hashKey = version,
             values = JsonUtil.toJson(atomPostMap)
         )
-        redisOperation.hset(
-            key = atomRunInfoKey,
-            hashKey = version,
-            values = JsonUtil.toJson(atomRunInfo)
-        )
+        storeRunInfoCacheManager.setAtomRunInfo(atomCode, version, JsonUtil.toJson(atomRunInfo))
         // 更新插件xxx.latest这种版本号的缓存信息
         redisOperation.hset(
             key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
             hashKey = VersionUtils.convertLatestVersion(version),
             values = JsonUtil.toJson(atomPostMap)
         )
-        redisOperation.hset(
-            key = atomRunInfoKey,
-            hashKey = VersionUtils.convertLatestVersion(version),
+        storeRunInfoCacheManager.setAtomRunInfo(
+            atomCode = atomCode,
+            version = VersionUtils.convertLatestVersion(version),
             values = JsonUtil.toJson(atomRunInfo)
         )
         if (releaseFlag) {
@@ -885,11 +884,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 osMap = resolveAtomRunInfoOsMap(atomRecord)
             )
             // 更新插件当前版本号的缓存信息
-            redisOperation.hset(
-                key = atomRunInfoKey,
-                hashKey = version,
-                values = JsonUtil.toJson(updatedAtomRunInfo)
-            )
+            storeRunInfoCacheManager.setAtomRunInfo(atomCode, version, JsonUtil.toJson(updatedAtomRunInfo))
             val updateLatestAtomCacheFlag = if (latestFlag == true) {
                 true
             } else {
@@ -898,9 +893,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
             if (updateLatestAtomCacheFlag) {
                 // 更新插件xxx.latest这种版本号的缓存信息
-                redisOperation.hset(
-                    key = atomRunInfoKey,
-                    hashKey = VersionUtils.convertLatestVersion(version),
+                storeRunInfoCacheManager.setAtomRunInfo(
+                    atomCode = atomCode,
+                    version = VersionUtils.convertLatestVersion(version),
                     values = JsonUtil.toJson(updatedAtomRunInfo)
                 )
             }

@@ -27,17 +27,17 @@
 
 package com.tencent.devops.process.engine.interceptor
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
@@ -49,11 +49,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
 import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
-import kotlin.math.max
-import kotlin.math.min
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import kotlin.math.min
 
 /**
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
@@ -100,13 +99,7 @@ class QueueInterceptor @Autowired constructor(
         return when {
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
-                Response(
-                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ERROR_PIPELINE_SUMMARY_NOT_FOUND,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
+                Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt())
 
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -124,17 +117,11 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser
                 )
 
-            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >= max(
-                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
-                task.maxConRunningQueueSize
-            ) ->
-                Response(
-                    status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = BK_MAX_PARALLEL,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${max(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX, task.maxConRunningQueueSize)}"
-                )
+            (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) >=
+                    PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                ->
+                // 重要说明： BuildStartContro.checkRunningCountWithLimit才是真正判断并发执行的逻辑，此处仅做队列满员判定（兼容以前错误的 max 函数逻辑）
+                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt())
 
             else -> Response(data = BuildStatus.RUNNING)
         }
@@ -159,13 +146,7 @@ class QueueInterceptor @Autowired constructor(
                 Response(data = BuildStatus.RUNNING)
 
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
-                Response(
-                    status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = MessageUtil.getMessageByLocale(
-                        messageCode = ERROR_PIPELINE_QUEUE_FULL,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
+                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt())
 
             queueCount >= task.maxQueueSize -> {
                 // 满员时挤掉最早排队的构建并放行当前构建，maxQueueSize是排队队列的容量而非新构建的准入门槛。
@@ -244,7 +225,10 @@ class QueueInterceptor @Autowired constructor(
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
                     status = BuildStatus.CANCELED,
-                    executeCount = buildInfo.executeCount
+                    executeCount = buildInfo.executeCount,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_QUEUE_FULL
+                    )
                 )
             )
         }
@@ -284,6 +268,8 @@ class QueueInterceptor @Autowired constructor(
             return
         }
         logger.info("[$pipelineId]|${task.buildId}|QUEUE_OUT_SIZE|$groupName|out=${outQueueBuilds.size}")
+        // 满员挤出发生在当前构建入库之前，被取消的是更早的排队，{0} 指向这次触发挤出的构建。
+        // 不要改回 BK_CONCURRENCY_QUEUE_SIZE_CANCEL：启动对账没有单一触发构建，两处文案不能共用。
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
             projectCode = projectId,
             pipelineId = task.pipelineInfo.pipelineId,
@@ -296,11 +282,8 @@ class QueueInterceptor @Autowired constructor(
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY,
-                    params = arrayOf(
-                        groupName,
-                        "<a target='_blank' href='$detailUrl'>${task.buildId}</a>"
-                    )
+                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD,
+                    params = arrayOf("<a target='_blank' href='$detailUrl'>${task.buildId}</a>")
                 ),
                 tag = "QueueInterceptor",
                 containerHashId = "",
@@ -316,7 +299,11 @@ class QueueInterceptor @Autowired constructor(
                     userId = latestStartUser ?: task.pipelineInfo.creator,
                     buildId = buildInfo.buildId,
                     status = BuildStatus.CANCELED,
-                    executeCount = buildInfo.executeCount
+                    executeCount = buildInfo.executeCount,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_GROUP,
+                        reasonParams = listOf(groupName)
+                    )
                 )
             )
         }
@@ -329,6 +316,49 @@ class QueueInterceptor @Autowired constructor(
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
+        // 配置了同一批标识时不走整组取消。标识为空、null 时只排队，不去重。
+        if (concurrencyGroup.isNotBlank() && task.concurrencySubGroup != null) {
+            val batchId = ConcurrencySubGroupPolicy.effectiveBatchId(task.concurrencySubGroup)
+            if (batchId == null) {
+                if (task.cancelAllowed) {
+                    buildLogPrinter.addYellowLine(
+                        buildId = task.buildId,
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_EMPTY
+                        ),
+                        tag = "QueueInterceptor",
+                        containerHashId = "",
+                        executeCount = 1,
+                        jobId = null,
+                        stepId = "QueueInterceptor"
+                    )
+                }
+            } else if (task.cancelAllowed) {
+                cancelSameSubGroup(
+                    task = task,
+                    projectId = projectId,
+                    concurrencyGroup = concurrencyGroup,
+                    batchId = batchId,
+                    latestStartUser = latestStartUser
+                )
+            }
+            return checkRunLockWithSingleType(
+                task = task,
+                latestBuildId = latestBuildId,
+                latestStartUser = latestStartUser,
+                runningCount = countGroupBuild(
+                    task = task,
+                    concurrencyGroup = concurrencyGroup,
+                    status = listOf(BuildStatus.RUNNING)
+                ),
+                queueCount = countGroupBuild(
+                    task = task,
+                    concurrencyGroup = concurrencyGroup,
+                    status = QUEUE_STATUS_LIST
+                ),
+                groupName = concurrencyGroup
+            )
+        }
         return when {
             concurrencyGroup.isNotBlank() && task.concurrencyCancelInProgress && task.cancelAllowed -> {
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
@@ -406,6 +436,66 @@ class QueueInterceptor @Autowired constructor(
             }
             // 满足条件
             else -> Response(data = BuildStatus.RUNNING)
+        }
+    }
+
+    /**
+     * 入库前的同一批取消，只做提前优化。权威去重在 BuildStartControl.cancelOlderSameBatch。
+     *
+     * 本方法跑在构建历史写入之前。并发触发互相看不见，当前构建通常还没有 buildNum，
+     * [ConcurrencyCancelGuardUtils.olderSameBatch] 会返回空列表，避免把已经入库、构建号更大的构建取消掉。
+     * 重试时历史已在，只取消本流水线内构建号更小、解析值相同的构建。③ 含运行中，④ 只含排队。
+     * 原因文案的 {0} 是当前构建链接。
+     */
+    private fun cancelSameSubGroup(
+        task: InterceptData,
+        projectId: String,
+        concurrencyGroup: String,
+        batchId: String,
+        latestStartUser: String?
+    ) {
+        val status = if (task.concurrencyCancelInProgress) {
+            listOf(BuildStatus.RUNNING) + QUEUE_STATUS_LIST
+        } else {
+            QUEUE_STATUS_LIST
+        }
+        val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = task.pipelineInfo.pipelineId,
+            buildId = task.buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
+        val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = status,
+            excludeBuildId = task.buildId
+        )
+        // 入库前通常还没有构建号，这时不取消，留给持有组锁的启动逻辑。已有构建号时只取消更小的。
+        val currentBuildNum = pipelineRuntimeService.getBuildInfo(projectId, task.buildId)?.buildNum
+        val cancelTargets = ConcurrencyCancelGuardUtils.olderSameBatch(
+            candidateBuilds = builds,
+            pipelineId = task.pipelineInfo.pipelineId,
+            currentBuildId = task.buildId,
+            currentBuildNum = currentBuildNum,
+            batchId = batchId
+        )
+        val reason = I18nUtil.getCodeLanMessage(
+            messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_REPLACED,
+            params = arrayOf("<a target='_blank' href='$detailUrl'>${task.buildId}</a>")
+        )
+        cancelTargets.forEach { target ->
+            pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                projectId = projectId,
+                pipelineId = target.pipelineId,
+                buildId = target.buildId,
+                userId = latestStartUser ?: task.pipelineInfo.creator,
+                groupName = concurrencyGroup,
+                detailUrl = detailUrl,
+                reasonMessage = reason
+            )
         }
     }
 

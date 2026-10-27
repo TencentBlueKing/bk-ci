@@ -28,16 +28,12 @@
 package com.tencent.devops.process.api.template
 
 import com.tencent.bk.audit.annotations.AuditEntry
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.PTemplateOrderByType
 import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -54,10 +50,6 @@ import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.TemplatePACService
 import com.tencent.devops.process.service.template.TemplateSettingService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -196,24 +188,6 @@ class UserPTemplateResourceImpl @Autowired constructor(
         templateId: String,
         setting: PipelineSetting
     ): Result<Boolean> {
-        if (setting.runLockType == PipelineRunLockType.SINGLE ||
-            setting.runLockType == PipelineRunLockType.SINGLE_LOCK ||
-            setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
-            setting.runLockType == PipelineRunLockType.MULTIPLE
-        ) {
-            if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-            ) {
-                throw InvalidParamException(I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL))
-            }
-            if (setting.maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL)
-                )
-            }
-        }
         return Result(templateSettingService.updateTemplateSetting(projectId, userId, templateId, setting))
     }
 

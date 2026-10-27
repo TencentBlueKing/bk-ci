@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.26
 
 **文档描述：** devops_ci_repository的数据库文档
 | 表名                  | 说明       |
@@ -192,6 +192,7 @@
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  8   | TYPE |   varchar   | 32 |   0    |    Y     |  N   |   GITHUB_APP    | GitHubtoken类型（GITHUB_APP、OAUTH_APP）  |
 |  9   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
+|  10   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_REPOSITORY_GIT_CHECK</a>
 
@@ -230,6 +231,7 @@
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | token的创建时间  |
 |  8   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 |  9   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
+|  10   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_REPOSITORY_PIPELINE_REF</a>
 
@@ -348,6 +350,7 @@
 |  8   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  9   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
 |  10   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
+|  11   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_REPOSITORY_TGIT_TOKEN</a>
 
@@ -365,6 +368,7 @@
 |  6   | EXPIRES_IN |   bigint   | 20 |   0    |    Y     |  N   |       | 过期时间  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | token的创建时间  |
 |  8   | OAUTH_USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 账户实际名称  |
+|  9   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_REPOSITORY_WEBHOOK_REQUEST</a>
 

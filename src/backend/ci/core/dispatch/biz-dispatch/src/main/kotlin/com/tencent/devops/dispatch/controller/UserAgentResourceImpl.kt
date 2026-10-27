@@ -39,6 +39,7 @@ class UserAgentResourceImpl @Autowired constructor(
         return Result(
             thirdPartyAgentBuildService.fetchBuildPipelineView(
                 userId = userId,
+                projectId = projectId,
                 envId = envRId,
                 data = data
             )
@@ -88,7 +89,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<PipelineIdAndName>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentBuildService.fetchPipelineIdAndName(agentId, envRId, pipelineName))
+        return Result(thirdPartyAgentBuildService.fetchPipelineIdAndName(projectId, agentId, envRId, pipelineName))
     }
 
     override fun listAgentPipelineJobsByJobName(
@@ -100,7 +101,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<JobIdAndName>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentBuildService.fetchJobIdAndName(agentId, envRId, jobName))
+        return Result(thirdPartyAgentBuildService.fetchJobIdAndName(projectId, agentId, envRId, jobName))
     }
 
     override fun listAgentPipelineJobsByCreator(
@@ -112,7 +113,7 @@ class UserAgentResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         val envRId = AllCreateNodeEnv.hashIdToId(envId)
         checkEnvOrAgentPermission(userId, projectId, agentId, envRId)
-        return Result(thirdPartyAgentBuildService.fetchCreator(agentId, envRId, creator))
+        return Result(thirdPartyAgentBuildService.fetchCreator(projectId, agentId, envRId, creator))
     }
 
     override fun fetchAgentBuildsByJob(

@@ -180,7 +180,7 @@ class PipelineYamlVersionResolver @Autowired constructor(
         }
         val defaultBranch = serverRepository.defaultBranch!!
         val ciDir = filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' }) }
-        val repoFileUrl = repoFileUrl(repository.url, ref, ciDir)
+        val repoFileUrl = repoFileUrl(serverRepository.httpUrl, ref, ciDir)
         // 这里后续看是否可以改成从T_PIPELINE_YAML_BRANCH_FILE表中获取
         val fileContent = try {
             scmProxyService.getFileContent(
@@ -229,14 +229,17 @@ class PipelineYamlVersionResolver @Autowired constructor(
 
     /**
      * 代码源仓库文件链接
+     *
+     * TODO 目前统一按工蜂的链接格式拼接, 不同代码源平台格式不同, 后续迁移到 devops-scm 中由各平台实现
      */
     private fun repoFileUrl(
-        repoUrl: String,
+        httpUrl: String,
         branch: String,
         filePath: String
     ): String {
-        val (domain, repoName) = GitUtils.getDomainAndRepoName(repoUrl)
-        return "https://$domain/$repoName/tree/$branch/$filePath"
+        val encodedBranch = GitUtils.urlEncodePathSegment(branch)
+        val encodedFilePath = GitUtils.urlEncodePath(filePath)
+        return "${httpUrl.removeSuffix(".git")}/tree/$encodedBranch/$encodedFilePath"
     }
 
     companion object {

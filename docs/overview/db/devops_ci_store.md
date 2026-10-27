@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.26
 
 **文档描述：** devops_ci_store的数据库文档
 | 表名                  | 说明       |
@@ -150,7 +150,7 @@
 |  13   | SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 简介  |
 |  14   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 描述  |
 |  15   | CATEGROY |   tinyint   | 4 |   0    |    N     |  N   |   1    | 类别  |
-|  16   | VERSION |   varchar   | 30 |   0    |    N     |  N   |       | 版本号  |
+|  16   | VERSION |   varchar   | 256 |   0    |    N     |  N   |       | 版本号  |
 |  17   | LOGO_URL |   varchar   | 256 |   0    |    Y     |  N   |       | LOGOURL地址  |
 |  18   | ICON |   text   | 65535 |   0    |    Y     |  N   |       | 插件图标  |
 |  19   | DEFAULT_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否为默认原子  |
@@ -1066,6 +1066,7 @@
 |  11   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  13   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  14   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_STORE_ERROR_CODE_INFO</a>
 
@@ -1479,6 +1480,7 @@
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  11   | FIELD_TYPE |   varchar   | 16 |   0    |    Y     |  N   |   BACKEND    | 字段类型  |
+|  12   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_STORE_STATISTICS</a>
 
