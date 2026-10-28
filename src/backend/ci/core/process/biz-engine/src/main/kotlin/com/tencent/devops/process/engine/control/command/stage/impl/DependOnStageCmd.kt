@@ -77,20 +77,9 @@ class DependOnStageCmd(
                 "ENGINE|${stage.buildId}|DEPEND_ON_INIT|s(${stage.stageId})|" +
                     "j(${container.containerId})|jobId=${container.jobId}|dependOn=$dependRel"
             )
-            val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
-            if (!dependRel.isNullOrEmpty()) {
-                buildLogPrinter.addLine(
-                    buildId = stage.buildId,
-                    message = "Job[${container.jobId ?: container.containerId}] dependOn $dependRel",
-                    tag = startVmId,
-                    containerHashId = container.containerHashId,
-                    executeCount = commandContext.executeCount,
-                    jobId = null,
-                    stepId = startVmId
-                )
-            }
             val notFoundJobIds = unresolvedJobIds[container.containerId]
             if (!notFoundJobIds.isNullOrEmpty()) {
+                val startVmId = VMUtils.genStartVMTaskId(container.seq.toString())
                 buildLogPrinter.addYellowLine(
                     buildId = stage.buildId,
                     message = "Job[${container.jobId ?: container.containerId}] dependOn $notFoundJobIds " +
@@ -117,7 +106,7 @@ class DependOnStageCmd(
         val message = I18nUtil.getCodeLanMessage(
             messageCode = e.errorCode,
             params = e.params,
-            defaultMessage = e.defaultMessage ?: "jobId dependOn resolve failed"
+            defaultMessage = e.defaultMessage ?: "Job dependOn resolve failed"
         )
         LOG.warn(
             "ENGINE|${stage.buildId}|DEPEND_ON_FAILED|s(${stage.stageId})|${e.errorCode}|$message"
