@@ -248,6 +248,18 @@ const actions = {
         })
     },
     /**
+     * 获取 PAC 流水线 yaml 信息（列表行数据中不含 yamlInfo，需要单独获取）
+     *
+     * @param {String} projectId 项目 id
+     * @param {String} pipelineId 流水线 id
+     * @param {Number} version 流水线版本号
+     */
+    requestPipelineYamlInfo (_ctx, { projectId, pipelineId, version }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${pipelineId}/${version}/yamlInfo`).then(response => {
+            return response.data
+        })
+    },
+    /**
      * 删除流水线
      *
      * @param {Function} commit store commit mutation handler

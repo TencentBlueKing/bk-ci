@@ -232,7 +232,7 @@
             :lock-user="pipelineActionState.activePipeline?.lockUser"
             :lock-time="pipelineActionState.activePipeline?.lockTime"
             :lock-reason="pipelineActionState.activePipeline?.lockReason"
-            :yaml-info="pipelineActionState.activePipeline?.yamlInfo"
+            :yaml-info="disableDialogYamlInfo"
             @close="closeDisableDialog"
             @done="refresh"
         />
@@ -325,7 +325,8 @@
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
                 PROJECT_RESOURCE_ACTION,
-                tableHeight: null
+                tableHeight: null,
+                disableDialogYamlInfo: null
             }
         },
         computed: {
@@ -422,6 +423,14 @@
             '$route.params.viewId' () {
                 this.filters = {}
                 this.$nextTick(this.updateTableHeight)
+            },
+            'pipelineActionState.isDisableDialogShow' (val) {
+                if (!val) return
+                // 列表行数据中不含 yamlInfo，YAML 禁用的流水线打开弹窗时单独调接口获取，其余情况不调用
+                this.disableDialogYamlInfo = null
+                if (this.pipelineActionState.activePipeline?.yamlLocked) {
+                    this.fetchDisableDialogYamlInfo()
+                }
             }
         },
 
@@ -447,8 +456,27 @@
 
         methods: {
             ...mapActions('pipelines', [
-                'requestHasCreatePermission'
+                'requestHasCreatePermission',
+                'requestPipelineYamlInfo'
             ]),
+            async fetchDisableDialogYamlInfo () {
+                const activePipeline = this.pipelineActionState.activePipeline
+                try {
+                    const { projectId, pipelineId, pipelineVersion } = activePipeline
+                    const yamlInfo = await this.requestPipelineYamlInfo({
+                        projectId,
+                        pipelineId,
+                        version: pipelineVersion
+                    })
+                    if (this.pipelineActionState.activePipeline !== activePipeline) return
+                    this.disableDialogYamlInfo = yamlInfo
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                }
+            },
             updateTableHeight () {
                 this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
