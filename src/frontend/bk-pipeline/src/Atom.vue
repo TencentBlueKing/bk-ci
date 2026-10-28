@@ -104,7 +104,8 @@
             {{ formatTime }}
           </span>
           <template #content>
-            <p>{{ formatTime }}</p>
+            <p v-if="atomTimeRange">{{ atomTimeRange }}</p>
+            <p v-else>{{ formatTime }}</p>
           </template>
         </bk-popover>
       </span>
@@ -161,6 +162,7 @@ import { t } from "./locale";
 import {
   convertMStoString,
   eventBus,
+  formatRangeTime,
   hashID,
   isTriggerContainer,
   randomString,
@@ -479,6 +481,17 @@ const formatTime = computed(() => {
   } catch (error) {
     return "--";
   }
+});
+
+const atomTimeRange = computed(() => {
+  const timeRange = formatRangeTime(
+    props.atom?.startTime,
+    props.atom?.endTime,
+    reactiveData?.buildStartTime,
+  );
+  if (!timeRange) return "";
+  const runningLabel = props.atom?.endTime ? "" : ` ${t("started")}`;
+  return `${t("startEndTime")}：${timeRange}${runningLabel}`;
 });
 
 const isQualityCheckAtom = computed(() => {

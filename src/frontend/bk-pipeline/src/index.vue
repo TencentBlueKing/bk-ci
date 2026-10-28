@@ -114,6 +114,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  buildStartTime: {
+    type: Number,
+    default: 0,
+  },
   canSkipElement: {
     type: Boolean,
     default: false,
@@ -160,6 +164,7 @@ const keys = [
   "editable",
   "isExecDetail",
   "isLatestBuild",
+  "buildStartTime",
   "canSkipElement",
   "cancelUserId",
   "isExpandAllMatrix",
