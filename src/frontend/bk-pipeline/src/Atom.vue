@@ -65,7 +65,12 @@
         />
       </p>
       <template v-if="isExecuting">
-        <span class="atom-execounter">{{ execTime }}</span>
+        <bk-popover :delay="[300, 0]" placement="top">
+          <span class="atom-execounter">{{ execTime }}</span>
+          <template #content>
+            <p v-if="atomTimeRange">{{ atomTimeRange }}</p>
+          </template>
+        </bk-popover>
       </template>
       <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
       <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
@@ -484,8 +489,9 @@ const formatTime = computed(() => {
 });
 
 const atomTimeRange = computed(() => {
+  const startTime = props.atom?.startTime ?? props.atom?.startEpoch;
   const timeRange = formatRangeTime(
-    props.atom?.startTime,
+    startTime,
     props.atom?.endTime,
     reactiveData?.buildStartTime,
   );
