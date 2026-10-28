@@ -861,6 +861,34 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
+    /**
+     * 初始化Stage内Job的dependOn映射：
+     * 插件/Stage重试与运行中重试沿用上次持久化的映射，运行中重试据此判断需要刷新的Job；
+     * 构建/重新构建按启动参数预算并校验循环依赖，最终以Stage启动时DependOnStageCmd重算的结果为准
+     */
+    private fun initStageDependOn(
+        stage: Stage,
+        context: StartBuildContext,
+        lastTimeBuildContainers: List<PipelineBuildContainer>
+    ) {
+        if (!context.retryStartTaskId.isNullOrBlank()) {
+            val dbDependOn = lastTimeBuildContainers.filter { it.stageId == stage.id }
+                .associate { it.containerId to it.controlOption.jobControlOption.dependOnContainerId2JobIds }
+            stage.containers.forEach { c ->
+                val jobControlOption = when (c) {
+                    is VMBuildContainer -> c.jobControlOption
+                    is NormalContainer -> c.jobControlOption
+                    else -> null
+                } ?: return@forEach
+                jobControlOption.dependOnContainerId2JobIds = dbDependOn[c.id]
+            }
+            return
+        }
+        if (stage.containers.any { DependOnUtils.enableDependOn(it) }) {
+            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+        }
+    }
+
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
         buildLogPrinter.startLog(
             buildId = context.buildId,
@@ -943,11 +971,11 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
-            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+            initStageDependOn(stage = stage, context = context, lastTimeBuildContainers = lastTimeBuildContainers)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
-                if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                if (context.shouldSkipRefreshWhenRetryRunning(stage, container)) {
                     logger.info(
                         "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
                     )
