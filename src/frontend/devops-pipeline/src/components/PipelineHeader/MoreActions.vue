@@ -73,7 +73,6 @@
             :lock-time="pipelineInfo?.lockTime"
             :lock-reason="pipelineInfo?.lockReason"
             :yaml-info="yamlInfo"
-            :pac-enabled="pacEnabled"
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
         />

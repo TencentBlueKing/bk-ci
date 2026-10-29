@@ -852,7 +852,7 @@
         },
         methods: {
             prettyDateTimeFormat,
-            // 执行按钮 tooltip：PAC 流水线禁用态展示与详情页一致的禁用明细（禁用人/时间/原因）
+            // 执行按钮 tooltip：禁用态展示与详情页一致的禁用明细（禁用人/时间/原因）
             getExecBtnTooltips (row) {
                 const isPageLocked = !!row.lock
                 const isYamlLocked = !!row.yamlLocked
@@ -861,20 +861,19 @@
                         ? { disabled: true }
                         : { content: this.$t('pipelineManualDisable'), delay: [300, 0] }
                 }
-                if (row.yamlExist) {
-                    return {
-                        allowHTML: true,
-                        width: 300,
-                        theme: 'dark',
-                        content: this.getPipelineDisabledTooltipHtml(row),
-                        placement: 'bottom-end',
-                        delay: [300, 0]
-                    }
+                return {
+                    allowHTML: true,
+                    width: 300,
+                    theme: 'dark',
+                    content: this.getPipelineDisabledTooltipHtml(row),
+                    placement: 'bottom-end',
+                    delay: [300, 0]
                 }
-                return { content: this.$t('pipelineLockTips'), delay: [300, 0] }
             },
             // 禁用 tooltip 分组：与 HistoryHeader 的 disabledTooltipGroups 三种场景保持一致
             getPipelineDisabledTooltipGroups (row) {
+                // 存量页面禁用数据没有禁用人/时间/原因，跳过页面禁用明细
+                const hasPageDisabledInfo = !!(row.lockUser || row.lockTime || row.lockReason)
                 const pageItems = [
                     { label: this.$t('disabledByLabel'), value: row.lockUser || '--' },
                     { label: this.$t('disabledAtLabel'), value: convertTime(row.lockTime) },
@@ -887,7 +886,7 @@
                 // 页面与 YAML 均禁用，分组展示两者明细
                 if (row.lock && row.yamlLocked) {
                     return [
-                        { title: this.$t('pageDisabledLabel'), items: pageItems },
+                        ...(hasPageDisabledInfo ? [{ title: this.$t('pageDisabledLabel'), items: pageItems }] : []),
                         { title: this.$t('yamlDisabledLabel'), items: yamlItems }
                     ]
                 }
@@ -900,8 +899,8 @@
                         ]
                     }]
                 }
-                // 仅页面禁用
-                return [{ items: pageItems }]
+                // 仅页面禁用；存量数据无禁用明细，只展示标题
+                return hasPageDisabledInfo ? [{ items: pageItems }] : []
             },
             getPipelineDisabledTooltipHtml (row) {
                 return `<div class="pipeline-disabled-tooltip">

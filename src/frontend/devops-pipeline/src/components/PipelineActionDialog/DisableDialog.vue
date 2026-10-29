@@ -10,19 +10,13 @@
         <div class="disable-pipeline-dialog">
             <i
                 :class="['bk-icon disable-pipeline-warning-icon', {
-                    'icon-exclamation': !lock || pacEnabled,
-                    'icon-check-1': lock && !pacEnabled
+                    'icon-exclamation': !lock,
+                    'icon-check-1': lock
                 }]"
             ></i>
 
-            <!-- 非 PAC 流水线 -->
-            <template v-if="!pacEnabled">
-                <h3>{{ $t(lock ? 'enablePipelineConfirmTips' : 'disablePipelineConfirmTips') }}</h3>
-                <p>{{ $t(lock ? 'enablePipelineConfirmDesc' : 'disablePipelineConfirmDesc') }}</p>
-            </template>
-
             <!-- 场景一：仅YAML 禁用，不能直接启用 -->
-            <template v-else-if="!lock && isCurPipelineYamlLocked">
+            <template v-if="!lock && isCurPipelineYamlLocked">
                 <h3>{{ $t('cannotEnablePipelineTips') }}</h3>
                 <p
                     class="disable-pipeline-name"
@@ -39,7 +33,10 @@
                         <br />
                     </i18n>
                 </div>
-                <div class="pac-yaml-file-link">
+                <div
+                    v-if="yamlInfo?.filePath"
+                    class="pac-yaml-file-link"
+                >
                     <copy-icon :value="pacYamlFilePath" />
                     <span
                         class="pac-yaml-file-path"
@@ -57,7 +54,7 @@
                     </span>
                 </div>
             </template>
-            <!-- 禁用 PAC 流水线弹窗展示 -->
+            <!-- 禁用流水线弹窗展示 -->
             <template v-else-if="!lock">
                 <h3>{{ $t('disablePipelineConfirmTips') }}</h3>
                 <p
@@ -107,7 +104,10 @@
                         <br />
                     </i18n>
                 </div>
-                <div class="pac-yaml-file-link">
+                <div
+                    v-if="yamlInfo?.filePath"
+                    class="pac-yaml-file-link"
+                >
                     <copy-icon :value="pacYamlFilePath" />
                     <span
                         class="pac-yaml-file-path"
@@ -134,7 +134,10 @@
                 >
                     {{ $t('pipeline') }}：{{ pipelineName }}
                 </p>
-                <ul class="pac-disable-info-list">
+                <ul
+                    v-if="hasDisabledInfo"
+                    class="pac-disable-info-list"
+                >
                     <li>
                         <span class="pac-disable-info-label">{{ $t('disabledByLabel') }}</span>
                         <span class="pac-disable-info-value">{{ pacDisabledByUser }}</span>
@@ -181,7 +184,6 @@
             pipelineId: String,
             pipelineName: String,
             value: Boolean,
-            pacEnabled: Boolean,
             yamlInfo: Object,
             // UI 禁用态
             lock: Boolean,
@@ -207,6 +209,10 @@
             isCurPipelineYamlLocked () {
                 return this.yamlLocked
             },
+            // 存量禁用数据没有禁用人/时间/原因
+            hasDisabledInfo () {
+                return !!(this.lockUser || this.lockTime || this.lockReason)
+            },
             // 已禁用（仅 UI 禁用场景）时展示的禁用人
             pacDisabledByUser () {
                 return this.lockUser || '--'
@@ -227,17 +233,17 @@
             pacYamlFileUrl () {
                 return this.yamlInfo?.fileUrl || ''
             },
-            // PAC 流水线仅被代码库 YAML 禁用，无法在页面启用，只展示关闭按钮
+            // 流水线仅被代码库 YAML 禁用，无法在页面启用，只展示关闭按钮
             onlyYamlDisabledScene () {
-                return this.pacEnabled && !this.lock && this.isCurPipelineYamlLocked
+                return !this.lock && this.isCurPipelineYamlLocked
             }
         },
         methods: {
             ...mapActions('pipelines', ['lockPipeline']),
             ...mapActions('atom', ['requestPipelineSummary']),
             handleConfirm () {
-                // PAC 流水线禁用时需要填写禁用原因
-                if (this.pacEnabled && !this.lock && !this.disableReason.trim()) {
+                // 禁用时需要填写禁用原因
+                if (!this.lock && !this.disableReason.trim()) {
                     this.pacReasonError = true
                     return
                 }
@@ -266,12 +272,12 @@
                         pipelineId: this.pipelineId,
                         enable: lock,
                         params: {
-                            // 仅 PAC 流水线禁用时需要传禁用原因
-                            ...(this.pacEnabled && !lock ? { lockReason: this.disableReason } : {})
+                            // 禁用时传禁用原因
+                            ...(!lock ? { lockReason: this.disableReason } : {})
                         }
                     })
-                    // PAC 流水线在详情页需重新拉取详情，刷新禁用人/禁用时间/禁用原因等展示数据
-                    if (this.pacEnabled && this.$route.params.pipelineId) {
+                    // 详情页需重新拉取详情，刷新禁用人/禁用时间/禁用原因等展示数据
+                    if (this.$route.params.pipelineId) {
                         await this.requestPipelineSummary(this.$route.params)
                     }
                     this.$bkMessage({

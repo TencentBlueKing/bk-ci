@@ -252,7 +252,6 @@
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked',
-                pacEnabled: 'atom/pacEnabled',
                 isReleasePipeline: 'atom/isReleasePipeline',
                 isReleaseVersion: 'atom/isReleaseVersion',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
@@ -379,12 +378,17 @@
                     { label: this.$t('submitTimeLabel'), value: convertTime(this.pipelineInfo?.yamlLockTime) }
                 ]
             },
+            // 存量禁用数据没有禁用人/时间/原因
+            hasPageDisabledInfo () {
+                return !!(this.pipelineInfo?.lockUser || this.pipelineInfo?.lockTime || this.pipelineInfo?.lockReason)
+            },
             // 禁用 tooltip 分组信息：三种禁用场景
             disabledTooltipGroups () {
                 // 场景三：页面与 YAML 均禁用，分组展示两者明细
                 if (this.isPageAndYamlDisabled) {
                     return [
-                        { key: 'page', title: this.$t('pageDisabledLabel'), items: this.pageDisabledItems },
+                        // 存量页面禁用数据没有禁用明细，跳过页面禁用分组
+                        ...(this.hasPageDisabledInfo ? [{ key: 'page', title: this.$t('pageDisabledLabel'), items: this.pageDisabledItems }] : []),
                         { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: this.yamlDisabledItems }
                     ]
                 }
@@ -398,15 +402,15 @@
                         ]
                     }]
                 }
-                // 场景一：仅页面禁用
-                return [{ key: 'page', items: this.pageDisabledItems }]
+                // 场景一：仅页面禁用；存量数据无禁用明细，只展示标题
+                return this.hasPageDisabledInfo ? [{ key: 'page', items: this.pageDisabledItems }] : []
             },
             tooltip () {
                 if (this.executable) {
                     return { disabled: true }
                 }
-                // PAC 流水线禁用态：展示禁用人/时间/原因等详细信息
-                if (this.pacEnabled && (this.isCurPipelineLocked || this.isCurPipelineYamlLocked)) {
+                // 禁用态：展示禁用人/时间/原因等详细信息
+                if (this.isCurPipelineLocked || this.isCurPipelineYamlLocked) {
                     return {
                         allowHTML: true,
                         width: 300,
@@ -417,7 +421,7 @@
                     }
                 }
                 return {
-                    content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                    content: this.$t(!(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
                     delay: [300, 0]
                 }
             },
