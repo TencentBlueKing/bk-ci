@@ -8,12 +8,7 @@
         @cancel="handleCancel"
     >
         <div class="disable-pipeline-dialog">
-            <i
-                :class="['bk-icon disable-pipeline-warning-icon', {
-                    'icon-exclamation': !lock,
-                    'icon-check-1': lock
-                }]"
-            ></i>
+            <i class="bk-icon disable-pipeline-warning-icon icon-exclamation"></i>
 
             <!-- 场景一：仅YAML 禁用，不能直接启用 -->
             <template v-if="!lock && isCurPipelineYamlLocked">
@@ -32,26 +27,18 @@
                         <code>disable-pipeline: true</code>
                         <br />
                     </i18n>
-                </div>
-                <div
-                    v-if="yamlInfo?.filePath"
-                    class="pac-yaml-file-link"
-                >
-                    <copy-icon :value="pacYamlFilePath" />
-                    <span
-                        class="pac-yaml-file-path"
-                        :title="pacYamlFilePath"
-                        @click="handleCopyYamlPath"
-                    >{{ pacYamlFilePath }}</span>
-                    <span
+                    <p
+                        v-if="yamlInfo?.fileUrl"
+                        v-bk-tooltips="yamlInfo?.filePath"
+                        class="pac-yaml-modify-link"
                         @click="handleJumpToYaml"
-                        class="jump-icon"
                     >
+                        {{ $t('goToModifyLabel') }}
                         <logo
                             name="tiaozhuan"
                             size="12"
                         />
-                    </span>
+                    </p>
                 </div>
             </template>
             <!-- 禁用流水线弹窗展示 -->
@@ -103,26 +90,18 @@
                         <code>disable-pipeline: true</code>
                         <br />
                     </i18n>
-                </div>
-                <div
-                    v-if="yamlInfo?.filePath"
-                    class="pac-yaml-file-link"
-                >
-                    <copy-icon :value="pacYamlFilePath" />
-                    <span
-                        class="pac-yaml-file-path"
-                        :title="pacYamlFilePath"
-                        @click="handleCopyYamlPath"
-                    >{{ pacYamlFilePath }}</span>
-                    <span
+                    <p
+                        v-if="yamlInfo?.fileUrl"
+                        v-bk-tooltips="yamlInfo?.filePath"
+                        class="pac-yaml-modify-link"
                         @click="handleJumpToYaml"
-                        class="jump-icon"
                     >
+                        {{ $t('goToModifyLabel') }}
                         <logo
                             name="tiaozhuan"
                             size="12"
                         />
-                    </span>
+                    </p>
                 </div>
             </template>
             <!-- 场景三：仅 UI 禁用，启用时展示禁用人/禁用时间/禁用原因 -->
@@ -170,14 +149,12 @@
 </template>
 
 <script>
-    import CopyIcon from '@/components/CopyIcon'
     import { mapActions } from 'vuex'
-    import { convertTime, copyToClipboard } from '@/utils/util'
+    import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
 
     export default {
         components: {
-            CopyIcon,
             Logo
         },
         props: {
@@ -225,11 +202,7 @@
             pacDisabledReason () {
                 return this.lockReason || '--'
             },
-            // YAML 禁用场景下展示的文件路径
-            pacYamlFilePath () {
-                return this.yamlInfo?.filePath || '--'
-            },
-            // 点击跳转图标时打开的代码库文件链接
+            // 点击"前往修改"打开的代码库 YAML 文件链接
             pacYamlFileUrl () {
                 return this.yamlInfo?.fileUrl || ''
             },
@@ -248,14 +221,6 @@
                     return
                 }
                 return this.disablePipeline()
-            },
-            // 复制 YAML 文件路径
-            handleCopyYamlPath () {
-                copyToClipboard(this.pacYamlFilePath)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('copySuc')
-                })
             },
             // 跳转到代码库对应的 YAML 文件
             handleJumpToYaml () {
@@ -328,6 +293,7 @@
     }
     .disable-pipeline-name {
         margin: 12px 0 0;
+        padding-left: 16px;
         color: #63656e;
         font-size: 14px;
         text-align: left;
@@ -336,56 +302,46 @@
         white-space: nowrap;
     }
     .disable-pipeline-tip-box {
-        margin: 16px 0 0;
-        padding: 12px 16px;
-        background: #F5F7FA;
-        border-radius: 2px;
-        color: #63656e;
-        font-size: 12px;
-        line-height: 20px;
         text-align: left;
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: #f5f7fa;
+        border-radius: 2px;
         code {
-            background: #EAEBF0;
-            padding: 2px 4px;
+            padding: 0 4px;
+            background: rgba(0, 0, 0, 0.06);
             border-radius: 2px;
+            font-family: Consolas, Monaco, monospace;
+            white-space: nowrap;
         }
     }
-    .pac-yaml-file-link {
+    .pac-yaml-modify-link {
         display: flex;
         align-items: center;
-        margin: 12px 0 0;
-        font-size: 12px;
-        color: #63656e;
-        .pac-yaml-file-path {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin: 0 6px;
-            cursor: pointer;
-            color: #3a84ff;
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-    }
-    .jump-icon {
+        gap: 4px;
+        width: fit-content;
+        margin-top: 8px;
         color: #3a84ff;
-        vertical-align: bottom;
-        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
         cursor: pointer;
     }
     .pac-disable-info-list {
-        margin: 16px 0 0;
-        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 20px;
+        padding: 8px 16px;
+        border-radius: 2px;
+        background: #f5f7fa;
         li {
             display: flex;
-            line-height: 32px;
-            font-size: 12px;
+            align-items: flex-start;
+            gap: 8px;
         }
         .pac-disable-info-label {
-            width: 70px;
+            flex: 0 0 64px;
             color: #979ba5;
-            flex-shrink: 0;
         }
         .pac-disable-info-value {
             color: #313238;

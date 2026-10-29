@@ -45,6 +45,7 @@ const state = {
     pipelineAuthority: {},
     pipelineActionState: {
         activePipeline: null,
+        activePipelineYamlInfo: null,
         isConfirmShow: false,
         confirmType: '',
         activePipelineList: [],

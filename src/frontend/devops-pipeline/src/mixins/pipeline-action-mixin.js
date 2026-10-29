@@ -81,7 +81,8 @@ export default {
             'copyPipeline',
             'restorePipeline',
             'deleteMigrateArchive',
-            'lockPipeline'
+            'lockPipeline',
+            'requestPipelineYamlInfo'
         ]),
         async getPipelines (query = {}) {
             try {
@@ -366,7 +367,27 @@ export default {
                 })
             }
         },
-        lockPipelineHandler (pipeline) {
+        async lockPipelineHandler (pipeline) {
+            // YAML 禁用的流水线需先获取 yaml 信息，成功后再打开弹窗；其余情况直接打开
+            if (pipeline.yamlLocked) {
+                try {
+                    const { projectId, pipelineId, pipelineVersion } = pipeline
+                    const activePipelineYamlInfo = await this.requestPipelineYamlInfo({
+                        projectId,
+                        pipelineId,
+                        version: pipelineVersion
+                    })
+                    this.updatePipelineActionState({ activePipelineYamlInfo })
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                    this.updatePipelineActionState({ activePipelineYamlInfo: null })
+                }
+            } else {
+                this.updatePipelineActionState({ activePipelineYamlInfo: null })
+            }
             this.updatePipelineActionState({
                 isDisableDialogShow: true,
                 activePipeline: pipeline
@@ -413,7 +434,8 @@ export default {
         closeDisableDialog () {
             this.updatePipelineActionState({
                 isDisableDialogShow: false,
-                activePipeline: null
+                activePipeline: null,
+                activePipelineYamlInfo: null
             })
         },
         closeCopyDialog () {

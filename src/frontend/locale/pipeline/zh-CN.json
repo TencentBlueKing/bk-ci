@@ -1723,6 +1723,7 @@
   "enablePacPipelineConfirmDesc": "PAC 模式下的流水线，请修改默认分支 YAML 中的禁用设置为 false，或去掉禁用设置",
   "enablePipelineConfirmDesc": "启用后，满足触发条件时将运行流水线。",
   "pacPipelineLockTips": "已禁用，任何方式都不可触发",
+  "goToModifyLabel": "前往修改",
   "resolveBothDisabledTips": "需解除页面与 YAML 两处才能恢复触发",
   "pageDisabledLabel": "页面禁用",
   "yamlDisabledLabel": "YAML 声明禁用",

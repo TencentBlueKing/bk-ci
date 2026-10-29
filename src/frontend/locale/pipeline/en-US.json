@@ -1725,6 +1725,7 @@
   "enablePacPipelineConfirmDesc": "PAC mode pipeline, please modify the disable setting in the default branch YAML to false, or remove the disable setting",
   "enablePipelineConfirmDesc": "Enable the pipeline, and it will run when the trigger conditions are met.",
   "pacPipelineLockTips": "Disabled. Cannot be triggered in any way.",
+  "goToModifyLabel": "Go to Modify",
   "resolveBothDisabledTips": "Both the page-level and YAML-level disabling must be resolved to restore triggering.",
   "pageDisabledLabel": "Disabled on Page",
   "yamlDisabledLabel": "Disabled in YAML",

@@ -80,6 +80,23 @@
                         :info="yamlInfo"
                     />
                 </div>
+                <!-- 已禁用标签，hover 展示禁用明细 -->
+                <div
+                    v-if="isDisabledPipeline"
+                    v-bk-tooltips="disabledTooltip"
+                    class="pipeline-disabled-tag"
+                    @click.stop.prevent=""
+                >
+                    <i class="devops-icon icon-minus-circle" />
+                    <span>{{ $t('disabled') }}</span>
+                </div>
+                <!-- 已禁用 tooltip 内容，与 HistoryHeader 执行按钮的 tooltip 保持一致 -->
+                <div
+                    v-if="isDisabledPipeline"
+                    style="display: none;"
+                >
+                    <pipeline-disabled-tooltip id="pipelineDisabledTagTooltip" />
+                </div>
                 <i
                     @click.prevent
                     v-bk-tooltips="$t('subpage.switchPipelineTooltips')"
@@ -100,6 +117,7 @@
 <script>
     import { mapState, mapGetters, mapActions } from 'vuex'
     import PacTag from '@/components/PacTag'
+    import PipelineDisabledTooltip from '@/components/PipelineDisabledTooltip.vue'
     import { RESOURCE_ACTION } from '@/utils/permission'
     import {
         PROCESS_API_URL_PREFIX
@@ -107,7 +125,8 @@
 
     export default {
         components: {
-            PacTag
+            PacTag,
+            PipelineDisabledTooltip
         },
         props: {
             showPacTag: {
@@ -134,13 +153,28 @@
             ]),
             ...mapGetters({
                 pacEnabled: 'atom/pacEnabled',
-                instanceFromTemplate: 'atom/instanceFromTemplate'
+                instanceFromTemplate: 'atom/instanceFromTemplate',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked'
             }),
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
+            },
+            isDisabledPipeline () {
+                return this.isCurPipelineLocked || this.isCurPipelineYamlLocked
+            },
+            disabledTooltip () {
+                return {
+                    allowHTML: true,
+                    width: 320,
+                    theme: 'light',
+                    content: '#pipelineDisabledTagTooltip',
+                    placement: 'bottom-start',
+                    delay: [300, 0]
+                }
             }
         },
         created () {
@@ -271,6 +305,24 @@
         border: 1px solid #DCDEE5;
         border-radius: 2px;
         padding: 0 8px;
+    }
+    .pipeline-disabled-tag {
+        display: inline-flex;
+        align-items: center;
+        height: 16px;
+        padding: 2px 4px;
+        font-size: 10px;
+        line-height: 16px;
+        color: #63656e;
+        background: #f0f1f5;
+        border-radius: 2px;
+        cursor: default;
+        .devops-icon {
+            margin-right: 4px;
+            margin-top: 1px;
+            font-size: 10px;
+            vertical-align: middle;
+        }
     }
     .constraint-info-area {
         background: #F5F7FA;

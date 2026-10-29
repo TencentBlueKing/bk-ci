@@ -863,8 +863,8 @@
                 }
                 return {
                     allowHTML: true,
-                    width: 300,
-                    theme: 'dark',
+                    width: 320,
+                    theme: 'light',
                     content: this.getPipelineDisabledTooltipHtml(row),
                     placement: 'bottom-end',
                     delay: [300, 0]
@@ -907,8 +907,10 @@
                     <p class="disabled-tooltip-title">${this.$t('pacPipelineLockTips')}</p>
                     ${row.lock && row.yamlLocked ? `<p class="disabled-tooltip-sub-title">${this.$t('resolveBothDisabledTips')}</p>` : ''}
                     ${this.getPipelineDisabledTooltipGroups(row).map(group => `
-                        ${group.title ? `<p class="disabled-tooltip-group-title">${group.title}</p>` : ''}
-                        ${group.items.map(item => `<p class="disabled-tooltip-item"><span class="item-label">${item.label}</span><span class="item-value">${item.value}</span></p>`).join('')}
+                        <div class="disabled-tooltip-group">
+                            ${group.title ? `<p class="disabled-tooltip-group-title">${group.title}</p>` : ''}
+                            ${group.items.map(item => `<p class="disabled-tooltip-item"><span class="item-label">${item.label}</span><span class="item-value">${item.value}</span></p>`).join('')}
+                        </div>
                     `).join('')}
                 </div>`
             },
@@ -1395,14 +1397,23 @@
     text-align: left;
     .disabled-tooltip-title {
         font-weight: bold;
+        color: #313238;
         margin-bottom: 4px;
     }
     .disabled-tooltip-sub-title {
+        color: #63656e;
         margin-bottom: 8px;
+    }
+    .disabled-tooltip-group {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #f5f7fa;
+        border-radius: 4px;
     }
     .disabled-tooltip-group-title {
         font-weight: bold;
-        margin: 8px 0 4px;
+        color: #313238;
+        margin-bottom: 4px;
     }
     .disabled-tooltip-item {
         display: flex;
@@ -1413,6 +1424,7 @@
         }
         .item-value {
             word-break: break-all;
+            color: #313238;
         }
     }
 }
