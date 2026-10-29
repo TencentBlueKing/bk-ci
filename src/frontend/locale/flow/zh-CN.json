@@ -164,6 +164,7 @@
       "renameSuccess": "重命名成功",
       "renameFailed": "重命名失败",
       "latest": "最新",
+      "switchToLatest": "切换至最新版本",
       "executionInfo": "执行信息",
       "executionRecord": "执行记录",
       "triggerRecord": "触发记录",

@@ -13,6 +13,8 @@ export interface ListItem {
   value: string | number
   label: string
   disabled?: boolean
+  // 选项头像，存在时在下拉选项中展示
+  avatarUrl?: string
   [key: string]: unknown
 }
 
@@ -29,6 +31,10 @@ export interface SelectDataConf {
   multiSelect?: boolean
   searchable?: boolean
   clearable?: boolean
+  // 下拉底部固定扩展项
+  hasAddItem?: boolean
+  itemText?: string
+  itemTargetUrl?: string
   [key: string]: unknown
 }
 
