@@ -30,6 +30,12 @@
                     </div>
                 </bk-popover>
                 <bk-tag v-else>{{ envNodeTypeDisplayName }}</bk-tag>
+                <span
+                    v-if="isCreateResType && envSourceDisplayName"
+                    class="env-type-tag"
+                >
+                    {{ envSourceDisplayName }}
+                </span>
                 <bk-tag v-if="currentEnv?.os">{{ osDisplayName }}</bk-tag>
                 <span
                     v-if="!isCreateResType"
@@ -87,6 +93,7 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useEnvAside from '@/hooks/useEnvAside'
+    import useResourceType from '@/hooks/useResourceType'
     import Node from './components/Node/index.vue'
     import EnvParam from './components/EnvParam/index.vue'
     import BasicInfo from './components/BasicInfo/index.vue'
@@ -172,6 +179,11 @@
             const osDisplayName = computed(() => {
                 const os = currentEnv.value?.os
                 return os ? (OS_LABEL_MAP[os] || os) : ''
+            })
+            const { getEnvSourceLabelKey } = useResourceType()
+            const envSourceDisplayName = computed(() => {
+                const key = getEnvSourceLabelKey(currentEnv.value)
+                return key ? proxy.$t(key) : ''
             })
             const envTypeDisplayName = computed(() => {
                 const envTypeMap = {
@@ -324,6 +336,7 @@
                 envNodeTypeDisplayName,
                 relatedNodesTipList,
                 osDisplayName,
+                envSourceDisplayName,
                 isCreateResType,
                 handleCreateEnv
             }

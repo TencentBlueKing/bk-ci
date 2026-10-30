@@ -25,29 +25,48 @@
                         {{ $t('environment.relatedNodes') }}
                     </bk-button>
                 </span>
-                <span
-                    v-if="!isDynamicEnv"
-                    v-bk-tooltips="{
-                        content: $t('environment.builtInEnvRemoveNodeTips'),
-                        disabled: !isBuiltInEnv || !!selectedNodesList.length
-                    }"
+                <bk-dropdown-menu
+                    trigger="click"
+                    :font-size="'medium'"
+                    @show="batchMenuOpen = true"
+                    @hide="batchMenuOpen = false"
                 >
-                    <bk-button
-                        :disabled="isBuiltInEnv || !selectedNodesList.length"
-                        v-perm="{
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: ENV_RESOURCE_TYPE,
-                                resourceCode: envHashId,
-                                action: ENV_RESOURCE_ACTION.EDIT
-                            }
-                        }"
-                        key="bulkRemove"
-                        @click="handleBatchRemove"
-                    >
-                        {{ $t('environment.bulkRemove') }}
+                    <bk-button slot="dropdown-trigger">
+                        {{ $t('environment.batchOperation') }}
+                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': batchMenuOpen }]"></i>
                     </bk-button>
-                </span>
+                    <ul
+                        slot="dropdown-content"
+                        class="bk-dropdown-list env-batch-list"
+                    >
+                        <template v-for="(group, index) in batchGroups">
+                            <li
+                                :key="`${group.key}-label`"
+                                class="batch-group-label"
+                                :class="{ 'is-follow': index > 0 }"
+                            >
+                                {{ group.label }}
+                            </li>
+                            <li
+                                v-for="item in group.items"
+                                :key="item.key"
+                            >
+                                <a
+                                    href="javascript:;"
+                                    :class="{ disabled: item.disabled }"
+                                    v-bk-tooltips="{
+                                        content: item.tooltips,
+                                        disabled: !item.disabled || !item.tooltips
+                                    }"
+                                    v-perm="item.perm"
+                                    @click="onBatchItem(item)"
+                                >
+                                    {{ item.text }}
+                                </a>
+                            </li>
+                        </template>
+                    </ul>
+                </bk-dropdown-menu>
             </div>
             <search-select
                 ref="searchSelect"
@@ -69,13 +88,19 @@
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
-            @selection-change="handleSelectionChange"
         >
             <bk-table-column
-                type="selection"
                 fixed="left"
-                width="40"
-            />
+                width="72"
+                :render-header="renderSelectionHeader"
+            >
+                <template slot-scope="{ row }">
+                    <bk-checkbox
+                        :value="isRowSelected(row)"
+                        @change="(checked) => toggleRowSelected(row, checked)"
+                    />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 fixed="left"
@@ -216,44 +241,6 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        <bk-dialog
-            v-model="toggleDialogVisible"
-            :title="toggleDialogTitle"
-            width="500"
-            :mask-close="false"
-            header-position="center"
-            :show-footer="false"
-        >
-            <div class="toggle-enable-dialog-content">
-                <div class="toggle-enable-label">
-                    {{ $t('environment.reasonLabel') }}
-                    <span class="required">*</span>
-                </div>
-                <bk-input
-                    ref="toggleReasonInput"
-                    type="textarea"
-                    :maxlength="200"
-                    :placeholder="toggleReasonPlaceholder"
-                    v-model="toggleReason"
-                    @focus="handleReasonFocus"
-                />
-            </div>
-            
-            <div class="toggle-enable-dialog-footer">
-                <bk-button
-                    :theme="toggleCurrentValue ? 'primary' : 'danger'"
-                    :loading="toggleDialogLoading"
-                    @click="handleToggleDialogConfirm"
-                >
-                    {{ toggleConfirmText }}
-                </bk-button>
-                <bk-button
-                    @click="handleToggleDialogCancel"
-                >
-                    {{ $t('environment.cancel') }}
-                </bk-button>
-            </div>
-        </bk-dialog>
         <related-nodes-dialog
             @save-success="handleRelateSuccess"
         />
@@ -318,6 +305,7 @@
             const PAGINATION_HEIGHT = 64
             const TABLE_MARGIN_TOP = 20
             const selectedNodesList = ref([])
+            const batchMenuOpen = ref(false)
             const searchValue = ref([])
             const runningStatus = ref(['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'])
             const successStatus = ref(['NORMAL', 'BUILD_IMAGE_SUCCESS'])
@@ -379,6 +367,7 @@
             watch(() => searchValue.value, () => {
                 // 如果是 envHashId 变化导致的清空，不触发搜索
                 if (isEnvIdChanging.value) return
+                selectedNodesList.value = []
                 resetPage()
                 fetchData()
             })
@@ -388,6 +377,7 @@
                 resetPagination() // 重置分页配置
                 isEnvIdChanging.value = true
                 searchValue.value = []
+                selectedNodesList.value = []
                 fetchData()
                 nextTick(() => {
                     isEnvIdChanging.value = false
@@ -434,9 +424,31 @@
                 })
             }
             
-            const handleSelectionChange = ((list) => {
-                selectedNodesList.value = list
+            const isRowSelected = (row) => selectedNodesList.value.some(item => item.nodeHashId === row.nodeHashId)
+            const isPageAllSelected = computed(() => {
+                return envNodeList.value.length > 0 && envNodeList.value.every(row => isRowSelected(row))
             })
+            const isPageIndeterminate = computed(() => {
+                if (!envNodeList.value.length || isPageAllSelected.value) return false
+                return envNodeList.value.some(row => isRowSelected(row))
+            })
+            const toggleRowSelected = (row, checked) => {
+                const rest = selectedNodesList.value.filter(item => item.nodeHashId !== row.nodeHashId)
+                selectedNodesList.value = checked ? [...rest, row] : rest
+            }
+            const selectCurrentPage = () => {
+                const pageIds = new Set(envNodeList.value.map(row => row.nodeHashId))
+                const kept = selectedNodesList.value.filter(row => !pageIds.has(row.nodeHashId))
+                selectedNodesList.value = [...kept, ...envNodeList.value]
+            }
+            const toggleCurrentPage = (checked) => {
+                if (checked) {
+                    selectCurrentPage()
+                    return
+                }
+                const pageIds = new Set(envNodeList.value.map(row => row.nodeHashId))
+                selectedNodesList.value = selectedNodesList.value.filter(row => !pageIds.has(row.nodeHashId))
+            }
 
             // 获取节点列表
             const fetchData = async () => {
@@ -460,6 +472,7 @@
                         message: proxy.$t('environment.removeSuccess'),
                         theme: 'success'
                     })
+                    selectedNodesList.value = []
                     resetPage()
                     fetchData()
                     fetchEnvList()
@@ -491,90 +504,300 @@
                 })
             }
 
-            // 启用/停用节点 - 弹框确认
-            const toggleDialogVisible = ref(false)
-            const toggleReason = ref('')
-            const toggleDialogLoading = ref(false)
-            const toggleCurrentRow = ref(null)
-            const toggleCurrentValue = ref(null)
-            const toggleDialogTitle = computed(() => {
-                return toggleCurrentValue.value
-                    ? proxy.$t('environment.confirmEnableNode')
-                    : proxy.$t('environment.confirmDisableNode')
-            })
-            const toggleConfirmText = computed(() => {
-                return toggleCurrentValue.value
-                    ? proxy.$t('environment.enableBtn')
-                    : proxy.$t('environment.disableBtn')
-            })
-            const toggleReasonPlaceholder = computed(() => {
-                return toggleCurrentValue.value
+            const nodeConfirmLabel = (row) => {
+                const name = String(row?.displayName || '').trim()
+                const ip = String(row?.ip || '').trim()
+                if (name && ip) return `${name}（${ip}）`
+                return name || ip || '-'
+            }
+            const nodeFailLabel = (row) => String(row?.displayName || '').trim() || String(row?.ip || '').trim() || '-'
+
+            const askToggle = (rows, enable) => {
+                const ordered = rows || []
+                const targets = ordered.filter(row => !!row.envEnableNode !== enable)
+                const skipped = ordered.filter(row => !!row.envEnableNode === enable)
+                if (!targets.length) {
+                    proxy.$bkMessage({
+                        theme: 'primary',
+                        message: enable
+                            ? proxy.$t('environment.selectedAlreadyEnabled')
+                            : proxy.$t('environment.selectedAlreadyDisabled')
+                    })
+                    return
+                }
+                const willNameList = targets.map(nodeConfirmLabel)
+                const skipNameList = skipped.map(nodeConfirmLabel)
+                const willTitle = proxy.$t(
+                    enable ? 'environment.willEnableCount' : 'environment.willDisableCount',
+                    [willNameList.length]
+                )
+                const skipTitle = proxy.$t(
+                    enable ? 'environment.alreadyEnabledKeep' : 'environment.alreadyDisabledKeep',
+                    [skipNameList.length]
+                )
+                const defaultReason = enable
                     ? proxy.$t('environment.enableNodeDefaultReason')
                     : proxy.$t('environment.disableNodeDefaultReason')
-            })
-
-            // switcher 点击事件 - 弹出确认框
-            const handleSwitcherClick = (row) => {
-                // 记录原始状态（操作前的值）
-                const originalValue = row.envEnableNode
-                toggleCurrentRow.value = row
-                // 判断操作类型：原值为启用(true) → 要停用，原值为停用(false) → 要启用
-                toggleCurrentValue.value = !originalValue
-                // 清空输入框，通过 placeholder 提示默认原因
-                toggleReason.value = ''
-                toggleDialogVisible.value = true
-                // focus 输入框
-                nextTick(() => {
-                    const inputRef = proxy.$refs.toggleReasonInput
-                    if (inputRef) {
-                        inputRef.focus()
+                const reasonRequiredText = proxy.$t('environment.reasonRequired')
+                const reasonLabel = proxy.$t('environment.reasonLabel')
+                const reasonPlaceholder = proxy.$t('environment.reasonPlaceholder')
+                let reasonPanel = null
+                const ReasonPanel = {
+                    name: 'EnvToggleReason',
+                    data () {
+                        return { text: '', error: '' }
+                    },
+                    mounted () {
+                        reasonPanel = this
+                    },
+                    beforeDestroy () {
+                        if (reasonPanel === this) reasonPanel = null
+                    },
+                    methods: {
+                        onFocus () {
+                            if (!this.text) this.text = defaultReason
+                        },
+                        onInput (event) {
+                            this.text = event.target.value
+                            if (this.error) this.error = ''
+                        },
+                        takeReason () {
+                            const value = this.text.trim()
+                            if (!value) {
+                                this.error = reasonRequiredText
+                                return ''
+                            }
+                            this.error = ''
+                            return value
+                        }
+                    },
+                    render (h) {
+                        const nameList = (names, extraClass) => h('ul', {
+                            class: `toggle-name-list ${extraClass}`
+                        }, names.map((name, index) => h('li', { key: index }, name)))
+                        return h('div', { class: 'env-toggle-reason' }, [
+                            h('p', { class: 'toggle-will-title' }, willTitle),
+                            nameList(willNameList, 'is-will'),
+                            skipNameList.length ? h('p', { class: 'toggle-skip-title' }, skipTitle) : null,
+                            skipNameList.length ? nameList(skipNameList, 'is-skip') : null,
+                            h('div', { class: 'toggle-enable-label' }, [
+                                `${reasonLabel} `,
+                                h('span', { class: 'required' }, '*')
+                            ]),
+                            h('textarea', {
+                                class: 'toggle-reason-input',
+                                attrs: {
+                                    maxlength: 200,
+                                    placeholder: reasonPlaceholder
+                                },
+                                domProps: { value: this.text },
+                                on: {
+                                    focus: this.onFocus,
+                                    input: this.onInput
+                                }
+                            }),
+                            this.error ? h('p', { class: 'toggle-reason-error' }, this.error) : null
+                        ])
+                    }
+                }
+                proxy.$bkInfo({
+                    type: 'warning',
+                    title: enable
+                        ? proxy.$t('environment.confirmEnableNode')
+                        : proxy.$t('environment.confirmDisableNode'),
+                    width: 480,
+                    okText: enable ? proxy.$t('environment.enableBtn') : proxy.$t('environment.disableBtn'),
+                    cancelText: proxy.$t('environment.cancel'),
+                    theme: 'primary',
+                    maskClose: false,
+                    confirmLoading: true,
+                    extCls: 'env-toggle-node-dialog',
+                    subHeader: proxy.$createElement(ReasonPanel),
+                    confirmFn: async () => {
+                        const reason = reasonPanel?.takeReason()
+                        if (!reason) return false
+                        if (targets.length > 1) {
+                            try {
+                                const res = await toggleEnableNode(
+                                    targets[0].nodeHashId,
+                                    enable,
+                                    reason,
+                                    targets.map(row => row.nodeHashId)
+                                )
+                                const allOk = res === true || res?.data === true
+                                proxy.$bkMessage({
+                                    theme: allOk ? 'success' : 'warning',
+                                    message: res?.message || (enable
+                                        ? proxy.$t('environment.enableSuccess')
+                                        : proxy.$t('environment.disableSuccess'))
+                                })
+                                fetchData()
+                            } catch (err) {
+                                if (err?.message) {
+                                    proxy.$bkMessage({
+                                        theme: 'error',
+                                        message: err.message
+                                    })
+                                }
+                                return false
+                            }
+                            return
+                        }
+                        const failed = []
+                        for (const row of targets) {
+                            try {
+                                await toggleEnableNode(row.nodeHashId, enable, reason)
+                                row.envEnableNode = enable
+                            } catch (err) {
+                                failed.push(row)
+                            }
+                        }
+                        const successCount = targets.length - failed.length
+                        const failedText = failed.map(nodeFailLabel).join('、')
+                        if (!failed.length) {
+                            proxy.$bkMessage({
+                                theme: 'success',
+                                message: enable ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess')
+                            })
+                        } else if (successCount > 0) {
+                            proxy.$bkMessage({
+                                theme: 'warning',
+                                message: proxy.$t(enable ? 'environment.enablePartial' : 'environment.disablePartial', [successCount, failedText])
+                            })
+                        } else {
+                            proxy.$bkMessage({
+                                theme: 'error',
+                                message: proxy.$t(enable ? 'environment.enableNone' : 'environment.disableNone', [failedText])
+                            })
+                        }
+                        if (successCount > 0) fetchData()
                     }
                 })
             }
 
-            // 输入框 focus 时自动填入默认值
-            const handleReasonFocus = () => {
-                if (!toggleReason.value) {
-                    toggleReason.value = toggleCurrentValue.value
-                        ? proxy.$t('environment.enableNodeDefaultReason')
-                        : proxy.$t('environment.disableNodeDefaultReason')
-                }
+            const handleSwitcherClick = (row) => {
+                askToggle([row], !row.envEnableNode)
             }
 
-            // 确认启用/停用
-            const handleToggleDialogConfirm = async () => {
-                if (!toggleReason.value.trim()) {
+            const copySelectedIps = async () => {
+                const ips = selectedNodesList.value
+                    .map(row => String(row.ip || '').trim())
+                    .filter(Boolean)
+                if (!ips.length) {
                     proxy.$bkMessage({
-                        message: proxy.$t('environment.reasonRequired'),
-                        theme: 'warning'
+                        theme: 'warning',
+                        message: proxy.$t('environment.noIpToCopy')
                     })
                     return
                 }
-                const row = toggleCurrentRow.value
-                const value = toggleCurrentValue.value
+                const text = ips.join('\n')
+                let copied = false
                 try {
-                    toggleDialogLoading.value = true
-                    await toggleEnableNode(row.nodeHashId, value, toggleReason.value.trim())
-                    row.envEnableNode = value
-                    proxy.$bkMessage({
-                        message: value ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess'),
-                        theme: 'success'
-                    })
-                    fetchData()
+                    if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(text)
+                        copied = true
+                    }
                 } catch (err) {
-                    console.error('启用/停用节点失败:', err)
-                } finally {
-                    toggleDialogLoading.value = false
-                    toggleDialogVisible.value = false
+                    copied = false
                 }
+                if (!copied) {
+                    const el = document.createElement('textarea')
+                    el.value = text
+                    el.setAttribute('readonly', '')
+                    el.style.position = 'fixed'
+                    el.style.left = '-9999px'
+                    document.body.appendChild(el)
+                    el.select()
+                    try {
+                        copied = document.execCommand('copy')
+                    } catch (err) {
+                        copied = false
+                    }
+                    document.body.removeChild(el)
+                }
+                proxy.$bkMessage({
+                    theme: copied ? 'success' : 'warning',
+                    message: copied
+                        ? proxy.$t('environment.copiedIpCount', [ips.length])
+                        : proxy.$t('environment.copyIpFailed')
+                })
             }
 
-            // 取消启用/停用
-            const handleToggleDialogCancel = () => {
-                toggleDialogVisible.value = false
-                toggleReason.value = ''
-                toggleCurrentRow.value = null
-                toggleCurrentValue.value = null
+            const editPerm = computed(() => ({
+                permissionData: {
+                    projectId: projectId.value,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: envHashId.value,
+                    action: ENV_RESOURCE_ACTION.EDIT
+                }
+            }))
+            const allowPerm = { hasPermission: true, disablePermissionApi: true }
+            const batchGroups = computed(() => {
+                const none = !selectedNodesList.value.length
+                const checkTip = none ? proxy.$t('environment.pleaseCheckNode') : ''
+                const item = (key, text, handler, extra = {}) => ({
+                    key,
+                    text,
+                    disabled: none || !!extra.disabled,
+                    tooltips: none ? checkTip : (extra.tooltips || ''),
+                    perm: extra.perm || allowPerm,
+                    handler
+                })
+                const groups = []
+                if (isBuildEnv.value && !isCreateResType.value) {
+                    groups.push({
+                        key: 'toggle',
+                        label: proxy.$t('environment.batchGroupToggle'),
+                        items: [
+                            item('enable', proxy.$t('environment.batchEnable'), () => askToggle(selectedNodesList.value, true), { perm: editPerm.value }),
+                            item('disable', proxy.$t('environment.batchDisable'), () => askToggle(selectedNodesList.value, false), { perm: editPerm.value })
+                        ]
+                    })
+                }
+                groups.push({
+                    key: 'copy',
+                    label: proxy.$t('environment.batchGroupCopy'),
+                    items: [
+                        item('copy', proxy.$t('environment.copyIp'), copySelectedIps)
+                    ]
+                })
+                if (!isDynamicEnv.value) {
+                    groups.push({
+                        key: 'remove',
+                        label: proxy.$t('environment.batchGroupRemove'),
+                        items: [
+                            item('remove', proxy.$t('environment.bulkRemove'), handleBatchRemove, {
+                                disabled: isBuiltInEnv.value,
+                                tooltips: isBuiltInEnv.value ? proxy.$t('environment.builtInEnvRemoveNodeTips') : '',
+                                perm: editPerm.value
+                            })
+                        ]
+                    })
+                }
+                return groups
+            })
+            const onBatchItem = (item) => {
+                if (item.disabled) return
+                item.handler()
+            }
+
+            const renderSelectionHeader = (h) => {
+                return h('div', {
+                    class: 'selection-header',
+                    on: {
+                        click: (event) => event.stopPropagation()
+                    }
+                }, [
+                    h('bk-checkbox', {
+                        props: {
+                            value: isPageAllSelected.value,
+                            indeterminate: isPageIndeterminate.value
+                        },
+                        on: {
+                            change: toggleCurrentPage
+                        }
+                    })
+                ])
             }
 
             const handlePageChange = (page) => {
@@ -606,6 +829,10 @@
                 tableSize,
                 tableMaxHeight,
                 selectedNodesList,
+                batchMenuOpen,
+                batchGroups,
+                isPageAllSelected,
+                isPageIndeterminate,
                 pagination,
                 searchValue,
                 searchList,
@@ -630,20 +857,15 @@
                 handlePageLimitChange,
                 handleShowAddNodesDialog,
                 handleRelateSuccess,
-                handleSelectionChange,
                 handleBatchRemove,
                 handleRemoveNode,
+                isRowSelected,
+                toggleRowSelected,
+                toggleCurrentPage,
+                renderSelectionHeader,
+                onBatchItem,
                 handleSwitcherClick,
-                handleReasonFocus,
-                handleToggleDialogConfirm,
-                handleToggleDialogCancel,
-                handleToNodeDetail,
-                toggleDialogVisible,
-                toggleReason,
-                toggleDialogLoading,
-                toggleDialogTitle,
-                toggleConfirmText,
-                toggleReasonPlaceholder
+                handleToNodeDetail
             }
         }
     }
@@ -670,6 +892,9 @@
         .node-name {
             color: #3a84ff;
             cursor: pointer;
+        }
+        ::v-deep th .cell {
+            overflow: visible;
         }
     }
     .node-status-icon {
@@ -702,6 +927,31 @@
         color: $failColor;
     }
 
+    .selection-header {
+        display: inline-flex;
+        align-items: center;
+    }
+    ::v-deep .bk-dropdown-menu.medium-font .env-batch-list > li > a {
+        height: 32px;
+        line-height: 33px;
+        font-size: 12px;
+    }
+    .batch-group-label {
+        padding: 6px 16px 0;
+        font-size: 12px;
+        line-height: 20px;
+        color: #979ba5;
+        pointer-events: none;
+    }
+    .batch-group-label.is-follow {
+        margin-top: 4px;
+        padding-top: 6px;
+        border-top: 1px solid #f0f1f5;
+    }
+    .env-batch-list a.disabled {
+        color: #c4c6cc;
+        cursor: not-allowed;
+    }
     .switcher-wrapper {
         position: relative;
         display: inline-block;
@@ -726,22 +976,107 @@
         }
     }
 }
-.toggle-enable-dialog-content {
-    padding: 20px;
-    background-color: #f5f7fa;
+.bk-dialog-wrapper.env-toggle-node-dialog {
+    .bk-info-box {
+        .bk-dialog-type-body {
+            padding: 0 24px;
+        }
+        .bk-dialog-type-header.has-sub-header {
+            padding: 24px 24px 0;
+        }
+        .bk-dialog-type-header .header {
+            font-size: 20px;
+            line-height: 32px;
+            color: #313238;
+        }
+        .bk-dialog-type-sub-header {
+            padding: 16px 24px 0;
+            text-align: left;
+            line-height: 20px;
+        }
+        .bk-dialog-type-sub-header .header {
+            text-align: left;
+            font-size: 12px;
+            line-height: 20px;
+            color: #63656e;
+        }
+        .bk-dialog-footer {
+            background: #fff;
+            border-top: none;
+            padding: 24px;
+            text-align: center;
+        }
+        .bk-dialog-footer .footer-wrapper {
+            display: inline-block;
+        }
+        .bk-dialog-footer .footer-wrapper button {
+            min-width: 88px;
+        }
+    }
+    .env-toggle-reason {
+        font-size: 12px;
+        line-height: 20px;
+        text-align: left;
+    }
+    .toggle-will-title,
+    .toggle-skip-title {
+        margin: 0;
+        font-size: 12px;
+        line-height: 20px;
+    }
+    .toggle-will-title {
+        color: #313238;
+    }
+    .toggle-skip-title {
+        margin-top: 12px;
+        color: #979ba5;
+    }
+    .toggle-name-list {
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+        overflow: auto;
+        li {
+            line-height: 22px;
+            word-break: break-all;
+        }
+        &.is-will {
+            max-height: 176px;
+            color: #313238;
+        }
+        &.is-skip {
+            max-height: 88px;
+            color: #979ba5;
+        }
+    }
     .toggle-enable-label {
-        font-size: 14px;
+        margin: 12px 0 8px;
         color: #63656e;
-        margin-bottom: 8px;
         .required {
             color: #ea3636;
         }
     }
-}
-.toggle-enable-dialog-footer {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
+    .toggle-reason-input {
+        display: block;
+        width: 100%;
+        min-height: 80px;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid #c4c6cc;
+        border-radius: 2px;
+        font: inherit;
+        color: #63656e;
+        resize: vertical;
+        background: #fff;
+        outline: none;
+        &:focus {
+            border-color: #3a84ff;
+        }
+    }
+    .toggle-reason-error {
+        margin: 8px 0 0;
+        color: #ea3636;
+        font-size: 12px;
+    }
 }
 </style>

@@ -52,6 +52,9 @@ const mutations = {
     setNodeCount (state, res) {
         state.nodeCount = res
     },
+    setNodeSourceCount (state, res) {
+        state.nodeSourceCount = res || {}
+    },
     setSelectionTagList (state, list) {
         state.selectionTagList = list
     },

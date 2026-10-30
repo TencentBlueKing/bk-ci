@@ -39,7 +39,15 @@
                     <template slot-scope="props">
                         <div
                             class="table-node-item node-item-id"
+                            :class="{ 'is-neutral': isNeutralName(props.row) }"
                         >
+                            <span
+                                v-if="showDigitalTwinAvatar(props.row)"
+                                class="digital-twin-avatar"
+                                :style="getAvatarStyle(props.row.displayName)"
+                            >
+                                {{ getDisplayNameLastChar(props.row.displayName) }}
+                            </span>
                             <a
                                 v-perm="canShowDetail(props.row) ? {
                                     hasPermission: props.row.canView,
@@ -55,13 +63,20 @@
                                 :class="{
                                     'pointer': canShowDetail(props.row),
                                     'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType,
-                                    'unavailable': removedStatus.includes(props.row.nodeStatus)
+                                    'unavailable': removedStatus.includes(props.row.nodeStatus),
+                                    'is-neutral-name': isNeutralName(props.row)
                                 }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >
                                 {{ props.row.displayName || '-' }}
                             </a>
+                            <bk-tag
+                                v-if="isCreateResType && getNeutralLabel(props.row)"
+                                class="neutral-status-tag"
+                            >
+                                {{ getNeutralLabel(props.row) }}
+                            </bk-tag>
                         </div>
                     </template>
                 </bk-table-column>
@@ -108,8 +123,16 @@
                         </div>
                         <div
                             class="table-node-item node-item-id"
+                            :class="{ 'is-neutral': isNeutralName(props.row) }"
                             v-else
                         >
+                            <span
+                                v-if="showDigitalTwinAvatar(props.row)"
+                                class="digital-twin-avatar"
+                                :style="getAvatarStyle(props.row.displayName)"
+                            >
+                                {{ getDisplayNameLastChar(props.row.displayName) }}
+                            </span>
                             <span
                                 v-perm="canShowDetail(props.row) ? {
                                     hasPermission: props.row.canView,
@@ -122,12 +145,22 @@
                                     }
                                 } : {}"
                                 class="node-name"
-                                :class="{ 'pointer': canShowDetail(props.row), 'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType }"
+                                :class="{
+                                    'pointer': canShowDetail(props.row),
+                                    'useless': (!canShowDetail(props.row) || !props.row.canUse) && !isCreateResType,
+                                    'is-neutral-name': isNeutralName(props.row)
+                                }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >
                                 {{ props.row.displayName || '-' }}
                             </span>
+                            <bk-tag
+                                v-if="isCreateResType && getNeutralLabel(props.row)"
+                                class="neutral-status-tag"
+                            >
+                                {{ getNeutralLabel(props.row) }}
+                            </bk-tag>
                             <span
                                 v-perm="{
                                     hasPermission: props.row.canEdit,
@@ -225,59 +258,137 @@
                 </bk-table-column>
                 <bk-table-column
                     v-if="allRenderColumnMap.nodeStatus"
-                    :label="`${$t('environment.status')}(${$t('environment.version')})`"
+                    :label="agentColumnLabel"
                     sortable="custom"
                     min-width="180"
                     prop="nodeStatus"
                 >
                     <template slot-scope="props">
-                        <div
-                            class="table-node-item node-item-status"
-                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'"
-                        >
-                            <span class="node-status-icon normal-stutus-icon"></span>
-                            <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
-                        </div>
-                        <div class="table-node-item node-item-status">
-                            <!-- 状态icon -->
-                            <span
-                                class="node-status-icon normal-stutus-icon"
-                                v-if="successStatus.includes(props.row.nodeStatus)"
-                            ></span>
-                            <span
-                                class="node-status-icon abnormal-stutus-icon"
-                                v-if="failStatus.includes(props.row.nodeStatus)"
+                        <!-- 创作流：已释放/已销毁不写 Agent 列；只写正常/异常 + 版本 -->
+                        <template v-if="isCreateResType">
+                            <div
+                                v-if="getCreateAgentStatus(props.row)"
+                                class="table-node-item node-item-status"
                             >
-                            </span>
-                            <span
-                                v-if="runningStatus.includes(props.row.nodeStatus)"
-                                class="loading-icon"
+                                <span
+                                    class="node-status-icon"
+                                    :class="getCreateAgentStatus(props.row) === 'normal' ? 'normal-stutus-icon' : 'abnormal-stutus-icon'"
+                                ></span>
+                                <span class="node-status">
+                                    {{ getCreateAgentStatus(props.row) === 'normal'
+                                        ? $t('environment.nodeInfo.normal')
+                                        : $t('environment.nodeInfo.abnormal') }}
+                                </span>
+                                <span v-if="props.row.agentVersion">
+                                    ({{ props.row.agentVersion }})
+                                </span>
+                            </div>
+                            <span v-else>-</span>
+                        </template>
+                        <template v-else>
+                            <div
+                                class="table-node-item node-item-status"
+                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE'"
                             >
-                                <bk-loading
-                                    theme="primary"
-                                    mode="spin"
-                                    size="mini"
-                                    is-loading
-                                />
-                            </span>
-                            <!-- 状态值 -->
-                            <span
-                                class="install-agent"
-                                v-if="props.row.nodeStatus === 'RUNNING'"
-                                @click="installAgent(props.row)"
-                            >
-                                {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) }}
-                            </span>
-                            <span
-                                class="node-status"
-                                v-else
-                            >
-                                {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) || props.row.nodeStatus }}
-                            </span>
-                            <span v-if="props.row.agentVersion">
-                                ({{ props.row.agentVersion }})
-                            </span>
-                        </div>
+                                <span class="node-status-icon normal-stutus-icon"></span>
+                                <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
+                            </div>
+                            <div class="table-node-item node-item-status">
+                                <span
+                                    class="node-status-icon normal-stutus-icon"
+                                    v-if="successStatus.includes(props.row.nodeStatus)"
+                                ></span>
+                                <span
+                                    class="node-status-icon abnormal-stutus-icon"
+                                    v-if="failStatus.includes(props.row.nodeStatus)"
+                                >
+                                </span>
+                                <span
+                                    v-if="runningStatus.includes(props.row.nodeStatus)"
+                                    class="loading-icon"
+                                >
+                                    <bk-loading
+                                        theme="primary"
+                                        mode="spin"
+                                        size="mini"
+                                        is-loading
+                                    />
+                                </span>
+                                <span
+                                    class="install-agent"
+                                    v-if="props.row.nodeStatus === 'RUNNING'"
+                                    @click="installAgent(props.row)"
+                                >
+                                    {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) }}
+                                </span>
+                                <span
+                                    class="node-status"
+                                    v-else
+                                >
+                                    {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) || props.row.nodeStatus }}
+                                </span>
+                                <span v-if="props.row.agentVersion">
+                                    ({{ props.row.agentVersion }})
+                                </span>
+                            </div>
+                        </template>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.buildConcurrency"
+                    sortable="custom"
+                    :label="$t('environment.buildConcurrency')"
+                    min-width="120"
+                    prop="busyTaskSize"
+                    :render-header="(h) => renderCapacityHeader(h, $t('environment.buildConcurrency'))"
+                >
+                    <template slot-scope="props">
+                        {{ formatConcurrency(props.row, 'host') }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.dockerConcurrency"
+                    sortable="custom"
+                    :label="$t('environment.dockerBuildConcurrency')"
+                    min-width="180"
+                    prop="dockerBusyTaskSize"
+                    :render-header="(h) => renderCapacityHeader(h, $t('environment.dockerBuildConcurrency'))"
+                >
+                    <template slot-scope="props">
+                        {{ formatConcurrency(props.row, 'docker') }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.cpuCores"
+                    sortable="custom"
+                    :label="$t('environment.cpuCores')"
+                    min-width="110"
+                    prop="ncpus"
+                >
+                    <template slot-scope="props">
+                        {{ formatCpu(props.row) }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.memory"
+                    sortable="custom"
+                    :label="$t('environment.nodeInfo.ram')"
+                    min-width="120"
+                    prop="memTotal"
+                >
+                    <template slot-scope="props">
+                        {{ formatMemory(props.row) }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="allRenderColumnMap.nodeSource"
+                    :label="$t('environment.nodeSourceType')"
+                    prop="createWorkspaceSource"
+                    min-width="100"
+                    show-overflow-tooltip
+                >
+                    <template slot-scope="props">
+                        {{ getNodeSourceDisplay(props.row) || '-' }}
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -357,9 +468,10 @@
                     <template slot-scope="props">
                         <template v-if="props.row.canEdit">
                             <div class="table-node-item node-item-handler">
+                                <!-- 流水线：异常重装；创作流：Agent 异常重装（中性状态不展示） -->
                                 <span
                                     class="install-agent mr10"
-                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                    v-if="showReinstallAgent(props.row)"
                                     v-perm="{
                                         hasPermission: props.row.canEdit,
                                         disablePermissionApi: true,
@@ -375,7 +487,7 @@
                                     {{ `${$t('environment.reinstallAgent')}` }}
                                 </span>
                                 <span
-                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) || isCreateResType"
+                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) || (isCreateResType && !canCleanNode(props.row))"
                                     v-perm="{
                                         hasPermission: props.row.canEdit,
                                         disablePermissionApi: true,
@@ -391,11 +503,29 @@
                                 >
                                     {{ $t('environment.setTag') }}
                                 </span>
+                                <!-- 创作流：仅已释放/已销毁提供清理 -->
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isPersonalProject && props.row.createWorkspaceSource !== 'REMOTEDEV'"
+                                    v-if="isCreateResType && canCleanNode(props.row)"
                                     v-perm="{
-                                        // 团队项目创作流节点，使用canEdit判断删除权限
-                                        hasPermission: !isPersonalProject && isCreateResType ? props.row.canEdit : props.row.canDelete,
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: currentResourceType,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: currentResourceAction.EDIT
+                                        }
+                                    }"
+                                    class="node-handle delete-node-text"
+                                    @click.stop="openActionConfirm(props.row, 'clean')"
+                                >
+                                    {{ $t('environment.clean') }}
+                                </span>
+                                <!-- 流水线：删除 -->
+                                <span
+                                    v-if="!isCreateResType && !['TSTACK'].includes(props.row.nodeType)"
+                                    v-perm="{
+                                        hasPermission: props.row.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
@@ -405,7 +535,7 @@
                                         }
                                     }"
                                     class="node-handle delete-node-text"
-                                    @click.stop="confirmDelete(props.row, index)"
+                                    @click.stop="openActionConfirm(props.row, 'delete')"
                                 >
                                     {{ $t('environment.delete') }}
                                 </span>
@@ -414,12 +544,12 @@
                         <template v-else>
                             <span
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                v-bk-tooltips="getCreateNodePermissionTooltips(props.row?.createWorkspaceSource)"
+                                v-bk-tooltips="getCreateNodePermissionTooltips(props.row)"
                             >
                                 <bk-button
                                     theme="primary"
                                     outline
-                                    :disabled="isCreateResType"
+                                    :disabled="isApplyPermissionDisabled(props.row)"
                                     @click="handleApplyPermission(props.row)"
                                 >
                                     {{ $t('environment.applyPermission') }}
@@ -444,6 +574,16 @@
                 />
             </template>
         </bk-table>
+        <NodeActionConfirmDialog
+            :visible="actionConfirm.visible"
+            :mode="actionConfirm.mode"
+            :node="actionConfirm.node"
+            :relations="actionConfirm.relations"
+            :relations-loading="actionConfirm.relationsLoading"
+            :confirm-loading="actionConfirm.confirmLoading"
+            @confirm="handleActionConfirm"
+            @cancel="closeActionConfirm"
+        />
         <bk-sideslider
             :is-show.sync="isShowSetTagSlider"
             :show-mask="false"
@@ -531,6 +671,7 @@
 
 <script>
     import EmptyTableStatus from '@/components/empty-table-status'
+    import NodeActionConfirmDialog from './components/NodeActionConfirmDialog.vue'
     import {
         NODE_RESOURCE_ACTION,
         NODE_RESOURCE_TYPE,
@@ -540,11 +681,64 @@
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE, CREATE_WORKSPACE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useResourceType from '@/hooks/useResourceType'
+    import { fetchNodeRelations, invalidateNodeRelationsCache } from '@/hooks/useNodeRelations'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
+    const CAPACITY_COLUMNS_MIGRATED_KEY = 'node_list_capacity_columns_v1'
+    const CAPACITY_COLUMN_IDS = ['buildConcurrency', 'dockerConcurrency', 'cpuCores', 'memory']
+    const DEFAULT_NODE_COLUMNS = [
+        { id: 'displayName' },
+        { id: 'ip' },
+        { id: 'label' },
+        { id: 'os' },
+        { id: 'nodeStatus' },
+        { id: 'nodeSource' },
+        { id: 'usage' },
+        { id: 'createdUser' },
+        { id: 'lastModifyBy' },
+        { id: 'lastModifyTime' },
+        { id: 'latestBuildPipeline' },
+        { id: 'latestBuildTime' }
+    ]
+    const DEPLOY_NODE_TYPES = ['CMDB', 'CC', 'UNKNOWN', 'OTHER']
+    const resourceTypeHelpers = useResourceType()
+
+    const ensureCapacityColumns = (columns) => {
+        const cols = Array.isArray(columns) ? columns.slice() : []
+        let insertAt = cols.findIndex(col => col.id === 'nodeStatus')
+        insertAt = insertAt >= 0 ? insertAt + 1 : cols.length
+        CAPACITY_COLUMN_IDS.forEach((id) => {
+            if (!cols.some(col => col.id === id)) {
+                cols.splice(insertAt, 0, { id })
+                insertAt += 1
+            }
+        })
+        return cols
+    }
+
+    const loadSelectedColumns = () => {
+        let cached = null
+        try {
+            cached = JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))
+        } catch (err) {
+            cached = null
+        }
+        let columns = cached?.columns || DEFAULT_NODE_COLUMNS
+        if (!localStorage.getItem(CAPACITY_COLUMNS_MIGRATED_KEY)) {
+            columns = ensureCapacityColumns(columns)
+            localStorage.setItem(CAPACITY_COLUMNS_MIGRATED_KEY, '1')
+            localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
+                columns,
+                size: cached?.size || localStorage.getItem('node_table_size') || 'small'
+            }))
+        }
+        return columns
+    }
 
     export default {
         components: {
-            EmptyTableStatus
+            EmptyTableStatus,
+            NodeActionConfirmDialog
         },
         props: {
             nodeList: {
@@ -592,19 +786,7 @@
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
-                rawSelectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
-                    { id: 'displayName' },
-                    { id: 'ip' },
-                    { id: 'label' },
-                    { id: 'os' },
-                    { id: 'nodeStatus' },
-                    { id: 'usage' },
-                    { id: 'createdUser' },
-                    { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' },
-                    { id: 'latestBuildPipeline' },
-                    { id: 'latestBuildTime' }
-                ],
+                rawSelectedTableColumn: loadSelectedColumns(),
                 isShowSetTagSlider: false,
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
@@ -614,7 +796,15 @@
                 ],
                 currentNodeId: null,
                 visibleLabelCountList: {},
-                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB'],
+                actionConfirm: {
+                    visible: false,
+                    mode: 'delete',
+                    node: null,
+                    relations: { environments: [], references: [] },
+                    relationsLoading: false,
+                    confirmLoading: false
+                }
             }
         },
         computed: {
@@ -627,12 +817,34 @@
                     return result
                 }, {})
             },
+            createHiddenColumns () {
+                return ['usage', 'createdUser', 'latestBuildPipeline']
+            },
+            pipelineHiddenColumns () {
+                return ['nodeSource']
+            },
+            showAgentCapacity () {
+                return this.isCreateResType || this.$route.params.nodeType !== 'CMDB'
+            },
             selectedTableColumn () {
-                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
-                if (this.isCreateResType) {
-                    return this.rawSelectedTableColumn.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
+                const hidden = this.isCreateResType
+                    ? [...this.createHiddenColumns]
+                    : [...this.pipelineHiddenColumns]
+                if (!this.showAgentCapacity) hidden.push(...CAPACITY_COLUMN_IDS)
+                const cols = this.rawSelectedTableColumn.filter(col => !hidden.includes(col.id))
+                if (this.isCreateResType && !cols.find(c => c.id === 'nodeSource')) {
+                    const statusIdx = cols.findIndex(c => c.id === 'nodeStatus')
+                    const capacityIdx = cols.reduce((idx, col, index) => {
+                        return CAPACITY_COLUMN_IDS.includes(col.id) ? index : idx
+                    }, statusIdx)
+                    cols.splice(capacityIdx >= 0 ? capacityIdx + 1 : cols.length, 0, { id: 'nodeSource' })
                 }
-                return this.rawSelectedTableColumn
+                return cols
+            },
+            agentColumnLabel () {
+                return this.isCreateResType
+                    ? this.$t('environment.agentStatusVersion')
+                    : `${this.$t('environment.status')}(${this.$t('environment.version')})`
             },
             usageMap () {
                 return {
@@ -699,7 +911,27 @@
                     },
                     {
                         id: 'nodeStatus',
-                        label: this.$t('environment.status')
+                        label: this.agentColumnLabel
+                    },
+                    {
+                        id: 'buildConcurrency',
+                        label: this.$t('environment.buildConcurrency')
+                    },
+                    {
+                        id: 'dockerConcurrency',
+                        label: this.$t('environment.dockerBuildConcurrency')
+                    },
+                    {
+                        id: 'cpuCores',
+                        label: this.$t('environment.cpuCores')
+                    },
+                    {
+                        id: 'memory',
+                        label: this.$t('environment.nodeInfo.ram')
+                    },
+                    {
+                        id: 'nodeSource',
+                        label: this.$t('environment.nodeSourceType')
                     },
                     {
                         id: 'usage',
@@ -726,11 +958,11 @@
                         label: this.$t('environment.nodeInfo.lastRunAs')
                     }
                 ]
-                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
-                if (this.isCreateResType) {
-                    return columns.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
-                }
-                return columns
+                const hidden = this.isCreateResType
+                    ? [...this.createHiddenColumns]
+                    : [...this.pipelineHiddenColumns]
+                if (!this.showAgentCapacity) hidden.push(...CAPACITY_COLUMN_IDS)
+                return columns.filter(col => !hidden.includes(col.id))
             },
             showEditIcon () {
                 return !this.isEditNodeStatus && !this.isCreateResType
@@ -758,7 +990,178 @@
             window.removeEventListener('resize', this.updateTableHeight)
         },
         methods: {
-            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts', 'requestNodeSourceCounts']),
+            renderCapacityHeader (h, label) {
+                return h('span', { class: 'capacity-header' }, [
+                    label,
+                    h('i', {
+                        class: 'bk-icon icon-info-circle',
+                        directives: [{
+                            name: 'bkTooltips',
+                            value: this.$t('environment.concurrencyColumnTip')
+                        }],
+                        on: {
+                            click: (event) => event.stopPropagation()
+                        }
+                    })
+                ])
+            },
+            getCreateAgentStatus (row) {
+                return resourceTypeHelpers.getAgentStatus(row)
+            },
+            isCapacityBlank (row) {
+                if (!row) return true
+                if (DEPLOY_NODE_TYPES.includes(row.nodeType)) return true
+                return resourceTypeHelpers.isNeutralStatusNode(row)
+            },
+            formatLimitText (limit) {
+                if (limit === 0 || limit === '0') {
+                    return { text: this.$t('environment.concurrencyUnlimited'), isDefault: false }
+                }
+                if (limit === null || limit === undefined || limit === '') {
+                    return { text: '4', isDefault: true }
+                }
+                return { text: String(limit), isDefault: false }
+            },
+            formatConcurrency (row, kind) {
+                if (this.isCapacityBlank(row)) return ''
+                const busyKey = kind === 'docker' ? 'dockerBusyTaskSize' : 'busyTaskSize'
+                const limitKey = kind === 'docker' ? 'dockerParallelTaskCount' : 'parallelTaskCount'
+                const busy = row[busyKey]
+                const busyText = (busy === null || busy === undefined || busy === '') ? '-' : String(busy)
+                const limit = this.formatLimitText(row[limitKey])
+                const cell = `${busyText}/${limit.text}`
+                return limit.isDefault ? `${cell} ${this.$t('environment.concurrencyDefault')}` : cell
+            },
+            formatCpu (row) {
+                if (this.isCapacityBlank(row)) return ''
+                const text = String(row?.ncpus ?? '').trim()
+                return text && text !== '0' ? text : '-'
+            },
+            formatMemory (row) {
+                if (this.isCapacityBlank(row)) return ''
+                const text = String(row?.memTotal ?? '').trim()
+                if (!text || text === '0' || /^0(\.0+)?\s/.test(text)) return '-'
+                return text
+            },
+            canCleanNode (row) {
+                return resourceTypeHelpers.canCleanNode(row)
+            },
+            getNeutralLabel (row) {
+                const key = resourceTypeHelpers.getNeutralStatusLabelKey(row)
+                return key ? this.$t(key) : ''
+            },
+            isNeutralName (row) {
+                return this.isCreateResType && resourceTypeHelpers.isNeutralStatusNode(row)
+            },
+            showDigitalTwinAvatar (row) {
+                return this.isCreateResType && resourceTypeHelpers.isDigitalTwin(row)
+            },
+            getDisplayNameLastChar (name) {
+                const text = (name || '').trim()
+                if (!text) return '?'
+                return Array.from(text).pop()
+            },
+            getAvatarStyle (name) {
+                const palette = ['#3A84FF', '#2DCB56', '#9B80FF', '#18C0BB', '#FF9C01', '#FF5656']
+                const text = (name || '').trim()
+                let hash = 0
+                for (let i = 0; i < text.length; i++) {
+                    hash = (hash + text.charCodeAt(i) * (i + 1)) % palette.length
+                }
+                return { backgroundColor: palette[hash] || palette[0] }
+            },
+            getNodeSourceDisplay (row) {
+                return resourceTypeHelpers.getNodeSourceLabel(row, this.$t.bind(this))
+            },
+            showReinstallAgent (row) {
+                if (this.isCreateResType) {
+                    return resourceTypeHelpers.isAgentPresent(row)
+                        && resourceTypeHelpers.getAgentStatus(row) === 'abnormal'
+                }
+                return ['THIRDPARTY'].includes(row.nodeType) && row.nodeStatus === 'ABNORMAL'
+            },
+            async openActionConfirm (row, mode) {
+                this.actionConfirm = {
+                    visible: true,
+                    mode,
+                    node: row,
+                    relations: { environments: [], references: [] },
+                    relationsLoading: true,
+                    confirmLoading: false
+                }
+                try {
+                    // 所属环境取详情 thirdPartyAgentDetail.envIds
+                    let envIds = Array.isArray(row.envIds) ? row.envIds : undefined
+                    if (envIds === undefined && row.nodeHashId) {
+                        try {
+                            const detail = await this.$store.dispatch('environment/requestNodeDetail', {
+                                projectId: this.projectId,
+                                nodeHashId: row.nodeHashId
+                            })
+                            if (Array.isArray(detail?.envIds)) {
+                                envIds = detail.envIds
+                            }
+                        } catch (e) {
+                            console.error(e)
+                        }
+                    }
+                    const relations = await fetchNodeRelations({
+                        projectId: this.projectId,
+                        nodeHashId: row.nodeHashId,
+                        isCreateResType: this.isCreateResType,
+                        agentId: row.agentHashId || row.agentId,
+                        envIds,
+                        store: this.$store,
+                        resType: this.currentResType
+                    })
+                    this.actionConfirm.relations = relations
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    this.actionConfirm.relationsLoading = false
+                }
+            },
+            closeActionConfirm () {
+                this.actionConfirm.visible = false
+                this.actionConfirm.confirmLoading = false
+            },
+            async handleActionConfirm () {
+                const row = this.actionConfirm.node
+                if (!row) return
+                this.actionConfirm.confirmLoading = true
+                let message, theme
+                try {
+                    await this.$store.dispatch('environment/toDeleteNode', {
+                        projectId: this.projectId,
+                        params: [row.nodeHashId]
+                    })
+                    message = this.$t('environment.successfullyDeleted')
+                    theme = 'success'
+                    message && this.$bkMessage({ message, theme })
+                    invalidateNodeRelationsCache(row.nodeHashId)
+                    this.closeActionConfirm()
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: this.currentResourceType,
+                            resourceCode: row.nodeHashId,
+                            action: this.isCreateResType
+                                ? this.currentResourceAction.EDIT
+                                : this.currentResourceAction.DELETE
+                        }
+                    )
+                } finally {
+                    this.actionConfirm.confirmLoading = false
+                    this.$emit('refresh')
+                    await this.requestGetCounts(this.projectId)
+                    if (this.isCreateResType) {
+                        await this.requestNodeSourceCounts(this.projectId)
+                    }
+                }
+            },
             handleExpandList () {
                 this.$emit('toggle-fold')
             },
@@ -903,53 +1306,6 @@
                 if (!param.projectId) return
                 window.open(`${window.location.origin}/console/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
             },
-            /**
-             * 删除节点
-             */
-            async confirmDelete (row, index) {
-                const params = []
-                const id = row.nodeHashId
-
-                params.push(id)
-
-                this.$bkInfo({
-                    theme: 'warning',
-                    type: 'warning',
-                    extCls: 'info-content',
-                    title: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
-                    subTitle: this.$t('environment.nodeInfo.stopAgentProcessOnly'),
-                    confirmFn: async () => {
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('environment/toDeleteNode', {
-                                projectId: this.projectId,
-                                params
-                            })
-
-                            message = this.$t('environment.successfullyDeleted')
-                            theme = 'success'
-
-                            message && this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        } catch (e) {
-                            this.handleError(
-                                e,
-                                {
-                                    projectId: this.projectId,
-                                    resourceType: this.currentResourceType,
-                                    resourceCode: row.nodeHashId,
-                                    action: this.currentResourceAction.DELETE
-                                }
-                            )
-                        } finally {
-                            this.$emit('refresh')
-                            await this.requestGetCounts(this.projectId)
-                        }
-                    }
-                })
-            },
             handleSetTag (row) {
                 this.isShowSetTagSlider = true
                 this.currentNodeId = row.nodeId
@@ -1047,6 +1403,7 @@
                 this.setTagForm[index].tagValueId = ''
             },
             handleApplyPermission (node) {
+                if (this.isApplyPermissionDisabled(node)) return
                 this.handleNoPermission({
                     projectId: this.projectId,
                     resourceType: this.currentResourceType,
@@ -1054,17 +1411,41 @@
                     action: this.currentResourceAction.EDIT
                 })
             },
-            getCreateNodePermissionTooltips (createWorkspaceSource) {
-                const tipMap = {
-                    [CREATE_WORKSPACE_TYPE.DEVCLOUD]: this.$t('environment.createNodeIMatePermissionTip'),
-                    [CREATE_WORKSPACE_TYPE.REMOTEDEV]: this.$t('environment.createNodePersonalPermissionTip')
-                    // IEG_IMATE 文案待确定，暂不处理
+            /**
+             * 创作流申请权限禁用判断：
+             * - 云桌面（CLOUD_DESKTOP_NODE）：权限与普通云桌面一致，可申请
+             * - 数字同事（REMOTEDEV / IEG_IMATE）及 DEVCLOUD 等：禁点 + tip 说明
+             */
+            isApplyPermissionDisabled (row) {
+                if (!this.isCreateResType) return false
+                return !resourceTypeHelpers.isCloudDesktop(row)
+            },
+            getCreateNodePermissionTooltips (row) {
+                if (!this.isCreateResType) {
+                    return { content: '', disabled: true }
                 }
-                const content = tipMap[createWorkspaceSource] || ''
-                return {
-                    content,
-                    disabled: !this.isCreateResType || !content
+                // 数字同事：REMOTEDEV / IEG_IMATE 同一套鉴权说明
+                if (resourceTypeHelpers.isDigitalTwin(row)) {
+                    return {
+                        content: this.$t('environment.createNodeIMatePermissionTip'),
+                        disabled: false
+                    }
                 }
+                // 创作流云桌面：可申请权限，不强制 tip；无权限时也可用云桌面说明
+                if (resourceTypeHelpers.isCloudDesktop(row)) {
+                    return {
+                        content: this.$t('environment.createNodePersonalPermissionTip'),
+                        disabled: true
+                    }
+                }
+                // TEG iMate Linux
+                if (row?.createWorkspaceSource === CREATE_WORKSPACE_TYPE.DEVCLOUD) {
+                    return {
+                        content: this.$t('environment.createNodeIMatePermissionTip'),
+                        disabled: false
+                    }
+                }
+                return { content: '', disabled: true }
             },
             clearFilter () {
                 this.$emit('clear-filter')
@@ -1099,6 +1480,16 @@
     .list-table-container {
         height: 100%;
     }
+    .capacity-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        .bk-icon {
+            color: #979ba5;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    }
     .expand-btn {
         position: absolute;
         z-index: 100;
@@ -1123,12 +1514,46 @@
         .node-item-id {
           position: relative;
           color: $primaryColor;
+          display: flex;
+          align-items: center;
+          flex-wrap: nowrap;
+          min-width: 0;
+          .digital-twin-avatar {
+              flex-shrink: 0;
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+              border-radius: 50%;
+              color: #fff;
+              font-size: 12px;
+              line-height: 20px;
+              text-align: center;
+          }
           .node-name {
               line-height: 14px;
               display: inline-block;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
+              max-width: 100%;
+              &.is-neutral-name {
+                  color: #C4C6CC;
+              }
+          }
+          .neutral-status-tag {
+              margin-left: 6px;
+              flex-shrink: 0;
+              background: #F0F1F5;
+              color: #979BA5;
+              border: none;
+          }
+          &.is-neutral {
+              .digital-twin-avatar {
+                  opacity: 0.45;
+              }
+              .neutral-status-tag {
+                  color: #C4C6CC;
+              }
           }
           .pointer {
               cursor: pointer;

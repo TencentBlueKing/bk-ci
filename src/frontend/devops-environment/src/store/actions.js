@@ -40,6 +40,27 @@ const withDevopsChannel = (config = {}) => {
     }
 }
 
+const NODE_FETCH_BODY_KEYS = ['parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal']
+
+const splitNodeFetchParams = (params = {}, tags) => {
+    const query = { ...params }
+    const body = {}
+    if (tags) body.tags = tags
+    NODE_FETCH_BODY_KEYS.forEach((key) => {
+        const value = query[key]
+        if (value === undefined || value === null || value === '') return
+        if (key === 'ncpus') {
+            const cores = Number(value)
+            if (!Number.isInteger(cores)) return
+            body[key] = cores
+        } else {
+            body[key] = String(value)
+        }
+        delete query[key]
+    })
+    return { query, body }
+}
+
 const request = {
     get (url, config) {
         return vue.$ajax.get(url, withDevopsChannel(config))
@@ -125,9 +146,10 @@ const actions = {
      * 节点列表
      */
     requestNodeList ({ commit }, { projectId, params, tags, ipListSearch }) {
-        const query = new URLSearchParams(params).toString()
-        const body = ipListSearch ? { tags, ipListSearch } : { tags }
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, body).then(response => {
+        const { query, body } = splitNodeFetchParams(params, tags)
+        if (ipListSearch) body.ipListSearch = ipListSearch
+        const queryString = new URLSearchParams(query).toString()
+        return request.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${queryString}`, body).then(response => {
             return response
         })
     },
@@ -160,6 +182,20 @@ const actions = {
             return res
         } catch (err) {
             console.error(err)
+        }
+    },
+    /**
+     * 创作流各节点来源（数字分身/云桌面）数量
+     */
+    async requestNodeSourceCounts ({ commit }, projectId) {
+        try {
+            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodeSourceCounts`)
+            commit('setNodeSourceCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+            commit('setNodeSourceCount', {})
+            return {}
         }
     },
     createdNodeTag ({ commit }, { projectId, params }) {
@@ -375,8 +411,15 @@ const actions = {
     removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
         return request.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     },
-    enableNode (_, { projectId, envHashId, nodeHashId, enableNode, reason }) {
-        return request.put(`${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`, { reason })
+    enableNode (_, { projectId, envHashId, nodeHashId, enableNode, reason, nodeHashIds }) {
+        const body = { reason }
+        const hashIds = Array.isArray(nodeHashIds) ? nodeHashIds.filter(Boolean) : []
+        if (hashIds.length) body.nodeHashIds = hashIds
+        return request.put(
+            `${prefix}/user/environment/${projectId}/${envHashId}/enableNode/${nodeHashId}?enableNode=${enableNode}`,
+            body,
+            hashIds.length ? { originalResponse: true } : undefined
+        )
     },
     /**
     * 设置docker构建并发数
@@ -394,8 +437,9 @@ const actions = {
     },
 
     exportNodeListCSV ({ commit }, { projectId, params }) {
-        const queryString = new URLSearchParams(params).toString()
-        return request.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, {}, {
+        const { query, body } = splitNodeFetchParams(params)
+        const queryString = new URLSearchParams(query).toString()
+        return request.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, body, {
             originalResponse: true
         }).then(response => {
             return response
