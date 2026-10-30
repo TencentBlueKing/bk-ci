@@ -31,6 +31,7 @@ package com.tencent.devops.process.webhook
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -38,9 +39,23 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactKind
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTION
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_COUNT
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_DIR
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_IMAGE_DIGEST
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_IMAGE_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_IMAGE_TAG
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_KIND
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_PATH
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_REPO_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_SHA256
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_SIZE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_SOURCE_BUILD_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ARTIFACT_SOURCE_PIPELINE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_ACTOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BASE_REF
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BASE_REPO_URL
@@ -176,6 +191,8 @@ object TriggerBuildParamUtils {
         p4WebhookTrigger()
         // tapd事件触发
         tapdWebhookTrigger()
+        // 制品到达触发参数
+        artifactWebhookTrigger()
     }
 
     fun getBasicParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.basic")
@@ -563,6 +580,39 @@ object TriggerBuildParamUtils {
             CI_EVENT_URL
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[TapdWebHookTriggerElement.classType] = mutableMapOf("common" to params)
+    }
+
+    /**
+     * 制品到达触发变量名列表，按公共 / 文件 / 目录 / 镜像分组。
+     */
+    private fun artifactWebhookTrigger() {
+        val commonParams = listOf(
+            CI_ARTIFACT_REPO_TYPE,
+            CI_ARTIFACT_KIND,
+            CI_ARTIFACT_COUNT,
+            CI_ARTIFACT_SOURCE_PIPELINE,
+            CI_ARTIFACT_SOURCE_BUILD_ID
+        )
+        val fileParams = listOf(
+            CI_ARTIFACT_NAME,
+            CI_ARTIFACT_PATH,
+            CI_ARTIFACT_SHA256,
+            CI_ARTIFACT_SIZE
+        )
+        val folderParams = listOf(
+            CI_ARTIFACT_DIR
+        )
+        val imageParams = listOf(
+            CI_ARTIFACT_IMAGE_NAME,
+            CI_ARTIFACT_IMAGE_TAG,
+            CI_ARTIFACT_IMAGE_DIGEST
+        )
+        TRIGGER_BUILD_PARAM_NAME_MAP[ArtifactTriggerElement.classType] = mutableMapOf(
+            "common" to commonParams,
+            ArtifactKind.FILE.name to fileParams,
+            ArtifactKind.FOLDER.name to folderParams,
+            ArtifactKind.IMAGE.name to imageParams
+        )
     }
 
     /**

@@ -242,6 +242,12 @@ const atomMixin = {
         rely (obj, element) {
             return rely(obj, element)
         },
+        isRequired (obj, element) {
+            if (obj.requiredRely) {
+                return rely({ rely: obj.requiredRely }, element)
+            }
+            return !!obj.required
+        },
         /**
          * 获取每种类型最大长度限制
          */
