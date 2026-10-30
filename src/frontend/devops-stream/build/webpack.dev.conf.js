@@ -111,8 +111,8 @@ const devConf = merge(baseConf, {
                     {
                         loader: 'postcss-loader',
                         options: {
-                            config: {
-                                path: resolve(__dirname, '..', 'postcss.config.js')
+                            postcssOptions: {
+                                config: resolve(__dirname, '..', 'postcss.config.js')
                             }
                         }
                     }
