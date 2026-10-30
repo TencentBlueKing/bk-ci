@@ -166,6 +166,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 draftSetting.pipelineAsCodeSettings
             }
             val pipelineSettingWithoutVersion = draftSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
+            pipelineSettingWithoutVersion.fixYamlLocked(enablePac = enablePac)
 
             val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,

@@ -70,7 +70,6 @@ import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
@@ -99,6 +98,7 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelineAuthorizationService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
@@ -823,8 +823,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlFileInfo = yamlFileInfo,
-            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
+            yamlFileInfo = yamlFileInfo
         )
     }
 
@@ -886,8 +885,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlFileInfo = yamlFileInfo,
-            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
+            yamlFileInfo = yamlFileInfo
         )
     }
 
@@ -1910,13 +1908,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        enable: Boolean
+        enable: Boolean,
+        request: PipelineLockRequest? = null
     ) {
         val pipelineInfo = locked(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = !enable
+            locked = !enable,
+            request = request
         )
         auditService.createAudit(
             Audit(
@@ -1931,7 +1931,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
     }
 
-    fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
+    fun locked(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        locked: Boolean,
+        request: PipelineLockRequest? = null
+    ): PipelineInfo {
+        val lockReason = request?.lockReason
         val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(
@@ -1951,8 +1958,21 @@ class PipelineInfoFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        if (locked && (lockReason?.length ?: 0) > PipelineLockRequest.LOCK_REASON_MAX_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
+                params = arrayOf(PipelineLockRequest.LOCK_REASON_MAX_LENGTH.toString())
+            )
+        }
 
-        if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
+        val changed = pipelineRepositoryService.updateLocked(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            locked = locked,
+            lockReason = lockReason?.takeIf { locked && it.isNotBlank() }
+        )
+        if (!changed) { // 可能重复操作，不打扰用户
             logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
         }
         operationLogService.addOperationLog(

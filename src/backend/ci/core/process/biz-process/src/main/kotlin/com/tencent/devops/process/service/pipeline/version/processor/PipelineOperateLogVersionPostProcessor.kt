@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version.processor
 
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
@@ -54,6 +55,21 @@ class PipelineOperateLogVersionPostProcessor @Autowired constructor(
                 params = operationLogParams,
                 description = null
             )
+            changedYamlLocked()?.let { yamlLocked ->
+                operationLogService.addOperationLog(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = 0,
+                    operationLogType = if (yamlLocked) {
+                        OperationLogType.DISABLE_PIPELINE_YAML
+                    } else {
+                        OperationLogType.ENABLE_PIPELINE_YAML
+                    },
+                    params = "",
+                    description = null
+                )
+            }
         }
     }
 }

@@ -93,4 +93,5 @@ object OpenAPIMessageCode {
     const val BK_OBJECT_PROPERTY_ILLUSTRATE = "bkObjectPropertyIllustrate" // Any 任意类型，参照实际请求或返回
     const val BK_NO_SUCH_PARAMETER = "bkNoSuchParameter" // 无此参数
     const val APP_CODE_PERMISSION_DENIED_MESSAGE = "appCodePermissionDeniedMessage"
+    const val BK_OPENAPI_DEFAULT_LOCK_REASON = "bkOpenapiDefaultLockReason" // {0} 通过 OpenAPI 禁用了流水线
 }

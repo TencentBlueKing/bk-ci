@@ -87,7 +87,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "环境hashId", required = false)
     var envHashId: String? = null,
     @get:Schema(title = "环境名称", required = false)
-    var envName: String? = null
+    var envName: String? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     companion object {
 
@@ -113,7 +115,8 @@ data class PipelineSettingVersion(
             failIfVariableInvalid = setting.failIfVariableInvalid,
             buildCancelPolicy = setting.buildCancelPolicy,
             envHashId = setting.envHashId,
-            envName = setting.envName
+            envName = setting.envName,
+            yamlLocked = setting.yamlLocked
         )
     }
 }

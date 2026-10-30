@@ -2657,14 +2657,16 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         locked: Boolean,
-        transactionContext: DSLContext? = null
+        transactionContext: DSLContext? = null,
+        lockReason: String?
     ): Boolean {
-        return pipelineInfoDao.update(
+        return pipelineInfoDao.updateLock(
             dslContext = transactionContext ?: dslContext,
-            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = locked
+            locked = locked,
+            lockUser = userId,
+            lockReason = lockReason.takeIf { locked }
         )
     }
 

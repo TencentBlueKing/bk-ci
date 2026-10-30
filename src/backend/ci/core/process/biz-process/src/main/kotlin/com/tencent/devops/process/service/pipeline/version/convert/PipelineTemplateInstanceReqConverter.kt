@@ -182,8 +182,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = newPipelineId,
                 channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineName = pipelineName,
-                pipelineDesc = null,
-                pipelineDisable = pipelineInfo?.locked
+                pipelineDesc = null
             )
 
             // 获取版本状态
@@ -473,6 +472,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineSetting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
             pipelineSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         } ?: pipelineSetting
+        pacSetting.fixYamlLocked(enablePac = enablePac)
         return pacSetting
     }
 
