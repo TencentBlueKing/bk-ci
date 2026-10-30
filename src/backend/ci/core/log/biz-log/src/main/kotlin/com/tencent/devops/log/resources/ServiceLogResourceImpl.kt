@@ -251,7 +251,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         subTag: String?,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Response {
         return buildLogQueryService.downloadLogs(
             userId = userId,
@@ -265,7 +266,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             subTag = subTag,
             jobId = jobId,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 
@@ -277,7 +279,8 @@ class ServiceLogResourceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?,
         stepId: String?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        checkPermissionFlag: Boolean
     ): Result<QueryLogStatus> {
         return buildLogQueryService.getLogMode(
             userId = userId,
@@ -287,7 +290,8 @@ class ServiceLogResourceImpl @Autowired constructor(
             tag = tag,
             executeCount = executeCount,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            checkPermissionFlag = checkPermissionFlag
         )
     }
 

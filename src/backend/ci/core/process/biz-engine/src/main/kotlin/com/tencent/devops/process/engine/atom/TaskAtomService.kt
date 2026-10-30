@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.utils.RecordTaskOutputUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -258,7 +259,13 @@ class TaskAtomService @Autowired(required = false) constructor(
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg,
-                    atomVersion = atomVersion
+                    atomVersion = atomVersion,
+                    outputValues = RecordTaskOutputUtils.resolveDeclaredOutputValues(
+                        taskParams = task.taskParams,
+                        buildResult = atomResponse.outputVars,
+                        jobId = task.jobId,
+                        stepId = task.stepId
+                    ).takeIf { it.isNotEmpty() }
                 )
                 val (updateTaskStatusInfos, recordTask) = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->

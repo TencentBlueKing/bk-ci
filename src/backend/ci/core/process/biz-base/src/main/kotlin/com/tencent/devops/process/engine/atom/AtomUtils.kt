@@ -140,7 +140,9 @@ object AtomUtils {
                 containerHashId = task.containerHashId,
                 executeCount = task.executeCount ?: 1,
                 jobId = null,
-                stepId = task.stepId
+                stepId = task.stepId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId
             )
             atoms[atomCode] = atomRunInfo.initProjectCode
         }
