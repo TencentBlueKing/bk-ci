@@ -27,6 +27,8 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
   const loading = ref(false)
   const executeDetail = ref<ExecuteDetailData | null>(null)
+  let requestGeneration = 0
+  const resourceKey = () => JSON.stringify([projectId.value, flowId.value, buildNo.value, route.query.executeCount])
 
   async function getExecuteDetail() {
     const params = {
@@ -39,6 +41,8 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   }
 
   async function initExecuteDetail() {
+    const generation = ++requestGeneration
+    const key = resourceKey()
     try {
       loading.value = true
       executeDetail.value = null
@@ -46,12 +50,12 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
       const [executeRes] = await Promise.all([getExecuteDetail(), flowInfoStore.getFlowInfo()])
 
-      executeDetail.value = executeRes
+      if (generation === requestGeneration && key === resourceKey()) executeDetail.value = executeRes
     } catch (error) {
       console.error('Failed to fetch execute detail:', error)
-      executeDetail.value = null
+      if (generation === requestGeneration) executeDetail.value = null
     } finally {
-      loading.value = false
+      if (generation === requestGeneration) loading.value = false
     }
   }
 
@@ -60,9 +64,12 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
    * Used for polling to update execution progress without UI loading effect
    */
   async function silentRefreshExecuteDetail() {
+    if (loading.value) return
+    const generation = requestGeneration
+    const key = resourceKey()
     try {
       const executeRes = await getExecuteDetail()
-      executeDetail.value = executeRes
+      if (generation === requestGeneration && key === resourceKey()) executeDetail.value = executeRes
       return executeRes
     } catch (error) {
       console.error('Failed to silently refresh execute detail:', error)

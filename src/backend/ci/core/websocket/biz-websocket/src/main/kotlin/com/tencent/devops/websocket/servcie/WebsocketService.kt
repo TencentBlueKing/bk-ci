@@ -33,34 +33,32 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.event.ClearSessionEvent
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.pojo.ChangePageDTO
 import com.tencent.devops.websocket.utils.WebsocketPageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
 
 @Service
 @Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val transferDispatch: SampleEventDispatcher,
-    private val projectProxyService: ProjectProxyService
+    private val projectProxyService: ProjectProxyService,
+    private val sessionRegistry: LegacySessionRegistry
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WebsocketService::class.java)
     }
-    @Value("\${session.timeout:5}")
-    private val sessionTimeOut: Long? = null
 
     @Value("\${session.maxCount:50}")
-    private val cacheMaxSession: Int? = null
+    private val cacheMaxSession: Int = 50
 
-    private val cacheSessionList = mutableListOf<String>()
+    private val cacheSessionList = ConcurrentHashMap.newKeySet<String>()
 
-    private val longSessionList = mutableSetOf<String>()
+    private val longSessionList = ConcurrentHashMap.newKeySet<String>()
 
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
     fun changePage(changePage: ChangePageDTO) {
@@ -87,6 +85,7 @@ class WebsocketService @Autowired constructor(
                 WsRedisUtils.cleanPageSessionBySessionId(redisOperation, oldPage, changePage.sessionId)
             }
             WsRedisUtils.refreshPageSession(redisOperation, changePage.sessionId, normalPage)
+            sessionRegistry.pageChanged(changePage.sessionId, normalPage)
 
             logger.info("sessionPage[session:$changePage.sessionId,page:$normalPage]")
         }
@@ -112,11 +111,13 @@ class WebsocketService @Autowired constructor(
                 clearPage = WebsocketPageUtils.buildNormalPage(oldPage)
             }
 
-            WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)
             if (clearPage != null) {
                 WsRedisUtils.cleanPageSessionBySessionId(redisOperation, clearPage, sessionId)
-            } else if (redisPage != null) {
-                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
+            }
+            if (clearPage == null || clearPage == redisPage) {
+                WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)
+                redisPage?.let { WsRedisUtils.cleanPageSessionBySessionId(redisOperation, it, sessionId) }
+                sessionRegistry.pageChanged(sessionId, null)
             }
         } finally {
             redisLock.unlock()
@@ -131,6 +132,11 @@ class WebsocketService @Autowired constructor(
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
+            if (sessionRegistry.isManaged(sessionId)) {
+                sessionRegistry.logout(sessionId, userId)
+                return
+            }
+            if (WsRedisUtils.getUserBySession(redisOperation, sessionId)?.let { it != userId } == true) return
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
             WsRedisUtils.deleteUserSessionBySession(redisOperation, sessionId)
             WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
@@ -145,6 +151,8 @@ class WebsocketService @Autowired constructor(
         sessionId: String
     ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
+        if (sessionRegistry.isManaged(sessionId)) return Result(sessionRegistry.logout(sessionId, userId))
+        if (WsRedisUtils.getUserBySession(redisOperation, sessionId)?.let { it != userId } == true) return Result(false)
         val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(userId, sessionId, null)
         if (page != null) {
@@ -179,41 +187,21 @@ class WebsocketService @Autowired constructor(
 
     // 判断获取到的session是否由该实例持有,只有持有了该实例才能做push动作
     fun isCacheSession(sessionId: String): Boolean {
-        if (cacheSessionList.contains(sessionId)) {
-            logger.debug("sessionId[$sessionId] is in this host")
-            return true
-        }
-        return false
+        return sessionRegistry.isLocal(sessionId) || cacheSessionList.contains(sessionId)
     }
 
     fun createLongSessionPage(page: String) {
-        longSessionList.add(page)
+        if (longSessionList.size < 1000) longSessionList.add(page)
     }
 
-    fun getLongSessionPage(): Set<String> {
-        return longSessionList
-    }
+    fun getLongSessionPage(): Set<String> = longSessionList.toSet()
 
     fun clearLongSessionPage() {
         longSessionList.clear()
     }
 
-    fun createTimeoutSession(sessionId: String, userId: String) {
-        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
-        val redisData = "$sessionId#$userId&$timeout"
-        // hash后对1000取模，将数据打散到1000个桶内
-        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
-        if (bucket < 0) bucket *= -1
-        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
-        logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
-        var timeoutData = redisOperation.get(redisHashKey)
-        if (timeoutData == null) {
-            redisOperation.set(redisHashKey, redisData, null, true)
-        } else {
-            timeoutData = "$timeoutData,$redisData"
-            redisOperation.set(redisHashKey, timeoutData, null, true)
-        }
-    }
+    @Deprecated("Session expiry is managed by LegacySessionRegistry")
+    fun createTimeoutSession(sessionId: String, userId: String) = Unit
 
     fun getMaxSession(): Int? {
         return cacheMaxSession

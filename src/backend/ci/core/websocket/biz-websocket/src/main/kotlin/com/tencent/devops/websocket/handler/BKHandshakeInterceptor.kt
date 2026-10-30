@@ -29,9 +29,7 @@ package com.tencent.devops.websocket.handler
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.websocket.utils.WsRedisUtils
-import com.tencent.devops.websocket.servcie.WebsocketService
+import com.tencent.devops.websocket.servcie.LegacySessionRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.server.ServerHttpRequest
@@ -55,19 +53,7 @@ class BKHandshakeInterceptor @Autowired constructor(
         response: ServerHttpResponse,
         wsHandler: WebSocketHandler,
         exception: Exception?
-    ) {
-        if (request is ServletServerHttpRequest) {
-            val sessionId = request.servletRequest.getParameter("sessionId")
-            val userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
-
-            if (!userId.isNullOrBlank() && !sessionId.isNullOrBlank()) {
-                WsRedisUtils.writeSessionIdByRedis(redisOperation, userId, sessionId)
-                logger.info("[WebSocket]-[$userId]-[$sessionId]-connection was successful")
-                SpringContextUtil.getBean(WebsocketService::class.java)
-                    .createTimeoutSession(sessionId, userId)
-            }
-        }
-    }
+    ) = Unit
 
     override fun beforeHandshake(
         request: ServerHttpRequest,
@@ -79,12 +65,14 @@ class BKHandshakeInterceptor @Autowired constructor(
             val sessionId = request.servletRequest.getParameter("sessionId")
             val userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
 
-            if (userId.isNullOrBlank() || sessionId.isNullOrBlank()) {
-                logger.warn("[WebSocket]-[userId=$userId]-[sessionId=$sessionId]-" +
-                    "connection rejected: missing required parameters")
+            if (userId.isNullOrBlank() || sessionId.isNullOrBlank() || sessionId.length > 128) {
+                logger.warn("Websocket connection rejected: invalid identity")
                 return false
             }
+            attributes[LegacySessionRegistry.SESSION_ATTRIBUTE] = sessionId
+            attributes[LegacySessionRegistry.USER_ATTRIBUTE] = userId
+            return true
         }
-        return true
+        return false
     }
 }

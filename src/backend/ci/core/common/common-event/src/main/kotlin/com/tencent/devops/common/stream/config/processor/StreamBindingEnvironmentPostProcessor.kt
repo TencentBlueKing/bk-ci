@@ -67,11 +67,11 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         }
 
         println("StreamBindingEnvironmentPostProcessor start")
-        environment.propertySources.addLast(createPropertySource())
+        environment.propertySources.addLast(createPropertySource(environment))
         println("StreamBindingEnvironmentPostProcessor finish")
     }
 
-    private fun createPropertySource(): PropertiesPropertySource {
+    private fun createPropertySource(environment: ConfigurableEnvironment): PropertiesPropertySource {
         with(Properties()) {
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
@@ -116,6 +116,9 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     if (!consumerArgs.isNullOrEmpty()) {
                         val event = Class.forName(consumerArgs[0].toString()).getAnnotation(Event::class.java)
                         val consumer = method.getAnnotation(EventConsumer::class.java)
+                        if (consumer.enabledProperty.isNotBlank() &&
+                            !environment.getProperty(consumer.enabledProperty, Boolean::class.java, false)
+                        ) return@forEach
                         val bindingName = DefaultBindingUtils.getInBindingName(method)
                         println(
                             "Found StreamConsumer method: ${method.name}, bindingName[$bindingName], " +

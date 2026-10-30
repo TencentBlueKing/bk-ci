@@ -20,6 +20,7 @@
 import { statusAlias } from '@/utils/pipelineStatus'
 import { convertMStoStringByRule, convertMStoString, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
+import { watchRealtime } from '../../../common-lib/websocket/bridge'
 
 import {
     ALL_PIPELINE_VIEW_ID,
@@ -56,6 +57,9 @@ export default {
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
         },
+        realtimePipelineKey () {
+            return `${this.$route.params.projectId}:${Object.keys(this.pipelineMap).sort().join(',')}`
+        },
         statusIconMap () {
             return {
                 SUCCEED: 'check-circle-shape',
@@ -67,7 +71,36 @@ export default {
             }
         }
     },
+    watch: {
+        realtimePipelineKey () { this.startRealtimeStatus() }
+    },
+    beforeDestroy () { this.realtimeStatus?.dispose() },
     methods: {
+        startRealtimeStatus () {
+            this.realtimeStatus?.dispose()
+            const projectId = this.$route.params.projectId
+            const pipelineIds = Object.keys(this.pipelineMap).slice(0, 128)
+            const denied = new Set()
+            if (!pipelineIds.length) return
+            this.realtimeStatus = watchRealtime({
+                topics: pipelineIds.map(id => `ps:${projectId}:${id}`),
+                load: () => {
+                    const ids = pipelineIds.filter(id => !denied.has(id))
+                    return ids.length ? this.$store.dispatch('pipelines/requestPipelineRuntimeStatus', { projectId, pipelineIds: ids }) : Promise.resolve({})
+                },
+                apply: data => {
+                    if (this.$route.params.projectId === projectId) this.updatePipelineStatus(data)
+                },
+                onForbidden: topic => {
+                    const id = topic.split(':')[2]
+                    denied.add(id)
+                    if (this.pipelineMap[id]) Object.assign(this.pipelineMap[id], {
+                        latestBuildStatus: null, latestBuildId: null, latestBuildNum: null,
+                        latestBuildStageStatus: null, latestBuildRoute: null, pipelineActions: [], disabled: true
+                    })
+                }
+            })
+        },
         ...mapMutations('pipelines', [
             'updatePipelineActionState',
             'addCollectViewPipelineCount'
@@ -597,13 +630,24 @@ export default {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
                 if (this.pipelineMap[pipelineId]) {
-                    // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
-                    Object.assign(this.pipelineMap[pipelineId], {
+                    const previous = this.pipelineMap[pipelineId]
+                    const merged = { ...previous, ...item }
+                    Object.assign(previous, {
                         ...item,
+                        hasCollect: this.pipelineMap[pipelineId].hasCollect,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
-                        duration: this.calcDuration(item),
-                        progress: this.calcProgress(item),
-                        latestBuildStageStatus: this.getLatestBuildStageStatus(item)
+                        duration: this.calcDuration(merged),
+                        progress: this.calcProgress(merged),
+                        latestBuildRoute: previous.latestBuildRoute && {
+                            ...previous.latestBuildRoute,
+                            params: { ...previous.latestBuildRoute.params, buildNo: merged.latestBuildId }
+                        },
+                        pipelineActions: this.getPipelineActions(merged, Object.keys(this.pipelineMap).indexOf(pipelineId)),
+                        disabled: this.isDisabledPipeline(merged),
+                        tooltips: this.disabledTips(merged),
+                        latestBuildStageStatus: item.latestBuildStageStatus === undefined
+                            ? this.pipelineMap[pipelineId].latestBuildStageStatus
+                            : this.getLatestBuildStageStatus(item)
                     })
                 }
             })

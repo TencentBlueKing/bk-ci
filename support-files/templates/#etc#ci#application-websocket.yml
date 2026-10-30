@@ -3,3 +3,17 @@
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21926
 server:
   port: __BK_CI_WEBSOCKET_API_PORT__
+
+websocket:
+  v2:
+    allowed-origins: ${BK_CI_WEBSOCKET_V2_ORIGINS:}
+    max-connections: 10000
+    max-topics: 128
+    max-batch-size: 32
+    max-bindings: 20000
+    heartbeat-ms: 30000
+    authorization-ttl-ms: 60000
+    merge-window-ms: 300
+    queue-ttl-ms: 30000
+    queue-max-length: 10000
+    queue-max-bytes: 16777216
