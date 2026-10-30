@@ -33,7 +33,6 @@ import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceWithoutVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
-import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
@@ -48,7 +47,6 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
     private val pipelineResourceFactory: PipelineResourceFactory,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
-    private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService
 ) {
 
@@ -88,8 +86,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
-            pipelineDesc = pipelineSettingWithoutVersion.desc,
-            yamlLocked = yamlLockedFromYaml(yaml, versionStatus)
+            pipelineDesc = pipelineSettingWithoutVersion.desc
         )
 
         val pipelineDialect = pipelineAsCodeService.getPipelineDialect(
@@ -134,8 +131,7 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = channelCode,
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
-            pipelineDesc = pipelineSettingWithoutVersion.desc,
-            yamlLocked = yamlLockedFromYaml(yaml, versionStatus)
+            pipelineDesc = pipelineSettingWithoutVersion.desc
         )
 
         val templateInstanceBasicInfo = pipelineResourceFactory.createTemplateInstanceBasicInfo(
@@ -210,12 +206,5 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             baseDraftVersion = baseDraftVersion,
             overrideDraft = overrideDraft
         )
-    }
-
-    private fun yamlLockedFromYaml(yaml: String?, versionStatus: VersionStatus): Boolean? {
-        if (versionStatus != VersionStatus.RELEASED || yaml == null) {
-            return null
-        }
-        return transferService.loadYaml(yaml).disablePipeline == true
     }
 }

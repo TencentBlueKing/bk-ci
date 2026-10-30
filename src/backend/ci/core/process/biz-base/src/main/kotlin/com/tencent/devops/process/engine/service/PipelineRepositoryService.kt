@@ -2670,46 +2670,6 @@ class PipelineRepositoryService constructor(
         )
     }
 
-    fun updateYamlLocked(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        yamlLocked: Boolean,
-        transactionContext: DSLContext? = null
-    ): Boolean {
-        val info = getPipelineInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            queryDslContext = transactionContext
-        ) ?: return false
-        if ((info.yamlLocked == true) == yamlLocked) {
-            return false
-        }
-        val changed = pipelineInfoDao.updateYamlLock(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            yamlLocked = yamlLocked,
-            yamlLockUser = userId
-        )
-        if (changed) {
-            operationLogService.addOperationLog(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = 0,
-                operationLogType = if (yamlLocked) {
-                    OperationLogType.DISABLE_PIPELINE_YAML
-                } else {
-                    OperationLogType.ENABLE_PIPELINE_YAML
-                },
-                params = "",
-                description = null
-            )
-        }
-        return changed
-    }
-
     fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
         return try {
             client.get(ServiceAuthAuthorizationResource::class).getResourceAuthorization(

@@ -49,7 +49,9 @@ data class PipelineSettingDraftVersion(
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     val failIfVariableInvalid: Boolean?,
     @get:Schema(title = "构建取消权限策略", required = false)
-    val buildCancelPolicy: BuildCancelPolicy?
+    val buildCancelPolicy: BuildCancelPolicy?,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     companion object {
         fun convertFromDraftVersion(draft: PipelineSettingDraftVersion): PipelineSettingVersion {
@@ -72,7 +74,8 @@ data class PipelineSettingDraftVersion(
                 maxConRunningQueueSize = draft.maxConRunningQueueSize,
                 pipelineAsCodeSettings = draft.pipelineAsCodeSettings,
                 failIfVariableInvalid = draft.failIfVariableInvalid,
-                buildCancelPolicy = draft.buildCancelPolicy
+                buildCancelPolicy = draft.buildCancelPolicy,
+                yamlLocked = draft.yamlLocked
             )
         }
     }

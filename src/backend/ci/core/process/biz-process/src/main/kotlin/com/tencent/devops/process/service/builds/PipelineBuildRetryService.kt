@@ -153,7 +153,7 @@ class PipelineBuildRetryService @Autowired constructor(
             val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, buildInfo.version
             )
-            if (readyToBuildPipelineInfo.isDisabled()) {
+            if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 

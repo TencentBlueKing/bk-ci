@@ -268,6 +268,8 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.failIfVariableInvalid = settingVersion.failIfVariableInvalid
         settingInfo.buildCancelPolicy = settingVersion.buildCancelPolicy ?: settingInfo.buildCancelPolicy
         settingInfo.envHashId = settingVersion.envHashId
+        // YAML 禁用按版本生效，以版本自身的值为准
+        settingInfo.yamlLocked = settingVersion.yamlLocked ?: settingInfo.yamlLocked
         if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
             labelNames.clear()
             pipelineGroupService.getGroups(userId, projectId).forEach { group ->

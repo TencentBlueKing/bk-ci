@@ -69,8 +69,7 @@ class PipelineResourceFactory @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode,
         pipelineName: String,
-        pipelineDesc: String?,
-        yamlLocked: Boolean? = null
+        pipelineDesc: String?
     ): PipelineBasicInfo {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         return PipelineBasicInfo(
@@ -79,8 +78,7 @@ class PipelineResourceFactory @Autowired constructor(
             pipelineName = pipelineName,
             pipelineDesc = pipelineDesc,
             channelCode = channelCode,
-            id = id,
-            yamlLocked = yamlLocked
+            id = id
         )
     }
 

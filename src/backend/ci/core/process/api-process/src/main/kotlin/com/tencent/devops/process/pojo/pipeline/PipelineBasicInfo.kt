@@ -43,7 +43,5 @@ data class PipelineBasicInfo(
     @get:Schema(title = "渠道")
     val channelCode: ChannelCode,
     @get:Schema(title = "ID")
-    val id: Long?,
-    @get:Schema(title = "YAML是否禁用")
-    val yamlLocked: Boolean? = null
+    val id: Long?
 )

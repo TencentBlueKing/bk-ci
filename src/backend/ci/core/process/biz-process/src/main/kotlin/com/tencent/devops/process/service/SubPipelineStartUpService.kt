@@ -278,7 +278,7 @@ class SubPipelineStartUpService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        if (readyToBuildPipelineInfo.isDisabled()) {
+        if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         // 引用分支版本时，无需校验是否存在正式版本

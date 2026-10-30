@@ -472,6 +472,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineSetting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
             pipelineSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         } ?: pipelineSetting
+        pacSetting.fixYamlLocked(enablePac = enablePac)
         return pacSetting
     }
 

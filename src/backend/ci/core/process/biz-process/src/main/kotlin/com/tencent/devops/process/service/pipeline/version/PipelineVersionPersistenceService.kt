@@ -38,7 +38,6 @@ import com.tencent.devops.process.dao.PipelineSettingDraftVersionDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -63,7 +62,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
@@ -98,7 +96,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineBasicInfo = pipelineBasicInfo,
                     pipelineModelBasicInfo = pipelineModelBasicInfo,
                     version = pipelineResourceVersion.version,
-                    latestVersionStatus = pipelineResourceVersion.status
+                    latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
                 )
                 createPipelineResource(
                     transactionContext = transactionContext,
@@ -174,6 +173,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                         pipelineModelBasicInfo = pipelineModelBasicInfo,
                         version = pipelineResourceVersion.version,
                         latestVersionStatus = pipelineResourceVersion.status,
+                        yamlLocked = changedYamlLocked()
                     )
                     updatePipelineResource(
                         transactionContext = transactionContext,
@@ -480,6 +480,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineModelBasicInfo = pipelineModelBasicInfo,
                     version = pipelineResourceVersion.version,
                     latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
                 )
                 updatePipelineResource(
                     transactionContext = transactionContext,
@@ -606,6 +607,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
         latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.create(
@@ -621,12 +623,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 canElementSkip = pipelineModelBasicInfo.canElementSkip,
                 taskCount = pipelineModelBasicInfo.taskCount,
                 id = id,
-                latestVersionStatus = latestVersionStatus
-            )
-            updateYamlLockIfNeed(
-                userId = userId,
-                pipelineBasicInfo = this,
-                transactionContext = transactionContext
+                latestVersionStatus = latestVersionStatus,
+                yamlLocked = yamlLocked
             )
         }
     }
@@ -637,7 +635,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineBasicInfo: PipelineBasicInfo,
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
-        latestVersionStatus: VersionStatus?
+        latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.update(
@@ -652,29 +651,10 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 canElementSkip = pipelineModelBasicInfo.canElementSkip,
                 taskCount = pipelineModelBasicInfo.taskCount,
                 latestVersion = version,
-                latestVersionStatus = latestVersionStatus
-            )
-            updateYamlLockIfNeed(
-                userId = userId,
-                pipelineBasicInfo = this,
-                transactionContext = transactionContext
+                latestVersionStatus = latestVersionStatus,
+                yamlLocked = yamlLocked
             )
         }
-    }
-
-    private fun updateYamlLockIfNeed(
-        userId: String,
-        pipelineBasicInfo: PipelineBasicInfo,
-        transactionContext: DSLContext
-    ) {
-        val yamlLocked = pipelineBasicInfo.yamlLocked ?: return
-        pipelineRepositoryService.updateYamlLocked(
-            userId = userId,
-            projectId = pipelineBasicInfo.projectId,
-            pipelineId = pipelineBasicInfo.pipelineId,
-            yamlLocked = yamlLocked,
-            transactionContext = transactionContext
-        )
     }
 
     private fun createPipelineResource(

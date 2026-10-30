@@ -53,6 +53,7 @@ class PipelineTemplateSettingDao {
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
+                YAML_LOCKED,
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
@@ -77,6 +78,7 @@ class PipelineTemplateSettingDao {
                 record.maxConRunningQueueSize ?: 50,
                 record.failIfVariableInvalid,
                 record.buildCancelPolicy.value,
+                record.yamlLocked ?: false,
                 record.creator,
                 record.updater,
                 record.createdTime.toLocalDateTimeOrDefault(),
@@ -100,6 +102,7 @@ class PipelineTemplateSettingDao {
                 .set(BUILD_CANCEL_POLICY, record.buildCancelPolicy.value)
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
+                .apply { record.yamlLocked?.let { set(YAML_LOCKED, it) } }
                 .execute()
         }
     }
@@ -287,7 +290,8 @@ class PipelineTemplateSettingDao {
             buildCancelPolicy = BuildCancelPolicy.parse(this.buildCancelPolicy),
             maxPipelineResNum = PIPELINE_RES_NUM_MIN,
             creator = creator,
-            updater = updater
+            updater = updater,
+            yamlLocked = this.yamlLocked
         )
     }
 }

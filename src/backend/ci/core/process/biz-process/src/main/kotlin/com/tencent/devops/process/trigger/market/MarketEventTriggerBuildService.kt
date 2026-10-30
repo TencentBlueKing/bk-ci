@@ -92,7 +92,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         params = arrayOf(pipelineId)
                     )
-                if (pipelineInfo.isDisabled()) return
+                if (pipelineInfo.locked == true) return
                 context.pipelineInfo = pipelineInfo
 
                 val resource = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
@@ -190,7 +190,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
             params = arrayOf(pipelineId)
         )
-        if (pipelineInfo.isDisabled()) {
+        if (pipelineInfo.locked == true) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK,
                 params = arrayOf(pipelineId)

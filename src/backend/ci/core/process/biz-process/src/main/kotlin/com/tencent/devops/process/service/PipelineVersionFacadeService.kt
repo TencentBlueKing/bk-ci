@@ -608,7 +608,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = resource.status,
             latestVersion = pipelineInfo.version,
             envHashId = setting.envHashId,
-            draftVersion = resource.draftVersion
+            draftVersion = resource.draftVersion,
+            yamlLocked = setting.yamlDisabled()
         )
     }
 

@@ -286,7 +286,15 @@ class PipelineBuildFacadeService(
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
             projectId, pipelineId, targetVersion
         )
-        if (pipeline.isDisabled()) {
+        if (pipeline.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        val versionSetting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = resource.version
+        )
+        if (versionSetting?.yamlDisabled() == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         val triggerContainer = resource.model.getTriggerContainer()
@@ -513,7 +521,7 @@ class PipelineBuildFacadeService(
             val (readyToBuildPipelineInfo, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, targetVersion
             )
-            if (readyToBuildPipelineInfo.isDisabled()) {
+            if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             } else if (branch.isNullOrBlank() && startType == StartType.SERVICE &&
                 readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
@@ -684,7 +692,7 @@ class PipelineBuildFacadeService(
             val (pipeline, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, version
             )
-            if (pipeline.isDisabled()) {
+            if (pipeline.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
             if (version == null && pipeline.latestVersionStatus?.isNotReleased() == true) {
@@ -767,7 +775,7 @@ class PipelineBuildFacadeService(
                     projectId, pipelineId, null
                 )
             }
-            if (readyToBuildPipelineInfo.isDisabled()) {
+            if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
             if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
@@ -3046,7 +3054,7 @@ class PipelineBuildFacadeService(
         val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
             projectId, pipelineId, null
         )
-        if (readyToBuildPipelineInfo.isDisabled()) {
+        if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(

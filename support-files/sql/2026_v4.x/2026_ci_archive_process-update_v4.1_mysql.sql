@@ -108,6 +108,24 @@ BEGIN
             ADD COLUMN `YAML_LOCK_TIME` timestamp NULL DEFAULT NULL COMMENT 'YAML禁用操作时间';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'YAML_LOCKED') THEN
+        ALTER TABLE `T_PIPELINE_SETTING`
+            ADD COLUMN `YAML_LOCKED` bit(1) DEFAULT b'0' COMMENT 'YAML是否禁用';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'YAML_LOCKED') THEN
+        ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+            ADD COLUMN `YAML_LOCKED` bit(1) DEFAULT b'0' COMMENT 'YAML是否禁用';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

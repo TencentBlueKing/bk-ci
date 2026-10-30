@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.template.JobTemplateModel
@@ -215,7 +214,7 @@ class TemplateModelTransfer @Autowired constructor(
             baseYaml.syntaxDialect = makeSyntaxDialect(setting)
             baseYaml.concurrency = modelTransfer.makeConcurrency(setting)
             baseYaml.customBuildNum = setting.buildNumRule
-            baseYaml.disablePipeline = (setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
+            baseYaml.disablePipeline = setting.yamlDisabled().nullIfDefault(false)
             baseYaml.failIfVariableInvalid = setting.failIfVariableInvalid.nullIfDefault(false)
             baseYaml.cancelPolicy =
                 setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()

@@ -517,7 +517,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
-        if (pipelineInfo.isDisabled()) {
+        if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         // 代码库触发支持仅有分支版本的情况，如果仅有草稿需要在这里拦截

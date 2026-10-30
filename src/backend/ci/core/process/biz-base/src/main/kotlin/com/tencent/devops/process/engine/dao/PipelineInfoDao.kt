@@ -67,9 +67,11 @@ class PipelineInfoDao {
         taskCount: Int,
         id: Long? = null,
         latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
-        pipelineDisable: Boolean? = null
+        pipelineDisable: Boolean? = null,
+        yamlLocked: Boolean? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
@@ -87,7 +89,10 @@ class PipelineInfoDao {
                 TASK_COUNT,
                 ID,
                 LATEST_VERSION_STATUS,
-                LOCKED
+                LOCKED,
+                YAML_LOCKED,
+                YAML_LOCK_USER,
+                YAML_LOCK_TIME
             )
                 .values(
                     pipelineId,
@@ -95,15 +100,18 @@ class PipelineInfoDao {
                     version,
                     pipelineName,
                     pipelineDesc,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
+                    now,
+                    now,
                     channelCode.name, userId, userId,
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
                     latestVersionStatus?.name,
-                    pipelineDisable ?: false
+                    pipelineDisable ?: false,
+                    yamlLocked == true,
+                    userId.takeIf { yamlLocked == true },
+                    now.takeIf { yamlLocked == true }
                 )
                 .execute()
         }
@@ -126,9 +134,11 @@ class PipelineInfoDao {
         latestVersion: Int = 0,
         updateLastModifyUser: Boolean? = true,
         latestVersionStatus: VersionStatus? = null,
-        locked: Boolean? = null
+        locked: Boolean? = null,
+        yamlLocked: Boolean? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
+            val now = LocalDateTime.now()
             val update = dslContext.update(this)
             version?.let {
                 update.set(VERSION, version)
@@ -151,6 +161,11 @@ class PipelineInfoDao {
             if (locked != null) {
                 update.set(LOCKED, locked)
             }
+            if (yamlLocked != null) {
+                update.set(YAML_LOCKED, yamlLocked)
+                    .set(YAML_LOCK_USER, userId)
+                    .set(YAML_LOCK_TIME, now)
+            }
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
@@ -164,7 +179,7 @@ class PipelineInfoDao {
             latestVersionStatus?.let {
                 update.set(LATEST_VERSION_STATUS, latestVersionStatus.name)
             }
-            update.set(UPDATE_TIME, LocalDateTime.now())
+            update.set(UPDATE_TIME, now)
                 .where(conditions)
                 .execute() == 1
         }
@@ -196,25 +211,6 @@ class PipelineInfoDao {
         }
     }
 
-    fun updateYamlLock(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        yamlLocked: Boolean,
-        yamlLockUser: String
-    ): Boolean {
-        return with(T_PIPELINE_INFO) {
-            val now = LocalDateTime.now()
-            dslContext.update(this)
-                .set(YAML_LOCKED, yamlLocked)
-                .set(YAML_LOCK_USER, yamlLockUser)
-                .set(YAML_LOCK_TIME, now)
-                .set(UPDATE_TIME, now)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute() == 1
-        }
-    }
 //        if (count < 1) {
 //            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
 //            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
