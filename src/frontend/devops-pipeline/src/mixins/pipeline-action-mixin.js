@@ -81,7 +81,8 @@ export default {
             'copyPipeline',
             'restorePipeline',
             'deleteMigrateArchive',
-            'lockPipeline'
+            'lockPipeline',
+            'requestPipelineYamlInfo'
         ]),
         async getPipelines (query = {}) {
             try {
@@ -202,11 +203,11 @@ export default {
             return '--'
         },
         isDisabledPipeline (pipeline) {
-            return pipeline.lock || !pipeline.canManualStartup
+            return pipeline.lock || pipeline.yamlLocked || !pipeline.canManualStartup
         },
         disabledTips (pipeline) {
             if (!this.isDisabledPipeline(pipeline)) return { disabled: true }
-            return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
+            return this.$t((pipeline.lock || pipeline.yamlLocked) ? 'pipelineLockTips' : 'pipelineManualDisable')
         },
         calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
@@ -257,7 +258,7 @@ export default {
 
             return [
                 {
-                    text: this.$t(pipeline.lock ? 'enable' : 'disable'),
+                    text: this.$t((pipeline.lock || pipeline.yamlLocked) ? 'enable' : 'disable'),
                     handler: this.lockPipelineHandler,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
@@ -366,7 +367,27 @@ export default {
                 })
             }
         },
-        lockPipelineHandler (pipeline) {
+        async lockPipelineHandler (pipeline) {
+            // YAML 禁用的流水线需先获取 yaml 信息，成功后再打开弹窗；其余情况直接打开
+            if (pipeline.yamlLocked) {
+                try {
+                    const { projectId, pipelineId, pipelineVersion } = pipeline
+                    const activePipelineYamlInfo = await this.requestPipelineYamlInfo({
+                        projectId,
+                        pipelineId,
+                        version: pipelineVersion
+                    })
+                    this.updatePipelineActionState({ activePipelineYamlInfo })
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                    this.updatePipelineActionState({ activePipelineYamlInfo: null })
+                }
+            } else {
+                this.updatePipelineActionState({ activePipelineYamlInfo: null })
+            }
             this.updatePipelineActionState({
                 isDisableDialogShow: true,
                 activePipeline: pipeline
@@ -413,7 +434,8 @@ export default {
         closeDisableDialog () {
             this.updatePipelineActionState({
                 isDisableDialogShow: false,
-                activePipeline: null
+                activePipeline: null,
+                activePipelineYamlInfo: null
             })
         },
         closeCopyDialog () {

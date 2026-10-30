@@ -534,7 +534,7 @@
                     </span>
                     <span
                         v-else
-                        v-bk-tooltips="props.row.tooltips"
+                        v-bk-tooltips="getExecBtnTooltips(props.row)"
                     >
                         <bk-button
                             text
@@ -553,7 +553,7 @@
                             }"
                             @click="execPipeline(props.row)"
                         >
-                            {{ props.row.lock ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
+                            {{ (props.row.lock || props.row.yamlLocked) ? $t('disabled') : props.row.canManualStartup ? $t('exec') : $t('nonManual') }}
                         </bk-button>
                     </span>
                     <ext-menu
@@ -852,6 +852,68 @@
         },
         methods: {
             prettyDateTimeFormat,
+            // 执行按钮 tooltip：禁用态展示与详情页一致的禁用明细（禁用人/时间/原因）
+            getExecBtnTooltips (row) {
+                const isPageLocked = !!row.lock
+                const isYamlLocked = !!row.yamlLocked
+                if (!isPageLocked && !isYamlLocked) {
+                    return row.canManualStartup
+                        ? { disabled: true }
+                        : { content: this.$t('pipelineManualDisable'), delay: [300, 0] }
+                }
+                return {
+                    allowHTML: true,
+                    width: 320,
+                    theme: 'light',
+                    content: this.getPipelineDisabledTooltipHtml(row),
+                    placement: 'bottom-end',
+                    delay: [300, 0]
+                }
+            },
+            // 禁用 tooltip 分组：与 HistoryHeader 的 disabledTooltipGroups 三种场景保持一致
+            getPipelineDisabledTooltipGroups (row) {
+                // 存量页面禁用数据没有禁用人/时间/原因，跳过页面禁用明细
+                const hasPageDisabledInfo = !!(row.lockUser || row.lockTime || row.lockReason)
+                const pageItems = [
+                    { label: this.$t('disabledByLabel'), value: row.lockUser || '--' },
+                    { label: this.$t('disabledAtLabel'), value: convertTime(row.lockTime) },
+                    { label: this.$t('disableReasonLabel'), value: row.lockReason || '--' }
+                ]
+                const yamlItems = [
+                    { label: this.$t('submitterLabel'), value: row.yamlLockUser || '--' },
+                    { label: this.$t('submitTimeLabel'), value: convertTime(row.yamlLockTime) }
+                ]
+                // 页面与 YAML 均禁用，分组展示两者明细
+                if (row.lock && row.yamlLocked) {
+                    return [
+                        ...(hasPageDisabledInfo ? [{ title: this.$t('pageDisabledLabel'), items: pageItems }] : []),
+                        { title: this.$t('yamlDisabledLabel'), items: yamlItems }
+                    ]
+                }
+                // 仅 YAML 声明禁用，额外展示禁用来源
+                if (row.yamlLocked) {
+                    return [{
+                        items: [
+                            { label: this.$t('disabledSourceLabel'), value: this.$t('yamlDisabledSourceDesc') },
+                            ...yamlItems
+                        ]
+                    }]
+                }
+                // 仅页面禁用；存量数据无禁用明细，只展示标题
+                return hasPageDisabledInfo ? [{ items: pageItems }] : []
+            },
+            getPipelineDisabledTooltipHtml (row) {
+                return `<div class="pipeline-disabled-tooltip">
+                    <p class="disabled-tooltip-title">${this.$t('pacPipelineLockTips')}</p>
+                    ${row.lock && row.yamlLocked ? `<p class="disabled-tooltip-sub-title">${this.$t('resolveBothDisabledTips')}</p>` : ''}
+                    ${this.getPipelineDisabledTooltipGroups(row).map(group => `
+                        <div class="disabled-tooltip-group">
+                            ${group.title ? `<p class="disabled-tooltip-group-title">${group.title}</p>` : ''}
+                            ${group.items.map(item => `<p class="disabled-tooltip-item"><span class="item-label">${item.label}</span><span class="item-value">${item.value}</span></p>`).join('')}
+                        </div>
+                    `).join('')}
+                </div>`
+            },
             latestExecHeader () {
                 const h = this.$createElement
                 if (this.isArchiveView) {
@@ -1327,4 +1389,43 @@
             max-width: 100%;
         }
     }
+
+// 禁用流水线执行按钮的富文本 tooltip，样式与 HistoryHeader 保持一致
+.pipeline-disabled-tooltip {
+    font-size: 12px;
+    line-height: 20px;
+    text-align: left;
+    .disabled-tooltip-title {
+        font-weight: bold;
+        color: #313238;
+        margin-bottom: 4px;
+    }
+    .disabled-tooltip-sub-title {
+        color: #63656e;
+        margin-bottom: 8px;
+    }
+    .disabled-tooltip-group {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #f5f7fa;
+        border-radius: 4px;
+    }
+    .disabled-tooltip-group-title {
+        font-weight: bold;
+        color: #313238;
+        margin-bottom: 4px;
+    }
+    .disabled-tooltip-item {
+        display: flex;
+        .item-label {
+            width: 64px;
+            flex-shrink: 0;
+            color: #979ba5;
+        }
+        .item-value {
+            word-break: break-all;
+            color: #313238;
+        }
+    }
+}
 </style>

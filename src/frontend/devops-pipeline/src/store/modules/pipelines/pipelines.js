@@ -45,6 +45,7 @@ const state = {
     pipelineAuthority: {},
     pipelineActionState: {
         activePipeline: null,
+        activePipelineYamlInfo: null,
         isConfirmShow: false,
         confirmType: '',
         activePipelineList: [],
@@ -173,8 +174,8 @@ const actions = {
         })
     },
 
-    lockPipeline ({ commit, state, dispatch }, { projectId, pipelineId, enable }) {
-        return ajax.post(`${prefix}/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${enable}`).then(response => {
+    lockPipeline ({ commit, state, dispatch }, { projectId, pipelineId, enable, params }) {
+        return ajax.post(`${prefix}/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${enable}`, params).then(response => {
             return response.data
         })
     },
@@ -244,6 +245,18 @@ const actions = {
      */
     requestPipelineStatus ({ commit, state, dispatch }, { projectId, pipelineId }) {
         return ajax.post(`${prefix}${projectId}/pipelineStatus`, pipelineId).then(response => {
+            return response.data
+        })
+    },
+    /**
+     * 获取 PAC 流水线 yaml 信息（列表行数据中不含 yamlInfo，需要单独获取）
+     *
+     * @param {String} projectId 项目 id
+     * @param {String} pipelineId 流水线 id
+     * @param {Number} version 流水线版本号
+     */
+    requestPipelineYamlInfo (_ctx, { projectId, pipelineId, version }) {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${pipelineId}/${version}/yamlInfo`).then(response => {
             return response.data
         })
     },
