@@ -791,7 +791,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
         }
     }
 
-
     companion object {
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
         private val logger = LoggerFactory.getLogger(PipelineVersionPersistenceService::class.java)
