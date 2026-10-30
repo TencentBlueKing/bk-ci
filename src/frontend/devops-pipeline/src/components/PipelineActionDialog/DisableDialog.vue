@@ -345,6 +345,7 @@
         }
         .pac-disable-info-value {
             color: #313238;
+            text-align: left;
             word-break: break-all;
         }
     }

@@ -323,6 +323,9 @@
             font-size: 10px;
             vertical-align: middle;
         }
+        &:hover {
+            background-color: #dcdee5;
+        }
     }
     .constraint-info-area {
         background: #F5F7FA;
