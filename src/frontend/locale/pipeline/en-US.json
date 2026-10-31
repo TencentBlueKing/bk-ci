@@ -1553,7 +1553,7 @@
     "fastKill": "Enable Fast-kill",
     "fastKillDesc": "Enable Fast-kill",
     "maxConcurrency": "Maximum Concurrency",
-    "maxConcurrencyDesc": "Between 1 and 20",
+    "maxConcurrencyDesc": "Upper limit of concurrently running tasks; leave empty for 5. Variable values must also be integers from 1–50, or this Job will fail.",
     "mutualGroupName": "Name of Mutex Group",
     "mutualGroupNamePlaceholder": "The field must be filled and only supports English letter, numbers or variables ",
     "queueEnable": " Enable the queue of mutually exclusive groups",
