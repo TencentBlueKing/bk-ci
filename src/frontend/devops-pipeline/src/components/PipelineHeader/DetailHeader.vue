@@ -91,12 +91,8 @@
                         </li>
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked || !canReplay
+                                'disabled': loading || isCurPipelineLocked
                             }]"
-                            v-bk-tooltips="{
-                                content: this.$t('history.canNotReplayTips'),
-                                disabled: canReplay
-                            }"
                             v-perm="{
                                 hasPermission: canExecute,
                                 disablePermissionApi: true,
@@ -112,7 +108,6 @@
                             {{ $t("history.rePlay") }}
                             <bk-popover
                                 :z-index="3000"
-                                :disabled="!canReplay"
                             >
                                 <i class="bk-icon icon-info-circle" />
                                 <template slot="content">
@@ -281,8 +276,7 @@
                 timesNum: 1,
                 isShowConfirmDialog: false,
                 draftStatus: DRAFT_STATUS.NORMAL,
-                draftSaveInfo: null,
-                canReplay: true
+                draftSaveInfo: null
             }
         },
         computed: {
@@ -359,11 +353,6 @@
                 }
             }
         },
-        mounted () {
-            if (!this.archiveFlag) {
-                this.fetchPipelineRePlayStatus()
-            }
-        },
         methods: {
             ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions(
@@ -393,9 +382,16 @@
                 }
             },
             async handleClick (type = 'reBuild') {
-                // 如果是rePlay且canReplay为false，不进行后续逻辑
-                if (type === 'rePlay' && !this.canReplay) {
-                    return
+                if (type === 'rePlay') {
+                    if (this.loading) return
+                    const canReplay = await this.checkCanReplay()
+                    if (!canReplay) {
+                        this.$showTips({
+                            message: this.$t('history.canNotReplayTips'),
+                            theme: 'warning'
+                        })
+                        return
+                    }
                 }
                 const h = this.$createElement
                 const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
@@ -591,16 +587,21 @@
                 })
             },
 
-            async fetchPipelineRePlayStatus () {
+            async checkCanReplay () {
                 try {
+                    this.loading = true
                     const res = await this.requestPipelineRePlayStatus({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         buildId: this.$route.params.buildNo
                     })
-                    this.canReplay = res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY
+                    // 查询失败时放行,重放接口会再次校验触发事件
+                    return res?.status !== PIPELINE_REPLAY_STATUS.CANNOT_REPLAY
                 } catch (err) {
                     console.error(err)
+                    return true
+                } finally {
+                    this.loading = false
                 }
             },
             
