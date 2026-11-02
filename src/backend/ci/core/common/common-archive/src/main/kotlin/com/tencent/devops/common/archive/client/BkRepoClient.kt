@@ -28,6 +28,7 @@
 package com.tencent.devops.common.archive.client
 
 import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -47,6 +48,7 @@ import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
@@ -73,6 +75,7 @@ import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
+import com.tencent.devops.common.archive.constant.REPO_VARIABLE
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
@@ -147,6 +150,7 @@ class BkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT, display = false)
             createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey, display = false)
+            createGenericRepo(userId, projectId, REPO_VARIABLE, display = false)
             true
         } catch (e: Exception) {
             logger.error("BKSystemErrorMonitor|BK_REPO|create repo resource error", e)
@@ -222,6 +226,33 @@ class BkRepoClient constructor(
         doRequest(request).resolveResponse<Response<Void>>(ERROR_REPO_EXISTED)
     }
 
+    /**
+     * 确认大变量仓库存在。创建成功时报文是 code=0、data=null，不能用 data 判断结果。
+     * 仓库重名返回 [ERROR_REPO_EXISTED]，同样视为已存在。其它失败抛出，由调用方决定是否重试。
+     */
+    fun ensureVariableRepo(userId: String, projectId: String) {
+        try {
+            createGenericRepo(userId = userId, projectId = projectId, repoName = REPO_VARIABLE, display = false)
+        } catch (ignored: RemoteServiceException) {
+            if (ignored.errorCode == ERROR_REPO_EXISTED) {
+                return
+            }
+            throw ignored
+        }
+    }
+
+    private fun businessCode(content: String): Int? {
+        val codeNode = runCatching { objectMapper.readTree(content).get("code") }.getOrNull() ?: return null
+        return businessCodeOf(codeNode)
+    }
+
+    private fun businessCodeOf(codeNode: JsonNode): Int? {
+        if (!codeNode.isNumber && !codeNode.isTextual) {
+            return null
+        }
+        return codeNode.asText().toIntOrNull()
+    }
+
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
         logger.info("getFileSize, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
@@ -239,8 +270,10 @@ class BkRepoClient constructor(
                 " metadata: $metadata"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
+        // nodeMetadata 是当前字段（报告归档走它）；metadata 保留给仍认旧字段的制品库
         val requestData = UserMetadataSaveRequest(
-            metadata = metadata
+            metadata = metadata,
+            nodeMetadata = metadata.map { (key, value) -> MetadataModel(key, value) }
         )
         val request = Request.Builder()
             .url(url)
@@ -1335,6 +1368,11 @@ class BkRepoClient constructor(
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()
+            // 业务码在响应体里。HTTP 200 和非 2xx 都可能带上可忽略的码，例如创建仓库重名 251007。
+            if (allowCode != null && businessCode(responseContent) == allowCode) {
+                logger.info("request bkrepo api failed but it can be allowed: $responseContent")
+                return null
+            }
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
@@ -1344,11 +1382,12 @@ class BkRepoClient constructor(
             } catch (e: JacksonException) {
                 throw RemoteServiceException(responseContent, this.code)
             }
-            if (allowCode == responseData.code) {
-                logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
-                return null
-            }
-            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
+            throw RemoteServiceException(
+                errorMessage = responseData.message ?: responseData.code.toString(),
+                httpStatus = this.code,
+                responseContent = responseContent,
+                errorCode = responseData.code
+            )
         }
     }
 

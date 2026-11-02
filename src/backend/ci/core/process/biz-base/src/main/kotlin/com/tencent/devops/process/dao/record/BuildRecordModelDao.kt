@@ -37,8 +37,11 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -101,6 +104,35 @@ class BuildRecordModelDao {
                     .and(PIPELINE_ID.eq(pipelineId))
                     .and(EXECUTE_COUNT.eq(executeCount))
             ).execute()
+        }
+    }
+
+    /**
+     * 从某一次执行的流水线记录里取出某个大变量的引用串。只查这一行。
+     */
+    fun getLargeVariableReference(
+        dslContext: DSLContext,
+        query: LargeVariableRecordQuery
+    ): String? {
+        if (query.scope != LargeVariableScope.Pipeline) return null
+        val jsonPath = BuildRecordVarPath.largeVariable(
+            BuildRecordVarPath.BK_LARGE_VARIABLES, query.varName
+        ) ?: return null
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            val reference = JooqUtils.jsonExtract(
+                t1 = MODEL_VAR,
+                t2 = jsonPath,
+                removeDoubleQuotes = true
+            )
+            return dslContext.select(reference)
+                .from(this)
+                .where(
+                    PROJECT_ID.eq(query.projectId)
+                        .and(PIPELINE_ID.eq(query.pipelineId))
+                        .and(BUILD_ID.eq(query.buildId))
+                        .and(EXECUTE_COUNT.eq(query.executeCount))
+                )
+                .fetchOne(reference)
         }
     }
 

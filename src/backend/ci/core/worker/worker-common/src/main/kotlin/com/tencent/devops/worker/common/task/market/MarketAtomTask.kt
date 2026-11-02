@@ -113,9 +113,11 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
@@ -578,22 +580,30 @@ open class MarketAtomTask : ITask() {
         val atomParams = mutableMapOf<String, String>()
         try {
             if (dialect.supportUseExpression()) {
+                val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                    variables = variables,
+                    prefetchTexts = inputMap.values.map { JsonUtil.toJson(it) }
+                )
                 val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId),
                         CIKeywordsService.CIKeywordsRuntimeNamedValue()
-                    )
+                    ),
+                    overflowKeys = overflowKeys,
+                    overflowLoader = overflowLoader
                 )
                 inputMap.forEach { (name, value) ->
                     logger.info("parseInputParams|name=$name|value=$value")
                     atomParams[name] = EnvReplacementParser.parse(
-                        value = JsonUtil.toJson(value),
+                        value = copyInputValue(value),
                         contextMap = variables,
                         dialect = dialect,
                         contextPair = customReplacement,
                         functions = SpecialFunctions.functions,
-                        output = SpecialFunctions.output
+                        output = SpecialFunctions.output,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
                     ).parseCredentialValue(null, acrossInfo?.targetProjectId)
                 }
             } else {
@@ -614,6 +624,22 @@ open class MarketAtomTask : ITask() {
             )
         }
         return atomParams
+    }
+
+    /**
+     * 表达式替换会递归写入 Map/List，先复制一份，避免修改原始插件模型或遇到只读集合。
+     */
+    private fun copyInputValue(value: Any?): Any? = when (value) {
+        is Map<*, *> -> LinkedHashMap<Any?, Any?>(value.size).apply {
+            value.forEach { (key, item) -> this[key] = copyInputValue(item) }
+        }
+        is List<*> -> ArrayList<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        is Set<*> -> LinkedHashSet<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        else -> value
     }
 
     private fun getAtomSensitiveConfMap(atomCode: String): Map<String, MutableMap<String, String>> {
@@ -677,10 +703,22 @@ open class MarketAtomTask : ITask() {
                     }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
-                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
+                    // 大变量入参只在日志里展示引用串，避免把 256KB 级真实值刷进构建日志；
+                    // 插件通过 input.json 拿到的仍是真实值，不受此展示截断影响。
+                    val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
+                        "__BK_OVF__:${value.length}"
+                    } else {
+                        value
+                    }
+                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$display")
                 }
             } else {
-                LoggerService.addWarnLine("input(except): $key=$value")
+                val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
+                    "__BK_OVF__:${value.length}"
+                } else {
+                    value
+                }
+                LoggerService.addWarnLine("input(except): $key=$display")
             }
         }
         LoggerService.addFoldEndLine("-----")
@@ -941,11 +979,21 @@ open class MarketAtomTask : ITask() {
                 if (outputTemplate.containsKey(varKey)) {
                     if (isSensitiveOutput) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
+                    } else if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
+                        // 超长输出不打印真实值：约定 output(overflow) 前缀，前端可渲染「查看」按钮并调 variables/value
+                        LoggerService.addNormalLine(
+                            "output(overflow): $key=__BK_OVF__:${value.length}"
+                        )
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=${if (isSensitive) "******" else value}")
+                    val display = when {
+                        isSensitive -> "******"
+                        value.length > TaskDaemon.PARAM_MAX_LENGTH -> "__BK_OVF__:${value.length}"
+                        else -> value
+                    }
+                    LoggerService.addWarnLine("output(except): $key=$display")
                 }
             }
 

@@ -33,20 +33,25 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.BuildVarOverflowStorage
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildVarResourceImpl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
+    private val buildVarOverflowStorage: BuildVarOverflowStorage,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineContextService: PipelineContextService
@@ -91,7 +96,20 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
+        val candidate = variables[varName] ?: allContext[varName] ?: allContext[alisName]
+        // 单变量查询：命中大变量引用时按引用串从制品库下载真实值，失败时保留引用串
+        val finalValue = if (BuildVarOverflowUtils.isOverflowReference(candidate)) {
+            buildVariableService.newOverflowLoader(projectId, pipelineId, buildId).load(candidate!!) ?: candidate
+        } else {
+            candidate
+        }
+        return Result(finalValue)
+    }
+
+    @BkApiPermission([BkApiHandleType.BUILD_API_AUTH_CHECK])
+    override fun ensureVariableRepo(buildId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        buildVarOverflowStorage.ensureVariableRepo(projectId)
+        return Result(true)
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

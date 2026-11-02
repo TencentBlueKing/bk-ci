@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -37,6 +38,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStage
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_STAGE_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
@@ -140,6 +143,36 @@ class BuildRecordStageDao {
                         .and(STAGE_ID.eq(stageId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    /**
+     * 从指定 Stage、指定一次执行的记录里取出某个大变量的引用串。只查这一行。
+     */
+    fun getLargeVariableReference(
+        dslContext: DSLContext,
+        query: LargeVariableRecordQuery
+    ): String? {
+        val stageId = (query.scope as? LargeVariableScope.Stage)?.stageId ?: return null
+        val jsonPath = BuildRecordVarPath.largeVariable(
+            BuildRecordVarPath.BK_LARGE_VARIABLES, query.varName
+        ) ?: return null
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            val reference = JooqUtils.jsonExtract(
+                t1 = STAGE_VAR,
+                t2 = jsonPath,
+                removeDoubleQuotes = true
+            )
+            return dslContext.select(reference)
+                .from(this)
+                .where(
+                    PROJECT_ID.eq(query.projectId)
+                        .and(PIPELINE_ID.eq(query.pipelineId))
+                        .and(BUILD_ID.eq(query.buildId))
+                        .and(EXECUTE_COUNT.eq(query.executeCount))
+                        .and(STAGE_ID.eq(stageId))
+                )
+                .fetchOne(reference)
         }
     }
 

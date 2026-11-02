@@ -95,7 +95,10 @@ interface BuildJobResource {
         vmSeqId: String,
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @Parameter(description = "构建机是否支持自行替换传统方言参数中的变量", required = false)
+        @QueryParam("replaceVarOnWorker")
+        replaceVarOnWorker: Boolean? = null
     ): Result<BuildTask>
 
     @Operation(summary = "构建机Job完成任务")
