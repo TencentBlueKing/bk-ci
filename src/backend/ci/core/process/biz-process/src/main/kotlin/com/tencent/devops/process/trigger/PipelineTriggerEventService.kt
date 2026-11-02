@@ -630,7 +630,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 detailId = detailId
-            )?.takeIf { it.pipelineId == pipelineId }
+            )?.takeIf { it.buildId == buildId }
         }
         // TODO 兼容没有触发明细ID变量的历史构建,历史触发事件过期后删除
         return pipelineTriggerEventDao.getTriggerDetail(
