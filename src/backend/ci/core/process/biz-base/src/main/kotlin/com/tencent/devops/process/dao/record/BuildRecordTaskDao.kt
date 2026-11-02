@@ -152,16 +152,22 @@ class BuildRecordTaskDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-                .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
-                        .and(PIPELINE_ID.eq(pipelineId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                )
-            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
-            containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
-            taskIds?.let { update.and(TASK_ID.`in`(taskIds)) }
-            update.execute()
+            // 阶段/Job 跳过会把底下的步骤整批改成跳过，原来只改状态，已经跑过的步骤会停在"有开始无结束"。
+            // 这里按终态补一次结束时间，口径与 updateTaskRecord 一致：空才补，已有的不覆盖。
+            // UNEXEC 不是终态（isNeverRun），取消时标记未执行的步骤不会走到这里。
+            if (buildStatus.isFinish()) {
+                update.set(END_TIME, DSL.coalesce(END_TIME, LocalDateTime.now()))
+            }
+            val conditioned = update.where(
+                BUILD_ID.eq(buildId)
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(EXECUTE_COUNT.eq(executeCount))
+            )
+            stageId?.let { conditioned.and(STAGE_ID.eq(stageId)) }
+            containerId?.let { conditioned.and(CONTAINER_ID.eq(containerId)) }
+            taskIds?.let { conditioned.and(TASK_ID.`in`(taskIds)) }
+            conditioned.execute()
         }
     }
 
