@@ -71,6 +71,18 @@ class TimerTriggerElementBizPlugin constructor(
     ) {
         val params = pipelineRepositoryService.getTriggerParams((container as TriggerContainer))
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.elementEnabled()}")
+        if (!element.yamlBranch.isNullOrBlank()) {
+            logger.info("[$pipelineId]|$userId| skip release timer, yaml-branch=${element.yamlBranch}")
+            val existing = pipelineTimerService.get(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = element.id ?: ""
+            )
+            if (existing != null && existing.yamlBranch.isNullOrBlank()) {
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, element.id ?: "")
+            }
+            return
+        }
         val crontabExpressions = timerTriggerTaskService.getCrontabExpressions(
             params = params,
             element = element

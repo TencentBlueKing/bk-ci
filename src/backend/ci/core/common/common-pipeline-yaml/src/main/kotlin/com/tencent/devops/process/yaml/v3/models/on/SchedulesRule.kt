@@ -58,6 +58,10 @@ data class SchedulesRule(
 
     val branches: List<String>? = null,
 
+    @get:Schema(title = "yaml-branch")
+    @JsonProperty("yaml-branch")
+    val yamlBranch: String? = null,
+
     val always: Boolean? = false,
     @JsonIgnore
     var newExpression: List<String>? = null,

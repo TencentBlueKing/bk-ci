@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
@@ -87,15 +88,8 @@ data class PipelineSetting(
     @get:Schema(title = "同一批标识。null 表示请求未携带，保存时沿用已有值；空白表示清空", required = false)
     var concurrencySubGroup: String? = null,
     @get:Schema(title = "并发构建数量限制", required = false)
-    var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
-    @get:Schema(
-        title = "[已废弃] 是否配置流水线变量值超长时终止执行；" +
-            "升级到大变量按需加载方案后该开关已无意义，仅为兼容旧 Yaml 反序列化保留，" +
-            "实际不会生效",
-        required = false,
-        deprecated = true
-    )
-    @Deprecated("Replaced by overflow-aware variable storage; kept for backward compatibility")
+    var maxConRunningQueueSize: Int? = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     var failIfVariableInvalid: Boolean? = false,
     @get:Schema(title = "构建取消权限策略", required = false)
     var buildCancelPolicy: BuildCancelPolicy = BuildCancelPolicy.EXECUTE_PERMISSION,
@@ -210,7 +204,20 @@ data class PipelineSetting(
         concurrencyGroup = other.concurrencyGroup
         concurrencyCancelInProgress = other.concurrencyCancelInProgress
         concurrencySubGroup = other.concurrencySubGroup
-        maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+        maxConRunningQueueSize = other.maxConRunningQueueSize
+        correctAndPadding()
+    }
+
+    /**
+     * 填充不希望报错的数据并直接纠正.
+     * 设置 [maxConRunningQueueSize] 为正数并且不超过 [PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX]
+     */
+    fun correctAndPadding() {
+        if (maxConRunningQueueSize == null) {
+            maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+        } else if (maxConRunningQueueSize!! !in 1..PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
+            maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+        }
     }
 
     /**

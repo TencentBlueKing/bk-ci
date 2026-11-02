@@ -48,6 +48,16 @@ BEGIN
             ADD COLUMN `CONCURRENCY_SUB_GROUP` varchar(255) DEFAULT NULL COMMENT '同一批标识，启动时解析后的值';
     END IF;
 
+## 以前缺失补刀 7edbb50: feat: 创作流-第三方机 #12354 --- START
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.STATISTICS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_RECORD_CONTAINER'
+                    AND INDEX_NAME = 'IDX_PROJECT_PIPELINE_CONTAINER') THEN
+        ALTER TABLE T_PIPELINE_BUILD_RECORD_CONTAINER
+            ADD INDEX IDX_PROJECT_PIPELINE_CONTAINER (PROJECT_ID, PIPELINE_ID, CONTAINER_ID, START_TIME);
+    END IF;
+## 以前缺失补刀 7edbb50: feat: 创作流-第三方机 #12354 --- END
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

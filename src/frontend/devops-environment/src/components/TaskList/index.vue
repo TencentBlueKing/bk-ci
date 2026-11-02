@@ -240,7 +240,7 @@
                                 <template #default="{ row }">
                                     <a
                                         class="text-link build-num-link"
-                                        :href="getBuildDetailUrl(row)"
+                                        :href="getBuildDetailUrl(row, task)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
                                 </template>
@@ -308,7 +308,7 @@
                                 <template #default="{ row }">
                                     <a
                                         class="text-link build-num-link"
-                                        :href="getBuildDetailUrl(row)"
+                                        :href="getBuildDetailUrl(row, task)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
                                 </template>
@@ -372,7 +372,7 @@
                                 <template #default="{ row }">
                                     <a
                                         class="text-link build-num-link"
-                                        :href="getBuildDetailUrl(row)"
+                                        :href="getBuildDetailUrl(row, task)"
                                         target="_blank"
                                     >#{{ row.buildNum }}</a>
                                 </template>
@@ -719,12 +719,13 @@
                 return `/console/pipeline/${projectId.value}/${task.pipelineId}/history/pipeline`
             }
 
-            // 构建执行详情页
-            const getBuildDetailUrl = (row) => {
+            // 构建执行详情页（明细行接口未返回 pipelineId，回退取所属任务头部的 pipelineId）
+            const getBuildDetailUrl = (row, task) => {
+                const pipelineId = row.pipelineId || task?.pipelineId
                 if (isCreateResType.value) {
-                    return `/console/creative-stream/${row.projectId}/flow/${row.pipelineId}/execute/${row.buildId}/execute-detail`
+                    return `/console/creative-stream/${row.projectId}/flow/${pipelineId}/execute/${row.buildId}/execute-detail`
                 }
-                return `/console/pipeline/${row.projectId || projectId.value}/${row.pipelineId}/detail/${row.buildId}/executeDetail`
+                return `/console/pipeline/${row.projectId || projectId.value}/${pipelineId}/detail/${row.buildId}/executeDetail`
             }
 
             // 工作节点详情页（resType 区分流水线资源/创作流资源）

@@ -28,7 +28,16 @@
                             @click="editTriggerAtom(props.$index)"
                             :class="{ 'text-link': true, 'is-error': !props.row.name || props.row.isError }"
                         >
-                            {{ props.row.name || $t('settings.selectTrigger') }}
+                            <template v-if="isYamlBranchInactiveRow(props.row)">
+                                <span
+                                    class="yaml-branch-inactive-tag"
+                                >
+                                    {{ $t('editPage.yamlBranchInactiveTag') }}
+                                </span>
+                            </template>
+                            <template v-else>
+                                {{ props.row.name || $t('settings.selectTrigger') }}
+                            </template>
                         </span>
                     </template>
                 </bk-table-column>
@@ -98,9 +107,10 @@
 
 <script>
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import AtomPropertyPanel from '../AtomPropertyPanel'
     import AtomSelector from '../AtomSelector'
+    import { getCurrentYamlBranch, isYamlBranchInactive } from '../AtomPropertyPanel/TimerTrigger/yamlBranchMixin'
 
 
     export default {
@@ -127,8 +137,11 @@
         computed: {
             ...mapState('atom', [
                 'editingElementPos',
-                'showAtomSelectorPopup'
+                'showAtomSelectorPopup',
+                'pipelineInfo',
+                'activePipelineVersion'
             ]),
+            ...mapGetters('atom', ['isBranchVersion']),
             container () {
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
@@ -138,6 +151,14 @@
                 } catch (err) {
                     return []
                 }
+            },
+            // 当前查看/编辑的 YAML 配置所在分支名（仅分支版本场景有值）
+            currentYamlBranch () {
+                return getCurrentYamlBranch({
+                    isBranchVersion: this.isBranchVersion,
+                    activePipelineVersion: this.activePipelineVersion,
+                    pipelineInfo: this.pipelineInfo
+                })
             }
         },
         watch: {
@@ -174,6 +195,17 @@
             },
             getIsEnable (row) {
                 return row?.additionalOptions?.enable ?? true
+            },
+            // 定时触发器配置了 yaml-branch 且与当前配置所在分支不一致：标记未生效定时
+            isYamlBranchInactiveRow (row) {
+                if (this.currentYamlBranch === '') {
+                    return false
+                }
+                return isYamlBranchInactive({
+                    value: (row?.yamlBranch || '').trim(),
+                    currentBranch: this.currentYamlBranch,
+                    defaultBranch: this.pipelineInfo?.yamlInfo?.defaultBranch || ''
+                })
             },
             handleUpdateOptions (index, key, val) {
                 const element = this.triggerList[index]
@@ -232,6 +264,13 @@
 <style lang="scss" scoped>
     .is-error {
         color: #ff5656;
+    }
+    .yaml-branch-inactive-tag {
+        display: inline-block;
+        color: #ea3636;
+        font-size: 12px;
+        line-height: 18px;
+        cursor: pointer;
     }
     .link-btn {
         cursor: pointer;

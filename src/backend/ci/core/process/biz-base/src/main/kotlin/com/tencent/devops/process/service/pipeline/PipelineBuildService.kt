@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -84,7 +83,6 @@ import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
@@ -220,18 +218,17 @@ class PipelineBuildService(
             startParamKeys = resource.model.getTriggerContainer().params.mapTo(HashSet()) { it.id },
             failIfVariableInvalid = setting?.failIfVariableInvalid == true
         )
-        val bucketSize = setting!!.maxConRunningQueueSize
+        setting!!.correctAndPadding()
+        val maxConRunningQueueSize = setting.maxConRunningQueueSize!!
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
-                acquire = simpleRateLimiter.acquire(
-                    bucketSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
-                )
+                acquire = simpleRateLimiter.acquire(bucketSize = maxConRunningQueueSize, lockKey = lockKey)
                 if (!acquire) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
-                        defaultMessage = "Frequency limit: $bucketSize",
-                        params = arrayOf(bucketSize.toString())
+                        defaultMessage = "Frequency limit: $maxConRunningQueueSize",
+                        params = arrayOf(maxConRunningQueueSize.toString())
                     )
                 }
             }
@@ -325,7 +322,7 @@ class PipelineBuildService(
                     concurrencyGroup = context.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
                     concurrencySubGroup = context.concurrencySubGroup,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    maxConRunningQueueSize = maxConRunningQueueSize,
                     retry = pipelineParamMap[PIPELINE_RETRY_COUNT] != null,
                     retryOnRunningBuild = context.retryOnRunningBuild
                 )

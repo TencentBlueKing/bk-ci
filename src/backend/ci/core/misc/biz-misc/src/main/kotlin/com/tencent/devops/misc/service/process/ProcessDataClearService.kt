@@ -57,6 +57,13 @@ class ProcessDataClearService @Autowired constructor(
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param archiveFlag 归档标识
+     *
+     * 注意：这里刻意不包裹 transaction。
+     *   1) 20+ 张表的删除包成一个长事务，会把各表的行锁/索引页锁持有到整段结束，
+     *      与运行时写入路径共享索引页时容易引发热点等待；
+     *   2) 这些表互相之间无跨表一致性要求，删除按项目+流水线匹配，重复执行幂等；
+     *   3) DAO 保证 deletePipelineInfo 最后执行，中途失败时流水线主表仍可见，
+     *      下一轮 cron / 重试可以重新发起清理。
      */
     fun clearPipelineData(
         projectId: String,
@@ -64,26 +71,20 @@ class ProcessDataClearService @Autowired constructor(
         archiveFlag: Boolean? = null
     ) {
         val finalDslContext = generateFinalDslContext(archiveFlag)
-        val pipelineIds = arrayListOf(pipelineId)
-        finalDslContext.transaction { t ->
-            // 所有 DAO 删除操作统一走事务上下文 context，保证流水线本体清理的原子性；
-            // 流水线维度的关联表清单内聚在 DAO 聚合方法里，新增表只需在 DAO 处补一行
-            val context = DSL.using(t)
-            processDataDeleteDao.deletePipelineRelatedData(
-                dslContext = context,
+        processDataDeleteDao.deletePipelineRelatedData(
+            dslContext = finalDslContext,
+            projectId = projectId,
+            pipelineIds = arrayListOf(pipelineId),
+            archiveFlag = archiveFlag,
+            broadcastTableDeleteFlag = true
+        )
+        if (archiveFlag != true) {
+            // 添加删除记录，插入要实现幂等
+            processDao.addPipelineDataClear(
+                dslContext = finalDslContext,
                 projectId = projectId,
-                pipelineIds = pipelineIds,
-                archiveFlag = archiveFlag,
-                broadcastTableDeleteFlag = true
+                pipelineId = pipelineId
             )
-            if (archiveFlag != true) {
-                // 添加删除记录，插入要实现幂等
-                processDao.addPipelineDataClear(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-            }
         }
         processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId)
     }
