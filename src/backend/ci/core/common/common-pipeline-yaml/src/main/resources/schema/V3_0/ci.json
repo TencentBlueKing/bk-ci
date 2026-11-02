@@ -3108,6 +3108,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -3598,6 +3610,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
