@@ -1726,6 +1726,8 @@
   "yamlDisabledLabel": "YAML 宣言無効",
   "disabledSourceLabel": "無効化の由来",
   "yamlDisabledSourceDesc": "コードリポジトリのデフォルトブランチの YAML で disable-pipeline: true が宣言されています。",
+  "branchYamlDisabledSourceDesc": "コードリポジトリのブランチ {0} の YAML で disable-pipeline: true が宣言されています。",
+  "draftYamlLockedTips": "YAML で disable-pipeline: true が宣言されています。",
   "submitterLabel": "提出者",
   "submitTimeLabel": "提出時間",
   "disablePipelineConfirmDesc1": "無効化後は、いかなる方法でもこのパイプラインをトリガーできなくなります。",

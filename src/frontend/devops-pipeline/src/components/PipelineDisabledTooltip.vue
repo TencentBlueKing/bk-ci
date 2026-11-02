@@ -46,10 +46,11 @@
             }
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo', 'activePipelineVersion']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
-                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked'
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked',
+                isBranchVersion: 'atom/isBranchVersion'
             }),
             // 页面与 YAML 均禁用
             isPageAndYamlDisabled () {
@@ -67,12 +68,19 @@
                     { label: this.$t('disableReasonLabel'), value: this.pipelineInfo?.lockReason || '--' }
                 ]
             },
-            // YAML 声明禁用明细
+            // YAML 声明禁用明细（正式版本，数据来自详情接口，切换版本时不会被覆盖）
             yamlDisabledItems () {
                 return [
                     { label: this.$t('submitterLabel'), value: this.pipelineInfo?.yamlLockUser || '--' },
                     { label: this.$t('submitTimeLabel'), value: convertTime(this.pipelineInfo?.yamlLockTime) }
                 ]
+            },
+            // 禁用来源描述
+            yamlDisabledSource () {
+                if (this.isBranchVersion) {
+                    return this.$t('branchYamlDisabledSourceDesc', [this.activePipelineVersion?.versionName || '--'])
+                }
+                return this.$t('yamlDisabledSourceDesc')
             },
             // 禁用 tooltip 分组信息：三种禁用场景
             disabledTooltipGroups () {
@@ -81,16 +89,19 @@
                     return [
                         // 存量页面禁用数据没有禁用明细，跳过页面禁用分组
                         ...(this.hasPageDisabledInfo ? [{ key: 'page', title: this.$t('pageDisabledLabel'), items: this.pageDisabledItems }] : []),
-                        { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: this.yamlDisabledItems }
+                        // 分支版本无 YAML 禁用明细（版本接口仅返回 yamlLocked），只展示分组标题；正式版本展示提交人/时间
+                        this.isBranchVersion
+                            ? { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: [] }
+                            : { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: this.yamlDisabledItems }
                     ]
                 }
-                // 场景二：仅代码库 YAML 声明禁用，额外展示禁用来源
+                // 场景二：仅代码库 YAML 声明禁用，展示禁用来源；正式版本额外展示提交人/时间
                 if (this.isCurPipelineYamlLocked) {
                     return [{
                         key: 'yaml',
                         items: [
-                            { label: this.$t('disabledSourceLabel'), value: this.$t('yamlDisabledSourceDesc') },
-                            ...this.yamlDisabledItems
+                            { label: this.$t('disabledSourceLabel'), value: this.yamlDisabledSource },
+                            ...(this.isBranchVersion ? [] : this.yamlDisabledItems)
                         ]
                     }]
                 }

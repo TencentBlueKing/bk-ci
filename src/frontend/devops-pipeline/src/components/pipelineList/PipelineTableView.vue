@@ -870,7 +870,7 @@
                     delay: [300, 0]
                 }
             },
-            // 禁用 tooltip 分组：与 HistoryHeader 的 disabledTooltipGroups 三种场景保持一致
+            // 禁用 tooltip 分组：与 PipelineDisabledTooltip 的 disabledTooltipGroups 三种场景保持一致（列表为正式版本状态，无分支场景）
             getPipelineDisabledTooltipGroups (row) {
                 // 存量页面禁用数据没有禁用人/时间/原因，跳过页面禁用明细
                 const hasPageDisabledInfo = !!(row.lockUser || row.lockTime || row.lockReason)

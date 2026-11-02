@@ -82,7 +82,7 @@
                 </div>
                 <!-- 已禁用标签，hover 展示禁用明细 -->
                 <div
-                    v-if="isDisabledPipeline"
+                    v-if="showDisabledTag"
                     v-bk-tooltips="disabledTooltip"
                     class="pipeline-disabled-tag"
                     @click.stop.prevent=""
@@ -92,7 +92,7 @@
                 </div>
                 <!-- 已禁用 tooltip 内容，与 HistoryHeader 执行按钮的 tooltip 保持一致 -->
                 <div
-                    v-if="isDisabledPipeline"
+                    v-if="showDisabledTag"
                     style="display: none;"
                 >
                     <pipeline-disabled-tooltip id="pipelineDisabledTagTooltip" />
@@ -165,6 +165,9 @@
             },
             isDisabledPipeline () {
                 return this.isCurPipelineLocked || this.isCurPipelineYamlLocked
+            },
+            showDisabledTag () {
+                return this.isDisabledPipeline && this.$route.name !== 'pipelinesEdit'
             },
             disabledTooltip () {
                 return {

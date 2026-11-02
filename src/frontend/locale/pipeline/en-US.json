@@ -1731,6 +1731,8 @@
   "yamlDisabledLabel": "Disabled in YAML",
   "disabledSourceLabel": "Disabled Source",
   "yamlDisabledSourceDesc": "The default branch of the code repository declares disable-pipeline: true in YAML.",
+  "branchYamlDisabledSourceDesc": "Branch {0} of the code repository declares disable-pipeline: true in YAML.",
+  "draftYamlLockedTips": "YAML declares disable-pipeline: true.",
   "submitterLabel": "Submitter",
   "submitTimeLabel": "Submit Time",
   "disablePipelineConfirmDesc1": "Once disabled, this pipeline cannot be triggered in any way.",

@@ -1729,6 +1729,8 @@
   "yamlDisabledLabel": "YAML 声明禁用",
   "disabledSourceLabel": "禁用来源",
   "yamlDisabledSourceDesc": "代码库默认分支的 YAML 声明了 disable-pipeline: true",
+  "branchYamlDisabledSourceDesc": "代码库分支{0}的 YAML 声明了 disable-pipeline: true",
+  "draftYamlLockedTips": "YAML 声明了 disable-pipeline: true",
   "submitterLabel": "提交人",
   "submitTimeLabel": "提交时间",
   "disablePipelineConfirmDesc1": "禁用后任何方式都不可触发这条流水线。",

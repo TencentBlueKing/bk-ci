@@ -86,6 +86,7 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
@@ -145,6 +146,11 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
             commit(SET_PIPELINE_YAML, yaml)
         }
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
+    }
+
+    // 切换版本时同步 YAML 禁用状态（版本接口仅返回 yamlLocked，如 a 版本禁用但分支版本未必禁用）
+    if (pipelineRes?.yamlLocked !== undefined) {
+        commit(UPDATE_PIPELINE_INFO, { yamlLocked: pipelineRes.yamlLocked })
     }
 
     setTimeout(() => {
