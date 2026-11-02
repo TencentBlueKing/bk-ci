@@ -294,7 +294,12 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             pipelineVersion = resource.version
         )
-        if (versionSetting?.yamlDisabled() == true) {
+        if (pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = versionSetting
+            )
+        ) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         val triggerContainer = resource.model.getTriggerContainer()
