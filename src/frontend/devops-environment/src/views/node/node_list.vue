@@ -285,11 +285,18 @@
                 </bk-button>
             </div>
         </bk-dialog>
+        <batch-container-limit-dialog
+            v-model="isShowBatchContainerLimit"
+            :nodes="selectedNodes"
+            @saved="requestList"
+        />
     </div>
 </template>
 
 <script>
     import ImportThirdPartyDialog from '@/components/devops/environment/ImportThirdPartyDialog.vue'
+    import BatchContainerLimitDialog from './components/BatchContainerLimitDialog.vue'
+    import { BATCH_LIMIT_MAX, isLinuxBuildNode } from '@/utils/containerLimit'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
     import {
@@ -317,6 +324,7 @@
         components: {
             ListTable,
             ImportThirdPartyDialog,
+            BatchContainerLimitDialog,
             SearchSelect,
             CollapseLayout,
             NodeDetail
@@ -420,6 +428,7 @@
                 isBatchDropdownShow: false,
                 selectedNodes: [],
                 isShowEditMaxConcurrency: false,
+                isShowBatchContainerLimit: false,
                 isShowResetImportUser: false,
                 parallelTaskCount: 0,
                 dockerParallelTaskCount: 0
@@ -590,6 +599,7 @@
                         disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) || cannotEditNodes.length > 0,
                         handler: () => this.batchSetMaxConcurrency()
                     },
+                    ...(!this.isCreateResType ? [this.containerLimitMenuItem()] : []),
                     ...(!this.isCreateResType ? [
                         {
                             key: 'bulkResetImportUser',
@@ -857,6 +867,41 @@
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) return
                 if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowEditMaxConcurrency = true
+            },
+            containerLimitMenuItem () {
+                const selected = this.selectedNodes
+                const linuxNodes = selected.filter(isLinuxBuildNode)
+                const editable = linuxNodes.filter(node => node.canEdit)
+                let disabled = false
+                let tooltips = ''
+                if (selected.length && !linuxNodes.length) {
+                    disabled = true
+                    tooltips = this.$t('environment.noLinuxBuildNodeTip')
+                } else if (selected.length && linuxNodes.length && !editable.length) {
+                    disabled = true
+                    tooltips = this.$t('environment.noEditableNodeTip')
+                }
+                return {
+                    key: 'batchContainerLimit',
+                    textKey: 'environment.batchEditContainerLimit',
+                    tooltips,
+                    disabled,
+                    handler: () => this.openBatchContainerLimit()
+                }
+            },
+            openBatchContainerLimit () {
+                if (!this.hasSelectedNode()) return
+                const item = this.containerLimitMenuItem()
+                if (item.disabled) return
+                const editable = this.selectedNodes.filter(node => node.canEdit && isLinuxBuildNode(node))
+                if (editable.length > BATCH_LIMIT_MAX) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: this.$t('environment.batchLimitMax')
+                    })
+                    return
+                }
+                this.isShowBatchContainerLimit = true
             },
             async handleSetMaxConcurrency () {
                 try {

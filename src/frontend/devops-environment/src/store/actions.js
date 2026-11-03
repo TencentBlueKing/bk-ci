@@ -416,6 +416,35 @@ const actions = {
         })
     },
     /**
+     * 查询节点或环境的容器配置。scope 为 ENV 或 NODE，resourceId 为 hashId。
+     * 没有记录时后端返回 docker，cpus、memory 为 null。
+     */
+    requestDockerConfig ({ commit }, { projectId, scope, resourceId }) {
+        return request.get(`${prefix}/user/environment/dockerConfig/${projectId}/${scope}/${resourceId}`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 保存容器配置。未出现的字段保持不变。
+     * 环境不能带 containerRuntime；创作节点不能带 cpus、memory。
+     */
+    saveDockerConfig ({ commit }, { projectId, scope, resourceId, params }) {
+        return request.post(`${prefix}/user/environment/dockerConfig/${projectId}/${scope}/${resourceId}`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * 批量保存节点容器 CPU、内存。缺省字段保持不变，空字符串表示不限。不能带 containerRuntime。
+     */
+    batchSaveNodeDockerConfig ({ commit }, { projectId, nodeIds, config }) {
+        return request.post(`${prefix}/user/environment/dockerConfig/${projectId}/nodes/batch`, {
+            nodeIds,
+            config
+        }).then(response => {
+            return response
+        })
+    },
+    /**
      * 获取构建机最近执行记录
      */
     getLatestBuildPipelineList ({ commit }, { projectId }) {

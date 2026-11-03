@@ -159,6 +159,41 @@ export default function useNodeDetail () {
     }
 
     /**
+     * 查询节点容器配置。没有记录时后端直接返回 docker。
+     */
+    const fetchNodeDockerConfig = async () => {
+        if (!nodeHashId.value) return
+        try {
+            const res = await proxy.$store.dispatch('environment/requestDockerConfig', {
+                projectId: projectId.value,
+                scope: 'NODE',
+                resourceId: nodeHashId.value
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    /**
+     * 保存节点容器配置。调用方只传本次要改的字段。
+     */
+    const saveNodeDockerConfig = async (params) => {
+        if (!nodeHashId.value) return
+        try {
+            const res = await proxy.$store.dispatch('environment/saveDockerConfig', {
+                projectId: projectId.value,
+                scope: 'NODE',
+                resourceId: nodeHashId.value,
+                params
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    /**
      * 获取节点环境变量列表
      * @param {Object} params - 查询参数 { envName, envValue, source }
      */
@@ -232,6 +267,8 @@ export default function useNodeDetail () {
         fetchAgentOfflinePeriod,
         saveParallelTaskCount,
         saveDockerParallelTaskCount,
+        fetchNodeDockerConfig,
+        saveNodeDockerConfig,
         fetchNodeEnvs,
         saveNodeEnvs,
         deleteNodeEnv
