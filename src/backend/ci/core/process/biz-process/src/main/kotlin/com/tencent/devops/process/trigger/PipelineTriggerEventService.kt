@@ -81,8 +81,10 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import java.text.MessageFormat
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 @Suppress("ALL")
 @Service
 class PipelineTriggerEventService @Autowired constructor(
@@ -98,6 +100,8 @@ class PipelineTriggerEventService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineTriggerEventService::class.java)
         private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
         private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
+        // 触发事件查询的最大跨度(自然日)
+        private const val MAX_QUERY_DAYS = 7L
         // 构建链接
         private const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
         private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/{0}/flow/{1}/execute/{2}/execute-detail"
@@ -294,13 +298,25 @@ class PipelineTriggerEventService @Autowired constructor(
 
     /**
      * 未指定事件ID时必须带时间范围,避免扫描全部分区
+     *
+     * 跨度按自然日计算,兼容前端默认的"7天前00:00:00至今天23:59:59"
      */
     private fun checkTimeRange(eventId: Long?, startTime: Long?, endTime: Long?) {
         if (eventId != null) {
             return
         }
-        if (startTime == null || endTime == null) {
+        if (startTime == null || endTime == null || startTime > endTime) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR)
+        }
+        val days = ChronoUnit.DAYS.between(
+            Timestamp(startTime).toLocalDateTime().toLocalDate(),
+            Timestamp(endTime).toLocalDateTime().toLocalDate()
+        )
+        if (days > MAX_QUERY_DAYS) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
+                params = arrayOf(MAX_QUERY_DAYS.toString())
+            )
         }
     }
 
