@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.service.record
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ResolveTerminalStartVmStatusTest {
@@ -73,5 +75,20 @@ class ResolveTerminalStartVmStatusTest {
         assertNull(
             resolveTerminalStartVmStatus(BuildStatus.RUNNING, matrixGroup = false, BuildStatus.RUNNING.name)
         )
+    }
+
+    @Test
+    fun canceledOrFailedJobMarksUnstartedTasks() {
+        assertTrue(shouldMarkUnstartedTasksUnexec(BuildStatus.CANCELED, matrixGroup = false))
+        assertTrue(shouldMarkUnstartedTasksUnexec(BuildStatus.FAILED, matrixGroup = null))
+        assertTrue(shouldMarkUnstartedTasksUnexec(BuildStatus.TERMINATE, matrixGroup = false))
+    }
+
+    @Test
+    fun successSkipRunningAndMatrixDoNotMarkUnstartedTasks() {
+        assertFalse(shouldMarkUnstartedTasksUnexec(BuildStatus.SUCCEED, matrixGroup = false))
+        assertFalse(shouldMarkUnstartedTasksUnexec(BuildStatus.SKIP, matrixGroup = false))
+        assertFalse(shouldMarkUnstartedTasksUnexec(BuildStatus.RUNNING, matrixGroup = false))
+        assertFalse(shouldMarkUnstartedTasksUnexec(BuildStatus.CANCELED, matrixGroup = true))
     }
 }

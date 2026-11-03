@@ -367,6 +367,18 @@ class ContainerBuildRecordService(
                     startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
+                // 取消或失败收口时，没跑到的插件记录仍是 null，详情会和 UNEXEC 分成两种未执行
+                if (shouldMarkUnstartedTasksUnexec(buildStatus, recordContainer.matrixGroupFlag)) {
+                    recordTaskDao.updateNullRecordStatus(
+                        dslContext = context,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        containerId = containerId,
+                        buildStatus = BuildStatus.UNEXEC
+                    )
+                }
             }
         }
     }
@@ -589,4 +601,16 @@ internal fun resolveTerminalStartVmStatus(
     } else {
         containerStatus.name
     }
+}
+
+/**
+ * Job 以取消或失败结束时，尚未写入状态的插件应记为未执行。
+ * 成功不改。跳过由 [ContainerBuildRecordService.containerSkip] 写成 SKIP。
+ * 矩阵组容器上的记录不是具体插件，不在这里补。
+ */
+internal fun shouldMarkUnstartedTasksUnexec(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?
+): Boolean {
+    return containerStatus.isFinish() && !containerStatus.isSuccess() && matrixGroup != true
 }
