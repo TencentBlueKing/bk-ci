@@ -472,6 +472,9 @@
                         "type" : "string"
                       }
                     },
+                    "yaml-branch" : {
+                      "type" : "string"
+                    },
                     "nodes" : {
                       "oneOf" : [ {
                         "enum" : [ "all" ]
@@ -546,6 +549,9 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "yaml-branch" : {
+                    "type" : "string"
                   },
                   "nodes" : {
                     "oneOf" : [ {
@@ -1524,6 +1530,9 @@
                       "type" : "string"
                     }
                   },
+                  "yaml-branch" : {
+                    "type" : "string"
+                  },
                   "nodes" : {
                     "oneOf" : [ {
                       "enum" : [ "all" ]
@@ -1598,6 +1607,9 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "yaml-branch" : {
+                  "type" : "string"
                 },
                 "nodes" : {
                   "oneOf" : [ {
@@ -3096,6 +3108,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -3232,7 +3256,7 @@
         "max-parallel" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 200
+          "maximum" : 500
         }
       }
     },
@@ -3586,6 +3610,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]

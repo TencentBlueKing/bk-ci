@@ -600,8 +600,13 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
+            // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本,只有当模板创建时是草稿版本才会出现这种情况
+            val draft2Branch = pipelineTemplateInfo.releasedVersion == resourceOnlyVersion.version &&
+                pipelineTemplateInfo.latestVersionStatus == VersionStatus.COMMITTING
             val pipelineTemplateInfoUpdateInfo = PipelineTemplateInfoUpdateInfo(
                 enablePac = true,
+                latestVersionStatus = VersionStatus.BRANCH.takeIf { draft2Branch },
+                releasedVersionName = resourceOnlyVersion.versionName.takeIf { draft2Branch },
                 updater = userId
             )
             val pipelineTemplateCommonCondition = PipelineTemplateCommonCondition(
@@ -633,7 +638,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                if (pipelineTemplateInfo.enablePac != enablePac) {
+                if (pipelineTemplateInfo.enablePac != enablePac || draft2Branch) {
                     pipelineTemplateInfoService.update(
                         transactionContext = transactionContext,
                         record = pipelineTemplateInfoUpdateInfo,

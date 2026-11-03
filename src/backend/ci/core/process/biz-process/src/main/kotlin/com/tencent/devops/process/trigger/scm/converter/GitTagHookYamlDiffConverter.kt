@@ -4,7 +4,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.enums.EventAction
@@ -41,8 +41,11 @@ class GitTagHookYamlDiffConverter @Autowired constructor(
         )
         val serverRepo = webhook.repo
         val defaultBranch = serverRepo.defaultBranch!!
-        return fileTrees.map { tree ->
-            val filePath = GitActionCommon.getCiFilePath(tree.path)
+        return fileTrees.filter {
+            // 模版不需要执行
+            !YamlFileUtils.isTemplateFile(YamlFileUtils.getCiFilePath(it.path))
+        }.map { tree ->
+            val filePath = YamlFileUtils.getCiFilePath(tree.path)
             PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,

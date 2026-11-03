@@ -53,6 +53,9 @@ export const FlowHeader = defineComponent({
     onVersionChange: {
       type: Function as PropType<(version: number) => void>,
     },
+    onSwitchToLatest: {
+      type: Function as PropType<() => void>,
+    },
   },
   setup(props) {
     const { t } = useI18n()
@@ -263,6 +266,37 @@ export const FlowHeader = defineComponent({
       )
     })
 
+    // 最新发布版本号：优先取 flowInfo.releaseVersion，兜底从版本列表中查找 latestReleasedFlag
+    const latestVersion = computed(() => {
+      if (props.flowInfo?.releaseVersion != null) {
+        return props.flowInfo.releaseVersion
+      }
+      const latest =
+        props.versionList.find((v) => v.latestReleasedFlag) ??
+        dropdownVersionList.value.find((v) => v.latestReleasedFlag)
+      return latest?.version
+    })
+
+    // 当前选中版本不是最新版本时，展示“切换至最新版本”按钮
+    const showSwitchToLatest = computed(() => {
+      return (
+        latestVersion.value != null &&
+        currentVersion.value != null &&
+        !currentVersion.value.latestReleasedFlag
+      )
+    })
+
+    const handleSwitchToLatest = () => {
+      // 外部提供自定义处理（如跳转回执行记录 tab），优先执行
+      if (props.onSwitchToLatest) {
+        props.onSwitchToLatest()
+        return
+      }
+      if (latestVersion.value == null) return
+      selectedVersion.value = latestVersion.value
+      props.onVersionChange?.(latestVersion.value)
+    }
+
     const visibleVersionList = computed(() => {
       return dropdownVersionList.value.filter((v) => v.status === VERSION_STATUS_ENUM.RELEASED)
     })
@@ -294,7 +328,12 @@ export const FlowHeader = defineComponent({
 
     return () => (
       <>
-        <CommonHeader loading={props.loading} workflowName={props.flowInfo?.pipelineName}>
+        <CommonHeader
+          loading={props.loading}
+          workflowName={props.flowInfo?.pipelineName}
+          showSwitchToLatest={showSwitchToLatest.value}
+          onSwitchToLatest={handleSwitchToLatest}
+        >
           {{
             'workflow-selector': () => (
               <FlowSelector

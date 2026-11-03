@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.Condition
@@ -305,25 +306,67 @@ class ThirdPartyAgentBuildDao {
         agentId: String,
         hasDocker: Boolean
     ): List<Pair<String, Int>> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            // 子查询：该 agent 下每个 (buildId, vmSeqId) 取最新一行（ID 自增，最大即最新）
-            val latestIds = dslContext.select(DSL.max(ID))
-                .from(this)
-                .where(AGENT_ID.eq(agentId))
-                .groupBy(BUILD_ID, VM_SEQ_ID)
-
-            val dsl = dslContext.select(BUILD_ID, STATUS)
-                .from(this)
-                .where(ID.`in`(latestIds))
-            if (hasDocker) {
-                dsl.and(DOCKER_INFO.isNotNull)
-            } else {
-                dsl.and(DOCKER_INFO.isNull)
-            }
-            return dsl.and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .fetch()
-                .map { Pair(it[BUILD_ID], it[STATUS]) }
+        val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
+        val dsl = dslContext.select(t.BUILD_ID, t.STATUS)
+            .from(t)
+            .where(t.AGENT_ID.eq(agentId))
+            .and(t.STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            .and(notExistsNewerRecord(dslContext, t))
+        if (hasDocker) {
+            dsl.and(t.DOCKER_INFO.isNotNull)
+        } else {
+            dsl.and(t.DOCKER_INFO.isNull)
         }
+        return dsl.fetch().map { Pair(it[t.BUILD_ID], it[t.STATUS]) }
+    }
+
+    /**
+     * 判断 t 这一行是否是同一 (agentId, buildId, vmSeqId) 下的最新一行（ID 自增，最大即最新）。
+     * 不使用 "ID IN (SELECT MAX(ID) ... GROUP BY ...)"：那种写法要回表扫 agent 的全部历史记录再分组，
+     * 历史多时达到百万行级别；这里先由外层按 AGENT_ID + STATUS 取出少量运行中/排队中的行，
+     * 再逐行用 IDX_BVE(BUILD_ID, VM_SEQ_ID, ...) 确认后面没有更新的记录，结果集一致。
+     */
+    private fun notExistsNewerRecord(
+        dslContext: DSLContext,
+        t: TDispatchThirdpartyAgentBuild
+    ): Condition {
+        val n = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("n")
+        return DSL.notExists(
+            dslContext.selectOne()
+                .from(n)
+                .where(n.BUILD_ID.eq(t.BUILD_ID))
+                .and(n.VM_SEQ_ID.eq(t.VM_SEQ_ID))
+                .and(n.AGENT_ID.eq(t.AGENT_ID))
+                .and(n.ID.gt(t.ID))
+        )
+    }
+
+    /**
+     * 批量统计多个 agent 当前 运行中+排队中 的任务数，一次 SQL 代替按 agent 循环调用 [getRunningAndQueueBuilds]。
+     * 统计口径与 [getRunningAndQueueBuilds] 保持一致：每个 (agentId, buildId, vmSeqId) 只取最新一行。
+     * @return agentId -> Pair(普通任务数, Docker 任务数)；没有任务的 agent 不会出现在结果中，调用方按 0 处理
+     */
+    fun countRunningAndQueueByAgents(
+        dslContext: DSLContext,
+        agentIds: Set<String>
+    ): Map<String, Pair<Int, Int>> {
+        if (agentIds.isEmpty()) {
+            return emptyMap()
+        }
+        val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
+        // 用条件求和一次拿到普通和 Docker 两种计数
+        val normalCnt = DSL.sum(DSL.`when`(t.DOCKER_INFO.isNull, 1).otherwise(0)).`as`("NORMAL_CNT")
+        val dockerCnt = DSL.sum(DSL.`when`(t.DOCKER_INFO.isNotNull, 1).otherwise(0)).`as`("DOCKER_CNT")
+        return dslContext.select(t.AGENT_ID, normalCnt, dockerCnt)
+            .from(t)
+            .where(t.AGENT_ID.`in`(agentIds))
+            .and(t.STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            .and(notExistsNewerRecord(dslContext, t))
+            .groupBy(t.AGENT_ID)
+            .fetch()
+            .associate {
+                it.value1() to Pair(it.value2()?.toInt() ?: 0, it.value3()?.toInt() ?: 0)
+            }
     }
 
     // 这个方法在有executeCount前就是按build维度的，需要聚合下
@@ -435,9 +478,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun countAgentBuildsByJob(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineId: String?,
@@ -449,7 +493,7 @@ class ThirdPartyAgentBuildDao {
             return 0
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>().apply {
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId)).apply {
                 if (agentId != null) add(AGENT_ID.eq(agentId))
                 if (envId != null) add(ENV_ID.eq(envId))
                 if (pipelineId != null) add(PIPELINE_ID.eq(pipelineId))
@@ -481,9 +525,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun listAgentBuildsByJob(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineId: String?,
@@ -497,7 +542,7 @@ class ThirdPartyAgentBuildDao {
             return emptyList()
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>().apply {
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId)).apply {
                 if (agentId != null) add(AGENT_ID.eq(agentId))
                 if (envId != null) add(ENV_ID.eq(envId))
                 if (pipelineId != null) add(PIPELINE_ID.eq(pipelineId))
@@ -563,6 +608,11 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    /**
+     * 统计某个 job 在环境下（全集群）运行中+排队中的任务数，每个 (buildId, vmSeqId) 只取最新一行。
+     * 不使用 "ID IN (SELECT MAX(ID) ... GROUP BY ...)"：那种写法要回表扫该 job 的全部历史再分组。
+     * 不强制索引，由优化器结合数据分布选择，避免目标 job 记录少时仍扫描整条流水线的历史索引。
+     */
     fun countProjectJobRunningAndQueueAll(
         dslContext: DSLContext,
         pipelineId: String,
@@ -570,25 +620,25 @@ class ThirdPartyAgentBuildDao {
         jobId: String,
         projectId: String
     ): Long {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            // 子查询：每个 (buildId, vmSeqId) 取最新一行的主键（ID 自增，最大即最新）
-            val latestIds = dslContext.select(DSL.max(ID))
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(JOB_ID.eq(jobId))
-                .and(ENV_ID.eq(envId))
-                .groupBy(BUILD_ID, VM_SEQ_ID)
-
-            // 只在“每组最新行”里数 RUNNING/QUEUE
-            return dslContext.selectCount()
-                .from(this)
-                .where(ID.`in`(latestIds))
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .fetchOne(0, Long::class.java)!!
-        }
+        val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
+        val n = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("n")
+        return dslContext.selectCount()
+            .from(t)
+            .where(jobEnvCondition(t, projectId, pipelineId, jobId, envId))
+            .and(t.STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            .and(
+                notExistsNewerJobRecord(
+                    dslContext, t, n, jobEnvCondition(n, projectId, pipelineId, jobId, envId)
+                )
+            )
+            .fetchOne(0, Long::class.java)!!
     }
 
+    /**
+     * 统计某个 job 在指定 agent 上运行中+排队中的任务数，口径与原写法一致：
+     * 在 "命中过滤条件（含 agentIds）的行" 里，每个 (buildId, vmSeqId) 只取最新一行，不按 agent 分组。
+     * 外层由优化器自行选择 IDX_AGENTID_STATUS_UPDATE，只扫这些 agent 的活跃行。
+     */
     fun countAgentsJobRunningAndQueueAll(
         dslContext: DSLContext,
         projectId: String,
@@ -597,34 +647,64 @@ class ThirdPartyAgentBuildDao {
         jobId: String,
         agentIds: Set<String>
     ): Map<String, Int> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            // 子查询：命中过滤条件的行里，每个 (buildId, vmSeqId) 取最新一行
-            val latestIds = dslContext.select(DSL.max(ID))
-                .from(this)
-                .where(AGENT_ID.`in`(agentIds))
-                .and(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(JOB_ID.eq(jobId))
-                .and(ENV_ID.eq(envId))
-                .groupBy(BUILD_ID, VM_SEQ_ID)
-
-            return dslContext.select(AGENT_ID, DSL.count().`as`("COUNT"))
-                .from(this)
-                .where(ID.`in`(latestIds))
-                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .groupBy(AGENT_ID)
-                .fetch()
-                .map { it[AGENT_ID] to (it["COUNT"] as Int) }
-                .toMap()
+        if (agentIds.isEmpty()) {
+            return emptyMap()
         }
+        val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
+        val n = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("n")
+        val cnt = DSL.count().`as`("COUNT")
+        return dslContext.select(t.AGENT_ID, cnt)
+            .from(t)
+            .where(t.AGENT_ID.`in`(agentIds))
+            .and(jobEnvCondition(t, projectId, pipelineId, jobId, envId))
+            .and(t.STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+            .and(
+                notExistsNewerJobRecord(
+                    dslContext, t, n,
+                    n.AGENT_ID.`in`(agentIds).and(jobEnvCondition(n, projectId, pipelineId, jobId, envId))
+                )
+            )
+            .groupBy(t.AGENT_ID)
+            .fetch()
+            .associate { it.value1() to it.value2() }
     }
 
+    private fun jobEnvCondition(
+        table: TDispatchThirdpartyAgentBuild,
+        projectId: String,
+        pipelineId: String,
+        jobId: String,
+        envId: Long
+    ): Condition = table.PROJECT_ID.eq(projectId)
+        .and(table.PIPELINE_ID.eq(pipelineId))
+        .and(table.JOB_ID.eq(jobId))
+        .and(table.ENV_ID.eq(envId))
+
     /**
-     * 支持跨项目引用环境和节点的查询，不用projectId
+     * 判断 t 是否是 "满足 nFilter 的行" 中同一 (buildId, vmSeqId) 下的最新一行。
+     * 与 [notExistsNewerRecord] 的区别：job 维度的原口径不按 AGENT_ID 分组，且只在满足过滤条件的行里比较。
+     */
+    private fun notExistsNewerJobRecord(
+        dslContext: DSLContext,
+        t: TDispatchThirdpartyAgentBuild,
+        n: TDispatchThirdpartyAgentBuild,
+        nFilter: Condition
+    ): Condition = DSL.notExists(
+        dslContext.selectOne()
+            .from(n)
+            .where(n.BUILD_ID.eq(t.BUILD_ID))
+            .and(n.VM_SEQ_ID.eq(t.VM_SEQ_ID))
+            .and(n.ID.gt(t.ID))
+            .and(nFilter)
+    )
+
+    /**
+     * 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
      * @return PIPELINE_COUNT,JOB_COUNT,BUILD_COUNT
      */
     fun countAgentBuildPipelineJob(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         startTime: Long?,
@@ -638,7 +718,7 @@ class ThirdPartyAgentBuildDao {
             return Triple(0L, 0L, 0L)
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -686,9 +766,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchAgentBuildPipeline(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         limit: Int,
@@ -703,7 +784,7 @@ class ThirdPartyAgentBuildDao {
             return emptyList()
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -777,9 +858,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchAgentBuildPipelineBuild(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         limit: Int,
@@ -794,7 +876,7 @@ class ThirdPartyAgentBuildDao {
             return emptyList()
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -864,9 +946,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchAgentBuildPipelineJob(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         limit: Int,
@@ -882,7 +965,7 @@ class ThirdPartyAgentBuildDao {
             return emptyList()
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -970,9 +1053,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchPipelineIdAndName(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineName: String?
@@ -981,7 +1065,7 @@ class ThirdPartyAgentBuildDao {
             return emptyList()
         }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -1007,15 +1091,16 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchJobIdAndName(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         jobName: String?
     ): List<Pair<String, String>> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -1041,15 +1126,16 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchCreator(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         creator: String?
     ): List<String> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val conditions = mutableListOf<Condition>()
+            val conditions = mutableListOf(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 conditions.add(AGENT_ID.eq(agentId))
             }
@@ -1072,9 +1158,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun countAgentBuildGroupsByPipeline(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineId: String,
@@ -1088,6 +1175,7 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.select(countDistinct(BUILD_ID, EXECUTE_COUNT)).from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
@@ -1121,9 +1209,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun listAgentBuildGroupsByPipeline(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineId: String,
@@ -1139,6 +1228,7 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.select(BUILD_ID, EXECUTE_COUNT).from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
@@ -1173,9 +1263,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun countAgentBuildGroupsByBuild(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         buildId: String,
@@ -1187,6 +1278,7 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
@@ -1225,9 +1317,10 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun listAgentBuildGroupsByBuild(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         buildId: String,
@@ -1241,6 +1334,7 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
@@ -1281,6 +1375,7 @@ class ThirdPartyAgentBuildDao {
 
     fun fetchAgentBuildsByBuildId(
         dslContext: DSLContext,
+        projectId: String,
         agentId: String?,
         envId: Long?,
         buildIdList: Set<String>
@@ -1288,6 +1383,7 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.`in`(buildIdList))
+                .and(buildProjectCondition(projectId, envId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
             }
@@ -1297,4 +1393,14 @@ class ThirdPartyAgentBuildDao {
             return dsl.fetch()
         }
     }
+
+    /**
+     * 所有创作环境的 ID 在各项目间相同，必须同时按项目过滤；普通环境和节点保留跨项目查看能力。
+     */
+    private fun buildProjectCondition(projectId: String, envId: Long?): Condition =
+        if (envId != null && AllCreateNodeEnv.hasId(envId)) {
+            TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.PROJECT_ID.eq(projectId)
+        } else {
+            DSL.noCondition()
+        }
 }

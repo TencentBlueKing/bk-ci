@@ -55,6 +55,16 @@ object GitUtils {
 
     fun urlEncode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
+    /**
+     * 编码url路径片段,空格编码为%20而不是+
+     */
+    fun urlEncodePathSegment(s: String): String = urlEncode(s).replace("+", "%20")
+
+    /**
+     * 按"/"分段编码url路径,保留路径分隔符
+     */
+    fun urlEncodePath(path: String): String = path.split("/").joinToString("/") { urlEncodePathSegment(it) }
+
     fun getProjectName(gitUrl: String) = getDomainAndRepoName(gitUrl).second
 
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {

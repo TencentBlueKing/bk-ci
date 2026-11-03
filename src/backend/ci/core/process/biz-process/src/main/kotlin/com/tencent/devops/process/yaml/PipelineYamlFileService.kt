@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.process.dao.yaml.PipelineYamlBranchFileDao
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.enums.ContentKind
@@ -58,7 +58,7 @@ class PipelineYamlFileService @Autowired constructor(
             recursive = true,
             authRepository = authRepository
         )?.filter {
-            it.kind == ContentKind.FILE && GitActionCommon.checkYamlPipelineFile(it.path)
+            it.kind == ContentKind.FILE && YamlFileUtils.checkYamlPipelineFile(it.path)
         } ?: emptyList()
     }
 

@@ -58,6 +58,10 @@ data class SchedulesRule(
 
     val branches: List<String>? = null,
 
+    @get:Schema(title = "yaml-branch")
+    @JsonProperty("yaml-branch")
+    val yamlBranch: String? = null,
+
     val always: Boolean? = false,
     @get:Schema(title = "timezone")
     val timezone: String? = null,

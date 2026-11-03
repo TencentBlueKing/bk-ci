@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -52,7 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -119,7 +120,7 @@ class ModelTransfer @Autowired constructor(
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
-            maxConRunningQueueSize = yaml.concurrency?.maxParallel ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+            maxConRunningQueueSize = yaml.concurrency?.maxParallel ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT,
             labels = yaml2Labels(yamlInput),
             pipelineAsCodeSettings = yamlSyntaxDialect2Setting(yaml.syntaxDialect),
             successSubscriptionList = yamlNotice2Setting(
@@ -536,7 +537,7 @@ class ModelTransfer @Autowired constructor(
                 queueLength = null,
                 queueTimeoutMinutes = setting.waitQueueTimeMinute
                     .nullIfDefault(VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE),
-                maxParallel = setting.maxConRunningQueueSize.nullIfDefault(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX)
+                maxParallel = setting.maxConRunningQueueSize.nullIfDefault(PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT)
             )
         }
         return null
@@ -596,7 +597,7 @@ class ModelTransfer @Autowired constructor(
                     on.value.forEach { pre ->
                         triggerV3.add(pre.toPre(modelInput.version).also {
                             it as PreTriggerOnV3
-                            if (!it.repoName.isNullOrBlank()) {
+                            if (!it.repoName.isNullOrBlank() || on.key != ScmType.CODE_GIT) {
                                 it.type = on.key.alis
                             }
                         })

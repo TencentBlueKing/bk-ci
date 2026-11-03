@@ -36,6 +36,16 @@ class DispatchStrategyExecutor(
     fun execute(
         strategies: List<DispatchStrategyConfig>,
         tryAgent: (ThirdPartyAgent) -> Boolean
+    ): ThirdPartyAgent? = executeWithRule(strategies) { agent, _ ->
+        if (tryAgent(agent)) TryAgentResult.SUCCESS else TryAgentResult.REJECTED
+    }
+
+    // LOAD_CHANGED 只表示快照过期，可继续匹配后续更宽松规则；真正入队失败仍按 agent 去重。
+    enum class TryAgentResult { SUCCESS, REJECTED, LOAD_CHANGED }
+
+    fun executeWithRule(
+        strategies: List<DispatchStrategyConfig>,
+        tryAgent: (ThirdPartyAgent, NodeRule?) -> TryAgentResult
     ): ThirdPartyAgent? {
         val envId = strategies.firstOrNull()?.envId
         val tag = "[Strategy|env:$envId]"
@@ -177,18 +187,15 @@ class DispatchStrategyExecutor(
     private fun matchAndTry(
         agents: List<AgentWithLoad>,
         nodeRule: NodeRule?,
-        tryAgent: (ThirdPartyAgent) -> Boolean,
+        tryAgent: (ThirdPartyAgent, NodeRule?) -> TryAgentResult,
         lv: String
     ): ThirdPartyAgent? {
         for (al in agents) {
             if (al.agent.agentId in hasTryAgents) continue
 
-            val matched = when (nodeRule) {
-                NodeRule.IDLE -> isIdle(al)
-                NodeRule.AVAILABLE -> isAvailable(al)
-                // 没有规则就是默认都可以
-                else -> true
-            }
+            val matched = matchesNodeRule(
+                al.agent, nodeRule, input.isDockerBuilder, al.runningCnt, al.dockerRunningCnt
+            )
 
             val a = al.agent
             val loadDesc = if (input.isDockerBuilder) {
@@ -210,28 +217,15 @@ class DispatchStrategyExecutor(
                         "$loadDesc -> ${nodeRule?.name ?: "NULL"} matched, trying to dispatch"
             )
 
-            hasTryAgents.add(al.agent.agentId)
-            if (tryAgent(al.agent)) {
-                return al.agent
+            when (tryAgent(al.agent, nodeRule)) {
+                TryAgentResult.SUCCESS -> return al.agent
+                TryAgentResult.REJECTED -> hasTryAgents.add(al.agent.agentId)
+                TryAgentResult.LOAD_CHANGED -> pipelineLog("$lv [${a.agentId}] load changed, recheck next rule")
             }
 
             pipelineLog("$lv [${a.agentId}] dispatch failed, try next")
         }
         return null
-    }
-
-    private fun isIdle(al: AgentWithLoad): Boolean {
-        return if (input.isDockerBuilder) al.dockerRunningCnt == 0 else al.runningCnt == 0
-    }
-
-    private fun isAvailable(al: AgentWithLoad): Boolean {
-        return if (input.isDockerBuilder) {
-            val limit = al.agent.dockerParallelTaskCount ?: 0
-            al.dockerRunningCnt != 0 && (limit == 0 || limit > al.dockerRunningCnt)
-        } else {
-            val limit = al.agent.parallelTaskCount ?: 0
-            al.runningCnt != 0 && (limit == 0 || limit > al.runningCnt)
-        }
     }
 
     private fun pipelineLog(message: String) {
@@ -245,6 +239,23 @@ class DispatchStrategyExecutor(
     )
 
     companion object {
+        /** 快照筛选与锁内复检共用完全相同的规则，包括 0/null 容量表示不限、null 规则直接放行。 */
+        fun matchesNodeRule(
+            agent: ThirdPartyAgent,
+            nodeRule: NodeRule?,
+            isDocker: Boolean,
+            normalCount: Int,
+            dockerCount: Int
+        ): Boolean {
+            val count = if (isDocker) dockerCount else normalCount
+            val limit = if (isDocker) agent.dockerParallelTaskCount ?: 0 else agent.parallelTaskCount ?: 0
+            return when (nodeRule) {
+                NodeRule.IDLE -> count == 0
+                NodeRule.AVAILABLE -> count != 0 && (limit == 0 || limit > count)
+                null -> true
+            }
+        }
+
         private val logger = LoggerFactory.getLogger(DispatchStrategyExecutor::class.java)
     }
 }

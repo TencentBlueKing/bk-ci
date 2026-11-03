@@ -131,7 +131,14 @@
                     />
                 </form-field>
     
+                <yaml-branch-field
+                    :element="element"
+                    :disabled="disabled"
+                    :errors="errors"
+                    :handle-update-element="handleUpdateElement"
+                />
                 <form-field
+                    v-if="!showYamlBranch"
                     class="cron-build-tab"
                     :label="$t('editPage.branches')"
                     :desc="$t('editPage.timerTriggerBranchTips')"
@@ -165,15 +172,18 @@
     import atomMixin from '../atomMixin'
     import CodelibSelector from './CodelibSelector'
     import TimeZoneSelect from './TimeZoneSelect'
+    import YamlBranchField from './YamlBranchField'
+    import yamlBranchMixin from './yamlBranchMixin'
 
     export default {
         name: 'timer-trigger',
         components: {
             BranchParameterArray,
             CodelibSelector,
-            TimeZoneSelect
+            TimeZoneSelect,
+            YamlBranchField
         },
-        mixins: [atomMixin, validMixins],
+        mixins: [atomMixin, validMixins, yamlBranchMixin],
         data () {
             return {
                 isShowBasicRule: false,

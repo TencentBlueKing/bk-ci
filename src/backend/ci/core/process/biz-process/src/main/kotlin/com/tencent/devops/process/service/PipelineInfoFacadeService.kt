@@ -119,6 +119,7 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.FileExportUtil
+import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -170,7 +171,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val publicVarGroupService: PublicVarGroupService,
-    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver,
+    private val pipelineYamlBranchTimerService: PipelineYamlBranchTimerService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1354,6 +1356,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     setting = savedSetting
                 )
             )
+            if (versionStatus == VersionStatus.BRANCH && !branchName.isNullOrBlank()) {
+                yamlFacadeService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )?.let { yamlInfo ->
+                    pipelineYamlBranchTimerService.reconcile(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = deployResult.version,
+                        branch = branchName,
+                        defaultBranch = yamlInfo.defaultBranch ?: branchName,
+                        repoHashId = yamlInfo.repoHashId,
+                        filePath = yamlInfo.filePath,
+                        channelCode = channelCode
+                    )
+                }
+            }
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(pipelineId, model.name, existModel, model)
@@ -1782,6 +1802,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
+                pipelineYamlBranchTimerService.deletePipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
                 watcher.start("s_c_yaml_del")
                 val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
                 if (setting.pipelineAsCodeSettings?.enable == true) {

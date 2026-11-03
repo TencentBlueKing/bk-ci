@@ -43,6 +43,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELIN
 import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerBranchDao
 import com.tencent.devops.process.plugin.trigger.dao.PipelineTimerDao
+import com.tencent.devops.process.plugin.trigger.dao.YamlBranchTimerRow
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.util.TimerTimeZoneUtils
 import org.jooq.DSLContext
@@ -78,7 +79,8 @@ open class PipelineTimerService @Autowired constructor(
         noScm: Boolean?,
         startParam: Map<String, String>?,
         timeZone: String? = null,
-        transaction: DSLContext = dslContext
+        transaction: DSLContext = dslContext,
+        yamlBranch: String? = null
     ): Result<Boolean> {
         val crontabJson = JsonUtil.toJson(crontabExpressions, formatted = false)
         val resolvedTimeZone = TimerTimeZoneUtils.resolve(timeZone)
@@ -94,7 +96,8 @@ open class PipelineTimerService @Autowired constructor(
                 noScm,
                 startParam?.let { JsonUtil.toJson(it) },
                 taskId,
-                resolvedTimeZone
+                resolvedTimeZone,
+                yamlBranch
             )
         ) {
             pipelineEventDispatcher.dispatch(
@@ -200,10 +203,18 @@ open class PipelineTimerService @Autowired constructor(
                 taskId = ""
             )
         } ?: return null
-        return convert(timerRecord)
+        return convert(
+            timerRecord = timerRecord,
+            yamlBranch = pipelineTimerDao.getYamlBranch(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = timerRecord.taskId
+            )
+        )
     }
 
-    private fun convert(timerRecord: TPipelineTimerRecord): PipelineTimer? {
+    private fun convert(timerRecord: TPipelineTimerRecord, yamlBranch: String? = null): PipelineTimer? {
         with(timerRecord) {
             return PipelineTimer(
                 projectId = projectId,
@@ -229,7 +240,8 @@ open class PipelineTimerService @Autowired constructor(
                 startParam = startParam?.let {
                     JsonUtil.to(it, object : TypeReference<Map<String, String>>() {})
                 },
-                timeZone = pipelineTimerDao.readTimeZone(this)
+                timeZone = pipelineTimerDao.readTimeZone(this),
+                yamlBranch = yamlBranch?.takeIf { it.isNotBlank() }
             )
         }
     }
@@ -404,11 +416,24 @@ open class PipelineTimerService @Autowired constructor(
         } else Result(false)
     }
 
+    fun listYamlBranchTimers(
+        projectId: String,
+        pipelineId: String,
+        yamlBranch: String?
+    ): List<YamlBranchTimerRow> {
+        return pipelineTimerDao.listYamlBranchTimers(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            yamlBranch = yamlBranch
+        )
+    }
+
     fun cleanTimer(
         projectId: String,
         pipelineId: String
     ): Int {
-        return pipelineTimerDao.delete(
+        return pipelineTimerDao.deleteReleaseTimers(
             dslContext = dslContext,
             pipelineId = pipelineId,
             projectId = projectId

@@ -187,7 +187,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_STAGE` (
   `CHECK_IN` mediumtext COLLATE utf8mb4_bin DEFAULT NULL COMMENT '准入检查配置',
   `CHECK_OUT` mediumtext COLLATE utf8mb4_bin DEFAULT NULL COMMENT '准出检查配置',
   `STAGE_ID_FOR_USER` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '当前stageId 阶段ID (用户可编辑)',
-  PRIMARY KEY (`BUILD_ID`,`STAGE_ID`)
+  PRIMARY KEY (`BUILD_ID`,`STAGE_ID`),
+  KEY `idx_proj_pipeline` (`PROJECT_ID`,`PIPELINE_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='流水线构建阶段表';
 
 -- ----------------------------
@@ -510,6 +511,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   `NO_SCM` bit(1)  DEFAULT FALSE COMMENT '源代码未更新则不触发构建',
   `START_PARAM` text COMMENT '启动参数',
   `TIME_ZONE` varchar(64) NOT NULL DEFAULT 'Asia/Shanghai' COMMENT '定时触发IANA时区，存量默认Asia/Shanghai',
+  `YAML_BRANCH` varchar(255) DEFAULT NULL COMMENT 'PAC 非默认分支定时：到点按该分支 YAML 执行',
   PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`,`TASK_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 

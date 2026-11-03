@@ -1,7 +1,9 @@
-import { useDataSource, type SelectDataConf } from '@/hooks/useDataSource'
+import { useDataSource, type ListItem, type SelectDataConf } from '@/hooks/useDataSource'
+import { SvgIcon } from '@/components/SvgIcon'
 import { Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import styles from './Selector.module.css'
 
 export default defineComponent({
   name: 'flow-selector',
@@ -62,6 +64,7 @@ export default defineComponent({
       if (Array.isArray(props.options) && props.options.length > 0) {
         return props.options
       }
+      return undefined
     })
     const mergedConf: SelectDataConf = {
       ...(attrs as SelectDataConf),
@@ -90,6 +93,16 @@ export default defineComponent({
       }
     }
 
+    const showAddItem = computed(
+      () => Boolean(props.optionsConf?.hasAddItem) && Boolean(props.optionsConf?.itemTargetUrl),
+    )
+
+    const handleAddItemClick = () => {
+      if (props.optionsConf?.itemTargetUrl) {
+        window.open(props.optionsConf.itemTargetUrl, '_blank')
+      }
+    }
+
     return () => (
       <Select
         loading={isLoading.value}
@@ -100,7 +113,26 @@ export default defineComponent({
         onToggle={handleToggleVisible}
         list={list.value}
         {...selectConf.value}
-      ></Select>
+      >
+        {{
+          optionRender: ({ item }: { item: ListItem }) => (
+            <div class={styles.optionItem}>
+              {item.avatarUrl && <img src={item.avatarUrl} class={styles.optionAvatar} alt="" />}
+              <span class={styles.optionLabel} title={String(item.label)}>
+                {item.label}
+              </span>
+            </div>
+          ),
+          extension:
+            showAddItem.value &&
+            (() => (
+              <div class={styles.extensionEntry} onClick={handleAddItemClick}>
+                <SvgIcon name="jump" size={12} />
+                {props.optionsConf?.itemText}
+              </div>
+            )),
+        }}
+      </Select>
     )
   },
 })
