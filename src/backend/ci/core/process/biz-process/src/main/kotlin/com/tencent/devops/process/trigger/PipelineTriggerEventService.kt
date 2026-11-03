@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -81,7 +82,6 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
 import java.text.MessageFormat
 import java.time.LocalDateTime
 @Suppress("ALL")
@@ -307,8 +307,8 @@ class PipelineTriggerEventService @Autowired constructor(
         if (startTime == null || endTime == null || startTime > endTime) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR)
         }
-        val startDate = Timestamp(startTime).toLocalDateTime().toLocalDate()
-        val endDate = Timestamp(endTime).toLocalDateTime().toLocalDate()
+        val startDate = DateTimeUtil.convertTimestampToLocalDateTime(startTime / 1000).toLocalDate()
+        val endDate = DateTimeUtil.convertTimestampToLocalDateTime(endTime / 1000).toLocalDate()
         if (endDate.isAfter(startDate.plusDays(MAX_QUERY_DAYS))) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
