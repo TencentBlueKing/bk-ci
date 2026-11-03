@@ -52,7 +52,6 @@ import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_TIME_RANGE_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -301,7 +300,7 @@ class PipelineTriggerEventService @Autowired constructor(
             return
         }
         if (startTime == null || endTime == null) {
-            throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_TIME_RANGE_EMPTY)
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR)
         }
     }
 

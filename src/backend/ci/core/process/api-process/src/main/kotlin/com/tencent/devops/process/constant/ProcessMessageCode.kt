@@ -561,8 +561,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
-    const val ERROR_TRIGGER_EVENT_TIME_RANGE_EMPTY = "2101503" // 请选择查询的日期范围
-
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
     const val ERROR_PIPELINE_BATCH_TASK_STATUS_CAN_NOT_DELETE = "2101651" // 流水线批量任务{0}当前状态为{1}，不能删除

@@ -381,6 +381,14 @@
                     this.showEnd = res.count <= this.pageSize
                     this.hasLoadEnd = res.count === this.eventList.length
                     this.page += 1
+                }).catch(e => {
+                    if (this.repoId !== requestRepoId) {
+                        return
+                    }
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
                 }).finally(() => {
                     // 若仓库已切换，loading 状态由新请求接管，本处不再清理避免闪烁
                     if (this.repoId !== requestRepoId) {
