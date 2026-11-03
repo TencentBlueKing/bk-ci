@@ -52,6 +52,7 @@ import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_TIME_RANGE_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -227,6 +228,7 @@ class PipelineTriggerEventService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): SQLPage<PipelineTriggerEventVo> {
+        checkTimeRange(eventId = eventId, startTime = startTime, endTime = endTime)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
@@ -292,6 +294,18 @@ class PipelineTriggerEventService @Autowired constructor(
     }
 
     /**
+     * 未指定事件ID时必须带时间范围,避免扫描全部分区
+     */
+    private fun checkTimeRange(eventId: Long?, startTime: Long?, endTime: Long?) {
+        if (eventId != null) {
+            return
+        }
+        if (startTime == null || endTime == null) {
+            throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_TIME_RANGE_EMPTY)
+        }
+    }
+
+    /**
      * 按事件ID批量查询事件信息,与触发明细组装
      */
     private fun convertTriggerEventVo(
@@ -342,7 +356,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?,
         eventId: Long?,
-        pipelineName: String?,
         reason: String?,
         startTime: Long?,
         endTime: Long?,
@@ -350,6 +363,7 @@ class PipelineTriggerEventService @Autowired constructor(
         pageSize: Int?,
         userId: String
     ): SQLPage<RepoTriggerEventVo> {
+        checkTimeRange(eventId = eventId, startTime = startTime, endTime = endTime)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
@@ -362,7 +376,6 @@ class PipelineTriggerEventService @Autowired constructor(
             triggerUser = triggerUser,
             pipelineId = pipelineId,
             eventId = eventId,
-            pipelineName = pipelineName,
             reason = reason,
             startTime = startTime,
             endTime = endTime,
@@ -384,7 +397,6 @@ class PipelineTriggerEventService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             eventIds = eventIds,
-            pipelineName = pipelineName,
             pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime
@@ -414,7 +426,6 @@ class PipelineTriggerEventService @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?,
         eventId: Long?,
-        pipelineName: String?,
         reason: String?,
         startTime: Long?,
         endTime: Long?,
@@ -422,7 +433,7 @@ class PipelineTriggerEventService @Autowired constructor(
     ): Pair<Set<Long>, Long> {
         return when {
             // 仅查询Event表
-            pipelineName.isNullOrBlank() && pipelineId.isNullOrBlank() && reason == null -> {
+            pipelineId.isNullOrBlank() && reason == null -> {
                 val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -462,7 +473,6 @@ class PipelineTriggerEventService @Autowired constructor(
                     triggerType = triggerType,
                     startTime = startTime,
                     endTime = endTime,
-                    pipelineName = pipelineName,
                     pipelineId = pipelineId,
                     limit = sqlLimit.limit,
                     offset = sqlLimit.offset
@@ -478,7 +488,6 @@ class PipelineTriggerEventService @Autowired constructor(
                     triggerType = triggerType,
                     startTime = startTime,
                     endTime = endTime,
-                    pipelineName = pipelineName,
                     pipelineId = pipelineId
                 )
                 eventIds to count
@@ -493,7 +502,6 @@ class PipelineTriggerEventService @Autowired constructor(
                     eventType = eventType,
                     triggerType = triggerType,
                     triggerUser = triggerUser,
-                    pipelineName = pipelineName,
                     reason = reason,
                     startTime = startTime,
                     endTime = endTime,
@@ -508,7 +516,6 @@ class PipelineTriggerEventService @Autowired constructor(
                     eventType = eventType,
                     triggerType = triggerType,
                     triggerUser = triggerUser,
-                    pipelineName = pipelineName,
                     reason = reason,
                     startTime = startTime,
                     endTime = endTime
@@ -522,7 +529,6 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String?,
-        pipelineName: String?,
         reason: String?,
         page: Int?,
         pageSize: Int?,
@@ -539,7 +545,6 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             reason = reason,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
@@ -551,7 +556,6 @@ class PipelineTriggerEventService @Autowired constructor(
             projectId = projectId,
             eventId = eventId,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             reason = reason
         )
         return SQLPage(count = count, records = records)

@@ -169,7 +169,6 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
-        pipelineName: String? = null,
         reason: String?,
         startTime: Long? = null,
         endTime: Long? = null,
@@ -187,7 +186,6 @@ class PipelineTriggerEventDao {
             triggerType = triggerType,
             triggerUser = triggerUser,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             reason = reason,
             startTime = startTime,
             endTime = endTime
@@ -244,7 +242,6 @@ class PipelineTriggerEventDao {
         triggerType: String? = null,
         triggerUser: String? = null,
         pipelineId: String? = null,
-        pipelineName: String? = null,
         reason: String?,
         startTime: Long? = null,
         endTime: Long? = null
@@ -260,7 +257,6 @@ class PipelineTriggerEventDao {
             triggerType = triggerType,
             triggerUser = triggerUser,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             reason = reason,
             startTime = startTime,
             endTime = endTime
@@ -279,7 +275,6 @@ class PipelineTriggerEventDao {
         projectId: String,
         eventId: Long? = null,
         pipelineId: String? = null,
-        pipelineName: String? = null,
         reason: String? = null,
         startTime: Long? = null,
         endTime: Long? = null,
@@ -292,7 +287,6 @@ class PipelineTriggerEventDao {
                     buildDetailCondition(
                         t2 = this,
                         eventId = eventId,
-                        pipelineName = pipelineName,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         reason = reason,
@@ -316,7 +310,6 @@ class PipelineTriggerEventDao {
         projectId: String,
         eventId: Long? = null,
         pipelineId: String? = null,
-        pipelineName: String? = null,
         reason: String? = null,
         startTime: Long? = null,
         endTime: Long? = null
@@ -328,7 +321,6 @@ class PipelineTriggerEventDao {
                     buildDetailCondition(
                         t2 = this,
                         eventId = eventId,
-                        pipelineName = pipelineName,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         reason = reason,
@@ -352,7 +344,6 @@ class PipelineTriggerEventDao {
         triggerType: String?,
         triggerUser: String?,
         pipelineId: String?,
-        pipelineName: String?,
         reason: String?,
         startTime: Long?,
         endTime: Long?
@@ -368,7 +359,6 @@ class PipelineTriggerEventDao {
         ) + buildDetailCondition(
             t2 = t2,
             eventId = eventId,
-            pipelineName = pipelineName,
             projectId = projectId,
             pipelineId = pipelineId,
             reason = reason,
@@ -450,7 +440,6 @@ class PipelineTriggerEventDao {
 
     fun getCountByDetail(
         dslContext: DSLContext,
-        pipelineName: String?,
         pipelineId: String?,
         eventId: Long? = null,
         eventSource: String? = null,
@@ -475,7 +464,6 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -488,7 +476,6 @@ class PipelineTriggerEventDao {
 
     fun getDetailEventIds(
         dslContext: DSLContext,
-        pipelineName: String?,
         pipelineId: String?,
         eventId: Long? = null,
         eventSource: String? = null,
@@ -515,7 +502,6 @@ class PipelineTriggerEventDao {
             triggerUser = triggerUser,
             triggerType = triggerType,
             pipelineId = pipelineId,
-            pipelineName = pipelineName,
             startTime = startTime,
             endTime = endTime
         )
@@ -540,7 +526,6 @@ class PipelineTriggerEventDao {
         eventType: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
-        pipelineName: String? = null,
         reason: String? = null,
         startTime: Long? = null,
         endTime: Long? = null,
@@ -568,7 +553,6 @@ class PipelineTriggerEventDao {
                     dslContext = dslContext,
                     t1 = t1,
                     projectId = projectId,
-                    pipelineName = pipelineName,
                     reason = reason,
                     startTime = startTime,
                     endTime = endTime
@@ -589,7 +573,6 @@ class PipelineTriggerEventDao {
         eventType: String? = null,
         triggerType: String? = null,
         triggerUser: String? = null,
-        pipelineName: String? = null,
         reason: String? = null,
         startTime: Long? = null,
         endTime: Long? = null
@@ -615,7 +598,6 @@ class PipelineTriggerEventDao {
                     dslContext = dslContext,
                     t1 = t1,
                     projectId = projectId,
-                    pipelineName = pipelineName,
                     reason = reason,
                     startTime = startTime,
                     endTime = endTime
@@ -628,7 +610,6 @@ class PipelineTriggerEventDao {
         dslContext: DSLContext,
         t1: TPipelineTriggerEvent,
         projectId: String,
-        pipelineName: String?,
         reason: String?,
         startTime: Long?,
         endTime: Long?
@@ -637,7 +618,6 @@ class PipelineTriggerEventDao {
         val conditions = buildDetailCondition(
             t2 = t2,
             projectId = projectId,
-            pipelineName = pipelineName,
             reason = reason,
             startTime = startTime,
             endTime = endTime
@@ -702,7 +682,6 @@ class PipelineTriggerEventDao {
         dslContext: DSLContext,
         projectId: String,
         eventIds: Set<Long>,
-        pipelineName: String?,
         pipelineId: String?,
         startTime: Long? = null,
         endTime: Long? = null
@@ -717,9 +696,6 @@ class PipelineTriggerEventDao {
             }
             if (endTime != null) {
                 conditions.add(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
-            }
-            if (!pipelineName.isNullOrBlank()) {
-                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
             if (!pipelineId.isNullOrBlank()) {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
@@ -809,7 +785,6 @@ class PipelineTriggerEventDao {
     private fun buildDetailCondition(
         t2: TPipelineTriggerDetail,
         eventId: Long? = null,
-        pipelineName: String? = null,
         projectId: String,
         pipelineId: String? = null,
         reason: String? = null,
@@ -820,9 +795,6 @@ class PipelineTriggerEventDao {
         with(t2) {
             if (eventId != null) {
                 conditions.add(EVENT_ID.eq(eventId))
-            }
-            if (!pipelineName.isNullOrBlank()) {
-                conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
             if (projectId.isNotBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
@@ -888,7 +860,6 @@ class PipelineTriggerEventDao {
         t1: TPipelineTriggerEvent,
         t2: TPipelineTriggerDetail,
         projectId: String,
-        pipelineName: String? = null,
         eventSource: String? = null,
         eventId: Long? = null,
         eventType: String? = null,
@@ -918,7 +889,6 @@ class PipelineTriggerEventDao {
                 t2,
                 eventId = eventId,
                 projectId = projectId,
-                pipelineName = pipelineName,
                 pipelineId = pipelineId,
                 reason = reason,
                 startTime = startTime,
