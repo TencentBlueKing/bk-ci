@@ -144,6 +144,10 @@ class PipelineYamlFileManager @Autowired constructor(
             )
             handlePullRequestOnFailed(context = context, exception = ignored)
             webhookTriggerManager.fireChangeError(context = context, exception = ignored)
+            // 同步结果需要保留原始异常中的错误码和参数。
+            if (actionType == YamlFileActionType.SYNC) {
+                throw ignored
+            }
             false
         }
     }

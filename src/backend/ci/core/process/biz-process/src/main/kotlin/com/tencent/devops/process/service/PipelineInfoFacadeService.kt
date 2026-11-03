@@ -550,7 +550,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                    params = arrayOf(model.name)
                 )
             }
 
@@ -1191,7 +1192,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         } catch (e: PipelineAlreadyExistException) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                params = arrayOf(pipelineCopy.name)
             )
         } catch (e: ErrorCodeException) {
             throw e
@@ -1271,7 +1273,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                    params = arrayOf(savedSetting?.pipelineName ?: model.name)
                 )
             }
 
