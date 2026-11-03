@@ -84,7 +84,6 @@ import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.text.MessageFormat
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 @Suppress("ALL")
 @Service
 class PipelineTriggerEventService @Autowired constructor(
@@ -308,11 +307,9 @@ class PipelineTriggerEventService @Autowired constructor(
         if (startTime == null || endTime == null || startTime > endTime) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR)
         }
-        val days = ChronoUnit.DAYS.between(
-            Timestamp(startTime).toLocalDateTime().toLocalDate(),
-            Timestamp(endTime).toLocalDateTime().toLocalDate()
-        )
-        if (days > MAX_QUERY_DAYS) {
+        val startDate = Timestamp(startTime).toLocalDateTime().toLocalDate()
+        val endDate = Timestamp(endTime).toLocalDateTime().toLocalDate()
+        if (endDate.isAfter(startDate.plusDays(MAX_QUERY_DAYS))) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
                 params = arrayOf(MAX_QUERY_DAYS.toString())
