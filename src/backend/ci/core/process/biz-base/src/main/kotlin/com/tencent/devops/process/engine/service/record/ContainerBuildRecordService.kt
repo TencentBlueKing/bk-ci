@@ -331,6 +331,12 @@ class ContainerBuildRecordService(
                     if (recordContainer.endTime == null) {
                         endTime = now
                     }
+                    // 开机回报没写上终态时，用容器终态补齐「准备 Job」，已有终态不覆盖
+                    resolveTerminalStartVmStatus(
+                        containerStatus = buildStatus,
+                        matrixGroup = recordContainer.matrixGroupFlag,
+                        currentStartVmStatus = recordContainer.containerVar[Container::startVMStatus.name]?.toString()
+                    )?.let { containerVar[Container::startVMStatus.name] = it }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, now.timestampmilli()
                     )
@@ -559,5 +565,28 @@ class ContainerBuildRecordService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerBuildRecordService::class.java)
+    }
+}
+
+/**
+ * 容器进入终态时，「准备 Job」仍停在非终态就补写。
+ * 已经结束的开机结果保持不变；矩阵组没有开机步骤。
+ * 成功收成 [BuildStatus.SUCCEED]，失败、取消、超时沿用容器终态。
+ */
+internal fun resolveTerminalStartVmStatus(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?,
+    currentStartVmStatus: String?
+): String? {
+    if (!containerStatus.isFinish() || matrixGroup == true) {
+        return null
+    }
+    if (BuildStatus.parse(currentStartVmStatus).isFinish()) {
+        return null
+    }
+    return if (containerStatus.isSuccess() && !containerStatus.isSkip()) {
+        BuildStatus.SUCCEED.name
+    } else {
+        containerStatus.name
     }
 }
