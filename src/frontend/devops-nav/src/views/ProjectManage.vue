@@ -660,7 +660,7 @@
                                                            style: { color: '#3A84FF', cursor: 'pointer' },
                                                            on: {
                                                                click: () => {
-                                                                   window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                                                                   window.open(`${window.location.origin}${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
                                                                }
                                                            }
                                                        }, this.$t('我的交接')),
@@ -671,7 +671,7 @@
                                          ]),
                             confirmFn: () => {
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
-                                window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
+                                window.open(`${window.location.origin}${window.getRoutePrefix()}/permission/my-handover?flowNo=${res}&type=handoverFromMe`, '_blank')
                             },
                             cancelFn: () => {
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
@@ -747,9 +747,9 @@
 
             goToPermission (key) {
                 if (key === 'uniqueManager') {
-                    window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
+                    window.open(`${window.location.origin}${window.getRoutePrefix()}/permission/my-permission?projectCode=${this.projectId}&uniqueManagerGroupsQueryFlag=true`, '_blank')
                 } else {
-                    window.open(`${window.location.origin}/${window.getRoutePrefix()}/permission/auth/${key}?projectCode=${this.projectId}`, '_blank')
+                    window.open(`${window.location.origin}${window.getRoutePrefix()}/permission/auth/${key}?projectCode=${this.projectId}`, '_blank')
                 }
             },
 

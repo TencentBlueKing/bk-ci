@@ -143,7 +143,7 @@
                             <a
                                 target="_blank"
                                 style="color:#3c96ff;"
-                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
+                                :href="`${getRoutePrefix()}/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
                             > {{ $t('store.源模板') }} </a>
                         </span>
                     </template>
@@ -319,7 +319,7 @@
                                 <a
                                     target="_blank"
                                     style="color:#3c96ff;display:block;"
-                                    :href="`/console/pipeline/${curHandlerTemp.projectCode}/template/${curHandlerTemp.templateCode}/edit`"
+                                    :href="`${getRoutePrefix()}/pipeline/${curHandlerTemp.projectCode}/template/${curHandlerTemp.templateCode}/edit`"
                                 > {{ $t('store.查看') }} </a>
                             </div>
                         </div>
@@ -435,6 +435,9 @@
         },
 
         methods: {
+            getRoutePrefix () {
+                return window.getRoutePrefix()
+            },
             async requestList () {
                 this.isLoading = true
                 const page = this.pagination.current

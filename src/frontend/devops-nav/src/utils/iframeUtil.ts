@@ -6,6 +6,31 @@ interface UrlParam {
     refresh: boolean
 }
 
+/**
+ * 计算 iframe 回写父窗口时的服务根路径。
+ * 无子路径时形如 /console/pipeline/{projectId}/...，应保留 /console/pipeline。
+ * 有 PUBLIC_URL_PREFIX 时形如 /devops/console/pipeline/{projectId}/...，
+ * 不能再用「前两段」截断，否则会丢掉模块名 pipeline，路由匹配失败导致白屏。
+ */
+export function getIframeSyncBasePath (pathname: string): string {
+    const routePrefix = String((typeof window.getRoutePrefix === 'function' ? window.getRoutePrefix() : '') || '').replace(/\/+$/, '')
+    if (routePrefix) {
+        const escapedPrefix = routePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const matched = pathname.match(new RegExp(`^(${escapedPrefix}/[^/]+)(?:/.*)?$`))
+        if (matched) {
+            return matched[1]
+        }
+    }
+    return pathname.replace(/^\/(\w+)\/(\w+)\/([\w.-]+)\/(\S+)$/, '/$1/$2')
+}
+
+function normalizeSyncUrl (url: string): string {
+    if (!url) {
+        return ''
+    }
+    return url.startsWith('/') ? url : `/${url}`
+}
+
 function iframeUtil (router: any) {
     const utilMap: ObjectMap = {}
     function init () {
@@ -49,7 +74,7 @@ function iframeUtil (router: any) {
     }
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
-        const pathname = `${location.pathname.replace(/^\/(\w+)\/(\w+)\/([\w.-]+)\/(\S+)$/, '/$1/$2')}${url}`
+        const pathname = `${getIframeSyncBasePath(location.pathname)}${normalizeSyncUrl(url)}`
         if (refresh) {
             location.pathname = pathname
         } else {
