@@ -191,7 +191,7 @@ log:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
     closeInDay: __BK_CI_LOG_COLD_DAY__             # 索引自动关闭时间，留空则为永不关闭
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
-  # 通过本地文件系统进行存储的必要配置
+  # 社区版本地文件存储。仅当 type=lucene 时生效，不影响 elasticsearch 存量部署。
   lucene:
     dataDirectory: __BK_CI_LUCENE_DATA_DIR__        # 建立lucene索引的根目录
     indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内

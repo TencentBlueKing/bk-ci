@@ -57,6 +57,11 @@ data class MatrixControlOption(
     val fastKill: Boolean? = false,
     @get:Schema(title = "Job运行的最大并发量", required = false)
     var maxConcurrency: Int? = 5,
+    @get:Schema(
+        title = "Job运行的最大并发量（支持变量），启动matrix job时解析，解析结果须为1-MAX的整数，否则Job失败退出",
+        required = false
+    )
+    var maxConcurrencyVar: String? = null,
     @get:Schema(title = "自定义调度类型（用于生成DispatchType的任意对象）", required = false)
     var customDispatchInfo: DispatchInfo? = null, // DispatchTypeParser的传入和解析保持一致即可
     @get:Schema(title = "矩阵组的总数量", required = false)

@@ -1,0 +1,39 @@
+/* 下拉选项自定义渲染：头像 + 文本 */
+.optionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.optionAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.optionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 下拉底部固定扩展项（如“前往数字分身列表”） */
+.extensionEntry {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  transition: color 0.2s;
+}
+
+.extensionEntry:hover {
+  color: var(--color-primary);
+}
