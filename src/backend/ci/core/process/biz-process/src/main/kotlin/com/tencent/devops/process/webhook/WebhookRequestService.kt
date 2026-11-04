@@ -74,7 +74,6 @@ class WebhookRequestService(
     private val webhookGrayCompareService: WebhookGrayCompareService,
     private val webhookManager: WebhookManager,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val marketEventRequestService: MarketEventRequestService,
     private val tapdWebhookRequestService: TapdWebhookRequestService,
     private val artifactWebhookRequestService: ArtifactWebhookRequestService
 ) {
@@ -198,7 +197,7 @@ class WebhookRequestService(
             }
 
             else -> {
-                handleStoreEvent(replayEvent, triggerEvent)
+                logger.info("unsupported replay trigger type|${replayEvent.eventId}|${replayEvent.triggerType}")
             }
         }
     }
@@ -272,17 +271,6 @@ class WebhookRequestService(
                     matcher = matcher
                 )
             }
-        }
-    }
-
-    /**
-     * 回放研发商店注册的触发事件
-     * 注：目前此处仅对接远程桌面相关事件
-     */
-    fun handleStoreEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
-        with(replayEvent) {
-            // 使用MarketEventRequestService的公共方法处理事件分发逻辑
-            marketEventRequestService.dispatchCdsTriggerEvent(triggerEvent, pipelineId = replayEvent.pipelineId)
         }
     }
 
