@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -259,6 +260,37 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             skipFailedTask = skipFailedTask,
             channelCode = apiGatewayUtil.getChannelCode(),
             checkManualStartup = true
+        )
+    }
+
+    override fun replayByBuild(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        buildNumber: Int?,
+        forceTrigger: Boolean?
+    ): Result<BuildReplayResult> {
+        logger.info("OPENAPI_BUILD_V4|$userId|replay by build|$projectId|$pipelineId|$buildId|$buildNumber")
+
+        val checkPipelineId = if (buildId.isNullOrBlank()) {
+            pipelineId ?: throw ParamBlankException("pipelineId and buildId cannot be empty at the same time")
+        } else checkPipelineId(projectId, pipelineId, buildId)
+
+        val checkBuildId = if (buildId.isNullOrBlank()) {
+            val buildNum = buildNumber
+                ?: throw ParamBlankException("buildId and buildNumber cannot be empty at the same time")
+            checkBuildId(projectId, checkPipelineId, buildNum)
+        } else buildId
+
+        return client.get(ServiceBuildResource::class).replayByBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId,
+            buildId = checkBuildId,
+            forceTrigger = forceTrigger
         )
     }
 

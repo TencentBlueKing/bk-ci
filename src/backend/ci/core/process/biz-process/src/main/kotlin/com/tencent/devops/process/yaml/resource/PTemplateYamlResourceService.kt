@@ -29,12 +29,12 @@ package com.tencent.devops.process.yaml.resource
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDeployReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.yaml.common.YamlFileUtils
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import org.springframework.stereotype.Service
 
 /**
@@ -49,10 +49,9 @@ class PTemplateYamlResourceService(
     override fun createYamlPipeline(
         userId: String,
         projectId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult {
-        with(event) {
+        with(request) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = YamlFileUtils.getCiTemplateName(filePath)
@@ -63,7 +62,7 @@ class PTemplateYamlResourceService(
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
-                description = commit!!.commitMsg,
+                description = commitMsg,
                 yamlFileInfo = yamlFileInfo
             )
             return with(deployTemplateResult) {
@@ -84,10 +83,9 @@ class PTemplateYamlResourceService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult {
-        with(event) {
+        with(request) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = YamlFileUtils.getCiTemplateName(filePath)
@@ -99,7 +97,7 @@ class PTemplateYamlResourceService(
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
-                description = commit!!.commitMsg,
+                description = commitMsg,
                 yamlFileInfo = yamlFileInfo
             )
             return with(deployTemplateResult) {
