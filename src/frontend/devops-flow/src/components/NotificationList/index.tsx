@@ -9,17 +9,7 @@ import { Button, Card, Collapse, Exception } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './NotificationList.module.css'
-
-// Notification type mapping
-const NOTIFY_TYPE_MAP: Record<string, string> = {
-  EMAIL: 'flow.content.emailNotice',
-  WEWORK: 'flow.content.weworkNotice',
-  RTX: 'flow.content.rtxNotice',
-  WEWORK_GROUP: 'flow.content.weworkGroup',
-  VOICE: 'flow.content.voiceNotice',
-  WECHAT: 'flow.content.wechatNotice',
-  SMS: 'flow.content.smsNotice',
-}
+import { NOTIFY_TYPE_LABEL_KEY } from './notifyType'
 
 export interface NotifyItem {
   type: string
@@ -84,7 +74,11 @@ export default defineComponent({
     // Format notification types for display
     const formatNotificationTypes = (types: string[]): string => {
       if (!types || types.length === 0) return '--'
-      return types.map((type) => t(NOTIFY_TYPE_MAP[type]!) || type).join(', ')
+      const labels = types.map((type) => {
+        const key = NOTIFY_TYPE_LABEL_KEY[type]
+        return key ? t(key) : type
+      })
+      return [...new Set(labels)].join(', ')
     }
 
     // Format groups for display
