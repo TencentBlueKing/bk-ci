@@ -224,6 +224,10 @@
                     return res
                 } catch (error) {
                     console.error(error)
+                    this.$showTips({
+                        message: error.message || error,
+                        theme: 'error'
+                    })
                 } finally {
                     this.isLoading = false
                 }
