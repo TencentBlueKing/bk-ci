@@ -564,9 +564,6 @@ object ProcessMessageCode {
     const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
     const val ERROR_ARTIFACT_TRIGGER_PARAM_INVALID = "2101504" // 插件[{0}]的字段[{1}]不能为空或者无法解析
     const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
-    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_PIPELINE = "bkArtifactTriggerFieldWatchPipeline" // 监听流水线
-    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_ROOT_PATH = "bkArtifactTriggerFieldWatchRootPath" // 监听根路径
-    const val BK_ARTIFACT_TRIGGER_FIELD_IMAGE = "bkArtifactTriggerFieldImage" // 镜像名
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -945,6 +942,10 @@ object ProcessMessageCode {
     const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
     // 字段被排除
     const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_PIPELINE = "bkArtifactTriggerFieldWatchPipeline" // 监听流水线
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_ROOT_PATH = "bkArtifactTriggerFieldWatchRootPath" // 监听根路径
+    const val BK_ARTIFACT_TRIGGER_FIELD_IMAGE = "bkArtifactTriggerFieldImage" // 镜像名
 
     // 创作流启动节点为空
     const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
