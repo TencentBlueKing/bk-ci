@@ -647,6 +647,12 @@ notify:
     targetMemory: 80
 
 # openapi Deployment
+# 蓝鲸网关 JWT 公钥。默认关闭。开启用户态解析时同时设置：
+#   config.bkCiOpenapiApiAuth=true
+#   config.bkCiOpenapiApiBluekingEnable=true
+#   config.bkCiOpenapiApiPubOuter 为容器内公钥文件路径，父目录须已在镜像中，例如
+#     /data/workspace/openapi/<文件名>.pub。Chart 只挂载该文件。
+#   openapi.secret.content 为公钥文件的单行 base64。Secret 的 data key 是路径中的文件名。
 openapi:
   enabled: false
   secret:

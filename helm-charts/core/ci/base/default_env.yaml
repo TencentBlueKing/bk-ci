@@ -66,6 +66,9 @@ bkCiAuthAesAuthKey: ""
 bkCiAiAesKey: ""
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
+# 蓝鲸网关 JWT 解析默认关闭。开启时两个开关都设为 true，并在部署 values 中设置
+# bkCiOpenapiApiPubOuter（容器内公钥文件路径）以及 openapi.secret.enabled / content。
+# 不在此处声明空的 bkCiOpenapiApiPubOuter：缺失时 build_chart.py 会写成 ""。
 bkCiOpenapiApiAuth: false
 bkCiOpenapiApiBluekingEnable: false
 bkCiMqDefaultBinder: core-rabbit
