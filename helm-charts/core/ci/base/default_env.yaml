@@ -57,6 +57,7 @@ bkCiSm4Enabled: false
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
+bkCiOpenapiApiBluekingEnable: false
 bkCiMqDefaultBinder: core-rabbit
 bkTenantEnabled: false
 bkApigwUserUrl: http://bkapi.example.com
