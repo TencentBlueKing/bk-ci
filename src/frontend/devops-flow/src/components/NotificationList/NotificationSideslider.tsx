@@ -8,6 +8,7 @@ import { Button, Checkbox, Form, Input, Popover, Sideslider, Switcher, TagInput 
 import { computed, defineComponent, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { matchesNotifyType } from './notifyType'
 import styles from './NotificationSideslider.module.css'
 
 interface ProjectGroup {
@@ -155,23 +156,22 @@ export default defineComponent({
       return `${t('flow.content.addNotification')} - ${props.notifyTypeName}`
     })
 
-    // Handle type checkbox change
+    // Handle type checkbox change.
+    // RTX is the code-mode value of 企业微信消息; keep it until the user turns the option off.
     const handleTypeChange = (typeId: string, checked: boolean) => {
+      const types = localNotification.value.types
       if (checked) {
-        if (!localNotification.value.types.includes(typeId)) {
-          localNotification.value.types.push(typeId)
+        if (!types.some((type) => matchesNotifyType(typeId, type))) {
+          types.push(typeId)
         }
-      } else {
-        const index = localNotification.value.types.indexOf(typeId)
-        if (index > -1) {
-          localNotification.value.types.splice(index, 1)
-        }
+        return
       }
+      localNotification.value.types = types.filter((type) => !matchesNotifyType(typeId, type))
     }
 
     // Check if type is selected
     const isTypeSelected = (typeId: string): boolean => {
-      return localNotification.value.types.includes(typeId)
+      return localNotification.value.types.some((type) => matchesNotifyType(typeId, type))
     }
 
     // Show wechat group input when WEWORK_GROUP is selected
