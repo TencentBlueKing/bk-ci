@@ -256,7 +256,7 @@
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimeDisplay from '../../../../common-lib/time-display'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
-    
+
     export default {
         components: {
             EmptyTableStatus,

@@ -58,7 +58,7 @@
                 prop="createTime"
                 show-overflow-tooltip
             >
-                <template slot-scope="props">
+                <template v-slot="props">
                     <time-display :value="props.row.createTime" />
                 </template>
             </bk-table-column>
