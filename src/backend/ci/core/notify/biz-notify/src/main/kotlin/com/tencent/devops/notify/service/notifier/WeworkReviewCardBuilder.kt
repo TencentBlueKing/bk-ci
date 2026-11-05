@@ -465,7 +465,7 @@ object WeworkReviewCardBuilder {
 
     /**
      * 键值列表对齐文档里的「邀请人」行。审核说明放引用区。
-     * 阶段名是流水线 Stage 名称，审核流只展示当前待审核环节。列表最多 6 行，这两行优先保留。
+     * 步骤名取 Stage 名称或人工审核插件所在步骤，审核流只展示当前待审核环节。列表最多 6 行，这两行优先保留。
      * 有构建链接时最后一行固定为详情跳转，replace_name 换掉按钮区后这一行仍可点。
      */
     private fun layout(
@@ -493,7 +493,7 @@ object WeworkReviewCardBuilder {
         if (buildLabel.isNotBlank() && buildLabel != "-") {
             addRow(rows, copy.t(NotifyMessageCode.BK_REVIEW_CARD_BUILD, "构建号"), "#$buildLabel")
         }
-        val stageKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_STAGE, "阶段名")
+        val stageKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_STAGE, "步骤名")
         val flowKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_FLOW, "审核流")
         val triggerKey = copy.t(NotifyMessageCode.BK_REVIEW_CARD_TRIGGER, "触发人")
         val extras = mutableListOf<WeworkTemplateCardHorizontalContent>()
@@ -588,7 +588,7 @@ object WeworkReviewCardBuilder {
     }
 
     /**
-     * 阶段名、审核流、触发人优先。剩下的空位再放进度和审核人。
+     * 步骤名、审核流、触发人优先。剩下的空位再放进度和审核人。
      */
     private fun pickRows(
         extras: List<WeworkTemplateCardHorizontalContent>,

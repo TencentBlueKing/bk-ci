@@ -78,7 +78,7 @@ object NotifyMessageCode {
     const val BK_REVIEW_CARD_MOBILE = "bkReviewCardMobile" // 手机端查看详情
     const val BK_REVIEW_CARD_PIPELINE = "bkReviewCardPipeline" // 流水线
     const val BK_REVIEW_CARD_BUILD = "bkReviewCardBuild" // 构建号
-    const val BK_REVIEW_CARD_STAGE = "bkReviewCardStage" // 阶段名
+    const val BK_REVIEW_CARD_STAGE = "bkReviewCardStage" // 步骤名
     const val BK_REVIEW_CARD_FLOW = "bkReviewCardFlow" // 审核流
     const val BK_REVIEW_CARD_PROGRESS = "bkReviewCardProgress" // 进度
     const val BK_REVIEW_CARD_REVIEWERS = "bkReviewCardReviewers" // 审核人
