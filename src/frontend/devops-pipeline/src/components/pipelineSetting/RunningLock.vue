@@ -191,7 +191,7 @@
                                         >
                                             <span
                                                 :class="{ 'arrival-policy-tip': item.tip }"
-                                                v-bk-tooltips="item.tip ? { content: item.tip, placements: ['top'] } : { disabled: true }"
+                                                v-bk-tooltips="item.tip ? { content: item.tip, placements: ['top'], allowHTML: true, maxWidth: 460 } : { disabled: true }"
                                             >{{ item.label }}</span>
                                         </bk-radio>
                                         <p class="arrival-policy-desc">{{ item.desc }}</p>
