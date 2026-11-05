@@ -159,7 +159,6 @@ class ArtifactWebhookRequestService(
             }
     }
 
-
     private fun parseEvent(eventType: String, rawBody: String): ArtifactEvent? {
         val clazz: Class<out ArtifactEvent> = when (BkRepoEventType.fromValue(eventType)) {
             BkRepoEventType.PACKAGE_METADATA_SAVED ->
