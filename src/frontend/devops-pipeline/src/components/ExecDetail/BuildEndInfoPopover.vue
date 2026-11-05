@@ -640,7 +640,6 @@
 
     .position-fail-detail-reason {
         color: #4D4F56;
-        white-space: pre-line;
     }
 
     .position-index-tag {
