@@ -69,6 +69,7 @@ object NotifyMessageCode {
     const val BK_REVIEW_CARD_PASS = "bkReviewCardPass" // 通过
     const val BK_REVIEW_CARD_REJECT = "bkReviewCardReject" // 驳回
     const val BK_REVIEW_CARD_DETAIL = "bkReviewCardDetail" // 详情
+    const val BK_REVIEW_CARD_OPEN_BUILD = "bkReviewCardOpenBuild" // 查看构建
     const val BK_REVIEW_CARD_CONFIRM = "bkReviewCardConfirm" // 确认提交
     const val BK_REVIEW_CARD_EDIT = "bkReviewCardEdit" // 修改参数
     const val BK_REVIEW_CARD_SUBMIT = "bkReviewCardSubmit" // 参数确认无误，提交
