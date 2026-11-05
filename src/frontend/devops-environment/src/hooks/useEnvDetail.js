@@ -104,7 +104,7 @@ export default function useEnvDetail () {
     }
 
     // 启用/停用节点
-    const toggleEnableNode = async (nodeHashId, enableNode, reason, nodeHashIds) => {
+    const toggleEnableNode = async (nodeHashId, enableNode, reason) => {
         if (!envHashId.value) return
         try {
             const res = await proxy.$store.dispatch('environment/enableNode', {
@@ -112,8 +112,7 @@ export default function useEnvDetail () {
                 envHashId: envHashId.value,
                 nodeHashId,
                 enableNode,
-                reason,
-                nodeHashIds
+                reason
             })
             return res
         } catch (e) {
