@@ -138,6 +138,7 @@
                         <node-detail
                             :install-agent="installAgent"
                             :list-node="detailListNode"
+                            @deleted="handleDetailNodeDeleted"
                         />
                     </template>
                 </CollapseLayout>
@@ -715,7 +716,7 @@
                     this.$nextTick(async () => {
                         await this.requestList()
                         // 同时刷新计数数据
-                        await this.requestGetCounts(this.projectId)
+                        await this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                     })
                 }
             },
@@ -742,7 +743,7 @@
             'importDialog.isShow' (v) {
                 if (!v) {
                     this.requestList()
-                    this.requestGetCounts(this.projectId)
+                    this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                 }
             },
             searchValue (val) {
@@ -872,7 +873,7 @@
                             theme: 'success'
                         })
                         this.requestList()
-                        await this.requestGetCounts(this.projectId)
+                        await this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -909,7 +910,7 @@
                             theme: 'success'
                         })
                         this.requestList()
-                        await this.requestGetCounts(this.projectId)
+                        await this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -949,7 +950,7 @@
                             console.log(err)
                         } finally {
                             this.requestList()
-                            await this.requestGetCounts(this.projectId)
+                            await this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                         }
                     }
                 })
@@ -1297,6 +1298,15 @@
             handleShowNodeDetail (nodeHashId) {
                 this.updateNodeHashId(nodeHashId)
                 this.toggleFlod()
+            },
+            // 详情页清理/删除成功：刷新列表、节点计数及创作流分类计数
+            async handleDetailNodeDeleted () {
+                this.requestList()
+                const tasks = [this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })]
+                if (this.isCreateResType) {
+                    tasks.push(this.$store.dispatch('environment/requestNodeSourceCounts', this.projectId))
+                }
+                await Promise.all(tasks)
             },
 
             handleToPipelineDetail (param) {

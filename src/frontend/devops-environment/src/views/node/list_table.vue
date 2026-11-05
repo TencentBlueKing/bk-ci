@@ -1001,7 +1001,7 @@
                 } finally {
                     this.actionConfirm.confirmLoading = false
                     this.$emit('refresh')
-                    await this.requestGetCounts(this.projectId)
+                    await this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })
                     if (this.isCreateResType) {
                         await this.requestNodeSourceCounts(this.projectId)
                     }

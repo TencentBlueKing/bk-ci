@@ -434,7 +434,7 @@
             },
             async getNodeTypeCount () {
                 // 节点计数与创作流分类计数并行，互不阻塞
-                const tasks = [this.requestGetCounts(this.projectId)]
+                const tasks = [this.requestGetCounts({ projectId: this.projectId, createMode: this.isCreateResType })]
                 if (this.isCreateResType) {
                     tasks.push(this.requestNodeSourceCounts(this.projectId))
                 }

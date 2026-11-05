@@ -134,8 +134,15 @@ const actions = {
     /**
      * 预览动态环境按标签匹配到的节点列表
      */
-    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags, createMode = false }) {
-        const query = new URLSearchParams({ projectId, page, pageSize, createMode }).toString()
+    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags, createMode = false, nodeSource }) {
+        const query = new URLSearchParams({
+            projectId,
+            page,
+            pageSize,
+            createMode,
+            // nodeSource 仅创作流生效
+            ...(createMode && nodeSource ? { nodeSource } : {})
+        }).toString()
         return request.post(`${prefix}/user/environment/previewTagEnvNodes?${query}`, tags).then(response => {
             return response
         })
@@ -153,9 +160,14 @@ const actions = {
             return []
         }
     },
-    async requestGetCounts ({ commit }, projectId) {
+    /**
+     * 节点数量；payload 兼容旧的 projectId 字符串，或 { projectId, createMode }
+     */
+    async requestGetCounts ({ commit }, payload) {
+        const { projectId, createMode = false } = typeof payload === 'string' ? { projectId: payload } : (payload || {})
         try {
-            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodesCount`)
+            const query = createMode ? '?createMode=true' : ''
+            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodesCount${query}`)
             commit('setNodeCount', res || {})
             return res
         } catch (err) {

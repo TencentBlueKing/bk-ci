@@ -71,6 +71,11 @@ export default function useNodeDetail () {
         // 列表侧 createWorkspaceSource / nodeStatus 对「已释放/已销毁」标签更可靠，优先保留
         const listStatus = listNode.nodeStatus || listNode.status
         const detailStatus = base.nodeStatus || base.status
+        // 入驻云桌面字段仅创作流以列表为准；流水线以详情为准（改名后刷新不被旧列表值覆盖）
+        const preferList = isCreateResType()
+        const pick = (listValue, detailValue) => preferList
+            ? (listValue || detailValue)
+            : (detailValue || listValue)
         return {
             ...base,
             nodeHashId: base.nodeHashId || listNode.nodeHashId || base.nodeId || nodeHashId.value,
@@ -79,11 +84,10 @@ export default function useNodeDetail () {
             createWorkspaceSource: listNode.createWorkspaceSource
                 || listNode.nodeSource
                 || base.createWorkspaceSource,
-            // 入驻云桌面四字段以节点列表为准
             createWorkspaceId: listNode.createWorkspaceId || base.createWorkspaceId,
-            displayName: listNode.displayName || base.displayName,
-            osName: listNode.osName || listNode.os || base.osName || base.os,
-            ip: listNode.ip || base.ip,
+            displayName: pick(listNode.displayName, base.displayName),
+            osName: pick(listNode.osName || listNode.os, base.osName || base.os),
+            ip: pick(listNode.ip, base.ip),
             // 权限与列表一致（详情对已释放/已销毁常无 canEdit，清理会被误判无权限）
             canEdit: listNode.canEdit ?? base.canEdit,
             canDelete: listNode.canDelete ?? base.canDelete,

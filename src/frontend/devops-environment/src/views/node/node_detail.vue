@@ -127,6 +127,16 @@
                 <a
                     v-if="showDeleteAction"
                     class="clean-node-btn"
+                    v-perm="{
+                        hasPermission: currentNode?.canDelete,
+                        disablePermissionApi: typeof currentNode?.canDelete === 'boolean',
+                        permissionData: {
+                            projectId: $route.params.projectId,
+                            resourceType: nodeResourceType,
+                            resourceCode: currentNode?.nodeHashId,
+                            action: nodeResourceAction.DELETE
+                        }
+                    }"
                     @click="openDeleteConfirm"
                 >
                     {{ $t('environment.delete') }}
@@ -182,7 +192,9 @@
     import { fetchNodeRelations, invalidateNodeRelationsCache } from '@/hooks/useNodeRelations'
     import {
         CREATIVE_STREAM_NODE_RESOURCE_ACTION,
-        CREATIVE_NODE_RESOURCE_TYPE
+        CREATIVE_NODE_RESOURCE_TYPE,
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE
     } from '@/utils/permission'
     
     export default {
@@ -328,8 +340,9 @@
                 return isCreateResType.value && canCleanNode(currentNode.value)
             })
 
+            // 与列表一致：流水线可删除，TSTACK 节点不提供删除
             const showDeleteAction = computed(() => {
-                return !isCreateResType.value
+                return !isCreateResType.value && currentNode.value?.nodeType !== 'TSTACK'
             })
 
             // 与列表一致：仅数字分身展示字头头像
@@ -351,6 +364,8 @@
 
             const creativeResourceType = CREATIVE_NODE_RESOURCE_TYPE
             const creativeResourceAction = CREATIVE_STREAM_NODE_RESOURCE_ACTION
+            const nodeResourceType = NODE_RESOURCE_TYPE
+            const nodeResourceAction = NODE_RESOURCE_ACTION
             
             // 判断 Agent 是否正常
             const isAgentNormal = computed(() => {
@@ -525,7 +540,8 @@
                     })
                     invalidateNodeRelationsCache(nodeHashId.value)
                     closeActionConfirm()
-                    // 清理/删除后回到列表
+                    // 通知列表刷新数据与计数；路由回到列表只会收起详情面板
+                    proxy.$emit('deleted', nodeHashId.value)
                     proxy.$router.replace({
                         name: 'nodeList',
                         params: { ...proxy.$route.params },
@@ -631,6 +647,8 @@
                 avatarStyle,
                 creativeResourceType,
                 creativeResourceAction,
+                nodeResourceType,
+                nodeResourceAction,
                 actionConfirm,
                 openCleanConfirm,
                 openDeleteConfirm,

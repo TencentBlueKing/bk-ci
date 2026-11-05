@@ -558,6 +558,7 @@
     "nodeUsage": "Node Usage",
     "cpuCores": "CPU Cores",
     "buildAgent": "Build Agent",
+    "refresh": "Refresh",
     "agentNormal": "Agent Normal",
     "agentAbnormal": "Agent Abnormal",
     "agentStatusVersion": "Agent Status(Version)",
