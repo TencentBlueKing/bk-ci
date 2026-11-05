@@ -1,11 +1,13 @@
 package com.tencent.devops.process.trigger.artifact
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.webhook.BkRepoEventType
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactTriggerEventType
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
@@ -49,6 +51,44 @@ class ArtifactWebhookRequestService(
 
     @Value("\${external.webhook.artifact.rate-limit.max-count:$DEFAULT_RATE_LIMIT_MAX_COUNT}")
     private val rateLimitMaxCount: Int = DEFAULT_RATE_LIMIT_MAX_COUNT
+
+    @Value("\${external.webhook.artifact.secret:#{null}}")
+    private val artifactWebhookSecret: String? = null
+
+    /**
+     * 接收制品库 webhook 请求，校验后投递 [ArtifactWebhookRequestEvent]
+     */
+    fun receive(eventType: String?, secret: String?, body: String): Boolean {
+        // body 为原始 JSON 字符串，可能带缩进/换行；打印前压成紧凑单行，解析失败则回退原文
+        val compactBody = runCatching {
+            JsonUtil.getObjectMapper(formatted = false).readTree(body).toString()
+        }.getOrDefault(body)
+        logger.info("artifact webhook request|$eventType|$compactBody")
+        if (!artifactWebhookSecret.isNullOrBlank() && secret != artifactWebhookSecret) {
+            logger.warn("the secret of artifact webhook is illegal")
+            throw InvalidParamException(
+                message = "secret illegal",
+                params = arrayOf("secret")
+            )
+        }
+        if (eventType.isNullOrBlank()) {
+            logger.warn("the eventType of artifact webhook is missing")
+            throw InvalidParamException(
+                message = "eventType illegal",
+                params = arrayOf("eventType")
+            )
+        }
+        sampleEventDispatcher.dispatch(
+            ArtifactWebhookRequestEvent(
+                eventType = eventType,
+                request = WebhookRequest(
+                    headers = emptyMap(),
+                    body = compactBody
+                )
+            )
+        )
+        return true
+    }
 
     fun handleRequest(requestEvent: ArtifactWebhookRequestEvent) {
         val rawBody = requestEvent.request.body
