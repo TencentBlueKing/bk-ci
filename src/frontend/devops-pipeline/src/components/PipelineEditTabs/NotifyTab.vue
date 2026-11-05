@@ -312,7 +312,7 @@
             getShowContent (col, val) {
                 let res = ''
                 if (col === 'types') {
-                    const showTypes = val.map(item => this.notifyTypeMap[item] || item)
+                    const showTypes = [...new Set((val || []).map(item => this.notifyTypeMap[item] || item))]
                     return showTypes.join(',')
                 } else if (col === 'groups') {
                     res = val.join(',')
