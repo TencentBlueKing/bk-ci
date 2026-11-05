@@ -3,6 +3,7 @@ package com.tencent.devops.notify.service.notifier
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -257,6 +258,59 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
+    fun `markdown flag sends rendered text and skips the card`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "178",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewDesc" to "- **触发人**: albert\\n- **优先级**: 50",
+                    "reviewStage" to "[1]人工审核",
+                    "triggerUser" to "albertqwang"
+                ),
+                markdown = true
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        assertNotNull(plan)
+        assertTrue(plan!!.receiverCards.isEmpty())
+        val markdown = plan.fallbackText
+        assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
+        assertTrue(markdown.contains("**触发人**"))
+        assertTrue(markdown.contains("stage-review-notice"))
+        assertTrue(markdown.contains("https://example.com/pc"))
+        assertFalse(markdown.contains("\\n"))
+    }
+
+    @Test
+    fun `card quote flattens markdown so newlines and markers stay plain`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "178",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewDesc" to "- **触发人**: albert\\n- **优先级**: 50",
+                    "triggerUser" to "albertqwang"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val quote = plan!!.receiverCards.getValue("royalhuang").quoteArea!!.quoteText!!
+        assertTrue(quote.contains("触发人"))
+        assertTrue(quote.contains("优先级"))
+        assertFalse(quote.contains("**"))
+        assertFalse(quote.contains("\\n"))
+    }
+
+    @Test
     fun `missing callback skips card so existing text path stays`() {
         val plan = WeworkReviewCardBuilder.build(
             request = SendNotifyMessageTemplateRequest(
@@ -273,12 +327,14 @@ class WeworkReviewCardBuilderTest {
     private fun reviewRequest(
         receivers: MutableSet<String>,
         titleParams: Map<String, String> = emptyMap(),
-        bodyParams: Map<String, String>
+        bodyParams: Map<String, String>,
+        markdown: Boolean = false
     ) = SendNotifyMessageTemplateRequest(
         templateCode = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
         receivers = receivers,
         titleParams = titleParams,
         bodyParams = bodyParams,
+        markdownContent = markdown,
         callbackData = mapOf(
             "reviewType" to "STAGE",
             "projectId" to "royalpipeline",

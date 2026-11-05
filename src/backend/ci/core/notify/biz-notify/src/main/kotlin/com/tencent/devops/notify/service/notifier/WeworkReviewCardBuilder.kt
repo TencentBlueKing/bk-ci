@@ -56,6 +56,9 @@ object WeworkReviewCardBuilder {
     private const val TITLE_LIMIT = 26
     private const val TITLE_DESC_LIMIT = 30
 
+    /** 消息推送 markdown / markdown_v2 正文上限 4096 字节。 */
+    private const val MARKDOWN_BYTES = 3800
+
     /** 环节状态只用于挑选当前审核，不展示在卡片上。 */
     private const val STATE_PASSED = "已通过"
     private const val STATE_ABORTED = "已驳回"
@@ -191,6 +194,39 @@ object WeworkReviewCardBuilder {
                     )
                 )
             }
+        }
+
+        // 勾选 Markdown 时不发模板卡片。卡片引用区是纯文本，官方没有 markdown 渲染字段。
+        if (request.markdownContent == true) {
+            val markdown = renderMarkdown(
+                copy = fallbackCopy,
+                title = reviewTitle(projectName, fallbackCopy),
+                desc = mainDesc(scene, isStage, fallbackCopy),
+                reviewDesc = reviewDesc,
+                cardLayout = layout(
+                    copy = fallbackCopy,
+                    isStage = isStage,
+                    pipelineName = pipelineName,
+                    buildNum = buildNum,
+                    reviewStage = reviewStage,
+                    stageName = stageName,
+                    reviewDesc = reviewDesc,
+                    scene = scene,
+                    reviewParams = reviewParams.map { it.localize(fallbackCopy) },
+                    reviewUsers = reviewUsers,
+                    reviewGroups = reviewGroups,
+                    triggerUser = triggerUser,
+                    detailUrl = reviewUrl.ifBlank { reviewAppUrl }
+                ),
+                reviewUrl = reviewUrl,
+                reviewAppUrl = reviewAppUrl
+            )
+            logger.info(
+                "reviewNotifyTrace|hop=notify.card.markdown|" +
+                    "template=${request.templateCode}|buildId=${callback["buildId"]}|" +
+                    "bytes=${markdown.toByteArray(Charsets.UTF_8).size}"
+            )
+            return WeworkReviewCardSendPlan(receiverCards = emptyMap(), fallbackText = markdown)
         }
 
         val receiverCards = linkedMapOf<String, WeworkTemplateCard>()
@@ -534,7 +570,7 @@ object WeworkReviewCardBuilder {
         if (detail != null && rows.size < LIST_LIMIT) {
             rows.add(detail)
         }
-        val quote = reviewDesc.takeIf { it.isNotBlank() }?.let {
+        val quote = plainQuote(reviewDesc).takeIf { it.isNotBlank() }?.let {
             WeworkTemplateCardQuoteArea(
                 title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明"),
                 quoteText = clip(it, QUOTE_LIMIT)
@@ -545,6 +581,80 @@ object WeworkReviewCardBuilder {
             quote = quote,
             subTitle = paramSubTitle(scene, reviewParams)
         )
+    }
+
+    /**
+     * 企微 markdown 消息会渲染加粗、链接和换行。模板卡片的 quote_text 不会。
+     * 字段与卡片一致：标题、说明、审核说明原文、键值列表、详情链接。
+     */
+    private fun renderMarkdown(
+        copy: CardCopy,
+        title: String,
+        desc: String,
+        reviewDesc: String,
+        cardLayout: CardLayout,
+        reviewUrl: String,
+        reviewAppUrl: String
+    ): String {
+        val text = StringBuilder()
+        text.append("**").append(title).append("**\n")
+        if (desc.isNotBlank()) {
+            text.append(desc).append("\n")
+        }
+        val source = markdownDesc(reviewDesc)
+        if (source.isNotBlank()) {
+            text.append("\n**").append(copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明")).append("**\n")
+            text.append(source).append("\n")
+        }
+        val rows = cardLayout.rows.orEmpty()
+        if (rows.isNotEmpty()) {
+            text.append("\n")
+            rows.forEach { row ->
+                val value = if (row.type == 1 && !row.url.isNullOrBlank()) {
+                    "[${row.value}](${row.url})"
+                } else {
+                    row.value
+                }
+                text.append(">").append(row.keyname).append("：").append(value).append("\n")
+            }
+        }
+        val openBuild = copy.t(NotifyMessageCode.BK_REVIEW_CARD_OPEN_BUILD, "查看构建")
+        if (reviewUrl.isNotBlank() && rows.none { it.url == reviewUrl }) {
+            text.append("\n[").append(openBuild).append("](").append(reviewUrl).append(")\n")
+        }
+        if (reviewAppUrl.isNotBlank() && reviewAppUrl != reviewUrl && rows.none { it.url == reviewAppUrl }) {
+            text.append("[").append(openBuild).append("](").append(reviewAppUrl).append(")\n")
+        }
+        return clipUtf8(text.toString().trimEnd())
+    }
+
+    /** 字面量 \n 还原成换行，保留 markdown 语法给消息体渲染。 */
+    private fun markdownDesc(raw: String): String {
+        return raw.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\\t", "\t").trim()
+    }
+
+    /**
+     * 卡片引用区只接受纯文本，换行会显示成 \n，加粗和链接也不会渲染。
+     */
+    private fun plainQuote(raw: String): String {
+        val unescaped = raw.replace("\\r\\n", " ").replace("\\n", " ").replace("\\t", " ")
+            .replace("\r\n", " ").replace("\n", " ")
+        val linked = Regex("\\[([^\\]]+)]\\(([^)]+)\\)").replace(unescaped) { match ->
+            match.groupValues[1]
+        }
+        return linked.replace(Regex("[*_`>#]+"), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    private fun clipUtf8(text: String, maxBytes: Int = MARKDOWN_BYTES): String {
+        val charset = Charsets.UTF_8
+        if (text.toByteArray(charset).size <= maxBytes) return text
+        var end = text.length
+        while (end > 0 && text.substring(0, end).toByteArray(charset).size > maxBytes - 3) {
+            end -= 40
+        }
+        return text.substring(0, end.coerceAtLeast(0)).trimEnd() + "…"
     }
 
     private fun mainDesc(scene: CardScene, isStage: Boolean, copy: CardCopy): String {
