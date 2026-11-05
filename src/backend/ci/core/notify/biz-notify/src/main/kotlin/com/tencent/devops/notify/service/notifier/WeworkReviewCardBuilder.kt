@@ -204,11 +204,6 @@ object WeworkReviewCardBuilder {
             )
             val perCallback = callback.toMutableMap()
             perCallback["receiver"] = receiver
-            redisOperation?.set(
-                key = WeworkReviewCardConst.REDIS_KEY_PREFIX + taskId,
-                value = JsonUtil.toJson(perCallback, false),
-                expiredInSecond = WeworkReviewCardConst.REDIS_TTL_SECONDS
-            )
             val copy = CardCopy(receiverLanguage(receiver))
             val card = buildCard(
                 taskId = taskId,
@@ -229,6 +224,12 @@ object WeworkReviewCardBuilder {
                 reviewUsers = reviewUsers.ifEmpty { receivers },
                 reviewGroups = reviewGroups,
                 iconUrl = body["cardIconUrl"]
+            )
+            perCallback[WeworkReviewCardConst.REDIS_TEMPLATE_CARD_FIELD] = JsonUtil.toJson(card, false)
+            redisOperation?.set(
+                key = WeworkReviewCardConst.REDIS_KEY_PREFIX + taskId,
+                value = JsonUtil.toJson(perCallback, false),
+                expiredInSecond = WeworkReviewCardConst.REDIS_TTL_SECONDS
             )
             receiverCards[receiver] = card
             logger.info(

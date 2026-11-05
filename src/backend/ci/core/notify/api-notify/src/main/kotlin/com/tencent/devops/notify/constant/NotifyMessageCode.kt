@@ -67,6 +67,7 @@ object NotifyMessageCode {
 
     const val BK_REVIEW_CARD_SOURCE = "bkReviewCardSource" // 蓝盾流水线
     const val BK_REVIEW_CARD_PASS = "bkReviewCardPass" // 通过
+    const val BK_REVIEW_CARD_CHOSEN = "bkReviewCardChosen" // 你已选择：{0}
     const val BK_REVIEW_CARD_REJECT = "bkReviewCardReject" // 驳回
     const val BK_REVIEW_CARD_DETAIL = "bkReviewCardDetail" // 详情
     const val BK_REVIEW_CARD_OPEN_BUILD = "bkReviewCardOpenBuild" // 查看构建
