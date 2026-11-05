@@ -4806,6 +4806,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/repositories/oauth/oauthStatus:
+    get:
+      operationId: "v4_app_oauth_status"
+      description: "获取用户OAUTH授权状态"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/repositories/oauth/oauthStatus"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/repositories/projects/{projectId}/repository:
     get:
       operationId: "v4_app_repository_get_by_name"
@@ -9704,6 +9725,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/repositories/oauth/isOauth"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/repositories/oauth/oauthStatus:
+    get:
+      operationId: "v4_user_oauth_status"
+      description: "获取用户OAUTH授权状态"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/repositories/oauth/oauthStatus"
           timeout: 30
         enableWebsocket: false
         isPublic: true
