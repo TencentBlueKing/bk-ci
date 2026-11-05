@@ -159,7 +159,6 @@ class ArtifactWebhookRequestService(
             }
     }
 
-
     /**
      * 仅接受注册时订阅的原始事件类型（见 ArtifactTriggerElementVersionProcessor.buildTriggers），
      * 其余事件即使投递到回调地址也直接丢弃。

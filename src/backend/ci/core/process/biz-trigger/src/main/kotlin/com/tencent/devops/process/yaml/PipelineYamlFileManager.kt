@@ -423,7 +423,7 @@ class PipelineYamlFileManager @Autowired constructor(
             blobId = content.blobId!!,
             ref = ref,
             commitId = commit?.commitId ?: "",
-            commitTime = commit?.commitTime?:LocalDateTime.now(),
+            commitTime = commit?.commitTime ?: LocalDateTime.now(),
             pipelineId = pipelineId,
             status = if (ref == defaultBranch) {
                 PipelineYamlStatus.OK.name
@@ -752,7 +752,6 @@ class PipelineYamlFileManager @Autowired constructor(
                 Pair(false, false)
         }
     }
-
 
     /**
      * 合并到目标分支后处理源分支版本与 pr 状态
