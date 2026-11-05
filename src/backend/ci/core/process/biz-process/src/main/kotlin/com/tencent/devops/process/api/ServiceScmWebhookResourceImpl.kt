@@ -34,14 +34,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
+import com.tencent.devops.process.trigger.event.GithubWebhookEvent
+import com.tencent.devops.process.trigger.scm.CodeWebhookEventDispatcher
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
-import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
-import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 

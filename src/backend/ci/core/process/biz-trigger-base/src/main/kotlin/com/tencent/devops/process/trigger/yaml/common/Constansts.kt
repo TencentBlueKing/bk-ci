@@ -1,0 +1,10 @@
+package com.tencent.devops.process.trigger.yaml.common
+
+object Constansts {
+    const val ciFileExtensionYml = ".yml"
+    const val ciFileExtensionYaml = ".yaml"
+    const val ciFileName = ".ci.yml"
+    const val ciFileDirectoryName = ".ci"
+    const val ciTemplateDirectoryName = ".ci/templates"
+    const val DEFAULT_DEPENDENT_REF = "*"
+}

@@ -58,7 +58,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreate
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

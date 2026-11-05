@@ -13,8 +13,10 @@ import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.process.yaml.common.YamlFileUtils
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
+import com.tencent.devops.process.trigger.event.PipelineYamlFileEvent
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlSyncService
+import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
 import com.tencent.devops.scm.api.enums.ContentKind
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC

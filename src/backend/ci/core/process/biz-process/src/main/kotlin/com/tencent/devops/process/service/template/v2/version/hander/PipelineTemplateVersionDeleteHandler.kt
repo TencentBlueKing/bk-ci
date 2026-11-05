@@ -48,7 +48,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

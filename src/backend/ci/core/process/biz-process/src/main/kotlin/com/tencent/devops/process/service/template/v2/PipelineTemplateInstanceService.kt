@@ -76,7 +76,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

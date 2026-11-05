@@ -22,9 +22,10 @@ import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.yaml.common.Constansts
-import com.tencent.devops.process.yaml.common.YamlFileUtils
-import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.common.Constansts
+import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
+import com.tencent.devops.process.trigger.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmPullRequestApiResource

@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacDisableReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacEnableReq
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlPacManager
-import com.tencent.devops.process.yaml.PipelineYamlService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

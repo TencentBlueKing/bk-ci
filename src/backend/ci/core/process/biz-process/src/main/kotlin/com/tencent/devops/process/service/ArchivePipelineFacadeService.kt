@@ -45,7 +45,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.pipeline.ArchivePipelineManageService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

@@ -35,10 +35,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

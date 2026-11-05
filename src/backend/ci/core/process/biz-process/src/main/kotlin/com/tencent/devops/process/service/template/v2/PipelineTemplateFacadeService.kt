@@ -88,9 +88,9 @@ import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import com.tencent.devops.process.util.FileExportUtil
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.store.api.template.ServiceTemplateResource

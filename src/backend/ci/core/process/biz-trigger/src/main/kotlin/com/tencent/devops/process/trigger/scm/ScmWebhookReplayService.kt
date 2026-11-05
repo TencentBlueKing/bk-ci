@@ -3,11 +3,9 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
-import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
-import com.tencent.devops.process.service.webhook.PipelineBuildWebhookMatchService
-import com.tencent.devops.process.webhook.WebhookEventFactory
-import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
+import com.tencent.devops.process.trigger.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.trigger.event.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
@@ -26,7 +24,7 @@ class ScmWebhookReplayService(
     private val dslContext: DSLContext,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
     private val grayService: WebhookGrayService,
-    private val webhookEventFactory: WebhookEventFactory,
+    private val scmWebhookEventFactory: ScmWebhookEventFactory,
     private val webhookManager: WebhookManager,
     private val pipelineBuildWebhookMatchService: PipelineBuildWebhookMatchService
 ) {
@@ -97,11 +95,11 @@ class ScmWebhookReplayService(
                     headers = webhookRequest.requestHeader,
                     body = webhookRequest.requestBody
                 )
-                val event = webhookEventFactory.parseEvent(scmType = replayScmType, request = request) ?: run {
+                val event = scmWebhookEventFactory.parseEvent(scmType = replayScmType, request = request) ?: run {
                     logger.warn("Failed to parse webhook event")
                     return
                 }
-                val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = replayScmType, event = event)
+                val matcher = scmWebhookEventFactory.createScmWebHookMatcher(scmType = replayScmType, event = event)
 
                 pipelineBuildWebhookMatchService.replay(
                     replayEvent = replayEvent,

@@ -46,13 +46,13 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_I
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.trigger.scm.PipelineWebHookQueueService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
