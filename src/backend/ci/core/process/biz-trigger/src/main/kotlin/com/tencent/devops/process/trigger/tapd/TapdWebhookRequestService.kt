@@ -27,13 +27,17 @@
 
 package com.tencent.devops.process.trigger.tapd
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.TapdEventAction
 import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
@@ -42,8 +46,10 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OBJECT_U
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OWNER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SECRET
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STORY_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_NAME
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
@@ -88,8 +94,55 @@ class TapdWebhookRequestService(
     @Value("\${external.webhook.tapd.webUrl:}")
     private val tapdWebUrl: String = ""
 
+    @Value("\${external.webhook.tapd.secret:}")
+    private val tapdWebhookSecret: String = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(TapdWebhookRequestService::class.java)
+    }
+
+    /**
+     * 接收 TAPD webhook 请求，校验后投递 [TapdWebhookRequestEvent]
+     */
+    fun receive(body: Map<String, Any>): Boolean {
+        if (tapdWebhookSecret.isNotBlank()) {
+            val secret = body[TAPD_KEY_SECRET]?.toString()
+            if (secret != tapdWebhookSecret) {
+                logger.warn("the secret of tapd webhook is illegal")
+                throw InvalidParamException(
+                    message = "secret illegal",
+                    params = arrayOf("secret")
+                )
+            }
+        }
+        logger.info("Receive TapdWebhook|${JsonUtil.toJson(body, false)}")
+        val rawEvent = body[TAPD_KEY_EVENT]?.toString() ?: run {
+            logger.warn("Tapd webhook missing event field")
+            return false
+        }
+        val parts = rawEvent.split(TAPD_EVENT_SEPARATOR)
+        if (parts.size != 2) {
+            logger.warn("Tapd webhook invalid event format|event=$rawEvent")
+            return false
+        }
+        val eventType = parts[0].lowercase()
+        val eventAction = parts[1].lowercase()
+        val workspaceId = body[TAPD_KEY_WORKSPACE_ID]?.toString() ?: run {
+            logger.warn("Tapd webhook missing workspace_id|event=$rawEvent")
+            return false
+        }
+        val triggerUser = body.getHookField(TAPD_KEY_CURRENT_USER)
+        sampleEventDispatcher.dispatch(
+            TapdWebhookRequestEvent(
+                workspaceId = workspaceId,
+                eventType = eventType,
+                eventAction = eventAction,
+                rawEvent = rawEvent,
+                triggerUser = triggerUser,
+                body = body
+            )
+        )
+        return true
     }
 
     fun handleRequest(event: TapdWebhookRequestEvent) {

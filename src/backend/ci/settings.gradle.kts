@@ -180,7 +180,6 @@ include(":core:process:boot-engine")
 include(":core:process:api-trigger")
 include(":core:process:biz-trigger-base")
 include(":core:process:biz-trigger")
-include(":core:process:boot-trigger")
 include(":core:process:model-process")
 
 include(":core:dispatch")
