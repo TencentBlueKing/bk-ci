@@ -132,9 +132,10 @@ class SubPipelineCallAtom constructor(
                     val parentBuildNum = pipelineRuntimeService.getBuildInfo(
                         task.projectId, task.buildId
                     )?.buildNum
-                    // 父构建的取消人在cancelBuild中已先于取消事件同步落库，此处可直接读取
-                    val parentOperator = pipelineBuildRecordService.getBuildCancelUser(
+                    // 与 terminateSubPipeline 同一规则：只传父构建已确认的操作人，不用子构建启动人
+                    val parentOperator = pipelineBuildRecordService.getInheritedCancelOperator(
                         projectId = task.projectId,
+                        pipelineId = task.pipelineId,
                         buildId = task.buildId,
                         executeCount = task.executeCount ?: 1
                     )
@@ -142,7 +143,7 @@ class SubPipelineCallAtom constructor(
                         projectId = subBuildInfo.projectId,
                         pipelineId = subBuildInfo.pipelineId,
                         buildId = subBuildId,
-                        userId = subBuildInfo.startUser,
+                        userId = parentOperator ?: subBuildInfo.startUser,
                         executeCount = subBuildInfo.executeCount ?: 1,
                         buildStatus = BuildStatus.CANCELED,
                         buildEndInfo = BuildEndInfo.ofCancelParentPipeline(
