@@ -36,7 +36,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
-import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

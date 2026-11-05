@@ -11,15 +11,14 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
-import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.trigger.replay.TriggerReplayHandler
-import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
+import com.tencent.devops.process.trigger.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.trigger.event.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC

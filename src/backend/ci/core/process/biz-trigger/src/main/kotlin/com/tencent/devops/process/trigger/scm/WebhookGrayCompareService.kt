@@ -48,10 +48,8 @@ import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParam
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.service.webhook.PipelineBuildWebhookMatchService
 import com.tencent.devops.process.trigger.enums.MatchStatus
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository

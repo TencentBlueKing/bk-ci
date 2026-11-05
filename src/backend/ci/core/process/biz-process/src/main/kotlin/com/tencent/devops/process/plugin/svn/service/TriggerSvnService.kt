@@ -11,10 +11,10 @@ import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEventFile
 import com.tencent.devops.process.dao.PipelineWebhookRevisionDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
+import com.tencent.devops.process.trigger.event.SvnWebhookEvent
+import com.tencent.devops.process.trigger.scm.CodeWebhookEventDispatcher
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
-import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
-import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository

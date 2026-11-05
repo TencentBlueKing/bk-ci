@@ -47,7 +47,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
-import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
@@ -57,6 +56,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.trigger.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.utils.PIPELINE_TRIGGER_DETAIL_ID
 import com.tencent.devops.process.utils.PIPELINE_TRIGGER_EVENT_ID
 import com.tencent.devops.project.api.service.ServiceAllocIdResource

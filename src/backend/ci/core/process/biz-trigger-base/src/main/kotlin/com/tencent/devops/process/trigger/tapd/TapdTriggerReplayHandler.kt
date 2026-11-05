@@ -10,14 +10,14 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARA
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.trigger.TriggerReplayHandler
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
+import com.tencent.devops.process.trigger.event.ReplayWebhookEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
-import com.tencent.devops.process.trigger.replay.TriggerReplayHandler
-import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

@@ -14,7 +14,7 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
-import com.tencent.devops.process.yaml.common.Constansts
+import com.tencent.devops.process.trigger.yaml.common.Constansts
 import com.tencent.devops.process.yaml.pojo.PipelineYamlViewLock
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

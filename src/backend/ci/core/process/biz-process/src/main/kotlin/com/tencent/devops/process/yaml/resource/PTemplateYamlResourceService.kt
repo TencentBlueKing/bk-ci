@@ -34,7 +34,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.yaml.common.YamlFileUtils
+import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
 import org.springframework.stereotype.Service
 
 /**

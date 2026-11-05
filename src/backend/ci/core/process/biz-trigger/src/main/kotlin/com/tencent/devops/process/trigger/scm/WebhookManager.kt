@@ -50,7 +50,7 @@ import java.time.LocalDateTime
 @Service
 class WebhookManager @Autowired constructor(
     private val client: Client,
-    private val webhookListeners: List<WebHookEventListener>,
+    private val webhookHandlers: List<ScmWebhookHandler>,
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
@@ -214,9 +214,9 @@ class WebhookManager @Autowired constructor(
         webhook: Webhook,
         replayPipelineId: String? = null
     ) {
-        webhookListeners.forEach { listener ->
+        webhookHandlers.forEach { handler ->
             try {
-                listener.onEvent(
+                handler.onEvent(
                     eventId = eventId,
                     eventTime = eventTime,
                     repository = repository,

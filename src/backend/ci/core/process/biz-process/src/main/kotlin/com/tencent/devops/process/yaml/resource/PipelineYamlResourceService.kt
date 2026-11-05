@@ -42,7 +42,7 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
-import com.tencent.devops.process.yaml.common.YamlFileUtils
+import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service

@@ -8,7 +8,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerEl
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.ArtifactTriggerEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -20,6 +19,7 @@ import com.tencent.devops.process.pojo.trigger.artifact.PackageMetadataArtifactE
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerRateLimiter
 import com.tencent.devops.process.trigger.artifact.handler.ArtifactEventHandlerManager
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.trigger.event.ArtifactWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ArtifactWebhookTriggerEvent
 import org.jooq.DSLContext

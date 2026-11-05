@@ -16,7 +16,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineEventRegister
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscription
@@ -27,6 +26,7 @@ import com.tencent.devops.process.pojo.trigger.artifact.ArtifactWebhookConstant.
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.trigger.PipelineEventRegisterService
 import com.tencent.devops.process.trigger.artifact.ArtifactWebhookUtils
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.trigger.pojo.PipelineEventRegisterLock
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum

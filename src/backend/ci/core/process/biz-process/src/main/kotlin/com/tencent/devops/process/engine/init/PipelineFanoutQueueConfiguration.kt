@@ -35,7 +35,7 @@ import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.engine.listener.run.PipelineNotifyQueueListener
 import com.tencent.devops.process.engine.listener.run.PipelineWebHookQueueListener
 import com.tencent.devops.process.engine.service.PipelineNotifyService
-import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
+import com.tencent.devops.process.trigger.scm.PipelineWebHookQueueService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean

@@ -119,9 +119,9 @@ import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.trigger.timer.PipelineYamlBranchTimerService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.util.FileExportUtil
-import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
