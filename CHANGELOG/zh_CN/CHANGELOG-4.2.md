@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.9](#v420-rc9)
+   - [Changelog since v4.2.0-rc.8](#changelog-since-v420-rc8)
+
 - [v4.2.0-rc.8](#v420-rc8)
    - [Changelog since v4.2.0-rc.7](#changelog-since-v420-rc7)
 
@@ -28,6 +31,101 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.9
+## 2026-11-05
+### Changelog since v4.2.0-rc.8
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 流水线并发能力增强：上调并发上限硬限制，并发排队支持新任务到达时的处理策略，matrix job 最大并发数支持变量占位
+- 构建详情页与运行态状态增加小结说明因果，便于追溯构建过程
+- PAC 能力增强：非默认分支可按本分支 YAML 登记定时触发，工蜂合作版支持 PAC
+- stage 和插件审核支持企业微信卡片按钮
+- 环境管理增强：搜索节点支持批量 IP、导入构建机支持指定并发与标签、节点任务详情增加视图、第三方构建机调度锁优化
+- 补充 AI 模块的后台管理能力
+- git 事件触发插件增加回写质量红线报告开关
+- 用户登录时自动开启个人项目
+
+**Bug 修复**
+- 修复复制新实例发布会改写原实例的问题
+- 修复流水线模板更新实例化失败的问题
+- 修复 job 下插件执行很快时点击取消可能导致 job 取消不掉的问题
+- 修复配置日志存储为 lucene 时运行流水线后台报错、页面查不到日志的问题
+
+#### 新增
+
+##### 流水线
+- [新增] feat: 优化部分构建详情的耗时计算问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11448)
+- [新增] bug: PAC yaml文件删除,不需要校验是否有流水线删除权限 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13689)
+- [新增] feat: 上调流水线并发上限硬限制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13731)
+- [新增] feat: stage和插件审核支持企微的卡片按钮 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13390)
+- [新增] feat：【PAC】非默认分支可按本分支 YAML 登记定时触发 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13742)
+- [新增] feat:构建详情页状态增加小结说明因果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13477)
+- [新增] feat: UI 转 YAML 时切换选项时清空无效字段 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13698)
+- [新增] feat：流水线并发排队支持新任务到达时的处理策略 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12840)
+- [新增] feat: git事件触发插件增加回写质量红线报告开关 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13682)
+- [新增] feat：构建运行态详情增加小结说明因果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13559)
+- [新增] feat:构建详情页非结束状态增加小结说明因果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13519)
+- [新增] feat：bash 插件输出变量时变量值支持多行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12879)
+- [新增] feat：构建详情页状态增加小结说明因果 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13457)
+
+##### 代码库
+- [新增] feat: 工蜂合作版支持PAC [链接](http://github.com/TencentBlueKing/bk-ci/issues/13315)
+
+##### 研发商店
+- [新增] feat:研发商店组件列表查询接口增加安装类型返回字段 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13781)
+
+##### 环境管理
+- [新增] feat：搜索节点支持用户输入批量 IP [链接](http://github.com/TencentBlueKing/bk-ci/issues/13343)
+- [新增] feat: 第三方构建机环境调度锁优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13743)
+- [新增] feat：环境管理-节点任务详情增加视图 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13340)
+- [新增] feat：导入构建机时支持指定并发和标签 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13550)
+
+##### 项目管理
+- [新增] feat：用户登录时自动开启个人项目 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13762)
+
+##### 其他
+- [新增] feat：matrix job 最大并发数支持变量占位 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13737)
+- [新增] feat：bk-ci jdk 镜像证书优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13794)
+- [新增] feat: 多租户子路径分支同步主干 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13520)
+- [新增] feat: APIGW 获取流水线模板详情接口返回分支版本数据 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13728)
+- [新增] feat: 补充AI模块的后台管理能力 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13535)
+
+#### 优化
+
+##### 流水线
+- [优化] pref:流水线取消逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13433)
+
+##### 环境管理
+- [优化] bug：环境管理流水线/Job/创作流视图详情跳转无pipelineId处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13709)
+
+##### 其他
+- [优化] pref：容器重启场景优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13732)
+- [优化] pref:数据清理逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13786)
+- [优化] pref:创作流细节优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13755)
+- [优化] perf：判断用户是否完成工蜂 OAuth 接口增加授权 URL [链接](http://github.com/TencentBlueKing/bk-ci/issues/13717)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 优化T_PIPELINE_TRIGGER_DETAIL表的慢查询 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13783)
+- [修复] fix：复制新实例发布会改写原实例问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13780)
+- [修复] bug: 流水线模板更新实例化失败问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13773)
+- [修复] bug:TGit 触发器勾选「WIP 阶段不触发」不生效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13744)
+- [修复] feat: 创作流编排插件搜索功能优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13527)
+- [修复] fix: 变量别名包含百分号时，编辑变量无法保存 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13740)
+- [修复] bug:job下插件执行很快的情况下有时候点击取消会导致job取消不掉 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13581)
+- [修复] 流水线文件类型变量上传文件卡住 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13719)
+- [修复] bug： PAC 流水线当分支版本比较多正式版本被挤到后边的页时无法执行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13697)
+- [修复] bug:配置失败继续的插件加上配置前面有插件失败才跑这个运行条件的插件可能导致job取消不掉 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13676)
+
+##### 日志服务
+- [修复] 配置日志存储方式为lucene时，运行流水线后台报错，页面查不到日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/5007)
+
+##### 其他
+- [修复] bug: 创作流 SubParameter 组件请求参数应优先使用插件字段中的 projectId/pipelineId/buildId [链接](http://github.com/TencentBlueKing/bk-ci/issues/13756)
+
 # v4.2.0-rc.8
 ## 2026-10-13
 ### Changelog since v4.2.0-rc.7
