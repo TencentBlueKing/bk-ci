@@ -584,8 +584,9 @@ object WeworkReviewCardBuilder {
     }
 
     /**
-     * 企微 markdown 消息会渲染加粗、链接和换行。模板卡片的 quote_text 不会。
-     * 字段与卡片一致：标题、说明、审核说明原文、键值列表、详情链接。
+     * 勾选 Markdown 时以用户填写的审核说明为主体，沿用改卡片前的文本通知：
+     * 说明原文在前，流水线字段用引用收在后面，查看构建只留一个链接。
+     * 模板卡片的 quote_text 不能渲染 markdown，所以这条路径不发卡片。
      */
     private fun renderMarkdown(
         copy: CardCopy,
@@ -597,33 +598,24 @@ object WeworkReviewCardBuilder {
         reviewAppUrl: String
     ): String {
         val text = StringBuilder()
-        text.append("**").append(title).append("**\n")
-        if (desc.isNotBlank()) {
-            text.append(desc).append("\n")
-        }
+        text.append("**").append(title).append("**\n\n")
         val source = markdownDesc(reviewDesc)
         if (source.isNotBlank()) {
-            text.append("\n**").append(copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明")).append("**\n")
             text.append(source).append("\n")
+        } else if (desc.isNotBlank()) {
+            text.append(desc).append("\n")
         }
-        val rows = cardLayout.rows.orEmpty()
+        val rows = cardLayout.rows.orEmpty().filter { it.type != 1 }
         if (rows.isNotEmpty()) {
             text.append("\n")
             rows.forEach { row ->
-                val value = if (row.type == 1 && !row.url.isNullOrBlank()) {
-                    "[${row.value}](${row.url})"
-                } else {
-                    row.value
-                }
-                text.append(">").append(row.keyname).append("：").append(value).append("\n")
+                text.append(">").append(row.keyname).append("：").append(row.value).append("\n")
             }
         }
-        val openBuild = copy.t(NotifyMessageCode.BK_REVIEW_CARD_OPEN_BUILD, "查看构建")
-        if (reviewUrl.isNotBlank() && rows.none { it.url == reviewUrl }) {
-            text.append("\n[").append(openBuild).append("](").append(reviewUrl).append(")\n")
-        }
-        if (reviewAppUrl.isNotBlank() && reviewAppUrl != reviewUrl && rows.none { it.url == reviewAppUrl }) {
-            text.append("[").append(openBuild).append("](").append(reviewAppUrl).append(")\n")
+        val openUrl = reviewUrl.ifBlank { reviewAppUrl }
+        if (openUrl.isNotBlank()) {
+            val openBuild = copy.t(NotifyMessageCode.BK_REVIEW_CARD_OPEN_BUILD, "查看构建")
+            text.append("\n[").append(openBuild).append("](").append(openUrl).append(")")
         }
         return clipUtf8(text.toString().trimEnd())
     }

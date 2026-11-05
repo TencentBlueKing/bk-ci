@@ -267,6 +267,7 @@ class WeworkReviewCardBuilderTest {
                     "pipelineName" to "stage-review-notice",
                     "buildNum" to "178",
                     "reviewUrl" to "https://example.com/pc",
+                    "reviewAppUrl" to "https://example.com/app",
                     "reviewDesc" to "- **触发人**: albert\\n- **优先级**: 50",
                     "reviewStage" to "[1]人工审核",
                     "triggerUser" to "albertqwang"
@@ -282,7 +283,12 @@ class WeworkReviewCardBuilderTest {
         assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
         assertTrue(markdown.contains("**触发人**"))
         assertTrue(markdown.contains("stage-review-notice"))
+        assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
+        assertFalse(markdown.contains("审核说明"))
+        assertFalse(markdown.contains("需要您审核后继续"))
+        assertEquals(1, Regex("查看构建").findAll(markdown).count())
         assertTrue(markdown.contains("https://example.com/pc"))
+        assertFalse(markdown.contains("https://example.com/app"))
         assertFalse(markdown.contains("\\n"))
     }
 
