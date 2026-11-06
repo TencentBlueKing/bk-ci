@@ -647,7 +647,7 @@ class PipelineBuildRecordService @Autowired constructor(
         val positions = BuildEndPositionCollector.collectCancelPositions(model)
         // update() 在没有取消人时会写入 System，表示系统取消，不是真实操作人。
         // 阶段准入驳回走的就是这条路径，不能展示成「用户取消」。
-        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != "System"
+        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != BuildEndInfo.SYSTEM_CANCEL_USER
         val info = if (hasUser) {
             BuildEndInfo(
                 endType = BuildEndType.CANCEL_USER,
@@ -1327,6 +1327,29 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             executeCount = executeCount
+        )
+    }
+
+    /**
+     * 父构建取消子构建时要继续传递的操作人。
+     * 终态详情优先；详情还没落库时用已经同步写入的取消人。系统占位和系统取消都不传。
+     */
+    fun getInheritedCancelOperator(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        val record = recordModelDao.getRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        ) ?: return null
+        return BuildEndInfo.inheritedCancelOperator(
+            endInfo = parseBuildEndInfo(record.modelVar),
+            storedCancelUser = record.cancelUser
         )
     }
 

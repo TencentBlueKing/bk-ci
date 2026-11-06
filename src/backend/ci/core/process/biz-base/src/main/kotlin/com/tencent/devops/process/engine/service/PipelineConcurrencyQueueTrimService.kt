@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -151,7 +152,12 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
                     userId = userId,
                     buildId = buildInfo.buildId,
                     status = BuildStatus.CANCELED,
-                    executeCount = buildInfo.executeCount
+                    executeCount = buildInfo.executeCount,
+                    // 与启动拦截器的并发组挤出使用同一张系统取消卡片。对账没有单一触发构建，不写操作人。
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_GROUP,
+                        reasonParams = listOf(concurrencyGroup)
+                    )
                 )
             )
         }
