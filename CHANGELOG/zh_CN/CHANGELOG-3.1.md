@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.2](#v312)
+   - [Changelog since v3.1.1](#changelog-since-v311)
+
 - [v3.1.1](#v311)
    - [Changelog since v3.1.0](#changelog-since-v310)
 
@@ -28,6 +31,13 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.2
+## 2026-11-06
+### Changelog since v3.1.1
+#### 新增
+- [新增] feat: backend.conf使用前缀匹配 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13708)
+- [新增] feat: 去除dispatch k8s模块 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13649)
+
 # v3.1.1
 ## 2026-01-06
 ### Changelog since v3.1.0
