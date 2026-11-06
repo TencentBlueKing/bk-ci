@@ -215,6 +215,20 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo))
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_ENABLE)
+    override fun enable(
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        projectService.updateUsableStatus(
+            userId = userId,
+            englishName = projectId,
+            enabled = enabled
+        )
+        return Result(true)
+    }
+
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
         return Result(
             projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)

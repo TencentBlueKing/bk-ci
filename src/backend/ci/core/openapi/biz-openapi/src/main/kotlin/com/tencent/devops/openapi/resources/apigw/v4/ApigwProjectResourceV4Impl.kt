@@ -101,6 +101,21 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun enable(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        logger.info("OPENAPI_PROJECT_V4|$userId|enable|$projectId|$enabled")
+        return client.get(ServiceProjectResource::class).enable(
+            userId = userId,
+            projectId = projectId,
+            enabled = enabled
+        )
+    }
+
     override fun get(
         appCode: String?,
         apigwType: String?,

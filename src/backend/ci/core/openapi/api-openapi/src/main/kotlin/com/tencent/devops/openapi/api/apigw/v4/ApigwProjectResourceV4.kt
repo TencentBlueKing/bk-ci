@@ -103,6 +103,28 @@ interface ApigwProjectResourceV4 {
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
 
+    @PUT
+    @Path("/{projectId}/enable")
+    @Operation(summary = "启用或停用项目", tags = ["v4_user_project_enable", "v4_app_project_enable"])
+    @BkApigwApi(version = "v4", apigwPathTail = "/projects/{projectId}/enable")
+    fun enable(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "待变更的新状态，true 为启用，false 为停用", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
+
     @GET
     @Path("/{projectId}")
     @Operation(summary = "获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
