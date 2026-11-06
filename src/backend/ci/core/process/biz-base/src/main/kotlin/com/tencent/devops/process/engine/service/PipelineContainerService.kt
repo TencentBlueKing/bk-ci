@@ -1238,12 +1238,15 @@ class PipelineContainerService @Autowired constructor(
 //                    )
 //                )
                 val tenantId = TenantUtils.getTenantIdByEnglishName(context.projectId)
+                val displayNames = TC.uid2Names(listOf(context.triggerUser, context.userId), tenantId)
+                val triggerName = context.triggerUser?.let { displayNames[it] ?: it } ?: "null"
+                val startName = context.userId?.let { displayNames[it] ?: it } ?: "null"
                 buildLogPrinter.addLine(
                     buildId = context.buildId,
                     message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: " +
-                            TC.uid2Name(context.triggerUser, tenantId) +
+                            triggerName +
                             ", ${I18nUtil.getCodeLanMessage(BK_START_USER)}: " +
-                            TC.uid2Name(context.userId, tenantId),
+                            startName,
                     tag = context.firstTaskId,
                     containerHashId = container.id,
                     executeCount = context.executeCount,

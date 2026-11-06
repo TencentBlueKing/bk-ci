@@ -22,14 +22,18 @@ if config.esb.enabled then
 end
 
 -- 获取租户ID与用户时区（蓝鲸 get_bk_token_userinfo；time_zone 可空，后端兜底）
-local tenant_id = 'default'
+-- 单租户不写租户头。多租户拿不到 tenant_id 时拒绝登录，不回落到默认租户。
+local tenant_id = nil
 local time_zone = nil
 if config.tenant.enabled then
     local user_info = oauthUtil:verify_bk_token(bk_token)
-    if user_info ~= nil then
-        tenant_id = user_info.tenant_id
-        time_zone = user_info.time_zone
+    if user_info == nil or user_info.tenant_id == nil or user_info.tenant_id == "" then
+        ngx.log(ngx.ERR, "tenant enabled but bk_token userinfo has no tenant_id")
+        ngx.exit(401)
+        return
     end
+    tenant_id = user_info.tenant_id
+    time_zone = user_info.time_zone
 end
 
 local ticket = oauthUtil:get_ticket(bk_token)
@@ -38,7 +42,9 @@ local ticket = oauthUtil:get_ticket(bk_token)
 ngx.header["x-devops-uid"] = ticket.identity.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.header["x-devops-access-token"] = ticket.access_token
-ngx.header["x-bk-tenant-id"] = tenant_id
+if tenant_id ~= nil and tenant_id ~= "" then
+    ngx.header["x-bk-tenant-id"] = tenant_id
+end
 if time_zone ~= nil and time_zone ~= "" then
     ngx.header["x-bk-user-timezone"] = time_zone
 end

@@ -41,7 +41,7 @@ BEGIN
                    WHERE TABLE_SCHEMA = db
                      AND TABLE_NAME = 'T_ATOM'
                      AND INDEX_NAME = 'inx_ta_tenant_id') THEN
-    ALTER TABLE `T_ATOM` ADD UNIQUE INDEX
+    ALTER TABLE `T_ATOM` ADD INDEX
         `inx_ta_tenant_id` (`TENANT_ID`);
     END IF;
 
@@ -50,7 +50,7 @@ BEGIN
                    WHERE TABLE_SCHEMA = db
                      AND TABLE_NAME = 'T_TEMPLATE'
                      AND INDEX_NAME = 'inx_tt_tenant_id') THEN
-    ALTER TABLE `T_TEMPLATE` ADD UNIQUE INDEX
+    ALTER TABLE `T_TEMPLATE` ADD INDEX
         `inx_tt_tenant_id` (`TENANT_ID`);
     END IF;
 
@@ -59,8 +59,8 @@ BEGIN
                    WHERE TABLE_SCHEMA = db
                      AND TABLE_NAME = 'T_IMAGE'
                      AND INDEX_NAME = 'inx_ti_tenant_id') THEN
-    ALTER TABLE `T_IMAGE` ADD UNIQUE INDEX
-        `inx_ta_tenant_id` (`TENANT_ID`);
+    ALTER TABLE `T_IMAGE` ADD INDEX
+        `inx_ti_tenant_id` (`TENANT_ID`);
     END IF;
 
     COMMIT;

@@ -6,9 +6,13 @@ set -o nounset                              # Treat unset variables as an error
 set -a
 BK_ENV_FILE=./bkenv.properties
 [ -r $BK_ENV_FILE ] && source $BK_ENV_FILE
-# 新 key 未设置时，把旧 key 的值回填到 BK_CI_AUTH_SYNC_CRON_ENABLED
-if [ -z "${BK_CI_AUTH_SYNC_CRON_ENABLED:-}" ] && [ -n "${BK_CI_SYNC_CRON_ENABLED:-}" ]; then
-    BK_CI_AUTH_SYNC_CRON_ENABLED="$BK_CI_SYNC_CRON_ENABLED"
+# 新 key 未设置时回填旧 key；两者都空时默认开启
+if [ -z "${BK_CI_AUTH_SYNC_CRON_ENABLED:-}" ]; then
+    if [ -n "${BK_CI_SYNC_CRON_ENABLED:-}" ]; then
+        BK_CI_AUTH_SYNC_CRON_ENABLED="$BK_CI_SYNC_CRON_ENABLED"
+    else
+        BK_CI_AUTH_SYNC_CRON_ENABLED=true
+    fi
 fi
 set +a
 

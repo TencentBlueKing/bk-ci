@@ -24,9 +24,6 @@ spec:
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/bkiam-rbac
           {{ $tenantId := "default" }}
-          {{- if .Values.config.bkTenantEnabled }}
-            {{ $tenantId = "system" }}
-          {{- end }}
           command:
             - "/bin/bash"
             - "-c"

@@ -14,6 +14,8 @@ import com.tencent.devops.common.service.tenant.TenantUtils
 import jakarta.ws.rs.HttpMethod
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * 多租户部门服务
@@ -178,7 +180,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         try {
             return TenantUtils.callApigw(
                 apigwHost = bkApigwUserHost!!,
-                path = LIST_USER_DEPARTMENT.replace("{bk_username}", bkUsername),
+                path = LIST_USER_DEPARTMENT.replace("{bk_username}", encodePathSegment(bkUsername)),
                 params = params,
                 tenantId = tenantId,
                 method = HttpMethod.GET,
@@ -204,7 +206,7 @@ class TenantAuthDeptServiceImpl : DeptService {
         try {
             return TenantUtils.callApigw(
                 apigwHost = bkApigwUserHost!!,
-                path = RETRIEVE_USER.replace("{bk_username}", bkUsername),
+                path = RETRIEVE_USER.replace("{bk_username}", encodePathSegment(bkUsername)),
                 params = emptyMap(),
                 tenantId = tenantId,
                 method = HttpMethod.GET,
@@ -276,6 +278,10 @@ class TenantAuthDeptServiceImpl : DeptService {
                 defaultMessage = "department ${departmentIds.joinToString(",")} not exist"
             )
         }
+    }
+
+    private fun encodePathSegment(value: String): String {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20")
     }
 
     companion object {

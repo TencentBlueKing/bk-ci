@@ -155,18 +155,28 @@ export function toEpochMilli (value) {
     return null
 }
 
+const dateTimeFormatterCache = new Map()
+
+function getDateTimeFormatter (timeZone) {
+    let formatter = dateTimeFormatterCache.get(timeZone)
+    if (!formatter) {
+        formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23'
+        })
+        dateTimeFormatterCache.set(timeZone, formatter)
+    }
+    return formatter
+}
+
 function formatParts (date, timeZone) {
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hourCycle: 'h23'
-    })
-    const parts = formatter.formatToParts(date)
+    const parts = getDateTimeFormatter(timeZone).formatToParts(date)
     const map = {}
     parts.forEach((p) => {
         if (p.type !== 'literal') {

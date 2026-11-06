@@ -1221,7 +1221,12 @@ class ProjectDao {
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
 
     private fun tenantVisibleCondition(field: org.jooq.Field<String>, tenantId: String?) =
-        field.eq(tenantId).or(field.isNull)
+        if (tenantId == TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI) {
+            // 迁移窗口：尚未回填的空租户只对默认租户可见
+            field.eq(tenantId).or(field.isNull)
+        } else {
+            field.eq(tenantId)
+        }
 
     fun listAllTenantIds(dslContext: DSLContext): List<String> {
         if (!TenantUtils.isMultiTenantMode()) {

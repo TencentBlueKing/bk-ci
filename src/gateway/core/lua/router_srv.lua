@@ -89,7 +89,7 @@ if ngx.var.url_prefix ~= nil then
     else
         local bkStoreId = "bk-store"
         if config.tenant.enabled then
-            bkStoreId = "system." .. bkStoreId
+            bkStoreId = "default." .. bkStoreId
         end
         ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/" .. bkStoreId .. "/static/"
     end

@@ -85,13 +85,6 @@ def get_columns(conn, database, table):
         return [row[0] for row in cur.fetchall()]
 
 
-def get_row_count(conn, table):
-    """获取表行数"""
-    with conn.cursor() as cur:
-        cur.execute(f"SELECT COUNT(*) FROM `{table}`")
-        return cur.fetchone()[0]
-
-
 def escape_value(val):
     """将 Python 值转为 SQL 字面量"""
     if val is None:
@@ -110,42 +103,49 @@ def escape_value(val):
         return "X'" + val.hex() + "'"
     # str / datetime / date / decimal 等
     s = str(val)
-    s = s.replace("\\", "\\\\").replace("'", "\\'")
+    s = (
+        s.replace("\\", "\\\\")
+        .replace("\0", "\\0")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\x1a", "\\Z")
+        .replace("'", "\\'")
+    )
     return f"'{s}'"
 
 
 def export_table(conn, database, table, columns, output_file):
-    """导出单张表到 SQL 文件"""
-    row_count = get_row_count(conn, table)
-    if row_count == 0:
-        print(f"  {table}: 0 行，跳过导出")
-        return None
-
+    """导出单张表到 SQL 文件。空表不落文件，不再先做全表 COUNT。"""
     col_names = ", ".join(f"`{c}`" for c in columns)
     written = 0
-
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(f"-- Table: {database}.{table}\n")
-        f.write(f"-- Rows: {row_count}\n")
-        f.write(f"-- Exported at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-
+    outfile = None
+    try:
         with conn.cursor() as cur:
             cur.execute(f"SELECT {col_names} FROM `{table}`")
             while True:
                 rows = cur.fetchmany(BATCH_SIZE)
                 if not rows:
                     break
+                if outfile is None:
+                    outfile = open(output_file, "w", encoding="utf-8")
+                    outfile.write(f"-- Table: {database}.{table}\n")
+                    outfile.write(f"-- Exported at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
                 values_list = []
                 for row in rows:
                     vals = ", ".join(escape_value(v) for v in row)
                     values_list.append(f"({vals})")
-                f.write(
+                outfile.write(
                     f"INSERT INTO `{table}` ({col_names}) VALUES\n"
                 )
-                f.write(",\n".join(values_list))
-                f.write(";\n\n")
+                outfile.write(",\n".join(values_list))
+                outfile.write(";\n\n")
                 written += len(rows)
-
+    finally:
+        if outfile is not None:
+            outfile.close()
+    if written == 0:
+        print(f"  {table}: 0 行，跳过导出")
+        return None
     return written
 
 

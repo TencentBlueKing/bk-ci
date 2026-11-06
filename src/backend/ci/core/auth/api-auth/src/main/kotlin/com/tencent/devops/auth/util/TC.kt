@@ -33,15 +33,19 @@ class TC : ApplicationContextAware, InitializingBean {
             if (userId == null) {
                 return "null"
             }
-            if (tenantId == null) {
-                return userId
+            return uid2Names(listOf(userId), tenantId)[userId] ?: userId
+        }
+
+        /**
+         * 一次查询多个用户的展示名。多租户关闭或没有租户时直接返回原 ID。
+         */
+        fun uid2Names(userIds: Collection<String?>, tenantId: String?): Map<String, String> {
+            val ids = userIds.filterNotNull().distinct()
+            if (ids.isEmpty() || tenantId == null || !TenantUtils.isMultiTenantMode()) {
+                return ids.associateWith { it }
             }
-            val listUserInfos = listUserInfos(listOf(userId), tenantId)
-            return if (listUserInfos.isEmpty()) {
-                userId
-            } else {
-                listUserInfos[0].displayName
-            }
+            val displayNames = listUserInfos(ids, tenantId).associate { it.name to it.displayName }
+            return ids.associateWith { displayNames[it] ?: it }
         }
 
         private fun listUserInfos(

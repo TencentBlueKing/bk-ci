@@ -15,11 +15,12 @@
 说明:
     1. 新数据库必须已经通过 DDL 脚本初始化好表结构（含多租户字段）
     2. 脚本会读取导出的 SQL 文件，解析数据，补充多租户字段后写入新库
-    3. devops_ci_store 下的 tenant_id 填充为 "system"
-    4. 其他库下的 tenant_id 填充为 "tencent"
-    5. T_PROJECT / T_PROJECT_APPROVAL 的 tenant_english_name 用 english_name 填充
-    6. 使用 INSERT IGNORE 避免重复数据冲突
-    7. 支持断点续跑：已导入的表会跳过（通过 --skip-existing 控制）
+    3. devops_ci_store 下的 tenant_id 填充为 "default"（平台默认租户）
+    4. 仅 T_PROJECT / T_PROJECT_APPROVAL 填充为 "tencent"（迁移源租户，不是平台默认值）
+    5. 未出现在映射里的表不改写 tenant_id，沿用 DDL 默认值
+    6. T_PROJECT / T_PROJECT_APPROVAL 的 tenant_english_name 用 english_name 填充
+    7. 使用 INSERT IGNORE 避免重复数据冲突，并按实际写入行数和告警统计
+    8. --skip-existing 不再整表跳过；表里已有数据时继续导入，重复行由 INSERT IGNORE 跳过
 """
 
 import argparse
@@ -70,13 +71,13 @@ TENANT_FIELD_MAP = {
         "TENANT_ENGLISH_NAME": "$ENGLISH_NAME",
     },
     ("devops_ci_store", "T_ATOM"): {
-        "TENANT_ID": "system",
+        "TENANT_ID": "default",
     },
     ("devops_ci_store", "T_TEMPLATE"): {
-        "TENANT_ID": "system",
+        "TENANT_ID": "default",
     },
     ("devops_ci_store", "T_IMAGE"): {
-        "TENANT_ID": "system",
+        "TENANT_ID": "default",
     },
 }
 
@@ -114,11 +115,67 @@ def execute_session_setting(conn, sql, warn_prefix):
     return True
 
 
-def print_sql_error(prefix, sql, error):
-    """打印 SQL 执行异常和对应语句内容。"""
+def print_sql_error(prefix, error):
+    """只打印定位信息和错误，不输出 SQL 正文。"""
     print(f"{prefix}: {error}")
-    print("    [SQL]")
-    print(sql)
+
+
+def find_statement_end(text, start):
+    """在字符串外查找语句结束分号。引号内的分号不截断。"""
+    in_string = False
+    quote_char = None
+    i = start
+    while i < len(text):
+        ch = text[i]
+        if in_string:
+            if ch == "\\" and i + 1 < len(text):
+                i += 2
+                continue
+            if ch == quote_char:
+                if i + 1 < len(text) and text[i + 1] == quote_char:
+                    i += 2
+                    continue
+                in_string = False
+                quote_char = None
+            i += 1
+            continue
+        if ch in ("'", '"'):
+            in_string = True
+            quote_char = ch
+        elif ch == ";":
+            return i
+        i += 1
+    return -1
+
+
+def iter_insert_statements(filepath):
+    """
+    按 INSERT 语句流式产出 (table, columns, values_str)。
+    只保留当前语句，语句结束分号按引号感知定位。
+    """
+    buf = ""
+    with open(filepath, "r", encoding="utf-8") as f:
+        while True:
+            chunk = f.read(1024 * 1024)
+            if chunk:
+                buf += chunk
+            while True:
+                match = RE_INSERT_HEAD.search(buf)
+                if not match:
+                    break
+                end = find_statement_end(buf, match.end())
+                if end == -1:
+                    buf = buf[match.start():]
+                    break
+                columns = [c.strip().strip("`") for c in match.group(2).split(",")]
+                yield match.group(1), columns, buf[match.end():end]
+                buf = buf[end + 1:]
+            if not chunk:
+                if RE_INSERT_HEAD.search(buf):
+                    print(f"    [WARN] {filepath}: 末尾 INSERT 未闭合，已丢弃剩余片段")
+                break
+            if not RE_INSERT_HEAD.search(buf) and len(buf) > 8192:
+                buf = buf[-4096:]
 
 
 def get_target_columns(conn, database, table):
@@ -141,34 +198,8 @@ def get_row_count(conn, table):
 
 
 def parse_insert_statements(filepath):
-    """
-    解析导出的 SQL 文件，逐条 INSERT 语句 yield:
-      (table_name, [col1, col2, ...], "raw_values_string")
-    raw_values_string 是 VALUES 后面的内容（多行拼接），包含一组 (...),(...) 值
-    """
-    with open(filepath, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # 按 INSERT INTO 拆分
-    parts = RE_INSERT_HEAD.split(content)
-    # parts[0] 是头部注释, 然后每 3 个一组: table, columns, values_block
-    i = 1
-    while i + 2 <= len(parts):
-        table = parts[i]
-        columns_raw = parts[i + 1]
-        values_block = parts[i + 2]
-        columns = [c.strip().strip("`") for c in columns_raw.split(",")]
-
-        # values_block 里可能还包含后续的 INSERT (如果有多批次)
-        # 取到第一个分号为止
-        semi_pos = values_block.find(";")
-        if semi_pos != -1:
-            values_str = values_block[:semi_pos]
-        else:
-            values_str = values_block
-
-        yield table, columns, values_str
-        i += 3
+    """兼容旧调用，逐条产出 INSERT。"""
+    yield from iter_insert_statements(filepath)
 
 
 def parse_row_values(values_str):
@@ -213,25 +244,24 @@ def parse_row_values(values_str):
     return row_literals
 
 
-def resolve_field_value(rule, source_columns, row_literal, col_index_map):
+def resolve_field_value(rule, col_index_map, all_vals):
     """
     根据填充规则获取字段值的 SQL 字面量。
     - rule 是固定字符串 -> 返回 'value'
-    - rule 以 "$" 开头 -> 从该行已有列中取值
+    - rule 以 "$" 开头 -> 从该行已拆好的列值中取值
     """
     if rule.startswith("$"):
         ref_col = rule[1:]
-        # 找到引用列在 source_columns 中的位置
-        if ref_col in col_index_map:
-            idx = col_index_map[ref_col]
-            # 从 row_literal 中提取第 idx 个值
-            return extract_nth_value(row_literal, idx)
-        # 列名大小写不敏感再试
-        ref_lower = ref_col.lower()
-        for col_name, col_idx in col_index_map.items():
-            if col_name.lower() == ref_lower:
-                return extract_nth_value(row_literal, col_idx)
-        return "NULL"
+        idx = col_index_map.get(ref_col)
+        if idx is None:
+            ref_lower = ref_col.lower()
+            for col_name, col_idx in col_index_map.items():
+                if col_name.lower() == ref_lower:
+                    idx = col_idx
+                    break
+        if idx is None or idx >= len(all_vals):
+            return "NULL"
+        return all_vals[idx].strip()
     return f"'{rule}'"
 
 
@@ -328,8 +358,10 @@ def import_table_file(conn, database, table_file, tenant_fields, skip_existing):
     if skip_existing:
         existing_count = get_row_count(conn, table_name)
         if existing_count > 0:
-            print(f"    [SKIP] {table_name}: 目标表已有 {existing_count} 行数据")
-            return 0
+            print(
+                f"    [INFO] {table_name}: 目标表已有 {existing_count} 行，"
+                "继续导入，重复行由 INSERT IGNORE 跳过"
+            )
 
     target_col_set = {c.lower() for c in target_columns}
     total_imported = 0
@@ -378,8 +410,7 @@ def import_table_file(conn, database, table_file, tenant_fields, skip_existing):
 
                 # 补充多租户字段值
                 for field_name, rule in extra_fields.items():
-                    val = resolve_field_value(rule, src_columns, row_lit, col_index_map)
-                    picked.append(val)
+                    picked.append(resolve_field_value(rule, col_index_map, all_vals))
 
                 new_rows.append("(" + ", ".join(picked) + ")")
 
@@ -391,28 +422,53 @@ def import_table_file(conn, database, table_file, tenant_fields, skip_existing):
             try:
                 with conn.cursor() as cur:
                     cur.execute(sql)
+                    inserted = cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+                    cur.execute("SHOW WARNINGS")
+                    warnings = cur.fetchall()
                 conn.commit()
-                total_imported += len(batch)
+                total_imported += inserted
+                real_warnings = [w for w in warnings if len(w) < 2 or w[1] != 1062]
+                if real_warnings:
+                    print(
+                        f"    [WARN] {table_name} batch@{batch_start}: "
+                        f"写入 {inserted} 行，告警 {len(real_warnings)} 条"
+                    )
+                    for warning in real_warnings[:5]:
+                        print(f"        {warning}")
+                elif inserted < len(batch):
+                    print(
+                        f"    [INFO] {table_name} batch@{batch_start}: "
+                        f"写入 {inserted} 行，重复跳过 {len(batch) - inserted} 行"
+                    )
             except Exception as e:
                 conn.rollback()
                 print_sql_error(
                     f"    [ERROR] {table_name} batch@{batch_start}",
-                    sql,
                     e,
                 )
-                # 逐行重试
-                for row_sql in new_rows:
-                    single = f"INSERT IGNORE INTO `{table_name}` ({col_names_sql}) VALUES\n{row_sql};"
+                for row_index, row_sql in enumerate(new_rows):
+                    single = (
+                        f"INSERT IGNORE INTO `{table_name}` ({col_names_sql}) "
+                        f"VALUES\n{row_sql};"
+                    )
                     try:
                         with conn.cursor() as cur:
                             cur.execute(single)
+                            inserted = cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+                            cur.execute("SHOW WARNINGS")
+                            warnings = cur.fetchall()
                         conn.commit()
-                        total_imported += 1
+                        total_imported += inserted
+                        real_warnings = [w for w in warnings if len(w) < 2 or w[1] != 1062]
+                        if real_warnings:
+                            print(
+                                f"    [WARN] {table_name} row@{batch_start + row_index}: "
+                                f"{real_warnings[0]}"
+                            )
                     except Exception as e2:
                         conn.rollback()
                         print_sql_error(
-                            f"    [ERROR] {table_name} single row",
-                            single,
+                            f"    [ERROR] {table_name} row@{batch_start + row_index}",
                             e2,
                         )
 
@@ -502,8 +558,9 @@ def main():
     print(f"导入数据目录: {os.path.abspath(args.input_dir)}")
     print(f"待导入数据库: {len(databases)} 个")
     print(f"多租户字段填充规则:")
-    print(f"  devops_ci_store 下 tenant_id = 'system'")
-    print(f"  其他库下          tenant_id = 'tencent'")
+    print(f"  devops_ci_store 下 tenant_id = 'default'")
+    print(f"  T_PROJECT / T_PROJECT_APPROVAL tenant_id = 'tencent'")
+    print(f"  未配置的表沿用 DDL 默认值")
     print()
 
     total_start = time.time()

@@ -78,15 +78,21 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     fun migrateProjectCodePrefix(): Boolean {
         logger.info("Start migrating project code prefix")
         val projectCodes = listDistinctProjectCodes()
-        logger.info("Found ${projectCodes.size} projects to migrate: $projectCodes")
+        logger.info("Found ${projectCodes.size} projects to migrate")
+        val failed = mutableListOf<String>()
         projectCodes.forEach { oldProjectCode ->
             try {
-                migrateProject(oldProjectCode)
+                if (!migrateProject(oldProjectCode)) {
+                    failed.add(oldProjectCode)
+                }
             } catch (e: Exception) {
-                logger.error(
-                    "Failed to migrate project: $oldProjectCode", e
-                )
+                logger.error("Failed to migrate project: $oldProjectCode", e)
+                failed.add(oldProjectCode)
             }
+        }
+        if (failed.isNotEmpty()) {
+            logger.error("Project code prefix migration incomplete, failed count=${failed.size}")
+            return false
         }
         logger.info("Finish migrating project code prefix")
         return true
@@ -115,19 +121,14 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             "Start migrating single project code prefix: " +
                     "$projectCode"
         )
-        migrateProject(projectCode)
-        logger.info(
-            "Finish migrating single project code prefix: " +
-                    "$projectCode"
-        )
-        return true
+        return migrateProject(projectCode)
     }
 
     /**
      * 迁移单个项目
      */
     @Suppress("LongMethod")
-    private fun migrateProject(oldProjectCode: String) {
+    private fun migrateProject(oldProjectCode: String): Boolean {
         val newProjectCode = "$PROJECT_CODE_PREFIX$oldProjectCode"
         logger.info("Migrating project: $oldProjectCode -> $newProjectCode")
         try {
@@ -140,10 +141,11 @@ class MigrateProjectCodePrefixService @Autowired constructor(
             // Step 4: 删除旧项目数据
             deleteOldProjectData(oldProjectCode)
         } catch (e: Exception) {
-            logger.warn("migrate projectCode prefix failed: $e")
-            return
+            logger.warn("migrate projectCode prefix failed: $oldProjectCode", e)
+            return false
         }
         logger.info("Successfully migrated project: $oldProjectCode -> $newProjectCode")
+        return true
     }
 
     /**
@@ -193,26 +195,16 @@ class MigrateProjectCodePrefixService @Autowired constructor(
         oldProjectCode: String,
         newProjectCode: String
     ) {
-        // 查询旧项目下所有非项目类型资源
-        val offset = 0
-        val limit = 10000
-        val resources = authResourceDao.list(
-            dslContext = dslContext,
-            projectCode = oldProjectCode,
-            resourceName = null,
-            resourceType = null,
-            offset = offset,
-            limit = limit
-        ).filter {
+        val resources = listProjectResources(oldProjectCode).filter {
             it.resourceType != AuthResourceType.PROJECT.value
         }
         logger.info(
             "Found ${resources.size} non-project resources " +
                     "in project $oldProjectCode"
         )
-        resources.forEach { resource ->
+        val failedCount = resources.count { resource ->
             try {
-                logger.info(
+                logger.debug(
                     "Creating resource: type=${resource.resourceType}," +
                             " code=${resource.resourceCode}," +
                             " name=${resource.resourceName}"
@@ -226,6 +218,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                     tenantId = null,
                     async = false
                 )
+                false
             } catch (e: Exception) {
                 logger.error(
                     "Failed to create resource: " +
@@ -234,7 +227,13 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                             "in project $newProjectCode",
                     e
                 )
+                true
             }
+        }
+        if (failedCount > 0) {
+            throw IllegalStateException(
+                "failed to create $failedCount resources in project $oldProjectCode"
+            )
         }
     }
 
@@ -284,13 +283,16 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                             "in project $newProjectCode, " +
                             "skip ${members.size} members"
                 )
-                return@forEach
+                throw IllegalStateException(
+                    "new group not found for iamGroupId=$oldIamGroupId in project $newProjectCode"
+                )
             }
-            logger.info(
+            logger.debug(
                 "Migrating ${members.size} members: " +
                         "oldIamGroupId=$oldIamGroupId -> " +
                         "newIamGroupId=${newGroup.relationId}"
             )
+            var failedMembers = 0
             members.forEach { member ->
                 try {
                     permissionResourceMemberService.addGroupMember(
@@ -301,6 +303,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                         iamGroupId = newGroup.relationId
                     )
                 } catch (e: Exception) {
+                    failedMembers++
                     logger.error(
                         "Failed to add member " +
                                 "${member.memberId} to group " +
@@ -309,6 +312,12 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                         e
                     )
                 }
+            }
+            if (failedMembers > 0) {
+                throw IllegalStateException(
+                    "failed to migrate $failedMembers members of group $oldIamGroupId " +
+                        "in project $oldProjectCode"
+                )
             }
         }
     }
@@ -368,20 +377,33 @@ class MigrateProjectCodePrefixService @Autowired constructor(
         return "${group.resourceType}:$resourceCode:${group.groupName}"
     }
 
+    private fun listProjectResources(projectCode: String) = buildList {
+        val pageSize = 1000
+        var offset = 0
+        while (true) {
+            val page = authResourceDao.list(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceName = null,
+                resourceType = null,
+                offset = offset,
+                limit = pageSize
+            )
+            addAll(page)
+            if (page.size < pageSize) {
+                break
+            }
+            offset += pageSize
+        }
+    }
+
     /**
      * 获取项目下所有组（包含项目资源和非项目资源的组）
      */
     private fun listAllGroupsByProject(
         projectCode: String
     ): List<AuthResourceGroup> {
-        val resources = authResourceDao.list(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceName = null,
-            resourceType = null,
-            offset = 0,
-            limit = 10000
-        )
+        val resources = listProjectResources(projectCode)
         val allGroups = mutableListOf<AuthResourceGroup>()
         resources.forEach { resource ->
             allGroups.addAll(
@@ -402,17 +424,9 @@ class MigrateProjectCodePrefixService @Autowired constructor(
     private fun deleteOldProjectData(oldProjectCode: String) {
         logger.info("Deleting old project data: $oldProjectCode")
 
-        // 先获取所有旧资源用于逐个删除
-        val resources = authResourceDao.list(
-            dslContext = dslContext,
-            projectCode = oldProjectCode,
-            resourceName = null,
-            resourceType = null,
-            offset = 0,
-            limit = 10000
-        )
+        val resources = listProjectResources(oldProjectCode)
 
-        resources.forEach { resource ->
+        val failedCount = resources.count { resource ->
             try {
                 // 删除成员
                 authResourceGroupMemberDao.deleteByResource(
@@ -435,6 +449,7 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                     resourceType = resource.resourceType,
                     resourceCode = resource.resourceCode
                 )
+                false
             } catch (e: Exception) {
                 logger.error(
                     "Failed to delete old resource: " +
@@ -443,7 +458,13 @@ class MigrateProjectCodePrefixService @Autowired constructor(
                             "in project $oldProjectCode",
                     e
                 )
+                true
             }
+        }
+        if (failedCount > 0) {
+            throw IllegalStateException(
+                "failed to delete $failedCount resources in project $oldProjectCode"
+            )
         }
         logger.info(
             "Deleted old project data: $oldProjectCode, " +

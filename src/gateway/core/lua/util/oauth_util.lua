@@ -164,7 +164,7 @@ function _M:verify_bk_token(bk_token)
         {
             method = "GET",
             ssl_verify = false,
-            headers = { ["X-Bkapi-Authorization"] = '{"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}', ["X-Bk-Tenant-Id"] = 'system' }
+            headers = { ["X-Bkapi-Authorization"] = '{"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}', ["X-Bk-Tenant-Id"] = 'default' }
         }
     )
     --- 设置HTTP保持连接
@@ -187,9 +187,9 @@ function _M:verify_bk_token(bk_token)
     --- 转换JSON的返回数据为TABLE
     local result = json.decode(responseBody)
 
-    -- 返回 data（tenant_id / time_zone 等）
-    if result == nil then
-        ngx.log(ngx.ERR, "null is tenant result")
+    -- 返回 data（tenant_id / time_zone 等）。data 为空或没有 tenant_id 时拒绝，避免调用方继续登录。
+    if result == nil or result.data == nil or result.data.tenant_id == nil or result.data.tenant_id == "" then
+        ngx.log(ngx.ERR, "tenant userinfo missing tenant_id")
         ngx.exit(401)
         return
     end

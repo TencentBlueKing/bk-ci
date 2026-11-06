@@ -34,9 +34,9 @@ python import_data.py \
 
 | 数据库 | 表 | 填充字段 | 填充值 |
 | --- | --- | --- | --- |
-| devops_ci_store | T_ATOM | TENANT_ID | system |
-| devops_ci_store | T_TEMPLATE | TENANT_ID | system |
-| devops_ci_store | T_IMAGE | TENANT_ID | system |
+| devops_ci_store | T_ATOM | TENANT_ID | default |
+| devops_ci_store | T_TEMPLATE | TENANT_ID | default |
+| devops_ci_store | T_IMAGE | TENANT_ID | default |
 | devops_ci_project | T_PROJECT | tenant_id | tencent |
 | devops_ci_project | T_PROJECT | tenant_english_name | 取自该行 english_name 值 |
 | devops_ci_project | T_PROJECT_APPROVAL | TENANT_ID | tencent |
@@ -45,7 +45,7 @@ python import_data.py \
 ### 关键特性
 
 - **幂等**：导入使用 `INSERT IGNORE`，重复执行不会报错
-- **断点续跑**：`--skip-existing` 跳过目标表已有数据的表
+- **断点续跑**：`--skip-existing` 在目标表已有数据时继续导入，重复主键由 `INSERT IGNORE` 跳过，并打印实际写入行数与告警
 - **容错**：批量插入失败时自动逐行重试，定位问题行
 - **安全**：导入前关闭外键检查加速，完成后恢复
 - **源列兼容**：自动对比源数据列与目标表列，跳过目标表不存在的列，新增的多租户列自动补充

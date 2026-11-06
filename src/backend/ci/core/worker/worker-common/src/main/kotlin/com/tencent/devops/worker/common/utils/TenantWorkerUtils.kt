@@ -6,5 +6,5 @@ object TenantWorkerUtils {
      */
     fun isMultiTenantMode(projectId: String): Boolean = projectId.contains(".")
 
-    public const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
+    public const val DEFAULT_TENANT_ID_FOR_MULTI = "default"
 }

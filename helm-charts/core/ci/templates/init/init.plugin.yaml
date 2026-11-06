@@ -24,9 +24,6 @@ spec:
           workingDir: /data/workspace/
           {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
           {{ $tenantId := "default" }}
-          {{- if .Values.config.bkTenantEnabled }}
-            {{ $tenantId = "system" }}
-          {{- end }}
           command:
             - "/bin/bash"
             - "-c"

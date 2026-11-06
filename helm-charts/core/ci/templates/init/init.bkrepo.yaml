@@ -26,8 +26,7 @@ spec:
           {{ $tenantId := "default" }}
           {{ $projectHead := "" }}
           {{- if .Values.config.bkTenantEnabled }}
-            {{ $tenantId = "system" }}
-            {{ $projectHead = "system." }}
+            {{ $projectHead = "default." }}
           {{- end }}
           command:
             - "/bin/bash"

@@ -353,7 +353,9 @@ auth sync cron 开关：优先新 key bkCiAuthSyncCronEnabled；未配置时用�
 {{- define "bkci.authSyncCronEnabled" -}}
 {{- if hasKey .Values.config "bkCiAuthSyncCronEnabled" -}}
 {{- index .Values.config "bkCiAuthSyncCronEnabled" -}}
-{{- else -}}
+{{- else if hasKey .Values.config "bkCiSyncCronEnabled" -}}
 {{- index .Values.config "bkCiSyncCronEnabled" -}}
+{{- else -}}
+true
 {{- end -}}
 {{- end -}}

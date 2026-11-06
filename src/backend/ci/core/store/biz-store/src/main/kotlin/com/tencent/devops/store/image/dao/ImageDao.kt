@@ -1040,5 +1040,10 @@ class ImageDao {
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
 
     private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
-        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
+        if (tenantId == TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI) {
+            // 迁移窗口：尚未回填的空租户只对默认租户可见
+            field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
+        } else {
+            field.`in`(tenantId, TenantUtils.getTenantId())
+        }
 }

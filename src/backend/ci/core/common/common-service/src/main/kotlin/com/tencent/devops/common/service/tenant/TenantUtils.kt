@@ -13,6 +13,8 @@ import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.core.env.get
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class TenantUtils : ApplicationContextAware, InitializingBean {
     private var applicationContext: ApplicationContext? = null
@@ -39,7 +41,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private var disableEsb: Boolean = false
 
         private const val DEFAULT_TENANT_ID_FOR_SINGLE = "default"
-        public const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
+        public const val DEFAULT_TENANT_ID_FOR_MULTI = "default"
         private val logger = LoggerFactory.getLogger(TenantUtils::class.java)
 
         fun disableEsb(): Boolean {
@@ -100,7 +102,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
          * 多租户必须非空：SDK 在 enableMultiTenantMode 下若 ThreadLocal 无租户会丢掉鉴权头。
          *
          * @param projectEnglishName 项目英文名，优先按英文名解析租户
-         * @param tenantId 已解析的租户 ID；无项目名时使用，空则回落 system
+         * @param tenantId 已解析的租户 ID；无项目名时使用，空则回落 default
          */
         fun iamTenantId(projectEnglishName: String? = null, tenantId: String? = null): String? {
             if (!enableMultiTenantMode) {
@@ -126,29 +128,32 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         ): T {
             var url = getAuthRequestUrl(apigwHost, path)
             var body: RequestBody? = null
-            if (method == HttpMethod.GET) {
-                // 将map参数拼接到url上
+            if (method == HttpMethod.GET && params.isNotEmpty()) {
                 url = buildString {
-                    append("$url?")
-                    append(params.entries.joinToString("&") { "${it.key}=${it.value}" })
+                    append(url)
+                    append("?")
+                    append(
+                        params.entries.joinToString("&") {
+                            "${encodeQuery(it.key)}=${encodeQuery(it.value)}"
+                        }
+                    )
                 }
-            } else {
+            } else if (method != HttpMethod.GET) {
                 val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
                 body = JsonUtil.toJson(params).toRequestBody(mediaType)
             }
-            logger.info("callApi: url = $url , body = $body")
+            logger.info("callApi: method = $method , path = $path")
             val request = Request.Builder().url(url)
                 .headers(getHeaders(tenantId))
                 .let { if (method == HttpMethod.GET) it.get() else it.post(body!!) }
                 .build()
             OkhttpUtils.doHttp(request).use {
                 if (!it.isSuccessful) {
-                    // 请求错误
-                    logger.warn("call api fail: url = $url | params = $params | response = ($it)")
-                    throw RuntimeException("call api fail: url = $url | params = $params | response = ($it)")
+                    logger.warn("call api fail: path = $path | status = ${it.code}")
+                    throw RuntimeException("call api fail: path = $path | status = ${it.code}")
                 }
                 val responseStr = it.body!!.string()
-                logger.info("call api : response = $responseStr")
+                logger.info("call api : path = $path | status = ${it.code} | bytes = ${responseStr.length}")
                 return JsonUtil.getObjectMapper().readValue(responseStr, respType)
             }
         }
@@ -156,6 +161,10 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 生成请求url
          */
+        private fun encodeQuery(value: Any?): String {
+            return URLEncoder.encode(value?.toString().orEmpty(), StandardCharsets.UTF_8)
+        }
+
         private fun getAuthRequestUrl(apigwHost: String, uri: String): String {
             return if (apigwHost.endsWith("/")) {
                 apigwHost + uri
