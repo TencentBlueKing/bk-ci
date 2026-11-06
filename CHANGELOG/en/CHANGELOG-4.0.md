@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.2](#v402)
+   - [Changelog since v4.0.1](#changelog-since-v401)
+
 - [v4.0.1](#v401)
    - [Changelog since v4.0.0](#changelog-since-v400)
 
@@ -31,6 +34,14 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.2
+## 2026-11-06
+### Changelog since v4.0.1
+#### New Features
+- [New Feature] feat: Close service/op interface [Link](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+- [New Feature] feat: backend.conf uses prefix matching [Link](http://github.com/TencentBlueKing/bk-ci/issues/13708)
+- [New Feature] feat: Remove dispatch k8s module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13649)
+
 # v4.0.1
 ## 2025-12-30
 ### Changelog since v4.0.0
