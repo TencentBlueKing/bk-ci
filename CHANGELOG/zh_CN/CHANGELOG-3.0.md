@@ -29,14 +29,31 @@
 
 <!-- NEW RELEASE NOTES ENTRY -->
 # v3.0.16
-## 2025-12-29
+## 2026-11-06
 ### Changelog since v3.0.15
+#### 新增
+- [新增] feat: 依赖包版本升级优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12951)
+
+#### 优化
+- [优化] pref: 完善商店上传文件名称校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13027)
+- [优化] pref:zip解压工具优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12960)
+
 #### 修复
 
 ##### 流水线
+- [修复] bug: 触发事件描述由前端组装 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12969)
 - [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
 
+##### 凭证管理
+- [修复] feat: 密钥支持自动刷新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### 权限中心
+- [修复] bug: 修复用户态接口鉴权时偶现卡顿 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12111)
+
 ##### 其他
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+- [修复] bug: 优化callback调用http工具 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12961)
+- [修复] bugfix: 修复release3.0的上传插件问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12889)
 - [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
 
 # v3.0.15
