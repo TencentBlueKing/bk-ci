@@ -52,37 +52,44 @@
                     class="diff-version-header"
                     v-if="showButton"
                 >
-                    <p
-                        v-if="instanceCompareWithTemplate"
-                        class="base-version-selector-left-part"
-                    >
-                        {{ $t('template.instance') }}
-                        {{ instanceName || '--' }}
-                        <span class="from-template-version-span">
-                            ｜
-                            {{ $t('template.fromTemplateVersion', [templateVersionName || '--']) }}
-                        </span>
-                        <bk-tag
-                            theme="info"
-                            type="stroke"
+                    <div class="base-version-left-part">
+                        <p
+                            v-if="instanceCompareWithTemplate"
+                            class="base-version-selector-left-part"
                         >
-                            {{ $t('template.parsedYaml') }}
-                        </bk-tag>
-                    </p>
-                    <VersionSelector
-                        v-else
-                        ext-cls="dark-theme-select-trigger"
-                        ext-popover-cls="dark-theme-select-menu"
-                        :editable="canSwitchVersion"
-                        :show-draft-tag="!canSwitchVersion"
-                        :show-extension="false"
-                        :draft-version="(diffMode && currentEditingData) ? draftVersion : undefined"
-                        :need-draft-list="!!draftVersion"
-                        :auto-update-pipeline-info="false"
-                        v-model="activeVersion"
-                        @change="diffActiveVersion"
-                        v-bind="baseVersionSelectorConf"
-                    />
+                            {{ $t('template.instance') }}
+                            {{ instanceName || '--' }}
+                            <span class="from-template-version-span">
+                                ｜
+                                {{ $t('template.fromTemplateVersion', [templateVersionName || '--']) }}
+                            </span>
+                            <bk-tag
+                                theme="info"
+                                type="stroke"
+                            >
+                                {{ $t('template.parsedYaml') }}
+                            </bk-tag>
+                        </p>
+                        <VersionSelector
+                            v-else
+                            ext-cls="dark-theme-select-trigger"
+                            ext-popover-cls="dark-theme-select-menu"
+                            :editable="canSwitchVersion"
+                            :show-draft-tag="!canSwitchVersion"
+                            :show-extension="false"
+                            :draft-version="(diffMode && currentEditingData) ? draftVersion : undefined"
+                            :need-draft-list="!!draftVersion"
+                            :auto-update-pipeline-info="false"
+                            v-model="activeVersion"
+                            @change="diffActiveVersion"
+                            v-bind="baseVersionSelectorConf"
+                        />
+                        <DiffJumpBar
+                            :state="diffNavState"
+                            @prev="goPrevDiff"
+                            @next="goNextDiff"
+                        />
+                    </div>
                     <p class="latest-version-selector-right-part">
                         <span v-if="instanceCompareWithTemplate">{{ $t('template.template') }}</span>
                         <VersionSelector
@@ -107,12 +114,24 @@
                     >{{ $t('template.useTemplateSettings') }}
                     </bk-checkbox>
                 </header>
+                <header
+                    v-else
+                    class="diff-version-header diff-version-header-standalone"
+                >
+                    <DiffJumpBar
+                        :state="diffNavState"
+                        @prev="goPrevDiff"
+                        @next="goNextDiff"
+                    />
+                </header>
                 <div class="pipeline-yaml-diff-wrapper">
                     <yaml-diff
+                        ref="yamlDiff"
                         :old-yaml="activeYaml"
                         height="100%"
                         read-only
                         :new-yaml="currentYaml"
+                        @diff-change="handleDiffChange"
                     />
                 </div>
             </div>
@@ -132,6 +151,7 @@
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
     import Logo from '@/components/Logo'
+    import DiffJumpBar from '@/components/PipelineDetailTabs/DiffJumpBar'
     import { mapActions, mapGetters } from 'vuex'
     import { DRAFT_STATUS } from '@/utils/pipelineConst'
     import dayjs from 'dayjs'
@@ -139,7 +159,8 @@
         components: {
             YamlDiff,
             VersionSelector,
-            Logo
+            Logo,
+            DiffJumpBar
         },
         props: {
             text: {
@@ -218,7 +239,14 @@
                 pipelineVersionList: [],
                 useTemplateSettings: false,
                 templateVersionName: '',
-                instanceName: ''
+                instanceName: '',
+                // 差异块跳转状态：count 差异块总数，currentIndex 当前所在差异块（0 表示在第一处之上）
+                diffNavState: {
+                    count: 0,
+                    currentIndex: 0,
+                    hasPrev: false,
+                    hasNext: false
+                }
             }
         },
         computed: {
@@ -260,6 +288,15 @@
                         this.initDiff()
                     })
                 }
+            },
+            handleDiffChange (state) {
+                this.diffNavState = state
+            },
+            goPrevDiff () {
+                this.$refs.yamlDiff?.goPrev()
+            },
+            goNextDiff () {
+                this.$refs.yamlDiff?.goNext()
             },
             formatDate (data) {
                 return dayjs(data).format('YYYY-MM-DD HH:mm:ss')
@@ -323,6 +360,13 @@
                 this.currentVersion = this.draftVersion ? `draft-${this.draftVersion}` : this.latestVersion
                 this.showVersionDiffDialog = true
                 this.isLoadYaml = true
+                // 重置差异块跳转状态，等待 YamlDiff 重新计算后上报
+                this.diffNavState = {
+                    count: 0,
+                    currentIndex: 0,
+                    hasPrev: false,
+                    hasNext: false
+                }
                 
                 // 处理特殊的差异对比模式（CONFLICT 或 PUBLISHED）
                 if (this.diffMode && this.currentEditingData) {
@@ -462,6 +506,15 @@
                             align-items: center;
                             padding: 0 24px;
                             color: #C4C6CC;
+                            .base-version-left-part {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                min-width: 0;
+                            }
+                        }
+                        .diff-version-header-standalone {
+                            grid-template-columns: auto;
                         }
 
                         .pipeline-yaml-diff-wrapper {
