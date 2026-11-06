@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -52,6 +53,9 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             ).third
         )
         with(element) {
+            if (eventType == CodeEventType.PULL_REQUEST) {
+                params.includeUsers = EnvUtils.parseEnv(joinToString(element.includeUsers), variables)
+            }
             params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
                 ""
             } else {
