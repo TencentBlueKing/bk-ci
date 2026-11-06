@@ -19,6 +19,8 @@ commonLabels: {}
 # java 启动参数
 java:
   options: ""
+  # glibc malloc arena 上限，避免 Java 进程占用过多虚拟内存
+  mallocArenaMax: "4"
 
 # ingress 配置
 ingress:
@@ -319,332 +321,109 @@ entrypoint:
   override: true
 
 # Log Deployment
-log:
+log: &javaMicroservice
+  <<: &scheduling
+    replicas: 1
+    podLabels: {}
+    hostAliases: []
+    containerSecurityContext:
+      enabled: false
+      runAsUser: 1001
+      runAsNonRoot: true
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1001
+    podAffinityPreset: ""
+    podAntiAffinityPreset: soft
+    nodeAffinityPreset:
+      type: ""
+      key: ""
+      values: []
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    podAnnotations: {}
+    priorityClassName: ""
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 80
+      targetMemory: 80
   enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
+  resources: &javaResources
     requests:
       cpu: 100m
       memory: 1000Mi
     limits:
       cpu: 500m
       memory: 1500Mi
-  jvm:
+  jvm: &javaJvm
     heapPct: "70.0"
     initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
 
 # Auth Deployment
 auth:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # artifactory Deployment
 artifactory:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # dispatch Deployment
 dispatch:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # environment Deployment
 environment:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # misc Deployment
 misc:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # metrics Deployment
 metrics:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+  <<: *javaMicroservice
 
 # notify Deployment
 notify:
-  enabled: true
-  replicas: 1
-  podLabels: {}
+  <<: *javaMicroservice
+
+# process Deployment
+process:
+  <<: *javaMicroservice
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2Gi
     limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
+      cpu: 1000m
+      memory: 2Gi
+
+# project Deployment
+project:
+  <<: *javaMicroservice
+
+# quality Deployment
+quality:
+  <<: *javaMicroservice
+
+# repository Deployment
+repository:
+  <<: *javaMicroservice
+
+# store Deployment
+store:
+  <<: *javaMicroservice
+
+# ticket Deployment
+ticket:
+  <<: *javaMicroservice
+
+# websocket Deployment
+websocket:
+  <<: *javaMicroservice
 
 # openapi Deployment
 # 蓝鲸网关 JWT 公钥。默认关闭。开启用户态解析时同时设置：
@@ -654,334 +433,11 @@ notify:
 #     /data/workspace/openapi/<文件名>.pub。Chart 只挂载该文件。
 #   openapi.secret.content 为公钥文件的单行 base64。Secret 的 data key 是路径中的文件名。
 openapi:
+  <<: *javaMicroservice
   enabled: false
   secret:
     enabled: false
     content: ""
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# process Deployment
-process:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 2Gi
-    limits:
-      cpu: 1000m
-      memory: 2Gi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# project Deployment
-project:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# quality Deployment
-quality:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# repository Deployment
-repository:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# store Deployment
-store:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# ticket Deployment
-ticket:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# websocket Deployment
-websocket:
-  enabled: true
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 1000Mi
-    limits:
-      cpu: 500m
-      memory: 1500Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
 
 turbo:
   enabled: false
@@ -1035,9 +491,8 @@ turbo:
 
 # frontend Deployment
 frontend:
+  <<: *scheduling
   enabled: true
-  replicas: 1
-  podLabels: {}
   resources:
     requests:
       cpu: 100m
@@ -1045,38 +500,12 @@ frontend:
     limits:
       cpu: 500m
       memory: 1024Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
 
 # gateway Deployment
 gateway:
+  <<: *scheduling
   enabled: true
   type: ClusterIP
-  replicas: 1
-  podLabels: {}
   resources:
     requests:
       cpu: 100m
@@ -1084,38 +513,11 @@ gateway:
     limits:
       cpu: 500m
       memory: 800Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
 
 # AI Assistant Deployment
 ai:
+  <<: *javaMicroservice
   enabled: false
-  replicas: 1
-  podLabels: {}
   resources:
     requests:
       cpu: 500m
@@ -1126,28 +528,3 @@ ai:
   jvm:
     heapPct: "60.0"
     initSecs: 30
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
