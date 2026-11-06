@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
+import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildReplayResult
@@ -317,6 +318,28 @@ class UserBuildResourceImpl @Autowired constructor(
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(buildDetail)
+    }
+
+    @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
+    override fun getConcurrencyQueue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<ConcurrencyQueueView> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getConcurrencyQueue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_VIEW)

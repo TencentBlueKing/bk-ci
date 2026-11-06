@@ -165,6 +165,31 @@ class BuildRecordTaskDao {
         }
     }
 
+    /**
+     * 只补还没有状态的插件。已有状态（成功、失败、取消、未执行）不覆盖。
+     */
+    fun updateNullRecordStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        containerId: String,
+        buildStatus: BuildStatus
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            dslContext.update(this)
+                .set(STATUS, buildStatus.name)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(CONTAINER_ID.eq(containerId))
+                .and(STATUS.isNull.or(STATUS.eq("")))
+                .execute()
+        }
+    }
+
     fun getRecords(
         dslContext: DSLContext,
         projectId: String,

@@ -49,6 +49,7 @@ class CommandShellImpl : ICommand {
         charsetType: String?,
         taskId: String?
     ) {
+        // 采集顺序由 worker CommandLineExecutor.redirectErrorStream 保证，见 CommandLineUtils
         val realCommand = parseTemplate(
             buildId = buildId,
             command = script,

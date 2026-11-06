@@ -331,6 +331,12 @@ class ContainerBuildRecordService(
                     if (recordContainer.endTime == null) {
                         endTime = now
                     }
+                    // 开机回报没写上终态时，用容器终态补齐「准备 Job」，已有终态不覆盖
+                    resolveTerminalStartVmStatus(
+                        containerStatus = buildStatus,
+                        matrixGroup = recordContainer.matrixGroupFlag,
+                        currentStartVmStatus = recordContainer.containerVar[Container::startVMStatus.name]?.toString()
+                    )?.let { containerVar[Container::startVMStatus.name] = it }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, now.timestampmilli()
                     )
@@ -361,6 +367,18 @@ class ContainerBuildRecordService(
                     startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
+                // 取消或失败收口时，没跑到的插件记录仍是 null，详情会和 UNEXEC 分成两种未执行
+                if (shouldMarkUnstartedTasksUnexec(buildStatus, recordContainer.matrixGroupFlag)) {
+                    recordTaskDao.updateNullRecordStatus(
+                        dslContext = context,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        containerId = containerId,
+                        buildStatus = BuildStatus.UNEXEC
+                    )
+                }
             }
         }
     }
@@ -560,4 +578,39 @@ class ContainerBuildRecordService(
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerBuildRecordService::class.java)
     }
+}
+
+/**
+ * 容器进入终态时，「准备 Job」仍停在非终态就补写。
+ * 已经结束的开机结果保持不变；矩阵组没有开机步骤。
+ * 成功收成 [BuildStatus.SUCCEED]，失败、取消、超时沿用容器终态。
+ */
+internal fun resolveTerminalStartVmStatus(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?,
+    currentStartVmStatus: String?
+): String? {
+    if (!containerStatus.isFinish() || matrixGroup == true) {
+        return null
+    }
+    if (BuildStatus.parse(currentStartVmStatus).isFinish()) {
+        return null
+    }
+    return if (containerStatus.isSuccess() && !containerStatus.isSkip()) {
+        BuildStatus.SUCCEED.name
+    } else {
+        containerStatus.name
+    }
+}
+
+/**
+ * Job 以取消或失败结束时，尚未写入状态的插件应记为未执行。
+ * 成功不改。跳过由 [ContainerBuildRecordService.containerSkip] 写成 SKIP。
+ * 矩阵组容器上的记录不是具体插件，不在这里补。
+ */
+internal fun shouldMarkUnstartedTasksUnexec(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?
+): Boolean {
+    return containerStatus.isFinish() && !containerStatus.isSuccess() && matrixGroup != true
 }
