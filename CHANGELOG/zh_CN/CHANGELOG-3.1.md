@@ -29,9 +29,11 @@
 
 <!-- NEW RELEASE NOTES ENTRY -->
 # v3.1.1
-## 2026-01-06
+## 2026-11-06
 ### Changelog since v3.1.0
 #### 新增
+- [新增] feat: backend.conf使用前缀匹配 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13708)
+- [新增] feat: 去除dispatch k8s模块 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13649)
 - [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
 - [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
 - [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
