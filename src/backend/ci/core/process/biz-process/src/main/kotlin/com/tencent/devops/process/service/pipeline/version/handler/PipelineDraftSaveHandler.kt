@@ -166,7 +166,12 @@ class PipelineDraftSaveHandler @Autowired constructor(
             pipelineName = pipelineSettingWithoutVersion.pipelineName,
             version = resourceOnlyVersion.version,
             versionNum = resourceOnlyVersion.versionNum,
-            versionName = resourceOnlyVersion.versionName
+            versionName = resourceOnlyVersion.versionName,
+            yamlLocked = pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = pipelineSettingWithoutVersion
+            )
         )
     }
 

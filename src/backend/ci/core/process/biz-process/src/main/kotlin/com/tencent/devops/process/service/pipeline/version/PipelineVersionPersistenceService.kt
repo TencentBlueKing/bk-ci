@@ -96,7 +96,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineBasicInfo = pipelineBasicInfo,
                     pipelineModelBasicInfo = pipelineModelBasicInfo,
                     version = pipelineResourceVersion.version,
-                    latestVersionStatus = pipelineResourceVersion.status
+                    latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
                 )
                 createPipelineResource(
                     transactionContext = transactionContext,
@@ -172,6 +173,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                         pipelineModelBasicInfo = pipelineModelBasicInfo,
                         version = pipelineResourceVersion.version,
                         latestVersionStatus = pipelineResourceVersion.status,
+                        yamlLocked = changedYamlLocked()
                     )
                     updatePipelineResource(
                         transactionContext = transactionContext,
@@ -478,6 +480,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineModelBasicInfo = pipelineModelBasicInfo,
                     version = pipelineResourceVersion.version,
                     latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
                 )
                 updatePipelineResource(
                     transactionContext = transactionContext,
@@ -604,6 +607,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
         latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.create(
@@ -620,7 +624,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 taskCount = pipelineModelBasicInfo.taskCount,
                 id = id,
                 latestVersionStatus = latestVersionStatus,
-                pipelineDisable = pipelineDisable
+                yamlLocked = yamlLocked
             )
         }
     }
@@ -631,7 +635,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineBasicInfo: PipelineBasicInfo,
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
-        latestVersionStatus: VersionStatus?
+        latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.update(
@@ -647,7 +652,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 taskCount = pipelineModelBasicInfo.taskCount,
                 latestVersion = version,
                 latestVersionStatus = latestVersionStatus,
-                locked = pipelineDisable
+                yamlLocked = yamlLocked
             )
         }
     }
@@ -785,7 +790,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
             )
         }
     }
-
 
     companion object {
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"

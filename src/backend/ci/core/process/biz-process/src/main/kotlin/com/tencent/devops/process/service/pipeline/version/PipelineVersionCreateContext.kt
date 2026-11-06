@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.enums.OperationLogType
@@ -93,4 +94,15 @@ data class PipelineVersionCreateContext(
     var operationLogType: OperationLogType = OperationLogType.NORMAL_SAVE_OPERATION,
     @get:Schema(title = "操作日志参数", required = false)
     var operationLogParams: String = ""
-)
+) {
+    /**
+     * 发布默认分支版本时，YAML 禁用状态发生变化则返回变化后的值，否则返回 null
+     */
+    fun changedYamlLocked(): Boolean? {
+        if (pipelineResourceWithoutVersion.status != VersionStatus.RELEASED) {
+            return null
+        }
+        val yamlLocked = pipelineSettingWithoutVersion.yamlLocked ?: return null
+        return yamlLocked.takeIf { it != (pipelineInfo?.yamlLocked == true) }
+    }
+}
