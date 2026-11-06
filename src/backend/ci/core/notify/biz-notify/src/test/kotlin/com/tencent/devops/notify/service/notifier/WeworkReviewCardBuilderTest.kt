@@ -3,6 +3,7 @@ package com.tencent.devops.notify.service.notifier
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.wework.WeworkReviewCardConst
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -37,13 +38,15 @@ class WeworkReviewCardBuilderTest {
         assertNotEquals(first.taskId, second.taskId)
         assertEquals("<Royal流水线测试>人工审核", first.mainTitle.title)
         val rows = first.horizontalContentList!!
-        assertEquals(listOf("流水线", "构建号", "阶段名", "审核人", "触发人"), rows.map { it.keyname })
+        assertEquals(listOf("流水线", "构建号", "步骤名", "审核人", "触发人", "详情"), rows.map { it.keyname })
         assertEquals("stage-review-notice", rows[0].value)
         assertEquals("#6", rows[1].value)
         assertEquals("Stage审核", rows[2].value)
         assertEquals("royalhuang、fayewang", rows[3].value)
-        assertEquals("触发人", rows.last().keyname)
-        assertEquals(3, rows.last().type)
+        assertEquals(3, rows.first { it.keyname == "触发人" }.type)
+        assertEquals("查看构建", rows.last().value)
+        assertEquals(1, rows.last().type)
+        assertEquals("https://example.com/pc", rows.last().url)
         assertEquals("审核说明", first.quoteArea!!.title)
         assertEquals("重要审核XXX", first.quoteArea!!.quoteText)
         assertNull(first.subTitleText)
@@ -52,9 +55,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("驳回", first.buttonList!![1].text)
         assertEquals(1, first.buttonList!![1].type)
         assertTrue(first.buttonList!![1].url!!.contains("action=reject"))
-        assertEquals("详情", first.buttonList!![2].text)
-        assertEquals(1, first.buttonList!![2].type)
-        assertEquals("https://example.com/pc", first.buttonList!![2].url)
+        assertEquals(2, first.buttonList!!.size)
         assertNull(first.jumpList)
         assertNotNull(first.cardAction)
         assertTrue(rows.none { it.keyname == "进度" })
@@ -84,11 +85,11 @@ class WeworkReviewCardBuilderTest {
         )
         val waitingCard = waiting!!.receiverCards.getValue("royalhuang")
         assertEquals(
-            listOf("流水线", "构建号", "阶段名", "审核流", "进度", "触发人"),
+            listOf("流水线", "构建号", "步骤名", "审核流", "触发人", "详情"),
             waitingCard.horizontalContentList!!.map { it.keyname }
         )
         assertEquals("<Royal流水线测试>人工审核", waitingCard.mainTitle.title)
-        assertEquals("Stage审核", waitingCard.horizontalContentList!!.first { it.keyname == "阶段名" }.value)
+        assertEquals("Stage审核", waitingCard.horizontalContentList!!.first { it.keyname == "步骤名" }.value)
         assertEquals("首次审核", waitingCard.horizontalContentList!!.first { it.keyname == "审核流" }.value)
         assertNull(waitingCard.subTitleText)
 
@@ -140,7 +141,8 @@ class WeworkReviewCardBuilderTest {
         assertTrue(card.buttonList!![0].url!!.contains("action=approve"))
         assertEquals("驳回", card.buttonList!![1].text)
         assertEquals(1, card.buttonList!![1].type)
-        assertEquals("详情", card.buttonList!![2].text)
+        assertEquals(2, card.buttonList!!.size)
+        assertEquals("https://example.com/pc", card.horizontalContentList!!.last().url)
     }
 
     @Test
@@ -225,7 +227,9 @@ class WeworkReviewCardBuilderTest {
         assertEquals("确认提交", card.buttonList!![0].text)
         assertEquals("修改参数", card.buttonList!![1].text)
         assertTrue(card.buttonList!![1].url!!.contains("action=modify"))
-        assertEquals("详情", card.buttonList!!.last().text)
+        assertEquals("驳回", card.buttonList!!.last().text)
+        assertEquals("查看构建", card.horizontalContentList!!.last().value)
+        assertEquals("https://example.com/pc", card.horizontalContentList!!.last().url)
     }
 
     @Test
@@ -254,6 +258,65 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
+    fun `markdown flag sends rendered text and skips the card`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "178",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewAppUrl" to "https://example.com/app",
+                    "reviewDesc" to "- **触发人**: albert\\n- **优先级**: 50",
+                    "reviewStage" to "[1]人工审核",
+                    "triggerUser" to "albertqwang"
+                ),
+                markdown = true
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        assertNotNull(plan)
+        assertTrue(plan!!.receiverCards.isEmpty())
+        val markdown = plan.fallbackText
+        assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
+        assertTrue(markdown.contains("**触发人**"))
+        assertTrue(markdown.contains("stage-review-notice"))
+        assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
+        assertFalse(markdown.contains("审核说明"))
+        assertFalse(markdown.contains("需要您审核后继续"))
+        assertEquals(1, Regex("查看构建").findAll(markdown).count())
+        assertTrue(markdown.contains("https://example.com/pc"))
+        assertFalse(markdown.contains("https://example.com/app"))
+        assertFalse(markdown.contains("\\n"))
+    }
+
+    @Test
+    fun `card quote flattens markdown so newlines and markers stay plain`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "178",
+                    "reviewUrl" to "https://example.com/pc",
+                    "reviewDesc" to "- **触发人**: albert\\n- **优先级**: 50",
+                    "triggerUser" to "albertqwang"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val quote = plan!!.receiverCards.getValue("royalhuang").quoteArea!!.quoteText!!
+        assertTrue(quote.contains("触发人"))
+        assertTrue(quote.contains("优先级"))
+        assertFalse(quote.contains("**"))
+        assertFalse(quote.contains("\\n"))
+    }
+
+    @Test
     fun `missing callback skips card so existing text path stays`() {
         val plan = WeworkReviewCardBuilder.build(
             request = SendNotifyMessageTemplateRequest(
@@ -270,12 +333,14 @@ class WeworkReviewCardBuilderTest {
     private fun reviewRequest(
         receivers: MutableSet<String>,
         titleParams: Map<String, String> = emptyMap(),
-        bodyParams: Map<String, String>
+        bodyParams: Map<String, String>,
+        markdown: Boolean = false
     ) = SendNotifyMessageTemplateRequest(
         templateCode = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
         receivers = receivers,
         titleParams = titleParams,
         bodyParams = bodyParams,
+        markdownContent = markdown,
         callbackData = mapOf(
             "reviewType" to "STAGE",
             "projectId" to "royalpipeline",
