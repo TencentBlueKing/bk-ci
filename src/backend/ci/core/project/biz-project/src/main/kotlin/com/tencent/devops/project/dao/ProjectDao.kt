@@ -1233,7 +1233,7 @@ class ProjectDao {
             return emptyList()
         }
         with(TProject.T_PROJECT) {
-            return dslContext.select(PROJECT_TENANT_ID)
+            return dslContext.selectDistinct(PROJECT_TENANT_ID)
                 .from(this)
                 .where(PROJECT_TENANT_ID.isNotNull)
                 .fetch(PROJECT_TENANT_ID, String::class.java)

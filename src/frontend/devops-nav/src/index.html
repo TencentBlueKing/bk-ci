@@ -154,28 +154,24 @@
       try {
         var prefix = window.getRoutePrefix()
         var reg = new RegExp('^' + prefix + '/[\\w\\-]+/([\\w\\-]+)?')
+        var query = new URLSearchParams(location.search)
+        var headerKey = X_DEVOPS_PROJECT_ID.toLowerCase()
+        if (query.has('projectCode') || query.has('project_code') || query.has(headerKey)) {
+          return query.get('projectCode') || query.get('project_code') || query.get(headerKey) || ''
+        }
         if (location.pathname.match(new RegExp('^' + prefix + '/perm/([\\w\\-]+)?'))) {
-          var query = location.search.slice(1)
-          var queryArr = query.split('&')
-          for (var i = 0; i < queryArr.length; i++) {
-            var item = queryArr[i].split('=')
-            var key = decodeURIComponent(item[0])
-            if (key === 'projectCode') {
-              return decodeURIComponent(item[1])
-            }
-          }
           return ''
         } else if ([
           new RegExp('^' + prefix + '/store/([\\w\\-]+)?'),
           new RegExp('^' + prefix + '/permission/([\\w\\-]+)?'),
           new RegExp('^' + prefix + '/manage/apply'),
           new RegExp('^' + prefix + '/platform/([\\w\\-]+)?'),
-        ].some((reg) => location.pathname.match(reg))) {
+        ].some((item) => location.pathname.match(item))) {
           // TODO store、permission、apply project 没有projectId
           return ''
         } else {
           var res = location.pathname.match(reg)
-          return res ? res[1] : ''
+          return res && res[1] && res[1] !== '0' && res[1].indexOf('git_') !== 0 ? res[1] : ''
         }
       } catch (e) {
         console.warn(e)

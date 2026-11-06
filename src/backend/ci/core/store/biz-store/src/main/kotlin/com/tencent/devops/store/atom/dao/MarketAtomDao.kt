@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TAtomFeature
@@ -384,7 +385,8 @@ class MarketAtomDao : AtomBaseDao() {
                 HTML_TEMPLATE_VERSION,
                 PUBLISHER,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                STORE_TENANT_ID
             )
                 .values(
                     id,
@@ -408,7 +410,8 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.frontendType.typeVersion,
                     userId,
                     userId,
-                    userId
+                    userId,
+                    TenantUtils.getTenantId(tenantId)
                 )
                 .execute()
         }
@@ -476,7 +479,12 @@ class MarketAtomDao : AtomBaseDao() {
                 formatted = false
             )
             baseStep.set(SERVICE_SCOPE, serviceScopeJson)
-            baseStep.where(ID.eq(id)).execute()
+            val step = baseStep.where(ID.eq(id))
+            if (useTenantCondition(tenantId)) {
+                step.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)).execute()
+            } else {
+                step.execute()
+            }
         }
     }
 
@@ -781,6 +789,9 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(tClassify)
             .on(buildClassifyJoinCondition(tAtom, tClassify, serviceScope))
             .where(tAtom.ID.eq(atomId))
+            .let {
+                if (useTenantCondition(tenantId)) it.and(tenantVisibleCondition(STORE_TENANT_ID, tenantId)) else it
+            }
             .limit(1)
             .fetchOne()
     }

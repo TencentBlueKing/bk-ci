@@ -75,7 +75,8 @@ bkCiMqDefaultBinder: core-rabbit
 bkTenantEnabled: false
 bkApigwUserUrl: http://bkapi.example.com
 bkApigwCmsiUrl: http://bkapi.example.com
-bkApigwUserWebUrl: http://bkapi.example.com
+# 与 application-project.yml 的 __BK_CI_USER_WEB_APIGW_URL__ 对应。单租户留空。
+bkCiUserWebApigwUrl: ""
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
 bkCiPlatformManager: admin
