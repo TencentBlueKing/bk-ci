@@ -559,7 +559,7 @@ class PipelineBuildRecordService @Autowired constructor(
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList,
             artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
-                userId = userId,
+                userId = userId ?: buildInfo.startUser,
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             ),
