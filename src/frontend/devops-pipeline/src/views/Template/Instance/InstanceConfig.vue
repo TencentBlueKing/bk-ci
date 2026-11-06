@@ -670,7 +670,7 @@
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
                 if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                    i.isRequiredParam = !!(templateParam.required && templateParam.asInstanceInput)
+                    i.isRequiredParam = templateParam.required && i.required
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
