@@ -28,18 +28,23 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserScmWebhookResourceImpl @Autowired constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : UserScmWebhookResource {
     override fun getEventType(scmType: String): Result<List<WebhookEventType>> {
         val eventTypeList = when (scmType) {
@@ -77,6 +82,18 @@ class UserScmWebhookResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<PipelineWebhook>> {
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
         return Result(
             pipelineWebhookService.listWebhook(
                 userId = userId,

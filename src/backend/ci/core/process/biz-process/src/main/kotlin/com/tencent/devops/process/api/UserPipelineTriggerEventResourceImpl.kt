@@ -41,10 +41,12 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerReplayService
 
 @RestResource
 class UserPipelineTriggerEventResourceImpl(
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineTriggerReplayService: PipelineTriggerReplayService
 ) : UserPipelineTriggerEventResource {
 
     override fun listTriggerType(
@@ -190,7 +192,7 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         detailId: Long
     ): Result<Boolean> {
-        pipelineTriggerEventService.replay(
+        pipelineTriggerReplayService.replay(
             userId = userId,
             projectId = projectId,
             detailId = detailId
@@ -203,7 +205,7 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         eventId: Long
     ): Result<Boolean> {
-        pipelineTriggerEventService.replayAll(
+        pipelineTriggerReplayService.replayAll(
             userId = userId,
             projectId = projectId,
             eventId = eventId
