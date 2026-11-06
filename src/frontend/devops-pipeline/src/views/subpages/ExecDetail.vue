@@ -251,6 +251,7 @@
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
+    import { watchRealtime } from '../../../../common-lib/websocket/bridge'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     const PANELS = {
@@ -529,12 +530,9 @@
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
             },
-            'routerParams.buildNo': {
-                handler (val, oldVal) {
-                    if (val !== oldVal) {
-                        this.requestPipelineExecDetail(this.routerParams)
-                    }
-                }
+            routerParams: {
+                handler () { this.startRealtimeDetail() },
+                deep: true
             },
             fetchError (error) {
                 this.isLoading = false
@@ -570,11 +568,9 @@
             }
         },
         mounted () {
-            this.requestPipelineExecDetail(this.routerParams)
-            webSocketMessage.installWsMessage(this.setPipelineDetail)
-            webSocketMessage.registeOnReconnect(() => {
-                this.requestPipelineExecDetail(this.routerParams)
-            })
+            this.startRealtimeDetail()
+            webSocketMessage.installWsMessage(() => this.realtimeDetail?.refresh())
+            webSocketMessage.registeOnReconnect(() => this.realtimeDetail?.refresh())
             // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
             const {
                 stageIndex,
@@ -596,6 +592,7 @@
         },
 
         beforeDestroy () {
+            this.realtimeDetail?.dispose()
             this.setPipelineDetail(null)
             this.resetAtomModalMap()
             this.isLoading = false
@@ -603,6 +600,26 @@
         },
 
         methods: {
+            startRealtimeDetail () {
+                this.realtimeDetail?.dispose()
+                const params = { ...this.routerParams }
+                const { projectId, pipelineId, buildNo, executeCount } = params
+                if (!projectId || !pipelineId || !buildNo) return
+                const attempt = Number(executeCount) > 0 ? `attempt:${Number(executeCount)}` : 'latest'
+                this.hasNoPermission = false
+                this.realtimeDetail = watchRealtime({
+                    topics: [`pr:${projectId}:${pipelineId}:${buildNo}:${attempt}`],
+                    load: () => this.$store.dispatch('atom/fetchPipelineExecDetail', params),
+                    apply: data => this.setPipelineDetail(data),
+                    onError: error => {
+                        this.isLoading = false
+                        if (error.code === 403 || error.status === 403) {
+                            this.hasNoPermission = true
+                            this.setPipelineDetail(null)
+                        }
+                    }
+                })
+            },
             ...mapActions('atom', [
                 'reviewExcuteAtom',
                 'togglePropertyPanel',

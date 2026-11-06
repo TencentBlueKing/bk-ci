@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.websocket.handler.BKHandshakeInterceptor
+import com.tencent.devops.websocket.handler.LegacyIdentityInterceptor
 import com.tencent.devops.websocket.handler.SessionWebSocketHandlerDecoratorFactory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,6 +76,7 @@ class WebSocketConfig @Autowired constructor(
 
     @Override
     override fun configureClientInboundChannel(registration: ChannelRegistration) {
+        registration.interceptors(LegacyIdentityInterceptor())
         var defaultCorePoolSize = min
         if (defaultCorePoolSize < Runtime.getRuntime().availableProcessors() * 2) {
             defaultCorePoolSize = Runtime.getRuntime().availableProcessors() * 2
@@ -95,6 +97,9 @@ class WebSocketConfig @Autowired constructor(
 
     override fun configureWebSocketTransport(registration: WebSocketTransportRegistration) {
         registration.addDecoratorFactory(wsHandlerDecoratorFactory())
+        registration.setSendTimeLimit(15000)
+        registration.setSendBufferSizeLimit(1024 * 1024)
+        registration.setTimeToFirstMessage(60000)
         super.configureWebSocketTransport(registration)
     }
 
