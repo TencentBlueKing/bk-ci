@@ -1648,6 +1648,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
+                executeCount = executeCount,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.RECORD.binary
             ).apply { this.channelCode = channelCodeStr },
@@ -1973,6 +1974,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = latestRunningBuild.pipelineId,
                 userId = latestRunningBuild.userId,
                 buildId = latestRunningBuild.buildId,
+                executeCount = latestRunningBuild.executeCount,
                 // 刷新历史列表、详情、状态页面
                 refreshTypes = RefreshType.HISTORY.binary or
                     RefreshType.STATUS.binary or
@@ -2042,6 +2044,7 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId,
                     buildId = buildId,
+                    executeCount = executeCount,
                     // 刷新详情、状态页面
                     // #3400 在BuildEnd处会有HISTORY，历史列表此处不需要，减少负载
                     refreshTypes = RefreshType.STATUS.binary or RefreshType.RECORD.binary
