@@ -862,6 +862,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
+            val now = LocalDateTime.now()
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
@@ -870,6 +871,8 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
+                // 终止后状态不再是运行中，随后的 buildEnd 按运行中过滤会漏掉这些记录，必须在这里补结束时间
+                if (stage.endTime == null) { stage.endTime = now }
                 // 第2层循环：刷新stage下运行中的container状态（包括矩阵）
                 val recordContainers = recordContainerDao.getRecords(
                     dslContext = context, projectId = projectId,
@@ -894,12 +897,14 @@ class PipelineBuildRecordService @Autowired constructor(
                         }
                     }
                     container.status = buildStatus.name
+                    if (container.endTime == null) { container.endTime = now }
                     // 第3层循环：刷新container下运行中的task状态
                     recordTasks.forEach nextTask@{ task ->
                         if (!BuildStatus.parse(task.status).isRunning()) {
                             return@nextTask
                         }
                         task.status = buildStatus.name
+                        if (task.endTime == null) { task.endTime = now }
                     }
                     recordTaskDao.batchSave(context, recordTasks)
                 }

@@ -171,7 +171,17 @@ abstract class Element(
         title = "插件上报的外部链接（仅运行构建时有用的中间参数，不要在编排保存阶段设置值）",
         required = false
     )
-    open var externalLink: String? = null
+    open var externalLink: String? = null,
+    @get:Schema(
+        title = "步骤开始时间（毫秒时间戳，仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var startTime: Long? = null,
+    @get:Schema(
+        title = "步骤结束时间（毫秒时间戳，仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var endTime: Long? = null
 ) {
 
     open fun getAtomCode() = getClassType()

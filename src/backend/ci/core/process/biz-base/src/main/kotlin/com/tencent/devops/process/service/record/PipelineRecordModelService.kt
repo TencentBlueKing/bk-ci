@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.record
 import com.tencent.devops.common.api.constant.KEY_TASK_ATOM
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -55,6 +56,7 @@ import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("UNCHECKED_CAST")
@@ -69,6 +71,10 @@ class PipelineRecordModelService @Autowired constructor(
 
     companion object {
         private const val QUALITY_FLAG = "qualityFlag"
+
+        // 阶段/作业/步骤三层模型的起止时间字段同名，共用一套写入口径
+        private val START_TIME_FIELD = Stage::startTime.name
+        private val END_TIME_FIELD = Stage::endTime.name
     }
 
     /**
@@ -158,6 +164,11 @@ class PipelineRecordModelService @Autowired constructor(
             stageVarMap[Stage::id.name] = stageId
             stageVarMap[Stage::status.name] = buildRecordStage.status ?: ""
             stageVarMap[Stage::executeCount.name] = buildRecordStage.executeCount
+            putRuntimeTime(
+                varMap = stageVarMap,
+                startTime = buildRecordStage.startTime,
+                endTime = buildRecordStage.endTime
+            )
             val stageBaseMap = baseStages.first {
                 it[Stage::id.name] == stageId
             }
@@ -242,7 +253,29 @@ class PipelineRecordModelService @Autowired constructor(
         containerVarMap[Container::executeCount.name] = recordContainer.executeCount
         containerVarMap[Container::containPostTaskFlag.name] = recordContainer.containPostTaskFlag ?: false
         containerVarMap[Container::matrixGroupFlag.name] = recordContainer.matrixGroupFlag ?: false
+        putRuntimeTime(
+            varMap = containerVarMap,
+            startTime = recordContainer.startTime,
+            endTime = recordContainer.endTime
+        )
         return containerVarMap
+    }
+
+    /**
+     * 把执行记录表里的起止时间写进详情模型，阶段/作业/步骤共用一套口径。
+     *
+     * 起止时间直接取记录表存的值，不从 timeCost 反推，也不改动任何耗时字段。
+     * 没有开始时间时不单独补结束时间：未执行、跳过的记录只有结束时间，
+     * 若只返回结束时间，前端会算出一个负数或无意义的区间。
+     */
+    private fun putRuntimeTime(
+        varMap: MutableMap<String, Any>,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?
+    ) {
+        val start = startTime ?: return
+        varMap[START_TIME_FIELD] = start.timestampmilli()
+        endTime?.let { varMap[END_TIME_FIELD] = it.timestampmilli() }
     }
 
     /**
@@ -355,6 +388,11 @@ class PipelineRecordModelService @Autowired constructor(
         taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
         taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
         taskVarMap[Element::asyncStatus.name] = containerRecordTask.asyncStatus ?: ""
+        putRuntimeTime(
+            varMap = taskVarMap,
+            startTime = containerRecordTask.startTime,
+            endTime = containerRecordTask.endTime
+        )
         val elementPostInfo = containerRecordTask.elementPostInfo
         if (elementPostInfo != null) {
             // 生成post类型task的变量模型

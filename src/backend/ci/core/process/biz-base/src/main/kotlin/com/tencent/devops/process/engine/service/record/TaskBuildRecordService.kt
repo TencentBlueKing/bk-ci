@@ -108,7 +108,8 @@ class TaskBuildRecordService(
         executeCount: Int,
         buildStatus: BuildStatus,
         operation: String,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        fallbackStartTime: LocalDateTime? = null
     ) {
         updateTaskRecord(
             projectId = projectId,
@@ -119,7 +120,8 @@ class TaskBuildRecordService(
             buildStatus = buildStatus,
             taskVar = emptyMap(),
             timestamps = timestamps,
-            operation = operation
+            operation = operation,
+            fallbackStartTime = fallbackStartTime
         )
     }
 
@@ -567,7 +569,12 @@ class TaskBuildRecordService(
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
         operation: String,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        /**
+         * 一步到位完成、没有运行态刷新的步骤（如触发步骤）由调用方补一个真实的开始时间，
+         * 否则记录表只有结束时间，详情页无法展示起止区间。仅在记录本身还没有开始时间时生效。
+         */
+        fallbackStartTime: LocalDateTime? = null
     ) {
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -591,8 +598,10 @@ class TaskBuildRecordService(
                 var endTime: LocalDateTime? = null
                 val now = LocalDateTime.now()
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+                if (recordTask.startTime == null) {
+                    startTime = if (buildStatus?.isRunning() == true) now else fallbackStartTime
+                }
                 if (buildStatus?.isRunning() == true) {
-                    if (recordTask.startTime == null) startTime = now
                     // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
                     if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
                         dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId,
