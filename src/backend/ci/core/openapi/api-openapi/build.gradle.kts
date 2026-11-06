@@ -35,6 +35,7 @@ dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:auth:api-auth"))
     api(project(":core:process:api-process"))
+    api(project(":core:process:api-trigger"))
     api(project(":core:project:api-project"))
     api(project(":core:metrics:api-metrics"))
     api("com.tencent.devops:devops-boot-starter-api")

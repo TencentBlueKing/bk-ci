@@ -47,8 +47,8 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreate
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlReleaseService
-import com.tencent.devops.process.yaml.PipelineYamlService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

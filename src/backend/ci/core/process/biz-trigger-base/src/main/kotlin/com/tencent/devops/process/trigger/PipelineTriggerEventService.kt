@@ -1,0 +1,695 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 Tencent.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+package com.tencent.devops.process.trigger
+
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.context.ChannelContext
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
+import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.trigger.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.utils.PIPELINE_TRIGGER_DETAIL_ID
+import com.tencent.devops.process.utils.PIPELINE_TRIGGER_EVENT_ID
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentBaseResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.text.MessageFormat
+@Suppress("ALL")
+@Service
+class PipelineTriggerEventService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val client: Client,
+    private val pipelineTriggerEventDao: PipelineTriggerEventDao,
+    private val buildVariableService: BuildVariableService
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTriggerEventService::class.java)
+        private const val PIPELINE_TRIGGER_EVENT_BIZ_ID = "PIPELINE_TRIGGER_EVENT"
+        private const val PIPELINE_TRIGGER_DETAIL_BIZ_ID = "PIPELINE_TRIGGER_DETAIL"
+        // 触发事件查询的最大跨度(自然日)
+        private const val MAX_QUERY_DAYS = 7L
+        // 构建链接
+        private const val PIPELINE_BUILD_URL_PATTERN = "<a href=\"{0}\" target=\"_blank\">#{1}</a>"
+        private const val CREATIVE_STREAM_CONSOLE_PATH = "/console/creative-stream/{0}/flow/{1}/execute/{2}/execute-detail"
+        private const val PIPELINE_CONSOLE_PATH = "/console/pipeline/{0}/{1}/detail/{2}/executeDetail"
+    }
+
+    fun getDetailId(): Long {
+        return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_DETAIL_BIZ_ID).data ?: 0
+    }
+
+    fun getEventId(): Long {
+        return client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_TRIGGER_EVENT_BIZ_ID).data ?: 0
+    }
+
+    fun getEventId(projectId: String, requestId: String, eventSource: String): Long {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId ?: getEventId()
+    }
+
+    fun getEventIdOrNull(projectId: String, requestId: String, eventSource: String): Long? {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId
+    }
+
+    fun saveEvent(
+        triggerEvent: PipelineTriggerEvent,
+        triggerDetail: PipelineTriggerDetail
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            pipelineTriggerEventDao.save(
+                dslContext = transactionContext,
+                triggerEvent = triggerEvent
+            )
+            pipelineTriggerEventDao.saveDetail(
+                dslContext = transactionContext,
+                triggerDetail = triggerDetail
+            )
+        }
+        saveTriggerVars(triggerDetail)
+    }
+
+    fun saveTriggerEvent(triggerEvent: PipelineTriggerEvent) {
+        pipelineTriggerEventDao.save(
+            dslContext = dslContext,
+            triggerEvent = triggerEvent
+        )
+    }
+
+    fun updateEventBody(
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
+    ) {
+        pipelineTriggerEventDao.updateEventBody(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId,
+            eventBody = eventBody
+        )
+    }
+
+    fun saveTriggerDetail(triggerDetail: PipelineTriggerDetail) {
+        pipelineTriggerEventDao.saveDetail(
+            dslContext = dslContext,
+            triggerDetail = triggerDetail
+        )
+        saveTriggerVars(triggerDetail)
+    }
+
+    /**
+     * 触发事件ID和明细ID写入构建变量,按构建查询触发明细时先取变量,避免按buildId查询触发明细表
+     */
+    private fun saveTriggerVars(triggerDetail: PipelineTriggerDetail) {
+        with(triggerDetail) {
+            if (buildId.isNullOrBlank() || pipelineId.isNullOrBlank() || detailId == null) return
+            try {
+                val variables = mapOf(
+                    PIPELINE_TRIGGER_EVENT_ID to eventId.toString(),
+                    PIPELINE_TRIGGER_DETAIL_ID to detailId.toString()
+                ).mapValues { (key, value) ->
+                    BuildParameters(key = key, value = value, readOnly = true)
+                }
+                buildVariableService.batchSetVariable(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId!!,
+                    buildId = buildId!!,
+                    variables = variables
+                )
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "Failed to save trigger vars|$projectId|$pipelineId|$buildId|$eventId|$detailId",
+                    ignored
+                )
+            }
+        }
+    }
+
+    fun getTriggerEvent(projectId: String, eventId: Long): PipelineTriggerEvent? {
+        return pipelineTriggerEventDao.getTriggerEvent(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId
+        )
+    }
+
+    fun listPipelineTriggerEvent(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        eventType: String?,
+        triggerType: String?,
+        triggerUser: String?,
+        eventId: Long?,
+        reason: String?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineTriggerEventVo> {
+        checkTimeRange(eventId = eventId, startTime = startTime, endTime = endTime)
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        // 没有事件表的过滤条件时,仅查询明细表,避免大表join
+        val queryDetail = eventType.isNullOrBlank() && triggerType.isNullOrBlank() && triggerUser.isNullOrBlank()
+        val (count, records) = if (queryDetail) {
+            val count = pipelineTriggerEventDao.countTriggerDetail(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventId = eventId,
+                pipelineId = pipelineId,
+                reason = reason,
+                startTime = startTime,
+                endTime = endTime
+            )
+            val details = pipelineTriggerEventDao.listTriggerDetail(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventId = eventId,
+                pipelineId = pipelineId,
+                reason = reason,
+                startTime = startTime,
+                endTime = endTime,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            count to convertTriggerEventVo(
+                projectId = projectId,
+                details = details,
+                startTime = startTime,
+                endTime = endTime
+            )
+        } else {
+            val count = pipelineTriggerEventDao.countTriggerEventVo(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventType = eventType,
+                triggerType = triggerType,
+                triggerUser = triggerUser,
+                pipelineId = pipelineId,
+                eventId = eventId,
+                reason = reason,
+                startTime = startTime,
+                endTime = endTime
+            )
+            val records = pipelineTriggerEventDao.listTriggerEventVo(
+                dslContext = dslContext,
+                projectId = projectId,
+                eventType = eventType,
+                triggerUser = triggerUser,
+                triggerType = triggerType,
+                pipelineId = pipelineId,
+                eventId = eventId,
+                reason = reason,
+                startTime = startTime,
+                endTime = endTime,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+            count to records
+        }
+        return SQLPage(count = count, records = records.map { fillEventDetailParam(it) })
+    }
+
+    /**
+     * 未指定事件ID时必须带时间范围,避免扫描全部分区
+     *
+     * 跨度按自然日计算,兼容前端默认的"7天前00:00:00至今天23:59:59"
+     */
+    private fun checkTimeRange(eventId: Long?, startTime: Long?, endTime: Long?) {
+        if (eventId != null) {
+            return
+        }
+        if (startTime == null || endTime == null || startTime > endTime) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR)
+        }
+        val startDate = DateTimeUtil.convertTimestampToLocalDateTime(startTime / 1000).toLocalDate()
+        val endDate = DateTimeUtil.convertTimestampToLocalDateTime(endTime / 1000).toLocalDate()
+        if (endDate.isAfter(startDate.plusDays(MAX_QUERY_DAYS))) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
+                params = arrayOf(MAX_QUERY_DAYS.toString())
+            )
+        }
+    }
+
+    /**
+     * 按事件ID批量查询事件信息,与触发明细组装
+     */
+    private fun convertTriggerEventVo(
+        projectId: String,
+        details: List<PipelineTriggerDetail>,
+        startTime: Long?,
+        endTime: Long?
+    ): List<PipelineTriggerEventVo> {
+        if (details.isEmpty()) {
+            return emptyList()
+        }
+        val eventMap = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventIds = details.map { it.eventId }.toSet(),
+            startTime = startTime,
+            endTime = endTime
+        ).associateBy { it.eventId }
+        // 与join查询保持一致,事件不存在的明细不返回
+        return details.mapNotNull { detail ->
+            val event = eventMap[detail.eventId] ?: return@mapNotNull null
+            PipelineTriggerEventVo(
+                detailId = detail.detailId!!,
+                projectId = detail.projectId,
+                eventId = detail.eventId,
+                triggerType = event.triggerType,
+                eventSource = event.eventSource,
+                eventType = event.eventType,
+                triggerUser = event.triggerUser,
+                eventDesc = I18Variable(code = "", defaultMessage = event.eventDesc),
+                eventTime = event.createTime.timestampmilli(),
+                status = detail.status,
+                pipelineId = detail.pipelineId,
+                pipelineName = detail.pipelineName,
+                buildId = detail.buildId,
+                buildNum = detail.buildNum,
+                reason = detail.reason,
+                reasonDetailList = detail.reasonDetail?.getReasonDetailList()
+            )
+        }
+    }
+
+    fun listRepoTriggerEvent(
+        projectId: String,
+        repoHashId: String,
+        triggerType: String?,
+        eventType: String?,
+        triggerUser: String?,
+        pipelineId: String?,
+        eventId: Long?,
+        reason: String?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?,
+        userId: String
+    ): SQLPage<RepoTriggerEventVo> {
+        checkTimeRange(eventId = eventId, startTime = startTime, endTime = endTime)
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        // 事件ID to 总数
+        val (eventIds, count) = listRepoTriggerEventIds(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            triggerType = triggerType,
+            eventType = eventType,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId,
+            eventId = eventId,
+            reason = reason,
+            startTime = startTime,
+            endTime = endTime,
+            sqlLimit = sqlLimit
+        )
+        if (eventIds.isEmpty()) {
+            return SQLPage(count = count, records = emptyList())
+        }
+        // 事件信息
+        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventIds = eventIds,
+            startTime = startTime,
+            endTime = endTime
+        )
+        // 触发详情记录（总数，成功数）
+        val eventDetailsMap = pipelineTriggerEventDao.listRepoTriggerDetail(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventIds = eventIds,
+            pipelineId = pipelineId,
+            startTime = startTime,
+            endTime = endTime
+        ).associateBy { it.eventId }
+        val records = triggerEvent.map {
+            RepoTriggerEventVo(
+                projectId = it.projectId,
+                eventId = it.eventId,
+                repoHashId = it.eventSource,
+                eventDesc = getEventDescVariable(it.eventDesc),
+                eventTime = it.createTime.timestampmilli(),
+                total = eventDetailsMap[it.eventId]?.total ?: 0,
+                success = eventDetailsMap[it.eventId]?.success ?: 0
+            )
+        }
+        return SQLPage(count = count, records = records)
+    }
+
+    /**
+     * 按筛选条件选择查询路径,返回当前页的事件ID和总数
+     */
+    private fun listRepoTriggerEventIds(
+        projectId: String,
+        repoHashId: String,
+        triggerType: String?,
+        eventType: String?,
+        triggerUser: String?,
+        pipelineId: String?,
+        eventId: Long?,
+        reason: String?,
+        startTime: Long?,
+        endTime: Long?,
+        sqlLimit: SQLLimit
+    ): Pair<Set<Long>, Long> {
+        return when {
+            // 仅查询Event表
+            pipelineId.isNullOrBlank() && reason == null -> {
+                val eventIds = pipelineTriggerEventDao.getEventIdsByEvent(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventId = eventId,
+                    eventType = eventType,
+                    triggerUser = triggerUser,
+                    triggerType = triggerType,
+                    startTime = startTime,
+                    endTime = endTime,
+                    limit = sqlLimit.limit,
+                    offset = sqlLimit.offset
+                )
+                val count = pipelineTriggerEventDao.getCountByEvent(
+                    dslContext = dslContext,
+                    eventId = eventId,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventType = eventType,
+                    triggerType = triggerType,
+                    triggerUser = triggerUser,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+                eventIds to count
+            }
+            // 指定流水线时,从流水线的明细出发关联事件
+            !pipelineId.isNullOrBlank() -> {
+                val eventIds = pipelineTriggerEventDao.getDetailEventIds(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventId = eventId,
+                    eventType = eventType,
+                    reason = reason,
+                    triggerUser = triggerUser,
+                    triggerType = triggerType,
+                    startTime = startTime,
+                    endTime = endTime,
+                    pipelineId = pipelineId,
+                    limit = sqlLimit.limit,
+                    offset = sqlLimit.offset
+                )
+                val count = pipelineTriggerEventDao.getCountByDetail(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventId = eventId,
+                    eventType = eventType,
+                    reason = reason,
+                    triggerUser = triggerUser,
+                    triggerType = triggerType,
+                    startTime = startTime,
+                    endTime = endTime,
+                    pipelineId = pipelineId
+                )
+                eventIds to count
+            }
+            // 未指定流水线时,从代码库的事件出发判断是否存在满足条件的明细
+            else -> {
+                val eventIds = pipelineTriggerEventDao.getEventIdsByDetailExists(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventId = eventId,
+                    eventType = eventType,
+                    triggerType = triggerType,
+                    triggerUser = triggerUser,
+                    reason = reason,
+                    startTime = startTime,
+                    endTime = endTime,
+                    limit = sqlLimit.limit,
+                    offset = sqlLimit.offset
+                )
+                val count = pipelineTriggerEventDao.getCountByDetailExists(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    eventSource = repoHashId,
+                    eventId = eventId,
+                    eventType = eventType,
+                    triggerType = triggerType,
+                    triggerUser = triggerUser,
+                    reason = reason,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+                eventIds to count
+            }
+        }
+    }
+
+    fun listRepoTriggerEventDetail(
+        projectId: String,
+        eventId: Long,
+        pipelineId: String?,
+        reason: String?,
+        page: Int?,
+        pageSize: Int?,
+        userId: String
+    ): SQLPage<PipelineTriggerEventVo> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val records = pipelineTriggerEventDao.listTriggerEventVo(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId,
+            pipelineId = pipelineId,
+            reason = reason,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        ).map {
+            fillEventDetailParam(it)
+        }
+        val count = pipelineTriggerEventDao.countTriggerEventVo(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId,
+            pipelineId = pipelineId,
+            reason = reason
+        )
+        return SQLPage(count = count, records = records)
+    }
+
+    fun triggerReasonStatistics(
+        projectId: String,
+        eventId: Long,
+        pipelineId: String?,
+        pipelineName: String?
+    ): PipelineTriggerReasonStatistics {
+        return pipelineTriggerEventDao.triggerReasonStatistics(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName
+        )
+    }
+
+    /**
+     * 获取构建对应的触发明细
+     */
+    fun getBuildTriggerDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): PipelineTriggerDetail? {
+        val detailId = buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = setOf(PIPELINE_TRIGGER_DETAIL_ID)
+        )[PIPELINE_TRIGGER_DETAIL_ID]?.toLongOrNull()
+        if (detailId != null) {
+            return pipelineTriggerEventDao.getTriggerDetail(
+                dslContext = dslContext,
+                projectId = projectId,
+                detailId = detailId
+            )?.takeIf { it.buildId == buildId }
+        }
+        // TODO 兼容没有触发明细ID变量的历史构建,历史触发事件过期后删除
+        return pipelineTriggerEventDao.getTriggerDetail(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+    }
+
+    fun listEventType(
+        userId: String,
+        scmType: ScmType?,
+        channelCode: String?
+    ): List<IdValue> {
+        return when (channelCode) {
+            ChannelCode.CREATIVE_STREAM.name -> {
+                client.get(ServiceStoreComponentBaseResource::class).getComponentBaseInfoByCodes(
+                    storeType = StoreTypeEnum.TRIGGER_EVENT,
+                    storeCodes = null
+                ).data?.map {
+                    IdValue(
+                        id = it.storeCode,
+                        value = it.storeName
+                    )
+                }
+            }
+            else -> {
+                CodeEventType.getEventsByScmType(scmType).map {
+                    IdValue(
+                        id = it.name,
+                        value = I18nUtil.getCodeLanMessage(
+                            messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.name}",
+                            defaultMessage = it.name,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    )
+                }
+            }
+        } ?: listOf()
+    }
+
+    /**
+     * 获取事件描述变量
+     */
+    private fun getEventDescVariable(eventDesc: String) = try {
+        JsonUtil.to(eventDesc, I18Variable::class.java)
+    } catch (ignored: Exception) {
+        logger.warn("Failed to resolve repo trigger event|sourceDesc[$eventDesc]", ignored)
+        I18Variable(code = "", defaultMessage = eventDesc)
+    }
+
+    private fun getI18nReason(reason: String?): String = getCodeLanMessage(
+        messageCode = if (reason.isNullOrBlank()) {
+            PipelineTriggerReason.TRIGGER_SUCCESS.name
+        } else {
+            reason
+        },
+        defaultMessage = reason
+    )
+
+    /**
+     * 获取构建链接
+     */
+    private fun PipelineTriggerEventVo.getBuildNumUrl(): String? {
+        return if (status == PipelineTriggerStatus.SUCCEED.name) {
+            when {
+                !buildId.isNullOrBlank() -> {
+                    val linkUrl = if (ChannelContext.getChannel() == ChannelCode.CREATIVE_STREAM.name) {
+                        MessageFormat.format(CREATIVE_STREAM_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    } else {
+                        MessageFormat.format(PIPELINE_CONSOLE_PATH, projectId, pipelineId, buildId)
+                    }
+                    MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
+                }
+
+                !reasonDetailList.isNullOrEmpty() -> {
+                    reasonDetailList!![0]
+                }
+
+                else ->
+                    null
+            }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * 填充事件相关参数
+     * 事件描述国际化,构建链接,失败详情国际化,触发状态国际化,失败状态国际化
+     */
+    private fun fillEventDetailParam(
+        eventParam: PipelineTriggerEventVo
+    ): PipelineTriggerEventVo {
+        return with(eventParam) {
+            eventDesc = getEventDescVariable(eventDesc.defaultMessage ?: eventDesc.toJsonStr())
+            buildNum = getBuildNumUrl()
+            reason = getI18nReason(eventParam.reason)
+            this
+        }
+    }
+}

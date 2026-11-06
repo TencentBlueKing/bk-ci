@@ -6,6 +6,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.task.PipelineTaskVersionProcessor
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerContainerVersionPostProcessor @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val taskVersionProcessors: List<PipelineTaskVersionProcessor>
 ) : PipelineVersionCreatePostProcessor {
 
@@ -32,6 +34,11 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
         }
         val triggerContainer = pipelineResourceVersion.model.getTriggerContainer()
         val variables = pipelineRepositoryService.getTriggerParams(triggerContainer)
+        cleanRemovedSubscriptions(
+            transactionContext = transactionContext,
+            pipelineResourceVersion = pipelineResourceVersion,
+            taskIds = triggerContainer.elements.mapNotNull { it.id }
+        )
         triggerContainer.elements.forEach { element ->
             taskVersionProcessors.firstOrNull { it.support(element) }
                     ?.postProcessAfterSave(
@@ -61,6 +68,24 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
                         element = element,
                         variables = variables
                     )
+        }
+    }
+
+    private fun cleanRemovedSubscriptions(
+        transactionContext: DSLContext,
+        pipelineResourceVersion: PipelineResourceVersion,
+        taskIds: List<String>
+    ) {
+        val projectId = pipelineResourceVersion.projectId
+        val pipelineId = pipelineResourceVersion.pipelineId
+        val count = pipelineEventSubscriptionDao.deleteExcludeTaskIds(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            taskIds = taskIds
+        )
+        if (count > 0) {
+            logger.info("clean removed trigger subscriptions|$projectId|$pipelineId|count=$count")
         }
     }
 

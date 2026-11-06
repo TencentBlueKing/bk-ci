@@ -184,13 +184,17 @@ object StreamBinding {
 
     const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
 
-    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
-
     // TAPD webhook 请求事件
     const val TAPD_WEBHOOK_REQUEST_EVENT = "engine.pipeline.tapd.webhook.event"
 
     // TAPD webhook 触发事件（单流水线）
     const val TAPD_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.tapd.webhook.trigger.event"
+
+    // 制品到达 webhook 请求事件
+    const val ARTIFACT_WEBHOOK_REQUEST_EVENT = "engine.pipeline.webhook.artifact.request.event"
+
+    // 制品到达 webhook 触发事件（单流水线）
+    const val ARTIFACT_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.webhook.artifact.trigger.event"
 
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"

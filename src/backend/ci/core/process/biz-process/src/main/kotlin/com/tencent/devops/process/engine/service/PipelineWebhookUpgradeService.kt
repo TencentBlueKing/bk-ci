@@ -43,6 +43,7 @@ import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext

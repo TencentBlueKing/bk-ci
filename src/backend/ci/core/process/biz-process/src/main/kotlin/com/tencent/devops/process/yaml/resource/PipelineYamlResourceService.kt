@@ -34,16 +34,15 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedM
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDeployReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
-import com.tencent.devops.process.yaml.common.YamlFileUtils
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
+import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -58,10 +57,9 @@ class PipelineYamlResourceService @Autowired constructor(
     override fun createYamlPipeline(
         userId: String,
         projectId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult {
-        with(event) {
+        with(request) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = YamlFileUtils.getCiFileName(filePath)
@@ -70,7 +68,7 @@ class PipelineYamlResourceService @Autowired constructor(
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
-                description = commit!!.commitMsg,
+                description = commitMsg,
                 yamlFileInfo = yamlFileInfo,
                 pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl
@@ -87,10 +85,9 @@ class PipelineYamlResourceService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult {
-        with(event) {
+        with(request) {
             val isDefaultBranch = ref == defaultBranch
             val yamlFileInfo = PipelineYamlFileInfo(repoHashId = repoHashId, filePath = filePath)
             val yamlFileName = YamlFileUtils.getCiFileName(filePath)
@@ -99,7 +96,7 @@ class PipelineYamlResourceService @Autowired constructor(
                 yamlFileName = yamlFileName,
                 branchName = ref,
                 isDefaultBranch = isDefaultBranch,
-                description = commit!!.commitMsg,
+                description = commitMsg,
                 yamlFileInfo = yamlFileInfo,
                 pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl
@@ -160,19 +157,11 @@ class PipelineYamlResourceService @Autowired constructor(
         pullRequestUrl: String,
         pullRequestNumber: Int,
         merged: Boolean,
-        exception: Throwable?
+        instanceErrorInfo: String?
     ) {
-        val (status, instanceErrorInfo) = when {
-            // 合并后 yaml 处理失败,将异常转换为可展示的失败原因
-            exception != null -> Pair(
-                TemplatePipelineStatus.FAILED,
-                TemplateInstanceUtil.translateInstanceException(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    exception = exception
-                )
-            )
+        val (status, errorInfo) = when {
+            // 合并后 yaml 处理失败
+            instanceErrorInfo != null -> Pair(TemplatePipelineStatus.FAILED, instanceErrorInfo)
             // 正常合并
             merged -> Pair(TemplatePipelineStatus.UPDATED, null)
             // 合并请求关闭未合并
@@ -181,14 +170,14 @@ class PipelineYamlResourceService @Autowired constructor(
                     messageCode = ProcessMessageCode.BK_YAML_INSTANCE_PULL_REQUEST_CLOSED,
                     params = arrayOf(pullRequestUrl, pullRequestNumber.toString())
                 )
-                Pair(TemplatePipelineStatus.FAILED, PipelineCheckFailedMsg(message))
+                Pair(TemplatePipelineStatus.FAILED, JsonUtil.toJson(PipelineCheckFailedMsg(message), false))
             }
         }
         pipelineTemplateRelatedService.updateStatusByPullRequestId(
             projectId = projectId,
             pipelineId = pipelineId,
             status = status,
-            instanceErrorInfo = instanceErrorInfo?.let { JsonUtil.toJson(it, false) },
+            instanceErrorInfo = errorInfo,
             pullRequestId = pullRequestId
         )
     }

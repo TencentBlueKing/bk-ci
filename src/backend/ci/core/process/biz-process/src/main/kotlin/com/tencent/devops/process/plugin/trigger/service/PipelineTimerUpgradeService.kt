@@ -32,6 +32,8 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.trigger.timer.PipelineTimerService
+import com.tencent.devops.process.trigger.timer.PipelineTimerTriggerTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException

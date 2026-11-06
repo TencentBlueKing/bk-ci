@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.resource
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlDeployReq
 
 /**
  * yaml文件对应的资源操作服务类
@@ -41,8 +41,7 @@ interface IPipelineYamlResourceService {
     fun createYamlPipeline(
         userId: String,
         projectId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult
 
     /**
@@ -52,8 +51,7 @@ interface IPipelineYamlResourceService {
         userId: String,
         projectId: String,
         pipelineId: String,
-        yaml: String,
-        event: PipelineYamlFileEvent
+        request: PipelineYamlDeployReq
     ): DeployPipelineResult
 
     /**
@@ -94,6 +92,8 @@ interface IPipelineYamlResourceService {
 
     /**
      * 合并请求完成
+     *
+     * @param instanceErrorInfo yaml 处理失败原因,为 PipelineCheckFailedReason 的 json
      */
     fun completePullRequest(
         userId: String,
@@ -103,6 +103,6 @@ interface IPipelineYamlResourceService {
         pullRequestUrl: String,
         pullRequestNumber: Int,
         merged: Boolean,
-        exception: Throwable? = null
+        instanceErrorInfo: String? = null
     ) = Unit
 }
