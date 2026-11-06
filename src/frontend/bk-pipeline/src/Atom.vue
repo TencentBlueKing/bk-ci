@@ -65,7 +65,12 @@
         />
       </p>
       <template v-if="isExecuting">
-        <span class="atom-execounter">{{ execTime }}</span>
+        <bk-popover :delay="[300, 0]" placement="top">
+          <span class="atom-execounter">{{ execTime }}</span>
+          <template #content>
+            <p v-if="atomTimeRange">{{ atomTimeRange }}</p>
+          </template>
+        </bk-popover>
       </template>
       <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
       <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
@@ -104,7 +109,8 @@
             {{ formatTime }}
           </span>
           <template #content>
-            <p>{{ formatTime }}</p>
+            <p v-if="atomTimeRange">{{ atomTimeRange }}</p>
+            <p v-else>{{ formatTime }}</p>
           </template>
         </bk-popover>
       </span>
@@ -161,6 +167,7 @@ import { t } from "./locale";
 import {
   convertMStoString,
   eventBus,
+  formatRangeTime,
   hashID,
   isTriggerContainer,
   randomString,
@@ -479,6 +486,18 @@ const formatTime = computed(() => {
   } catch (error) {
     return "--";
   }
+});
+
+const atomTimeRange = computed(() => {
+  const startTime = props.atom?.startTime ?? props.atom?.startEpoch;
+  const timeRange = formatRangeTime(
+    startTime,
+    props.atom?.endTime,
+    reactiveData?.buildStartTime,
+  );
+  if (!timeRange) return "";
+  const runningLabel = props.atom?.endTime ? "" : ` ${t("started")}`;
+  return `${t("startEndTime")}：${timeRange}${runningLabel}`;
 });
 
 const isQualityCheckAtom = computed(() => {

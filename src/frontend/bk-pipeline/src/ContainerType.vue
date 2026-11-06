@@ -13,6 +13,7 @@ import Logo from './Logo';
 import { localeMixins } from './locale';
 import {
     convertMStoString,
+    formatRangeTime,
     isNormalContainer,
     isTriggerContainer,
     isVmContainer,
@@ -24,6 +25,7 @@ export default {
         Logo,
     },
     mixins: [localeMixins],
+    inject: ["reactiveData"],
     props: {
         container: Object,
     },
@@ -40,11 +42,17 @@ export default {
             switch (true) {
                 case container.timeCost !== undefined: {
                     const { totalCost, executeCost, systemCost } = container.timeCost
+                    const timeRange = formatRangeTime(container.startTime, container.endTime, this.reactiveData?.buildStartTime)
+                    const runningLabel = container.endTime ? "" : ` ${this.t("started")}`
+                    const costStr = `${this.t("userTime")}：${convertMStoString(
+                        executeCost
+                    )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`
                     tooltip = {
                         delay: [300, 0],
-                        content: `${this.t("userTime")}：${convertMStoString(
-                            executeCost
-                        )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`,
+                        allowHtml: true,
+                        content: timeRange
+                            ? `<div class="container-time-range-tips">${this.t("startEndTime")}：${timeRange}${runningLabel}<br>${costStr}</div>`
+                            : costStr,
                     }
                     content = convertMStoString(totalCost)
                     showIcon = false
@@ -86,5 +94,9 @@ export default {
 <style lang="scss">
 .is-danger {
     color: #ff5656 !important;
+}
+
+.container-time-range-tips {
+    line-height: 20px;
 }
 </style>

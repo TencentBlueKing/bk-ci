@@ -167,6 +167,32 @@ export function convertMStoString(ms) {
   }
 }
 
+/**
+ *  将起止毫秒时间戳转换成时段字符串
+ *  @param {Number} startTime - 开始时间毫秒时间戳
+ *  @param {Number} [endTime] - 结束时间毫秒时间戳，为空时只展示开始时间
+ *  @param {Number} [baseTime] - 本次构建触发时间毫秒时间戳，作为同一天判断基准，缺省时取当前时刻
+ *  @return {String}
+ */
+export function formatRangeTime(startTime, endTime, baseTime) {
+  if (!startTime) return "";
+  const start = new Date(startTime);
+  const baseDate = new Date(baseTime || Date.now());
+  const isSameDay = (a, b) => a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+  const endSameDay = endTime ? isSameDay(new Date(endTime), baseDate) : true;
+  const shortFormat = isSameDay(start, baseDate) && endSameDay;
+  const format = (date, withSec) => {
+    const hm = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const str = shortFormat ? hm : `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${hm}`;
+    return withSec ? `${str}:${pad(date.getSeconds())}` : str;
+  };
+  if (!endTime) return format(start, false);
+  const end = new Date(endTime);
+  return `${format(start, shortFormat)} – ${format(end, shortFormat)}`;
+}
+
 export function checkContainerType(typeName) {
   return (container) => container?.["@type"] === typeName;
 }
