@@ -509,13 +509,14 @@ export default {
         },
         /**
          *  复制流水线弹窗的确认回调函数
+         *  args 中的 copyAsDraft 为 true 时复制为草稿版本(发布前不会运行)
          */
         async copy (tempPipeline, { projectId, pipelineId, group, pipelineName }) {
             try {
                 if (!tempPipeline.name) {
                     throw new Error(this.$t('subpage.nameNullTips'))
                 }
-                await this.copyPipeline({
+                const { id } = await this.copyPipeline({
                     projectId,
                     pipelineId,
                     args: {
@@ -525,11 +526,7 @@ export default {
                     }
                 })
 
-                this.$showTips({
-                    message: this.$t('copySuc'),
-                    theme: 'success'
-                })
-                return true
+                return id
             } catch (err) {
                 this.handleError(
                     err,
