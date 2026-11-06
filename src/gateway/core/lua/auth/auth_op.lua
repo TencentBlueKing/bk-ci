@@ -17,14 +17,30 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
--- 判断是否是白名单
-local service_ip_whitelist = consulUtil.getAllWhitelistIp()
+-- 配置缺失、空表或只有空字符串时拒绝访问，不再放行。
+local configured = config.service_ip_whitelist
+local hasConfiguredWhitelist = false
+if type(configured) == "string" then
+  hasConfiguredWhitelist = configured ~= ""
+elseif type(configured) == "table" then
+  for _, v in ipairs(configured) do
+    if v ~= nil and v ~= "" then
+      hasConfiguredWhitelist = true
+      break
+    end
+  end
+end
+
 local isInServiceWhitelist = false
--- 白名单为空的时候
-if next(service_ip_whitelist) ~= nil then
-  isInServiceWhitelist, err = ipUtil:isInWhiteList(service_ip_whitelist)
-else 
-  isInServiceWhitelist = true
+if not hasConfiguredWhitelist then
+  err = "service_ip_whitelist is empty"
+else
+  local service_ip_whitelist = consulUtil.getAllWhitelistIp()
+  if type(service_ip_whitelist) == "table" and next(service_ip_whitelist) ~= nil then
+    isInServiceWhitelist, err = ipUtil:isInWhiteList(service_ip_whitelist)
+  else
+    err = "service_ip_whitelist is empty"
+  end
 end
 if not isInServiceWhitelist then
   ngx.log(ngx.STDERR, "client ip do not in service_ip_whitelist: ", err)
