@@ -105,6 +105,7 @@ export default function useRelatedNodes () {
             ...params,
             projectId: projectId.value,
             createMode: isCreateResType.value,
+            nodeSource: isCreateResType.value ? currentEnv.value?.nodeSource : undefined,
             tags
         })
     }

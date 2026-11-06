@@ -28,10 +28,7 @@
             @enter="fetchEnvList"
             @clear="fetchEnvList"
         />
-        <div
-            v-if="!isCreateResType"
-            class="filer-type-menu"
-        >
+        <div class="filer-type-menu">
             <p class="title">{{ $t('environment.typeFilter') }}</p>
             <div class="type-list">
                 <span
@@ -45,6 +42,7 @@
                 >
                     {{ type.name }}
                     <span
+                        v-if="!type.hideCount"
                         class="node-count"
                     >
                         ({{ type.count ?? 0 }})
@@ -52,9 +50,7 @@
                 </span>
             </div>
         </div>
-        <div
-            :class="['env-list-menu', { 'mt10': isCreateResType }]"
-        >
+        <div class="env-list-menu">
             <p class="title">{{ $t('environment.environmentList') }}</p>
             <div class="env-list">
                 <span
@@ -124,7 +120,9 @@
 <script>
     import { watch, computed, onMounted } from 'vue'
     import {
-        ENV_TYPE_MAP
+        ENV_TYPE_MAP,
+        NODE_SOURCE,
+        CREATE_NODE_SOURCE_FILTERS
     } from '@/store/constants'
     import {
         ENV_RESOURCE_ACTION,
@@ -164,7 +162,26 @@
             } = useEnvDetail()
             const projectId = computed(() => proxy.$route.params.projectId)
             const envId = computed(() => proxy.$route.params?.envId)
-            const envTypList = computed(() => ([
+            // 分类数量取自 envCount 的 nodeSource key；后端未返回任何分类计数时不展示数量
+            const hasEnvSourceCount = computed(() => {
+                return CREATE_NODE_SOURCE_FILTERS.some(key => envCountData.value?.[key] !== undefined)
+            })
+            const createEnvTypeList = computed(() => ([
+                {
+                    id: ENV_TYPE_MAP.ALL,
+                    name: proxy.$t('environment.allEnv'),
+                    count: totalEnvCount.value
+                },
+                ...CREATE_NODE_SOURCE_FILTERS.map(source => ({
+                    id: source,
+                    name: proxy.$t(source === NODE_SOURCE.CLOUD_DESKTOP_NODE
+                        ? 'environment.cloudDesktopEnv'
+                        : 'environment.digitalTwinEnv'),
+                    count: envCountData.value?.[source] ?? 0,
+                    hideCount: !hasEnvSourceCount.value
+                }))
+            ]))
+            const envTypList = computed(() => isCreateResType.value ? createEnvTypeList.value : ([
                 {
                     id: ENV_TYPE_MAP.ALL,
                     name: proxy.$t('environment.allEnv'),
@@ -191,7 +208,9 @@
                 //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
                 // }
             ]))
-            const handleCreateEnvSuccess = async ({ hashId }, envType) => {
+            const handleCreateEnvSuccess = async ({ hashId }, envType, nodeSource) => {
+                // 创作流左侧按 nodeSource 分类，定位到新环境所在分类
+                const targetType = isCreateResType.value ? (nodeSource || ENV_TYPE_MAP.ALL) : envType
                 await fetchEnvList()
                 await fetchEnvCountAsType()
                 proxy.$router.replace({
@@ -199,10 +218,10 @@
                     params: {
                         ...proxy.$route.params,
                         envId: hashId,
-                        envType
+                        envType: targetType
                     }
                 })
-                handleChangeEnvType(envType)
+                handleChangeEnvType(targetType)
             }
             const handleChangeEnvType = async (type) => {
                 await proxy.$router.replace({
