@@ -247,7 +247,7 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_QUEUES_ILLEGAL = "2101142" // 最大排队数量非法
     const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101143" // 没有修改流水线组权限
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101144" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
-    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101145" // ({0})与({1})的jobId循环依赖
+    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101145" // Job[{0}]与Job[{1}]存在循环依赖，请检查Job的依赖配置及引用的变量值
     const val ERROR_PIPELINE_JOBID_EXIST = "2101146" // ({0})的jobId({1})已存在
     const val MAXIMUM_QUEUE_LENGTH_ILLEGAL = "2101147" // 最大排队时长非法
     const val BUILD_MSG_LABEL = "2101148" // 构建信息
