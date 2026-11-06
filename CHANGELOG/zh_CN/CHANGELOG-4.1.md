@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.1.1](#v411)
+   - [Changelog since v4.1.0](#changelog-since-v410)
+
 - [v4.1.0](#v410)
    - [Changelog since v4.0.0](#changelog-since-v400)
 
@@ -19,6 +22,18 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.1.1
+## 2026-11-06
+### Changelog since v4.1.0
+#### 新增
+
+##### 调度
+- [新增] feat: 去除dispatch k8s模块 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13649)
+
+##### 其他
+- [新增] 关闭service/op接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+- [新增] feat: backend.conf使用前缀匹配 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13708)
+
 # v4.1.0
 ## 2026-03-30
 ### Changelog since v4.0.0
