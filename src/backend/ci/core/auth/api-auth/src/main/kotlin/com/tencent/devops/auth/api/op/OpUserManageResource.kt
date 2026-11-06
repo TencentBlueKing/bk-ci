@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.api.op
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -28,7 +30,10 @@ interface OpUserManageResource {
     @Path("/syncUserInfoData/")
     @Operation(summary = "同步用户数据")
     fun syncUserInfoData(
-        userIds: List<String>
+        userIds: List<String>,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<Boolean>
 
     @POST

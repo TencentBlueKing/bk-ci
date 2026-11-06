@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserImageProjectResource
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.image.service.ImageProjectService
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -39,8 +41,6 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.request.InstallImageReq
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
-import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.image.service.ImageProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,24 +49,27 @@ class UserImageProjectResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserImageProjectResource {
 
-    override fun installImage(userId: String, installImageReq: InstallImageReq): Result<Boolean> {
+    override fun installImage(userId: String, tenantId: String?, installImageReq: InstallImageReq): Result<Boolean> {
         return imageProjectService.installImage(
             userId = userId,
             projectCodeList = installImageReq.projectCodeList,
             imageCode = installImageReq.imageCode,
             channelCode = ChannelCode.getRequestChannelCode(),
-            interfaceName = "/user/market/image/install"
+            interfaceName = "/user/market/image/install",
+            tenantId = tenantId
         )
     }
 
     override fun getInstalledProjects(
         userId: String,
+        tenantId: String?,
         imageCode: String
     ): Result<List<InstalledProjRespItem>> {
         return storeProjectService.getInstalledProjects(
             userId = userId,
             storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE
+            storeType = StoreTypeEnum.IMAGE,
+            tenantId = tenantId
         )
     }
 

@@ -89,14 +89,21 @@
                     :label="$t('store.修改人')"
                     prop="modifier"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <bk-user-display-name :user-id="props.row.modifier" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"
                     width="160"
-                    :formatter="timeFormatter"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <time-display :value="props.row.updateTime" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="250"
@@ -248,7 +255,7 @@
                             >
                             </bk-option>
                             <a
-                                href="/console/pm"
+                                :href="pmHref"
                                 slot="extension"
                                 target="_blank"
                             > {{ $t('store.新增项目') }} </a>
@@ -275,7 +282,7 @@
                             </bk-option>
                             <a
                                 v-if="relateImageData.form.projectCode"
-                                :href="`/console/ticket/${relateImageData.form.projectCode}/createCredential/USERNAME_PASSWORD/true`"
+                                :href="getTicketCreateUrl(relateImageData.form.projectCode, 'USERNAME_PASSWORD')"
                                 slot="extension"
                                 target="_blank"
                             > {{ $t('store.新增凭证') }} </a>
@@ -369,13 +376,16 @@
     import { imageStatusList } from '@/store/constants'
     import { debounce } from '@/utils/index'
     import status from './status'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     export default {
         components: {
-            status
+            status,
+            TimeDisplay
         },
         data () {
             return {
+                pmHref: window.getRoutePrefix() + '/pm',
                 imageStatusList,
                 searchName: '',
                 isLoading: false,
@@ -639,6 +649,10 @@
                 })
             },
 
+            getTicketCreateUrl (projectCode, credentialType) {
+                return `${window.getRoutePrefix()}/ticket/${projectCode}/createCredential/${credentialType}/true`
+            },
+
             requestList () {
                 this.isLoading = true
                 this.$store.dispatch('store/requestDeskImageList', { imageName: this.searchName, page: this.pagination.current, pageSize: this.pagination.limit }).then((res) => {
@@ -667,13 +681,6 @@
             relateImage () {
                 window.changeFlag = false
                 this.relateImageData.show = true
-            },
-
-            timeFormatter (row, column, cellValue, index) {
-                const date = new Date(cellValue)
-                const year = date.toISOString().slice(0, 10)
-                const time = date.toTimeString().split(' ')[0]
-                return `${year} ${time}`
             },
 
             sourceTypeFormatter (row, column, cellValue, index) {

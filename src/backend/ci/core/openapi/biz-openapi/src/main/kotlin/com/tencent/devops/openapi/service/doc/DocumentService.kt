@@ -132,6 +132,7 @@ class DocumentService {
         swagger: OpenAPI = loadSwagger(),
         outputPath: String? = null,
         parametersInfo: Map<String, Map<String, SwaggerDocParameterInfo>>? = null,
+        tagBlacklist: Set<String> = emptySet()
     ): Map<String, SwaggerDocResponse> {
         val response = mutableMapOf<String, SwaggerDocResponse>()
         definitions.putAll(swagger.components.schemas)
@@ -274,8 +275,11 @@ class DocumentService {
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 loadMarkdown.add(Text(0, getI18n(BK_STATEMENT), "statement"))
-                operation.tags.forEach tag@ { tag ->
+                operation.tags.forEach tag@{ tag ->
                     if (!tag.contains("user") && !tag.contains("app")) {
+                        return@tag
+                    }
+                    if (tag in tagBlacklist) {
                         return@tag
                     }
                     val res = SwaggerDocResponse(

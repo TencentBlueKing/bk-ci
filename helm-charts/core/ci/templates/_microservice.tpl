@@ -223,8 +223,9 @@ spec:
               name: log-volume
               subPathExpr: bkci/jvm/$(POD_NAME)
             {{- if and (eq $name "openapi") $svc.secret.enabled }}
-            - mountPath: {{ $root.Values.config.bkCiOpenapiApiPubOuter | splitList "/" | initial | join "/" }}
+            - mountPath: {{ $root.Values.config.bkCiOpenapiApiPubOuter }}
               name: bk-key-volume
+              subPath: {{ $root.Values.config.bkCiOpenapiApiPubOuter | splitList "/" | last }}
               readOnly: true
             {{- end }}
           lifecycle:

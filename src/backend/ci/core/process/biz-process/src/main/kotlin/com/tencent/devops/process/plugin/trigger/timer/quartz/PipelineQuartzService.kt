@@ -103,7 +103,8 @@ class PipelineQuartzService @Autowired constructor(
                         projectId = timer.projectId,
                         pipelineId = timer.pipelineId,
                         crontab = crontab,
-                        taskId = timer.taskId
+                        taskId = timer.taskId,
+                        timeZone = timer.timeZone
                     )
                 }
             }
@@ -113,7 +114,7 @@ class PipelineQuartzService @Autowired constructor(
         logger.warn("TIMER_RELOAD| reload ok!")
     }
 
-    fun addJob(projectId: String, pipelineId: String, crontab: String, taskId: String) {
+    fun addJob(projectId: String, pipelineId: String, crontab: String, taskId: String, timeZone: String? = null) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
             val comboKey = if (taskId.isBlank()) {
@@ -132,10 +133,14 @@ class PipelineQuartzService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 taskId = taskId,
-                md5 = md5
+                md5 = md5,
+                timeZone = timeZone
             )
         } catch (ignore: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
+            logger.error(
+                "TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab|timeZone=$timeZone",
+                ignore
+            )
         }
     }
 

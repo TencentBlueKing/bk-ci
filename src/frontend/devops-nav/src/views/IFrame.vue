@@ -110,7 +110,7 @@
             const { showProjectList } = this.headerConfig
             const { projectIdType } = this.$route.meta
             const query = queryStringify(this.$route.query)
-            const path = this.$route.path.replace('/console', '')
+            const path = this.$route.path.replace(window.getRoutePrefix(), '')
             const hash = this.$route.hash
             
             if (showProjectList) {

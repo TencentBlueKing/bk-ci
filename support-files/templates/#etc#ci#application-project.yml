@@ -45,3 +45,6 @@ sharding:
 auth:
   project:
     approval: false
+
+bk-user:
+  webUrl: __BK_CI_USER_WEB_APIGW_URL__

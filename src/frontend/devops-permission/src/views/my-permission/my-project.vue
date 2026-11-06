@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
 import tools from '@/utils/tools';
-const urlPerfix = location.origin
+const urlPerfix = window.PUBLIC_URL_PREFIX;
 const baseUrl = `${urlPerfix}/manage/userManage`
 const route = useRoute();
 const projectCode = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';

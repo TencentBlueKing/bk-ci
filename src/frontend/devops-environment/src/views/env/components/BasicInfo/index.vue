@@ -17,7 +17,13 @@
             >
                 <!-- 非编辑状态 -->
                 <template v-if="editingField !== field.key">
-                    {{ getFieldValue(field.key) || '--' }}
+                    <time-display
+                        v-if="field.isTime"
+                        :value="currentEnv?.[field.key]"
+                    />
+                    <template v-else>
+                        {{ getFieldValue(field.key) || '--' }}
+                    </template>
                     <i
                         v-if="field.editable && !envHashId.startsWith('-')"
                         class="bk-icon icon-edit-line edit-icon"
@@ -82,11 +88,14 @@
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useEnvAside from '@/hooks/useEnvAside'
-    import { convertTime } from '@/utils/util'
     import { OS_LABEL_MAP } from '@/store/constants'
-    
+    import TimeDisplay from '../../../../../../common-lib/time-display'
+
     export default {
         name: 'BasicInfo',
+        components: {
+            TimeDisplay
+        },
         setup () {
             const { proxy } = useInstance()
             const {
@@ -180,10 +189,6 @@
             // 获取字段值
             const getFieldValue = (key) => {
                 const value = currentEnv.value?.[key]
-                const field = infoFields.value.find(f => f.key === key)
-                if (field?.isTime && value) {
-                    return convertTime(value * 1000)
-                }
                 if (key === 'envType' && value) {
                     return proxy.$t(`environment.envInfo.${value}EnvType`)
                 }

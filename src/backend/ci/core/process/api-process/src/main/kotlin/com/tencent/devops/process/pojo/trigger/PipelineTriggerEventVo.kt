@@ -45,7 +45,7 @@ data class PipelineTriggerEventVo(
     @get:Schema(title = "事件类型")
     val eventType: String,
     @get:Schema(title = "触发人")
-    val triggerUser: String,
+    var triggerUser: String,
     @get:Schema(title = "事件描述")
     var eventDesc: I18Variable,
     @get:Schema(title = "事件时间")

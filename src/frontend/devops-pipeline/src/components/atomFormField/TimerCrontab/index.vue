@@ -14,14 +14,37 @@
         >
             {{ $t('cron.errorTips') }}
         </p>
+        <div
+            v-if="nextRuns.length"
+            class="cron-next-runs"
+        >
+            <p class="cron-next-runs-title">
+                {{ $t('cron.nextRuns', [resolvedTz]) }}
+            </p>
+            <ul>
+                <li
+                    v-for="(ts, idx) in nextRuns"
+                    :key="idx"
+                >
+                    <time-display
+                        :value="ts"
+                        :time-zone="resolvedTz"
+                    />
+                </li>
+            </ul>
+        </div>
     </div>
 </template>
 <script>
+    import CronExpression from 'cron-parser-custom'
     import BkCrontab from '@blueking/crontab/vue2'
     import '@blueking/crontab/vue2/vue2.css'
+    import TimeDisplay from '../../../../../common-lib/time-display'
+    import { DEFAULT_USER_TIME_ZONE, getUserTimeZone } from '../../../../../common-lib/time'
     export default {
         components: {
-            BkCrontab
+            BkCrontab,
+            TimeDisplay
         },
         props: {
             value: {
@@ -35,6 +58,11 @@
             handleChange: {
                 type: Function,
                 default: () => {}
+            },
+            /** IANA 时区，用于下次执行预览；空则用户时区，再空则东八区。不传给 crontab@0.0.2-beta.7 */
+            timeZone: {
+                type: String,
+                default: ''
             },
             keepError: {
                 type: Boolean,
@@ -115,6 +143,25 @@
                     }
                 }
             },
+            resolvedTz () {
+                return this.timeZone || getUserTimeZone() || DEFAULT_USER_TIME_ZONE
+            },
+            nextRuns () {
+                const expr = this.cronValue
+                if (!expr || expr === 'error' || this.hasInternalError) {
+                    return []
+                }
+                try {
+                    const sixField = expr.trim().split(/\s+/).length === 5 ? `0 ${expr.trim()}` : expr.trim()
+                    const interval = CronExpression.parse(sixField, { tz: this.resolvedTz })
+                    return Array.from({ length: 5 }, () => {
+                        const next = interval.next()
+                        return next && typeof next.getTime === 'function' ? next.getTime() : null
+                    }).filter(Boolean)
+                } catch (e) {
+                    return []
+                }
+            },
             shortcuts () {
                 return [
                     {
@@ -170,6 +217,16 @@
             color: #ff4d4f;
             font-size: 12px;
             margin-top: 4px;
+        }
+        .cron-next-runs {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #63656e;
+            line-height: 20px;
+        }
+        .cron-next-runs-title {
+            color: #979ba5;
+            margin-bottom: 2px;
         }
     }
 </style>

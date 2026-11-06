@@ -10,15 +10,17 @@
 </template>
 
 <script>
-    import SearchSelect from '@blueking/search-select'
-    import { mapState, mapGetters, mapActions } from 'vuex'
     import {
-        PIPELINE_FILTER_PIPELINENAME,
         PIPELINE_FILTER_CREATOR,
-        PIPELINE_FILTER_VIEWIDS,
-        PIPELINE_FILTER_LABELS
+        PIPELINE_FILTER_LABELS,
+        PIPELINE_FILTER_PIPELINENAME,
+        PIPELINE_FILTER_VIEWIDS
     } from '@/utils/pipelineConst'
+    import TenantSingleton from '@/utils/tenant'
+    import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    
     export default {
         name: 'PipelineSearcher',
         components: {
@@ -65,8 +67,8 @@
                     {
                         id: PIPELINE_FILTER_CREATOR,
                         default: true,
-                        name: this.$t('creator')
-
+                        name: this.$t('creator'),
+                        remoteMethod: TenantSingleton.fetchTenantUsers
                     },
                     ...(!this.isArchiveView
                         ? [{
@@ -116,21 +118,15 @@
                 return !this.isArchiveView ? this.$t('searchPipelinePlaceholder') : this.$t('searchPipelineArchivePlaceholder')
             }
         },
-        watch: {
-            dropList () {
-                this.initValues = this.parseQuery(this.value)
-            }
-        },
-        mounted () {
-            this.init()
+
+        async created () {
+            await this.requestTagList(this.$route.params)
+            await this.parseQuery(this.value)
         },
         methods: {
             ...mapActions('pipelines', [
                 'requestTagList'
             ]),
-            async init () {
-                await this.requestTagList(this.$route.params)
-            },
             getFilterLabelValues (ids) {
                 const tagGroupIdMap = ids.reduce((acc, id) => {
                     const label = this.labelMap[id]
@@ -151,10 +147,10 @@
                     }
                 })
             },
-            parseQuery (query) {
-                return this.filterKeys.map(key => {
+            async parseQuery (query) {
+                const filters = await Promise.all(this.filterKeys.map(async key => {
                     const item = query[key]
-                    if (item) {
+                    if (typeof item === 'string'  && item) {
                         const values = item.split(',')
                         switch (key) {
                             case PIPELINE_FILTER_LABELS:
@@ -168,6 +164,15 @@
                                         name: this.groupMap[id]?.name ?? 'invalid'
                                     }))
                                 }
+                            case PIPELINE_FILTER_CREATOR:
+                                const ids = values.map(id => id)
+                                const initRes = await TenantSingleton.fetchTenantDisplayNames(ids)
+                                
+                                return {
+                                    id: key,
+                                    name: this.searchConditions[key],
+                                    values: initRes
+                                }
                             default:
                                 return {
                                     id: key,
@@ -179,8 +184,9 @@
                                 }
                         }
                     }
-                    return null
-                }).filter(item => item !== null).flat()
+                    return Promise.resolve(null)
+                }))
+                this.initValues = filters.filter(item => item !== null).flat()
             },
             formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
@@ -188,7 +194,7 @@
                         const tagIds = filter.values.map(val => val.id)
                         acc[PIPELINE_FILTER_LABELS] = (acc[PIPELINE_FILTER_LABELS] ? [acc[PIPELINE_FILTER_LABELS], ...tagIds] : tagIds).join(',')
                     } else {
-                        acc[filter.id] = filter.values.map(val => val.id).join(',')
+                        acc[filter.id] = filter.values?.map?.(val => val.id).join(',')
                     }
                     return acc
                 }, {})

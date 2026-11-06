@@ -76,7 +76,8 @@ interface AuthProjectApi {
     fun getUserProjects(
         serviceCode: AuthServiceCode,
         userId: String,
-        supplier: (() -> List<String>)?
+        tenantId: String? = null,
+        supplier: (() -> List<String>)? = null
     ): List<String>
 
     /**
@@ -89,8 +90,9 @@ interface AuthProjectApi {
     fun getUserProjectsByPermission(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String? = null,
         permission: AuthPermission,
-        supplier: (() -> List<String>)?,
+        supplier: (() -> List<String>)? = null,
         resourceType: String? = null
     ): List<String>
 
@@ -104,7 +106,8 @@ interface AuthProjectApi {
     fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,
-        supplier: (() -> List<String>)?
+        tenantId: String? = null,
+        supplier: (() -> List<String>)? = null
     ): Map<String, String>
 
     /**

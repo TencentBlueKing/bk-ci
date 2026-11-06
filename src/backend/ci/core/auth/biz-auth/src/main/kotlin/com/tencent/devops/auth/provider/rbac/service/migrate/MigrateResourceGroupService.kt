@@ -35,6 +35,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,6 +66,7 @@ class MigrateResourceGroupService @Autowired constructor(
             val pageInfoDTO = V2PageInfoDTO()
             pageInfoDTO.page = PageUtil.DEFAULT_PAGE
             pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+            val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             val iamGroupInfo = if (resourceInfo.resourceType == AuthResourceType.PROJECT.value) {
                 val searchGroupDTO = SearchGroupDTO.builder()
                     .inherit(false)
@@ -73,12 +75,14 @@ class MigrateResourceGroupService @Autowired constructor(
                 iamV2ManagerService.getGradeManagerRoleGroupV2(
                     resourceInfo.relationId,
                     searchGroupDTO,
-                    pageInfoDTO
+                    pageInfoDTO,
+                    tenantId
                 )
             } else {
                 iamV2ManagerService.getSubsetManagerRoleGroup(
                     resourceInfo.relationId.toInt(),
-                    pageInfoDTO
+                    pageInfoDTO,
+                    tenantId
                 )
             }.results.firstOrNull { it.name == resourceGroupInfo.groupName }
             logger.info("resource groups need to fix,iam group info $projectCode|$iamGroupInfo")

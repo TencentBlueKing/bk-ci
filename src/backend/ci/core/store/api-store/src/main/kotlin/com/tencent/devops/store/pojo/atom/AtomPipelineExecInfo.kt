@@ -38,6 +38,6 @@ data class AtomPipelineExecInfo(
     val projectCode: String,
     @get:Schema(title = "拥有者", required = true)
     val owner: String,
-    @get:Schema(title = "最近执行时间", required = true)
-    val latestExecTime: String
+    @get:Schema(title = "最近执行时间（毫秒时间戳）", required = true)
+    val latestExecTime: Long?
 )

@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
-import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStaticProjectId
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -37,9 +37,9 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 import java.time.LocalDateTime
 
 @RestResource
@@ -70,7 +70,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectId = BKREPO_STATIC_PROJECT_ID,
+            projectId = bkRepoStaticProjectId(),
             filePath = filePath.toString(),
             fileType = FileTypeEnum.BK_STATIC,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW

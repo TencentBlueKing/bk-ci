@@ -65,18 +65,18 @@ data class NodeWithPermission(
     val gateway: String?,
     @get:Schema(title = "显示名称", required = false)
     val displayName: String?,
-    @get:Schema(title = "创建/导入时间", required = false)
-    val createTime: String?,
-    @get:Schema(title = "最后修改时间", required = false)
-    val lastModifyTime: String?,
+    @get:Schema(title = "创建/导入时间（毫秒时间戳）", required = false)
+    val createTime: Long?,
+    @get:Schema(title = "最后修改时间（毫秒时间戳）", required = false)
+    val lastModifyTime: Long?,
     @get:Schema(title = "最后修改人", required = false)
     val lastModifyUser: String?,
     @get:Schema(title = "所属业务, 默认-1表示没有绑定业务")
     val bizId: Long? = -1,
     @get:Schema(title = "流水线Job引用数")
     val pipelineRefCount: Int? = 0,
-    @get:Schema(title = "流水线Job引用数")
-    val lastBuildTime: String? = "",
+    @get:Schema(title = "最近构建时间（毫秒时间戳）")
+    val lastBuildTime: Long? = null,
     @get:Schema(title = "agent状态", required = true)
     val agentStatus: Boolean,
     @get:Schema(title = "agent版本")

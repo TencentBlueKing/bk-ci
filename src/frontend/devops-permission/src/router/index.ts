@@ -15,8 +15,11 @@ const AuthEntry = () => import(/* webpackChunkName: "Permission" */ '../views/au
 const OauthHome = () => import(/* webpackChunkName: "Permission" */ '../views/auth/oauth/oauth-home.vue');
 const MyAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/my-auth.vue');
 const MyHandover = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-handover/index.vue');
+
+const publicUrlPrefix = window.PUBLIC_URL_PREFIX || '';
+
 const router = createRouter({
-  history: createWebHistory('permission'),
+  history: createWebHistory(`${publicUrlPrefix}/permission`),
   routes: [
     {
       path: '/',

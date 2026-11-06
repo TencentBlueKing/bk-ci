@@ -166,6 +166,10 @@ export default defineStore('manageAside', () => {
    */
   async function getProjectMembers(projectId: string, departedFlag?: boolean, searchGroup?: any) {
     try {
+      if (!projectId) {
+        memberList.value = [];
+        return;
+      }
       isLoading.value = true;
       const params = getParams(projectId, departedFlag, searchGroup);
 

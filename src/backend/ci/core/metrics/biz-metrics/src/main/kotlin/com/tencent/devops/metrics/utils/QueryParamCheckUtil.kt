@@ -53,18 +53,31 @@ object QueryParamCheckUtil {
      * 获取开始日期时间字符串（当前时间减去1个月）
      * @return 格式化后的日期字符串，格式为"yyyy-MM-dd"
      */
-    fun getStartDateTime(): String {
-        val startDateTime = LocalDate.now().minusMonths(1)
-        return startDateTime.format(DATE_FORMATTER)
+    fun getStartDateTime(timeZone: String? = null): String {
+        val zone = DateTimeUtil.resolveZoneId(timeZone)
+        return LocalDate.now(zone).minusMonths(1).format(DATE_FORMATTER)
     }
 
     /**
      * 获取结束日期时间字符串（当前时间）
      * @return 格式化后的日期字符串，格式为"yyyy-MM-dd"
      */
-    fun getEndDateTime(): String {
-        val endDateTime = LocalDate.now()
-        return endDateTime.format(DATE_FORMATTER)
+    fun getEndDateTime(timeZone: String? = null): String {
+        val zone = DateTimeUtil.resolveZoneId(timeZone)
+        return LocalDate.now(zone).format(DATE_FORMATTER)
+    }
+
+    /**
+     * 将用户时区下的日历日区间换算为服务端 LocalDateTime 区间（用于事件时刻列过滤）。
+     * 返回 Pair(startInclusive, endExclusive)。
+     * 注意：STATISTICS_TIME 等「日历日桶」字段应直接用 LocalDate 标签匹配，不要走本方法。
+     */
+    fun calendarDateRangeToLocalDateTime(
+        startTime: String,
+        endTime: String,
+        timeZone: String? = null
+    ): Pair<LocalDateTime, LocalDateTime> {
+        return DateTimeUtil.calendarDateRangeToLocalDateTime(startTime, endTime, timeZone)
     }
 
     fun toMinutes(millisecond: Long): Double {

@@ -32,10 +32,13 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.deser.std.NumberDeserializers
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.ser.FilterProvider
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
@@ -134,6 +137,7 @@ object JsonUtil {
 
         registerModule(javaTimeModule())
         registerModule(KotlinModule.Builder().build())
+        registerModule(legacyTimestampModule())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
@@ -160,6 +164,7 @@ object JsonUtil {
     private val skipEmptyObjectMapper = ObjectMapper().apply {
         registerModule(javaTimeModule())
         registerModule(KotlinModule.Builder().build())
+        registerModule(legacyTimestampModule())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
@@ -169,6 +174,28 @@ object JsonUtil {
         jsonModules.forEach { jsonModule ->
             registerModule(jsonModule)
         }
+    }
+
+    /**
+     * 时区改造把 createTime/updateTime 等从日期字符串改成毫秒时间戳。
+     * Worker 与各服务共用这份 ObjectMapper，旧响应里的日期字符串仍要能读进 Long。
+     */
+    private fun legacyTimestampModule(): SimpleModule {
+        return SimpleModule("legacyDateTimeLong").apply {
+            addLegacyLongDeserializer(Long::class.javaObjectType, null)
+            val primitiveType = Long::class.javaPrimitiveType
+            if (primitiveType != null) {
+                addLegacyLongDeserializer(primitiveType, 0L)
+            }
+        }
+    }
+
+    private fun SimpleModule.addLegacyLongDeserializer(type: Class<Long>, nullValue: Long?) {
+        @Suppress("UNCHECKED_CAST")
+        val deserializer = LegacyDateTimeLongDeserializer(
+            NumberDeserializers.LongDeserializer(type, nullValue)
+        ) as JsonDeserializer<Long>
+        addDeserializer(type, deserializer)
     }
 
     private fun javaTimeModule(): JavaTimeModule {

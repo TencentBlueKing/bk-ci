@@ -59,7 +59,8 @@ interface AtomService {
         userId: String,
         queryParam: AtomQueryParam,
         page: Int = 1,
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        tenantId: String?
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
@@ -69,7 +70,8 @@ interface AtomService {
         userId: String,
         queryParam: AtomQueryParam,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
@@ -91,6 +93,7 @@ interface AtomService {
         version: String,
         atomStatus: Byte? = null,
         queryOfflineFlag: Boolean = false,
+        tenantId: String? = null,
         serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
@@ -103,6 +106,7 @@ interface AtomService {
         version: String,
         atomStatus: Byte? = null,
         queryOfflineFlag: Boolean = false,
+        tenantId: String? = null,
         serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
@@ -118,7 +122,11 @@ interface AtomService {
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>
+    fun getPipelineAtomVersions(
+        projectCode: String? = null,
+        atomCode: String,
+        tenantId: String? = null
+    ): Result<List<VersionInfo>>
 
     /**
      * 根据插件代码和版本号集合批量获取插件信息
@@ -128,12 +136,17 @@ interface AtomService {
     /**
      * 添加插件信息
      */
-    fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest): Result<Boolean>
+    fun savePipelineAtom(userId: String, atomRequest: AtomCreateRequest, tenantId: String?): Result<Boolean>
 
     /**
      * 更新插件信息
      */
-    fun updatePipelineAtom(userId: String, id: String, atomUpdateRequest: AtomUpdateRequest): Result<Boolean>
+    fun updatePipelineAtom(
+        userId: String,
+        id: String,
+        atomUpdateRequest: AtomUpdateRequest,
+        tenantId: String?
+    ): Result<Boolean>
 
     /**
      * 删除插件信息
@@ -165,7 +178,8 @@ interface AtomService {
         name: String?,
         serviceScope: ServiceScopeEnum?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Page<InstalledAtom>
 
     /**
@@ -191,7 +205,8 @@ interface AtomService {
     fun updateAtomBaseInfo(
         userId: String,
         atomCode: String,
-        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

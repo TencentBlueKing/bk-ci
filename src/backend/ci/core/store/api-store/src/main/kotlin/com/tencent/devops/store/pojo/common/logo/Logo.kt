@@ -42,9 +42,9 @@ data class Logo(
     @get:Schema(title = "点击logo后的跳转链接")
     val link: String?,
     @get:Schema(title = "创建日期")
-    val createTime: String,
+    val createTime: Long,
     @get:Schema(title = "更新日期")
-    val updateTime: String,
+    val updateTime: Long,
     @get:Schema(title = "创建人", required = true)
     val creator: String,
     @get:Schema(title = "最近修改人", required = true)

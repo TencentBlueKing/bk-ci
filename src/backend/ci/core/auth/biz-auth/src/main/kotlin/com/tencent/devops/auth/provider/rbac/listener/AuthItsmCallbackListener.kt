@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -59,6 +60,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         when (event.approveType) {
             AuthItsmApprovalType.CREATE.name ->
                 createProjectCallBack(itsmCallBackInfo = event.itsmCallBackInfo)
+
             AuthItsmApprovalType.UPDATE.name ->
                 updateProjectCallBack(itsmCallBackInfo = event.itsmCallBackInfo)
         }
@@ -113,7 +115,10 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         } else {
-            permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
+            permissionGradeManagerService.rejectCancelApplication(
+                callBackId = callBackId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(englishName)
+            )
             client.get(ServiceProjectApprovalResource::class).createRejectOrRevoke(
                 projectId = englishName,
                 itsmTicketStatus = itsmCallBackInfo.currentStatus,
@@ -172,7 +177,10 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         } else {
-            permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
+            permissionGradeManagerService.rejectCancelApplication(
+                callBackId = callBackId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(englishName)
+            )
             client.get(ServiceProjectApprovalResource::class).updateRejectOrRevoke(
                 projectId = englishName,
                 itsmTicketStatus = itsmCallBackInfo.currentStatus,

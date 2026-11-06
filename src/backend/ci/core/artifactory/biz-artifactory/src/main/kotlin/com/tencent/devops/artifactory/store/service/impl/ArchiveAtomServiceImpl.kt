@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.store.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
@@ -167,7 +168,11 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             clearServerTmpFile(projectCode, atomCode, version)
         }
         val finalAtomId = if (releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-            val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version).data
+            val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode),
+                atomCode = atomCode,
+                version = version
+            ).data
                 ?: throw ErrorCodeException(
                     errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                     params = arrayOf("$atomCode:$version")
@@ -360,7 +365,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             logger.info("updateArchiveFile path:$path")
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
+                projectId = bkRepoStoreProjectId(),
                 repoName = REPO_NAME_PLUGIN,
                 path = path,
                 file = file

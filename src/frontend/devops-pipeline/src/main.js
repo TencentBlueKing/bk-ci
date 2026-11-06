@@ -39,6 +39,7 @@ import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
+import TenantSingleton from './utils/tenant'
 import { BkXssFilterDirective } from '@blueking/xss-filter'
 
 import {
@@ -66,7 +67,7 @@ Vue.use(enStyle)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
 Vue.use(BkXssFilterDirective)
-Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(PermissionDirective(handlePipelineNoPermission, window.PUBLIC_URL_PREFIX))
 Vue.use(BkPermission, {
     i18n
 })
@@ -126,18 +127,27 @@ Vue.mixin({
     }
 })
 
-if (!isInIframe) {
-    // 只能以iframe形式嵌入
-    location.href = `${WEB_URL_PREFIX}${location.pathname}`;
-}
+// if (!isInIframe) {
+//     // 只能以iframe形式嵌入。WEB_URL_PREFIX 已经包含了子路径前缀（如 /bkci/console），
+//     // 这里要先把 location.pathname 中的子路径前缀剥掉，避免出现 /bkci/console/bkci/pipeline/... 的双前缀。
+//     const publicPrefix = window.PUBLIC_URL_PREFIX || ''
+//     const subPath = publicPrefix && location.pathname.indexOf(publicPrefix) === 0
+//         ? location.pathname.slice(publicPrefix.length)
+//         : location.pathname
+//     location.href = `${WEB_URL_PREFIX}${subPath}${location.search || ''}${location.hash || ''}`;
+// }
 
-global.pipelineVue = new Vue({
-    el: "#app",
-    router: createRouter(store, isInIframe),
-    store,
-    i18n,
-    components: {
-        App
-    },
-    template: '<App/>'
+new TenantSingleton().init().then(() => {
+    global.pipelineVue = new Vue({
+        el: "#app",
+        router: createRouter(store, isInIframe),
+        store,
+        i18n,
+        components: {
+            App
+        },
+        template: '<App/>'
+    })
 })
+
+

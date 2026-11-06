@@ -55,9 +55,23 @@ class ImageHandleBuildResultService @Autowired constructor(
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean> {
+        return handleStoreBuildResult(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            storeBuildResultRequest = storeBuildResultRequest,
+            tenantId = null
+        )
+    }
+
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest,
+        tenantId: String?
+    ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val imageId = storeBuildResultRequest.storeId
-        val imageRecord = imageDao.getImage(dslContext, imageId)
+        val imageRecord = imageDao.getImage(dslContext, imageId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
@@ -75,7 +89,8 @@ class ImageHandleBuildResultService @Autowired constructor(
             imageId = imageId,
             userId = imageRecord.modifier,
             imageStatus = imageStatus,
-            msg = null
+            msg = null,
+            tenantId = tenantId
         )
         return Result(true)
     }

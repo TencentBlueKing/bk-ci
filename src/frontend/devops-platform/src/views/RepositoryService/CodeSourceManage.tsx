@@ -1,12 +1,12 @@
-import http from '@/http/api'
-import { defineComponent, ref, onMounted, h, resolveDirective, withDirectives } from 'vue';
 import { timeFormatter } from '@/common/util';
+import PlatformHeader from '@/components/platform-header';
+import http from '@/http/api';
+import { InfoBox, Message, Tag } from 'bkui-vue';
+import { Plus } from 'bkui-vue/lib/icon';
+import { storeToRefs } from 'pinia';
+import { defineComponent, h, onMounted, ref, resolveDirective, withDirectives } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { Tag, InfoBox, Message } from 'bkui-vue';
-import { Plus } from 'bkui-vue/lib/icon';
-import PlatformHeader from '@/components/platform-header';
-import { storeToRefs } from 'pinia';
 import useRepoConfigTable from "./useRepoConfigTable";
 
 export default defineComponent({
@@ -76,7 +76,7 @@ export default defineComponent({
         'label': 'PAC',
         'field': 'pacEnabled',
         width: 120,
-        render({ cell, row }) {
+        render({ row }) {
           return h(Tag, {
             theme: row.pacEnabled ? 'success' : ''
           }, {
@@ -87,17 +87,27 @@ export default defineComponent({
       {
         'label': t('创建人'),
         'field': 'creator',
+        render({ row }) {
+          return h('bk-user-display-name', {
+            'user-id': row.creator
+          })
+        }
       },
       {
         'label': t('创建时间'),
         'field': 'createTime',
-        render({ cell, row }) {
+        render({ cell }) {
           return h('span', [timeFormatter(cell)])
         }
       },
       {
         'label': t('最近修改人'),
         'field': 'updater',
+        render({ row }) {
+          return h('bk-user-display-name', {
+            'user-id': row.updater
+          })
+        }
       },
       {
         'label': t('最近修改时间'),

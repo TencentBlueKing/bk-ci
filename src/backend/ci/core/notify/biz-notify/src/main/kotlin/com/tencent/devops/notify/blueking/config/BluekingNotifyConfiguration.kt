@@ -1,5 +1,6 @@
 package com.tencent.devops.notify.blueking.config
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.notify.blueking.sdk.CMSApi
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.blueking.service.inner.BlueKingWeworkServiceImpl
@@ -9,6 +10,7 @@ import com.tencent.devops.notify.blueking.service.inner.SmsServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.VoiceServiceImpl
 import com.tencent.devops.notify.blueking.service.inner.WechatServiceImpl
 import com.tencent.devops.notify.blueking.utils.NotifyService
+import com.tencent.devops.notify.blueking.utils.TenantNotifyService
 import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.dao.RtxNotifyDao
 import com.tencent.devops.notify.dao.SmsNotifyDao
@@ -21,6 +23,7 @@ import com.tencent.devops.notify.service.VoiceService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -53,7 +56,15 @@ class BluekingNotifyConfiguration {
     fun configuration() = com.tencent.devops.common.notify.utils.Configuration()
 
     @Bean
-    fun notifyService(@Autowired cmsApi: CMSApi) = NotifyService(cmsApi)
+    fun notifyService(@Autowired cmsApi: CMSApi): NotifyService {
+        if (TenantUtils.isMultiTenantMode()) {
+            logger.info("Multi tenant mode")
+            return TenantNotifyService(cmsApi)
+        } else {
+            logger.info("None tenant mode")
+            return NotifyService(cmsApi)
+        }
+    }
 
     @Bean
     @ConditionalOnMissingBean(EmailService::class)
@@ -104,4 +115,8 @@ class BluekingNotifyConfiguration {
         @Autowired configuration: NotifyConfig,
         @Autowired dslContext: DSLContext
     ) = VoiceServiceImpl(notifyService, voiceNotifyDao, streamBridge, configuration, dslContext)
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BluekingNotifyConfiguration::class.java)
+    }
 }

@@ -45,7 +45,7 @@ data class ProjectSimpleInfo(
     @get:Schema(title = "创建人", required = true)
     val creator: String?,
 
-    @get:Schema(title = "创建时间", required = true)
-    val createTime: String?
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
+    val createTime: Long?
 
 )

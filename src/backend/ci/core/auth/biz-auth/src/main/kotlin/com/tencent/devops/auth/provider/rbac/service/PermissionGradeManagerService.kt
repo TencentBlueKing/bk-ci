@@ -43,6 +43,7 @@ import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
+import com.tencent.devops.auth.pojo.ItsmTicketsRevoked
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
@@ -62,6 +63,7 @@ import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
@@ -172,7 +174,10 @@ class PermissionGradeManagerService @Autowired constructor(
                 .syncSubjectTemplate(true)
                 .groupName(manageGroupConfig.groupName)
                 .build()
-            val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
+            val gradeManagerId = iamV2ManagerService.createManagerV2(
+                createManagerDTO,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             logger.info("create iam grade manager success|$name|$projectCode|$userId|$gradeManagerId")
             gradeManagerId
         } else {
@@ -223,8 +228,10 @@ class PermissionGradeManagerService @Autowired constructor(
                 )
                 .build()
             logger.info("create grade manager application|$projectCode|$name|$callbackId|$itsmCreateCallBackUrl")
-            val createGradeManagerApplication =
-                iamV2ManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
+            val createGradeManagerApplication = iamV2ManagerService.createGradeManagerApplication(
+                gradeManagerApplicationCreateDTO,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             authItsmCallbackDao.create(
                 dslContext = dslContext,
                 applyId = createGradeManagerApplication.id,
@@ -284,14 +291,16 @@ class PermissionGradeManagerService @Autowired constructor(
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
 
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+        val tenantId = TenantUtils.iamTenantId(projectCode)
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId, tenantId)
         val finalMembers = gradeManagerDetail.members.filterNot {
-            deptService.isUserDeparted(it)
+            deptService.isUserDeparted(it, tenantId)
         }
         val description = gradeManagerDetail.description
         // 创建项目审批通过后，会调用更新分级管理员接口去修改项目的授权范围，此时不走审批流程
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status ||
-            registerMonitorPermission) {
+            registerMonitorPermission
+        ) {
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
                 .members(finalMembers)
@@ -303,7 +312,11 @@ class PermissionGradeManagerService @Autowired constructor(
                 .let { if (enabled != null) it.enabled(enabled) else it }
                 .build()
             logger.info("update grade manager|$name|$finalMembers")
-            iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
+            iamV2ManagerService.updateManagerV2(
+                gradeManagerId,
+                updateManagerDTO,
+                tenantId
+            )
             true
         } else {
             val callbackId = UUIDUtil.generate()
@@ -353,8 +366,10 @@ class PermissionGradeManagerService @Autowired constructor(
                 )
                 .build()
             logger.info("update grade manager application|$projectCode|$name|$callbackId|$itsmUpdateCallBackUrl")
-            val updateGradeManagerApplication =
-                iamV2ManagerService.updateGradeManagerApplication(gradeManagerId, gradeManagerApplicationUpdateDTO)
+            val updateGradeManagerApplication = iamV2ManagerService.updateGradeManagerApplication(
+                gradeManagerId, gradeManagerApplicationUpdateDTO,
+                tenantId
+            )
             authItsmCallbackDao.create(
                 dslContext = dslContext,
                 applyId = updateGradeManagerApplication.id,
@@ -455,15 +470,15 @@ class PermissionGradeManagerService @Autowired constructor(
         )
     }
 
-    fun deleteGradeManager(gradeManagerId: String) {
-        iamV2ManagerService.deleteManagerV2(gradeManagerId)
+    fun deleteGradeManager(gradeManagerId: String, tenantId: String?) {
+        iamV2ManagerService.deleteManagerV2(gradeManagerId, tenantId)
     }
 
     /**
      * 驳回取消申请
      */
-    fun rejectCancelApplication(callBackId: String): Boolean {
-        return iamV2ManagerService.cancelCallbackApplication(callBackId)
+    fun rejectCancelApplication(callBackId: String, tenantId: String?): Boolean {
+        return iamV2ManagerService.cancelCallbackApplication(callBackId, tenantId)
     }
 
     /**
@@ -482,16 +497,28 @@ class PermissionGradeManagerService @Autowired constructor(
         }
         // 若itsm还未结束，需要发起撤销
         if (!isItsmTicketFinished(callbackRecord.sn)) {
-            itsmService.cancelItsmApplication(
-                ItsmCancelApplicationInfo(
-                    sn = callbackRecord.sn,
-                    operator = userId,
-                    actionType = CANCEL_ITSM_APPLICATION_ACTION
+            if (TenantUtils.disableEsb()) {
+                itsmService.ticketsRevoked(
+                    ItsmTicketsRevoked(
+                        ticket_id = callbackRecord.sn,
+                        system_id = "bk_iam"
+                    )
                 )
-            )
+            } else {
+                itsmService.cancelItsmApplication(
+                    ItsmCancelApplicationInfo(
+                        sn = callbackRecord.sn,
+                        operator = userId,
+                        actionType = CANCEL_ITSM_APPLICATION_ACTION
+                    )
+                )
+            }
         }
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
-        iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
+        iamV2ManagerService.cancelCallbackApplication(
+            callbackRecord.callbackId,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
         authItsmCallbackDao.updateCallbackBySn(
             dslContext = dslContext,
             sn = callbackRecord.sn,
@@ -502,9 +529,13 @@ class PermissionGradeManagerService @Autowired constructor(
     }
 
     private fun isItsmTicketFinished(sn: String): Boolean {
-        val itsmTicketStatus = itsmService.getItsmTicketStatus(sn)
+        val itsmTicketStatus = if (TenantUtils.disableEsb()) {
+            itsmService.getItsmTicketStatusV2(sn)
+        } else {
+            itsmService.getItsmTicketStatus(sn)
+        }
         return itsmTicketStatus == REVOKE_ITSM_APPLICATION_ACTION ||
-            itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
+                itsmTicketStatus == FINISH_ITSM_APPLICATION_ACTION
     }
 
     fun handleItsmCreateCallback(
@@ -522,7 +553,11 @@ class PermissionGradeManagerService @Autowired constructor(
             .currentStatus(currentStatus)
             .approveResult(true).build()
         val gradeManagerId =
-            iamV2ManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO).roleId
+            iamV2ManagerService.handleCallbackApplication(
+                callBackId,
+                callbackApplicationDTO,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            ).roleId
 
         // 审批通过后，需要修改分级管理员，注册监控中心权限资源
         modifyGradeManager(
@@ -577,7 +612,11 @@ class PermissionGradeManagerService @Autowired constructor(
             .sn(sn)
             .currentStatus(currentStatus)
             .approveResult(true).build()
-        iamV2ManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO).roleId
+        iamV2ManagerService.handleCallbackApplication(
+            callBackId,
+            callbackApplicationDTO,
+            TenantUtils.getTenantIdByEnglishName(projectCode)
+        ).roleId
         authResourceService.update(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,

@@ -41,18 +41,19 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.constant.ProjectMessageCode
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -101,7 +102,8 @@ class RbacPermissionApplyService @Autowired constructor(
         logger.info("RbacPermissionApplyService|listGroups:searchGroupInfo=$searchGroupInfo")
         verifyProjectRouterTag(projectId)
         // 校验新用户信息是否同步完成
-        isUserExists(userId)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        isUserExists(userId, tenantId)
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -150,7 +152,8 @@ class RbacPermissionApplyService @Autowired constructor(
             managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
                 bkIamPath = bkIamPath,
-                relationId = projectInfo.relationId
+                relationId = projectInfo.relationId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
             )
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
             groupInfoList = buildGroupInfoList(
@@ -170,9 +173,9 @@ class RbacPermissionApplyService @Autowired constructor(
         )
     }
 
-    private fun isUserExists(userId: String) {
+    private fun isUserExists(userId: String, tenantId: String?) {
         // 校验新用户信息是否同步完成
-        val userExists = deptService.getUserInfo(userId) != null
+        val userExists = deptService.getUserInfo(userId = userId, tenantId = tenantId) != null
         if (!userExists) {
             logger.warn("user($userId) does not exist")
             throw ErrorCodeException(
@@ -242,7 +245,8 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun getGradeManagerRoleGroup(
         searchGroupInfo: SearchGroupInfo,
         bkIamPath: String?,
-        relationId: String
+        relationId: String,
+        tenantId: String?
     ): V2ManagerRoleGroupVO {
         val searchGroupDTO = SearchGroupDTO
             .builder()
@@ -265,7 +269,12 @@ class RbacPermissionApplyService @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
-        return v2ManagerService.getGradeManagerRoleGroupV2(relationId, searchGroupDTO, v2PageInfoDTO)
+        return v2ManagerService.getGradeManagerRoleGroupV2(
+            relationId,
+            searchGroupDTO,
+            v2PageInfoDTO,
+            tenantId
+        )
     }
 
     private fun buildGroupInfoList(
@@ -277,7 +286,11 @@ class RbacPermissionApplyService @Autowired constructor(
         if (managerRoleGroupInfoList.isEmpty()) return emptyList()
 
         val groupIds = managerRoleGroupInfoList.map { it.id.toString() }
-        val verifyMemberJoinedResult = verifyMemberJoined(userId, groupIds)
+        val verifyMemberJoinedResult = verifyMemberJoined(
+            userId = userId,
+            groupIds = groupIds,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        )
         val dbGroupRecords = authResourceGroupDao.listByRelationId(dslContext, projectId, groupIds)
 
         return managerRoleGroupInfoList.map { gInfo ->
@@ -312,14 +325,15 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun verifyMemberJoined(
         userId: String,
-        groupIds: List<String>
+        groupIds: List<String>,
+        tenantId: String? = null
     ): Map<Int, GroupMemberVerifyInfo> {
         val verifyGroupValidMemberResult = mutableMapOf<Int, GroupMemberVerifyInfo>()
         val futures = mutableListOf<Future<*>>()
         groupIds.chunked(20).forEach { batchGroupIds ->
             futures.add(executor.submit {
                 val batchVerifyGroupValidMember =
-                    v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","))
+                    v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","), tenantId)
                 verifyGroupValidMemberResult.putAll(batchVerifyGroupValidMember)
             })
         }
@@ -328,9 +342,10 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
+        val projectCode = applyJoinGroupInfo.projectCode
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         try {
             logger.info("apply to join group: applyJoinGroupInfo=$applyJoinGroupInfo")
-            val projectCode = applyJoinGroupInfo.projectCode
             val projectInfo = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
                 ?: throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -379,7 +394,10 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
-            v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
+            v2ManagerService.createRoleGroupApplicationV2(
+                iamApplicationDTO,
+                TenantUtils.getTenantIdByEnglishName(applyJoinGroupInfo.projectCode)
+            )
             // 记录单据，用于同步用户组
             authResourceGroupApplyDao.batchCreate(
                 dslContext = dslContext,
@@ -398,7 +416,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         resourceCodes = resourceCodes
                     )
                     val departedUsers = listResourcesCreator.filter {
-                        deptService.isUserDeparted(it)
+                        deptService.isUserDeparted(it, tenantId)
                     }.joinToString(",")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
@@ -453,7 +471,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     pageSize = 10
                 ),
                 bkIamPath = null,
-                relationId = gradeManagerId
+                relationId = gradeManagerId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             ).results.first()
             logger.info("get resource group info from iam:$projectCode|$projectName|$groupId|$iamGroupInfo")
             ResourceGroupInfo(
