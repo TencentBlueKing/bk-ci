@@ -67,8 +67,10 @@ object NotifyMessageCode {
 
     const val BK_REVIEW_CARD_SOURCE = "bkReviewCardSource" // 蓝盾流水线
     const val BK_REVIEW_CARD_PASS = "bkReviewCardPass" // 通过
+    const val BK_REVIEW_CARD_CHOSEN = "bkReviewCardChosen" // 你已选择：{0}
     const val BK_REVIEW_CARD_REJECT = "bkReviewCardReject" // 驳回
     const val BK_REVIEW_CARD_DETAIL = "bkReviewCardDetail" // 详情
+    const val BK_REVIEW_CARD_OPEN_BUILD = "bkReviewCardOpenBuild" // 查看构建
     const val BK_REVIEW_CARD_CONFIRM = "bkReviewCardConfirm" // 确认提交
     const val BK_REVIEW_CARD_EDIT = "bkReviewCardEdit" // 修改参数
     const val BK_REVIEW_CARD_SUBMIT = "bkReviewCardSubmit" // 参数确认无误，提交
@@ -77,7 +79,7 @@ object NotifyMessageCode {
     const val BK_REVIEW_CARD_MOBILE = "bkReviewCardMobile" // 手机端查看详情
     const val BK_REVIEW_CARD_PIPELINE = "bkReviewCardPipeline" // 流水线
     const val BK_REVIEW_CARD_BUILD = "bkReviewCardBuild" // 构建号
-    const val BK_REVIEW_CARD_STAGE = "bkReviewCardStage" // 阶段名
+    const val BK_REVIEW_CARD_STAGE = "bkReviewCardStage" // 步骤名
     const val BK_REVIEW_CARD_FLOW = "bkReviewCardFlow" // 审核流
     const val BK_REVIEW_CARD_PROGRESS = "bkReviewCardProgress" // 进度
     const val BK_REVIEW_CARD_REVIEWERS = "bkReviewCardReviewers" // 审核人
