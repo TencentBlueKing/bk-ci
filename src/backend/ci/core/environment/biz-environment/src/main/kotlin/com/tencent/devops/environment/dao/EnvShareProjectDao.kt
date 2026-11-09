@@ -29,7 +29,9 @@ package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.environment.pojo.TEnvShareProjectInfo
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.model.environment.tables.TEnv
+import com.tencent.devops.model.environment.tables.TEnvNode
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
 import org.jooq.DSLContext
@@ -133,6 +135,25 @@ class EnvShareProjectDao {
             }
             return dsl.fetch()
         }
+    }
+
+    fun existsEnabledNodeShare(
+        dslContext: DSLContext,
+        mainProjectId: String,
+        sharedProjectId: String,
+        nodeId: Long
+    ): Boolean {
+        val share = TEnvShareProject.T_ENV_SHARE_PROJECT
+        val node = TEnvNode.T_ENV_NODE
+        return dslContext.fetchExists(
+            dslContext.selectOne().from(share)
+                .join(node).on(node.ENV_ID.eq(share.ENV_ID).and(node.PROJECT_ID.eq(share.MAIN_PROJECT_ID)))
+                .where(share.MAIN_PROJECT_ID.eq(mainProjectId))
+                .and(share.SHARED_PROJECT_ID.eq(sharedProjectId))
+                .and(share.TYPE.eq(SharedEnvType.PROJECT.name))
+                .and(node.NODE_ID.eq(nodeId))
+                .and(node.ENABLE_NODE.eq(true))
+        )
     }
 
     fun listByShare(

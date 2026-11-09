@@ -862,8 +862,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         // 如果没有则去全局搜索这个 agent, 没有则说明被删除了
         val agentGlobalRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: return AgentResult(AgentStatus.DELETE, null)
-        // 如果还有则搜索是否被共享给当前项目，没有被共享则不能使用
-        val isShared = agentShareProjectDao.selectSharedAgentCount(dslContext, id, projectId) > 0
+        // 跨项目节点可以直接共享，也可以通过已共享的环境使用
+        val nodeId = agentGlobalRecord.nodeId
+        val isShared = agentShareProjectDao.selectSharedAgentCount(dslContext, id, projectId) > 0 ||
+            (nodeId != null && envShareProjectDao.existsEnabledNodeShare(
+                dslContext = dslContext,
+                mainProjectId = agentGlobalRecord.projectId,
+                sharedProjectId = projectId,
+                nodeId = nodeId
+            ))
         if (isShared) {
             return getResultByRecord(projectId, agentId, agentGlobalRecord)
         }
