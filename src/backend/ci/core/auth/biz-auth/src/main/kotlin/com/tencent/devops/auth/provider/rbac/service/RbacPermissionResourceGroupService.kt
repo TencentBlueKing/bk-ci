@@ -157,7 +157,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     displayName = it.name,
                     userCount = it.userCount,
                     departmentCount = it.departmentCount,
-                    templateCount = it.templateCount
+                    templateCount = it.templateCount,
+                    adminGroup = SensitiveGroupPermission.isProjectAdminGroup(
+                        resourceType = resourceType,
+                        groupCode = resourceGroup?.groupCode
+                    )
                 )
             }.toMutableList().plusAllProjectMemberGroup(
                 userId = userId,
@@ -166,8 +170,33 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             ).sortedBy { it.groupId }
             return Pagination(
                 hasNext = iamGroupInfoVoList.size == pageSize,
-                records = iamGroupInfoVoList
+                records = attachSensitiveResourceTypes(
+                    projectId = projectId,
+                    groups = iamGroupInfoVoList
+                )
             )
+        }
+    }
+
+    private fun attachSensitiveResourceTypes(
+        projectId: String,
+        groups: List<IamGroupInfoVo>
+    ): List<IamGroupInfoVo> {
+        val groupIds = groups.map { it.groupId }.filter { it > 0 }
+        if (groupIds.isEmpty()) {
+            return groups
+        }
+        val sensitiveResourceTypes = permissionResourceGroupPermissionService.listSensitiveResourceTypes(
+            projectCode = projectId,
+            iamGroupIds = groupIds
+        )
+        return groups.map { group ->
+            val resourceTypes = sensitiveResourceTypes[group.groupId].orEmpty()
+            if (resourceTypes.isEmpty()) {
+                group
+            } else {
+                group.copy(sensitiveResourceTypes = resourceTypes)
+            }
         }
     }
 
