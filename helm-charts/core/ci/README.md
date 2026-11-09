@@ -346,6 +346,7 @@ HPA设置
 | `bkSsmHost`  | 用户认证地址 | `""` |
 | `bkSsmPort`  | 用户认证端口 | `80` |
 | `bkCiNotifyWeworkSendChannel` | 通知渠道 | `weworkAgent` |
+| `bkCiArtifactWebhookSecret`  | 制品到达触发的回调密钥。不填时首次安装自动生成并保存到 Secret `<release>-bk-ci-webhook-secrets` 的 `artifact` 键，后续升级沿用；使用 `helm template`/GitOps 等无法 lookup 集群的方式部署时必须显式填写。部署后不要修改，否则已注册的制品库 webhook 会全部校验失败 | `""` |
 
 ### 编译加速配置
 |参数|描述|默认值 |

@@ -564,6 +564,8 @@ object ProcessMessageCode {
     const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
     const val ERROR_ARTIFACT_TRIGGER_PARAM_INVALID = "2101504" // 插件[{0}]的字段[{1}]不能为空或者无法解析
     const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
+    // 平台未配置制品到达触发的回调地址或密钥，插件[{0}]无法生效
+    const val ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED = "2101506"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

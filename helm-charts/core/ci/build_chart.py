@@ -47,7 +47,8 @@ include_dict = {
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
     'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}',
     'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}',
-    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}'
+    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}',
+    'bkCiArtifactWebhookSecret': '{{ include "bkci.artifactWebhookSecret" . | quote }}'
 }
 
 # 正则匹配 __BK_XXX__

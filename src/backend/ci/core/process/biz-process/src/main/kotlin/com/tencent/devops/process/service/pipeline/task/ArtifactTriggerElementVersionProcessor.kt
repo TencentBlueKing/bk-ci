@@ -114,13 +114,7 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             repository = repository,
             path = eventScope
         )
-        if (callbackUrl.isBlank()) {
-            logger.warn(
-                "skip register artifact webhook and subscription|callbackUrl is blank|" +
-                    "$projectId|$pipelineId|$taskId|eventSource=$eventSource"
-            )
-            return
-        }
+        checkPlatformConfigured(elementName = triggerElement.name)
         registerBkRepoWebhookIfAbsent(
             userId = context.userId,
             projectId = projectId,
@@ -154,6 +148,20 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         logger.info(
             "register artifact subscription success|$projectId|$pipelineId|$taskId|" +
                 "eventSource=$eventSource|eventType=$eventType|eventScope=$eventScope"
+        )
+    }
+
+    /**
+     * 未配置回调地址或密钥时触发器不可能生效（回调入口未配置密钥会拒绝所有请求），直接报错阻止保存。
+     */
+    private fun checkPlatformConfigured(elementName: String) {
+        if (callbackUrl.isNotBlank() && !webhookSecret.isNullOrBlank()) {
+            return
+        }
+        logger.warn("artifact trigger not configured|callbackUrl or secret is blank|$elementName")
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED,
+            params = arrayOf(elementName)
         )
     }
 

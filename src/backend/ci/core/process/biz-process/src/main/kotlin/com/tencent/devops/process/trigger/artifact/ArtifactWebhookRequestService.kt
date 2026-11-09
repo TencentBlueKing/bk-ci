@@ -65,8 +65,8 @@ class ArtifactWebhookRequestService(
             )
             return
         }
-        // bkrepo 原始事件类型(NODE_CREATED/PACKAGE_METADATA_SAVED 等)转换为产品语义事件，与订阅落库保持一致
-        val eventType = convertToTriggerEventType(rawEventType).name
+        // bkrepo 原始事件类型(NODE_CREATED/PACKAGE_METADATA_SAVED)转换为产品语义事件，与订阅落库保持一致
+        val eventType = convertToTriggerEventType(rawEventType)?.name ?: return
         logger.info("parse artifact event|$eventType|${JsonUtil.toJson(artifactEvent, false)}")
         val eventSource = artifactEvent.getAssociationId()
         val eventScopes = ArtifactWebhookUtils.buildQueryScopes(artifactEvent)
@@ -181,21 +181,14 @@ class ArtifactWebhookRequestService(
         }
     }
 
+    /**
+     * 仅接受注册时订阅的原始事件类型（见 ArtifactTriggerElementVersionProcessor.buildTriggers），
+     * 其余事件即使投递到回调地址也直接丢弃。
+     */
     private fun parseEvent(eventType: String, rawBody: String): ArtifactEvent? {
         val clazz: Class<out ArtifactEvent> = when (BkRepoEventType.fromValue(eventType)) {
-            BkRepoEventType.PACKAGE_METADATA_SAVED ->
-                PackageMetadataArtifactEvent::class.java
-
-            BkRepoEventType.NODE_CREATED,
-            BkRepoEventType.NODE_RENAMED,
-            BkRepoEventType.NODE_MOVED,
-            BkRepoEventType.NODE_COPIED,
-            BkRepoEventType.NODE_DELETED,
-            BkRepoEventType.NODE_DOWNLOADED,
-            BkRepoEventType.METADATA_SAVED,
-            BkRepoEventType.METADATA_DELETED ->
-                NodeArtifactEvent::class.java
-
+            BkRepoEventType.PACKAGE_METADATA_SAVED -> PackageMetadataArtifactEvent::class.java
+            BkRepoEventType.NODE_CREATED -> NodeArtifactEvent::class.java
             else -> {
                 logger.warn("unsupported bkrepo artifact event type|$eventType")
                 return null
@@ -221,22 +214,15 @@ class ArtifactWebhookRequestService(
     /**
      * 将 bkrepo 原始事件类型转换为产品语义的制品触发事件类型。
      *
-     * 当前产品仅定义「制品到达」一种，节点/包版本类事件统一转换为 [ArtifactTriggerEventType.ARRIVED]；
+     * 当前产品仅定义「制品到达」一种，节点创建/镜像元数据保存转换为 [ArtifactTriggerEventType.ARRIVED]；
      * 后续若新增其它产品事件（如制品删除），在此扩展映射即可，无需改动订阅匹配逻辑。
      */
-    private fun convertToTriggerEventType(rawEventType: String): ArtifactTriggerEventType {
+    private fun convertToTriggerEventType(rawEventType: String): ArtifactTriggerEventType? {
         return when (BkRepoEventType.fromValue(rawEventType)) {
             BkRepoEventType.NODE_CREATED,
-            BkRepoEventType.NODE_RENAMED,
-            BkRepoEventType.NODE_MOVED,
-            BkRepoEventType.NODE_COPIED,
-            BkRepoEventType.NODE_DELETED,
-            BkRepoEventType.NODE_DOWNLOADED,
-            BkRepoEventType.METADATA_SAVED,
-            BkRepoEventType.METADATA_DELETED,
             BkRepoEventType.PACKAGE_METADATA_SAVED -> ArtifactTriggerEventType.ARRIVED
 
-            else -> ArtifactTriggerEventType.ARRIVED
+            else -> null
         }
     }
 
