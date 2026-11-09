@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.26
+**文档版本：** 1.0.27
 
 **文档描述：** devops_ci_repository的数据库文档
 | 表名                  | 说明       |
@@ -368,7 +368,8 @@
 |  6   | EXPIRES_IN |   bigint   | 20 |   0    |    Y     |  N   |       | 过期时间  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | token的创建时间  |
 |  8   | OAUTH_USER_ID |   varchar   | 64 |   0    |    N     |  N   |       | 账户实际名称  |
-|  9   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
+|  9   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
+|  10   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_REPOSITORY_WEBHOOK_REQUEST</a>
 
