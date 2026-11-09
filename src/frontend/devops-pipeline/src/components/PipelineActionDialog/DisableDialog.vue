@@ -26,6 +26,7 @@
                     >
                         <code>disable-pipeline: true</code>
                         <br />
+                        <span>{{ yamlDisableBranchName }}</span>
                     </i18n>
                     <p
                         v-if="yamlInfo?.fileUrl"
@@ -89,6 +90,7 @@
                     >
                         <code>disable-pipeline: true</code>
                         <br />
+                        <span>{{ yamlDisableBranchName }}</span>
                     </i18n>
                     <p
                         v-if="yamlInfo?.fileUrl"
@@ -161,6 +163,8 @@
             pipelineId: String,
             pipelineName: String,
             value: Boolean,
+            // 分支版本名：分支版本被 YAML 禁用时展示分支名，不传则展示默认分支
+            yamlBranchName: String,
             yamlInfo: Object,
             // UI 禁用态
             lock: Boolean,
@@ -185,6 +189,10 @@
             // 代码库 YAML 中声明 disable-pipeline: true 导致的禁用
             isCurPipelineYamlLocked () {
                 return this.yamlLocked
+            },
+            // YAML 禁用所在的分支：分支版本展示分支名，否则展示默认分支
+            yamlDisableBranchName () {
+                return this.yamlBranchName || this.$t('defaultBranchLabel')
             },
             // 存量禁用数据没有禁用人/时间/原因
             hasDisabledInfo () {

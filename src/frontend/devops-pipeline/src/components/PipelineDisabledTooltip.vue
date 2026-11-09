@@ -89,9 +89,9 @@
                     return [
                         // 存量页面禁用数据没有禁用明细，跳过页面禁用分组
                         ...(this.hasPageDisabledInfo ? [{ key: 'page', title: this.$t('pageDisabledLabel'), items: this.pageDisabledItems }] : []),
-                        // 分支版本无 YAML 禁用明细（版本接口仅返回 yamlLocked），只展示分组标题；正式版本展示提交人/时间
+                        // 分支版本无提交人/时间明细（版本接口仅返回 yamlLocked），但需展示禁用来源；正式版本展示提交人/时间
                         this.isBranchVersion
-                            ? { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: [] }
+                            ? { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: [{ label: this.$t('disabledSourceLabel'), value: this.yamlDisabledSource }] }
                             : { key: 'yaml', title: this.$t('yamlDisabledLabel'), items: this.yamlDisabledItems }
                     ]
                 }
