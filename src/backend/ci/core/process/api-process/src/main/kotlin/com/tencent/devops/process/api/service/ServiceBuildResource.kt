@@ -61,6 +61,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -292,6 +293,27 @@ interface ServiceBuildResource {
         @QueryParam("checkManualStartup")
         checkManualStartup: Boolean? = false
     ): Result<BuildId>
+
+    @Operation(summary = "重新构建-按原触发方式和启动参数重新触发")
+    @POST
+    @Path("/{projectId}/{pipelineId}/{buildId}/replayByBuild")
+    fun replayByBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @Parameter(description = "强制触发", required = false)
+        @QueryParam("forceTrigger")
+        forceTrigger: Boolean? = false
+    ): Result<BuildReplayResult>
 
     @Operation(summary = "手动停止流水线")
     @DELETE

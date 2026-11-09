@@ -9,13 +9,13 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceWebhookBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelineBuildService: PipelineBuildService
+    private val pipelineBuildWebhookService: PipelineBuildWebhookService
 ) : ServiceWebhookBuildResource {
 
     override fun webhookTrigger(
@@ -48,19 +48,13 @@ class ServiceWebhookBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         request: WebhookStartPipelineRequest
     ): Result<BuildId> {
-        with(request) {
-            val buildId = pipelineBuildService.startPipeline(
+        return Result(
+            pipelineBuildWebhookService.webhookStartPipeline(
                 userId = userId,
-                pipeline = pipelineInfo,
-                startType = startType,
-                pipelineParamMap = pipelineParamMap,
-                channelCode = channelCode,
-                isMobile = false,
-                resource = resource,
-                signPipelineVersion = resource.version,
-                frequencyLimit = frequencyLimit
+                projectId = projectId,
+                pipelineId = pipelineId,
+                request = request
             )
-            return Result(buildId)
-        }
+        )
     }
 }

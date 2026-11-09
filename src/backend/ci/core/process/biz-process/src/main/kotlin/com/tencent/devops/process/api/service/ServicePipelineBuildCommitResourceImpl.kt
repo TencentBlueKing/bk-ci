@@ -3,7 +3,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
-import com.tencent.devops.process.service.builds.PipelineBuildCommitService
+import com.tencent.devops.process.trigger.scm.PipelineBuildCommitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

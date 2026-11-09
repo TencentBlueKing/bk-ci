@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineYamlResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
-import com.tencent.devops.process.yaml.PipelineYamlService
-import com.tencent.devops.process.yaml.PipelineYamlSyncService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlSyncService
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 
 @RestResource

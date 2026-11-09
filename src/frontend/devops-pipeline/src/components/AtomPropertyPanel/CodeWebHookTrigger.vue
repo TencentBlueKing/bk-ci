@@ -16,6 +16,7 @@
                                 v-if="!isHidden(i, atomValue) && rely(i, atomValue)"
                                 :key="i.key"
                                 v-bind="i"
+                                :required="isRequired(i, atomValue)"
                                 :is-error="errors.has(i.key)"
                                 :error-msg="errors.first(i.key)"
                             >
@@ -25,7 +26,7 @@
                                     :atom-value="atomValue"
                                     :disabled="disabled"
                                     :name="i.key"
-                                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) },i.rule, { required: !!i.required })"
+                                    v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) },i.rule, { required: isRequired(i, atomValue) })"
                                     :handle-change="handleUpdateAtomInput"
                                     :value="atomValue[i.key]"
                                     v-bind="i"
@@ -42,6 +43,7 @@
                         v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
                         :key="key"
                         v-bind="obj"
+                        :required="isRequired(obj, atomValue)"
                         :is-error="errors.has(obj.key)"
                         :error-msg="errors.first(obj.key)"
                     >
@@ -51,7 +53,7 @@
                             :disabled="disabled"
                             :element="element.data.input"
                             :name="key"
-                            v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
+                            v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: isRequired(obj, atomValue) })"
                             :handle-change="handleUpdateAtomInput"
                             :value="atomValue[key]"
                             v-bind="obj"

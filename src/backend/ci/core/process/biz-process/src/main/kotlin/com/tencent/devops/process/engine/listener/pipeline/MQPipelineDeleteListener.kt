@@ -36,9 +36,11 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -57,6 +59,8 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
     private val repoPipelineRefService: RepoPipelineRefService,
+    private val dslContext: DSLContext,
+    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineEventListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
@@ -79,6 +83,10 @@ class MQPipelineDeleteListener @Autowired constructor(
 
         watcher.safeAround("deleteWebhook") {
             pipelineWebhookService.deleteWebhook(projectId, pipelineId, userId)
+        }
+
+        watcher.safeAround("deleteEventSubscription") {
+            pipelineEventSubscriptionDao.deleteByPipelineId(dslContext, projectId, pipelineId)
         }
 
         watcher.safeAround("updateAgentPipelineRef") {

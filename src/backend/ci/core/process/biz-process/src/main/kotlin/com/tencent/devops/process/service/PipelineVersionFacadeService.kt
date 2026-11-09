@@ -80,9 +80,9 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlCommonService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository

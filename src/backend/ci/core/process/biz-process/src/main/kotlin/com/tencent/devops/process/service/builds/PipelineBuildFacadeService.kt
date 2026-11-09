@@ -154,7 +154,6 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
 import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -165,7 +164,10 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
+import com.tencent.devops.process.trigger.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerReplayService
+import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -177,7 +179,6 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
@@ -218,6 +219,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineTriggerReplayService: PipelineTriggerReplayService,
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
@@ -3083,21 +3085,17 @@ class PipelineBuildFacadeService(
             )
         }
         if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
-            val replayEventId = pipelineTriggerEventService.getBuildTriggerDetail(
+            return pipelineTriggerEventService.getBuildTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
             )?.let {
-                pipelineTriggerEventService.replay(
+                pipelineTriggerReplayService.replayByBuild(
                     userId = userId,
                     projectId = projectId,
-                    detailId = it.detailId!!
+                    triggerDetail = it
                 )
             } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
-            return BuildReplayResult(
-                status = BuildReplayStatus.REPLAYING,
-                eventId = replayEventId
-            )
         }
         val replayBuildId = buildManualStartup(
             userId = userId,

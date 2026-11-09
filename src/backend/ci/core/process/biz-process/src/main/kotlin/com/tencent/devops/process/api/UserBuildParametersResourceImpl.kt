@@ -49,8 +49,8 @@ import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildParamCombinationService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.trigger.scm.TriggerBuildParamUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import org.slf4j.LoggerFactory
