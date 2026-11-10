@@ -49,7 +49,7 @@ include_dict = {
     'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}',
     'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}',
     'bkCiDevopsToken': '{{ include "bkci.devopsToken" . }}',
-    'bkCiArtifactWebhookSecret': '{{ include "bkci.artifactWebhookSecret" . | quote }}'
+    'bkCiArtifactWebhookSecret': '{{ include "bkci.webhookSecret" (dict "name" "artifact" "context" .) | quote }}'
 }
 
 # 正则匹配 __BK_XXX__

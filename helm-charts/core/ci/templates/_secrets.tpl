@@ -46,3 +46,28 @@ secret.devopsToken.autoGenerate 为 true 时，未填写则复用已有 Secret �
   "key" "token"
   "context" .) -}}
 {{- end -}}
+
+{{/*
+触发器 webhook 回调密钥，所有触发器共用一个 Secret，name 即 Secret 中的键名（小驼峰）。
+values 中已填写 config.bkCi<Name>WebhookSecret 则使用该值；
+secret.webhookSecrets.<name>.autoGenerate 为 true 时，未填写则复用已有 Secret 或随机生成。
+密钥随注册请求保存到对端，变化会导致已注册的 webhook 全部校验失败，必须保持稳定。
+用法：include "bkci.webhookSecret" (dict "name" "artifact" "context" .)
+*/}}
+{{- define "bkci.webhookSecret.secretName" -}}
+{{- printf "%s-webhook-secrets" (include "bkci.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "bkci.webhookSecret" -}}
+{{- $ctx := .context -}}
+{{- if not $ctx.Values.config -}}
+{{- $_ := set $ctx.Values "config" dict -}}
+{{- end -}}
+{{- $cfg := index ($ctx.Values.secret.webhookSecrets | default dict) .name | default dict -}}
+{{- include "bkci.secrets.getOrGenerate" (dict
+  "autoGenerate" (dig "autoGenerate" false $cfg)
+  "configured" (index $ctx.Values.config (printf "bkCi%sWebhookSecret" (title .name)))
+  "secretName" (include "bkci.webhookSecret.secretName" $ctx)
+  "key" .name
+  "context" $ctx) -}}
+{{- end -}}

@@ -314,21 +314,6 @@ Return the db_quartz mongodb connection uri
 {{- end -}}
 
 {{/*
-Return the webhook secrets name
-*/}}
-{{- define "bkci.webhookSecretName" -}}
-{{- printf "%s-webhook-secrets" (include "bkci.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Artifact webhook secret
-密钥随注册请求头保存到制品库，变化会导致已注册的 webhook 全部校验失败，必须保持稳定
-*/}}
-{{- define "bkci.artifactWebhookSecret" -}}
-{{- include "bkci.secrets.manage" (dict "context" . "secret" (include "bkci.webhookSecretName" .) "key" "artifact" "valueKey" "bkCiArtifactWebhookSecret") -}}
-{{- end -}}
-
-{{/*
 bkci standard labels
 */}}
 {{- define "bkci.labels.standard" -}}
