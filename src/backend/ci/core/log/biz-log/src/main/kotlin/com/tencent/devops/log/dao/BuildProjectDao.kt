@@ -35,7 +35,7 @@ import org.springframework.stereotype.Repository
  * 使用原生 SQL 操作 T_LOG_BUILD_PROJECT 表（无 JOOQ codegen 依赖）。
  * 表可能尚未创建（增量 DDL 未执行），所有 DB 操作均容忍失败并降级为 warn 日志。
  *
- * 写入语义：首次写入优先；已有非空 PROJECT_ID / PIPELINE_ID 禁止覆盖，仅允许把空字段补全。
+ * 只有构建开始那次状态写入会插入归属。已有行不再更新。
  */
 @Repository
 class BuildProjectDao(
@@ -71,55 +71,46 @@ class BuildProjectDao(
         }
     }
 
-    fun upsert(buildId: String, projectId: String?, pipelineId: String?) {
-        val normalizedProjectId = projectId?.takeIf { it.isNotBlank() }
-        val normalizedPipelineId = pipelineId?.takeIf { it.isNotBlank() }
-        if (normalizedProjectId == null && normalizedPipelineId == null) {
-            return
-        }
-        try {
+    /**
+     * @return true 表示本次插入了新行。已有 BUILD_ID 时返回 false，不改原值。
+     */
+    fun insertIfAbsent(buildId: String, projectId: String, pipelineId: String): Boolean {
+        return try {
             dslContext.execute(
-                """INSERT INTO T_LOG_BUILD_PROJECT (BUILD_ID, PROJECT_ID, PIPELINE_ID)
-                   VALUES (?, ?, ?)
-                   ON DUPLICATE KEY UPDATE
-                     PROJECT_ID = IF(PROJECT_ID IS NULL OR PROJECT_ID = '', VALUES(PROJECT_ID), PROJECT_ID),
-                     PIPELINE_ID = IF(PIPELINE_ID IS NULL OR PIPELINE_ID = '', VALUES(PIPELINE_ID), PIPELINE_ID)""",
+                """INSERT IGNORE INTO T_LOG_BUILD_PROJECT (BUILD_ID, PROJECT_ID, PIPELINE_ID)
+                   VALUES (?, ?, ?)""",
                 buildId,
-                normalizedProjectId,
-                normalizedPipelineId
-            )
+                projectId,
+                pipelineId
+            ) > 0
         } catch (e: Exception) {
             logger.warn(
-                "BuildProjectDao.upsert failed for buildId={}, projectId={}, pipelineId={}: {}",
+                "BuildProjectDao.insertIfAbsent failed for buildId={}, projectId={}, pipelineId={}: {}",
                 buildId,
-                normalizedProjectId,
-                normalizedPipelineId,
+                projectId,
+                pipelineId,
                 e.message
             )
-            fallbackUpsertProjectId(buildId, normalizedProjectId)
+            fallbackInsertProjectId(buildId, projectId)
         }
     }
 
-    private fun fallbackUpsertProjectId(buildId: String, projectId: String?) {
-        if (projectId.isNullOrBlank()) {
-            return
-        }
-        try {
+    private fun fallbackInsertProjectId(buildId: String, projectId: String): Boolean {
+        return try {
             dslContext.execute(
-                """INSERT INTO T_LOG_BUILD_PROJECT (BUILD_ID, PROJECT_ID)
-                   VALUES (?, ?)
-                   ON DUPLICATE KEY UPDATE
-                     PROJECT_ID = IF(PROJECT_ID IS NULL OR PROJECT_ID = '', VALUES(PROJECT_ID), PROJECT_ID)""",
+                """INSERT IGNORE INTO T_LOG_BUILD_PROJECT (BUILD_ID, PROJECT_ID)
+                   VALUES (?, ?)""",
                 buildId,
                 projectId
-            )
+            ) > 0
         } catch (ignored: Exception) {
             logger.warn(
-                "BuildProjectDao.fallbackUpsertProjectId failed for buildId={}, projectId={}: {}",
+                "BuildProjectDao.fallbackInsertProjectId failed for buildId={}, projectId={}: {}",
                 buildId,
                 projectId,
                 ignored.message
             )
+            false
         }
     }
 

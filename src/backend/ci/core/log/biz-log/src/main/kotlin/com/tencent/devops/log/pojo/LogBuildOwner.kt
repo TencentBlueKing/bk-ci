@@ -27,26 +27,15 @@
 package com.tencent.devops.log.pojo
 
 /**
- * log 服务本地维护的 buildId 归属，不依赖 process。
+ * log 服务本地维护的 buildId 归属。
  *
- * 字段均可空：旧 Worker 可能只报 projectId、或两者都未报。
- * 已写入的非空字段禁止覆盖，仅允许把空位补全。
+ * 有效值只来自构建开始的日志状态写入。没有项目 ID 时查询不做跨项目拦截。
  */
 data class LogBuildOwner(
     val projectId: String?,
     val pipelineId: String?
 ) {
     fun hasAny(): Boolean = !projectId.isNullOrBlank() || !pipelineId.isNullOrBlank()
-
-    /**
-     * 只补空，不覆盖已有归属。上报值与已有值冲突时保留已有值。
-     */
-    fun fillEmpty(reported: LogBuildOwner): LogBuildOwner {
-        return LogBuildOwner(
-            projectId = projectId.takeIf { !it.isNullOrBlank() } ?: reported.projectId,
-            pipelineId = pipelineId.takeIf { !it.isNullOrBlank() } ?: reported.pipelineId
-        )
-    }
 
     companion object {
         val EMPTY = LogBuildOwner(null, null)

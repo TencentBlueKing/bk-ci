@@ -697,10 +697,8 @@ class BuildLogQueryService @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        // 有本地归属时，URL 上的 projectId/pipelineId 必须与 buildId 真实归属一致，
-        // 防止「对流水线 A 有 VIEW、却把别人的 buildId 塞进路径」读到他人日志。
-        // 无归属（旧 Worker / 历史构建）降级为现网 URL-RBAC，该窗口仍可能存在 IDOR。
-        // ServiceLogResource.checkPermissionFlag=false 不走本方法，仍由网关认证内部调用。
+        // 有项目归属时，URL 上的项目必须与 buildId 一致。
+        // 没有项目 ID 时不做跨项目拦截，继续走原有权限校验。
         validateBuildOwnership(
             userId = userId,
             projectId = projectId,
@@ -724,11 +722,11 @@ class BuildLogQueryService @Autowired constructor(
         buildId: String
     ) {
         val owner = logProjectIdResolver.find(buildId)
-        if (owner == null) {
+        if (owner?.projectId.isNullOrBlank()) {
             logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_SKIP)
             return
         }
-        val projectMismatch = !owner.projectId.isNullOrBlank() && owner.projectId != projectId
+        val projectMismatch = owner.projectId != projectId
         val pipelineMismatch = !owner.pipelineId.isNullOrBlank() && owner.pipelineId != pipelineId
         if (!projectMismatch && !pipelineMismatch) {
             logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MATCH)

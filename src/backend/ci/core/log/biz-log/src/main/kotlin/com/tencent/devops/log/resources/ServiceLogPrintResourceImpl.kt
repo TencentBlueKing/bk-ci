@@ -36,13 +36,15 @@ import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogProjectIdResolver
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
     private val indexService: IndexService,
-    private val buildLogPrintService: BuildLogPrintService
+    private val buildLogPrintService: BuildLogPrintService,
+    private val logProjectIdResolver: LogProjectIdResolver
 ) : ServiceLogPrintResource {
 
     override fun addLogLine(
@@ -85,7 +87,9 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         projectId: String?,
-        pipelineId: String?
+        pipelineId: String?,
+        ownerProjectId: String?,
+        ownerPipelineId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -93,6 +97,9 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         }
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
+        if (!ownerProjectId.isNullOrBlank() && !ownerPipelineId.isNullOrBlank()) {
+            logProjectIdResolver.assignIfAbsent(buildId, ownerProjectId, ownerPipelineId)
+        }
         buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,

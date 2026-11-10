@@ -36,11 +36,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
- * 解析 buildId → (projectId, pipelineId) 的映射，不依赖 process 服务。
+ * 解析 buildId → (projectId, pipelineId) 的映射。
  *
  * 查找优先级：本地 Caffeine 缓存 → Redis → DB（T_LOG_BUILD_PROJECT）。
- * 写入语义：首次写入优先；已有非空字段禁止覆盖，仅允许把空位补全。
- * 查询鉴权只走 [find]，不会把 URL 上的 projectId/pipelineId 写进映射，避免被越权请求污染归属。
+ * 只有构建开始的日志状态写入可以插入归属，已有记录不再覆盖。
+ * 请求头里的项目只参与当次流量统计。没有归属时查询不做跨项目拦截。
  */
 @Component
 class LogProjectIdResolver(
@@ -67,9 +67,9 @@ class LogProjectIdResolver(
     private val inflight = ConcurrentHashMap<String, Any>()
 
     /**
-     * 上报路径：用调用方报告的归属补全映射，并返回合并后的归属。
+     * 上报路径只读取已有归属，用来对齐后续日志事件的项目。
      *
-     * 已有非空 projectId/pipelineId 不会被上报值覆盖。
+     * 请求头不落库。没有归属时原样返回上报值，仅供当次流量统计。
      */
     fun resolve(
         buildId: String,
@@ -80,26 +80,40 @@ class LogProjectIdResolver(
         if (buildId.isBlank()) {
             return reported
         }
+        return lookup(buildId) ?: reported
+    }
 
-        val known = lookup(buildId)
-        if (known == null) {
-            if (reported.hasAny()) {
-                persist(buildId, reported)
-            }
-            return reported
+    /**
+     * 构建开始时写入归属。已有项目 ID 时直接返回，不更新缓存和数据库。
+     */
+    fun assignIfAbsent(buildId: String, projectId: String, pipelineId: String) {
+        val owner = LogBuildOwner.of(projectId, pipelineId)
+        val storedProjectId = owner.projectId
+        val storedPipelineId = owner.pipelineId
+        if (buildId.isBlank() || storedProjectId.isNullOrBlank() || storedPipelineId.isNullOrBlank()) {
+            return
         }
-
-        val merged = known.fillEmpty(reported)
-        if (merged != known) {
-            persist(buildId, merged)
+        if (!lookup(buildId)?.projectId.isNullOrBlank()) {
+            return
         }
-        return merged
+        val inserted = try {
+            buildProjectDao.insertIfAbsent(buildId, storedProjectId, storedPipelineId)
+        } catch (e: Exception) {
+            logger.warn("insert build owner failed for buildId={}: {}", buildId, e.message)
+            false
+        }
+        if (!inserted) {
+            negativeCache.invalidate(buildId)
+            lookupFromDb(buildId)
+            return
+        }
+        cacheOwner(buildId, owner)
     }
 
     /**
      * 查询路径：只读已落库/缓存的归属，不接受调用方上报值。
      *
-     * @return 已知归属；没有任何字段时返回 null（旧 Worker / 历史构建，查询侧降级为 URL-RBAC）
+     * @return 已有归属；没有项目 ID 时返回 null，查询不做跨项目拦截
      */
     fun find(buildId: String): LogBuildOwner? {
         if (buildId.isBlank()) {
@@ -129,8 +143,8 @@ class LogProjectIdResolver(
         return lookupFromDb(buildId)
     }
 
-    private fun persist(buildId: String, owner: LogBuildOwner) {
-        if (!owner.hasAny()) {
+    private fun cacheOwner(buildId: String, owner: LogBuildOwner) {
+        if (owner.projectId.isNullOrBlank()) {
             return
         }
         localCache.put(buildId, owner)
@@ -139,11 +153,6 @@ class LogProjectIdResolver(
             redisOperation.set(redisKey(buildId), encodeOwner(owner), REDIS_TTL_SECONDS)
         } catch (e: Exception) {
             logger.warn("Redis set failed for buildId={}: {}", buildId, e.message)
-        }
-        try {
-            buildProjectDao.upsert(buildId, owner.projectId, owner.pipelineId)
-        } catch (e: Exception) {
-            logger.warn("DB upsert failed for buildId={}: {}", buildId, e.message)
         }
     }
 
