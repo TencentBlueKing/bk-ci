@@ -73,6 +73,7 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_URL_SCHEME
 import com.tencent.devops.store.pojo.common.KEY_YAML_FLAG
 import com.tencent.devops.store.pojo.common.LATEST
@@ -712,10 +713,16 @@ class StoreComponentMarketQueryServiceImpl @Autowired constructor(
         } else {
             null
         }
-        // 版本级扩展：列表保持精简，仅取 urlScheme；
-        // installType/installParams 等安装明细由详情接口(StoreDetailInfo)/部署接口按需提供
-        val urlScheme = versionExtRecords.firstOrNull { it.fieldName == KEY_URL_SCHEME }?.fieldValue
-        val versionExtData = if (!urlScheme.isNullOrBlank()) mapOf(KEY_URL_SCHEME to urlScheme) else null
+        // 版本级扩展：列表保持精简，仅取 urlScheme 与安装方式 installType；
+        // installParams 等安装明细由详情接口(StoreDetailInfo)/部署接口按需提供
+        val versionExtData = mutableMapOf<String, Any>().apply {
+            versionExtRecords.firstOrNull { it.fieldName == KEY_URL_SCHEME }?.fieldValue
+                ?.takeIf { it.isNotBlank() }
+                ?.let { put(KEY_URL_SCHEME, it) }
+            versionExtRecords.firstOrNull { it.fieldName == KEY_INSTALL_TYPE }?.fieldValue
+                ?.takeIf { it.isNotBlank() }
+                ?.let { put(KEY_INSTALL_TYPE, StoreExtFieldUtil.formatJson(it)) }
+        }.takeIf { it.isNotEmpty() }
         // 向后兼容：保持 extData 为组件级+版本级合并，旧客户端仍可读取
         val mergedExt = mutableMapOf<String, Any>()
         featureExtData?.let { mergedExt.putAll(it) }

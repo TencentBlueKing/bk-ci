@@ -57,6 +57,7 @@ import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstance
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.pipeline.MatrixConcurrencyCheckService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -94,7 +95,8 @@ class PipelineTemplateInstanceReqConverter(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val client: Client,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val matrixConcurrencyCheckService: MatrixConcurrencyCheckService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
@@ -188,13 +190,16 @@ class PipelineTemplateInstanceReqConverter(
 
             // 获取版本状态
             val (versionStatus, branchName) = pipelineVersionGenerator.getInstanceStatusAndBranchName(
-                userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
                 enablePac = enablePac,
                 repoHashId = repoHashId,
                 targetAction = targetAction,
-                targetBranch = targetBranch
+                targetBranch = targetBranch,
+                checkoutBranch = pipelineVersionGenerator.generateTemplateInstanceBranch(
+                    userId = userId,
+                    instanceTime = instanceTime
+                )
             )
 
             val templateInfo = pipelineTemplateInfoService.get(projectId = projectId, templateId = templateId)
@@ -324,6 +329,13 @@ class PipelineTemplateInstanceReqConverter(
                     model = instanceModel
                 )
             }
+
+            // 最大并发数支持变量，实例化时用实例参数解析后严格校验，不通过则实例化失败
+            matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+                projectId = projectId,
+                pipelineName = pipelineName,
+                model = instanceModel
+            )
 
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
                 projectId = projectId,

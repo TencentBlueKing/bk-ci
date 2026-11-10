@@ -30,14 +30,13 @@ package com.tencent.devops.repository.service.oauth2
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -46,11 +45,9 @@ import org.springframework.stereotype.Service
 @Service
 class CodeGitOauth2TokenStoreService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val gitTokenDao: GitTokenDao
+    private val gitTokenDao: GitTokenDao,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper
 ) : IOauth2TokenStoreService {
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
 
     // 兼容历史数据,直接用scmType的值代替scmCode
     override fun support(scmCode: String): Boolean {
@@ -60,10 +57,10 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
     override fun get(userId: String, scmCode: String): OauthTokenInfo? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
             OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = userId,
                 operator = it.operator,
@@ -75,24 +72,29 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
     override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
         val gitToken = with(oauthTokenInfo) {
             GitToken(
-                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
-                refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
+                accessToken = gitTokenCryptoHelper.encryptSm4ButAes(accessToken),
+                refreshToken = refreshToken?.let { gitTokenCryptoHelper.encryptSm4ButAes(it) } ?: "",
                 tokenType = tokenType,
                 expiresIn = expiresIn ?: 0L,
                 operator = operator,
                 oauthUserId = userId
             )
         }
-        gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)
+        gitTokenDao.saveAccessToken(
+            dslContext = dslContext,
+            userId = oauthTokenInfo.userId,
+            token = gitToken,
+            aesKeySha = gitTokenCryptoHelper.currentKeySha()
+        )
     }
 
     override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
         return gitTokenDao.listToken(dslContext, userId).map {
             OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
-                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
                 createTime = it.createTime.timestampmilli(),
                 userId = it.userId,
                 operator = it.operator,

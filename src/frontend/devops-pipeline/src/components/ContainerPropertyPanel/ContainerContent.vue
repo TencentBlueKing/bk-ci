@@ -306,7 +306,7 @@
                     name="workspace"
                     :value="container.dispatchType.workspace"
                     :handle-change="changeBuildResource"
-                    :placeholder="$t('editPage.workspaceTips')"
+                    :placeholder="workspacePlaceholder"
                 />
             </form-field>
             <form-field
@@ -695,6 +695,14 @@
             },
             dockerInfo () {
                 return this.container.dispatchType?.dockerInfo || {}
+            },
+            isEnableDocker () {
+                return this.isLinuxOsDockerImage && Object.keys(this.dockerInfo).length > 0
+            },
+            workspacePlaceholder () {
+                return this.isEnableDocker
+                    ? this.$t('editPage.dockerWorkspaceTips')
+                    : this.$t('editPage.workspaceTips')
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType

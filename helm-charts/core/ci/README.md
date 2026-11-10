@@ -92,6 +92,13 @@ $ helm uninstall bkci
 | `init.bkrepo.enabled` | 是否初始化制品库 | `true` |
 | `init.defaultImage.enabled` | 是否初始化构建镜像 | `true` |
 
+## Secret 配置
+|参数|描述|默认值|
+|---|---|---|
+| `secret.devopsToken.autoGenerate` | 是否自动生成服务间调用 token 并存入 Secret，关闭时不创建 Secret，只使用 `config.bkCiDevopsToken`，未配置则为空 | `true` |
+| `secret.webhookSecrets.<key>.autoGenerate` | 是否自动生成对应触发器的 webhook 回调密钥并存入 Secret `<release>-bk-ci-webhook-secrets` 的 `<key>` 键，关闭时只使用 `config.bkCi<Key>WebhookSecret`；所有触发器都关闭时不创建 Secret | - |
+| `secret.webhookSecrets.artifact.autoGenerate` | 制品到达触发，未配置 `config.bkCiArtifactWebhookSecret` 且关闭时制品到达触发不可用 | `true` |
+
 ## ingress 配置
 
 |参数|描述|默认值 |
@@ -346,6 +353,7 @@ HPA设置
 | `bkSsmHost`  | 用户认证地址 | `""` |
 | `bkSsmPort`  | 用户认证端口 | `80` |
 | `bkCiNotifyWeworkSendChannel` | 通知渠道 | `weworkAgent` |
+| `bkCiArtifactWebhookSecret`  | 制品到达触发的回调密钥。不填且 `secret.webhookSecrets.artifact.autoGenerate` 为 `true` 时，首次安装自动生成并保存到 Secret `<release>-bk-ci-webhook-secrets` 的 `artifact` 键，后续升级沿用；使用 `helm template`/GitOps 等无法 lookup 集群的方式部署时必须显式填写。部署后不要修改，否则已注册的制品库 webhook 会全部校验失败 | `""` |
 
 ### 编译加速配置
 |参数|描述|默认值 |

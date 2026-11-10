@@ -28,6 +28,7 @@ package com.tencent.devops.openapi.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import io.swagger.v3.oas.annotations.Operation
@@ -102,6 +103,35 @@ class OpenapiPermissionService(
         }
 
         projectCache.put("${userId}_$projectId", "")
+    }
+
+    fun validUserProjectPermission(
+        apigwType: String?,
+        userId: String?,
+        projectId: String
+    ) {
+        if (apigwType?.contains("user") != true) {
+            return
+        }
+        if (userId.isNullOrBlank()) {
+            throw PermissionForbiddenException(
+                message = "X-DEVOPS-UID cannot be empty"
+            )
+        }
+        val isProjectUser = kotlin.runCatching {
+            client.get(ServiceProjectAuthResource::class)
+                .isProjectUser(
+                    token = clientTokenService.getSystemToken() ?: "",
+                    type = null,
+                    userId = userId,
+                    projectCode = projectId
+                ).data
+        }.getOrNull() ?: false
+        if (!isProjectUser) {
+            throw PermissionForbiddenException(
+                message = "user($userId) has no access to project($projectId)"
+            )
+        }
     }
 
     fun validProjectManagerPermission(

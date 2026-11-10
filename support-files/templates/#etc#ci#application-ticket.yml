@@ -13,8 +13,10 @@ server:
 cert:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aes-key: __BK_CI_TICKET_CERT_AES_KEY__
+  used-aes-keys: __BK_CI_TICKET_CERT_USED_AES_KEYS__
 
 credential:
   mixer: "******"
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aes-key: __BK_CI_TICKET_CREDENTIAL_AES_KEY__
+  used-aes-keys: __BK_CI_TICKET_CREDENTIAL_USED_AES_KEYS__

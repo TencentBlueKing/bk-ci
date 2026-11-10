@@ -43,8 +43,11 @@
                 </span>
             </div>
 
-            <!-- docker构建最大并发数 -->
-            <div class="setting-item">
+            <!-- docker构建最大并发数（仅支持 Docker 的操作系统展示，当前为 LINUX） -->
+            <div
+                class="setting-item"
+                v-if="supportDocker"
+            >
                 <span class="setting-label">docker构建最大并发数：</span>
                 <span class="setting-value">
                     <!-- 非编辑状态 -->
@@ -93,9 +96,10 @@
 </template>
 
 <script>
-    import { ref, nextTick } from 'vue'
+    import { ref, nextTick, computed } from 'vue'
     import useNodeDetail from '@/hooks/useNodeDetail'
     import useInstance from '@/hooks/useInstance'
+    import { DOCKER_SUPPORTED_OS, osOf } from '@/components/devops/environment/import-third-party/constants'
     import EnvParam from './EnvParam'
 
     export default {
@@ -111,6 +115,9 @@
                 saveDockerParallelTaskCount
             } = useNodeDetail()
             const { proxy } = useInstance()
+
+            // 仅支持 Docker 构建的操作系统（当前为 LINUX）展示 docker 构建最大并发数
+            const supportDocker = computed(() => DOCKER_SUPPORTED_OS.includes(osOf(currentNode.value)))
 
             const isSaving = ref(false)
             const editingField = ref(null)
@@ -194,6 +201,7 @@
 
             return {
                 currentNode,
+                supportDocker,
                 isSaving,
                 editingField,
                 editingValue,

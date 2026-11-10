@@ -89,7 +89,9 @@ class UserProjectInfoResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryProjectPipelineErrorTypes(
+        projectId: String,
         userId: String,
         page: Int,
         pageSize: Int,

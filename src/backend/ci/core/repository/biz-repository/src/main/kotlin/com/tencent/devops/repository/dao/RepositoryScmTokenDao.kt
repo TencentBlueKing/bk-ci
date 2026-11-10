@@ -54,7 +54,7 @@ class RepositoryScmTokenDao {
         }
     }
 
-    fun saveAccessToken(dslContext: DSLContext, scmToken: RepositoryScmToken): Int {
+    fun saveAccessToken(dslContext: DSLContext, scmToken: RepositoryScmToken, aesKeySha: String): Int {
         with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
             val now = LocalDateTime.now()
             return dslContext.insertInto(
@@ -67,7 +67,8 @@ class RepositoryScmTokenDao {
                 EXPIRES_IN,
                 CREATE_TIME,
                 UPDATE_TIME,
-                OPERATOR
+                OPERATOR,
+                AES_KEY_SHA
             )
                 .values(
                     scmToken.userId,
@@ -78,7 +79,8 @@ class RepositoryScmTokenDao {
                     scmToken.expiresIn,
                     now,
                     now,
-                    scmToken.operator
+                    scmToken.operator,
+                    aesKeySha
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, scmToken.accessToken)
@@ -92,6 +94,7 @@ class RepositoryScmTokenDao {
                         it
                     }
                 }
+                .set(AES_KEY_SHA, aesKeySha)
                 .execute()
         }
     }

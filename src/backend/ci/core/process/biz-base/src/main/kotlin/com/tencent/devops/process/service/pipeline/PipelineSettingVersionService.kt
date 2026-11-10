@@ -253,6 +253,10 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.concurrencyGroup = settingVersion.concurrencyGroup ?: settingInfo.concurrencyGroup
         settingInfo.concurrencyCancelInProgress = settingVersion.concurrencyCancelInProgress
             ?: settingInfo.concurrencyCancelInProgress
+        // 显式清空和功能上线前的历史版本都是 null，分不出来。
+        // 版本值为空时沿用当前设置，避免回放旧版本把已保存的同一批标识抹掉。
+        // 因此回放到曾经清空过标识的版本时，标识会被带回来。
+        settingInfo.concurrencySubGroup = settingVersion.concurrencySubGroup ?: settingInfo.concurrencySubGroup
         settingInfo.waitQueueTimeMinute = settingVersion.waitQueueTimeMinute ?: settingInfo.waitQueueTimeMinute
         settingInfo.maxQueueSize = settingVersion.maxQueueSize ?: settingInfo.maxQueueSize
         settingInfo.maxConRunningQueueSize = if (settingVersion.maxConRunningQueueSize != -1) {

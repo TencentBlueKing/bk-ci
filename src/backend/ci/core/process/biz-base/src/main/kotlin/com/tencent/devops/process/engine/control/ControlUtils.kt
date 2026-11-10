@@ -186,13 +186,16 @@ object ControlUtils {
             )
         } else when {
             // [只有前面有任务失败时才运行]，之前存在失败的任务（包含失败自动跳过的情况）
+            // 用户取消不是失败。失败继续会让 hasFailedTaskInSuccessContainer 为真，
+            // 若不看取消态，取消后仍会领取这类插件；构建机却已关机，插件停在 QUEUE_CACHE，Job 无法结束。
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
-                skip = !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
+                skip = containerFinalStatus.isCancel() ||
+                    !(containerFinalStatus.isFailure() || hasFailedTaskInSuccessContainer)
                 message.append("${I18nUtil.getCodeLanMessage(BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED)} skip=$skip")
             }
             // [只有前面有任务失败时才运行（不包括失败自动跳过）]，仅当容器真正失败时才运行
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP -> {
-                skip = !containerFinalStatus.isFailure()
+                skip = containerFinalStatus.isCancel() || !containerFinalStatus.isFailure()
                 message.append(
                     "${I18nUtil.getCodeLanMessage(BK_ONLY_WHEN_PREVIOUS_TASK_FAILED_EXCEPT_SKIP)} skip=$skip"
                 )

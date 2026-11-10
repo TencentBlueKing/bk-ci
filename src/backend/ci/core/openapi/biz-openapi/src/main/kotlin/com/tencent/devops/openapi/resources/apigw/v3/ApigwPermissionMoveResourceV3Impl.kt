@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPermissionMoveResourceV3
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.project.api.service.ServiceMoveProjectResource
@@ -12,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwPermissionMoveResourceV3Impl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    private val openapiPermissionService: OpenapiPermissionService
 ) : ApigwPermissionMoveResourceV3 {
     override fun relationProject(
         appCode: String?,
@@ -27,9 +29,15 @@ class ApigwPermissionMoveResourceV3Impl @Autowired constructor(
     override fun getProjectPipelineIds(
         appCode: String?,
         apigwType: String?,
+        userId: String?,
         projectId: String
     ): Result<List<PipelineIdInfo>> {
-        logger.info("OPENAPI_PERMISSION_MOVE_V3|$appCode|get project pipeline ids|$projectId")
+        logger.info("OPENAPI_PERMISSION_MOVE_V3|$appCode|$userId|get project pipeline ids|$projectId")
+        openapiPermissionService.validUserProjectPermission(
+            apigwType = apigwType,
+            userId = userId,
+            projectId = projectId
+        )
         return client.get(ServicePipelineResource::class).getProjectPipelineIds(projectId)
     }
 

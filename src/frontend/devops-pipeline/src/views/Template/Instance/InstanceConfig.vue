@@ -331,7 +331,7 @@
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isParamValueEqual } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
     const props = defineProps({
         isInstanceCreateType: Boolean
@@ -670,7 +670,7 @@
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
                 if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                    i.isRequiredParam = templateParam.required && i.required
+                    i.isRequiredParam = !!(templateParam.required && templateParam.asInstanceInput)
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
@@ -680,13 +680,8 @@
                     } else {
                         i.defaultValue = templateParam.required ? i.defaultValue : templateParam.defaultValue
                     }
-                    if (isObject(i.defaultValue)) {
-                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
-                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
-                    } else {
-                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
-                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
-                    }
+                    i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                    i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
@@ -701,13 +696,8 @@
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
-                    if (isObject(i.defaultValue)) {
-                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
-                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
-                    } else {
-                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
-                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
-                    }
+                    i.isChange = !isParamValueEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                    i.hasChange = !isParamValueEqual(i.defaultValue, templateParam?.defaultValue)
                 }
             }
             i.propertyUpdates = collectPropertyUpdates(i, initialInstanceParam)
@@ -722,7 +712,7 @@
                 const newItem = {
                     ...item,
                     isNew: true,
-                    readonlyCheck: false,
+                    readOnlyCheck: false,
                     isRequiredParam: item.required && item.asInstanceInput,
                     required: item.required
                 }
@@ -1029,12 +1019,7 @@
                         // 计算 isChange：对比模板默认值与初始值
                         let isChange = false
                         if (!p.isNew) {
-                            const initialDefaultValue = initialParam?.defaultValue
-                            const templateValue =  defaultValue
-                            
-                            isChange = isObject(templateValue)
-                                ? !isShallowEqual(templateValue, initialDefaultValue)
-                                : templateValue !== initialDefaultValue
+                            isChange = !isParamValueEqual(defaultValue, initialParam?.defaultValue)
                         }
                         const propertyUpdates = collectPropertyUpdates({
                             ...p,
@@ -1110,20 +1095,13 @@
                                 ? Number(value)
                                 : value
                             
-                            isChange = isObject(currentValue)
-                                ? !isShallowEqual(currentValue, initialDefaultValue)
-                                : currentValue !== initialDefaultValue
+                            isChange = !isParamValueEqual(currentValue, initialDefaultValue)
                         }
                         
                         // 计算 hasChange：对比修改后的值与模板值
                         let hasChange = false
                         if (templateParam) {
-                            const templateDefaultValue = templateParam.defaultValue
-                            const currentValue = value
-                            
-                            hasChange = isObject(currentValue)
-                                ? !isShallowEqual(value, templateDefaultValue)
-                                : currentValue !== templateDefaultValue
+                            hasChange = !isParamValueEqual(value, templateParam.defaultValue)
                         }
                         const propertyUpdates = collectPropertyUpdates({
                             ...p,
@@ -1456,9 +1434,7 @@
                                         ? Number(newDefaultValue)
                                         : newDefaultValue
                                     
-                                    isChange = isObject(currentValue)
-                                        ? !isShallowEqual(currentValue, initialDefaultValue)
-                                        : currentValue !== initialDefaultValue
+                                    isChange = !isParamValueEqual(currentValue, initialDefaultValue)
                                 }
                                 
                                 // 计算 hasChange：当前实例的值与模板默认值不同
@@ -1468,7 +1444,7 @@
                                     ? false
                                     : (allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
-                                        : initialParam?.defaultValue !== temDefaultValue)
+                                        : !isParamValueEqual(initialParam?.defaultValue, temDefaultValue))
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
                                     defaultValue: newDefaultValue

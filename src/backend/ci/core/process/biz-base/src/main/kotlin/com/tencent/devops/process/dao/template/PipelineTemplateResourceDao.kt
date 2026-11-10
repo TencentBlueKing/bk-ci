@@ -2,6 +2,7 @@ package com.tencent.devops.process.dao.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
@@ -23,6 +24,8 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.RecordMapper
+import org.jooq.SelectForUpdateStep
+import org.jooq.SelectLimitStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -182,14 +185,7 @@ class PipelineTemplateResourceDao {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
             dslContext.selectFrom(this)
                 .where(buildQueryCondition(commonCondition))
-                .let {
-                    if (commonCondition.page != null && commonCondition.pageSize != null) {
-                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
-                            .limit(commonCondition.pageSize)
-                    } else {
-                        it
-                    }
-                }
+                .let { applyPage(it, commonCondition) }
                 .fetch().map { it.convert() }
         }
     }
@@ -330,14 +326,7 @@ class PipelineTemplateResourceDao {
                 .from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
-                .let {
-                    if (commonCondition.page != null && commonCondition.pageSize != null) {
-                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
-                            .limit(commonCondition.pageSize)
-                    } else {
-                        it
-                    }
-                }
+                .let { applyPage(it, commonCondition) }
                 .fetch(versionSimpleMapper)
         }
     }
@@ -440,6 +429,20 @@ class PipelineTemplateResourceDao {
                 .where(buildQueryCondition(commonCondition))
                 .execute()
         }
+    }
+
+    /**
+     * 页码小于 1 时按第 1 页处理，避免算出负数 OFFSET。
+     * page 或 pageSize 为空时不分页。
+     */
+    private fun <R : Record> applyPage(
+        query: SelectLimitStep<R>,
+        commonCondition: PipelineTemplateResourceCommonCondition
+    ): SelectForUpdateStep<R> {
+        val page = commonCondition.page ?: return query
+        val pageSize = commonCondition.pageSize ?: return query
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        return query.offset(sqlLimit.offset).limit(sqlLimit.limit)
     }
 
     @Suppress("NestedBlockDepth")

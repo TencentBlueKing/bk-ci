@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.cfg
 
-import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
+import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 

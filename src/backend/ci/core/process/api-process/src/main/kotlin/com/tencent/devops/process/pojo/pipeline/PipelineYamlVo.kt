@@ -46,5 +46,7 @@ data class PipelineYamlVo(
     @get:Schema(title = "yaml文件url", required = false)
     val fileUrl: String? = null,
     @get:Schema(title = "yaml文件状态", required = false)
-    val status: String? = null
+    val status: String? = null,
+    @get:Schema(title = "默认分支", required = false)
+    val defaultBranch: String? = null
 )

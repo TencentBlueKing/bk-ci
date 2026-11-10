@@ -354,9 +354,10 @@ class PipelineVersionGenerator constructor(
 
     /**
      * 生成模版实例化版本
+     *
+     * @param checkoutBranch 实例化新建的分支名,当targetAction==CHECKOUT_BRANCH_AND_REQUEST_MERGE时必传
      */
     fun generateInstanceVersion(
-        userId: String,
         projectId: String,
         pipelineId: String,
         newModel: Model,
@@ -364,7 +365,8 @@ class PipelineVersionGenerator constructor(
         repoHashId: String?,
         targetAction: CodeTargetAction?,
         targetBranch: String? = null,
-        defaultBranch: String? = null
+        defaultBranch: String? = null,
+        checkoutBranch: String? = null
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
@@ -373,7 +375,6 @@ class PipelineVersionGenerator constructor(
                     params = arrayOf("repoHashId")
                 )
             }
-            val checkoutBranch = generateTemplateInstanceBranch(userId)
             generateVersionWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -539,19 +540,20 @@ class PipelineVersionGenerator constructor(
 
     /**
      * 获取模版实例化版本状态和分支名
+     *
+     * @param checkoutBranch 实例化新建的分支名,当targetAction==CHECKOUT_BRANCH_AND_REQUEST_MERGE时必传
      */
     fun getInstanceStatusAndBranchName(
-        userId: String,
         projectId: String,
         pipelineId: String?,
         enablePac: Boolean,
         repoHashId: String?,
         targetAction: CodeTargetAction?,
         targetBranch: String? = null,
-        defaultBranch: String? = null
+        defaultBranch: String? = null,
+        checkoutBranch: String? = null
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
-            val checkoutBranch = generateTemplateInstanceBranch(userId)
             getStatusAndBranchNameWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -695,19 +697,22 @@ class PipelineVersionGenerator constructor(
                 projectId = projectId,
                 pipelineIds = instanceReleaseInfos.map { it.pipelineId }.toSet()
             )
+            // 预览时还未发布,无法确定发布时间,分支名中的时间用占位符展示
+            val previewCheckoutBranch =
+                "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$userId-$PAC_TEMPLATE_INSTANCE_BRANCH_PREVIEW_TIME"
             return instanceReleaseInfos.map { releaseInfo ->
                 // 新增实例化
                 val pipelineId = releaseInfo.pipelineId
                 val resourceOnlyVersion = if (releaseInfo.pipelineId.isEmpty() || pipelineId2Name[pipelineId] == null) {
                     val (versionStatus, branchName) = getInstanceStatusAndBranchName(
-                        userId = userId,
                         projectId = projectId,
                         pipelineId = null,
                         enablePac = enablePac,
                         repoHashId = repoHashId,
                         targetAction = targetAction,
                         targetBranch = targetBranch,
-                        defaultBranch = defaultBranch
+                        defaultBranch = defaultBranch,
+                        checkoutBranch = previewCheckoutBranch
                     )
                     getDefaultVersion(
                         versionStatus = versionStatus,
@@ -724,7 +729,6 @@ class PipelineVersionGenerator constructor(
                         overrideTemplateField = releaseInfo.overrideTemplateField
                     )
                     generateInstanceVersion(
-                        userId = userId,
                         projectId = projectId,
                         pipelineId = releaseInfo.pipelineId,
                         newModel = instanceModel,
@@ -732,7 +736,8 @@ class PipelineVersionGenerator constructor(
                         repoHashId = repoHashId,
                         targetAction = targetAction,
                         targetBranch = targetBranch,
-                        defaultBranch = defaultBranch
+                        defaultBranch = defaultBranch,
+                        checkoutBranch = previewCheckoutBranch
                     )
                 }
                 PrefetchReleaseResult(
@@ -838,8 +843,16 @@ class PipelineVersionGenerator constructor(
             text.substring(text.length - tailLen)
     }
 
-    private fun generateTemplateInstanceBranch(userId: String): String {
-        val time = DateTimeUtil.toDateTime(LocalDateTime.now(), PAC_TEMPLATE_INSTANCE_BRANCH_TIME_FORMAT)
+    /**
+     * 生成模版实例化分支名
+     *
+     * @param instanceTime 实例化时间(毫秒),同一批实例化必须传入相同的值,否则会产生多个分支和MR
+     */
+    fun generateTemplateInstanceBranch(userId: String, instanceTime: Long?): String {
+        val dateTime = instanceTime?.let {
+            DateTimeUtil.convertTimestampToLocalDateTime(it / 1000)
+        } ?: LocalDateTime.now()
+        val time = DateTimeUtil.toDateTime(dateTime, PAC_TEMPLATE_INSTANCE_BRANCH_TIME_FORMAT)
         return "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$userId-$time"
     }
 
@@ -847,6 +860,7 @@ class PipelineVersionGenerator constructor(
         const val INIT_VERSION = 1
         private const val PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX = "bk-ci-template-instance-"
         private const val PAC_TEMPLATE_INSTANCE_BRANCH_TIME_FORMAT = "yyyyMMddHHmm"
+        private const val PAC_TEMPLATE_INSTANCE_BRANCH_PREVIEW_TIME = "\${{publish_time}}"
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
         private const val MAX_YAML_LOG_LENGTH = 8000
         private val logger = LoggerFactory.getLogger(PipelineVersionGenerator::class.java)

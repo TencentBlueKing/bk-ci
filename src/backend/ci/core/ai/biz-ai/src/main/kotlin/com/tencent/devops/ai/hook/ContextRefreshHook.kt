@@ -71,8 +71,9 @@ class ContextRefreshHook @Autowired constructor(
             if (msg.role == MsgRole.SYSTEM &&
                 msg.textContent?.contains(ContextMarker.START) == true
             ) {
-                val updatedText = ContextMarker.PATTERN.replace(
-                    msg.textContent!!, newBlock
+                val updatedText = ContextMarker.replaceBlock(
+                    msg.textContent!!,
+                    newBlock
                 )
                 Msg.builder()
                     .id(msg.id)

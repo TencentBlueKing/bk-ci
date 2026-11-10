@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -205,15 +206,13 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
 
     override fun downloadFile(userId: String, filePath: String, outputStream: OutputStream) {
         logger.info("downloadFile, filePath: $filePath")
-        if (filePath.contains("..")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
-        }
         val inputStream = getInputStreamByFilePath(filePath)
         FileCopyUtils.copy(inputStream, outputStream)
     }
 
     private fun getInputStreamByFilePath(filePath: String): InputStream {
-        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        // filePath 来自客户端，先解码再 canonical 前缀校验，禁止读出 archive 根目录
+        val file = FileUtil.resolveSafeDecodedChildFile(getBasePath(), filePath)
         return FileInputStream(file)
     }
 
@@ -278,44 +277,49 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             destPathBuilder.append(projectId).append(fileSeparator)
         }
 
-        if (FileTypeEnum.BK_CUSTOM == fileType) {
+        // customFilePath 由客户端指定，禁止再用 contains("..") 黑名单（可被 URL 编码绕过）。
+        // 先圈定 fileType/projectId（及 pipeline/build）作为根，再 canonical 校验落点仍在根下。
+        val scopedBase = File(destPathBuilder.toString())
+        val destPath = if (FileTypeEnum.BK_CUSTOM == fileType) {
             if (customFilePath == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf("customFilePath")
                 )
             }
-            if (customFilePath.contains("..")) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("customFilePath")
-                )
-            }
-            destPathBuilder.append(customFilePath.removePrefix(fileSeparator)) // 自定义方式归档文件
+            FileUtil.resolveSafeDecodedChildFile(scopedBase, customFilePath.removePrefix(fileSeparator)).path
         } else {
-            destPathBuilder.append(pipelineId).append(fileSeparator).append(buildId)
-            if (!customFilePath.isNullOrBlank()) {
-                destPathBuilder.append(fileSeparator).append(customFilePath.removePrefix(fileSeparator))
+            // 先锁定 pipelineId/buildId 目录，再解析 customFilePath。
+            // 不能把三段拼成一次相对路径：foo/bar/../.. 会逃到同项目其它流水线。
+            val pipelineBase = FileUtil.resolveSafeChildFile(
+                scopedBase,
+                "${pipelineId ?: "null"}$fileSeparator${buildId ?: "null"}"
+            )
+            if (customFilePath.isNullOrBlank()) {
+                pipelineBase.path
+            } else {
+                FileUtil.resolveSafeDecodedChildFile(
+                    pipelineBase,
+                    customFilePath.removePrefix(fileSeparator)
+                ).path
             }
         }
-        val destPath = destPathBuilder.toString()
         logger.info("[$buildId]|archiveFile destPath=$destPath")
         return destPath
     }
 
     override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, logo: Boolean?) {
         logger.info("downloadFile, filePath: $filePath")
-        if (filePath.contains("..")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
-        val file = File("${getBasePath()}$fileSeparator$filePath")
+        // 与 getFileContent 相同：解码后再做根目录前缀校验，防止本地任意文件读取
+        val file = FileUtil.resolveSafeDecodedChildFile(getBasePath(), filePath)
         response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         logger.info("downloadFileToLocal, filePath: $filePath")
-        val file = File("${getBasePath()}$fileSeparator$filePath")
+        // 原先无任何路径校验，filePath 可直接拼到 archiveLocalBasePath 下读任意本地文件
+        val file = FileUtil.resolveSafeDecodedChildFile(getBasePath(), filePath)
         // 如果文件不存在，提示404
         if (!file.exists()) {
             logger.info("file($filePath) not found")
@@ -366,7 +370,13 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val fileTypeStr = fileType?.fileType ?: "file"
         val fileTypeName = file.name.substring(file.name.indexOf(".") + 1)
         val destPath = if (null == filePath) {
-            "${getBasePath()}$fileSeparator$fileTypeStr$fileSeparator$${DefaultPathUtils.randomFileName(fileTypeName)}"
+            "${getBasePath()}$fileSeparator$${
+                DefaultPathUtils.getUploadPathByTime(
+                    filePath = filePath,
+                    fileType = fileType?.fileType,
+                    type = fileTypeName
+                )
+            }"
         } else {
             // #5176 修正未对上传类型来决定存放路径的问题，统一在此生成归档路径，而不是由外部指定会存在内部路径泄露风险
             if (fileType != null && !projectId.isNullOrBlank()) {
@@ -378,7 +388,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                     buildId = props?.get("buildId")
                 )
             } else {
-                "${getBasePath()}$fileSeparator$filePath"
+                // fileType/projectId 缺失时仍不能把客户端 filePath 原样拼到本地根目录
+                FileUtil.resolveSafeDecodedChildFile(getBasePath(), filePath).path
             }
         }
         logger.info("uploadFile|$uploadFileName destPath is:$destPath")
@@ -650,7 +661,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun deleteFile(userId: String, filePath: String) {
-        FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
+        val file = FileUtil.resolveSafeDecodedChildFile(getBasePath(), filePath)
+        FileSystemUtils.deleteRecursively(file)
     }
 
     override fun listCustomFiles(
@@ -683,12 +695,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         repoName: String,
         filePath: String
     ): String {
-        if (filePath.contains("../")) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
-        }
         val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
-        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
-        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        // 原逻辑先 contains("../") 再 URLDecoder.decode，%2e%2e%2f 可绕过黑名单后读任意本地文件。
+        // 必须先解码，再用 canonical path 确认仍位于 $archiveLocalBasePath/$bkRepoName 之下。
+        val file = FileUtil.resolveSafeDecodedChildFile("$archiveLocalBasePath/$bkRepoName", filePath)
         return if (file.exists()) file.readText((Charsets.UTF_8)) else ""
     }
 
@@ -698,12 +708,12 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         filePath: String
     ): List<String> {
         val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
-        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
-        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        // 与 getFileContent 相同：原先完全没有路径校验，解码后直接 File(...).listFiles()
+        val file = FileUtil.resolveSafeDecodedChildFile("$archiveLocalBasePath/$bkRepoName", filePath)
         val fileNames = mutableListOf<String>()
         file.listFiles()?.forEach { tmpFile ->
             if (tmpFile.isFile) {
-                fileNames.add(file.name)
+                fileNames.add(tmpFile.name)
             }
         }
         return fileNames

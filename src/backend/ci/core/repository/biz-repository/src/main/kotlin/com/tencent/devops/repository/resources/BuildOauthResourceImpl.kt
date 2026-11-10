@@ -57,6 +57,7 @@ class BuildOauthResourceImpl @Autowired constructor(
         return Result(gitOauthService.checkAndGetAccessToken(projectId, buildId, userId))
     }
 
+    @SensitiveApiPermission("get_oauth_token")
     override fun githubGet(projectId: String, buildId: String, userId: String): Result<GithubToken?> {
         return Result(githubTokenService.checkAndGetAccessToken(projectId, buildId, userId))
     }
@@ -92,6 +93,7 @@ class BuildOauthResourceImpl @Autowired constructor(
         )
     }
 
+    @SensitiveApiPermission("get_oauth_token")
     override fun scmRepoOauthToken(projectId: String, buildId: String, repoHashId: String): Result<GitToken?> {
         val repository = repositoryService.getRepository(
             projectId = projectId,

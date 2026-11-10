@@ -365,6 +365,6 @@ class SubPipelineTaskService @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
-        private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
+        const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
@@ -51,6 +52,11 @@ class CredentialHelper {
 
     @Value("\${credential.aes-key}")
     private lateinit var aesKey: String
+
+    @Value("\${credential.used-aes-keys:}")
+    private var usedAesKeys: String = ""
+
+    fun currentKeySha(): String = ShaUtils.sha256Fingerprint(aesKey)
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
@@ -138,7 +144,11 @@ class CredentialHelper {
             return null
         }
         try {
-            val credential = BkCryptoUtil.decryptSm4OrAes(aesKey, aesEncryptedCredential)
+            val credential = BkCryptoUtil.decryptSm4OrAes(
+                aesKey = aesKey,
+                usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+                content = aesEncryptedCredential
+            )
             val credentialEncryptedContent =
                 DHUtil.encrypt(
                     data = credential.toByteArray(),
@@ -156,13 +166,32 @@ class CredentialHelper {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return BkCryptoUtil.decryptSm4OrAes(aesKey, aesCredential)
+        return BkCryptoUtil.decryptSm4OrAes(
+            aesKey = aesKey,
+            usedAesKeys = BkCryptoUtil.parseAesKeys(usedAesKeys),
+            content = aesCredential
+        )
     }
 
     fun encryptCredential(credential: String?): String? {
         if (credential.isNullOrBlank() || credential == credentialMixer) {
             return null
         }
+        return BkCryptoUtil.encryptSm4ButAes(aesKey, credential)
+    }
+
+    /**
+     * 密钥轮换时使用：优先用历史密钥解密旧数据，再用当前密钥重新加密。
+     */
+    fun refreshCredential(aesCredential: String?): String? {
+        if (aesCredential.isNullOrBlank()) {
+            return aesCredential
+        }
+        val credential = BkCryptoUtil.decryptSm4OrAesForRefresh(
+            aesKey,
+            BkCryptoUtil.parseAesKeys(usedAesKeys),
+            aesCredential
+        )
         return BkCryptoUtil.encryptSm4ButAes(aesKey, credential)
     }
 }

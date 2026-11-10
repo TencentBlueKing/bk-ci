@@ -93,6 +93,8 @@ data class CodeGitWebHookTriggerElement(
     val includeNoteTypes: List<String>? = null,
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
+    @get:Schema(title = "是否回写质量红线报告")
+    val enableQualityReport: Boolean? = true,
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")

@@ -36,6 +36,11 @@ class ApigwPermissionMoveResourceV4Impl @Autowired constructor(
         projectId: String
     ): Result<List<PipelineIdInfo>> {
         logger.info("OPENAPI_PERMISSION_MOVE_V4|$appCode|$userId|get project pipeline ids|$projectId")
+        openapiPermissionService.validUserProjectPermission(
+            apigwType = apigwType,
+            userId = userId,
+            projectId = projectId
+        )
         return client.get(ServicePipelineResource::class).getProjectPipelineIds(projectId)
     }
 

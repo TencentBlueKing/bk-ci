@@ -27,8 +27,11 @@
 
 package com.tencent.devops.process.yaml.v2.models.job
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.process.yaml.utils.YamlScalarSerializer
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -112,7 +115,8 @@ data class Strategy(
     val fastKill: Boolean? = null,
     @get:Schema(title = "max-parallel")
     @JsonProperty("max-parallel")
-    val maxParallel: Int? = null
+    @get:JsonSerialize(using = YamlScalarSerializer::class)
+    val maxParallel: String? = null
 )
 
 data class RunsOn(
@@ -131,7 +135,17 @@ data class RunsOn(
     @get:Schema(title = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
-    val needs: Map<String, String>? = null
+    val needs: Map<String, String>? = null,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @get:Schema(title = "docker-build")
+    @JsonProperty("docker-build")
+    val dockerBuild: DockerBuild? = null
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class DockerBuild(
+    val enabled: Boolean? = null,
+    val version: String? = null
 )
 
 enum class JobRunsOnType(val type: String) {

@@ -30,7 +30,7 @@ const DEFAULT_CHECK_CONFIG: CheckConfig = {
   manualTrigger: false,
   reviewGroups: [],
   notifyType: ['RTX'],
-  markdownContent: true,
+  markdownContent: false,
   timeout: 24,
 }
 
@@ -425,7 +425,7 @@ export default defineComponent({
 
         <FormItem class={styles.formSection}>
           <Checkbox
-            modelValue={formData.markdownContent ?? true}
+            modelValue={formData.markdownContent === true}
             onChange={handleMarkdownContentChange}
           >
             {t('flow.stageReviewEdit.markdownContent')}

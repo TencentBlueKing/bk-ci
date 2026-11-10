@@ -37,13 +37,17 @@
                 <template v-if="relatedType === RELATED_TYPE.NODE">
                     <bk-input
                         v-model="searchKeyword"
+                        class="batch-search-input"
+                        :class="{ 'is-focused': isSearchFocused }"
+                        type="textarea"
+                        :rows="1"
                         :placeholder="$t('environment.searchNodePlaceholder')"
-                        right-icon="bk-icon icon-search"
-                        @enter="handleSearch"
-                        @clear="handleSearch"
                         clearable
+                        @focus="isSearchFocused = true"
+                        @blur="isSearchFocused = false"
+                        @clear="handleSearchClear"
                     />
-    
+
                     <div
                         class="node-list-section"
                         v-bkloading="{ isLoading }"
@@ -156,18 +160,19 @@
                                     prop="tagKeyId"
                                     min-width="200"
                                 >
-                                    <template #default="{ row, $index }">
+                                    <template #default="{ $index }">
                                         <bk-select
-                                            v-model="row.tagKeyId"
+                                            v-model="labelRules[$index].tagKeyId"
                                             :placeholder="$t('environment.pleaseSelectLabelKey')"
                                             :clearable="false"
-                                            @change="handleLabelKeyChange(row, $index)"
+                                            @change="handleLabelKeyChange($index)"
                                         >
                                             <bk-option
-                                                v-for="option in availableLabelKeys"
+                                                v-for="option in getAvailableLabelKeys($index)"
                                                 :key="option.id"
                                                 :id="option.id"
                                                 :name="option.name"
+                                                :disabled="isLabelKeyDisabled($index, option.id)"
                                             />
                                         </bk-select>
                                     </template>
@@ -177,16 +182,15 @@
                                     prop="tagValues"
                                     min-width="200"
                                 >
-                                    <template #default="{ row }">
+                                    <template #default="{ $index }">
                                         <bk-select
-                                            v-model="row.tagValues"
+                                            v-model="labelRules[$index].tagValues"
                                             :placeholder="$t('environment.pleaseSelectLabelValue')"
                                             :clearable="false"
-                                            :disabled="!row.tagKeyId"
-                                            multiple
+                                            :disabled="!labelRules[$index].tagKeyId"
                                         >
                                             <bk-option
-                                                v-for="val in getLabelValues(row.tagKeyId)"
+                                                v-for="val in getLabelValues(labelRules[$index].tagKeyId)"
                                                 :key="val.id"
                                                 :id="val.id"
                                                 :name="val.name"
@@ -284,7 +288,7 @@
                                 </div>
                             </div>
                             <i
-                                v-if="!node.isDelete"
+                                v-if="!node.isDelete && relatedType !== RELATED_TYPE.TAG"
                                 class="bk-icon icon-delete delete-icon"
                                 @click="handleRemoveSelectedNode(node)"
                             />
@@ -329,7 +333,7 @@
 </template>
 
 <script>
-    import { ref, computed, onMounted, watch } from 'vue'
+    import { ref, computed, onUnmounted, watch } from 'vue'
     import Logo from '@/components/Logo'
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -353,6 +357,7 @@
                 RELATED_TYPE,
                 relateNodes,
                 requestNodeList,
+                previewTagEnvNodes,
                 handleCloseDialog,
                 availableLabelKeys,
                 fetchTagList,
@@ -385,6 +390,16 @@
             })
 
             const searchKeyword = ref('')
+            const isSearchFocused = ref(false)
+            // 批量搜索防抖定时器
+            let searchDebounceTimer = null
+
+            // 按空格、中英文逗号/分号、换行、| 分隔解析输入，去重并过滤空字符串
+            const parseSearchTokens = (input) => {
+                if (!input) return []
+                const tokens = input.split(/[\s,，;；|]+/).map(token => token.trim()).filter(Boolean)
+                return [...new Set(tokens)]
+            }
             const dialogConfigs = {
                 top: '120'
             }
@@ -393,10 +408,12 @@
             // 保存两种模式下各自选择的节点
             const staticModeSelectedNodes = ref([])
             const dynamicModeSelectedNodes = ref([])
+            // 动态关联模式下回显 / 暂存的标签规则（用于模式切换时还原）
+            const dynamicModeLabelRules = ref([])
             
             // 动态关联相关数据
             const labelRules = ref([
-                { tagKeyId: '', tagValues: [] }
+                { tagKeyId: '', tagValues: '' }
             ])
             
             // 动态模式是否已经预览过
@@ -421,7 +438,7 @@
             
             // 判断所有标签规则是否都有效（所有规则的 key 和 value 都不为空）
             const hasValidLabelRules = computed(() => {
-                return labelRules.value.length && labelRules.value.every(rule => rule.tagKeyId && rule.tagValues?.length)
+                return labelRules.value.length && labelRules.value.every(rule => rule.tagKeyId && rule.tagValues)
             })
             
             // 判断是否应该显示选中的节点列表
@@ -468,11 +485,19 @@
             const isNodeSelected = (nodeHashId) => {
                 return selectedNodeIds.value.has(nodeHashId)
             }
-            const handleSearch = (keyword) => {
-                searchKeyword.value = keyword
-                pageChange(1)
-                fetchNodeList()
+            const handleSearchClear = () => {
+                searchKeyword.value = ''
             }
+            // 监听搜索输入变化，防抖触发搜索（textarea 中回车为换行分隔，不做快捷搜索）
+            watch(() => searchKeyword.value, (val) => {
+                if (!isShow.value) return
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+                searchDebounceTimer = setTimeout(() => {
+                    searchDebounceTimer = null
+                    pageChange(1)
+                    fetchNodeList()
+                }, 500)
+            })
             const handleNodeClick = (node) => {
                 const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
                 
@@ -553,11 +578,12 @@
             // 获取节点列表
             const fetchNodeList = async () => {
                 try {
+                    // IP 搜索统一走 ipListSearch（请求体，后端按分隔符解析后精确 IN 查询）
+                    const tokens = parseSearchTokens(searchKeyword.value)
                     const res = await requestNodeList({
                         page: pagination.value.current,
-                        pageSize: pagination.value.limit,
-                        keywords: searchKeyword.value
-                    })
+                        pageSize: pagination.value.limit
+                    }, [], tokens.join(','))
                     pagination.value.count = res.count
                     pageChange(pagination.value.current + 1)
                 } catch (error) {
@@ -611,6 +637,18 @@
             }
 
             const handleSave = async () => {
+                // 动态关联模式下，校验标签规则是否填写完整：每行都必须同时选择标签键和标签值
+                if (relatedType.value === RELATED_TYPE.TAG) {
+                    const isIncomplete = labelRules.value.some(rule => !rule.tagKeyId || !rule.tagValues)
+                    console.log(isIncomplete, 'isIncomplete')
+                    if (isIncomplete) {
+                        proxy.$bkMessage({
+                            theme: 'warning',
+                            message: proxy.$t('environment.installSession.tagIncomplete')
+                        })
+                        return
+                    }
+                }
                 try {
                     isSaveLoading.value = true
                     const params = {
@@ -623,13 +661,11 @@
                             : {
                                 // 每个标签键+值组合成一条记录
                                 tags: labelRules.value
-                                    .filter(rule => rule.tagKeyId && rule.tagValues?.length)
-                                    .flatMap(rule =>
-                                        rule.tagValues.map(tagValueId => ({
-                                            tagKeyId: rule.tagKeyId,
-                                            tagValueId
-                                        }))
-                                    )
+                                    .filter(rule => rule.tagKeyId && rule.tagValues)
+                                    .map(rule => ({
+                                        tagKeyId: rule.tagKeyId,
+                                        tagValueId: rule.tagValues
+                                    }))
                             }
                         )
                     }
@@ -651,7 +687,7 @@
             
             // 添加规则
             const handleAddRule = () => {
-                labelRules.value.push({ tagKeyId: '', tagValues: [] })
+                labelRules.value.push({ tagKeyId: '', tagValues: '' })
             }
             
             // 删除规则
@@ -660,7 +696,7 @@
                     labelRules.value.splice(index, 1)
                 } else {
                     labelRules.value[index].tagKeyId = ''
-                    labelRules.value[index].tagValues = []
+                    labelRules.value[index].tagValues = ''
                 }
             }
             
@@ -669,10 +705,17 @@
             const handlePreviewResult = async () => {
                 try {
                     isPreviewLoading.value = true
-                    const res = await requestNodeList({
-                        page: pagination.value.current,
+                    // 将标签规则摊平成 [{ tagKeyId, tagValueId }] 作为请求体
+                    const tags = labelRules.value
+                        .filter(rule => rule.tagKeyId && rule.tagValues)
+                        .map(rule => ({
+                            tagKeyId: rule.tagKeyId,
+                            tagValueId: rule.tagValues
+                        }))
+                    const res = await previewTagEnvNodes({
+                        page: -1,
                         pageSize: 1000
-                    }, labelRules.value)
+                    }, tags)
                     
                     // 获取预览结果的节点列表
                     const previewNodes = res.records || []
@@ -720,9 +763,25 @@
                 }
             }
             
-            // 标签键改变时清空值
-            const handleLabelKeyChange = (row, index) => {
-                row.tagValues = []
+            // 标签键改变时，仅保留仍属于新标签键的值
+            // 注意：bk-select 在 value 被程序化赋值时也会触发 change（回显场景），
+            // 因此这里不能无脑清空，否则复用行（如第一行）回显的值会被清掉
+            const handleLabelKeyChange = (index) => {
+                const rule = labelRules.value[index]
+                if (!rule) return
+                const validValueIds = new Set(getLabelValues(rule.tagKeyId).map(val => val.id))
+                // 切换标签键后，若当前值不属于新标签键则清空，避免脏数据
+                rule.tagValues = rule.tagValues && validValueIds.has(rule.tagValues) ? rule.tagValues : ''
+            }
+
+            // 当前行可选的标签键（保留所有键，其它行已选中的键在选项中置为禁用）
+            const getAvailableLabelKeys = (currentIndex) => {
+                return availableLabelKeys.value
+            }
+
+            // 判断某标签键是否已被其它行选中（用于禁用，避免重复选择）
+            const isLabelKeyDisabled = (currentIndex, keyId) => {
+                return labelRules.value.some((rule, i) => i !== currentIndex && rule.tagKeyId === keyId)
             }
 
             const initData = async () => {
@@ -751,26 +810,67 @@
                 }
             }
 
+            // 从环境详情回显动态关联（TAG）模式已关联的标签规则
+            const initLabelRulesFromEnv = () => {
+                const tags = currentEnv.value?.tags
+                const echoedRules = tags?.length
+                    ? tags.map(tag => ({
+                        tagKeyId: tag.tagKeyId,
+                        // 单值模式下只取第一个标签值回显
+                        tagValues: tag.tagValues?.[0]?.tagValueId ?? ''
+                    }))
+                    : [{ tagKeyId: '', tagValues: '' }]
+                // 暂存一份，供切换到动态关联模式时还原（保留用户编辑内容）
+                dynamicModeLabelRules.value = echoedRules.map(rule => ({
+                    tagKeyId: rule.tagKeyId,
+                    tagValues: rule.tagValues
+                }))
+                // 已在动态关联模式下打开时直接回显
+                if (relatedType.value === RELATED_TYPE.TAG) {
+                    labelRules.value = echoedRules.map(rule => ({
+                        tagKeyId: rule.tagKeyId,
+                        tagValues: rule.tagValues
+                    }))
+                }
+            }
+            
+            onUnmounted(() => {
+                if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+            })
+
             // 监听弹窗显示状态,显示时初始化数据
             watch(() => isShow.value, async (newVal) => {
                 if (newVal) {
-                    fetchTagList()
+                    // 每次打开时根据环境类型重新确定关联模式（动态/静态），
+                    // 避免上次关闭时 relatedType 被重置为静态后残留
+                    const targetType = RELATED_TYPE[currentEnv.value?.envNodeType] || RELATED_TYPE.NODE
+                    const isTypeChanged = targetType !== relatedType.value
+                    relatedType.value = targetType
+
+                    // 先加载标签键/值选项，确保回显的标签规则能正确显示名称
+                    await fetchTagList()
                     // 拉取当前环境已关联的节点列表
                     await fetchCurrentNodeList()
                     // 从 currentNodeList 初始化静态模式的数据
                     if (currentNodeList.value?.length) {
                         staticModeSelectedNodes.value = currentNodeList.value.map(node => ({ ...node }))
                     }
-                    // 初始化当前模式的数据
-                    initData()
+                    // 回显动态关联模式下已关联的标签规则
+                    initLabelRulesFromEnv()
+                    // 初始化当前模式的数据；若本次模式与上次不同，
+                    // 则由 relatedType 监听触发 initData，避免重复初始化
+                    if (!isTypeChanged) {
+                        initData()
+                    }
                 } else {
                     // 弹窗关闭时还原所有数据
                     selectedNodesList.value = []
                     staticModeSelectedNodes.value = []
                     dynamicModeSelectedNodes.value = []
+                    dynamicModeLabelRules.value = []
                     currentNodeList.value = []
                     isDynamicPreviewed.value = false
-                    labelRules.value = [{ tagKeyId: '', tagValues: [] }]
+                    labelRules.value = [{ tagKeyId: '', tagValues: '' }]
                     searchKeyword.value = ''
                     pageChange(1)
                     nodeList.value = []
@@ -780,14 +880,24 @@
 
             watch(() => relatedType.value, async (val, oldVal) => {
                 pageChange(1)
-                labelRules.value = [{ tagKeyId: '', tagValues: [] }]
                 // 切换模式前，保存当前模式的选择
                 if (val === RELATED_TYPE.NODE) {
-                    // 切换到静态模式前，保存动态模式的选择
+                    // 切换到静态模式前，保存动态模式的选择（节点 + 标签规则）
                     dynamicModeSelectedNodes.value = [...selectedNodesList.value]
+                    dynamicModeLabelRules.value = labelRules.value.map(rule => ({
+                        tagKeyId: rule.tagKeyId,
+                        tagValues: rule.tagValues
+                    }))
                 } else {
                     // 切换到动态模式前，保存静态模式的选择
                     staticModeSelectedNodes.value = [...selectedNodesList.value]
+                    // 还原动态关联模式的标签规则（回显数据或上次编辑内容）
+                    labelRules.value = dynamicModeLabelRules.value.length
+                        ? dynamicModeLabelRules.value.map(rule => ({
+                            tagKeyId: rule.tagKeyId,
+                            tagValues: rule.tagValues
+                        }))
+                        : [{ tagKeyId: '', tagValues: '' }]
                 }
                 initData()
             })
@@ -798,6 +908,7 @@
                 isLoading,
                 relatedType,
                 searchKeyword,
+                isSearchFocused,
                 currentEnv,
                 osDisplayName,
                 isCreateResType,
@@ -827,14 +938,16 @@
                 handleClearSelection,
                 handleRemoveSelectedNode,
                 handleScroll,
-                handleSearch,
+                handleSearchClear,
                 handleCloseDialog,
                 handleSave,
                 getLabelValues,
                 handleAddRule,
                 handleDeleteRule,
                 handleLabelKeyChange,
-                handlePreviewResult
+                handlePreviewResult,
+                getAvailableLabelKeys,
+                isLabelKeyDisabled
             }
         }
     }
@@ -849,6 +962,22 @@
     }
     .bk-dialog-tool {
         display: none;
+    }
+
+    .batch-search-input {
+        margin-bottom: 16px;
+        textarea {
+            height: 32px;
+            min-height: 32px;
+            resize: none;
+            transition: height .15s ease;
+            &::placeholder {
+                color: #C4C6CC;
+            }
+        }
+        &.is-focused textarea {
+            height: 96px;
+        }
     }
 
     .dialog-content {

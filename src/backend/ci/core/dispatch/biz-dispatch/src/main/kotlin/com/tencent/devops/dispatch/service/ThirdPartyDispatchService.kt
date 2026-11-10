@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
@@ -62,11 +63,16 @@ import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.tpaqueue.TPAQueueService
 import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
+import com.tencent.devops.dispatch.utils.DispatchLockCleanup
+import com.tencent.devops.dispatch.utils.DispatchLogBuffer
 import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
+import com.tencent.devops.dispatch.utils.ThirdPartyAgentJobEnvLock
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.AllCreateNodeEnv
+import com.tencent.devops.environment.pojo.DispatchStrategyConfig
+import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -75,6 +81,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import jakarta.ws.rs.core.Response
@@ -90,6 +97,10 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val tpaQueueService: TPAQueueService,
     private val tpaSingleQueueService: TPASingleQueueService
 ) {
+    // 环境锁最长等待时间（毫秒）。节点别名上下文 RPC 仍在锁内，等待过久会长期占用 MQ 消费线程；
+    // 拿不到锁时交给 MQ 延迟重试更合适。热点环境抢不到锁（BK_ENV_BUSY）偏多时可调小，默认 2000（原为写死 5000）
+    @Value("\${dispatch.thirdPartyEnv.lockWaitMills:2000}")
+    private val envLockWaitMills: Long = 2000
     fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
                 event.dispatchType is ThirdPartyAgentEnvDispatchType ||
@@ -105,6 +116,15 @@ class ThirdPartyDispatchService @Autowired constructor(
             return true
         }
         return v.split(";").toSet().contains(pipelineId)
+    }
+
+    // 按构建项目灰度，只有显式 true 才启用；不缓存开关，删除配置即可回退。
+    // 现有 DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE 新队列仍优先，不改变队列路由。
+    internal fun useFineGrainedEnvLock(projectId: String): Boolean = try {
+        redisOperation.hget(DISPATCH_ENV_FINE_LOCK_PROJECTS, projectId) == "true"
+    } catch (e: Exception) {
+        logger.warn("read fine-grained dispatch switch failed|$projectId|fallback to env lock", e)
+        false
     }
 
     fun startUp(dispatchMessage: DispatchMessage) {
@@ -530,81 +550,253 @@ class ThirdPartyDispatchService @Autowired constructor(
         screenEnvNode(dispatchMessage, dispatchType, jobEnvActiveAgents, envId)
     }
 
+    /**
+     * 环境调度时，在环境锁外提前准备的数据。
+     * 这些数据都是配置或历史数据，与"当前环境并发计数"无关，提前查询不会造成超调度，
+     * 放在锁外可以显著缩短环境锁的持有时间。
+     */
+    private data class PickupPrepared(
+        // 最近构建过的 agent，用于 PRE_BUILD 策略
+        val preBuildAgentIds: Set<String>,
+        // 环境调度策略
+        val strategies: List<DispatchStrategyConfig>,
+        // agentId -> 该 agent 拥有的标签键值
+        val agentTagValues: Map<String, Map<Long, Set<String>>>,
+        // 标签 key 的 id -> 名称
+        val tagKeys: Map<Long, String>
+    )
+
+    /**
+     * 从环境中挑选 agent 并调度。
+     *
+     * 环境锁的作用是保证 "读取并发计数 -> 判断 -> 写库占位" 的原子性，防止并发超调度，
+     * 节点别名仍需在释放 agent 锁前写入，其他收尾操作移到锁外：
+     * 1. 锁外预检：job 全集群/单节点并发已满则直接重试，不必排队抢锁
+     * 2. 锁外准备：调度策略/标签（RPC）、最近构建机（SQL）
+     * 3. 锁内：并发复检 + 批量查负载 + 按策略选机 + 写库占位及节点别名上下文
+     * 4. 锁外收尾：构建详情、监控事件、排队耗时统计
+     */
     private fun screenEnvNode(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: List<ThirdPartyAgent>,
         envId: Long
     ) {
-        ThirdPartyAgentEnvLock(redisOperation, dispatchMessage.event.projectId, dispatchType.envName).use { redisLock ->
-            val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
-            if (lock) {
-                // 判断是否有 jobEnv 的限制，检查全集群限制
-                checkAllNodeConcurrency(envId, dispatchMessage)
+        // 1. 锁外预检：job 全集群/单节点并发若已满则直接重试，不必排队抢锁。
+        // 预检到锁内复检之间，并发计数可能增也可能减；这里只在"已满"时提前拒绝，代价最多是偶尔多重试一轮，
+        // 不会误放行——真正的放行判断仍由锁内复检保证。没有配置 jobEnv 并发限制时这两个方法会直接返回。
+        // printLog = false：预检通过时不打印任何日志，避免与锁内复检重复；
+        // 已满时仍会打印并发已满的构建日志后抛重试（此时不再进锁复检，日志只有这一条）
+        checkAllNodeConcurrency(envId, dispatchMessage, printLog = false)
+        checkSingleNodeConcurrency(dispatchMessage, envId, agents, printLog = false)
 
-                // 判断是否有 jobEnv 的限制，筛选单节点的并发数
-                val activeAgents = checkSingleNodeConcurrency(dispatchMessage, envId, agents)
+        // 2. 锁外准备与并发竞争无关的数据（策略/标签 RPC、最近构建机 SQL）。
+        // 放在预检之后，避免并发已满时白做查询；覆盖原始 agents，供锁内按相同集合复检后选机
+        val prepared = preparePickup(dispatchMessage, dispatchType, agents, envId)
 
-                // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
-                if (activeAgents.isNotEmpty() && pickupAgent(
-                        activeAgents = activeAgents,
-                        dispatchMessage = dispatchMessage,
-                        dispatchType = dispatchType,
-                        envId = envId
-                    )
-                ) {
-                    // 错误结束的在最外边有处理了，这里只管正常逻辑的
-                    commonUtil.updateQueueTime(
-                        event = dispatchMessage.event,
-                        createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
-                        endTime = LocalDateTime.now().timestampmilli()
-                    )
-                    return
-                }
+        // 只在此次选机调用内缓冲日志，finally 在环境/Job/agent 锁全部释放后发送，异常路径也不会漏日志。
+        val result = DispatchLogBuffer.withBuffer(dispatchMessage.event.buildId, buildLogPrinter) {
+            if (useFineGrainedEnvLock(dispatchMessage.event.projectId)) {
+                screenEnvNodeWithFineGrainedLock(dispatchMessage, dispatchType, agents, envId, prepared)
             } else {
-                logWarn(
-                    dispatchMessage.event,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_ENV_BUSY,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
-                )
+                screenEnvNodeWithEnvLock(dispatchMessage, dispatchType, agents, envId, prepared)
             }
+        }
+        val (locked, pickupTried, pickedAgent) = result
 
-            logger.info(
-                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Not Found, Retry!"
+        // 4. 锁外收尾：任务已入库占位，后续操作不影响并发判断
+        val agent = pickedAgent
+        if (agent != null) {
+            tpaSingleQueueService.afterAgentInQueue(
+                data = ThirdPartyAgentDispatchData(dispatchMessage, dispatchType),
+                agent = agent
             )
+            // 错误结束的在最外边有处理了，这里只管正常逻辑的
+            commonUtil.updateQueueTime(
+                event = dispatchMessage.event,
+                createTime = dispatchMessage.event.dispatchQueueStartTimeMilliSecond ?: return,
+                endTime = LocalDateTime.now().timestampmilli()
+            )
+            return
+        }
 
+        if (!locked) {
             logWarn(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_AGENT_IS_BUSY,
+                    messageCode = BK_ENV_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
+                )
             )
-            throw DispatchRetryMQException(
-                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
-                            params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
-                        )
+        } else if (pickupTried && dispatchMessage.event.retryTime == 1) {
+            // 与原 pickupAgent 内的逻辑保持一致：只有真正按策略选过机、但所有策略都没匹配到可用 agent 时，
+            // 才在第一次重试时提示；可用 agent 列表为空、没有进入选机的情况不打印
+            // 之后与原逻辑一样继续打印 BK_AGENT_IS_BUSY 并抛重试
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_NO_AGENT_AVAILABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
+        }
+
+        logger.info(
+            "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                    "dispatchType=$dispatchType|Not Found, Retry!"
+        )
+
+        logWarn(
+            dispatchMessage.event,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_AGENT_IS_BUSY,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
+        )
+        throw DispatchRetryMQException(
+            errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+            errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                    )
+        )
+    }
+
+    private data class EnvPickupResult(
+        val locked: Boolean,
+        val pickupTried: Boolean = false,
+        val agent: ThirdPartyAgent? = null
+    )
+
+    /** 默认路径仍按环境所属项目 + 数字 envId 互斥，兼容名称/hashId、共享环境。 */
+    private fun screenEnvNodeWithEnvLock(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long,
+        prepared: PickupPrepared
+    ): EnvPickupResult {
+        val projectId = dispatchType.envProjectId?.takeIf { it.isNotBlank() } ?: dispatchMessage.event.projectId
+        val lock = ThirdPartyAgentEnvLock(redisOperation, projectId, envId.toString())
+        return DispatchLockCleanup.run<EnvPickupResult>(
+            description = "env|$projectId|$envId|${dispatchMessage.event.buildId}",
+            unlock = { lock.unlock() },
+            isQueued = { it.agent != null }
+        ) {
+            if (!lock.tryLock(timeout = envLockWaitMills)) return@run EnvPickupResult(false)
+            pickupWithJobLock(dispatchMessage, dispatchType, agents, envId, prepared)
         }
     }
 
+    /**
+     * 灰度路径不拿环境锁，不同 Job 可以并行选机。
+     * 批量负载只作为锁外选机快照，最终 nodeRule 必须在目标 agent 锁内重新查询，不能靠缓存放行。
+     * 暂不引入跨请求计数缓存/占位表，沿用数据库真实计数与重试记录口径。
+     */
+    private fun screenEnvNodeWithFineGrainedLock(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long,
+        prepared: PickupPrepared
+    ): EnvPickupResult {
+        val counts = thirdPartyAgentBuildService.countRunningAndQueueByAgents(agents.map { it.agentId }.toSet())
+        return pickupWithJobLock(dispatchMessage, dispatchType, agents, envId, prepared, counts)
+    }
+
+    private fun pickupWithJobLock(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long,
+        prepared: PickupPrepared,
+        counts: Map<String, Pair<Int, Int>>? = null
+    ): EnvPickupResult {
+        val event = dispatchMessage.event
+        val pick = {
+            checkAllNodeConcurrency(envId, dispatchMessage)
+            // 必须使用原始 agents：在给定集合内取最新记录，不能缩小为候选节点，否则会重新计入旧重试。
+            val activeAgents = checkSingleNodeConcurrency(dispatchMessage, envId, agents)
+            EnvPickupResult(
+                locked = true,
+                pickupTried = activeAgents.isNotEmpty(),
+                agent = if (activeAgents.isEmpty()) null else pickupAgent(
+                    activeAgents, dispatchMessage, dispatchType, envId, prepared, counts
+                )
+            )
+        }
+        // 沿用 jobId 缺失时不校验 Job 配额的行为；物理节点规则仍会在 agent 锁内复检。
+        val jobId = event.jobId?.takeIf { it.isNotBlank() } ?: return pick()
+        val lock = ThirdPartyAgentJobEnvLock(redisOperation, event.projectId, event.pipelineId, jobId, envId)
+        return DispatchLockCleanup.run<EnvPickupResult>(
+            description = "job|${event.projectId}|${event.pipelineId}|$jobId|$envId|${event.buildId}",
+            unlock = { lock.unlock() },
+            isQueued = { it.agent != null }
+        ) {
+            // 热点 Job 拿不到配额锁直接 MQ 重试，不持有环境锁自旋等待。
+            if (!lock.tryLock()) EnvPickupResult(false) else pick()
+        }
+    }
+
+    /**
+     * 锁外准备调度所需的配置/历史数据，详见 [PickupPrepared]
+     */
+    private fun preparePickup(
+        dispatchMessage: DispatchMessage,
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        agents: List<ThirdPartyAgent>,
+        envId: Long
+    ): PickupPrepared {
+        val nodeIdToAgentId = mutableMapOf<Long, String>()
+        agents.forEach { agent ->
+            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
+        }
+        // 共享环境使用环境所属项目的策略/标签；历史构建机与 Job 配额仍属于构建项目。
+        val strategyResult = thirdPartyAgentBuildService.getEnvStrategiesWithTags(
+            projectId = dispatchType.envProjectId?.takeIf { it.isNotBlank() } ?: dispatchMessage.event.projectId,
+            envId = envId,
+            nodeIds = nodeIdToAgentId.keys
+        )
+        // 不含 PRE_BUILD 策略时，不扫描最近构建历史。
+        val preBuildAgentIds = if (
+            strategyResult.strategies.any { it.enabled && it.scope == StrategyScope.PRE_BUILD }
+        ) {
+            thirdPartyAgentBuildService.getPreBuildAgentIds(
+                projectId = dispatchMessage.event.projectId,
+                pipelineId = dispatchMessage.event.pipelineId,
+                vmSeqId = dispatchMessage.event.vmSeqId,
+                size = agents.size.coerceAtLeast(1)
+            ).toSet()
+        } else emptySet()
+        val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
+        strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
+            nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
+        }
+        return PickupPrepared(
+            preBuildAgentIds = preBuildAgentIds,
+            strategies = strategyResult.strategies,
+            agentTagValues = agentTagValues,
+            tagKeys = strategyResult.tagKeys
+        )
+    }
+
+    /**
+     * @param printLog 是否打印"配置了并发但 jobId 为空"的告警。锁外预检传 false，避免与锁内复检重复打印；
+     * 并发已满时的构建日志不受该参数控制，因为紧接着就会抛重试，不会重复
+     */
     private fun checkSingleNodeConcurrency(
         dispatchMessage: DispatchMessage,
         envId: Long,
-        activeAgents: List<ThirdPartyAgent>
+        activeAgents: List<ThirdPartyAgent>,
+        printLog: Boolean = true
     ): List<ThirdPartyAgent> {
         if (dispatchMessage.event.singleNodeConcurrency == null) {
             return activeAgents
         }
         if (dispatchMessage.event.jobId.isNullOrBlank()) {
-            logger.warn(
+            if (printLog) logger.warn(
                 "buildByEnvId|{} has singleNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
                 dispatchMessage.event.singleNodeConcurrency,
@@ -623,12 +815,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             projectId = dispatchMessage.event.projectId
         )
         activeAgents.forEach {
-            // 为空说明当前节点没有记录就是没有任务直接加，除非并发是0的情况
-            if (m[it.agentId] == null && dispatchMessage.event.singleNodeConcurrency!! > 0) {
-                jobEnvActiveAgents.add(it)
-                return@forEach
-            }
-            if (m[it.agentId]!! < dispatchMessage.event.singleNodeConcurrency!!) {
+            // 无记录按 0 计数；并发配置为 0 时排队，不能对缺失计数使用 !!。
+            if ((m[it.agentId] ?: 0) < dispatchMessage.event.singleNodeConcurrency!!) {
                 jobEnvActiveAgents.add(it)
                 return@forEach
             }
@@ -655,9 +843,13 @@ class ThirdPartyDispatchService @Autowired constructor(
         return jobEnvActiveAgents.toList()
     }
 
+    /**
+     * @param printLog 含义同 [checkSingleNodeConcurrency]
+     */
     private fun checkAllNodeConcurrency(
         envId: Long,
-        dispatchMessage: DispatchMessage
+        dispatchMessage: DispatchMessage,
+        printLog: Boolean = true
     ) {
         if (dispatchMessage.event.allNodeConcurrency == null) {
             return
@@ -687,7 +879,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     errorMessage = ErrorCodeEnum.GET_BUILD_RESOURCE_ERROR.getErrorMessage()
                 )
             }
-        } else {
+        } else if (printLog) {
             logger.warn(
                 "buildByEnvId|{} has allNodeConcurrency {} but env {}|job {} null",
                 dispatchMessage.event.buildId,
@@ -698,25 +890,32 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
     }
 
+    /**
+     * 在环境锁内按策略挑选 agent 并占位（写库 + 写 Redis）。
+     * 策略/标签/最近构建机等数据由 [preparePickup] 在锁外提前准备好，这里只查询必须实时的 agent 负载。
+     * 调度成功后的收尾由调用方在锁外执行 [TPASingleQueueService.afterAgentInQueue]。
+     * @return 调度成功的 agent，所有策略都没有匹配到时返回 null
+     */
     private fun pickupAgent(
         activeAgents: List<ThirdPartyAgent>,
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        envId: Long
-    ): Boolean {
-        val preBuildAgentIds = thirdPartyAgentBuildService.getPreBuildAgentIds(
-            projectId = dispatchMessage.event.projectId,
-            pipelineId = dispatchMessage.event.pipelineId,
-            vmSeqId = dispatchMessage.event.vmSeqId,
-            size = activeAgents.size.coerceAtLeast(1)
-        ).toSet()
-
+        envId: Long,
+        prepared: PickupPrepared,
+        counts: Map<String, Pair<Int, Int>>? = null
+    ): ThirdPartyAgent? {
+        // 默认路径锁内批查；细粒度路径复用锁外快照。最终准入都在目标 agent 锁内复检。
+        val agentCounts = counts ?: thirdPartyAgentBuildService.countRunningAndQueueByAgents(
+            activeAgents.map { it.agentId }.toSet()
+        )
         val runningBuildsMapper = HashMap<String, Int>()
         val dockerRunningBuildsMapper = HashMap<String, Int>()
         activeAgents.forEach {
-            runningBuildsMapper[it.agentId] = thirdPartyAgentBuildService.getRunningBuilds(it.agentId)
+            // 查询结果中没有的 agent 说明没有任务，按 0 处理
+            val (normalCnt, dockerCnt) = agentCounts[it.agentId] ?: Pair(0, 0)
+            runningBuildsMapper[it.agentId] = normalCnt
             if (dispatchType.dockerInfo != null) {
-                dockerRunningBuildsMapper[it.agentId] = thirdPartyAgentBuildService.getDockerRunningBuilds(it.agentId)
+                dockerRunningBuildsMapper[it.agentId] = dockerCnt
             }
             logDebug(
                 dispatchMessage.event,
@@ -725,51 +924,43 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        val nodeIdToAgentId = mutableMapOf<Long, String>()
-        activeAgents.forEach { agent ->
-            agent.nodeId?.let { nodeIdToAgentId[HashUtil.decodeIdToLong(it)] = agent.agentId }
-        }
-        val strategyResult = thirdPartyAgentBuildService.getEnvStrategiesWithTags(
-            projectId = dispatchMessage.event.projectId,
-            envId = envId,
-            nodeIds = nodeIdToAgentId.keys
-        )
-        val agentTagValues = mutableMapOf<String, Map<Long, Set<String>>>()
-        strategyResult.nodeTagValues.forEach { (nodeId, kv) ->
-            nodeIdToAgentId[nodeId]?.let { agentId -> agentTagValues[agentId] = kv }
-        }
         val executor = DispatchStrategyExecutor(
             input = DispatchStrategyExecutor.StrategyInput(
                 allAgents = activeAgents,
-                preBuildAgentIds = preBuildAgentIds,
+                preBuildAgentIds = prepared.preBuildAgentIds,
                 agentRunningCounts = runningBuildsMapper,
                 dockerRunningCounts = dockerRunningBuildsMapper,
-                agentTagValues = agentTagValues,
-                tagKeys = strategyResult.tagKeys,
+                agentTagValues = prepared.agentTagValues,
+                tagKeys = prepared.tagKeys,
                 isDockerBuilder = dispatchType.dockerInfo != null
             ),
             logAction = { msg -> logDebug(dispatchMessage.event, msg) }
         )
-        val matched = executor.execute(strategyResult.strategies) { agent ->
-            agentInQueue(dispatchMessage, dispatchType, agent, envId)
-        }
-        if (matched != null) {
-            return true
-        }
-
-        if (dispatchMessage.event.retryTime == 1) {
-            logWarn(
-                dispatchMessage.event,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_NO_AGENT_AVAILABLE,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
+        return executor.executeWithRule(prepared.strategies) { agent, nodeRule ->
+            // deferPost = true：收尾放到所有调度锁释放之后。
+            tpaSingleQueueService.tryAgentWithRule(
+                data = ThirdPartyAgentDispatchData(
+                    dispatchMessage = dispatchMessage,
+                    dispatchType = dispatchType
+                ),
+                agent = agent,
+                envId = envId,
+                nodeRule = nodeRule,
+                deferPost = true,
+                onLoadChanged = { (normal, docker) ->
+                    runningBuildsMapper[agent.agentId] = normal
+                    dockerRunningBuildsMapper[agent.agentId] = docker
+                }
             )
         }
-        return false
     }
 
     private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
+        if (DispatchLogBuffer.append(
+                event.buildId, event.vmSeqId, event.containerHashId, event.executeCount, event.jobId,
+                logMessage
+            )
+        ) return
         buildLogPrinter.addLine(
             buildId = event.buildId,
             message = logMessage,
@@ -782,6 +973,11 @@ class ThirdPartyDispatchService @Autowired constructor(
     }
 
     private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
+        if (DispatchLogBuffer.append(
+                event.buildId, event.vmSeqId, event.containerHashId, event.executeCount, event.jobId,
+                logMessage, yellow = true
+            )
+        ) return
         buildLogPrinter.addYellowLine(
             buildId = event.buildId,
             message = logMessage,
@@ -794,6 +990,11 @@ class ThirdPartyDispatchService @Autowired constructor(
     }
 
     private fun logDebug(event: PipelineAgentStartupEvent, message: String) {
+        if (DispatchLogBuffer.append(
+                event.buildId, event.vmSeqId, event.containerHashId, event.executeCount, event.jobId,
+                message, logType = LogType.DEBUG
+            )
+        ) return
         buildLogPrinter.addDebugLine(
             buildId = event.buildId,
             message = message,
@@ -827,6 +1028,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyDispatchService::class.java)
+        const val DISPATCH_ENV_FINE_LOCK_PROJECTS = "DISPATCH_REDIS_ENV_FINE_LOCK_PROJECTS"
         const val DISPATCH_QUEUE_GRAY_PROJECT_PIPELINE = "DISPATCH_REDIS_QUEUE_GRAY_PROJECT_PIPELINE"
     }
 }

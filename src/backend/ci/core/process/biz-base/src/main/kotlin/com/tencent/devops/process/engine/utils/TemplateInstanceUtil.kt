@@ -479,6 +479,7 @@ object TemplateInstanceUtil {
             setting.maxQueueSize = templateSetting.maxQueueSize
             setting.concurrencyGroup = templateSetting.concurrencyGroup
             setting.concurrencyCancelInProgress = templateSetting.concurrencyCancelInProgress
+            setting.concurrencySubGroup = templateSetting.concurrencySubGroup
             setting.maxConRunningQueueSize = templateSetting.maxConRunningQueueSize
         }
     }

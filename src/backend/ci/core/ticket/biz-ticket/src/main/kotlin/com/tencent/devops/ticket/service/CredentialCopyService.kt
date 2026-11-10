@@ -88,7 +88,8 @@ class CredentialCopyService @Autowired constructor(
                 credentialV2 = sourceRecord.credentialV2,
                 credentialV3 = sourceRecord.credentialV3,
                 credentialV4 = sourceRecord.credentialV4,
-                credentialRemark = sourceRecord.credentialRemark
+                credentialRemark = sourceRecord.credentialRemark,
+                aesKeySha = sourceRecord.aesKeySha
             )
             createCredentialResourceSafely(
                 userId = userId,

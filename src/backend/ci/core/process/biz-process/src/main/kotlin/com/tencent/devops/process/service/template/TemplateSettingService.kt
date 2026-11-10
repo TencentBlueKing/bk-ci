@@ -77,6 +77,9 @@ class TemplateSettingService @Autowired constructor(
         val projectId = setting.projectId
         val templateId = setting.pipelineId
         // 对齐新旧通知配置，统一根据新list数据保存
+        setting.applyConcurrencySubGroup(
+            pipelineRepositoryService.getSetting(projectId, templateId)?.concurrencySubGroup
+        )
         val settingVersion = pipelineSettingVersionService.getSettingVersionAfterUpdate(
             projectId = projectId,
             pipelineId = templateId,

@@ -1,11 +1,11 @@
 package com.tencent.devops.ai.service
 
+import com.tencent.devops.ai.crypto.UserLlmConfigCryptoHelper
 import com.tencent.devops.ai.dao.UserLlmConfigDao
 import com.tencent.devops.ai.pojo.UserLlmConfigUpsertRequest
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.ai.tables.TAiUserLlmConfig
 import com.tencent.devops.model.ai.tables.records.TAiUserLlmConfigRecord
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.AESUtil
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -13,6 +13,7 @@ import io.mockk.verify
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -20,12 +21,22 @@ class UserLlmConfigServiceTest {
 
     private val dslContext = mockk<DSLContext>(relaxed = true)
     private val dao = mockk<UserLlmConfigDao>(relaxed = true)
-    private val service = UserLlmConfigService(dslContext, dao, "aes-key")
+    private val helper = mockk<UserLlmConfigCryptoHelper>()
+    private val service = UserLlmConfigService(dslContext, dao, helper)
+
+    @BeforeEach
+    fun setUp() {
+        every { helper.hasAesKey() } returns true
+        every { helper.currentKeySha() } returns "current-sha"
+        every { helper.encryptSm4ButAes(any()) } answers { "enc-${firstArg<String>()}" }
+        every { helper.decryptSm4OrAes(any()) } answers { firstArg<String>().removePrefix("enc-") }
+        every { helper.refreshSm4OrAes(any()) } answers { firstArg<String>() }
+    }
 
     @Test
     fun `should decrypt enabled user model`() {
         every { dao.getByUserId(dslContext, "tester") } returns storedConfig(
-            encryptedApiKey = AESUtil.encrypt("aes-key", "secret-key")
+            encryptedApiKey = "enc-secret-key"
         )
 
         val model = service.getEnabledModel("tester")
@@ -55,9 +66,9 @@ class UserLlmConfigServiceTest {
         val captured = slot<TAiUserLlmConfigRecord>()
         every { dslContext.newRecord(TAiUserLlmConfig.T_AI_USER_LLM_CONFIG) } returns TAiUserLlmConfigRecord()
         every { dao.getByUserId(dslContext, "tester") } returns storedConfig(
-            encryptedApiKey = AESUtil.encrypt("aes-key", "secret-key")
+            encryptedApiKey = "enc-secret-key"
         )
-        every { dao.upsert(dslContext, capture(captured)) } returns 1
+        every { dao.upsert(dslContext, capture(captured), "current-sha") } returns 1
 
         service.upsert(
             "tester",
@@ -68,8 +79,9 @@ class UserLlmConfigServiceTest {
             )
         )
 
-        assertEquals(AESUtil.encrypt("aes-key", "secret-key"), captured.captured.apiKey)
-        verify { dao.upsert(dslContext, any()) }
+        assertEquals("enc-secret-key", captured.captured.apiKey)
+        verify { dao.upsert(dslContext, any(), "current-sha") }
+        verify { helper.refreshSm4OrAes("enc-secret-key") }
     }
 
     private fun storedConfig(

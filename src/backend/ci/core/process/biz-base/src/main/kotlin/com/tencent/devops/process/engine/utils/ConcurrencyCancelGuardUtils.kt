@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.utils
 
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.process.engine.pojo.ConcurrencyGroupBuild
 import org.slf4j.LoggerFactory
 
@@ -113,5 +114,28 @@ object ConcurrencyCancelGuardUtils {
         }
         // 同流水线重试：构建号更大的是更新的那次，不能误杀
         return candidate.buildNum > currentNum
+    }
+
+    /**
+     * 同一批里只保留构建号更大的。拦截器入库前、启动控制持锁后都会调用。
+     *
+     * [currentBuildNum] 为空表示当前构建还没入库，无法判断谁更新，返回空列表，取消留给持有组锁的启动逻辑。
+     * 已入库时只取消本流水线内构建号更小的，避免旧触发把更新的构建取消掉。
+     * 候选上的空串和字面量 null 不算同一批，不会被选中。
+     */
+    fun olderSameBatch(
+        candidateBuilds: Collection<ConcurrencyGroupBuild>,
+        pipelineId: String,
+        currentBuildId: String,
+        currentBuildNum: Int?,
+        batchId: String
+    ): List<ConcurrencyGroupBuild> {
+        val currentNum = currentBuildNum ?: return emptyList()
+        return candidateBuilds.filter { candidate ->
+            candidate.buildId != currentBuildId &&
+                candidate.pipelineId == pipelineId &&
+                candidate.buildNum < currentNum &&
+                ConcurrencySubGroupPolicy.effectiveBatchId(candidate.concurrencySubGroup) == batchId
+        }
     }
 }

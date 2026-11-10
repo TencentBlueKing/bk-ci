@@ -74,5 +74,7 @@ data class PipelineTemplateInstanceReq(
     @get:Schema(title = "分支名,发布时指定的分支或者代码库推送的分支", required = false)
     val targetBranch: String? = null,
     @get:Schema(title = "版本发布描述", required = false)
-    val description: String? = null
+    val description: String? = null,
+    @get:Schema(title = "实例化时间(毫秒),用于生成PAC实例化分支名,同一批实例化需保持一致", required = false)
+    val instanceTime: Long? = null
 ) : PipelineVersionCreateReq

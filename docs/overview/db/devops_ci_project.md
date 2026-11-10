@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.27
 
 **文档描述：** devops_ci_project的数据库文档
 | 表名                  | 说明       |
@@ -19,6 +19,7 @@
 | T_PROJECT | 项目信息表 |
 | T_PROJECT_APPROVAL | 项目审批表 |
 | T_PROJECT_DATA_MIGRATE_HISTORY | 项目数据迁移历史表 |
+| T_PROJECT_FAVOR | 项目收藏表 |
 | T_PROJECT_LABEL |  |
 | T_PROJECT_LABEL_REL |  |
 | T_PROJECT_TAG_HISTORY | 项目路由历史表 |
@@ -303,6 +304,19 @@
 |  12   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  13   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
+**表名：** <a>T_PROJECT_FAVOR</a>
+
+**说明：** 项目收藏表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目英文名  |
+|  3   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 收藏用户  |
+|  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+
 **表名：** <a>T_PROJECT_LABEL</a>
 
 **说明：** 
@@ -507,6 +521,7 @@
 |  13   | USER_TYPE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 用户类型0普通用户1公共账号  |
 |  14   | BUSINESS_LINE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 业务线ID  |
 |  15   | BUSINESS_LINE_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 业务线名称  |
+|  16   | FULL_DEPARTMENTS |   text   | 65535 |   0    |    Y     |  N   |       | 完整部门链路，JSON数组，按祖先到当前组织排列  |
 
 **表名：** <a>T_USER_DAILY_FIRST_AND_LAST_LOGIN</a>
 
