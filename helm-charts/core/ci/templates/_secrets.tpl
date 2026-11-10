@@ -1,13 +1,13 @@
 {{/*
 获取 Secret 中某个 key 的值。
-configured 非空，或 enabled 为 false 时，直接返回 configured（可能为空）；
+configured 非空，或 autoGenerate 为 false 时，直接返回 configured（可能为空）；
 否则复用已有 Secret 中的值，没有时随机生成，并在同一次渲染中保持一致。
-参数：enabled、configured、secretName、key、length（默认 32）、context
+参数：autoGenerate、configured、secretName、key、length（默认 32）、context
 */}}
 {{- define "bkci.secrets.getOrGenerate" -}}
 {{- $ctx := .context -}}
 {{- $configured := .configured | default "" | toString -}}
-{{- if or $configured (not .enabled) -}}
+{{- if or $configured (not .autoGenerate) -}}
 {{- $configured -}}
 {{- else -}}
 {{- if not (hasKey $ctx.Values "bkciGeneratedSecrets") -}}
@@ -29,7 +29,7 @@ configured 非空，或 enabled 为 false 时，直接返回 configured（可能
 
 {{/*
 服务间调用白名单 token。values 中已填写则使用该值；
-secret.devopsToken.enabled 为 true 时，未填写则复用已有 Secret 或随机生成。
+secret.devopsToken.autoGenerate 为 true 时，未填写则复用已有 Secret 或随机生成。
 */}}
 {{- define "bkci.devopsToken.secretName" -}}
 {{- printf "%s-devops-token" (include "bkci.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
@@ -40,7 +40,7 @@ secret.devopsToken.enabled 为 true 时，未填写则复用已有 Secret 或随
 {{- $_ := set .Values "config" dict -}}
 {{- end -}}
 {{- include "bkci.secrets.getOrGenerate" (dict
-  "enabled" .Values.secret.devopsToken.enabled
+  "autoGenerate" .Values.secret.devopsToken.autoGenerate
   "configured" .Values.config.bkCiDevopsToken
   "secretName" (include "bkci.devopsToken.secretName" .)
   "key" "token"

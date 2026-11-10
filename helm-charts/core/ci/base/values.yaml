@@ -39,8 +39,8 @@ configmap:
 # Secret 配置
 secret:
   devopsToken:
-    # 是否由 Chart 自动生成并维护 Secret；关闭时只使用 config.bkCiDevopsToken
-    enabled: true
+    # 是否自动生成 token 并存入 Secret；关闭时不创建 Secret，只使用 config.bkCiDevopsToken
+    autoGenerate: true
 
 # 镜像配置
 gatewayImage:
