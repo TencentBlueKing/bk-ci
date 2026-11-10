@@ -53,7 +53,7 @@ export default {
             },
             {
                 test: /\.js$/,
-                include: [resolve('src')],
+                include: [resolve('src'), resolve('../common-lib')],
                 use: {
                     loader: 'babel-loader',
                     options: {
