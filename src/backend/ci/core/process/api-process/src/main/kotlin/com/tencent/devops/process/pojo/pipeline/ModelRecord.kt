@@ -30,6 +30,8 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.BuildRunningInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
@@ -110,5 +112,9 @@ data class ModelRecord(
     @get:Schema(title = "版本是否变更", required = false)
     val versionChange: Boolean? = false,
     @get:Schema(title = "取消构建权限", required = false)
-    var cancelBuildPerm: Boolean? = null
+    var cancelBuildPerm: Boolean? = null,
+    @get:Schema(title = "构建终态详情(取消/失败/超时等)", required = false)
+    val buildEndInfo: BuildEndInfo? = null,
+    @get:Schema(title = "构建运行态详情(排队中/执行中)，构建结束后为空", required = false)
+    var buildRunningInfo: BuildRunningInfo? = null
 )

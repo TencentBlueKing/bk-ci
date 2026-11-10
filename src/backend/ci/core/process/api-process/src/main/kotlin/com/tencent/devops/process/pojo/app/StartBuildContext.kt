@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -44,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
@@ -157,7 +156,9 @@ data class StartBuildContext(
     // 矩阵局部重试：目标父矩阵容器ID，非空表示本次为矩阵组内的局部重试
     val retryMatrixGroupId: String? = null,
     // 矩阵局部重试：目标子容器ID，为空且 retryFailedContainer=true 时表示重试该矩阵下所有失败子Job
-    val retryMatrixContainerId: String? = null
+    val retryMatrixContainerId: String? = null,
+    // 同一批标识。null 未配置；空串表示配置了但启动时解析为空
+    val concurrencySubGroup: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -416,26 +417,20 @@ data class StartBuildContext(
     /**
      * 应该跳过刷新container状态当运行时重试时
      */
-    fun shouldSkipRefreshWhenRetryRunning(container: Container): Boolean {
+    fun shouldSkipRefreshWhenRetryRunning(stage: Stage, container: Container): Boolean {
         // 运行中矩阵局部重试豁免：目标失败子容器挂在矩阵父容器的 groupContainers 下，
         // 模型遍历到的是矩阵父容器（container.id 为父ID，≠ retryTaskInContainerId 子容器ID），
         // 若按下方普通规则(id不同即跳过)父容器会被整体跳过，导致 prepareBuildContainerTasks 的矩阵分支不执行、
         // 目标子Job无法在同一执行次数下就地重置并重新下发。故本次为该父矩阵容器下的局部重试时，父容器必须参与刷新。
         if (retryOnRunningBuild && isRetryMatrixGroup(container)) return false
-        // 运行中重试, 如果当前的container依赖失败重试插件所属的container,则需要刷新
-        return if (retryOnRunningBuild && container.id != retryTaskInContainerId) {
-            val dependOnContainerId2JobIds = when (container) {
-                is VMBuildContainer -> {
-                    container.jobControlOption?.dependOnContainerId2JobIds
-                }
-
-                is NormalContainer -> {
-                    container.jobControlOption?.dependOnContainerId2JobIds
-                }
-
-                else -> null
-            } ?: emptyMap()
-            !dependOnContainerId2JobIds.keys.contains(retryTaskInContainerId)
+        // 运行中重试：直接或间接依赖被重试Job的container需要一起刷新
+        val targetContainerId = retryTaskInContainerId
+        return if (retryOnRunningBuild && container.id != targetContainerId && !targetContainerId.isNullOrBlank()) {
+            !DependOnUtils.dependOnContainer(
+                stage = stage,
+                container = container,
+                targetContainerId = targetContainerId
+            )
         } else {
             false
         }
@@ -524,6 +519,14 @@ data class StartBuildContext(
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup
                     },
+                concurrencySubGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                    ?.let {
+                        val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
+                        ConcurrencySubGroupPolicy.resolve(
+                            expression = it.concurrencySubGroup,
+                            variables = PipelineVarUtil.fillContextVarMap(webhookParam.plus(params))
+                        )
+                    },
                 triggerReviewers = triggerReviewers,
                 startBuildStatus =
                 if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
@@ -563,7 +566,7 @@ data class StartBuildContext(
                     params[PIPELINE_TRIGGER_EVENT_TYPE] to params[CI_NODE_ID]
                 }
 
-                params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name -> {
+                params[PIPELINE_WEBHOOK_TYPE] in setOf(CodeType.GIT.name, CodeType.TGIT.name) -> {
                     params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] to params[PIPELINE_WEBHOOK_REVISION]
                 }
 

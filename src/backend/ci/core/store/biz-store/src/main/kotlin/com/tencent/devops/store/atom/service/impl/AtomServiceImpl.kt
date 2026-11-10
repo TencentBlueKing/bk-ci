@@ -81,6 +81,7 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -1079,6 +1080,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val classType = handleClassType(atomRequest.os, atomRequest.serviceScopeConfigs)
         atomRequest.os.sort() // 给操作系统排序
         atomDao.addAtomFromOp(dslContext, userId, id, classType, atomRequest)
+
+        // 插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomRequest.atomCode)
+
         return Result(true)
     }
 
@@ -1212,6 +1217,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     serviceScope = atomUpdateRequest.getEffectiveServiceScope()
                 )
             }
+
+            // 插件参数定义变更后，失效参数联动配置缓存。
+            AtomPropsCacheManager.invalidate(redisOperation, atomCode)
+
             Result(true)
         } else {
             I18nUtil.generateResponseDataObject(
@@ -1227,11 +1236,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 删除插件信息
      */
     override fun deletePipelineAtom(id: String): Result<Boolean> {
+        // 删除前先取插件标识，删除后无法再查到该插件的版本数据。
+        val atomCode = atomDao.getPipelineAtom(dslContext, id)?.atomCode
+
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 删除插件信息
             atomDao.delete(context, id)
         }
+
+        // 插件参数定义被删除，失效参数联动配置缓存。
+        atomCode?.let { AtomPropsCacheManager.invalidate(redisOperation, it) }
+
         return Result(true)
     }
 

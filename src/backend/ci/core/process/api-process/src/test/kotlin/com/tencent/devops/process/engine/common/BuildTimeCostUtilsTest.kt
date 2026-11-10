@@ -81,4 +81,102 @@ internal class BuildTimeCostUtilsTest {
         val ans = BuildTimeCostUtils.mergeTimeLine(left, right)
         Assertions.assertEquals(ans, listOf(BuildRecordTimeLine.Moment(2L, 4L), BuildRecordTimeLine.Moment(6L, 9L)))
     }
+
+    @Test
+    fun partitionOverlappingExecuteUsesUnion() {
+        val cost = BuildTimeCostUtils.partitionTimeCost(
+            totalCost = 100,
+            executeMoments = listOf(
+                BuildRecordTimeLine.Moment(0, 80),
+                BuildRecordTimeLine.Moment(20, 60)
+            ),
+            waitMoments = emptyList(),
+            queueMoments = emptyList(),
+            queueInWait = false
+        )
+        Assertions.assertEquals(80, cost.executeCost)
+        Assertions.assertEquals(20, cost.systemCost)
+        Assertions.assertEquals(100, cost.executeCost + cost.systemCost + cost.waitCost + cost.queueCost)
+    }
+
+    @Test
+    fun partitionSerialExecuteSums() {
+        val cost = BuildTimeCostUtils.partitionTimeCost(
+            totalCost = 30,
+            executeMoments = listOf(
+                BuildRecordTimeLine.Moment(0, 10),
+                BuildRecordTimeLine.Moment(10, 30)
+            ),
+            waitMoments = emptyList(),
+            queueMoments = emptyList(),
+            queueInWait = false
+        )
+        Assertions.assertEquals(30, cost.executeCost)
+        Assertions.assertEquals(0, cost.systemCost)
+    }
+
+    @Test
+    fun partitionQueueNotCoveredByExecuteGoesToWaitWhenQueuedInWait() {
+        val cost = BuildTimeCostUtils.partitionTimeCost(
+            totalCost = 50,
+            executeMoments = listOf(BuildRecordTimeLine.Moment(20, 50)),
+            waitMoments = emptyList(),
+            queueMoments = listOf(BuildRecordTimeLine.Moment(0, 20)),
+            queueInWait = true
+        )
+        Assertions.assertEquals(30, cost.executeCost)
+        Assertions.assertEquals(20, cost.waitCost)
+        Assertions.assertEquals(20, cost.queueCost)
+        Assertions.assertEquals(0, cost.systemCost)
+    }
+
+    @Test
+    fun partitionQueueOverlappingExecuteIsNotDoubleCounted() {
+        val cost = BuildTimeCostUtils.partitionTimeCost(
+            totalCost = 40,
+            executeMoments = listOf(BuildRecordTimeLine.Moment(0, 40)),
+            waitMoments = emptyList(),
+            queueMoments = listOf(BuildRecordTimeLine.Moment(0, 15)),
+            queueInWait = true
+        )
+        Assertions.assertEquals(40, cost.executeCost)
+        Assertions.assertEquals(0, cost.waitCost)
+        Assertions.assertEquals(0, cost.systemCost)
+    }
+
+    @Test
+    fun criticalPathParallelIsMax() {
+        val cost = BuildTimeCostUtils.criticalPathCost(
+            jobCosts = mapOf("a" to 10L, "b" to 30L),
+            dependencies = emptyMap()
+        )
+        Assertions.assertEquals(30L, cost)
+    }
+
+    @Test
+    fun criticalPathSerialChainSums() {
+        val cost = BuildTimeCostUtils.criticalPathCost(
+            jobCosts = mapOf("a" to 10L, "b" to 15L),
+            dependencies = mapOf("b" to setOf("a"))
+        )
+        Assertions.assertEquals(25L, cost)
+    }
+
+    @Test
+    fun criticalPathDiamondUsesLongestBranch() {
+        val cost = BuildTimeCostUtils.criticalPathCost(
+            jobCosts = mapOf("a" to 10L, "b" to 4L, "c" to 6L),
+            dependencies = mapOf("c" to setOf("a", "b"))
+        )
+        Assertions.assertEquals(16L, cost)
+    }
+
+    @Test
+    fun criticalPathCycleDoesNotLoop() {
+        val cost = BuildTimeCostUtils.criticalPathCost(
+            jobCosts = mapOf("a" to 10L, "b" to 5L),
+            dependencies = mapOf("a" to setOf("b"), "b" to setOf("a"))
+        )
+        Assertions.assertEquals(15L, cost)
+    }
 }

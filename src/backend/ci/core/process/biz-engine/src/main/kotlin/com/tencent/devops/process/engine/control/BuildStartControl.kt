@@ -55,7 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.common.pipeline.utils.ConcurrencySubGroupPolicy
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -71,9 +71,8 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
-import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
-import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
@@ -90,6 +89,8 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelContext
+import com.tencent.devops.process.engine.utils.ConcurrencyCancelGuardUtils
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -98,11 +99,11 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import java.time.LocalDateTime
-import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import kotlin.math.max
 
 /**
  * 构建控制器
@@ -239,6 +240,8 @@ class BuildStartControl @Autowired constructor(
                 pipelineVersion = buildInfo.version
             )
 
+            setting?.correctAndPadding() // 纠正历史数据
+
             if (setting?.runLockType == PipelineRunLockType.MULTIPLE) {
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     // 并发时不按排队队列领取，直接更改状态为队列待处理
@@ -254,7 +257,7 @@ class BuildStartControl @Autowired constructor(
                     canStart = checkRunningCountWithLimit(
                         setting = setting,
                         executeCount = executeCount,
-                        limitCount = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                        limitCount = setting.maxConRunningQueueSize!!
                     )
                 } else {
                     buildLogPrinter.addLine(
@@ -265,7 +268,7 @@ class BuildStartControl @Autowired constructor(
                 }
             }
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
-            if (setting?.runLockType == PipelineRunLockType.SINGLE ||
+            else if (setting?.runLockType == PipelineRunLockType.SINGLE ||
                 setting?.runLockType == PipelineRunLockType.SINGLE_LOCK
             ) {
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
@@ -273,11 +276,7 @@ class BuildStartControl @Autowired constructor(
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
                 }
                 if (canStart) {
-                    canStart = checkRunningCountWithLimit(
-                        setting = setting,
-                        executeCount = executeCount,
-                        limitCount = 1
-                    )
+                    canStart = checkRunningCountWithLimit(setting, executeCount = executeCount, limitCount = 1)
                 } else {
                     buildLogPrinter.addLine(
                         message = "Waiting build #${buildInfo.buildNum - 1}",
@@ -285,14 +284,8 @@ class BuildStartControl @Autowired constructor(
                         jobId = null, stepId = TAG
                     )
                 }
-            }
-
-            if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
-                canStart = checkGroupType(
-                    buildInfo = buildInfo,
-                    setting = setting,
-                    executeCount = executeCount
-                )
+            } else if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                canStart = checkGroupType(buildInfo = buildInfo, setting = setting, executeCount = executeCount)
             }
 
             if (canStart) {
@@ -315,7 +308,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo, setting)
+                broadcastStartEvent(buildInfo, pipelineSetting = setting)
             } else {
                 broadcastQueueEvent(buildInfo)
             }
@@ -352,6 +345,13 @@ class BuildStartControl @Autowired constructor(
             }.onFailure {
                 LOG.warn("ENGINE|$buildId|$source|$pipelineId|$concurrencyGroup|QUEUE_TRIM_FAIL", it)
             }
+            // 调用顺序：QueueInterceptor 在历史入库前跑过一次同一批取消，当时多半还没有构建号，经常取消不到。
+            // 这里记录已入库且持有组锁，按构建号比较才是去重依据。
+            cancelOlderSameBatch(
+                buildInfo = buildInfo,
+                setting = setting,
+                concurrencyGroup = concurrencyGroup
+            )
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                 // 只有最新进来排队的构建才能QUEUE -> QUEUE_CACHE
                 checkStart = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
@@ -395,7 +395,11 @@ class BuildStartControl @Autowired constructor(
                         params = arrayOf(concurrencyGroup)
                     )
                 )
-                if (setting.concurrencyCancelInProgress) {
+                // 同一批标识已配置时，取消发生在新构建到达。这里只保留组锁，避免按 ① 跨流水线取消。
+                if (setting.concurrencyCancelInProgress &&
+                    buildInfo.concurrencySubGroup == null &&
+                    setting.concurrencySubGroup.isNullOrBlank()
+                ) {
                     val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = buildInfo.pipelineId,
@@ -447,6 +451,64 @@ class BuildStartControl @Autowired constructor(
             }
         }
         return checkStart
+    }
+
+    /**
+     * 同一批去重的权威入口。此时构建历史已写入，并且持有并发组锁。
+     *
+     * 只取消本流水线内、解析值相同、构建号更小的构建。③（cancelInProgress）含运行中，④ 只含排队。
+     * 构建上存的是空串或字面量 null 时，[ConcurrencySubGroupPolicy.effectiveBatchId] 为空，直接返回，
+     * 不按 ① 跨流水线取消。原因文案的 {0} 是这次触发取代的构建链接。
+     */
+    private fun PipelineBuildStartEvent.cancelOlderSameBatch(
+        buildInfo: BuildInfo,
+        setting: PipelineSetting,
+        concurrencyGroup: String
+    ) {
+        val batchId = ConcurrencySubGroupPolicy.effectiveBatchId(buildInfo.concurrencySubGroup) ?: return
+        val status = if (setting.concurrencyCancelInProgress) {
+            listOf(BuildStatus.RUNNING, BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
+        } else {
+            listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
+        }
+        val targets = ConcurrencyCancelGuardUtils.olderSameBatch(
+            candidateBuilds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                projectId = projectId,
+                concurrencyGroup = concurrencyGroup,
+                status = status,
+                excludeBuildId = buildId
+            ),
+            pipelineId = pipelineId,
+            currentBuildId = buildId,
+            currentBuildNum = buildInfo.buildNum,
+            batchId = batchId
+        )
+        if (targets.isEmpty()) {
+            return
+        }
+        val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
+        val reason = I18nUtil.getCodeLanMessage(
+            messageCode = ProcessMessageCode.BK_CONCURRENCY_SUB_GROUP_REPLACED,
+            params = arrayOf("<a target='_blank' href='$detailUrl'>$buildId</a>")
+        )
+        targets.forEach { target ->
+            pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                projectId = projectId,
+                pipelineId = target.pipelineId,
+                buildId = target.buildId,
+                userId = buildInfo.startUser,
+                groupName = concurrencyGroup,
+                detailUrl = detailUrl,
+                reasonMessage = reason
+            )
+        }
     }
 
     private fun PipelineBuildStartEvent.checkRunningCountWithLimit(
@@ -830,7 +892,10 @@ class BuildStartControl @Autowired constructor(
                 PipelineBuildCancelEvent(
                     source = TAG, projectId = projectId, pipelineId = pipelineId,
                     userId = userId, buildId = buildId, status = BuildStatus.UNEXEC,
-                    executeCount = executeCount
+                    executeCount = executeCount,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_MODEL_NOT_FOUND
+                    )
                 )
             )
             return // model不存在直接取消构建

@@ -132,7 +132,8 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
-        statusSet: Set<BuildStatus>? = null
+        statusSet: Set<BuildStatus>? = null,
+        executeCount: Int? = null
     ): List<PipelineBuildContainer> {
         return pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
@@ -140,7 +141,8 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             stageId = stageId,
             containsMatrix = containsMatrix,
-            statusSet = statusSet
+            statusSet = statusSet,
+            executeCount = executeCount
         )
     }
 
@@ -192,6 +194,24 @@ class PipelineContainerService @Autowired constructor(
     fun batchUpdate(transactionContext: DSLContext?, containerList: List<PipelineBuildContainer>) {
         JooqUtils.retryWhenDeadLock {
             pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
+        }
+    }
+
+    fun batchUpdateControlOption(containerList: List<PipelineBuildContainer>) {
+        if (containerList.isEmpty()) {
+            return
+        }
+        JooqUtils.retryWhenDeadLock {
+            containerList.forEach { container ->
+                pipelineBuildContainerDao.updateControlOption(
+                    dslContext = dslContext,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    stageId = container.stageId,
+                    containerId = container.containerId,
+                    controlOption = container.controlOption
+                )
+            }
         }
     }
 

@@ -31,8 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "AI热点问题")
 data class HotQuestionVO(
-    @get:Schema(title = "问题ID")
-    val id: String,
+    @get:Schema(title = "问题ID，创建时可空，由服务端生成")
+    val id: String? = null,
     @get:Schema(title = "问题文案")
     val question: String
 )

@@ -81,6 +81,16 @@ data class PreTemplateScriptBuildYamlV3Parser(
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
+
+        // PreTriggerOnV3 已声明的 YAML 字段名（含 @JsonProperty 重命名），对象形态中不在此集合的 key 视为通用触发器
+        private val preTriggerOnV3Keys: Set<String> by lazy {
+            val mapper = JsonUtil.getObjectMapper()
+            mapper.serializationConfig
+                .introspect(mapper.constructType(PreTriggerOnV3::class.java))
+                .findProperties()
+                .map { it.name }
+                .toSet()
+        }
     }
 
     init {
@@ -152,7 +162,12 @@ data class PreTemplateScriptBuildYamlV3Parser(
                 baseOk = true
                 return@forEach
             }
-            res.add((TriggerType.parse(it.type) ?: TriggerType.parse(default)) to ScriptYmlUtils.formatTriggerOn(it))
+            val type = if (it.type == null) {
+                TriggerType.parse(default)
+            } else {
+                TriggerType.parse(it.type) ?: TriggerType.GENERIC
+            }
+            res.add(type to ScriptYmlUtils.formatTriggerOn(it))
         }
         return res
     }
@@ -200,14 +215,41 @@ data class PreTemplateScriptBuildYamlV3Parser(
 
     private fun makeRunsOn(): List<PreTriggerOnV3>? {
         if (triggerOn == null) return null
-        // 简写方式
+        // 对象形态
         if (triggerOn is Map<*, *>) {
-            val new = JsonUtil.anyTo(triggerOn, object : TypeReference<PreTriggerOnV3>() {})
-            return listOf(PreTriggerOnV3(manual = new.manual, schedules = new.schedules, remote = new.remote), new)
+            val map = triggerOn as Map<*, *>
+            // 统一（通用）触发器框架「type + 事件类型」形态：事件 key 与 type 平级
+            val eventKeys = eventKeys(map)
+            // 简写方式（存量）：其余 key 拆成基础触发 + 默认代码库触发
+            val rest = map.filterKeys { it !in eventKeys }
+            val repoTrigger = JsonUtil.anyTo(rest, object : TypeReference<PreTriggerOnV3>() {})
+            eventKeys.forEach { key -> repoTrigger.events[key as String] = map[key] }
+            val baseTrigger = PreTriggerOnV3(
+                manual = repoTrigger.manual,
+                schedules = repoTrigger.schedules,
+                remote = repoTrigger.remote
+            )
+            return listOf(baseTrigger, repoTrigger)
         }
         if (triggerOn is List<*>) {
-            return JsonUtil.anyTo(triggerOn, object : TypeReference<List<PreTriggerOnV3>>() {})
+            return (triggerOn as List<*>).map { item ->
+                val pre = JsonUtil.anyTo(item, object : TypeReference<PreTriggerOnV3>() {})
+                (item as? Map<*, *>)?.let { map ->
+                    eventKeys(map).forEach { key -> pre.events[key as String] = map[key] }
+                }
+                pre
+            }
         }
         return null
+    }
+
+    /**
+     * 不是 PreTriggerOnV3 已有字段且值为对象的 key，视为通用框架触发器的事件类型（如 arrived）。
+     *
+     * 事件载荷原样放入 [PreTriggerOnV3.events]，由 type 对应的 TriggerConverter 负责解析，
+     * 新增触发器/事件类型无需改动本类与 PreTriggerOnV3。
+     */
+    private fun eventKeys(map: Map<*, *>): List<Any?> = map.keys.filter { key ->
+        key is String && key !in preTriggerOnV3Keys && map[key] is Map<*, *>
     }
 }

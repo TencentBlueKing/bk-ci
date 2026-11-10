@@ -16,6 +16,8 @@
 </template>
 
 <script>
+    import { ARTIFACTORY_API_URL_PREFIX } from '@/store/constants'
+
     export default {
         props: {
             filePath: String,
@@ -32,7 +34,7 @@
         },
         computed: {
             uploadAcrtifactUrl () {
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/file/uploadToPath`
+                return `${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/uploadToPath`
             }
         },
         methods: {
@@ -61,26 +63,34 @@
                     this.$emit('handle-change', file.name)
                     const formData = new FormData()
                     setTimeout(async () => {
-                        const path = typeof this.filePath === 'string' ? this.filePath : this.filePath.directory
-                        formData.append('file', file.origin)
-                        formData.append('projectId', this.$route.params.projectId)
-                        formData.append('path', path)
-                        
-                        const response = await this.$ajax.post(`${this.uploadAcrtifactUrl}`, formData, {
-                            headers: {
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        })
-                        this.files = res.fileList
-                        this.files[0].progress = '100%'
-                        this.$refs.uploadRef?.handleSuccess(response, this.files[0])
-                        this.$refs.uploadRef?.hideFileList()
-                        
-                        this.tip = response.data !== 'true' ? response.data : this.$t('fileUploadSuccess')
-                        this.$showTips({
-                            theme: response.data !== 'true' ? 'error' : 'success',
-                            message: `${file.name}文件上传成功` || response.data
-                        })
+                        try {
+                            const path = typeof this.filePath === 'string' ? this.filePath : this.filePath.directory
+                            formData.append('file', file.origin)
+                            formData.append('projectId', this.$route.params.projectId)
+                            formData.append('path', path)
+
+                            const response = await this.$ajax.post(`${this.uploadAcrtifactUrl}`, formData, {
+                                headers: {
+                                    'Content-Type': 'multipart/form-data'
+                                }
+                            })
+                            this.files = res.fileList
+                            this.files[0].progress = '100%'
+                            this.$refs.uploadRef?.handleSuccess(response, this.files[0])
+                            this.$refs.uploadRef?.hideFileList()
+
+                            this.tip = response.data !== 'true' ? response.data : this.$t('fileUploadSuccess')
+                            this.$showTips({
+                                theme: response.data !== 'true' ? 'error' : 'success',
+                                message: `${file.name}文件上传成功` || response.data
+                            })
+                        } catch (e) {
+                            this.$showTips({
+                                theme: 'error',
+                                message: e?.message || e
+                            })
+                            this.handleUploadError()
+                        }
                     }, 300)
                 } catch (e) {
                     console.error(e)

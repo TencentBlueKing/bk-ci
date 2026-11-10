@@ -88,6 +88,11 @@ class PipelineVersionPersistenceService @Autowired constructor(
             val pipelineSetting = pipelineSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion!!
             )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineResourceVersion = pipelineResourceVersion,
+                pipelineSetting = pipelineSetting
+            )
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 createPipelineInfo(

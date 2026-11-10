@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.param
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_QUALITY_REPORT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS
@@ -85,6 +86,7 @@ class TGitWebHookStartParam @Autowired constructor(
                 matchResult.extra[MATCH_LABEL] ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = enableCheck ?: true
+            startParams[BK_REPO_GIT_WEBHOOK_ENABLE_QUALITY_REPORT] = enableQualityReport ?: true
             startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
                 if (repo is CodeTGitRepository && repo.authType == RepoAuthType.OAUTH) {
                     repo.userName

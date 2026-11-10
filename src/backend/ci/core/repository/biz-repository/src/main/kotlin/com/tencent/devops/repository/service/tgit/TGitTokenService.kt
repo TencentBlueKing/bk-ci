@@ -97,10 +97,11 @@ class TGitTokenService @Autowired constructor(
     fun saveAccessToken(userId: String, oauthUserId: String, tGitToken: GitToken): Int {
         tGitToken.accessToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.accessToken)
         tGitToken.refreshToken = gitTokenCryptoHelper.encryptSm4ButAes(tGitToken.refreshToken)
+        // USER_ID 存 oauth 授权账号，OPERATOR 存蓝盾操作人
+        tGitToken.operator = userId
         return tGitTokenDao.saveAccessToken(
             dslContext = dslContext,
-            userId = userId,
-            oauthUserId = oauthUserId,
+            userId = oauthUserId,
             token = tGitToken,
             aesKeySha = gitTokenCryptoHelper.currentKeySha()
         )

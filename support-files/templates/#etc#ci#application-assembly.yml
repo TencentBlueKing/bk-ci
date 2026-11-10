@@ -191,7 +191,7 @@ log:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
     closeInDay: __BK_CI_LOG_COLD_DAY__             # 索引自动关闭时间，留空则为永不关闭
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
-  # 通过本地文件系统进行存储的必要配置
+  # 社区版本地文件存储。仅当 type=lucene 时生效，不影响 elasticsearch 存量部署。
   lucene:
     dataDirectory: __BK_CI_LUCENE_DATA_DIR__        # 建立lucene索引的根目录
     indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内
@@ -487,6 +487,24 @@ leaf:
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
   name: leaf
+
+# 外部系统集成配置
+external:
+  webhook:
+    tapd:
+      # 与 TAPD webhook 配置中一致的密钥；留空时不做合法性校验
+      secret: __BK_CI_TAPD_WEBHOOK_SECRET__
+      # TAPD 站点访问地址（scheme://host[:port]），用于组装工单详情页链接（ci.event_url）
+      webUrl: __BK_CI_TAPD_WEBHOOK_WEB_URL__
+    artifact:
+      # 制品库回调地址，注册 webhook 时下发给制品库
+      callbackUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/webhook/artifact
+      # 回调密钥，注册时下发、回调时校验；留空时拒绝所有回调，且无法保存带制品到达触发器的流水线
+      secret: __BK_CI_ARTIFACT_WEBHOOK_SECRET__
+      rate-limit:
+        # 同一制品仓库在窗口内最多处理的回调事件数，超出直接丢弃，<=0 表示不限制
+        window-seconds: 60
+        max-count: 100
 
 sharding:
   databaseShardingStrategy:

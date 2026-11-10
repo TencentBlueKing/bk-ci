@@ -30,6 +30,7 @@ package com.tencent.devops.project.dao
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.user.UserFullDepartment
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -38,6 +39,7 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class UserDao {
+
     fun get(dslContext: DSLContext, userId: String): TUserRecord? {
         with(TUser.T_USER) {
             return dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchOne()
@@ -81,7 +83,8 @@ class UserDao {
                 GROUP_NAME,
                 CREATE_TIME,
                 UPDATE_TIME,
-                USER_TYPE
+                USER_TYPE,
+                FULL_DEPARTMENTS
             ).values(
                 userDeptDetail.userId,
                 userDeptDetail.name,
@@ -97,7 +100,8 @@ class UserDao {
                 userDeptDetail.groupName,
                 now,
                 now,
-                publicAccount
+                publicAccount,
+                UserFullDepartment.toJson(userDeptDetail.fullDepartments)
             ).execute()
         }
     }
@@ -117,6 +121,7 @@ class UserDao {
                 .set(CENTER_NAME, userDeptDetail.centerName)
                 .set(GROYP_ID, userDeptDetail.groupId.toInt())
                 .set(GROUP_NAME, userDeptDetail.groupName)
+                .set(FULL_DEPARTMENTS, UserFullDepartment.toJson(userDeptDetail.fullDepartments))
                 .set(UPDATE_TIME, LocalDateTime.now())
             userDeptDetail.businessLineId?.let { baseStep.set(BUSINESS_LINE_ID, it.toLong()) }
             userDeptDetail.businessLineName?.let { baseStep.set(BUSINESS_LINE_NAME, it) }
@@ -136,7 +141,8 @@ class UserDao {
             groupId = userRecord.groypId?.toString() ?: "",
             businessLineId = userRecord.businessLineId?.toString(),
             businessLineName = userRecord.businessLineName,
-            name = userRecord.name
+            name = userRecord.name,
+            fullDepartments = UserFullDepartment.fromJson(userRecord.fullDepartments)
         )
     }
 

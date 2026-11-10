@@ -30,7 +30,6 @@ package com.tencent.devops.environment.init
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.service.AgentUrlService
-import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
@@ -41,7 +40,7 @@ class EnvironmentConfig {
 
     @Bean
     @ConditionalOnMissingBean(AgentUrlService::class)
-    fun agentUrlService(commonConfig: CommonConfig) = BluekingAgentUrlServiceImpl(commonConfig)
+    fun agentUrlService(commonConfig: CommonConfig) = AgentUrlService(commonConfig)
 
     @Bean
     fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)

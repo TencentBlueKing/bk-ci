@@ -683,5 +683,51 @@ class ControlUtilsTest : TestBase() {
                 hasFailedTaskInSuccessContainer = false
             )
         )
+
+        // 取消不是失败。即使前面有失败继续，也不再领取「失败才运行」的插件
+        Assertions.assertTrue(
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = elementAdditionalOptions(
+                    enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+                ),
+                containerFinalStatus = BuildStatus.CANCELED,
+                variables = variables,
+                hasFailedTaskInSuccessContainer = true
+            )
+        )
+        Assertions.assertTrue(
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = elementAdditionalOptions(
+                    enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP
+                ),
+                containerFinalStatus = BuildStatus.CANCELED,
+                variables = variables,
+                hasFailedTaskInSuccessContainer = false
+            )
+        )
+        Assertions.assertFalse(
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = elementAdditionalOptions(
+                    enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP
+                ),
+                containerFinalStatus = BuildStatus.FAILED,
+                variables = variables,
+                hasFailedTaskInSuccessContainer = false
+            )
+        )
+        Assertions.assertFalse(
+            ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = elementAdditionalOptions(
+                    enable = true, runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+                ),
+                containerFinalStatus = BuildStatus.CANCELED,
+                variables = variables,
+                hasFailedTaskInSuccessContainer = true
+            )
+        )
     }
 }

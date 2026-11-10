@@ -29,6 +29,10 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.trigger.artifact.ArtifactEventTriggerBuildService
+import com.tencent.devops.process.trigger.artifact.ArtifactWebhookRequestService
+import com.tencent.devops.process.trigger.event.ArtifactWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.ArtifactWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
@@ -129,5 +133,19 @@ class WebhookMQConfiguration @Autowired constructor() {
         @Autowired tapdEventTriggerBuildService: TapdEventTriggerBuildService
     ) = ScsConsumerBuilder.build<TapdWebhookTriggerEvent> {
         tapdEventTriggerBuildService.tapdWebhookTrigger(it)
+    }
+
+    @EventConsumer
+    fun artifactWebhookRequestEventConsumer(
+        @Autowired artifactWebhookRequestService: ArtifactWebhookRequestService
+    ) = ScsConsumerBuilder.build<ArtifactWebhookRequestEvent> {
+        artifactWebhookRequestService.handleRequest(it)
+    }
+
+    @EventConsumer
+    fun artifactWebhookTriggerEventConsumer(
+        @Autowired artifactEventTriggerBuildService: ArtifactEventTriggerBuildService
+    ) = ScsConsumerBuilder.build<ArtifactWebhookTriggerEvent> {
+        artifactEventTriggerBuildService.artifactWebhookTrigger(it)
     }
 }
