@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.store.config
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -38,7 +39,7 @@ class BkRepoStoreConfig {
 
     // 蓝盾新仓库研发商店项目名称
     @Value("\${bkrepo.store.projectName:bk-store}")
-    val bkrepoStoreProjectName: String = "bk-store"
+    private val bkrepoStoreProjectName: String = "bk-store"
 
     // 蓝盾新仓库研发商店用户名
     @Value("\${bkrepo.store.userName:g_bkstore}")
@@ -47,4 +48,12 @@ class BkRepoStoreConfig {
     // 蓝盾新仓库研发商店密码
     @Value("\${bkrepo.store.password:}")
     val bkrepoStorePassword: String = ""
+
+    // 获取项目名称
+    fun getBkrepoStoreProjectName(): String {
+        return TenantUtils.parseEnglishName(
+            tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
+            tenantEnglishName = bkrepoStoreProjectName
+        )
+    }
 }

@@ -38,7 +38,7 @@ export default {
         rules: [
             {
                 test: /\.vue$/,
-                include: [resolve('src'), /node_modules\/vue-echarts/],
+                include: [resolve('src'), resolve('../common-lib'), /node_modules\/vue-echarts/],
                 use: {
                     loader: 'vue-loader',
                     options: {
@@ -53,7 +53,7 @@ export default {
             },
             {
                 test: /\.js$/,
-                include: [resolve('src')],
+                include: [resolve('src'), resolve('../common-lib')],
                 use: {
                     loader: 'babel-loader',
                     options: {

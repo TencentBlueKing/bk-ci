@@ -91,17 +91,20 @@ class RbacAuthProjectApi @Autowired constructor(
     override fun getUserProjects(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): List<String> {
         return client.get(ServiceProjectAuthResource::class).getUserProjects(
             token = tokenService.getSystemToken()!!,
-            userId = userId
+            userId = userId,
+            tenantId = tenantId
         ).data ?: emptyList()
     }
 
     override fun getUserProjectsByPermission(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         permission: AuthPermission,
         supplier: (() -> List<String>)?,
         resourceType: String?
@@ -109,6 +112,7 @@ class RbacAuthProjectApi @Autowired constructor(
         return client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
             token = tokenService.getSystemToken()!!,
             userId = userId,
+            tenantId = tenantId,
             action = permission.value,
             resourceType = resourceType
         ).data ?: emptyList()
@@ -117,9 +121,10 @@ class RbacAuthProjectApi @Autowired constructor(
     override fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): Map<String, String> {
-        val projectList = getUserProjects(serviceCode, userId, supplier)
+        val projectList = getUserProjects(serviceCode, userId, tenantId, supplier = supplier)
         val projectMap = mutableMapOf<String, String>()
         projectList.map {
             projectMap[it] = it

@@ -91,23 +91,23 @@ init:
   plugin:
     enabled: false
     atoms:
-    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.16/checkout_en.zip
       code: checkout
-    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.5/run-v1.0.5.zip
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.1.3/run-v1.1.3.zip
       code: run
-    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.6/ci-SubPipelineExec_en.zip
+    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.12/ci-SubPipelineExec_en.zip
       code: SubPipelineExec
-    - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.1/uploadArtifact_en.zip
+    - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.4/uploadArtifact_en.zip
       code: uploadArtifact
     - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.1/uploadReport_en.zip
       code: uploadReport
-    - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.1/AcrossProjectDistribution_en.zip
+    - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.4/AcrossProjectDistribution_en.zip
       code: AcrossProjectDistribution
-    - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.2/downloadArtifact_en.zip
+    - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.5/downloadArtifact_en.zip
       code: downloadArtifact
-    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.13/PerforceSync_en.zip
+    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.23/PerforceSync_en.zip
       code: PerforceSync
-    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.0.12/CodeCCCheckAtom_en.zip
+    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.1.4/CodeCCCheckAtom_en.zip
       code: CodeCCCheckAtom
 
 # 多集群开关
@@ -393,6 +393,13 @@ notify:
 # process Deployment
 process:
   <<: *javaMicroservice
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
 
 # project Deployment
 project:
@@ -419,13 +426,18 @@ websocket:
   <<: *javaMicroservice
 
 # openapi Deployment
+# 蓝鲸网关 JWT 公钥。默认关闭。开启用户态解析时同时设置：
+#   config.bkCiOpenapiApiAuth=true
+#   config.bkCiOpenapiApiBluekingEnable=true
+#   config.bkCiOpenapiApiPubOuter 为容器内公钥文件路径，父目录须已在镜像中，例如
+#     /data/workspace/openapi/<文件名>.pub。Chart 只挂载该文件。
+#   openapi.secret.content 为公钥文件的单行 base64。Secret 的 data key 是路径中的文件名。
 openapi:
   <<: *javaMicroservice
   enabled: false
   secret:
     enabled: false
     content: ""
-
 
 turbo:
   enabled: false

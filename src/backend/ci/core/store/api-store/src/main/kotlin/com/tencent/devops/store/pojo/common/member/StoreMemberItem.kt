@@ -45,8 +45,8 @@ data class StoreMemberItem(
     val creator: String,
     @get:Schema(title = "修改人")
     val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: String,
-    @get:Schema(title = "修改时间")
-    val updateTime: String
+    @get:Schema(title = "创建时间（毫秒时间戳）")
+    val createTime: Long,
+    @get:Schema(title = "修改时间（毫秒时间戳）")
+    val updateTime: Long
 )

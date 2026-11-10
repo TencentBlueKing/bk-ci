@@ -289,10 +289,7 @@ function prezero (num) {
     return num
 }
 
-export function convertTime (ms) {
-    const time = new Date(ms)
-    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
-}
+export { convertTime, formatByUserTz, getUserTimeZone } from '../../../common-lib/time'
 
 /**
  *  转换文件大小

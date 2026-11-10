@@ -27,9 +27,7 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 @Schema(title = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
@@ -57,12 +55,10 @@ data class AtomFailDetailInfoDO(
     val classifyCode: String,
     @get:Schema(title = "启动用户")
     val startUser: String,
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @get:Schema(title = "启动时间")
-    val startTime: LocalDateTime?,
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @get:Schema(title = "结束时间")
-    val endTime: LocalDateTime?,
+    @get:Schema(title = "启动时间（毫秒时间戳）")
+    val startTime: Long?,
+    @get:Schema(title = "结束时间（毫秒时间戳）")
+    val endTime: Long?,
     @get:Schema(title = "错误的类型标识")
     val errorType: Int?,
     @get:Schema(title = "错误的类型标识名称")

@@ -33,6 +33,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class OauthUserVo(
     @get:Schema(title = "授权账号")
     val username: String,
+    @get:Schema(title = "授权账户展示名称")
+    val userDisplayName: String,
     @get:Schema(title = "操作人")
     val operator: String
 )

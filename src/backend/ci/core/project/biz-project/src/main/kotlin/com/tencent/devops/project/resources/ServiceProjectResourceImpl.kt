@@ -66,8 +66,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService
 ) : ServiceProjectResource {
 
-    override fun getProjectByUser(userName: String): Result<List<ProjectVO>> {
-        return Result(projectService.getProjectByUser(userName))
+    override fun getProjectByUser(userName: String, tenantId: String?): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectByUser(userName, tenantId))
     }
 
     override fun verifyUserProjectPermission(
@@ -88,7 +88,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
         channelCodes: String?,
         sort: ProjectSortType?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<List<ProjectVO>> {
         return Result(
             projectService.list(
@@ -97,7 +98,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 channelCodes = channelCodes,
                 sort = sort,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = tenantId
             )
         )
     }
@@ -173,14 +175,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
     @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
     ): Result<Boolean> {
         // 创建项目
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             createExtInfo = ProjectCreateExtInfo(needAuth = true, needValidate = true),
-            projectChannel = ProjectChannelCode.BS
+            projectChannel = ProjectChannelCode.BS,
+            accessToken = accessToken
         )
 
         return Result(true)
@@ -215,9 +219,19 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo))
     }
 
-    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+    override fun updateProjectName(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        tenantId: String?
+    ): Result<Boolean> {
         return Result(
-            projectService.updateProjectName(userId = userId, projectId = projectCode, projectName = projectName)
+            projectService.updateProjectName(
+                userId = userId,
+                projectId = projectCode,
+                projectName = projectName,
+                tenantId = tenantId
+            )
         )
     }
 
@@ -230,12 +244,17 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectByName(userId: String, projectName: String): Result<ProjectVO?> {
-        return Result(projectService.getProjectByName(projectName))
+    override fun getProjectByName(userId: String, tenantId: String?, projectName: String): Result<ProjectVO?> {
+        return Result(projectService.getProjectByName(projectName, tenantId))
     }
 
-    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
+    override fun validate(
+        validateType: ProjectValidateType,
+        name: String,
+        projectId: String?,
+        tenantId: String?
+    ): Result<Boolean> {
+        projectService.validate(validateType, name, projectId, tenantId)
         return Result(true)
     }
 
@@ -326,10 +345,11 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {
+    override fun getProjectListByProductId(productId: Int, tenantId: String?): Result<List<ProjectBaseInfo>> {
         return Result(
             projectService.getProjectListByProductId(
-                productId = productId
+                productId = productId,
+                tenantId = tenantId
             )
         )
     }
@@ -350,5 +370,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
             )
         )
+    }
+
+    override fun listAllTenantIds(): Result<List<String>> {
+        return Result(projectService.listAllTenantIds())
     }
 }

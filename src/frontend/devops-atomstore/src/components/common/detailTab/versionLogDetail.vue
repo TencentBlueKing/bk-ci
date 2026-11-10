@@ -35,7 +35,11 @@
             :label="$t('发布时间')"
             prop="lastUpdateTime"
             sortable
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <time-display :value="row.lastUpdateTime" />
+            </template>
+        </bk-table-column>
         <bk-table-column
             :label="$t('发布人')"
             prop="publisher"
@@ -53,8 +57,12 @@
 
 <script>
     import api from '@/api'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         props: {
             name: String,
             currentTab: String

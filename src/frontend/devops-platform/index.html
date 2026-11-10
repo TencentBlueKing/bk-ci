@@ -3,11 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="/console/static/devops-utils.js?t="></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/devops-utils.js?t="></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/url-prefix-interceptor.js"></script>
     <title>平台管理</title>
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      var PUBLIC_URL_PREFIX = "__BK_CI_PUBLIC_PATH__"; 
+      window.getRoutePrefix = function () {
+        return window.PUBLIC_URL_PREFIX + "/console";
+      };
+      // 运行时拼接资源地址，供构建产物使用（等价于 webpack 的 __webpack_public_path__）
+      window.__getPublicAssetUrl = function (file) {
+        var prefix = window.PUBLIC_URL_PREFIX || "";
+        if (prefix.indexOf("__") === 0) prefix = ""; // 占位符未被替换（开发态）
+        return prefix + "/platform/" + file;
+      };
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

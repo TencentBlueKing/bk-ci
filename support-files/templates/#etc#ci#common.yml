@@ -403,7 +403,7 @@ auth:
   gateway:
     devopsToken: __BK_CI_DEVOPS_TOKEN__
   platform:
-    manager: admin
+    manager: __BK_CI_PLATFORM_MANAGER__
 
 #bk esb config for cd plugin in pipeline
 esb:
@@ -429,6 +429,14 @@ codeoa:
 bk:
   paas:
     host: __BK_PAAS_PRIVATE_URL__
+  apigw:
+    appCode: __BK_CI_APP_CODE__
+    appSecret: __BK_CI_APP_TOKEN__
+    user: 
+      host: __BK_APIGW_USER_URL__
+    cmsi: 
+      host: __BK_APIGW_CMSI_URL__
+  enableMultiTenantMode: __BK_TENANT_ENABLED__
 
 bkci:
   security:
@@ -438,6 +446,8 @@ bkci:
   defaultLocale: __BK_CI_DEFAULT_LOCALE__
   supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
   rabbitQuorumEnable: __BK_CI_RABBIT_QUORUM_ENABLE__
+  # 子路径部署前缀，与前端 PUBLIC_PATH_PREFIX / 部署变量 BK_CI_PUBLIC_PATH 一致；根路径部署时为空
+  publicPath: __BK_CI_PUBLIC_PATH__
 
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672

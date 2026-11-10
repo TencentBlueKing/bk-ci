@@ -46,7 +46,7 @@
                                     <span :class="{ 'message-status': true, 'unread': !request.haveRead }"></span>
                                     {{ request.messageTitle }} （{{ request.contentAttr.failedNum }} / {{ request.contentAttr.total }}）
                                 </span>
-                                <span class="message-time">{{ request.createTime | timeFilter }}</span>
+                                <span class="message-time"><time-display :value="request.createTime" /></span>
                             </span>
                             <bk-table :data="request.content" :show-header="false" slot="content" class="notification-table">
                                 <bk-table-column>
@@ -84,16 +84,15 @@
 <script>
     import { notifications } from '@/http'
     import { mapState } from 'vuex'
-    import { timeFormatter } from '@/utils'
+    import TimeDisplay from '../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         filters: {
             buildNumFilter (val) {
                 return val ? `# ${val}` : '--'
-            },
-
-            timeFilter (val) {
-                return timeFormatter(val)
             }
         },
 

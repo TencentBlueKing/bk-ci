@@ -19,6 +19,7 @@
 
 <script>
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import TenantSingleton from '@/utils/tenant'
     import { coverStrTimer } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { mapActions, mapGetters } from 'vuex'
@@ -103,7 +104,8 @@
                     },
                     {
                         name: this.$t('details.trigger'),
-                        id: 'triggerUser'
+                        id: 'triggerUser',
+                        remoteMethod: TenantSingleton.fetchTenantUsers
                     },
                     {
                         name: this.$t('history.triggerType'),
@@ -177,12 +179,12 @@
                     }
                     this.statusList = statusList
                     this.triggerList = triggerList
-                    this.handlePathQuery(conditionsMap)
+                    await this.handlePathQuery(conditionsMap)
                 } catch (error) {
                     console.error(error)
                 }
             },
-            handlePathQuery (conditionsMap) {
+            async handlePathQuery (conditionsMap) {
                 // TODO 筛选参数目前不支持带#字符串回填
                 const { $route, historyPageStatus } = this
                 const pathQuery = $route.query
@@ -192,22 +194,26 @@
 
                 if (queryArr.length) {
                     const hasTimeRange = queryArr.includes('startTimeStartTime') && queryArr.includes('endTimeEndTime')
-                    const newSearchKey = queryArr.map(key => {
+                    const newSearchKey = await Promise.all(queryArr.map(async key => {
                         const newItem = this.filterData.find(item => item.id === key)
                         if (!newItem) return null
                         const valueMap = conditionsMap[key]?.reduce((acc, item) => {
                                 acc[item.id] = item.value
                                 return acc
                             }, {})
-
-                        newItem.values = newItem.multiable
-                            ? pathQuery[key].split(',').map(v => ({
-                                id: v,
-                                name: valueMap?.[v] ?? v
-                            }))
-                            : [{ id: pathQuery[key], name: valueMap?.[pathQuery[key]] ?? pathQuery[key] }]
+                        if (key === 'triggerUser') {
+                            console.log(valueMap, newItem, pathQuery[key], key)
+                            newItem.values = await TenantSingleton.fetchTenantDisplayNames(pathQuery[key])
+                        } else {
+                            newItem.values = newItem.multiable
+                                ? pathQuery[key].split(',').map(v => ({
+                                    id: v,
+                                    name: valueMap?.[v] ?? v
+                                }))
+                                : [{ id: pathQuery[key], name: valueMap?.[pathQuery[key]] ?? pathQuery[key] }]
+                        }
                         return newItem
-                    }).filter(item => !!item)
+                    }))
 
                     this.setHistoryPageStatus({
                         page,
@@ -228,7 +234,7 @@
                                 : {}),
                             ...(pathQuery.archiveFlag ? { archiveFlag: pathQuery.archiveFlag } : {})
                         },
-                        searchKey: newSearchKey
+                        searchKey: newSearchKey.filter(item => !!item)
                     })
                 }
                 this.startQuery(page)

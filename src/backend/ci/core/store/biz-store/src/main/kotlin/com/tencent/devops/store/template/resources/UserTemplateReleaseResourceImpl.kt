@@ -45,17 +45,19 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
 
     override fun addMarketTemplate(
         userId: String,
+        tenantId: String?,
         templateCode: String,
         marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean> {
-        return templateReleaseService.addMarketTemplate(userId, templateCode, marketTemplateRelRequest)
+        return templateReleaseService.addMarketTemplate(userId, templateCode, marketTemplateRelRequest, tenantId)
     }
 
     override fun updateMarketTemplate(
         userId: String,
+        tenantId: String?,
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?> {
-        return templateReleaseService.updateMarketTemplate(userId, marketTemplateUpdateRequest)
+        return templateReleaseService.updateMarketTemplate(userId, marketTemplateUpdateRequest, tenantId)
     }
 
     override fun releaseMarketTemplate(
@@ -74,8 +76,8 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo> {
-        return templateReleaseService.getProcessInfo(userId, templateId)
+    override fun getProcessInfo(userId: String, tenantId: String?, templateId: String): Result<StoreProcessInfo> {
+        return templateReleaseService.getProcessInfo(userId, templateId, tenantId)
     }
 
     override fun getProcessInfoByCode(
@@ -85,21 +87,22 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
         return templateReleaseService.getProcessInfoByCode(userId, templateCode)
     }
 
-    override fun cancelRelease(userId: String, templateId: String): Result<Boolean> {
-        return templateReleaseService.cancelRelease(userId, templateId)
+    override fun cancelRelease(userId: String, tenantId: String?, templateId: String): Result<Boolean> {
+        return templateReleaseService.cancelRelease(userId, templateId, tenantId)
     }
 
     override fun cancelReleaseByCode(userId: String, templateCode: String): Result<Boolean> {
-        return templateReleaseService.cancelRelease(userId, templateCode)
+        return templateReleaseService.cancelReleaseByCode(userId, templateCode)
     }
 
     override fun offlineTemplate(
         userId: String,
+        tenantId: String?,
         templateCode: String,
         version: String?,
         reason: String?
     ): Result<Boolean> {
-        return templateReleaseService.offlineTemplate(userId, templateCode, version, reason)
+        return templateReleaseService.offlineTemplate(userId, templateCode, version, reason, tenantId)
     }
 
     override fun offlineTemplateV2(

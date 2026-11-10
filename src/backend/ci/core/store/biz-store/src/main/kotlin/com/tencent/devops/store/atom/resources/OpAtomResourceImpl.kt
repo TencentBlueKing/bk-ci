@@ -57,12 +57,17 @@ class OpAtomResourceImpl @Autowired constructor(
     private val atomReleaseService: AtomReleaseService
 ) : OpAtomResource {
 
-    override fun add(userId: String, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
-        return atomService.savePipelineAtom(userId, atomCreateRequest)
+    override fun add(userId: String, tenantId: String?, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
+        return atomService.savePipelineAtom(userId, atomCreateRequest, tenantId)
     }
 
-    override fun update(userId: String, id: String, atomUpdateRequest: AtomUpdateRequest): Result<Boolean> {
-        return atomService.updatePipelineAtom(userId, id, atomUpdateRequest)
+    override fun update(
+        userId: String,
+        tenantId: String?,
+        id: String,
+        atomUpdateRequest: AtomUpdateRequest
+    ): Result<Boolean> {
+        return atomService.updatePipelineAtom(userId, id, atomUpdateRequest, tenantId)
     }
 
     override fun listAllPipelineAtoms(
@@ -103,30 +108,43 @@ class OpAtomResourceImpl @Autowired constructor(
         return atomService.deletePipelineAtom(id)
     }
 
-    override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
-        return opAtomService.approveAtom(userId, atomId, approveReq)
+    override fun approveAtom(
+        userId: String,
+        tenantId: String?,
+        atomId: String,
+        approveReq: ApproveReq
+    ): Result<Boolean> {
+        return opAtomService.approveAtom(userId, atomId, approveReq, tenantId)
     }
 
     override fun generateCiYaml(
+        tenantId: String?,
         atomCode: String?,
         os: String?,
         classType: String?,
         defaultShowFlag: Boolean?
     ): Result<String> {
-        return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag))
+        return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag, tenantId))
     }
 
-    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
+    override fun offlineAtom(
+        userId: String,
+        tenantId: String?,
+        atomCode: String,
+        atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean> {
         return atomReleaseService.offlineAtom(
             userId = userId,
             atomCode = atomCode,
             atomOfflineReq = atomOfflineReq,
-            checkPermissionFlag = false
+            checkPermissionFlag = false,
+            tenantId = tenantId
         )
     }
 
     override fun releaseAtom(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
@@ -141,7 +159,8 @@ class OpAtomResourceImpl @Autowired constructor(
             disposition = disposition,
             publisher = publisher,
             releaseType = releaseType,
-            version = version
+            version = version,
+            tenantId = tenantId
         )
     }
 

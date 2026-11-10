@@ -32,6 +32,10 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ENGLISH_NAME
+import com.tencent.devops.common.db.utils.TenantTableFields.TENANT_ID
+import com.tencent.devops.common.db.utils.optionalTenantId
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
@@ -39,9 +43,9 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -56,7 +60,7 @@ class ProjectApprovalDao {
         projectScope: Int
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
-            return dslContext.insertInto(
+            val affected = dslContext.insertInto(
                 this,
                 PROJECT_NAME,
                 ENGLISH_NAME,
@@ -87,7 +91,7 @@ class ProjectApprovalDao {
                 PROJECT_SCOPE
             ).values(
                 projectCreateInfo.projectName,
-                projectCreateInfo.englishName,
+                TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName),
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
@@ -141,6 +145,16 @@ class ProjectApprovalDao {
                 .set(KPI_NAME, projectCreateInfo.kpiName)
                 .set(PROJECT_SCOPE, projectScope)
                 .execute()
+            if (TenantUtils.isMultiTenantMode()) {
+                dslContext.update(this)
+                    .set(TENANT_ID, projectCreateInfo.tenantId)
+                    .set(TENANT_ENGLISH_NAME, projectCreateInfo.englishName)
+                    .where(ENGLISH_NAME.eq(
+                        TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName)
+                    ))
+                    .execute()
+            }
+            return affected
         }
     }
 
@@ -149,7 +163,6 @@ class ProjectApprovalDao {
         userId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>,
         tipsStatus: Int
     ): Int {
         return with(TProjectApproval.T_PROJECT_APPROVAL) {
@@ -317,6 +330,7 @@ class ProjectApprovalDao {
                 productId = productId,
                 productName = productName,
                 properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                tenantId = optionalTenantId(),
                 kpiCode = kpiCode,
                 kpiName = kpiName,
                 projectScope = projectScope

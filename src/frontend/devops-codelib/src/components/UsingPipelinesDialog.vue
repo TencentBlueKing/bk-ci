@@ -114,7 +114,7 @@
             },
 
             handleToPipeline (pipeline) {
-                window.open(`/console/pipeline/${this.projectId}/${pipeline.pipelineId}/history/pipeline`, '__blank')
+                window.open(`${window.getRoutePrefix()}/pipeline/${this.projectId}/${pipeline.pipelineId}/history/pipeline`, '__blank')
             }
         }
     }

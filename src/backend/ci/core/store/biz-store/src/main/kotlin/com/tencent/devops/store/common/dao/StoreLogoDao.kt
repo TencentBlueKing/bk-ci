@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.store.tables.TLogo
 import com.tencent.devops.model.store.tables.records.TLogoRecord
 import com.tencent.devops.store.pojo.common.logo.Logo
@@ -114,8 +114,8 @@ class StoreLogoDao {
                 logoType = type,
                 order = order,
                 link = link,
-                createTime = DateTimeUtil.toDateTime(createTime),
-                updateTime = DateTimeUtil.toDateTime(updateTime),
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli(),
                 creator = creator,
                 modifier = modifier
             )

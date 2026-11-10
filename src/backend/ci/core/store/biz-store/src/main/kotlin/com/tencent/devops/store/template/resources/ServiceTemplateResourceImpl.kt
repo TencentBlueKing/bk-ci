@@ -30,6 +30,7 @@ package com.tencent.devops.store.template.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
@@ -49,12 +50,17 @@ class ServiceTemplateResourceImpl @Autowired constructor(
     private val templateInstallHistoryService: TemplateInstallHistoryService,
     private val marketTemplatePublishedService: MarketTemplatePublishedService
 ) : ServiceTemplateResource {
-    override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+    override fun installTemplate(
+        userId: String,
+        tenantId: String?,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
         // 可见与可安装鉴权在marketTemplateService中实现
         val installResult = marketTemplateService.installTemplate(
             userId = userId,
             channelCode = ChannelCode.getRequestChannelCode(),
-            installTemplateReq = installTemplateReq
+            installTemplateReq = installTemplateReq,
+            tenantId = tenantId
         )
         return Result(
             status = installResult.status,
@@ -63,7 +69,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String): Result<MarketTemplateResp> {
+    override fun list(userId: String, tenantId: String?): Result<MarketTemplateResp> {
         return Result(
             marketTemplateService.list(
                 userId = userId.trim(),
@@ -76,7 +82,8 @@ class ServiceTemplateResourceImpl @Autowired constructor(
                 sortType = null,
                 projectCode = null,
                 page = null,
-                pageSize = 1
+                pageSize = 1,
+                tenantId = tenantId
             )
         )
     }
@@ -111,7 +118,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         userId: String,
         templateCode: String
     ): Result<TemplateDetail?> {
-        return marketTemplateService.getTemplateDetailByCode(userId, templateCode)
+        return marketTemplateService.getTemplateDetailByCode(userId, templateCode, TenantUtils.getTenantId())
     }
 
     override fun getMarketTemplateStatus(templateCode: String): Result<TemplateStatusEnum> {

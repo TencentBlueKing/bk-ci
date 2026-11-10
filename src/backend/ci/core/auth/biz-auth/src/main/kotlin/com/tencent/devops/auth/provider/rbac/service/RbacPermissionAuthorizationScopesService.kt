@@ -6,6 +6,7 @@ import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
@@ -53,7 +54,10 @@ class RbacPermissionAuthorizationScopesService constructor(
         logger.info("RbacPermissionMonitorService|generateMonitorAuthorizationScopes|$spaceBizId")
         return buildAuthorizationScopes(
             systemId = monitorSystemId,
-            authorizationScopesStr = authMonitorSpaceService.getMonitorGroupConfig(groupCode)!!,
+            authorizationScopesStr = authMonitorSpaceService.getMonitorGroupConfig(
+                groupCode,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )!!,
             projectCode = "-$spaceBizId",
             projectName = projectName,
             iamResourceCode = projectCode,

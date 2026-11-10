@@ -29,6 +29,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -95,7 +96,10 @@ interface ServiceProjectAuthResource {
         token: String,
         @PathParam("userId")
         @Parameter(description = "用户userId", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<List<String>>
 
     @GET
@@ -108,12 +112,15 @@ interface ServiceProjectAuthResource {
         @PathParam("userId")
         @Parameter(description = "用户userId", required = true)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @PathParam("action")
         @Parameter(description = "项目资源类型action", required = true)
         action: String,
         @QueryParam("resourceType")
         @Parameter(description = "资源类型", required = true)
-        resourceType: String? = null
+        resourceType: String? = null,
     ): Result<List<String>>
 
     @GET

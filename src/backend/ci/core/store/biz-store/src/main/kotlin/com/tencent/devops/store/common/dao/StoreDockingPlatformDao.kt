@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreDockingPlatform
@@ -302,8 +302,8 @@ class StoreDockingPlatformDao {
                 creator = creator,
                 labels = labels?.split(","),
                 modifier = modifier,
-                createTime = DateTimeUtil.toDateTime(createTime),
-                updateTime = DateTimeUtil.toDateTime(updateTime),
+                createTime = createTime.timestampmilli(),
+                updateTime = updateTime.timestampmilli(),
                 ownerDeptName = record.ownerDeptName
             )
         }

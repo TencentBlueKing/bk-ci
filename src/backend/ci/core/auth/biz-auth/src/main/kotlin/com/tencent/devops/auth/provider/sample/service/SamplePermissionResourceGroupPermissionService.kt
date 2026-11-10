@@ -110,12 +110,14 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
     ): List<String> = emptyList()
 
     override fun getGroupPermissionDetail(
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String?
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
 
     override fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String?
     ): List<GroupPermissionDetailVo> = emptyList()
 
     override fun syncGroupPermissions(

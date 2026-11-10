@@ -46,8 +46,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     private val windowsErrorPkgRunEnvInfo = StorePkgRunEnvInfo(
@@ -62,8 +62,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     private val linuxNormalPkgRunEnvInfo = StorePkgRunEnvInfo(
@@ -78,8 +78,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     private val linuxErrorPkgRunEnvInfo = StorePkgRunEnvInfo(
@@ -94,8 +94,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     private val macNormalPkgRunEnvInfo = StorePkgRunEnvInfo(
@@ -110,8 +110,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     private val macErrorPkgRunEnvInfo = StorePkgRunEnvInfo(
@@ -126,8 +126,8 @@ internal class NodeJsAtomRunConditionHandleServiceImplTest {
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
-        createTime = "",
-        updateTime = ""
+        createTime = 0L,
+        updateTime = 0L
     )
 
     @Nested
