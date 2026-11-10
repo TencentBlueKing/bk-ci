@@ -25,7 +25,9 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
         val projectId = commandContext.projectId
         val pipelineId = commandContext.pipelineId
         val buildId = commandContext.buildId
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        commandContext.channelCode = pipelineInfo?.channelCode
+        if (pipelineInfo == null) return
         val pipelineName = pipelineInfo.pipelineName
         val channelCode = pipelineInfo.channelCode
 
@@ -41,7 +43,6 @@ class BluekingNotifyUrlCmdImpl @Autowired constructor(
             "detailShortOuterUrl" to detailUrl
         )
         commandContext.notifyValue.putAll(urlMap)
-        commandContext.channelCode = channelCode
     }
 
     /**

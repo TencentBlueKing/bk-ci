@@ -33,7 +33,10 @@ class RtxNotifier @Autowired constructor(
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
-            )!!
+            ) ?: run {
+                logger.warn("no rtx template found for ${commonNotifyMessageTemplateRecord.id}")
+                return
+            }
         // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
         val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)

@@ -31,7 +31,10 @@ class WeworkNotifier @Autowired constructor(
         val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
             dslContext = dslContext,
             commonTemplateId = commonNotifyMessageTemplateRecord.id
-        )!!
+        ) ?: run {
+            logger.warn("no wework template found for ${commonNotifyMessageTemplateRecord.id}")
+            return
+        }
         // markdown 正文优先取 RTX 模板表的 BODY_MD，为空时回退 wework 模板表的 BODY
         val markdownBody = if (request.markdownContent == true) {
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
