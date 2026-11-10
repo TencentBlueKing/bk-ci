@@ -146,7 +146,7 @@ class NotifyMessageTemplateDao {
      * 获取 RTX 模板的 markdown 正文
      * @param dslContext 数据库操作对象
      * @param commonTemplateId 公共模板 ID
-     * @return BODY_MD；记录不存在或字段为空时返回 null
+     * @return BODY_MD 原值；记录不存在时返回 null，字段为空串或空白时原样返回
      */
     fun getRtxNotifyMessageTemplateBodyMd(
         dslContext: DSLContext,

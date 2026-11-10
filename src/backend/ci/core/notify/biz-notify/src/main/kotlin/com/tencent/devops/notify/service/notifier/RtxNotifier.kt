@@ -37,17 +37,20 @@ class RtxNotifier @Autowired constructor(
                 logger.warn("no rtx template found for ${commonNotifyMessageTemplateRecord.id}")
                 return
             }
+        val markdownBody = if (request.markdownContent == true) {
+            weworkTplRecord.bodyMd?.takeIf { it.isNotBlank() }
+        } else {
+            null
+        }
+        val effectiveRequest = if (request.markdownContent == true && markdownBody == null) {
+            request.copy(markdownContent = false)
+        } else {
+            request
+        }
         // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
         val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
-        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(
-            if (request.markdownContent == true) {
-                weworkTplRecord.bodyMd ?: weworkTplRecord.body
-            } else {
-                weworkTplRecord.body
-            },
-            language
-        )
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(markdownBody ?: weworkTplRecord.body, language)
         // 替换占位符里的动态参数
         val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
@@ -75,7 +78,7 @@ class RtxNotifier @Autowired constructor(
         )
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-            sendNotifyMessageTemplateRequest = request,
+            sendNotifyMessageTemplateRequest = effectiveRequest,
             body = body,
             sender = weworkTplRecord.sender,
             weworkService = weworkService,
