@@ -92,6 +92,11 @@ $ helm uninstall bkci
 | `init.bkrepo.enabled` | 是否初始化制品库 | `true` |
 | `init.defaultImage.enabled` | 是否初始化构建镜像 | `true` |
 
+## Secret 配置
+|参数|描述|默认值|
+|---|---|---|
+| `secret.devopsToken.autoGenerate` | 是否自动生成服务间调用 token 并存入 Secret，关闭时不创建 Secret，只使用 `config.bkCiDevopsToken`，未配置则为空 | `true` |
+
 ## ingress 配置
 
 |参数|描述|默认值 |

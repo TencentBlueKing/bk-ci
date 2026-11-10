@@ -36,6 +36,12 @@ nginx-ingress-controller:
 configmap:
   enabled: true
 
+# Secret 配置
+secret:
+  devopsToken:
+    # 是否自动生成 token 并存入 Secret；关闭时不创建 Secret，只使用 config.bkCiDevopsToken
+    autoGenerate: true
+
 # 镜像配置
 gatewayImage:
   registry: __image_registry__
