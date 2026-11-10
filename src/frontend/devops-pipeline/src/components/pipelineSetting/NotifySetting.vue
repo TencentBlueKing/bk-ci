@@ -16,8 +16,8 @@
                 :required="true"
             >
                 <bk-checkbox-group
-                    :value="checkboxTypes"
-                    @change="handleTypesChange"
+                    :value="subscription.types"
+                    @change="value => updateSubscription('types', value)"
                 >
                     <bk-checkbox
                         v-for="item in noticeList"
@@ -153,11 +153,6 @@
             }
         },
         computed: {
-            // Code 模式的 wework-message 会落成 RTX，勾选值是 WEWORK
-            checkboxTypes () {
-                const types = this.subscription.types || []
-                return [...new Set(types.map(type => (type === 'RTX' ? 'WEWORK' : type)))]
-            },
             noticeList () {
                 return [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
@@ -170,18 +165,6 @@
             },
             groupIdDesc () {
                 return this.$t('settings.groupIdDesc')
-            }
-        },
-        methods: {
-            handleTypesChange (nextValues) {
-                const prev = this.subscription.types || []
-                const keepRtx = prev.includes('RTX') && nextValues.includes('WEWORK')
-                const types = []
-                nextValues.forEach((type) => {
-                    const stored = type === 'WEWORK' && keepRtx ? 'RTX' : type
-                    if (!types.includes(stored)) types.push(stored)
-                })
-                this.updateSubscription('types', types)
             }
         }
     }
