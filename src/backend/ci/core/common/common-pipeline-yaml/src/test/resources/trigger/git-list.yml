@@ -1,0 +1,32 @@
+version: v3.0
+name: git-trigger-list-test
+on:
+  - repo-name: aliasName/xxx
+    type: git
+    push:
+      branches:
+        - master
+        - dev
+      paths:
+        - src/**
+    tag:
+      tags:
+        - "v*"
+    mr:
+      target-branches:
+        - master
+      action:
+        - open
+        - reopen
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"

@@ -98,6 +98,16 @@ BEGIN
         ALTER TABLE T_PIPELINE_TRIGGER_EVENT DROP INDEX `UNIQ_REQUEST`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_EVENT_SUBSCRIPTION'
+                    AND COLUMN_NAME = 'EVENT_SCOPE') THEN
+        ALTER TABLE T_PIPELINE_EVENT_SUBSCRIPTION
+            ADD COLUMN `EVENT_SCOPE` varchar(255) DEFAULT NULL
+            COMMENT '事件作用域,svn路径/制品路径,无则NULL';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

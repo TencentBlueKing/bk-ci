@@ -87,6 +87,9 @@
                 if (!param) {
                     return { type: 'text', text: '' }
                 }
+                if (param.type === 'i18n') {
+                    return { type: 'text', text: this.$t(param.text) }
+                }
                 if (param.type !== 'link') {
                     return param
                 }
