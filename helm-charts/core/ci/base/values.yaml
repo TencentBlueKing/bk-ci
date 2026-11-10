@@ -36,6 +36,12 @@ nginx-ingress-controller:
 configmap:
   enabled: true
 
+# Secret 配置
+secret:
+  devopsToken:
+    # 是否由 Chart 自动生成并维护 Secret；关闭时只使用 config.bkCiDevopsToken
+    enabled: true
+
 # 镜像配置
 gatewayImage:
   registry: __image_registry__
