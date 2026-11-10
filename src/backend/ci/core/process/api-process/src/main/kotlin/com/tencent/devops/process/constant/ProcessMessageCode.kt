@@ -555,6 +555,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
     const val ERROR_RUNTIME_RESOURCE_NODE_REQUIRED = "2101503" // 运行资源为环境[{0}]，启动时必须指定运行节点
+    const val ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED = "2101504" // 运行资源[{0}]未找到可用的执行机器，请检查该资源是否已释放
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

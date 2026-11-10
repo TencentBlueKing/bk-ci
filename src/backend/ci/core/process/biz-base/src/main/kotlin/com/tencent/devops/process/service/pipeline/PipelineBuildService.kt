@@ -506,16 +506,17 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
                 params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
             )
-            // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId
+            // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId。
+            // 资源被释放等原因换不出机器时直接拒绝启动：继续走下去只会在派发阶段以一个与原因无关的报错失败，
+            // 而且启动方传入的节点还会把「不能改派」的约束绕过去
             else -> runtimeResourceResolver.resolveAgentHashId(
                 projectId = ctx.pipeline.projectId,
                 userId = ctx.pipelineAuthorizer ?: ctx.userId,
                 resource = resource
+            )?.takeIf(String::isNotBlank) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
             )
-        }
-        // 解析不出绑定的那台机器时宁可不派发，也要清掉启动方传入的节点，否则「不能改派」的约束会被绕过
-        if (agentIdValue == null && resource?.group == false) {
-            ctx.pipelineParamMap.remove(NODE_AGENT_ID)
         }
         agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
