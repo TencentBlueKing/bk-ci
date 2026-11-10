@@ -37,10 +37,10 @@ class WeworkNotifier @Autowired constructor(
         }
         // markdown 正文优先取 RTX 模板表的 BODY_MD，为空时回退 wework 模板表的 BODY
         val markdownBody = if (request.markdownContent == true) {
-            notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
+            notifyMessageTemplateDao.getRtxNotifyMessageTemplateBodyMd(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
-            )?.bodyMd?.takeIf { it.isNotBlank() }
+            )?.takeIf { it.isNotBlank() }
         } else {
             null
         }
