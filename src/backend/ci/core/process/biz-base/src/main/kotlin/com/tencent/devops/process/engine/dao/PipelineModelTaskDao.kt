@@ -240,8 +240,8 @@ class PipelineModelTaskDao {
                 .join(tpi)
                 .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
-                .groupBy(PIPELINE_ID)
-                .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
+                .groupBy(PIPELINE_ID, PROJECT_ID)
+                .orderBy(DSL.max(UPDATE_TIME).desc(), PIPELINE_ID.desc())
 
             return if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -377,8 +377,8 @@ class PipelineModelTaskDao {
                 .join(tpi)
                 .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
                 .where(condition)
-                .groupBy(PIPELINE_ID)
-                .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
+                .groupBy(PIPELINE_ID, PROJECT_ID)
+                .orderBy(DSL.max(UPDATE_TIME).desc(), PIPELINE_ID.desc())
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
     }
