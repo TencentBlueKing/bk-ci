@@ -27,43 +27,23 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.utils.TestTool
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class DependOnControlTest {
     private val pipelineContainerService: PipelineContainerService = mockk()
-    private val client: Client = mockk()
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(client, mockk())
+    private val buildLogPrinter: BuildLogPrinter = mockk(relaxed = true)
     private val dependOnControl = DependOnControl(
         pipelineContainerService = pipelineContainerService,
         buildLogPrinter = buildLogPrinter
     )
-
-    @BeforeEach
-    fun setUp() {
-        justRun {
-            buildLogPrinter.addLine(
-                buildId = "",
-                message = "",
-                tag = "",
-                containerHashId = "",
-                executeCount = 1,
-                subTag = "",
-                jobId = "",
-                stepId = ""
-            )
-        }
-    }
 
     @Test
     fun `when dependOnContainerId2JobIds is null return success`() {
