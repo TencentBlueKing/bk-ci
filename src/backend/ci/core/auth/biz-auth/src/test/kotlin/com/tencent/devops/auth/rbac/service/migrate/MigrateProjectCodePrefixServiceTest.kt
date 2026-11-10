@@ -39,7 +39,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.auth.tables.TAuthResource
 import com.tencent.devops.model.auth.tables.records.TAuthResourceRecord
-import io.mockk.any
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
