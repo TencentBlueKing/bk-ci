@@ -221,6 +221,37 @@ object TaskUtils {
     }
 
     /**
+     * Job 取消过程中，构建机是否应放弃认领 [task]。
+     *
+     * 普通插件必须放弃：插件很快结束时，构建机会立刻来领下一条，取消标记若挡不住，Job 会继续跑完。
+     * 以下仍要认领，否则队头停住，后面的关机插件无法调度：
+     * 即使取消也执行的插件、引擎已经选出且尚未开始的 post、引擎侧任务（关机等）、结束节点。
+     * 已经在跑的 post 不再下发，避免完成上报和认领交叉时把同一个 post 执行两遍。
+     */
+    fun shouldSkipAgentClaimWhenJobCanceling(
+        task: PipelineBuildTask,
+        jobCanceling: Boolean
+    ): Boolean {
+        if (!jobCanceling) {
+            return false
+        }
+        val options = task.additionalOptions
+        if (options?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+            return false
+        }
+        if (options?.elementPostInfo != null && !task.status.isRunning()) {
+            return false
+        }
+        if (task.taskAtom.isNotBlank()) {
+            return false
+        }
+        if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) {
+            return false
+        }
+        return true
+    }
+
+    /**
      * 把正在运行的插件 ID 记入取消集合，供完成上报识别。
      */
     fun recordCancelTaskId(

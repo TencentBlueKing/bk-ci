@@ -101,6 +101,13 @@
                         </template>
                         <template v-else>
                             <bk-radio
+                                v-if="isTGit"
+                                class="mr20"
+                                value="OAUTH"
+                            >
+                                OAUTH
+                            </bk-radio>
+                            <bk-radio
                                 value="HTTPS"
                             >
                                 {{ $t('codelib.用户名+密码') }}
@@ -492,6 +499,17 @@
                             if (url.startsWith('http://')) {
                                 this.newRepoInfo.url = url.replace.replace('http://', 'https://')
                             }
+                        }
+                    }
+
+                    if (this.isTGit) {
+                        if (val === 'HTTPS' && this.cacheRepoInfo.authType === 'OAUTH') {
+                            this.newRepoInfo.url = this.cacheRepoInfo.url
+                            this.newRepoInfo.credentialId = ''
+                        }
+
+                        if (val === 'OAUTH' && this.cacheRepoInfo.authType === 'HTTPS') {
+                            this.newRepoInfo.credentialId = ''
                         }
                     }
                 },

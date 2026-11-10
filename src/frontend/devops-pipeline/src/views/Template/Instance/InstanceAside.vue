@@ -131,6 +131,7 @@
         INSTANCE_OPERATE_TYPE,
         SET_FETCH_PIPELINES_ERROR
     } from '@/store/modules/templates/constants'
+    import { applyInstancePacBinding } from '@/utils/templateInstancePac'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
@@ -253,16 +254,16 @@
                 version: currentVersion.value,
                 templateId: templateId.value
             })
+            const isCopy = instanceViewType.value === INSTANCE_OPERATE_TYPE.COPY
             const list = initialInstanceListValue.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
                 const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
+                const pipelineDetail = res[i.pipelineId]
                 return {
                     ...i,
-                    ...res[i.pipelineId],
-                    // 从流水线详情的 PAC 配置推导实例是否开启 PAC，确保升级/复制 PAC 流水线时正确勾选 PAC
-                    enabledPac: Boolean(res[i.pipelineId]?.repoHashId),
-                    // 同步 PAC 代码库，避免升级 PAC 流水线时 repoHashId 为空导致发布失败
-                    repoHashId: res[i.pipelineId]?.repoHashId ?? '',
+                    ...pipelineDetail,
+                    // 升级沿用原实例 PAC；复制走新建发布，不继承原 YAML 路径和代码库
+                    ...applyInstancePacBinding(pipelineDetail, isCopy),
                     pipelineName: proxy.$route.query.pipelineName || i.pipelineName,
                     ...(
                         triggerElements?.length ? {

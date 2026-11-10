@@ -28,6 +28,8 @@
 package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.common.VMUtils
@@ -120,6 +122,46 @@ class TaskUtilsTest : TestBase() {
 
         verify { redisOperation.addSetValue(key, TaskUtils.JOB_CANCEL_FLAG) }
         verify { redisOperation.expire(key, any(), any()) }
+    }
+
+    @Test
+    fun skipAgentClaimKeepsNormalPluginBlockedAndReleasesPost() {
+        val container = genVmBuildContainer()
+        val normal = genTask(taskId = "e-normal", vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "")
+        val post = genTask(
+            taskId = "e-post",
+            vmContainer = container,
+            elementAdditionalOptions = elementAdditionalOptions(
+                elementPostInfo = ElementPostInfo(
+                    postEntryParam = "",
+                    postCondition = "",
+                    parentElementId = "e-11",
+                    parentElementName = "Checkout Spark",
+                    parentElementJobIndex = 0
+                )
+            )
+        ).copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "")
+        val runningPost = post.copy(status = BuildStatus.RUNNING)
+        val evenCancel = genTask(
+            taskId = "e-even",
+            vmContainer = container,
+            elementAdditionalOptions = elementAdditionalOptions(
+                runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            )
+        ).copy(status = BuildStatus.RUNNING, taskAtom = "")
+        val shutdown = genTask(taskId = "stopVM-1", vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "dispatchVMShutdownTaskAtom", taskSeq = 1)
+        val endPoint = genTask(taskId = VMUtils.genEndPointTaskId(1), vmContainer = container)
+            .copy(status = BuildStatus.QUEUE_CACHE, taskAtom = "", taskSeq = 1)
+
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(normal, jobCanceling = false))
+        Assertions.assertTrue(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(normal, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(post, jobCanceling = true))
+        Assertions.assertTrue(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(runningPost, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(evenCancel, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(shutdown, jobCanceling = true))
+        Assertions.assertFalse(TaskUtils.shouldSkipAgentClaimWhenJobCanceling(endPoint, jobCanceling = true))
     }
 
     @Test

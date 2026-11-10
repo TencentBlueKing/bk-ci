@@ -180,6 +180,13 @@ class ThirdPartyAgentService @Autowired constructor(
         return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId, true).size
     }
 
+    /**
+     * 批量获取 agent 负载，返回 agentId -> Pair(普通任务数, Docker 任务数)，无任务的 agent 不在结果中
+     */
+    fun countRunningAndQueueByAgents(agentIds: Set<String>): Map<String, Pair<Int, Int>> {
+        return thirdPartyAgentBuildDao.countRunningAndQueueByAgents(dslContext, agentIds)
+    }
+
     fun checkRunningAndSize(agentId: String, buildId: String, docker: Boolean): Pair<Boolean, Int> {
         val records = thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId, docker)
         val hasRun = records.any { it.first == buildId && it.second == PipelineTaskStatus.RUNNING.status }
@@ -607,7 +614,7 @@ class ThirdPartyAgentService @Autowired constructor(
             executeCount = buildInfo.executeCount
         )
         if (buildRecord != null && (
-                    buildRecord.status != PipelineTaskStatus.DONE.status ||
+                    buildRecord.status != PipelineTaskStatus.DONE.status &&
                             buildRecord.status != PipelineTaskStatus.FAILURE.status
                     )
         ) {

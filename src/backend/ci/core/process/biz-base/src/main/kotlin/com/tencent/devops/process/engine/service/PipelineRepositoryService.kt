@@ -73,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -127,13 +128,13 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.PipelineVisibilityService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+import com.tencent.devops.process.utils.MatrixConcurrencyUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -143,14 +144,12 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.associate
-import kotlin.collections.forEach
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress(
     "LongParameterList",
@@ -210,8 +209,8 @@ class PipelineRepositoryService constructor(
         fun PipelineSetting.checkParam() {
             val maxResNum = maxPipelineResNum
             if (maxResNum != null && maxResNum < 1) {
-                throw InvalidParamException(
-                    message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL,
                     params = arrayOf("maxPipelineResNum")
                 )
             }
@@ -223,29 +222,34 @@ class PipelineRepositoryService constructor(
                 if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
                 ) {
-                    throw InvalidParamException(
-                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL),
-                        params = arrayOf("waitQueueTimeMinute")
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL,
+                        params = arrayOf(
+                            "$PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN",
+                            "$PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX"
+                        )
                     )
                 }
                 if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
                     maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
                 ) {
-                    throw InvalidParamException(
-                        I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL),
-                        params = arrayOf("maxQueueSize")
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL,
+                        params = arrayOf(
+                            "$PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN",
+                            "$PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX"
+                        )
                     )
                 }
-            }
-            if (maxConRunningQueueSize != null && (
-                    this.maxConRunningQueueSize!! <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                        this.maxConRunningQueueSize!! > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+
+                if (maxConRunningQueueSize != null &&
+                    this.maxConRunningQueueSize!! !in 1..PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL,
+                        params = arrayOf("$PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX")
                     )
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
-                    params = arrayOf("maxConRunningQueueSize")
-                )
+                }
             }
         }
     }
@@ -752,14 +756,24 @@ class PipelineRepositoryService constructor(
 
     private fun matrixYamlCheck(option: MatrixControlOption?) {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
+        // 使用变量配置最大并发数时，实际值需运行时解析，此处不做数值校验
+        if (!option.maxConcurrencyVar.isNullOrBlank()) {
+            checkMatrixYaml(option)
+            return
+        }
+        // 未配置并发数时取默认值，属于合法配置；已配置则必须与模板实例化时的要求一致，落在1-MAX之间
+        val maxConcurrency = option.maxConcurrency
+        if (maxConcurrency != null && !MatrixConcurrencyUtils.isValid(maxConcurrency)) {
             throw InvalidParamException(
-                "matrix maxConcurrency number(${option.maxConcurrency}) " +
-                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                "matrix maxConcurrency($maxConcurrency) is invalid, " +
+                    "must be an integer between ${MatrixConcurrencyUtils.MIN_MATRIX_CONCURRENCY} " +
+                    "and $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
+        checkMatrixYaml(option)
+    }
+
+    private fun checkMatrixYaml(option: MatrixControlOption) {
         MatrixYamlCheckUtils.checkYaml(
             MatrixPipelineInfo(
                 include = option.includeCaseStr,
@@ -792,7 +806,7 @@ class PipelineRepositoryService constructor(
     ): PipelineSetting {
         // 空白流水线设置初始化
         val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
-            val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
+        val notifyTypes = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
             ""

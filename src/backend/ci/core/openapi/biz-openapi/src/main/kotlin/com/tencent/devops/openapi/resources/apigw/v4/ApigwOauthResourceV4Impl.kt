@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryOauthResourceV4
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.pojo.oauth.ScmOauthStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,8 +52,22 @@ class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client
         return Result(isOauth)
     }
 
+    override fun oauthStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        scmCode: String,
+        redirectUrl: String?
+    ): Result<ScmOauthStatus> {
+        logger.info("OPENAPI_OAUTH_V4|$userId|get $scmCode oauth authorization status")
+        return client.get(ServiceOauthResource::class).scmOauthStatus(
+            userId = userId,
+            scmCode = scmCode,
+            redirectUrl = redirectUrl
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwOauthResourceV4Impl::class.java)
-        private const val AUTHORIZED_STATUS = 200
     }
 }

@@ -617,6 +617,18 @@
                     }
                 })
             },
+            /**
+             * 用选中的版本详情填充 activePipelineVersion
+             * 避免依赖分页下拉列表反查，保证 isReleaseVersion / isBranchVersion 等判定准确
+             */
+            setActiveVersionInfo (pipelineRes) {
+                if (!pipelineRes) return
+                this.selectPipelineVersion({
+                    ...pipelineRes,
+                    version: pipelineRes.version,
+                    status: pipelineRes.versionStatus
+                })
+            },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
                     const values = this.getExecuteParams(this.pipelineId)
@@ -814,6 +826,7 @@
                             this.branchVersion = branchInfo.version
                             this.isBranchVersion = false
                             this.expireReleasedVersion = false
+                            this.setActiveVersionInfo(pipelineRes)
                         } else {
                             // 分支使用 PAC 分支编排接口
                             const [res, branchPipelineRes] = await Promise.all([
@@ -829,6 +842,7 @@
                             // 保存分支版本号，用于启动构建时指定 version
                             this.branchVersion = branchPipelineRes?.version ?? null
                             this.isBranchVersion = true
+                            this.setActiveVersionInfo(pipelineRes)
                             if (branchPipelineRes) {
                                 const { version, latestVersion, versionStatus = '' } = branchPipelineRes
                                 this.expireReleasedVersion = versionStatus === 'RELEASED' && version !== latestVersion
@@ -844,6 +858,7 @@
                         // 非 PAC 分支模式下清空 branchVersion
                         this.branchVersion = null
                         this.isBranchVersion = false
+                        this.setActiveVersionInfo(pipelineRes)
                     }
 
                     this.pipelineModel = {

@@ -30,7 +30,6 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
-import com.tencent.devops.scm.pojo.GitFileInfo
 
 interface CodeRepositoryService<T> {
 
@@ -63,14 +62,6 @@ interface CodeRepositoryService<T> {
      * 获取开启pac的项目ID
      */
     fun getPacProjectId(userId: String, repoUrl: String): String?
-
-    /**
-     * 开启pac校验
-     */
-    fun pacCheckEnabled(projectId: String, userId: String, record: TRepositoryRecord, retry: Boolean)
-
-    // TODO 暂时放这里,后面代码库统一优化平台层接口
-    fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo>
 
     fun getPacRepository(externalId: String): TRepositoryRecord?
 

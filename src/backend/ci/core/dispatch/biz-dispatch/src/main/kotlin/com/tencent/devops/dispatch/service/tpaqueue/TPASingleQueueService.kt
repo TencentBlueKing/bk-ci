@@ -14,12 +14,16 @@ import com.tencent.devops.dispatch.pojo.QueueDataContext
 import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.dispatch.utils.DispatchLockCleanup
+import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor
+import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor.TryAgentResult
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.TPACommonUtil.Companion.tagError
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -55,10 +59,18 @@ class TPASingleQueueService @Autowired constructor(
         return doAgentInQueue(data, agent, context.envId)
     }
 
+    /**
+     * 尝试把任务调度到指定 agent
+     * @param deferPost 为 true 时只做占位及节点别名上下文写入，不做调度成功后的收尾（构建详情/MQ/日志），
+     * 由调用方在释放环境锁后自行调用 [afterAgentInQueue]，用于缩短环境锁的持有时间；
+     * 默认 false 保持原有行为，调度成功后立即收尾
+     */
     fun doAgentInQueue(
         data: ThirdPartyAgentDispatchData,
         agent: ThirdPartyAgent,
-        envId: Long?
+        envId: Long?,
+        deferPost: Boolean = false,
+        beforeQueueCheck: (() -> Boolean)? = null
     ): Boolean {
         if (data.dispatchType.isEnv()) {
             commonUtil.logWithAgentUrl(
@@ -69,22 +81,110 @@ class TPASingleQueueService @Autowired constructor(
                 agentHashId = agent.agentId
             )
         }
+        // TODO: 共享 agent 的调度项目与所属项目可能不同，和领取端的锁 key 不一致；本次按约定不调整。
         val redisLock = ThirdPartyAgentLock(redisOperation, data.projectId, agent.agentId)
-        try {
+        val success = DispatchLockCleanup.run<Boolean>(
+            description = "agent|${data.toLog()}|${agent.agentId}",
+            unlock = { redisLock.unlock() },
+            isQueued = { it }
+        ) {
             if (redisLock.tryLock()) {
-                return agentInQueue(data, agent, envId)
+                (beforeQueueCheck?.invoke() != false) && agentInQueue(data, agent, envId)
             } else {
                 commonUtil.logWarnI18n(
                     data, ErrorCodeEnum.BUILD_MACHINE_BUSY.errorCode.toString(),
                     suffixMsg = "(Agent is busy) - ${agent.hostname}/${agent.ip}"
                 )
-                return false
+                false
             }
-        } finally {
-            redisLock.unlock()
+        }
+        // 收尾不涉及 agent 并发判断，放在 agent 锁外执行
+        if (success && !deferPost) {
+            afterAgentInQueue(data, agent)
+        }
+        return success
+    }
+
+    /**
+     * 环境策略最终准入：agent 锁内重新查询真实负载，通过后同锁写入占位。
+     * 规则不匹配不是入队故障，更新快照后允许后续 AVAILABLE/null 等规则继续尝试。
+     * 显式 agent 调度仍调用 doAgentInQueue，不新增容量限制。
+     */
+    fun tryAgentWithRule(
+        data: ThirdPartyAgentDispatchData,
+        agent: ThirdPartyAgent,
+        envId: Long?,
+        nodeRule: NodeRule?,
+        deferPost: Boolean = false,
+        onLoadChanged: (Pair<Int, Int>) -> Unit = {}
+    ): TryAgentResult {
+        var loadChanged = false
+        val success = doAgentInQueue(data, agent, envId, deferPost) {
+            if (nodeRule == null) {
+                true // 无规则保持原有排队语义，不能统一强加 agent 容量上限。
+            } else {
+                val (normal, docker) = thirdPartyAgentService.countRunningAndQueueByAgents(setOf(agent.agentId))
+                    .getOrDefault(agent.agentId, Pair(0, 0))
+                val matched = DispatchStrategyExecutor.matchesNodeRule(
+                    agent, nodeRule, data.dispatchType.dockerInfo != null, normal, docker
+                )
+                if (!matched) {
+                    loadChanged = true
+                    onLoadChanged(Pair(normal, docker))
+                    commonUtil.logDebug(data, "[${agent.agentId}] load changed: jobs=$normal, dockerJobs=$docker")
+                }
+                matched
+            }
+        }
+        return when {
+            success -> TryAgentResult.SUCCESS
+            loadChanged -> TryAgentResult.LOAD_CHANGED
+            else -> TryAgentResult.REJECTED
         }
     }
 
+    /**
+     * 调度成功后的收尾：保存构建机信息到构建详情、打印调度日志、发送监控事件。
+     * 这些操作都是在任务已入库之后的附属动作，不影响并发判断，因此不需要放在环境锁/agent 锁内。
+     * 执行到这里时任务已写库 + 写 Redis，agent 随时可能领取，收尾异常不能再向上抛，
+     * 否则外层会当作调度失败处理；各步骤相互独立，单步失败不影响后续步骤（尤其是监控事件）。
+     */
+    fun afterAgentInQueue(data: ThirdPartyAgentDispatchData, agent: ThirdPartyAgent) {
+        // 保存构建详情
+        runPostStep(data, agent, "saveAgentInfoToBuildDetail") { saveAgentInfoToBuildDetail(data, agent) }
+
+        logger.info("${data.buildId}|START_AGENT_BY_ID|j(${data.vmSeqId})|agent=${agent.agentId}")
+        runPostStep(data, agent, "logSelectedAgent") {
+            commonUtil.logWithAgentUrl(
+                data = data,
+                messageCode = BK_SCHEDULING_SELECTED_AGENT,
+                param = arrayOf(agent.hostname, agent.ip),
+                nodeHashId = agent.nodeId,
+                agentHashId = agent.agentId
+            )
+        }
+
+        // 延迟队列轮训构建机状态监控
+        runPostStep(data, agent, "dispatchAgentMonitor") { dispatchAgentMonitor(data) }
+    }
+
+    private inline fun runPostStep(
+        data: ThirdPartyAgentDispatchData,
+        agent: ThirdPartyAgent,
+        step: String,
+        action: () -> Unit
+    ) {
+        try {
+            action()
+        } catch (ignore: Exception) {
+            logger.tagError("afterAgentInQueue|${data.toLog()}|agent=${agent.agentId}|$step|error", ignore)
+        }
+    }
+
+    /**
+     * 检查 agent 可用性（升级中/复用互斥），通过后写库 + 写 Redis，并在 agent 锁内写入节点别名上下文。
+     * 收尾逻辑见 [afterAgentInQueue]
+     */
     private fun agentInQueue(
         data: ThirdPartyAgentDispatchData,
         agent: ThirdPartyAgent,
@@ -171,21 +271,10 @@ class TPASingleQueueService @Autowired constructor(
         // #5806 入库失败就不再写Redis
         inQueue(data, agent, envId)
 
-        // 保存构建详情
-        saveAgentInfoToBuildDetail(data, agent)
+        // 同项目 agent 领取任务也使用这把锁；共享 agent 的锁归属差异见上方 TODO（内部已 catch）。
+        setNodeAliasContextVar(data, agent)
 
-        logger.info("${data.buildId}|START_AGENT_BY_ID|j(${data.vmSeqId})|agent=${agent.agentId}")
-        commonUtil.logWithAgentUrl(
-            data = data,
-            messageCode = BK_SCHEDULING_SELECTED_AGENT,
-            param = arrayOf(agent.hostname, agent.ip),
-            nodeHashId = agent.nodeId,
-            agentHashId = agent.agentId
-        )
-
-        // 延迟队列轮训构建机状态监控
-        dispatchAgentMonitor(data)
-
+        // 收尾（构建详情、日志、监控等）统一在 afterAgentInQueue 中处理
         return true
     }
 
@@ -263,8 +352,12 @@ class TPASingleQueueService @Autowired constructor(
                 atoms = data.atoms
             )
         )
+    }
 
-        // 添加上下文关键字 jobs.<job_id>.container.node_alias
+    /**
+     * 添加上下文关键字 jobs.<job_id>.container.node_alias，涉及两次跨服务调用，失败只打日志不影响调度
+     */
+    private fun setNodeAliasContextVar(data: ThirdPartyAgentDispatchData, agent: ThirdPartyAgent) {
         if (data.jobId.isNullOrBlank()) {
             return
         }

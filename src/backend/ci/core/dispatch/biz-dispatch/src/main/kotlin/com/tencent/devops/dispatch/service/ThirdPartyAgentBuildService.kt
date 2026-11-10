@@ -37,9 +37,10 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     private val client: Client,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
-    // 支持跨项目引用环境和节点的查询，不用projectId
+    // 普通环境和节点支持跨项目查询，所有创作环境按 projectId 隔离
     fun fetchBuildPipelineView(
         userId: String,
+        projectId: String,
         envId: Long?,
         data: TPAPipelineReq
     ): TPAPipelineBuildCountResp {
@@ -58,6 +59,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val jobId = if (data.view == TPAPipelineBuildView.JOB) data.jobId else null
         val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             startTime = data.startTime,
@@ -71,6 +73,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             TPAPipelineBuildView.PIPELINE -> {
                 val buildRecord = thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
                     dslContext = dslContext,
+                    projectId = projectId,
                     agentId = data.agentId,
                     envId = envId,
                     limit = limit,
@@ -94,6 +97,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
             TPAPipelineBuildView.JOB -> thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
                 dslContext = dslContext,
+                projectId = projectId,
                 agentId = data.agentId,
                 envId = envId,
                 limit = limit,
@@ -115,6 +119,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             TPAPipelineBuildView.BUILD -> {
                 val buildRecord = thirdPartyAgentBuildDao.fetchAgentBuildPipelineBuild(
                     dslContext = dslContext,
+                    projectId = projectId,
                     agentId = data.agentId,
                     envId = envId,
                     limit = limit,
@@ -128,6 +133,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 // 用来计算耗时
                 val buildRecordList = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
                     dslContext = dslContext,
+                    projectId = projectId,
                     agentId = data.agentId,
                     envId = envId,
                     buildIdList = buildRecord.filter { !it.buildId.isNullOrBlank() }.map { it.buildId!! }.toSet()
@@ -258,6 +264,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val limit = sqlLimit?.limit ?: 100
         val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
             envId = envId,
             startTime = startTime,
@@ -277,6 +284,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 count = jobCount,
                 records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
                     dslContext = dslContext,
+                    projectId = projectId,
                     agentId = agentId,
                     envId = envId,
                     limit = limit,
@@ -312,6 +320,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsByJob(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             pipelineId = data.pipelineId,
@@ -321,6 +330,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByJob(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             pipelineId = data.pipelineId,
@@ -396,6 +406,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByPipeline(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             pipelineId = pipelineId,
@@ -406,6 +417,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         // buildId维度的
         val pipelineBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             pipelineId = pipelineId,
@@ -421,6 +433,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         // 带上job维度的
         val agentBuildRecords = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             buildIdList = pipelineBuilds.map { it.first }.toSet()
@@ -504,6 +517,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             buildId = buildId,
@@ -514,6 +528,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         )
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = data.agentId,
             envId = envId,
             buildId = buildId,
@@ -582,6 +597,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchPipelineIdAndName(
+        projectId: String,
         agentId: String?,
         envId: Long?,
         pipelineName: String?
@@ -591,6 +607,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchPipelineIdAndName(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
             envId = envId,
             pipelineName = pipelineName
@@ -598,6 +615,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchJobIdAndName(
+        projectId: String,
         agentId: String?,
         envId: Long?,
         jobName: String?
@@ -607,6 +625,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchJobIdAndName(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
             envId = envId,
             jobName = jobName
@@ -614,6 +633,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     fun fetchCreator(
+        projectId: String,
         agentId: String?,
         envId: Long?,
         creator: String?
@@ -623,6 +643,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         }
         return thirdPartyAgentBuildDao.fetchCreator(
             dslContext = dslContext,
+            projectId = projectId,
             agentId = agentId,
             envId = envId,
             creator = creator

@@ -107,6 +107,25 @@ MySQL password
 {{- end -}}
 
 {{/*
+MySQL Secret name. Matches Bitnami mysql 10.3.0 mysql.secretName
+(existingSecret, otherwise common.names.fullname of the mysql subchart).
+*/}}
+{{- define "bkci.mysql.secretName" -}}
+{{- if .Values.mysql.auth.existingSecret -}}
+{{- tpl .Values.mysql.auth.existingSecret . -}}
+{{- else if .Values.mysql.fullnameOverride -}}
+{{- .Values.mysql.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "mysql" .Values.mysql.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Elasticsearch host
 */}}
 {{- define "bkci.elasticsearchHost" -}}
@@ -338,6 +357,36 @@ Return the bkci backend image name
 {{ include "common.images.image" (dict "imageRoot" .Values.backendImage "global" .Values.global) }}
 {{- end -}}
 
+
+{{/*
+服务间调用白名单 token。values 中已填写则使用该值；
+否则复用已有 Secret，没有 Secret 时随机生成，并在同一次渲染中保持一致。
+*/}}
+{{- define "bkci.devopsToken.secretName" -}}
+{{- printf "%s-devops-token" (include "bkci.names.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "bkci.devopsToken" -}}
+{{- if not .Values.config -}}
+{{- $_ := set .Values "config" dict -}}
+{{- end -}}
+{{- $configured := .Values.config.bkCiDevopsToken | default "" | toString -}}
+{{- if $configured -}}
+{{- $configured -}}
+{{- else -}}
+{{- $secretName := include "bkci.devopsToken.secretName" . -}}
+{{- $existing := lookup "v1" "Secret" .Release.Namespace $secretName -}}
+{{- if and $existing $existing.data (index $existing.data "token") -}}
+{{- index $existing.data "token" | b64dec -}}
+{{- else if index .Values.config "bkCiDevopsTokenGenerated" -}}
+{{- index .Values.config "bkCiDevopsTokenGenerated" -}}
+{{- else -}}
+{{- $generated := randAlphaNum 32 -}}
+{{- $_ := set .Values.config "bkCiDevopsTokenGenerated" $generated -}}
+{{- $generated -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Return the bkci turbo image name
