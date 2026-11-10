@@ -210,7 +210,7 @@ class EnvShareProjectDao {
                     now
                 ).onDuplicateKeyUpdate()
                     .set(ENV_NAME, envName)
-                    .set(SHARED_PROJECT_NAME, it.getFinalProjectId())
+                    .set(SHARED_PROJECT_NAME, it.name)
                     .set(TYPE, it.type.name)
                     .set(CREATOR, userId)
                     .set(UPDATE_TIME, now)
