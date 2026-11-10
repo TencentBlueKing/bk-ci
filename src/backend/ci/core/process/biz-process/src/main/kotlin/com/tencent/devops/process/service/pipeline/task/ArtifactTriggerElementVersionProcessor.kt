@@ -8,6 +8,7 @@ import com.tencent.devops.common.archive.pojo.webhook.BkRepoAssociationType
 import com.tencent.devops.common.archive.pojo.webhook.BkRepoEventType
 import com.tencent.devops.common.archive.pojo.webhook.BkRepoWebhookCreateRequest
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerInput
@@ -41,8 +42,8 @@ import org.springframework.stereotype.Service
  *
  * 保存流水线时：
  * 1. 保存前校验必填项（事务外）；
- * 2. 保证源侧 webhook 已注册（流水线/自定义 PATH，镜像 REPO）；
- * 3. 幂等写入/删除 T_PIPELINE_EVENT_SUBSCRIPTION。
+ * 2. 发布版本保存前保证源侧 webhook 已注册（事务外，流水线/自定义 PATH，镜像 REPO）；
+ * 3. 事务内幂等写入/删除 T_PIPELINE_EVENT_SUBSCRIPTION。
  */
 @Service
 class ArtifactTriggerElementVersionProcessor @Autowired constructor(
@@ -76,6 +77,29 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
             input = triggerElement.data.input,
             variables = variables
         )
+        checkPlatformConfigured(elementName = triggerElement.name)
+        if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
+            return
+        }
+        val projectId = pipelineResourceVersion.projectId
+        val input = triggerElement.data.input
+        val repository = input.repository
+        val eventScope = buildEventScope(input = input, variables = variables)
+        val (associationType, associationId) = buildAssociation(
+            projectId = projectId,
+            repository = repository,
+            path = eventScope
+        )
+        registerBkRepoWebhookIfAbsent(
+            userId = context.userId,
+            projectId = projectId,
+            eventSource = buildEventSource(projectId = projectId, repository = repository),
+            eventType = input.eventType.name,
+            eventScope = eventScope,
+            associationType = associationType,
+            associationId = associationId,
+            triggers = buildTriggers(repository = repository)
+        )
     }
 
     override fun postProcessAfterSave(
@@ -107,24 +131,7 @@ class ArtifactTriggerElementVersionProcessor @Autowired constructor(
         val repository = input.repository
         val eventType = input.eventType.name
         val eventSource = buildEventSource(projectId = projectId, repository = repository)
-        val triggers = buildTriggers(repository = repository)
         val eventScope = buildEventScope(input = input, variables = variables)
-        val (associationType, associationId) = buildAssociation(
-            projectId = projectId,
-            repository = repository,
-            path = eventScope
-        )
-        checkPlatformConfigured(elementName = triggerElement.name)
-        registerBkRepoWebhookIfAbsent(
-            userId = context.userId,
-            projectId = projectId,
-            eventSource = eventSource,
-            eventType = eventType,
-            eventScope = eventScope,
-            associationType = associationType,
-            associationId = associationId,
-            triggers = triggers
-        )
         val subscription = PipelineEventSubscription(
             projectId = projectId,
             pipelineId = pipelineId,
