@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.17](#v3017)
+   - [Changelog since v3.0.16](#changelog-since-v3016)
+
 - [v3.0.16](#v3016)
    - [Changelog since v3.0.15](#changelog-since-v3015)
 
@@ -28,6 +31,46 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.17
+## 2026-11-11
+### Changelog since v3.0.16
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 支持凭证密钥自动刷新，降低手动轮换成本
+- 完善研发商店上传文件名称校验
+
+**Bug 修复**
+- 修复流水线触发事件描述由前端组装导致的内容异常
+- 修复用户态接口鉴权时偶现卡顿
+- 用户态接口增加项目访问权限校验，避免越权访问
+- 修复 release3.0 的上传插件问题
+
+#### 新增
+- [新增] 关闭service/op接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+- [新增] feat: 依赖包版本升级优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12951)
+
+#### 优化
+- [优化] pref: 完善商店上传文件名称校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13027)
+- [优化] pref:zip解压工具优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12960)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 触发事件描述由前端组装 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12969)
+
+##### 凭证管理
+- [修复] feat: 密钥支持自动刷新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### 权限中心
+- [修复] bug: 修复用户态接口鉴权时偶现卡顿 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12111)
+
+##### 其他
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+- [修复] bug: 优化callback调用http工具 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12961)
+- [修复] bugfix: 修复release3.0的上传插件问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12889)
+
 # v3.0.16
 ## 2025-12-29
 ### Changelog since v3.0.15
