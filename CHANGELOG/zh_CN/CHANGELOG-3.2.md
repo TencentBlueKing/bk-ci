@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.2.1](#v321)
+   - [Changelog since v3.2.0](#changelog-since-v320)
+
 - [v3.2.0](#v320)
    - [Changelog since v3.1.0](#changelog-since-v310)
 
@@ -19,6 +22,44 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.2.1
+## 2026-11-11
+### Changelog since v3.2.0
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 支持服务间 JWT 验证，增强内部接口调用的安全性
+- Maven 仓库发布从 OSS 迁移到 Central
+- 关闭 service/op 接口，收敛运维入口
+- 去除 dispatch K8s 模块与 proxy 跨网络区域代码，精简部署架构
+- 升级 Turbo 版本，提升构建加速能力
+
+**Bug 修复**
+- 修复 tgit 触发器 2.0 版本内容为空的问题
+- 修复初始化默认镜像脚本报错
+- 用户态接口增加项目访问权限校验
+
+#### 新增
+- [新增] 关闭service/op接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+- [新增] feat: 去除dispatch k8s模块 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13649)
+- [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+
+#### 优化
+- [优化] chore: 升级api-turbo到0.0.7-RELEASE [链接](http://github.com/TencentBlueKing/bk-ci/issues/12382)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### 其他
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
 # v3.2.0
 ## 2025-03-27
 ### Changelog since v3.1.0
