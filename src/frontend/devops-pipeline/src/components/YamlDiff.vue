@@ -38,7 +38,11 @@
         data () {
             return {
                 isLoading: false,
-                diffBlocks: []
+                diffBlocks: [],
+                // 跳转固定态：打开/点击箭头后计数固定为跳转目标，用户滚动后才按视口重算
+                stickyIndex: null,
+                // 跳转后忽略滚动事件的截止时间（吸收同步滚动的定位抖动）
+                suppressRecalcUntil: 0
             }
         },
         watch: {
@@ -109,6 +113,8 @@
                 this.modifiedModel = modifiedModel
                 // 切换版本后重置差异块状态，等待 diff 重新计算
                 this.diffBlocks = []
+                this.stickyIndex = null
+                this.suppressRecalcUntil = 0
                 this.emitDiffState(DEFAULT_DIFF_STATE)
             },
             // 将连续的增删改合并为一处差异块；中间隔着未改行则拆分为两处
@@ -170,6 +176,12 @@
                 const scrollTop = editor.getScrollTop()
                 const viewTop = Math.floor(scrollTop / lineHeight) + 1
                 const viewBottom = Math.ceil((scrollTop + layoutInfo.height) / lineHeight)
+                // 滚动条已在顶端且第一处差异仍在视口内时，当前处就是第一处：
+                // 第一处贴着文件开头时滚不到视口中部，避免中线判定一直停在后面的块上
+                const firstRevealLine = Math.min(Math.max(1, getRevealLine(this.diffBlocks[0])), lineCount)
+                if (scrollTop === 0 && firstRevealLine <= viewBottom) {
+                    return 1
+                }
                 const middleLine = (viewTop + viewBottom) / 2
                 let currentIndex = 0
                 this.diffBlocks.forEach((block, index) => {
@@ -183,13 +195,19 @@
                 })
                 return currentIndex
             },
-            // 根据视口位置判定当前所在差异块
+            // 根据视口位置判定当前所在差异块（仅用户滚动时重算，跳转后的计数由 stickyIndex 固定）
             updateCurrentDiffIndex () {
                 if (!this.editor || !this.diffBlocks.length) {
                     this.emitDiffState(DEFAULT_DIFF_STATE)
                     return
                 }
+                // 跳转后的窗口期内不重算，吸收同步滚动带来的定位抖动
+                if (Date.now() < this.suppressRecalcUntil) {
+                    return
+                }
                 const currentIndex = this.getCurrentDiffIndex()
+                // 用户滚动后解除跳转固定态
+                this.stickyIndex = null
                 this.emitDiffState({
                     count: this.diffBlocks.length,
                     currentIndex,
@@ -232,25 +250,38 @@
                 )
                 originalEditor.revealLineInCenter(originalLine)
                 modifiedEditor.revealLineInCenter(modifiedLine)
-                // 内容不足一屏时 reveal 不会触发滚动事件，主动重算一次状态
-                this.updateCurrentDiffIndex()
+                // 计数先认跳转：打开或点击箭头后，计数固定为这次要去的那一处，
+                // 目标块因贴近文件开头/末尾而无法滚动到视口中部时也停在这一处
+                this.stickyIndex = index + 1
+                this.suppressRecalcUntil = Date.now() + 300
+                this.emitDiffState({
+                    count: this.diffBlocks.length,
+                    currentIndex: this.stickyIndex,
+                    hasPrev: this.stickyIndex > 1,
+                    hasNext: this.stickyIndex < this.diffBlocks.length
+                })
+            },
+            // 箭头导航使用的当前序号：跳转固定态（打开/点击箭头后未滚动）以 stickyIndex 为准，
+            // 与计数显示保持一致；避免顶部边界场景下视口重算（顶部规则）把导航基准算回上一块
+            getNavIndex () {
+                if (!this.editor || !this.diffBlocks.length) {
+                    return 0
+                }
+                if (this.stickyIndex != null) {
+                    return this.stickyIndex
+                }
+                return this.getCurrentDiffIndex()
             },
             // 跳转到上一处差异，到头即停住
             goPrev () {
-                if (!this.editor || !this.diffBlocks.length) {
-                    return
-                }
-                const index = this.getCurrentDiffIndex()
+                const index = this.getNavIndex()
                 if (index > 1) {
                     this.revealDiffBlock(index - 2)
                 }
             },
             // 跳转到下一处差异，到头即停住
             goNext () {
-                if (!this.editor || !this.diffBlocks.length) {
-                    return
-                }
-                const index = this.getCurrentDiffIndex()
+                const index = this.getNavIndex()
                 if (index < this.diffBlocks.length) {
                     this.revealDiffBlock(index)
                 }
