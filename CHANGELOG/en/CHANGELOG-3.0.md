@@ -28,6 +28,46 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.17
+## 2026-11-11
+### Changelog since v3.0.16
+### Summary
+Key changes in this release:
+
+**Features**
+- Support automatic credential key refresh to reduce manual rotation overhead
+- Improve file name validation for store uploads
+
+**Bug Fixes**
+- Fix abnormal content caused by pipeline trigger event descriptions being assembled on the frontend
+- Fix occasional lag during user-mode interface authentication
+- Add project access permission verification to user-mode interfaces to prevent unauthorized access
+- Fix the upload plugin issue in release3.0
+
+#### New
+- [New] Close service/op interfaces [link](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+- [New] feat: Optimize dependency package version upgrade [link](http://github.com/TencentBlueKing/bk-ci/issues/12951)
+
+#### Optimization
+- [Improved] pref: Improve file name validation for store uploads [link](http://github.com/TencentBlueKing/bk-ci/issues/13027)
+- [Improved] pref: Optimize zip decompression tool [link](http://github.com/TencentBlueKing/bk-ci/issues/12960)
+
+#### Fixes
+
+##### Pipeline
+- [Fixed] bug: Trigger event descriptions are assembled on the frontend [link](http://github.com/TencentBlueKing/bk-ci/issues/12969)
+
+##### Credential Management
+- [Fixed] feat: Support automatic key refresh [link](http://github.com/TencentBlueKing/bk-ci/issues/12971)
+
+##### Permission Center
+- [Fixed] bug: Fix occasional lag during user-mode interface authentication [link](http://github.com/TencentBlueKing/bk-ci/issues/12111)
+
+##### Other
+- [Fixed] bug: Add project access permission verification to user-mode interfaces [link](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+- [Fixed] bug: Optimize the http tool called by callback [link](http://github.com/TencentBlueKing/bk-ci/issues/12961)
+- [Fixed] bugfix: Fix the upload plugin issue in release3.0 [link](http://github.com/TencentBlueKing/bk-ci/issues/12889)
+
 # v3.0.16
 ## 2025-12-29
 ### Changelog since v3.0.15
