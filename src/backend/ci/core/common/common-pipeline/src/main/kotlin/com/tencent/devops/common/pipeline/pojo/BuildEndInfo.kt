@@ -362,7 +362,14 @@ data class BuildEndInfo(
             } else {
                 storedCancelUser
             }
-            return raw?.takeUnless { it.isBlank() || it == SYSTEM_CANCEL_USER }
+            return confirmedOperator(raw)
+        }
+
+        /**
+         * 取消人列里只有真人操作时才有意义：空值表示还没人取消，[SYSTEM_CANCEL_USER] 是系统取消的占位。
+         */
+        fun confirmedOperator(cancelUser: String?): String? {
+            return cancelUser?.takeUnless { it.isBlank() || it == SYSTEM_CANCEL_USER }
         }
 
         /**

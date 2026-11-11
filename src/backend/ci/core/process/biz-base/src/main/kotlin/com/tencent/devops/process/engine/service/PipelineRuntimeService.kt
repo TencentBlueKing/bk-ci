@@ -815,7 +815,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         // 只把真人操作人记成取消人。系统取消的 userId 往往是构建启动人或新构建的触发人，
         // 父级联再拿这个值往下传，就会把子流水线的权限代持人显示成取消人。
-        cancelUserToPersist(userId, buildEndInfo)?.let { cancelUserId ->
+        BuildEndInfo.inheritedCancelOperator(buildEndInfo, userId)?.let { cancelUserId ->
             pipelineBuildRecordService.updateBuildCancelUser(
                 projectId = projectId,
                 buildId = buildId,
@@ -863,17 +863,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         return true
-    }
-
-    /**
-     * 终态详情能区分用户取消和系统取消。没有详情的旧调用仍按 [userId] 记录。
-     * 父级联只记录 [ParentPipelineInfo.operator]，不记录本次调用传入的启动人。
-     */
-    private fun cancelUserToPersist(userId: String, buildEndInfo: BuildEndInfo?): String? {
-        if (buildEndInfo == null) {
-            return userId.takeUnless { it.isBlank() || it == BuildEndInfo.SYSTEM_CANCEL_USER }
-        }
-        return BuildEndInfo.inheritedCancelOperator(buildEndInfo, null)
     }
 
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
@@ -2390,7 +2379,8 @@ class PipelineRuntimeService @Autowired constructor(
                         ),
                     tag = "QueueInterceptor",
                     containerHashId = "",
-                    executeCount = 1,
+                    // 重试后的构建被并发挤出时，日志要落在当前执行次数上，否则只能在第 1 次里看到
+                    executeCount = buildInfo?.executeCount ?: 1,
                     jobId = null, stepId = "QueueInterceptor"
                 )
             }

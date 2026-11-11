@@ -1332,24 +1332,16 @@ class PipelineBuildRecordService @Autowired constructor(
 
     /**
      * 父构建取消子构建时要继续传递的操作人。
-     * 终态详情优先；详情还没落库时用已经同步写入的取消人。系统占位和系统取消都不传。
+     * 取消人在取消入口里先于取消事件同步落库，这里只查取消人列，不整行读 MODEL_VAR 解析终态详情。
+     * 系统取消没有真人操作，取消人列是 [BuildEndInfo.SYSTEM_CANCEL_USER] 占位或空，此时不往下传。
      */
     fun getInheritedCancelOperator(
         projectId: String,
-        pipelineId: String,
         buildId: String,
         executeCount: Int
     ): String? {
-        val record = recordModelDao.getRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            executeCount = executeCount
-        ) ?: return null
-        return BuildEndInfo.inheritedCancelOperator(
-            endInfo = parseBuildEndInfo(record.modelVar),
-            storedCancelUser = record.cancelUser
+        return BuildEndInfo.confirmedOperator(
+            getBuildCancelUser(projectId = projectId, buildId = buildId, executeCount = executeCount)
         )
     }
 

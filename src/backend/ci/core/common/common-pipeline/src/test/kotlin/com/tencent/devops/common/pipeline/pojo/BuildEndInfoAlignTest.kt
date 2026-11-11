@@ -512,15 +512,15 @@ class BuildEndInfoAlignTest {
     @Test
     fun `inherited operator follows the user through any parent depth`() {
         val root = BuildEndInfo.ofCancelUser(
-            operator = "edwinliao",
+            operator = "xxx",
             reasonCode = "bkBuildCancelUserManual"
         )
         Assertions.assertEquals(
-            "edwinliao",
+            "xxx",
             BuildEndInfo.inheritedCancelOperator(root, "oauth-holder")
         )
 
-        var operator: String? = "edwinliao"
+        var operator: String? = "xxx"
         repeat(5) { depth ->
             val info = BuildEndInfo.ofCancelParentPipeline(
                 reasonCode = "bkBuildCancelParentPipeline",
@@ -532,7 +532,7 @@ class BuildEndInfoAlignTest {
                 )
             )
             operator = BuildEndInfo.inheritedCancelOperator(info, "layer-$depth-holder")
-            Assertions.assertEquals("edwinliao", operator)
+            Assertions.assertEquals("xxx", operator)
         }
     }
 
@@ -558,9 +558,18 @@ class BuildEndInfoAlignTest {
 
     @Test
     fun `inherited operator falls back to stored cancel user only before end info is saved`() {
-        Assertions.assertEquals("edwinliao", BuildEndInfo.inheritedCancelOperator(null, "edwinliao"))
+        Assertions.assertEquals("xxx", BuildEndInfo.inheritedCancelOperator(null, "xxx"))
         Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, BuildEndInfo.SYSTEM_CANCEL_USER))
         Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, " "))
         Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, null))
+    }
+
+    @Test
+    fun `confirmed operator keeps real users and drops the system placeholder`() {
+        Assertions.assertEquals("xxx", BuildEndInfo.confirmedOperator("xxx"))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(BuildEndInfo.SYSTEM_CANCEL_USER))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(""))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator("  "))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(null))
     }
 }

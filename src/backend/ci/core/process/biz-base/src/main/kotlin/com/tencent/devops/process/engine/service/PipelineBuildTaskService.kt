@@ -160,7 +160,6 @@ class PipelineBuildTaskService @Autowired constructor(
                 // 这时没有真人取消，不能用任务启动人或子流水线代持人冒充。
                 val parentOperator = pipelineBuildRecordService.getInheritedCancelOperator(
                     projectId = buildTask.projectId,
-                    pipelineId = buildTask.pipelineId,
                     buildId = buildId,
                     executeCount = buildTask.executeCount ?: 1
                 )
@@ -187,7 +186,8 @@ class PipelineBuildTaskService @Autowired constructor(
                         message = "cancelled by pipeline[${buildTask.pipelineId}]$operatorTip",
                         tag = "",
                         containerHashId = "",
-                        executeCount = 1,
+                        // 这条日志打在父构建上，执行次数要跟父构建对齐
+                        executeCount = buildTask.executeCount ?: 1,
                         jobId = null,
                         stepId = null
                     )
@@ -202,9 +202,8 @@ class PipelineBuildTaskService @Autowired constructor(
                     projectId = subBuildInfo.projectId,
                     pipelineId = subBuildInfo.pipelineId,
                     buildId = subBuildInfo.buildId,
-                    // 有操作人时事件和取消人都用他，每一层才是同一个人。
-                    // 没有操作人时事件仍用子构建启动人推进关机，cancelBuild 不会把启动人记成取消人。
-                    userId = parentOperator ?: subBuildInfo.startUser,
+                    // 事件沿用子构建启动人推进关机，取消人由下面的 buildEndInfo 决定，不受这里影响
+                    userId = subBuildInfo.startUser,
                     executeCount = subBuildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED,
                     buildEndInfo = BuildEndInfo.ofCancelParentPipeline(
