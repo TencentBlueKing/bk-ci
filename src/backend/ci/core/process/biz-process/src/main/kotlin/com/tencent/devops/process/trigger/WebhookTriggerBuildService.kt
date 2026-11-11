@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
@@ -63,7 +64,8 @@ class WebhookTriggerBuildService(
     private val pipelineBuildService: PipelineBuildService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val webhookTriggerManager: WebhookTriggerManager,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val createStreamTriggerSupportService: CreateStreamTriggerSupportService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
@@ -164,30 +166,37 @@ class WebhookTriggerBuildService(
         resource: PipelineResourceVersion,
         startParams: Map<String, Any>
     ) {
+        val userId = pipelineRepositoryService.getPipelineOauthUser(
+            projectId = pipelineInfo.projectId,
+            pipelineId = pipelineInfo.pipelineId
+        ) ?: pipelineInfo.lastModifyUser
+        val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
+            pipelineInfo = pipelineInfo,
+            userId = userId
+        )
+        val finalStartParams = startParams + externalStartParams
         val buildId = startPipeline(
+            userId = userId,
             pipelineInfo = pipelineInfo,
             resource = resource,
-            startParams = startParams,
+            startParams = finalStartParams,
             startType = context.startType
         )
         context.buildId = buildId
-        context.startParams = startParams
+        context.startParams = finalStartParams
         webhookTriggerManager.fireBuildSuccess(context = context)
     }
 
-    fun startPipeline(
+    private fun startPipeline(
+        userId: String,
         pipelineInfo: PipelineInfo,
         resource: PipelineResourceVersion,
         startParams: Map<String, Any>,
-        startType: StartType = StartType.SERVICE
+        startType: StartType
     ): BuildId {
         val startEpoch = System.currentTimeMillis()
         val (projectId, pipelineId) =
             pipelineInfo.projectId to pipelineInfo.pipelineId
-        val userId = pipelineRepositoryService.getPipelineOauthUser(
-            projectId = projectId,
-            pipelineId = pipelineId
-        ) ?: pipelineInfo.lastModifyUser
         val buildId = pipelineBuildService.startPipeline(
             userId = userId,
             pipeline = pipelineInfo,
