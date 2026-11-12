@@ -258,7 +258,7 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
-    fun `markdown flag sends rendered text and skips the card`() {
+    fun `markdown flag keeps the original template and skips the card`() {
         val plan = WeworkReviewCardBuilder.build(
             request = reviewRequest(
                 receivers = mutableSetOf("royalhuang"),
@@ -277,23 +277,7 @@ class WeworkReviewCardBuilderTest {
             title = "t",
             redisOperation = null
         )
-        assertNotNull(plan)
-        assertTrue(plan!!.receiverCards.isEmpty())
-        val markdown = plan.fallbackText
-        assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
-        assertTrue(markdown.contains("**触发人**"))
-        assertTrue(markdown.contains("stage-review-notice"))
-        assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
-        assertFalse(markdown.contains("审核说明"))
-        assertFalse(markdown.contains("需要您审核后继续"))
-        assertTrue(markdown.contains("[电脑端查看详情](https://example.com/pc)"))
-        assertTrue(markdown.contains("[手机端查看详情](https://example.com/app)"))
-        assertTrue(
-            markdown.indexOf("[电脑端查看详情](https://example.com/pc)") <
-                markdown.indexOf("[手机端查看详情](https://example.com/app)")
-        )
-        assertFalse(markdown.contains("查看构建"))
-        assertFalse(markdown.contains("\\n"))
+        assertNull(plan)
     }
 
     @Test
