@@ -38,6 +38,10 @@ object StoreComponentContractPendingUtils {
 
     const val SKIP_NO_LATEST_RELEASE = "NO_LATEST_RELEASE"
     const val SKIP_NO_SOURCE = "NO_SOURCE"
+    const val SKIP_NOT_REPOSITORY = "NOT_REPOSITORY"
+
+    // 内置插件的 CODE_SRC 指向仓库里的某个源码文件或目录，不能检出
+    private val NOT_REPOSITORY_PATH = Regex("/(blob|tree)/")
 
     data class Candidate(
         val storeCode: String,
@@ -46,7 +50,7 @@ object StoreComponentContractPendingUtils {
     )
 
     /**
-     * 过期的排在前面，缺失的按执行次数补位，总数不超过 [scanSize]
+     * 过期的排在前面，缺失的按执行次数补位，总数不超过 [scanSize]；已租出的不占名额
      */
     fun mergeCandidates(
         stale: List<Candidate>,
@@ -54,15 +58,17 @@ object StoreComponentContractPendingUtils {
         existingCodes: Set<String>,
         maxFailCount: Int,
         scanSize: Int,
+        leased: (String) -> Boolean = { false },
         missingFailCount: (AtomRelease) -> Int
     ): List<Candidate> {
-        val result = stale.filter { it.failCount < maxFailCount }.take(scanSize).toMutableList()
-        val seen = result.map { it.storeCode }.toMutableSet()
+        val result = stale.filter { it.failCount < maxFailCount && !leased(it.storeCode) }
+            .take(scanSize).toMutableList()
+        val seen = stale.map { it.storeCode }.toMutableSet()
         for (release in hotReleases) {
             if (result.size >= scanSize) {
                 break
             }
-            if (release.atomCode in existingCodes || !seen.add(release.atomCode)) {
+            if (release.atomCode in existingCodes || !seen.add(release.atomCode) || leased(release.atomCode)) {
                 continue
             }
             val failCount = missingFailCount(release)
@@ -74,12 +80,14 @@ object StoreComponentContractPendingUtils {
     }
 
     /**
-     * 按顺序解析代码来源，解析不出的放进跳过清单，凑满 [limit] 个为止
+     * 按顺序解析代码来源，解析不出的放进跳过清单，凑满 [limit] 个为止。
+     * [acquire] 返回 false 表示被并发调用抢先租走，换下一个，不进跳过清单
      */
     fun pick(
         candidates: List<Candidate>,
         releases: Map<String, AtomRelease>,
         limit: Int,
+        acquire: (AtomRelease) -> Boolean = { true },
         resolve: (AtomRelease) -> StoreComponentSource?
     ): StoreComponentContractPendingResp {
         val items = mutableListOf<StoreComponentContractPendingItem>()
@@ -96,6 +104,13 @@ object StoreComponentContractPendingUtils {
             val source = resolve(release)
             if (source == null) {
                 skipped.add(Skipped(candidate.storeCode, release.version, SKIP_NO_SOURCE))
+                continue
+            }
+            if (NOT_REPOSITORY_PATH.containsMatchIn(source.repoUrl)) {
+                skipped.add(Skipped(candidate.storeCode, release.version, SKIP_NOT_REPOSITORY))
+                continue
+            }
+            if (!acquire(release)) {
                 continue
             }
             items.add(
