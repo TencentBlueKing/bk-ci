@@ -336,7 +336,7 @@ class PipelineContainerService @Autowired constructor(
                     !VMUtils.isVMTask(task.taskId) && task.additionalOptions?.elementPostInfo == null
                 }
                 val closeChild = context.skipFailedTask &&
-                    !tiedToAgentReuse(matrixContainer) &&
+                    !tiedToAgentReuse(context, matrixContainer) &&
                     userTasks.size == 1 &&
                     skipTaskIds.contains(userTasks.single().taskId)
                 val tasksToReset = if (closeChild) emptySet() else resetTaskIds
@@ -363,9 +363,14 @@ class PipelineContainerService @Autowired constructor(
                 }
                 if (closeChild) {
                     // 子 Job 记为成功后，矩阵调度不会再把它放进待运行列表。开始时间保留，避免耗时被清空。
+                    // 起止时间的补齐口径要和 cloneMatrixChildRecordsForRetry 的记录行保持一致。
+                    val now = LocalDateTime.now()
                     child.status = BuildStatus.SUCCEED
+                    if (child.startTime == null) {
+                        child.startTime = now
+                    }
                     if (child.endTime == null) {
-                        child.endTime = LocalDateTime.now()
+                        child.endTime = now
                     }
                 } else {
                     child.status = BuildStatus.QUEUE
@@ -594,7 +599,7 @@ class PipelineContainerService @Autowired constructor(
         }
         val closeWithoutStart = context.skipFailedTask &&
             container.matrixGroupFlag != true &&
-            !tiedToAgentReuse(container) &&
+            !tiedToAgentReuse(context, container) &&
             userSteps.size == 1 &&
             context.inSkipStage(stage, userSteps.single())
 
@@ -681,7 +686,9 @@ class PipelineContainerService @Autowired constructor(
                 }
 
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
-                val skipWhenFailed = context.inSkipStage(stage, atomElement)
+                // #13577 本 Job 已确定不再启动，它名下的插件（含 post）一个都不会跑，统一按跳过处理。
+                // 否则 post 元素在本轮遍历里会被重新置为排队，盖掉前面按 post 关系打上的 SKIP。
+                val skipWhenFailed = closeWithoutStart || context.inSkipStage(stage, atomElement)
                 val buildStatus = if (skipWhenFailed) BuildStatus.SKIP else null
                 val recordStatus = if (skipWhenFailed) BuildStatus.SKIP.name else null
                 val taskRecord = retryDetailModelStatus(
@@ -833,9 +840,13 @@ class PipelineContainerService @Autowired constructor(
                             dbRecord.run {
                                 if (closeWithoutStart) {
                                     // 保留开始时间，只补结束时间。Job 耗时停在失败那一次，不会再叠一段开机时间。
+                                    val now = LocalDateTime.now()
                                     status = BuildStatus.SUCCEED
+                                    if (startTime == null) {
+                                        startTime = now
+                                    }
                                     if (endTime == null) {
-                                        endTime = LocalDateTime.now()
+                                        endTime = now
                                     }
                                 } else {
                                     status = BuildStatus.QUEUE
@@ -1107,11 +1118,15 @@ class PipelineContainerService @Autowired constructor(
 
     /**
      * 构建机复用链上的 Job 仍走原来的启动流程，避免复用方拿不到机器。
-     * 准备任务前，复用链会写上 reusedInfo。
+     *
+     * 不能只看 dispatchType：reusedInfo 要等所有 Job 准备完、AgentReuseMutexTree.rewriteModel 才回写，
+     * 而且被复用的那一端自身的 agentType 就是普通的 ID/ENV，从它身上看不出有人在复用它。
+     * 所以以 [StartBuildContext.agentReuseJobIds] 为准，它在遍历编排前就从复用方反查出了两端的 jobId。
      */
-    private fun tiedToAgentReuse(container: Container): Boolean {
+    private fun tiedToAgentReuse(context: StartBuildContext, container: Container): Boolean {
         val dispatch = (container as? VMBuildContainer)?.dispatchType as? ThirdPartyAgentDispatch ?: return false
-        return dispatch.hasReuseMutex()
+        if (dispatch.hasReuseMutex()) return true
+        return container.jobId?.let { context.agentReuseJobIds.contains(it) } == true
     }
 
     private fun findPostTask(

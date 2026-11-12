@@ -159,6 +159,9 @@ class ContainerBuildRecordService(
      * 前端 StatusIcon 将 QUEUE 与 RUNNING/PREPARE_ENV 同样渲染为“转圈”，
      * 若此处置 QUEUE 会导致子Job/插件在真正被调度运行前就提前出现“运行中”转圈；
      * 置 null 时走 defaultStatus 不转圈，待引擎实际下发后再刷新为运行态。
+     *
+     * [skipTaskIds] 里的插件（本次失败跳过的）原样克隆，保留上一次的状态与耗时；
+     * [containerStatus] 非空且为结束态时，表示子Job本次不再执行，容器记录保留原有起止时间和耗时。
      */
     fun cloneMatrixChildRecordsForRetry(
         transactionContext: DSLContext?,
@@ -199,13 +202,13 @@ class ContainerBuildRecordService(
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
         )
-        val newTasks = oldTasks.mapNotNull { task ->
-            // #13577 失败跳过的步骤不克隆到本次执行次数。详情按 executeCount 取最新记录，
-            // 缺了这一行就会回落到上一次的失败结果，能看出它执行过并失败了，同时不参与本次执行。
-            if (skipTaskIds.contains(task.taskId)) {
-                return@mapNotNull null
-            }
-            val clearRuntime = resetTaskIds.contains(task.taskId)
+        val newTasks = oldTasks.map { task ->
+            // #13577 失败跳过的步骤按原样克隆：状态、起止时间、耗时都留着上一次失败的结果，
+            // 看得出它执行过并失败了，同时不参与本次执行。
+            // 这里不能像普通Job那样靠“不写记录、按 executeCount 回落”来实现：矩阵详情走
+            // BuildRecordTaskDao.getLatestMatrixRecords，它按 CONTAINER_ID 取最新执行次数后再整批回表，
+            // 少写一行的结果是这个步骤在详情里直接消失，而不是回落到上一次。
+            val clearRuntime = !skipTaskIds.contains(task.taskId) && resetTaskIds.contains(task.taskId)
             task.copy(
                 executeCount = newExecuteCount,
                 status = if (clearRuntime) null else task.status,
