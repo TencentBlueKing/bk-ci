@@ -76,7 +76,8 @@ object CommandLineUtils {
     ): String {
 
         val result = StringBuilder()
-        val errorResult = StringBuilder()
+        // 合流动后不再有独立 stderr；失败摘要改为截合并流末尾，兼容原 errorResult 用途
+        val mergedResult = StringBuilder()
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -92,6 +93,8 @@ object CommandLineUtils {
             else -> Charset.defaultCharset().name()
         }
 
+        // CommandLineExecutor 已 redirectErrorStream，只读合并后的 stdout。
+        // 一律 addNormalLine：##[error] 等前缀仍由 LoggerService 分级；勿再按 fd 调 addErrorLine。
         val outputStream = object : LogOutputStream() {
 
             override fun processBuffer() {
@@ -118,6 +121,7 @@ object CommandLineUtils {
                     buildId = buildId,
                     print2Logger = print2Logger
                 )
+                mergedResult.append(tmpLine).append("\n")
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
@@ -128,38 +132,7 @@ object CommandLineUtils {
                 }
             }
         }
-
-        val errorStream = object : LogOutputStream() {
-
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
-
-            override fun processLine(line: String?, level: Int) {
-                if (line == null) {
-                    return
-                }
-
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    tmpLine = it.onParseLine(tmpLine)
-                }
-                if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
-                    appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
-                    LoggerService.addErrorLine(tmpLine)
-                } else {
-                    result.append(tmpLine).append("\n")
-                }
-                errorResult.append(tmpLine).append("\n")
-            }
-        }
-        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
+        executor.streamHandler = PumpStreamHandler(outputStream, null)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
@@ -168,7 +141,7 @@ object CommandLineUtils {
                     errorType = ErrorType.USER,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
                         "Error message tracking:\n" +
-                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+                        mergedResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {

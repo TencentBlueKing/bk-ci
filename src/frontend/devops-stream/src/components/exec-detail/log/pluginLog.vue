@@ -191,11 +191,24 @@
                 try {
                     const logStatusRes = await pipelines.getLogStatus(pluginData)
                     const logMode = logStatusRes?.logMode || ''
-                    if (logMode === 'LOCAL') {
-                        this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
+                    const pluginRunning = [
+                        'RUNNING',
+                        'PREPARE_ENV',
+                        'QUEUE',
+                        'LOOP_WAITING',
+                        'CALL_WAITING',
+                        'WAITING'
+                    ].includes(this.plugin?.status)
+                    if (logMode === 'LOCAL' && pluginRunning) {
+                        this.$bkMessage({ theme: 'primary', message: this.$t('pipeline.uploadLog') })
                         return
                     }
-                    const downloadLink = logMode === 'ARCHIVED' ? await pipelines.getDownloadLogFromArtifactory(pluginData) : this.downLoadLink
+                    if (logMode === 'ARCHIVE_FAILED' || logMode === 'LOCAL') {
+                        this.$bkMessage({ theme: 'warning', message: this.$t('pipeline.archiveLogFailed') })
+                    }
+                    const downloadLink = logMode === 'ARCHIVED'
+                        ? await pipelines.getDownloadLogFromArtifactory(pluginData)
+                        : this.downLoadLink
                     location.href = downloadLink
                 } catch (error) {
                     this.$bkMessage({ theme: 'error', message: error.message || error })

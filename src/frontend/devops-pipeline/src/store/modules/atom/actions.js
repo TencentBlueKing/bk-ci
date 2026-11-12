@@ -976,6 +976,27 @@ export default {
         return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
+    getLogPanelLatest ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/latest`, {
+            params: query
+        })
+    },
+
+    getLogPanelBefore ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/before`, {
+            params: query
+        })
+    },
+
+    getLogPanelAfter ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: query
+        })
+    },
+
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
         return request.get(`/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
             const data = res.data || {}

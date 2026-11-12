@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElemen
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.RecordTaskOutputUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
@@ -389,6 +390,11 @@ class TaskBuildRecordService(
                     taskVar[Element::retryCountAuto.name] =
                         (recordTask.taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
                 }
+                RecordTaskOutputUtils.mergeOutputValues(
+                    target = taskVar,
+                    existingTaskVar = recordTask.taskVar,
+                    outputValues = taskBuildEndParam.outputValues.orEmpty()
+                )
                 recordTask.taskVar.putAll(taskVar)
                 recordTaskDao.updateRecord(
                     dslContext = context,

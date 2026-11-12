@@ -35,6 +35,9 @@ import com.tencent.devops.log.meta.Ansi
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
@@ -412,7 +415,9 @@ class BuildLogPrinter(
                     jobId = jobId,
                     stepId = stepId,
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    ownerProjectId = projectId,
+                    ownerPipelineId = pipelineId
                 )
             }
         } catch (ignore: Exception) {
@@ -445,19 +450,49 @@ class BuildLogPrinter(
         return client.get(ServiceLogPrintResource::class)
     }
 
-    private fun <T> doWithCircuitBreaker(
-        action: () -> T
-    ): T {
-        return circuitBreakerRegistry.let {
-            val breaker = it.circuitBreaker(this.javaClass.name)
-            breaker.executeCallable {
-                action()
+    /**
+     * 调用方只负责入队。连接、超时和熔断都在打印机线程里消化，不回到构建流程。
+     */
+    private fun doWithCircuitBreaker(action: () -> Unit) {
+        try {
+            logCallExecutor.execute {
+                try {
+                    circuitBreakerRegistry.circuitBreaker(javaClass.name).executeCallable {
+                        action()
+                    }
+                } catch (e: CallNotPermittedException) {
+                    logger.warn(
+                        "[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|",
+                        e
+                    )
+                } catch (thrown: Throwable) {
+                    logger.warn("build log call failed", thrown)
+                }
             }
+        } catch (thrown: Throwable) {
+            logger.warn("submit build log call failed", thrown)
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildLogPrinter::class.java)
+        private const val LOG_CALL_CORE_POOL_SIZE = 2
+        private const val LOG_CALL_MAX_POOL_SIZE = 8
+        private const val LOG_CALL_KEEP_ALIVE_SECONDS = 60L
+        private const val LOG_CALL_QUEUE_SIZE = 2048
+
+        private val logCallExecutor = ThreadPoolExecutor(
+            LOG_CALL_CORE_POOL_SIZE,
+            LOG_CALL_MAX_POOL_SIZE,
+            LOG_CALL_KEEP_ALIVE_SECONDS,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(LOG_CALL_QUEUE_SIZE),
+            { runnable ->
+                Thread(runnable, "build-log-printer").apply { isDaemon = true }
+            }
+        ) { _, _ ->
+            logger.warn("drop build log call, async queue is full")
+        }
 
         private const val LOG_DEBUG_FLAG = "##[debug]"
 

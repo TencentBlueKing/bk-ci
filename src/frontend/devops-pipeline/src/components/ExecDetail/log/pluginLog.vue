@@ -173,6 +173,17 @@
                 return currentJob.elements?.[elementIndex] ?? {}
             },
 
+            buildStillRunning () {
+                return [
+                    'RUNNING',
+                    'PREPARE_ENV',
+                    'QUEUE',
+                    'LOOP_WAITING',
+                    'CALL_WAITING',
+                    'WAITING'
+                ].includes(this.execDetail?.status)
+            },
+
             currentTaskStatus () {
                 return this.currentElement?.status ?? ''
             },
@@ -419,13 +430,20 @@
                     const logStatusRes = await this.getLogStatus(pluginData)
                     const data = logStatusRes.data || {}
                     const logMode = data.logMode || ''
-                    downloadLink
-                        = logMode === 'ARCHIVED'
-                            ? await this.getDownloadLogFromArtifactory(pluginData)
-                            : this.downloadLink
-                    if (logMode === 'LOCAL') {
+                    if (logMode === 'ARCHIVED') {
+                        downloadLink = await this.getDownloadLogFromArtifactory(pluginData)
+                    } else if (logMode === 'LOCAL' && this.buildStillRunning) {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog'), limit: 1 })
                         return
+                    } else if (logMode === 'ARCHIVE_FAILED' || logMode === 'LOCAL') {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: this.$t('history.archiveLogFailed'),
+                            limit: 1
+                        })
+                        downloadLink = this.downloadLink
+                    } else {
+                        downloadLink = this.downloadLink
                     }
                 }
                 location.href = downloadLink
