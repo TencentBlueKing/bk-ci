@@ -151,9 +151,7 @@ class TaskDaemon(
                     LargeVariableStore.isSupported()
                 ) {
                     // 敏感值也要能传给后续插件，同样存入制品库；日志侧由 SensitiveValueService 覆盖
-                    if (key in sensitiveKeys) {
-                        SensitiveValueService.addSensitiveValue(value)
-                    }
+                    rememberSensitiveLargeValue(key, value, sensitiveKeys)
                     largeValues[key] = value
                 } else {
                     LoggerService.addWarnLine(
@@ -196,6 +194,13 @@ class TaskDaemon(
             monitorData = getMonitorData(),
             sensitiveKeys = sensitiveKeys.takeIf { it.isNotEmpty() }
         )
+    }
+
+    /** 敏感大变量的明文要登记给日志脱敏，不能只靠引用串。 */
+    private fun rememberSensitiveLargeValue(key: String, value: String, sensitiveKeys: Set<String>) {
+        if (key in sensitiveKeys) {
+            SensitiveValueService.addSensitiveValue(value)
+        }
     }
 
     /**

@@ -248,7 +248,7 @@ object BuildVarOverflowExprSupport {
     }
 
     /**
-     * @property node      解析出的可变容器
+     * @property node 解析出的可变容器
      * @property compressed 是否与「引擎压缩序列化」的结果逐字相同。
      *   为 true 说明这是引擎按 Map/List 下发的参数；为 false 说明它只是**内容恰好是 JSON 文本的字符串参数**
      *   （引擎对字符串参数原样下发，不会重新序列化），两者的输出格式不同，必须区分。

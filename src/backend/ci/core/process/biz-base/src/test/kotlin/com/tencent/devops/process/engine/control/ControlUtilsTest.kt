@@ -747,7 +747,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY
                 ),
                 containerFinalStatus = BuildStatus.CANCELED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = true
             )
         )
@@ -758,7 +758,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP
                 ),
                 containerFinalStatus = BuildStatus.CANCELED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = false
             )
         )
@@ -769,7 +769,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_ONLY_EXCEPT_SKIP
                 ),
                 containerFinalStatus = BuildStatus.FAILED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = false
             )
         )
@@ -780,7 +780,7 @@ class ControlUtilsTest : TestBase() {
                     enable = true, runCondition = RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
                 ),
                 containerFinalStatus = BuildStatus.CANCELED,
-                variables = variables,
+                session = varSession(variables),
                 hasFailedTaskInSuccessContainer = true
             )
         )
