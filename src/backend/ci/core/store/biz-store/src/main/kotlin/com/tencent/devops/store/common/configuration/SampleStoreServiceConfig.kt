@@ -33,11 +33,13 @@ import com.tencent.devops.store.atom.service.impl.AtomMemberServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomCooperationServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomMemberServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomNotifyServiceImpl
+import com.tencent.devops.store.common.service.StoreComponentSourceResolver
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.impl.ContainerServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreCommonServiceImpl
+import com.tencent.devops.store.common.service.impl.SampleStoreComponentSourceResolver
 import com.tencent.devops.store.common.service.impl.SampleStoreLogoServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreUserServiceImpl
@@ -102,4 +104,8 @@ class SampleStoreServiceConfig {
     @Bean
     @ConditionalOnMissingBean(StoreCommonServiceImpl::class)
     fun storeCommonService() = SampleStoreCommonServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(StoreComponentSourceResolver::class)
+    fun storeComponentSourceResolver() = SampleStoreComponentSourceResolver()
 }
