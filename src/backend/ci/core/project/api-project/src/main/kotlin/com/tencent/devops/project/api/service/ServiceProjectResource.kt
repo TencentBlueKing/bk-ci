@@ -253,6 +253,21 @@ interface ServiceProjectResource {
     ): Result<Boolean>
 
     @PUT
+    @Path("/{projectId}/enable")
+    @Operation(summary = "启用或停用项目")
+    fun enable(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
+
+    @PUT
     @Path("/{projectCode}/projectName")
     fun updateProjectName(
         @Parameter(description = "userId", required = true)
