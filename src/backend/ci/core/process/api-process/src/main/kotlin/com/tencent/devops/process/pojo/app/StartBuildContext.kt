@@ -169,6 +169,13 @@ data class StartBuildContext(
     var reachedRetryTargetStage: Boolean = false
 
     /**
+     * #10082 处于构建机复用链上的 jobId 集合（复用方与被复用方都在内）。
+     * 注意：该字段在 PipelineRuntimeService 遍历编排前赋值，不能依赖 dispatchType.reusedInfo，
+     * 因为 AgentReuseMutexTree.rewriteModel 在所有 Job 准备完之后才回写 reusedInfo。
+     */
+    var agentReuseJobIds: Set<String> = emptySet()
+
+    /**
      * 是否为矩阵组内的局部重试（子Job/子插件重试、跳过或矩阵级批量重试）
      */
     fun isMatrixPartialRetry(): Boolean = !retryMatrixGroupId.isNullOrBlank()

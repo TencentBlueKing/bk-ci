@@ -48,6 +48,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -72,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -932,6 +934,9 @@ class PipelineRuntimeService @Autowired constructor(
         var afterRetryStage = false
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
         val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
+        // #13577 复用链上的 Job 必须按原流程启动构建机，而 rewriteModel 要等所有 Job 准备完才回写
+        // reusedInfo，所以这里先从编排里把复用关系的两端都收集出来，供 Job 准备阶段判断。
+        context.agentReuseJobIds = collectAgentReuseJobIds(fullModel, context.variables)
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             // 先标记是否已到达重试目标 Stage，后续跳过/禁止重置 checkIn 都依赖该标记
             if (context.isRetryTargetStage(stage)) {
@@ -1442,7 +1447,12 @@ class PipelineRuntimeService @Autowired constructor(
         val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
         if (updateExistsTask.isNotEmpty()) {
             pipelineTaskService.batchUpdate(transactionContext, updateExistsTask)
-            taskBuildRecordResult.addRecords(updateExistsTask, context.resourceVersion)
+            // #13577 失败跳过的步骤运行态已经更新，这里不再写本次执行记录。
+            // addRecords 会按新的执行次数落一条记录，详情就会盖住上一次的失败结果。
+            val tasksToRecord = updateExistsTask.filter { it.status != BuildStatus.SKIP }
+            if (tasksToRecord.isNotEmpty()) {
+                taskBuildRecordResult.addRecords(tasksToRecord.toMutableList(), context.resourceVersion)
+            }
         }
         if (buildTaskList.isNotEmpty()) {
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
@@ -1515,11 +1525,38 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
-                    matrixGroupId = build.matrixGroupId, status = null, startTime = build.startTime,
+                    matrixGroupId = build.matrixGroupId,
+                    // #13577 未结束的重试保持 status 为空，详情不会提前转圈。
+                    // 单步骤失败跳过的 Job 已是成功态，结束状态要写进本次记录。
+                    status = build.status.takeIf { it.isFinish() }?.name,
+                    startTime = build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
         }
+    }
+
+    /**
+     * #13577 收集处于构建机复用链上的 jobId（复用方与被复用方都算），口径与 [AgentReuseMutexTree] 建树一致。
+     * 被复用方自身的 dispatchType 看不出它被别人复用，只能反向从复用方的 value 里取。
+     * value 可能是变量，两种写法都放进集合，避免解析不到时漏判。
+     */
+    private fun collectAgentReuseJobIds(fullModel: Model, variables: Map<String, String>): Set<String> {
+        val jobIds = mutableSetOf<String>()
+        fullModel.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val dispatch = (container as? VMBuildContainer)?.dispatchType as? ThirdPartyAgentDispatch
+                    ?: return@forEach
+                if (!dispatch.agentType.isReuse()) return@forEach
+                container.jobId?.let { jobIds.add(it) }
+                jobIds.add(dispatch.value)
+                // 这里只是为了判断“是否在复用链上”，表达式解析失败不应该影响构建启动，
+                // 真正的报错留给后面的 AgentReuseMutexTree。
+                runCatching { EnvReplacementParser.parse(dispatch.value, contextMap = variables) }
+                    .getOrNull()?.let { jobIds.add(it) }
+            }
+        }
+        return jobIds
     }
 
     private fun saveStageRecords(
