@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import
 @Configuration(proxyBeanMethods = false)
 @Import(WsV2RabbitConfiguration::class)
 class PipelineWebSocketV2Configuration {
-    @EventConsumer(defaultConcurrency = 2)
+    @EventConsumer(defaultConcurrency = 10)
     fun pipelineWebsocketV2InvalidationConsumer(publisher: WsInvalidationPublisher) =
         ScsConsumerBuilder.build<PipelineBuildWebSocketPushEvent> { event ->
             topics(event).forEach { publisher.publish(WsInvalidation(it)) }
