@@ -5,6 +5,7 @@ import { Message } from 'bkui-vue'
 import type { ComputedRef, Ref } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { getVariableValueIssue } from '@/utils/startupParamValidation'
 import { useRoute, useRouter } from 'vue-router'
 import { ParamType as VariableParamType } from '@/types/variable'
 
@@ -470,6 +471,21 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
         theme: 'error',
         message: t('flow.preview.requiredParamsEmpty', { params: emptyRequiredParams.join(', ') }),
       })
+      return
+    }
+
+    const values = {
+      ...store.paramsValues,
+      ...store.versionParamValues,
+      ...store.buildValues,
+      ...store.constantValues,
+      ...store.otherValues,
+    }
+    const invalid = Object.keys(values).filter(key => getVariableValueIssue(values[key]))
+    if (invalid.length) {
+      invalidParams.value = new Set(invalid)
+      activeSections.value = new Set([...activeSections.value, 2, 3, 4, 5])
+      Message({ theme: 'error', message: t('flow.variable.invalidValue', { max: 4000 }) })
       return
     }
 

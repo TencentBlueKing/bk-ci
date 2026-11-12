@@ -302,6 +302,10 @@
     "systemPlugin": "系统插件"
   },
   "settings": {
+    "whenVariableExceedsLength": "运行期变量超过系统上限时",
+    "clearTheValue": "丢弃超限值，继续运行",
+    "errorAndHalt": "插件报错",
+    "variableLimitTips": "启动参数和默认值始终限制 4000 字符。运行期上限默认 256KB（UTF-8），以系统配置为准；非 bkrepo 环境为 4000 字符。",
     "baseInfo": "基本信息",
     "group": "分组",
     "groupName": "分组名称",
@@ -922,6 +926,7 @@
     "noBranchAvailable": "暂无可选分支"
   },
   "details": {
+    "longParamUnavailable": "历史大变量内容暂不可用",
     "executorInfo": "{0} {1}触发于 {2}",
     "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
     "executeDetail": "执行详情",
@@ -1387,6 +1392,8 @@
     "templateBuildParamTips": "设置为模版入参的参数，实例化时可以修改参数值，可以设置为实例的入参。"
   },
   "storeMap": {
+    "paramLengthLimitTips": "变量［{0}］长度［{1}］超过限制［{2}］，请修改后再提交",
+    "paramOverflowReferenceTips": "参数［{0}］包含历史大变量引用，请重新填写",
     "textarea": "文本框",
     "pauseAtom": "执行前暂停",
     "pauseConfLabel": "执行前暂停配置",

@@ -81,6 +81,13 @@ export default defineComponent({
 
       const rows: InfoRow[] = [
         {
+          key: 'failIfVariableInvalid',
+          label: t('flow.variable.limitPolicy'),
+          value: props.basicSettings.failIfVariableInvalid
+            ? t('flow.variable.failOversized')
+            : t('flow.variable.discardOversized'),
+        },
+        {
           key: 'concurrencySettings',
           label: t('flow.content.concurrencySettings'),
           value: isMultiple

@@ -302,6 +302,10 @@
     "systemPlugin": "システムプラグイン"
   },
   "settings": {
+    "whenVariableExceedsLength": "実行時変数がシステム上限を超えた場合",
+    "clearTheValue": "超過値を破棄して実行を続行",
+    "errorAndHalt": "プラグインを失敗にする",
+    "variableLimitTips": "起動パラメータとデフォルト値は常に4000文字までです。実行時の上限はシステム設定に従い、デフォルトは256KB（UTF-8）、bkrepo以外の環境では4000文字です。",
     "baseInfo": "基本情報",
     "group": "グループ",
     "groupName": "グループ名",
@@ -919,6 +923,7 @@
     "noBranchAvailable": "選択可能なブランチがありません"
   },
   "details": {
+    "longParamUnavailable": "過去の大きな変数の内容は利用できません",
     "executorInfo": "{0} {1}が{2}にトリガー",
     "pipelineVersionDiffTips": "パイプライン編成バージョン番号が変更されました",
     "executeDetail": "実行詳細",
@@ -1385,6 +1390,8 @@
     "templateBuildParamTips": "テンプレートへの入力パラメータとして設定されるパラメータ。これらの値はインスタンス化中に変更でき、インスタンスへの入力パラメータとして設定することもできます。"
   },
   "storeMap": {
+    "paramLengthLimitTips": "変数［{0}］は{1}文字で、上限の{2}文字を超えています。修正してください。",
+    "paramOverflowReferenceTips": "パラメータ［{0}］に過去の大きな変数への参照があります。値を入力し直してください。",
     "textarea": "テキストボックス",
     "pauseAtom": "実行前に一時停止",
     "pauseConfLabel": "実行前一時停止設定",

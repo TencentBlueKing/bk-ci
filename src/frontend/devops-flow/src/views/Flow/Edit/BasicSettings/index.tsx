@@ -35,10 +35,12 @@ export default defineComponent({
       waitQueueTimeMinute: 20,
       concurrencyGroup: '${{ci.flow_id}}',
       concurrencyCancelInProgress: false,
+      failIfVariableInvalid: false,
       maxQueueSize: 10,
     })
 
     function initFormData(setting: FlowSettings) {
+      formData.value.failIfVariableInvalid = setting?.failIfVariableInvalid ?? false
       formData.value.pipelineName = setting?.pipelineName || ''
       formData.value.desc = setting?.desc || ''
       formData.value.runLockType = setting?.runLockType || RunLockType.MULTIPLE
@@ -113,6 +115,13 @@ export default defineComponent({
             {/* 执行设置 */}
             <div class={styles.section}>
               <div class={styles.sectionTitle}>{t('flow.content.executionSettings')}</div>
+              <FormItem label={t('flow.variable.limitPolicy')}>
+                <Radio.Group v-model={formData.value.failIfVariableInvalid} onChange={handleChange}>
+                  <Radio label={false}>{t('flow.variable.discardOversized')}</Radio>
+                  <Radio label={true}>{t('flow.variable.failOversized')}</Radio>
+                </Radio.Group>
+                <p>{t('flow.variable.limitPolicyTips')}</p>
+              </FormItem>
               <FormItem>
                 <div class={styles.concurrencySettings}>
                   <div class={styles.concurrencyHeader}>

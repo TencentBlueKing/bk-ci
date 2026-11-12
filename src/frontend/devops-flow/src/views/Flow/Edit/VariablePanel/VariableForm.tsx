@@ -1,4 +1,5 @@
 import type { Param } from '@/api/flowModel'
+import { getVariableValueIssue, VAR_MAX_LENGTH } from '@/utils/startupParamValidation'
 import { SvgIcon } from '@/components/SvgIcon'
 import type { OptionsApiConfig, ParamOption } from '@/types/variable'
 import {
@@ -102,6 +103,11 @@ export default defineComponent({
         },
       ],
       defaultValue: [
+        {
+          validator: (value: unknown) => !getVariableValueIssue(value),
+          message: t('flow.variable.invalidValue', { max: VAR_MAX_LENGTH }),
+          trigger: 'blur',
+        },
         {
           validator: (value: unknown) => {
             // Only validate for constants

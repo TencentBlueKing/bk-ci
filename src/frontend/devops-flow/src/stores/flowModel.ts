@@ -8,6 +8,8 @@ import {
 } from '@/api/flowModel'
 import { getPluginProperties, type PluginProperty } from '@/api/flowContentList'
 import { defineStore } from 'pinia'
+import { useI18n } from 'vue-i18n'
+import { validateStartupValues } from '@/utils/startupParamValidation'
 import { computed, ref } from 'vue'
 import { useModeStore } from '@/stores/flowMode'
 import { UI_MODE } from '@/utils/flowConst'
@@ -17,6 +19,7 @@ import { validateFlowSettings } from '@/utils/validation'
  * 创作流模型状态管理
  */
 export const useFlowModelStore = defineStore('flowModel', () => {
+  const { t } = useI18n()
   const modeStore = useModeStore()
   // Flow 模型数据
   const flowModel = ref<FlowModel | null>(null)
@@ -248,6 +251,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     loading.value = true
 
     try {
+      // In YAML mode the model can be stale; the server validates the submitted YAML.
+      if (!yamlDirty.value) {
+        const params = flowModel.value.stages?.[0]?.containers?.[0]?.params || []
+        validateStartupValues(Object.fromEntries(params.map(param => [param.id, param.defaultValue])), t)
+      }
       const modelCopy = JSON.parse(JSON.stringify(flowModel.value))
 
       modelCopy.stages?.forEach((stage: any) => {

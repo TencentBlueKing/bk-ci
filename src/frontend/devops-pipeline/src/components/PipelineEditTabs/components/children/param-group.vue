@@ -75,37 +75,18 @@
                                         class="value-operate-row"
                                         style="justify-content: space-between;"
                                     >
-                                        <div
-                                            :class="['param-value', {
-                                                'is-long-value': param.isLongValue
-                                            }]"
-                                        >
+                                        <div class="param-value">
                                             <span
                                                 v-if="param.readOnly"
                                                 class="read-only"
                                             >{{ $t('readonlyParams') }}</span>
-                                            <template v-if="param.isLongValue">
-                                                <span class="default-value long-value-placeholder">
-                                                    {{ longValuePlaceholder(param) }}
-                                                </span>
-                                                <bk-button
-                                                    v-if="param.longValueViewable !== false"
-                                                    text
-                                                    size="small"
-                                                    class="view-long-value-btn"
-                                                    @click.stop="handleViewLongValue(param)"
-                                                >
-                                                    {{ $t('details.loadParamValue') }}
-                                                </bk-button>
-                                            </template>
                                             <span
-                                                v-else
                                                 :class="['default-value', {
                                                     'param-deleted': param.isDeleted
                                                 }]"
                                                 v-bk-overflow-tips
                                             >
-                                                {{ param.defaultValue === '' ? '--' : (param.defaultValue ?? '--') }}
+                                                {{ isOverflowReference(param.defaultValue) ? $t('details.longParamUnavailable') : (param.defaultValue === '' ? '--' : (param.defaultValue ?? '--')) }}
                                             </span>
                                         </div>
                                         <div
@@ -157,6 +138,7 @@
 <script>
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     import vueDraggable from 'vuedraggable'
+    import { isOverflowReference } from '@/utils/buildParamLongValue'
     export default {
         components: {
             vueDraggable
@@ -194,10 +176,6 @@
                 type: Function,
                 default: () => {}
             },
-            handleViewLongValue: {
-                type: Function,
-                default: () => {}
-            },
             editable: {
                 type: Boolean,
                 default: true
@@ -222,6 +200,7 @@
             }
         },
         methods: {
+            isOverflowReference,
             bkVarWrapper,
             handleCopy (con) {
                 copyToClipboard(con)
@@ -235,12 +214,6 @@
                 this.isShow = !this.isShow
             },
           
-            longValuePlaceholder (param) {
-                if (param.overflowLength != null) {
-                    return this.$t('details.longParamValueHiddenWithLength', [param.overflowLength])
-                }
-                return this.$t('details.longParamValueHidden')
-            },
             triggerSort (event, key, index) {
                 const { element, newIndex, oldIndex } = event?.moved
                 const paramList = this.listMap[key]
@@ -426,21 +399,10 @@
                         .param-value {
                             display: flex;
                             align-items: center;
-                            flex: 1;
-                            min-width: 0;
                             .default-value {
                                 color: #979BA5;
-                                min-width: 0;
-                                flex: 1;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                white-space: nowrap;
-                            }
-                            &.is-long-value {
-                                .view-long-value-btn {
-                                    flex-shrink: 0;
-                                    margin-left: 8px;
-                                }
+                                max-width: 286px;
+                                @include ellipsis();
                             }
                             .read-only {
                                 flex-shrink: 0;

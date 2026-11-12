@@ -14,29 +14,7 @@
             :handle-follow-template="() => handleFollowTemplate(param.id)"
         >
             <section class="component-row">
-                <long-param-input
-                    v-if="useLongParamInput"
-                    flex
-                    click-unfold
-                    :input-type="param.type"
-                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
-                    :handle-change="handleParamUpdate"
-                    :placeholder="param.placeholder"
-                    :disabled="disabled || param.isDelete"
-                    :is-diff-param="(highlightChangedParam && param.isChanged) || param.affectedChanged"
-                    :is-change-param="param.isChange"
-                    :is-new-param="param.isNew"
-                    :is-delete-param="param.isDelete"
-                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
-                    :class="{
-                        'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged,
-                        'is-change-param': param.isChange,
-                        'is-new-param': param.isNew,
-                        'is-delete-param': param.isDelete
-                    }"
-                />
                 <component
-                    v-else
                     :is="param.component"
                     flex
                     click-unfold
@@ -48,7 +26,7 @@
                     :random-sub-path="param.latestRandomStringInPath"
                     :enable-version-control="param.enableVersionControl"
                     :is-diff-param="highlightChangedParam && param.isChanged"
-                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
+                    v-validate="Object.assign({ required: param.required, objectRequired: isObject(param.value) }, typeof param.value === 'string' ? { max: VAR_MAX_LENGTH } : {})"
                     :class="{
                         'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged,
                         'is-change-param': param.isChange,
@@ -83,14 +61,13 @@
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import LongParamInput from '@/components/atomFormField/LongParamInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import { VAR_MAX_LENGTH } from '@/store/constants'
     import metadataList from '@/components/common/metadata-list'
-    import { isStringParam, isTextareaParam } from '@/store/modules/atom/paramsConfig'
     import { COMMON_PARAM_PREFIX, isObject } from '@/utils/util'
     export default {
         components: {
@@ -99,7 +76,6 @@
             EnumInput,
             VuexInput,
             VuexTextarea,
-            LongParamInput,
             FormField,
             metadataList,
             FileParamInput,
@@ -144,11 +120,8 @@
                 default: false
             }
         },
-        computed: {
-            useLongParamInput () {
-                return this.isExecPreview
-                    && (isStringParam(this.param.type) || isTextareaParam(this.param.type))
-            }
+        data () {
+            return { VAR_MAX_LENGTH }
         },
         methods: {
             isObject,

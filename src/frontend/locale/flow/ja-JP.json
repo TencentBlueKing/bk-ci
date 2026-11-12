@@ -348,6 +348,14 @@
       "validationError": "トリガー設定に検証エラーがあります。保存する前に修正してください"
     },
     "variable": {
+      "historicalValueUnavailable": "過去の大きな変数の内容は利用できません",
+      "limitPolicy": "実行時変数がシステム上限を超えた場合",
+      "discardOversized": "超過値を破棄して実行を続行",
+      "failOversized": "プラグインを失敗にする",
+      "limitPolicyTips": "起動パラメータとデフォルト値は常に4000文字までです。実行時の上限はシステム設定に従い、デフォルトは256KB（UTF-8）、bkrepo以外の環境では4000文字です。",
+      "valueTooLong": "変数［{key}］は{length}文字で、上限の{max}文字を超えています。修正してください。",
+      "overflowReference": "パラメータ［{key}］に過去の大きな変数への参照があります。値を入力し直してください。",
+      "invalidValue": "変数値は{max}文字以下にし、過去の大きな変数への参照を使用しないでください",
       "title": "変数",
       "description": "説明",
       "inputParams": "入力パラメータ",

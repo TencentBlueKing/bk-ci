@@ -21,6 +21,8 @@ import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from 
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
+import { getVariableValueIssue } from '../../../../../common-lib/variableValue'
+import { validateStartupValues } from '@/utils/startupParamValidation'
 
 function isSkip (status) {
     return status === 'SKIP'
@@ -67,6 +69,9 @@ export default {
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    failIfVariableInvalid: state => {
+        return state?.pipelineSetting?.failIfVariableInvalid ?? false
     },
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
@@ -224,6 +229,14 @@ export default {
             
 
             const allContainers = getters.getAllContainers(stages)
+            const startupParams = stages[0]?.containers?.[0]?.params || []
+            const values = startupParams.reduce((acc, param) => {
+                Vue.set(param, 'isInvalid', !!getVariableValueIssue(param.defaultValue))
+                acc[param.id] = param.defaultValue
+                return acc
+            }, {})
+            validateStartupValues(values)
+
             // 当前所有插件element
             const elementsMap = allContainers.reduce(function (prev, cur) {
                 prev.push(...cur.elements)

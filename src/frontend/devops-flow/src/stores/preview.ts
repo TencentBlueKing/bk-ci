@@ -11,6 +11,8 @@ import {
 import type { Container, Element, FlowInfo, FlowModel, Stage } from '@/types/flow'
 import { allVersionKeyList } from '@/utils/flowConst'
 import { defineStore } from 'pinia'
+import { useI18n } from 'vue-i18n'
+import { validateStartupValues } from '@/utils/startupParamValidation'
 import { computed, ref, shallowRef } from 'vue'
 
 // ============================================
@@ -87,6 +89,7 @@ const createParamsValuesMap = (
 // ============================================
 
 export const usePreviewStore = defineStore('preview', () => {
+  const { t } = useI18n()
   // ----------------------------------------
   // Atomic Data Layer
   // ----------------------------------------
@@ -489,6 +492,7 @@ export const usePreviewStore = defineStore('preview', () => {
           ? { ...processedParams, buildNo: userBuildNo.value }
           : processedParams
 
+      validateStartupValues(processedParams, t)
       return await requestExecPipeline({
         projectId,
         pipelineId,

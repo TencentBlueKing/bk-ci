@@ -303,6 +303,10 @@
     "systemPlugin": "System plugin"
   },
   "settings": {
+    "whenVariableExceedsLength": "When a runtime variable exceeds the system limit",
+    "clearTheValue": "Discard the oversized value and continue",
+    "errorAndHalt": "Fail the plugin",
+    "variableLimitTips": "Startup values and defaults are always limited to 4000 characters. The runtime limit defaults to 256KB (UTF-8), subject to system configuration; it is 4000 characters without bkrepo.",
     "baseInfo": "Basic Information",
     "group": "Group",
     "groupName": "Group",
@@ -925,6 +929,7 @@
     "noBranchAvailable": "No branch available"
   },
   "details": {
+    "longParamUnavailable": "Historical large-variable content is unavailable",
     "pipelineVersionDiffTips": "The pipeline config version has changed",
     "executeDetail": "Build Detail",
     "outputs": "Outputs",
@@ -1390,6 +1395,8 @@
     "templateBuildParamTips": "Parameters set as input parameters to the template. Their values ​​can be modified during instantiation, and they can also be set as input parameters to the instance."
   },
   "storeMap": {
+    "paramLengthLimitTips": "Variable [{0}] has {1} characters; the limit is {2}. Edit it before submitting.",
+    "paramOverflowReferenceTips": "Parameter [{0}] contains a historical large-variable reference. Enter its value again.",
     "textarea": "Textarea",
     "pauseAtom": "Pause before execution",
     "pauseConfLabel": "Pause configuration",

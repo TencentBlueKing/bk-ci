@@ -154,7 +154,6 @@ export default defineComponent({
                   disabled={disabled || param.readOnly}
                   placeholder={t('flow.content.descriptionPlaceholder')}
                   rows={3}
-                  maxlength={param.maxLength || 100}
                   class={isInvalid ? styles.inputInvalid : ''}
                   onChange={(val: string) => handleParamChange(type, param.id, val)}
                 />

@@ -21,6 +21,7 @@ import {
     PROCESS_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
+import { validateStartupValues } from '@/utils/startupParamValidation'
 import { flatSearchKey, isEmptyObj } from '@/utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
@@ -110,7 +111,7 @@ const actions = {
             })
             delete params.buildNo
         }
-        console.log('exec', query)
+        validateStartupValues(params)
         return ajax.post(url, params, {
             params: query
         }).then(response => {

@@ -347,6 +347,14 @@
       "validationError": "触发器配置存在校验错误，请修正后再保存"
     },
     "variable": {
+      "historicalValueUnavailable": "历史大变量内容暂不可用",
+      "limitPolicy": "运行期变量超过系统上限时",
+      "discardOversized": "丢弃超限值，继续运行",
+      "failOversized": "插件报错",
+      "limitPolicyTips": "启动参数和默认值始终限制 4000 字符。运行期上限默认 256KB（UTF-8），以系统配置为准；非 bkrepo 环境为 4000 字符。",
+      "valueTooLong": "变量［{key}］长度［{length}］超过 {max} 字符，请修改后再提交",
+      "overflowReference": "参数［{key}］包含历史大变量引用，请重新填写",
+      "invalidValue": "变量值不能超过 {max} 字符，也不能使用历史大变量引用",
       "title": "变量",
       "description": "描述",
       "inputParams": "入参",

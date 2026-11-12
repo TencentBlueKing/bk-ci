@@ -348,6 +348,14 @@
       "validationError": "Trigger configuration has validation errors, please fix before saving"
     },
     "variable": {
+      "historicalValueUnavailable": "Historical large-variable content is unavailable",
+      "limitPolicy": "When a runtime variable exceeds the system limit",
+      "discardOversized": "Discard the oversized value and continue",
+      "failOversized": "Fail the plugin",
+      "limitPolicyTips": "Startup values and defaults are always limited to 4000 characters. The runtime limit defaults to 256KB (UTF-8), subject to system configuration; it is 4000 characters without bkrepo.",
+      "valueTooLong": "Variable [{key}] has {length} characters; the limit is {max}. Edit it before submitting.",
+      "overflowReference": "Parameter [{key}] contains a historical large-variable reference. Enter its value again.",
+      "invalidValue": "Variable values must not exceed {max} characters or contain historical large-variable references",
       "title": "Variables",
       "description": "Description",
       "inputParams": "Input Parameters",

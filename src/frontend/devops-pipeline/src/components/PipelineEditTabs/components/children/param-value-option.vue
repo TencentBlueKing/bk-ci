@@ -174,7 +174,7 @@
                         :disabled="disabled && !isOverride"
                         :handle-change="handleChange"
                         name="defaultValue"
-                        v-validate="{ required: valueRequired }"
+                        v-validate="varLengthRule"
                         :data-vv-scope="'pipelineParam'"
                         :click-unfold="true"
                         :placeholder="$t('editPage.defaultValueTips')"
@@ -195,7 +195,7 @@
                         :disabled="disabled && !isOverride"
                         :handle-change="handleChange"
                         name="defaultValue"
-                        v-validate="{ required: valueRequired }"
+                        v-validate="varLengthRule"
                         :data-vv-scope="'pipelineParam'"
                         :placeholder="$t('editPage.defaultValueTips')"
                         :value="param.defaultValue"
@@ -299,7 +299,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
-    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, VAR_MAX_LENGTH } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -386,18 +386,13 @@
         },
         computed: {
             ...mapGetters('atom', [
-                'osList',
-                'allPipelineParams',
-                'getBuildResourceTypeList'
+                'osList'
             ]),
             ...mapState('atom', [
                 'pipeline'
             ]),
             varLengthRule () {
-
-                return {
-                    required: this.valueRequired
-                }
+                return { required: this.valueRequired, max: VAR_MAX_LENGTH }
             },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({

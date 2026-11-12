@@ -7,6 +7,7 @@ import { allVersionKeyList } from '@/utils/flowConst'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import { type BuildParamItem, type BuildParamProperty } from '@/api/executeDetail'
 import styles from './StartParams.module.css'
+import { isOverflowReference } from '../../../../../../../common-lib/variableValue'
 
 interface ParamItem extends BuildParamItem {
   isDiff?: boolean
@@ -111,6 +112,7 @@ export default defineComponent({
     }
 
     function formatParamValue(value: any): string {
+      if (isOverflowReference(value)) return t('flow.variable.historicalValueUnavailable')
       if (typeof value === 'object' && value !== null) {
         try {
           return JSON.stringify(value, null, 2)
