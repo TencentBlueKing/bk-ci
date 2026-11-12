@@ -111,7 +111,11 @@ interface OpStoreComponentContractResource {
         @Parameter(description = "缺失类组件的最低近期执行次数", required = false)
         @QueryParam("minRecentExecuteNum")
         @DefaultValue("1")
-        minRecentExecuteNum: Int
+        minRecentExecuteNum: Int,
+        @Parameter(description = "大于 0 时给返回的组件加租约（分钟），租约期内不再返回；0 为不加", required = false)
+        @QueryParam("leaseMinutes")
+        @DefaultValue("0")
+        leaseMinutes: Int
     ): Result<StoreComponentContractPendingResp>
 
     @Operation(summary = "上报一次契约抽取失败，返回当前连续失败次数")

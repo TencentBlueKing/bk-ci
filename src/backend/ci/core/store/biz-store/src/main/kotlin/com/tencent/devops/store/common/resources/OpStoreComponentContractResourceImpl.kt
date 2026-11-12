@@ -81,7 +81,8 @@ class OpStoreComponentContractResourceImpl @Autowired constructor(
         limit: Int,
         maxFailCount: Int,
         includeMissing: Boolean,
-        minRecentExecuteNum: Int
+        minRecentExecuteNum: Int,
+        leaseMinutes: Int
     ): Result<StoreComponentContractPendingResp> {
         return Result(
             storeComponentContractExtractService.listPending(
@@ -89,7 +90,8 @@ class OpStoreComponentContractResourceImpl @Autowired constructor(
                 limit = limit,
                 maxFailCount = maxFailCount,
                 includeMissing = includeMissing,
-                minRecentExecuteNum = minRecentExecuteNum
+                minRecentExecuteNum = minRecentExecuteNum,
+                leaseMinutes = leaseMinutes
             )
         )
     }

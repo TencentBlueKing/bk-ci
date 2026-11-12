@@ -86,6 +86,7 @@ class StoreComponentContractService @Autowired constructor(
         if (result == StoreComponentContractWriteResultEnum.CREATED) {
             storeComponentContractExtractService.clearMissingFailCount(storeType, storeCode, writeReq.basedOnVersion)
         }
+        storeComponentContractExtractService.releaseLease(storeType, storeCode)
         logger.info(
             "contract write|$userId|$storeType|$storeCode|${writeReq.basedOnVersion}|" +
                 "${writeReq.extractBuildId}|$result"
