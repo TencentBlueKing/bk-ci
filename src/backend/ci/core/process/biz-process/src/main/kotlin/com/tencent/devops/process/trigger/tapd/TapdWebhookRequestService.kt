@@ -334,7 +334,7 @@ class TapdWebhookRequestService(
             logger.warn("tapd replay source eventBody is not GenericWebhookEventBody|eventId=$eventId")
             return null
         }
-        val body = eventBody.body
+        val body = eventBody.bodyAsMap()
         if (body.isNullOrEmpty()) {
             logger.warn("tapd replay source eventBody is empty|eventId=$eventId")
             return null
@@ -497,7 +497,7 @@ class TapdWebhookRequestService(
         // 用通用 webhook eventBody 记录原始 payload（含派生字段），便于回放/排查
         val eventBody = GenericWebhookEventBody(
             headers = mapOf(),
-            body = ctx.body.mapValues { it.value?.toString() ?: "" },
+            body = GenericWebhookEventBody.ofMap(ctx.body.mapValues { it.value?.toString() ?: "" }),
             queryParams = mapOf()
         )
         return PipelineTriggerEvent(

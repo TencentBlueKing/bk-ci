@@ -85,6 +85,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.criticalPathCost
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -861,6 +862,34 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
+    /**
+     * 初始化Stage内Job的dependOn映射：
+     * 插件/Stage重试与运行中重试沿用上次持久化的映射，运行中重试据此判断需要刷新的Job；
+     * 构建/重新构建按启动参数预算并校验循环依赖，最终以Stage启动时DependOnStageCmd重算的结果为准
+     */
+    private fun initStageDependOn(
+        stage: Stage,
+        context: StartBuildContext,
+        lastTimeBuildContainers: List<PipelineBuildContainer>
+    ) {
+        if (!context.retryStartTaskId.isNullOrBlank()) {
+            val dbDependOn = lastTimeBuildContainers.filter { it.stageId == stage.id }
+                .associate { it.containerId to it.controlOption.jobControlOption.dependOnContainerId2JobIds }
+            stage.containers.forEach { c ->
+                val jobControlOption = when (c) {
+                    is VMBuildContainer -> c.jobControlOption
+                    is NormalContainer -> c.jobControlOption
+                    else -> null
+                } ?: return@forEach
+                jobControlOption.dependOnContainerId2JobIds = dbDependOn[c.id]
+            }
+            return
+        }
+        if (stage.containers.any { DependOnUtils.enableDependOn(it) }) {
+            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+        }
+    }
+
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
         buildLogPrinter.startLog(
             buildId = context.buildId,
@@ -943,11 +972,11 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
-            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+            initStageDependOn(stage = stage, context = context, lastTimeBuildContainers = lastTimeBuildContainers)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
-                if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                if (context.shouldSkipRefreshWhenRetryRunning(stage, container)) {
                     logger.info(
                         "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
                     )
@@ -2082,22 +2111,39 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val executeTask = pipelineTaskService.listByBuildId(projectId, buildId)
             .filter { !filter.contains(it.taskType) }
-        var executeTime = 0L
-        val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
+        val stageJobTime = mutableMapOf<String, MutableMap<String, Long>>()
         executeTask.forEach { task ->
-            val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
+            val jobTime = stageJobTime.computeIfAbsent(task.stageId) { mutableMapOf() }
             jobTime[task.containerId] = (jobTime[task.containerId] ?: 0L) + (task.totalTime ?: 0L)
         }
-        stageTotalTime.forEach { job ->
-            var maxJobTime = 0L
-            job.value.forEach {
-                if (maxJobTime < it.value) {
-                    maxJobTime = it.value
-                }
-            }
-            executeTime += maxJobTime
+        val containersByStage = pipelineContainerService.listByBuildId(projectId, buildId).groupBy { it.stageId }
+        var executeTime = 0L
+        stageJobTime.forEach { (stageId, jobTime) ->
+            // Stage 之间串行，Stage 内按 dependOn 走关键路径：并行取最慢，串行链路相加
+            executeTime += criticalPathCost(
+                jobCosts = jobTime,
+                dependencies = dependOnMap(containersByStage[stageId].orEmpty())
+            )
         }
         return executeTime
+    }
+
+    /**
+     * containerId -> 它直接依赖的 containerId。
+     * 矩阵分裂后子 Job 自身通常没有 dependOn，继承矩阵组上的依赖，否则组依赖会被当成并行。
+     */
+    private fun dependOnMap(containers: List<PipelineBuildContainer>): Map<String, Set<String>> {
+        val byId = containers.associateBy { it.containerId }
+        return containers.associate { container ->
+            val own = container.controlOption.jobControlOption.dependOnContainerId2JobIds?.keys ?: emptySet()
+            val groupId = container.matrixGroupId
+            val inherited = if (groupId.isNullOrBlank()) {
+                emptySet()
+            } else {
+                byId[groupId]?.controlOption?.jobControlOption?.dependOnContainerId2JobIds?.keys ?: emptySet()
+            }
+            container.containerId to (own + inherited)
+        }
     }
 
     fun getLastTimeBuild(projectId: String, pipelineId: String, debug: Boolean): BuildInfo? {

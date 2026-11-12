@@ -247,7 +247,7 @@ object ProcessMessageCode {
     const val MAXIMUM_NUMBER_QUEUES_ILLEGAL = "2101142" // 最大排队数量非法
     const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101143" // 没有修改流水线组权限
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101144" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
-    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101145" // ({0})与({1})的jobId循环依赖
+    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101145" // Job[{0}]与Job[{1}]存在循环依赖，请检查Job的依赖配置及引用的变量值
     const val ERROR_PIPELINE_JOBID_EXIST = "2101146" // ({0})的jobId({1})已存在
     const val MAXIMUM_QUEUE_LENGTH_ILLEGAL = "2101147" // 最大排队时长非法
     const val BUILD_MSG_LABEL = "2101148" // 构建信息
@@ -561,8 +561,13 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_START_NODE_NO_PERMISSION = "2101500" // 用户[{0}]没有节点[{1}]的操作权限，无法启动流水线
     const val ERROR_PIPELINE_VERSION_RECYCLED = "2101501" // 流水线版本[{0}]已被回收，无法启动构建，请使用最新版本重试
     const val ERROR_PIPELINE_VERSION_HAS_DELETED = "2101502" // 流水线版本[{0}]已删除
+    const val ERROR_ARTIFACT_BKREPO_API = "2101503" // 调用制品库【{0}】接口失败，异常信息: {1}
+    const val ERROR_ARTIFACT_TRIGGER_PARAM_INVALID = "2101504" // 插件[{0}]的字段[{1}]不能为空或者无法解析
+    const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
+    // 平台未配置制品到达触发的回调地址或密钥，插件[{0}]无法生效
+    const val ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED = "2101506"
     // 启动参数[{0}]的默认值长度[{1}]超过系统限制[{2}]，请缩短默认值后再保存
-    const val ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE = "2101504"
+    const val ERROR_START_PARAM_DEFAULT_VALUE_OVERSIZE = "2101507"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -630,6 +635,11 @@ object ProcessMessageCode {
     const val ERROR_CREATIVE_FLOW_VARIABLE_OVERRIDE_INVALID = "2101692" // 变量{0}不存在或不允许覆盖
     const val ERROR_CREATIVE_FLOW_SHARE_TEAM_PROJECT_NOT_SUPPORT = "2101693" // 项目{0}不是个人项目，团队创作流分享暂未支持
     const val ERROR_CREATIVE_FLOW_SHARE_REVOKE_PARAM_INVALID = "2101694" // 撤销授权须提供 shareId+flowIds 或 talentCode
+
+    // 矩阵Job最大并发数（支持变量）在模板实例化时解析后不在1-MAX之间
+    const val ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID = "2101695" // {0} 中 Matrix job「{1}」的最大并发数为 {2}，须为 1-{3} 的整数
+    // 矩阵Job最大并发数（支持变量）在运行时启动matrix job时解析后不在1-MAX之间
+    const val ERROR_MATRIX_MAX_CONCURRENCY_INVALID = "2101696" // Matrix job「{0}」的最大并发数为 {1}，须为 1-{2} 的整数
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -810,6 +820,7 @@ object ProcessMessageCode {
     const val BK_MANUALLY_SKIPPED = "bkManuallySkipped" // 被手动跳过 Manually skipped
     const val BK_EVENT = "bkEvent" // {0}事件
     const val BK_WAREHOUSE_EVENTS = "bkWarehouseEvents" // 仓库事件
+    const val BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS = "BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS" // webhook事件
     const val BK_VM_START_ALREADY = "bkVmStartAlready" // 重复启动构建机/VM Start already:
     const val BK_CONTINUE_WHEN_ERROR = "bkContinueWhenError" // 失败自动跳过/continue when error
     const val BK_MUTEX_WAITING = "bkMutexWaiting" // 互斥中(Mutex waiting)
@@ -940,6 +951,10 @@ object ProcessMessageCode {
     const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
     // 字段被排除
     const val BK_FIELD_CONDITION_EXCLUDE = "bkFieldConditionExclude"
+
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_PIPELINE = "bkArtifactTriggerFieldWatchPipeline" // 监听流水线
+    const val BK_ARTIFACT_TRIGGER_FIELD_WATCH_ROOT_PATH = "bkArtifactTriggerFieldWatchRootPath" // 监听根路径
+    const val BK_ARTIFACT_TRIGGER_FIELD_IMAGE = "bkArtifactTriggerFieldImage" // 镜像名
 
     // 创作流启动节点为空
     const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"

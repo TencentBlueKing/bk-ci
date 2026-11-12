@@ -407,7 +407,11 @@ class BuildVariableService @Autowired constructor(
             // 加锁防止数据被重复插入
             redisLock.lock()
             watch.start("getVars")
-            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
+            // 只查询本次要写入的变量,用于区分新增和更新
+            val buildVarMap = mutableMapOf<String, String>()
+            pipelineBuildParameters.map { it.key }.toSet().chunked(GET_VARS_BATCH_SIZE).forEach { keys ->
+                buildVarMap.putAll(pipelineBuildVarDao.getVars(dslContext, projectId, buildId, keys.toSet()))
+            }
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
             pipelineBuildParameters.forEach {
@@ -563,5 +567,6 @@ class BuildVariableService @Autowired constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildVariableService::class.java)
+        private const val GET_VARS_BATCH_SIZE = 500
     }
 }

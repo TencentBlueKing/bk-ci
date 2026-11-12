@@ -161,6 +161,8 @@ object WeworkReviewCardConst {
     const val MAX_HLIST = 6
     const val BUTTON_KEY_PREFIX = "BKCI_REVIEW"
     const val REDIS_KEY_PREFIX = "notify:wework:review:card:"
+    /** 回调缓存里保存的已发送模板卡片 JSON，供消息推送整卡替换 */
+    const val REDIS_TEMPLATE_CARD_FIELD = "templateCard"
     const val DEFAULT_REJECT_SUGGEST = "企业微信卡片一键驳回"
     /** 卡片任务缓存 7 天，覆盖常见审核超时 */
     const val REDIS_TTL_SECONDS = 7 * 24 * 3600L
