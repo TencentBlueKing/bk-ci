@@ -585,7 +585,8 @@ object WeworkReviewCardBuilder {
 
     /**
      * 勾选 Markdown 时以用户填写的审核说明为主体，沿用改卡片前的文本通知：
-     * 说明原文在前，流水线字段用引用收在后面，查看构建只留一个链接。
+     * 说明原文在前，流水线字段用引用收在后面。
+     * 电脑端和手机端链接各占一行，点按对应入口。
      * 模板卡片的 quote_text 不能渲染 markdown，所以这条路径不发卡片。
      */
     private fun renderMarkdown(
@@ -612,12 +613,23 @@ object WeworkReviewCardBuilder {
                 text.append(">").append(row.keyname).append("：").append(row.value).append("\n")
             }
         }
-        val openUrl = reviewUrl.ifBlank { reviewAppUrl }
-        if (openUrl.isNotBlank()) {
-            val openBuild = copy.t(NotifyMessageCode.BK_REVIEW_CARD_OPEN_BUILD, "查看构建")
-            text.append("\n[").append(openBuild).append("](").append(openUrl).append(")")
-        }
+        appendMarkdownLink(
+            text = text,
+            label = copy.t(NotifyMessageCode.BK_REVIEW_CARD_DESKTOP, "电脑端查看详情"),
+            url = reviewUrl
+        )
+        appendMarkdownLink(
+            text = text,
+            label = copy.t(NotifyMessageCode.BK_REVIEW_CARD_MOBILE, "手机端查看详情"),
+            url = reviewAppUrl
+        )
         return clipUtf8(text.toString().trimEnd())
+    }
+
+    /** 有地址才输出一行可点击链接。电脑端、手机端各一行，缺一边就只留另一边。 */
+    private fun appendMarkdownLink(text: StringBuilder, label: String, url: String) {
+        if (url.isBlank()) return
+        text.append("\n[").append(label).append("](").append(url).append(")")
     }
 
     /** 字面量 \n 还原成换行，保留 markdown 语法给消息体渲染。 */

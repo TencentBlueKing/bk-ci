@@ -286,9 +286,13 @@ class WeworkReviewCardBuilderTest {
         assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
         assertFalse(markdown.contains("审核说明"))
         assertFalse(markdown.contains("需要您审核后继续"))
-        assertEquals(1, Regex("查看构建").findAll(markdown).count())
-        assertTrue(markdown.contains("https://example.com/pc"))
-        assertFalse(markdown.contains("https://example.com/app"))
+        assertTrue(markdown.contains("[电脑端查看详情](https://example.com/pc)"))
+        assertTrue(markdown.contains("[手机端查看详情](https://example.com/app)"))
+        assertTrue(
+            markdown.indexOf("[电脑端查看详情](https://example.com/pc)") <
+                markdown.indexOf("[手机端查看详情](https://example.com/app)")
+        )
+        assertFalse(markdown.contains("查看构建"))
         assertFalse(markdown.contains("\\n"))
     }
 
