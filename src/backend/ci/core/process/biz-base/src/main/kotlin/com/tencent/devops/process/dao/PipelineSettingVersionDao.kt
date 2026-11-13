@@ -81,7 +81,8 @@ class PipelineSettingVersionDao {
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
                 ENV_HASH_ID,
-                ENV_NAME
+                ENV_NAME,
+                YAML_LOCKED
             ).values(
                 id,
                 setting.projectId,
@@ -109,7 +110,8 @@ class PipelineSettingVersionDao {
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
                 setting.envHashId,
-                setting.envName
+                setting.envName,
+                setting.yamlLocked ?: false
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -135,6 +137,9 @@ class PipelineSettingVersionDao {
             }
             setting.envName?.let { envName ->
                 insert.set(ENV_NAME, envName)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                insert.set(YAML_LOCKED, yamlLocked)
             }
             return insert.execute()
         }
@@ -170,6 +175,9 @@ class PipelineSettingVersionDao {
             }
             setting.envName?.let { envName ->
                 updateStep.set(ENV_NAME, envName)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                updateStep.set(YAML_LOCKED, yamlLocked)
             }
             updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
@@ -299,7 +307,8 @@ class PipelineSettingVersionDao {
                     failIfVariableInvalid = t.failIfVariableInvalid,
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     envHashId = t.envHashId,
-                    envName = t.envName
+                    envName = t.envName,
+                    yamlLocked = t.yamlLocked
                 )
             }
         }

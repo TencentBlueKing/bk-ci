@@ -51,7 +51,8 @@ class PipelineSettingDraftVersionDao {
                 PIPELINE_AS_CODE_SETTINGS,
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
-                BUILD_CANCEL_POLICY
+                BUILD_CANCEL_POLICY,
+                YAML_LOCKED
             ).values(
                 setting.projectId,
                 setting.pipelineId,
@@ -73,7 +74,8 @@ class PipelineSettingDraftVersionDao {
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
                 setting.maxConRunningQueueSize,
                 setting.failIfVariableInvalid,
-                setting.buildCancelPolicy.value
+                setting.buildCancelPolicy.value,
+                setting.yamlLocked ?: false
             ).execute()
         }
     }
@@ -104,7 +106,7 @@ class PipelineSettingDraftVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
         with(T_PIPELINE_SETTING_DRAFT_VERSION) {
-            dslContext.update(this)
+            val updateStep = dslContext.update(this)
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
                 .set(LABELS, setting.labels.let { JsonUtil.toJson(it, false) })
@@ -121,7 +123,10 @@ class PipelineSettingDraftVersionDao {
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
-                .where(PROJECT_ID.eq(setting.projectId))
+            setting.yamlLocked?.let { yamlLocked ->
+                updateStep.set(YAML_LOCKED, yamlLocked)
+            }
+            updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
                 .and(VERSION.eq(version))
                 .and(DRAFT_VERSION.eq(draftVersion))
@@ -164,7 +169,8 @@ class PipelineSettingDraftVersionDao {
                     },
                     maxConRunningQueueSize = r.maxConRunningQueueSize,
                     failIfVariableInvalid = r.failIfVariableInvalid,
-                    buildCancelPolicy = BuildCancelPolicy.parse(r.buildCancelPolicy)
+                    buildCancelPolicy = BuildCancelPolicy.parse(r.buildCancelPolicy),
+                    yamlLocked = r.yamlLocked
                 )
             }
         }
