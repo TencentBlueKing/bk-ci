@@ -42,7 +42,12 @@ class ReviewNotifyPlaceholderTest {
                 "有效期\${{ variables.timeout }}分钟，备注\${{ci.remark}}，未知\${{not.exist}}",
             "reviewParams" to """
                 [
-                  {"key":"BK_CI_BUILD_REMARK","value":"${'$'}{{ci.remark}}","chineseName":"备注","desc":"过期${'$'}{{variables.timeout}}"},
+                  {
+                    "key":"BK_CI_BUILD_REMARK",
+                    "value":"${'$'}{{ci.remark}}",
+                    "chineseName":"备注",
+                    "desc":"过期${'$'}{{variables.timeout}}"
+                  },
                   {"key":"miss","value":"${'$'}{{missing.var}}","chineseName":"未定义${'$'}{noSuchVar}"}
                 ]
             """.trimIndent(),

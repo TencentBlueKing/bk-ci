@@ -90,7 +90,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
             notifyTemplateEnumType.isReviewNotifyTemplate() ->
                 handleReviewNotify(event, notifyTemplateEnumType)
 
-            notifyTemplateEnumType == PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
+            notifyTemplateEnumType ==
+                PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
                 val variables = event.replacePlaceholders()
                 sendNotifyRequest(event.buildNotifyRequest(variables))
             }
