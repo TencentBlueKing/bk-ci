@@ -78,7 +78,8 @@ class DispatchMQConfiguration {
                     dockerRoutingType = dockerRoutingType,
                     routeKeySuffix = routeKeySuffix,
                     actionType = actionType,
-                    delayMills = delayMills
+                    delayMills = delayMills,
+                    retryTime = retryTime
                 )
             )
         }
@@ -103,7 +104,8 @@ class DispatchMQConfiguration {
                     dispatchType = dispatchType,
                     routeKeySuffix = routeKeySuffix,
                     actionType = actionType,
-                    delayMills = delayMills
+                    delayMills = delayMills,
+                    retryTime = retryTime
                 )
             )
         }
