@@ -242,6 +242,16 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
+    async requestPipelineRuntimeStatus (_, { projectId, pipelineIds }) {
+        try {
+            const response = await ajax.post(`${prefix}realtime/${projectId}/status`, pipelineIds)
+            return response.data
+        } catch (error) {
+            if (error.httpStatus !== 404 && error.code !== 404 && error.response?.status !== 404) throw error
+            const response = await ajax.post(`${prefix}${projectId}/pipelineStatus`, pipelineIds)
+            return response.data
+        }
+    },
     requestPipelineStatus ({ commit, state, dispatch }, { projectId, pipelineId }) {
         return ajax.post(`${prefix}${projectId}/pipelineStatus`, pipelineId).then(response => {
             return response.data

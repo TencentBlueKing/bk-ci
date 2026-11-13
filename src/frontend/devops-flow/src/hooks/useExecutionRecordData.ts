@@ -112,17 +112,13 @@ export function useExecutionRecordData(debug = false) {
   /**
    * Refresh data
    */
-  const refresh = () => {
-    store.loadExecutionRecords()
-  }
+  const refresh = () => store.loadExecutionRecords()
 
   /**
    * Silently refresh data without triggering loading UI.
    * Used for WebSocket-driven updates.
    */
-  const silentRefresh = () => {
-    store.silentLoadExecutionRecords()
-  }
+  const silentRefresh = () => store.silentLoadExecutionRecords()
 
   return {
     // Data

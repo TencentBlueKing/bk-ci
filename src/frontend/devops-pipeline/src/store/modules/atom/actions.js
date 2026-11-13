@@ -850,6 +850,10 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
+    fetchPipelineExecDetail: async (_, { projectId, buildNo, pipelineId, ...query }) => {
+        const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, { params: query })
+        return response.data
+    },
     requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
         try {
             const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {

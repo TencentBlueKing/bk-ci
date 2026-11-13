@@ -218,9 +218,7 @@ export function useFlowListData(styles?: Styles) {
    * 使用指定的 groupId 加载数据
    */
   function loadContentDataWithGroupId(groupId: string) {
-    loadContentData(groupId)
-    // 同时更新组数据
-    loadAllData()
+    return Promise.all([loadContentData(groupId), loadAllData()])
   }
 
   /**

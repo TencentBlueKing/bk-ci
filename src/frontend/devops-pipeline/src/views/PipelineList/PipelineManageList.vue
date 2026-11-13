@@ -427,7 +427,8 @@
         },
 
         mounted () {
-            webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
+            webSocketMessage.installWsMessage(() => this.$refs.pipelineBox?.realtimeStatus?.refresh())
+            webSocketMessage.registeOnReconnect(() => this.$refs.pipelineBox?.realtimeStatus?.refresh())
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             this.updateTableHeight()

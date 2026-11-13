@@ -80,16 +80,21 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
       await fetchAndApplyRecords(page)
     } catch (error) {
       console.error('Failed to silently load execution records:', error)
+      throw error
     }
   }
 
+  let recordsGeneration = 0
   async function fetchAndApplyRecords(page?: number) {
+    const generation = ++recordsGeneration
+    const key = JSON.stringify(queryParams.value)
     const params: ExecutionRecordQueryParams = {
       ...queryParams.value,
       page: page || pagination.value.current,
       pageSize: pagination.value.limit,
     }
     const response = await getExecutionRecords(params)
+    if (generation !== recordsGeneration || key !== JSON.stringify(queryParams.value)) return
     records.value = response.list
     pagination.value.count = response.count
     pagination.value.current = response.page

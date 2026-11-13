@@ -29,9 +29,12 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-websocket"))
     api(project(":core:project:api-project"))
+    implementation(project(":core:process:api-process"))
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
     api(project(":core:websocket:api-websocket"))
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
+    testImplementation("io.mockk:mockk")
 }
