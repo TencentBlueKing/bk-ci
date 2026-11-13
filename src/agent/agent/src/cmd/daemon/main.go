@@ -47,6 +47,8 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/codesign"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -102,6 +104,11 @@ func main() {
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
 	logs.Info("workDir: ", workDir)
+	// daemon 也要读取同一份开关；在 fork agent 前设置，agent 从启动时就继承保护。
+	envs.LoadEnvFiles(workDir)
+	if err := oomprotect.Init(workDir); err != nil {
+		logs.Errorf("OOM protection unavailable: %v", err)
+	}
 
 	watch()
 	systemutil.KeepProcessAlive()

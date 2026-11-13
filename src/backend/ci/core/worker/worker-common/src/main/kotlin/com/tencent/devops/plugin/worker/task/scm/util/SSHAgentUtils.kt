@@ -27,10 +27,10 @@
 
 package com.tencent.devops.plugin.worker.task.scm.util
 
+import com.tencent.devops.common.api.util.script.OomAwareExecutor
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteWatchdog
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
@@ -91,7 +91,7 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
 
     private fun executeCommand(commandLine: String, env: Map<String, String>?): String {
         val cmdLine = CommandLine.parse(commandLine)
-        val executor = DefaultExecutor()
+        val executor = OomAwareExecutor()
         val output = StringBuilder()
         val outputStream = object : LogOutputStream() {
             override fun processLine(line: String?, level: Int) {

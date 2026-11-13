@@ -47,6 +47,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
@@ -276,14 +277,37 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	if buildInfo.Success {
 		time.Sleep(8 * time.Second)
 	}
-	result, err := api.WorkerBuildFinish(buildInfo)
-	if err != nil {
-		logs.WithErrorNoStack(err).Error("send worker build finish failed")
+	reportWorkerFinish(buildInfo)
+}
+
+// reportWorkerFinish 在保护模式下保留本次完成通知并退避重试，避免内存压力导致网络
+// 短暂失败后仅记日志就丢失结束通知。只阻塞本次构建的收尾 goroutine，Ask 心跳继续。
+// 最小实现复用现有完成接口，不引入磁盘队列；本函数不承诺 agent/机器重启后补报。
+// 关闭开关保持原来的单次调用，保护模式的失败同时暂停新构建，优先让已有状态收敛。
+func reportWorkerFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
+	for delay := 5 * time.Second; ; {
+		result, err := api.WorkerBuildFinish(buildInfo)
+		if err == nil && result != nil && !result.IsNotOk() {
+			logs.Info("workerBuildFinish done")
+			return
+		}
+		if err != nil {
+			logs.WithErrorNoStack(err).Error("send worker build finish failed")
+		} else if result != nil {
+			logs.Error("send worker build finish failed: ", result.Message)
+		} else {
+			logs.Error("send worker build finish returned an empty result")
+		}
+		// 缺少执行次数的旧协议无法隔离同一 buildId 的重试构建，不能无限补发旧结果。
+		if !oomprotect.Enabled() || buildInfo.ExecuteCount == nil {
+			return
+		}
+		oomprotect.Pause()
+		time.Sleep(delay)
+		if delay < 30*time.Second {
+			delay += 5 * time.Second
+		}
 	}
-	if result.IsNotOk() {
-		logs.Error("send worker build finish failed: ", result.Message)
-	}
-	logs.Info("workerBuildFinish done")
 }
 
 // checkAndDeleteBuildTmpFile 删除可能因为进程中断导致的没有被删除的构建过程临时文件
