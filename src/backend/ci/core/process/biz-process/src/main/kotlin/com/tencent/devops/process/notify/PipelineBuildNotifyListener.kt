@@ -185,7 +185,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
         variables: Map<String, String> = emptyMap()
     ): SendNotifyMessageTemplateRequest {
         val resolvedReceivers = resolveReceivers(variables)
-        val filledCallback = fillCallbackData()
+        val filledCallback = fillCallbackData().toMutableMap()
         if (variables.isNotEmpty() && !filledCallback["reviewUsers"].isNullOrBlank()) {
             filledCallback["reviewUsers"] = resolvedReceivers.joinToString(",")
         }
