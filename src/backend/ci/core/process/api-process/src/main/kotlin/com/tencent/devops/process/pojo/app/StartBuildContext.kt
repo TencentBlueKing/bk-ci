@@ -386,6 +386,67 @@ data class StartBuildContext(
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
+    /**
+     * 本次重跑是否要刷新 [stage] 的起始时间。
+     *
+     * 流水线整体重试、Stage 整体重试、finally，以及重试点之后整段重跑的 Stage，起始时间重新记。
+     * 插件或 Job 从中途续上、只重试失败 Job、跳过失败插件时，目标 Stage 保留原起始时间，只清结束时间。
+     */
+    fun refreshStageRuntime(stage: Stage): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) {
+            return true
+        }
+        if (stage.finally) {
+            return true
+        }
+        if (stageRetry && !retryFailedContainer && !skipFailedTask) {
+            return true
+        }
+        if (isRetryTargetStage(stage)) {
+            return false
+        }
+        return true
+    }
+
+    /**
+     * 本次重跑是否要刷新 [container] 的起始时间。
+     *
+     * 从该 Job 第一个插件重试视为 Job 整体重跑。中途某个插件续上时保留 Job 起始时间。
+     * 矩阵局部重试且仍保留子容器时，父容器由调用方直接保留起始时间，不走本方法。
+     */
+    fun refreshContainerRuntime(stage: Stage, container: Container): Boolean {
+        if (retryStartTaskId.isNullOrBlank()) {
+            return true
+        }
+        if (stage.finally) {
+            return true
+        }
+        if (stageRetry && !retryFailedContainer && !skipFailedTask) {
+            return true
+        }
+        if (stageRetry && retryFailedContainer && container.id != retryStartTaskId) {
+            return true
+        }
+        if (stageRetry) {
+            return false
+        }
+        if (container.id != null && container.id == retryStartTaskId) {
+            return true
+        }
+        if (!containerContainsRetryStart(container)) {
+            return true
+        }
+        val retryIndex = container.elements.indexOfFirst {
+            it.id == retryStartTaskId || it.stepId == retryStartTaskId
+        }
+        // 重试目标在矩阵子容器里，父容器不是整体重开
+        if (retryIndex < 0) {
+            return false
+        }
+        // 跳过插件不是重跑，Job 已经开始过，起始时间保留。从第一个插件重试才视为 Job 整体重跑
+        return retryIndex == 0 && !skipFailedTask
+    }
+
     fun needRerunTask(stage: Stage, container: Container): Boolean {
         return needRerunStage(stage) || isRetryDependOnContainer(container)
     }

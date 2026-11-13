@@ -169,7 +169,11 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        /**
+         * 子 Job 整体重跑时清掉起始时间。只重跑中间插件时保留上一轮起始时间，结束时间置空，本轮结束再写。
+         */
+        refreshContainerStart: Boolean = true
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
@@ -183,7 +187,8 @@ class ContainerBuildRecordService(
         }
         val newContainer = oldContainer.copy(
             executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            startTime = if (refreshContainerStart) null else oldContainer.startTime,
+            endTime = null, timestamps = mapOf(), containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
@@ -470,7 +475,12 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        /**
+         * 一步到位完成、没有运行态刷新的作业（如触发作业）由调用方补一个真实的开始时间，
+         * 否则记录表只有结束时间，详情页无法展示起止区间。仅在记录本身还没有开始时间时生效。
+         */
+        fallbackStartTime: LocalDateTime? = null
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -493,8 +503,10 @@ class ContainerBuildRecordService(
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()
+            if (recordContainer.startTime == null) {
+                startTime = if (buildStatus?.isRunning() == true) now else fallbackStartTime
+            }
             if (buildStatus?.isRunning() == true) {
-                if (recordContainer.startTime == null) startTime = now
                 // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
                 if (recordContainer.endTime != null) recordContainerDao.flushEndTimeWhenRetry(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,

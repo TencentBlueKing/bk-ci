@@ -126,7 +126,11 @@ data class VMBuildContainer(
     @get:Schema(title = "当前矩阵子容器的上下文组合（分裂后的子容器特有字段）", required = false)
     var matrixContext: Map<String, String>? = null,
     @get:Schema(title = "分裂后的容器集合（分裂后的父容器特有字段）", required = false)
-    var groupContainers: MutableList<VMBuildContainer>? = null
+    var groupContainers: MutableList<VMBuildContainer>? = null,
+    @get:Schema(title = "作业开始时间（毫秒时间戳）", required = false, readOnly = true)
+    override var startTime: Long? = null,
+    @get:Schema(title = "作业结束时间（毫秒时间戳）", required = false, readOnly = true)
+    override var endTime: Long? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"

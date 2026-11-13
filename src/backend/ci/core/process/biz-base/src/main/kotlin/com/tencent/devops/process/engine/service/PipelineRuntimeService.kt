@@ -1146,11 +1146,15 @@ class PipelineRuntimeService @Autowired constructor(
                 if (context.needUpdateStage) {
                     afterRetryStage = true
                     stage.resetBuildOption(true)
+                    // 整体重跑才改起始时间；中途续上保留原起始时间，只清结束时间，结束时再写
+                    val refreshStageStart = context.refreshStageRuntime(stage)
                     run findHistoryStage@{
                         lastTimeBuildStages.forEach {
                             if (it.stageId == stage.id!!) {
                                 it.status = stageStatus
-                                it.startTime = stageStartTime
+                                if (refreshStageStart) {
+                                    it.startTime = stageStartTime
+                                }
                                 it.endTime = null
                                 it.executeCount = context.executeCount
                                 it.checkIn = stage.checkIn
@@ -1429,6 +1433,19 @@ class PipelineRuntimeService @Autowired constructor(
             )
             null
         } else {
+            // 未指定重试起点即整条流水线重跑，起始时间留空，等触发阶段按当前时间写入。
+            // 指定了起点（Stage/Job/插件续上）则继承上一轮的触发时间与起始时间，只让结束时间在本轮结束时重写。
+            val previous = if (context.retryStartTaskId.isNullOrBlank()) {
+                null
+            } else {
+                recordModelDao.getRecord(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    executeCount = context.executeCount - 1
+                )
+            }
             BuildRecordModel(
                 resourceVersion = context.resourceVersion, startUser = context.triggerUser,
                 startType = context.startType.name, buildNum = context.buildNum,
@@ -1438,7 +1455,9 @@ class PipelineRuntimeService @Autowired constructor(
                 timestamps = mapOf(
                     BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                         BuildRecordTimeStamp(context.now.timestampmilli(), null)
-                ), queueTime = context.now
+                ),
+                queueTime = previous?.queueTime ?: context.now,
+                startTime = previous?.startTime
             )
         }
         // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录

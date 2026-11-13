@@ -108,7 +108,8 @@ class TaskBuildRecordService(
         executeCount: Int,
         buildStatus: BuildStatus,
         operation: String,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        fallbackStartTime: LocalDateTime? = null
     ) {
         updateTaskRecord(
             projectId = projectId,
@@ -119,7 +120,8 @@ class TaskBuildRecordService(
             buildStatus = buildStatus,
             taskVar = emptyMap(),
             timestamps = timestamps,
-            operation = operation
+            operation = operation,
+            fallbackStartTime = fallbackStartTime
         )
     }
 
@@ -364,15 +366,17 @@ class TaskBuildRecordService(
                         taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
                     }
                 }
+                // 插件在等待中直接结束（人工审核超时、Job超时、构建取消）时等待时间戳没有收尾，
+                // 这里按结束时刻补齐，让记录表自洽。耗时计算另有兜底，见 generateTaskTimeCost
                 var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null
-                if (recordTask.status == BuildStatus.PAUSE.name) {
+                val unclosedWait = recordTask.timestamps.filterKeys { it.taskCheckWait() }
+                    .filterValues { it.startTime != null && it.endTime == null }
+                if (unclosedWait.isNotEmpty()) {
                     timestamps = mergeTimestamps(
-                        recordTask.timestamps,
-                        mapOf(
-                            BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                                BuildRecordTimeStamp(null, now.timestampmilli())
-                        )
+                        unclosedWait.mapValues { BuildRecordTimeStamp(null, now.timestampmilli()) },
+                        recordTask.timestamps
                     )
+                    recordTask.timestamps = timestamps
                 }
                 // 重置暂停任务暂停状态位
                 recordTask.taskVar.remove(TASK_PAUSE_TAG_VAR)
@@ -567,7 +571,12 @@ class TaskBuildRecordService(
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
         operation: String,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        /**
+         * 一步到位完成、没有运行态刷新的步骤（如触发步骤）由调用方补一个真实的开始时间，
+         * 否则记录表只有结束时间，详情页无法展示起止区间。仅在记录本身还没有开始时间时生效。
+         */
+        fallbackStartTime: LocalDateTime? = null
     ) {
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -591,8 +600,10 @@ class TaskBuildRecordService(
                 var endTime: LocalDateTime? = null
                 val now = LocalDateTime.now()
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+                if (recordTask.startTime == null) {
+                    startTime = if (buildStatus?.isRunning() == true) now else fallbackStartTime
+                }
                 if (buildStatus?.isRunning() == true) {
-                    if (recordTask.startTime == null) startTime = now
                     // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
                     if (recordTask.endTime != null) recordTaskDao.flushEndTimeWhenRetry(
                         dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId,

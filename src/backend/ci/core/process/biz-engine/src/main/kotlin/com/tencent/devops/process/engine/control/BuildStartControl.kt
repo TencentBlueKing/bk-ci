@@ -102,7 +102,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.math.max
 
 /**
@@ -663,6 +665,13 @@ class BuildStartControl @Autowired constructor(
         val now = LocalDateTime.now()
         val stage = model.stages[0]
         val container = stage.containers[0]
+        // 触发阶段/作业没有运行态刷新，耗时按"入队到现在"统计（见下方 stageElapsed）。
+        // 起止时间取同一口径，并保留毫秒：Long?.toLocalDateTime() 会先整除 1000，最多丢掉 999 毫秒。
+        // 触发步骤本身瞬间完成，开始时间取当前时刻，不把排队时间算到步骤上。
+        val triggerStartTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(buildInfo.queueTime),
+            ZoneId.systemDefault()
+        )
         run lit@{
             container.name = ContainerUtils.getClearedQueueContainerName(container.name)
             container.elements.forEach {
@@ -683,7 +692,8 @@ class BuildStartControl @Autowired constructor(
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
-                        operation = "updateTriggerElement#$taskId"
+                        operation = "updateTriggerElement#$taskId",
+                        fallbackStartTime = now
                     )
                     it.status = BuildStatus.SUCCEED.name
                     buildLogPrinter.stopLog(buildInfo.buildId, taskId, containerHashId = JOB_ID, executeCount)
@@ -718,7 +728,8 @@ class BuildStartControl @Autowired constructor(
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
                 Stage::elapsed.name to stageElapsed
-            )
+            ),
+            fallbackStartTime = triggerStartTime
         )
         container.status = BuildStatus.SUCCEED.name
         container.startEpoch = nowMills
@@ -736,7 +747,8 @@ class BuildStartControl @Autowired constructor(
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
                 Container::name.name to container.name, // 名字刷新成非队列中
                 Container::timeCost.name to BuildRecordTimeCost()
-            )
+            ),
+            fallbackStartTime = triggerStartTime
         )
 
         buildLogPrinter.addLine(

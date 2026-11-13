@@ -84,7 +84,8 @@ object BuildTimeCostUtils {
         timestamps.toList().forEach { (type, time) ->
             if (!type.stageCheckWait()) return@forEach
             logWhenNull(time, "$buildId|STAGE|$stageId|${type.name}")
-            time.insert2TimeLine(stageCheckWaitMoments)
+            // 准入、准出审核期间构建被终止时审核时间戳没有收尾，按阶段的结束时刻补齐
+            time.fixEndTime(endTime.timestampmilli()).insert2TimeLine(stageCheckWaitMoments)
         }
         return partitionTimeCost(
             totalCost = totalCost,
@@ -130,7 +131,8 @@ object BuildTimeCostUtils {
             logWhenNull(
                 time, "$buildId|CONTAINER|$containerId|${type.name}"
             )
-            time.insert2TimeLine(containerTimeLine.queueCostMoments)
+            // 互斥、构建机资源排队期间 Job 被取消或超时时排队时间戳没有收尾，按 Job 的结束时刻补齐
+            time.fixEndTime(endTime.timestampmilli()).insert2TimeLine(containerTimeLine.queueCostMoments)
         }
         taskRecords.forEach { record ->
             val taskTimeLine = BuildRecordTimeLine()
@@ -246,42 +248,30 @@ object BuildTimeCostUtils {
 
     /**
      * 计算Task级别的所有时间消耗
-     * queueCost、 systemCost 保持为 0
+     * queueCost、 systemCost、waitCost 保持为 0
+     *
+     * 插件暂停、人工审核、质量红线审核期间，Job 一直被这个插件占着，构建资源没有释放，
+     * 按产品口径整段算用户耗时，不单列等待耗时。不这么算的话，同一个审核插件
+     * 通过、驳回（等待时间戳收了尾）用户耗时是 0，超时（没收尾）却是整段审核时长，两者对不齐。
+     *
+     * 没占用构建资源的等待仍单列：Job 的互斥、构建机资源排队算排队耗时，
+     * Stage 准入准出审核算阶段的等待耗时，都不在这里。
+     *
      * @param timeLine 计算task时为null, 计算container时会传入以记录具体时刻
      */
     fun BuildRecordTask.generateTaskTimeCost(timeLine: BuildRecordTimeLine? = null): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
-        val waitCost = timestamps.toList().sumOf { (type, time) ->
-            if (!type.taskCheckWait()) return@sumOf 0L
-            logWhenNull(
-                time, "$buildId|TASK|$taskId|${type.name}"
+        timeLine?.executeCostMoments?.add(
+            BuildRecordTimeLine.Moment(
+                startTime.timestampmilli(),
+                endTime.timestampmilli()
             )
-            timeLine?.let {
-                time.insert2TimeLine(timeLine.waitCostMoments)
-            }
-            return@sumOf time.between()
-        }
-        val executeCost = totalCost - waitCost
-        timeLine?.let {
-            timeLine.executeCostMoments.addAll(
-                differenceTimeLine(
-                    listOf(
-                        BuildRecordTimeLine.Moment(
-                            startTime.timestampmilli(),
-                            endTime.timestampmilli()
-                        )
-                    ),
-                    timeLine.waitCostMoments
-                )
-            )
-        }
-
+        )
         return BuildRecordTimeCost(
             totalCost = totalCost,
-            waitCost = waitCost,
-            executeCost = executeCost.notNegative()
+            executeCost = totalCost
         )
     }
 

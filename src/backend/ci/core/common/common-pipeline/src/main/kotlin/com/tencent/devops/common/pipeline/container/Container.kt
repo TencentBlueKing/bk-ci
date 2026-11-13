@@ -65,12 +65,26 @@ interface Container {
     var startVMTaskSeq: Int? // 开机任务序号
 
     /**
+     * 作业开始时间，毫秒时间戳，直接取执行记录表存的开始时间，不由耗时反推。
+     * 作业被引擎受理（进入排队）时写入，未执行/跳过/触发作业没有值。
+     */
+    var startTime: Long?
+
+    /**
+     * 作业结束时间，毫秒时间戳，直接取执行记录表存的结束时间。
+     * 进行中为空；没有开始时间时也不返回，避免前端算出负数区间。
+     */
+    var endTime: Long?
+
+    /**
      * 重置所有状态数据
      */
     fun resetBuildOption(executeCount: Int) {
         this.status = null // 重置状态为空
         this.timeCost = null
         this.startEpoch = null
+        this.startTime = null
+        this.endTime = null
         this.elementElapsed = null
         this.systemElapsed = null
         this.startVMStatus = null

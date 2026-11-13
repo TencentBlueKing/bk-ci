@@ -61,6 +61,7 @@ object ModelVarRefUtils {
      */
     private val SKIP_FIELDS = setOf(
         "class", "declaringClass", "signature", "status", "startEpoch",
+        "startTime", "endTime",
         "systemElapsed", "elementElapsed", "elapsed", "timeCost", "executeCount",
         "logger", "LOG", "log"
     )
