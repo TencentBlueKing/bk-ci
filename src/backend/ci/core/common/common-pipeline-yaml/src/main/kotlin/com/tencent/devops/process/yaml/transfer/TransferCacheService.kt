@@ -136,7 +136,7 @@ class TransferCacheService @Autowired constructor(
                 when (poolType) {
                     JobRunsOnPoolType.ENV_ID.name -> {
                         client.get(ServiceEnvironmentResource::class)
-                            .get(userId, projectId, value)
+                            .get(userId, projectId, value, checkPermission = false)
                             .data?.name
                     }
 
