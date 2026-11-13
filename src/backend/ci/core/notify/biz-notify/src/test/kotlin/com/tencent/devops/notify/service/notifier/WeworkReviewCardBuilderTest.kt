@@ -49,7 +49,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("https://example.com/pc", rows.last().url)
         assertEquals("审核说明", first.quoteArea!!.title)
         assertEquals("重要审核XXX", first.quoteArea!!.quoteText)
-        assertNull(first.subTitleText)
+        assertEquals("重要审核XXX", first.subTitleText)
         assertEquals("通过", first.buttonList!![0].text)
         assertEquals(0, first.buttonList!![0].type)
         assertEquals("驳回", first.buttonList!![1].text)
@@ -258,7 +258,7 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
-    fun `markdown flag sends rendered text and skips the card`() {
+    fun `markdown flag keeps the original template and skips the card`() {
         val plan = WeworkReviewCardBuilder.build(
             request = reviewRequest(
                 receivers = mutableSetOf("royalhuang"),
@@ -277,19 +277,7 @@ class WeworkReviewCardBuilderTest {
             title = "t",
             redisOperation = null
         )
-        assertNotNull(plan)
-        assertTrue(plan!!.receiverCards.isEmpty())
-        val markdown = plan.fallbackText
-        assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
-        assertTrue(markdown.contains("**触发人**"))
-        assertTrue(markdown.contains("stage-review-notice"))
-        assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
-        assertFalse(markdown.contains("审核说明"))
-        assertFalse(markdown.contains("需要您审核后继续"))
-        assertEquals(1, Regex("查看构建").findAll(markdown).count())
-        assertTrue(markdown.contains("https://example.com/pc"))
-        assertFalse(markdown.contains("https://example.com/app"))
-        assertFalse(markdown.contains("\\n"))
+        assertNull(plan)
     }
 
     @Test

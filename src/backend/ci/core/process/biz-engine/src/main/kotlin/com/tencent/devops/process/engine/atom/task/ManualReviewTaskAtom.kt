@@ -223,14 +223,14 @@ class ManualReviewTaskAtom(
                     NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
                 ),
                 position = null,
-                stageId = null,
-                taskId = param.id,
+                stageId = task.stageId,
+                taskId = param.id ?: task.taskId,
                 callbackData = mapOf(
                     "reviewType" to "ATOM",
                     "projectId" to projectCode,
                     "pipelineId" to pipelineId,
                     "buildId" to buildId,
-                    "elementId" to (param.id ?: ""),
+                    "elementId" to (param.id ?: task.taskId),
                     "reviewUsers" to reviewUsersList.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
                     "suggestRequired" to (param.suggestRequired == true).toString(),
