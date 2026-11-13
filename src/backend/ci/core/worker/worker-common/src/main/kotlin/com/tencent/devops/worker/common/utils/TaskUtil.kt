@@ -28,8 +28,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -127,16 +125,18 @@ object TaskUtil {
         val dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
 
         // 对 taskParams 中的值做统一表达式替换，解决新版方言下 ${{ steps.xxx }} 未被替换的问题
+        val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+            variables = contextMap,
+            prefetchTexts = taskParams.values
+        )
         return taskParams.mapValues { (_, value) ->
-            if (dialect.supportUseExpression()) {
-                EnvReplacementParser.parse(
-                    value = value,
-                    contextMap = contextMap,
-                    dialect = dialect
-                )
-            } else {
-                ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).toString()
-            }
+            BuildVarOverflowExprSupport.replaceTaskParam(
+                value = value,
+                variables = contextMap,
+                dialect = dialect,
+                overflowKeys = overflowKeys,
+                loader = overflowLoader
+            )
         }
     }
 }

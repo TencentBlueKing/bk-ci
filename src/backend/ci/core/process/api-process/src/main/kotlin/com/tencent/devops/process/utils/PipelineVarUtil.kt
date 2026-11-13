@@ -532,6 +532,24 @@ object PipelineVarUtil {
         }
     }
 
+    /**
+     * 将调用方可能传入的旧变量名 / 预置上下文名解析成"落库使用的新变量名"（落库统一新名）。
+     *
+     * 用于单 key 精准查询：避免历史实现「全量加载构建变量再做新旧混合」的开销，
+     * 同时保持与 [mixOldVarAndNewVar] / [replaceTemplate] 等价的旧命名兼容能力。
+     * 依次尝试：旧→新精确映射、预置上下文→变量名映射、旧→新前缀映射；都不命中则原样返回。
+     */
+    fun resolveStoredVarKey(varName: String): String {
+        oldVarMappingNewVar[varName]?.let { return it }
+        contextVarMappingBuildVar[varName]?.let { return it }
+        oldPrefixMappingNew.forEach { (oldPrefix, newPrefix) ->
+            if (varName.startsWith(oldPrefix)) {
+                return newPrefix + varName.substring(oldPrefix.length)
+            }
+        }
+        return varName
+    }
+
     fun oldVarToNewVar(oldVarName: String): String? = oldVarMappingNewVar[oldVarName]
 
     fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]

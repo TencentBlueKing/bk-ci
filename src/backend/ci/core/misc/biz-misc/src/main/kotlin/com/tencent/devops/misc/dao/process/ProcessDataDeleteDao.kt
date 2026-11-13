@@ -74,10 +74,10 @@ import com.tencent.devops.model.process.tables.TPipelineTriggerEvent
 import com.tencent.devops.model.process.tables.TPipelineTriggerReview
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
-import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineViewTop
 import com.tencent.devops.model.process.tables.TPipelineViewUserLastView
 import com.tencent.devops.model.process.tables.TPipelineViewUserSettings
+import com.tencent.devops.model.process.tables.TPipelineVisibility
 import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TPipelineWebhookVersion
@@ -127,6 +127,11 @@ class ProcessDataDeleteDao {
             JooqUtils.retryWhenDeadLock {
                 deletePipelineBuildTemplateAcrossInfo(dslContext, projectId, pipelineId, buildIds)
             }
+        } else {
+            // 归档库：变量主表 T_PIPELINE_BUILD_VAR 随归档构建一起迁入（见 PipelineBuildLinkedDataMigrationStrategy），
+            // 归档过期清理 / 迁移回滚时必须同步删除，否则会残留孤儿；
+            // 非归档库该表删除仍按原有 clearBaseBuildData 开关控制，此处不改变其行为。
+            deletePipelineBuildVar(dslContext, projectId, buildIds)
         }
         deleteReport(dslContext, projectId, pipelineId, buildIds)
         deletePipelineTriggerReview(dslContext, projectId, buildIds)
@@ -305,6 +310,7 @@ class ProcessDataDeleteDao {
     }
 
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, buildIds: List<String>) {
+        if (buildIds.isEmpty()) return
         with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.`in`(buildIds)))

@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.dao.record.BuildRecordVarPath
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -72,6 +73,20 @@ class PipelineRecordModelService @Autowired constructor(
     }
 
     /**
+     * 去掉记录里的大变量引用串，它不属于构建详情模型。
+     *
+     * 引用串是按执行次数回看变量内容用的，走 `variables/value` 单独点查，
+     * `Model` / `Element` 上都没有这个字段。留着只会被整份序列化一遍再在反序列化时丢掉，
+     * 详情页是最热的读路径，没必要带上；也不该让正确性依赖「未知字段会被忽略」。
+     *
+     * 只作用于生成详情模型的这份内存数据，记录行本身不受影响。
+     */
+    private fun MutableMap<String, Any>.dropLargeVariables(): MutableMap<String, Any> {
+        remove(BuildRecordVarPath.BK_LARGE_VARIABLES)
+        return this
+    }
+
+    /**
      * 生成构建变量模型map集合
      * @param mergeBuildRecordParam 合并流水线变量模型参数
      * @return 构建变量模型map集合
@@ -84,7 +99,7 @@ class PipelineRecordModelService @Autowired constructor(
         val pipelineId = mergeBuildRecordParam.pipelineId
         val buildId = mergeBuildRecordParam.buildId
         val executeCount = mergeBuildRecordParam.executeCount
-        val recordModelMap = mergeBuildRecordParam.recordModelMap
+        val recordModelMap = mergeBuildRecordParam.recordModelMap.dropLargeVariables()
         val finalDSLContext = queryDslContext ?: dslContext
         // 获取stage级别变量数据
         val buildRecordStages = buildRecordStageDao.getLatestRecords(
@@ -153,7 +168,7 @@ class PipelineRecordModelService @Autowired constructor(
         buildRecordStages.forEach { buildRecordStage ->
             val pipelineBaseModelMap = mergeBuildRecordParam.pipelineBaseModelMap
             val baseStages = pipelineBaseModelMap[Model::stages.name] as List<Map<String, Any>>
-            val stageVarMap = buildRecordStage.stageVar
+            val stageVarMap = buildRecordStage.stageVar.dropLargeVariables()
             val stageId = buildRecordStage.stageId
             stageVarMap[Stage::id.name] = stageId
             stageVarMap[Stage::status.name] = buildRecordStage.status ?: ""
@@ -236,7 +251,7 @@ class PipelineRecordModelService @Autowired constructor(
         recordContainer: BuildRecordContainer,
         containerId: String
     ): MutableMap<String, Any> {
-        val containerVarMap = recordContainer.containerVar
+        val containerVarMap = recordContainer.containerVar.dropLargeVariables()
         containerVarMap[Container::id.name] = containerId
         containerVarMap[Container::status.name] = recordContainer.status ?: ""
         containerVarMap[Container::executeCount.name] = recordContainer.executeCount
@@ -350,7 +365,7 @@ class PipelineRecordModelService @Autowired constructor(
         matrixTaskFlag: Boolean,
         taskBaseMaps: MutableList<Map<String, Any>>
     ): MutableMap<String, Any> {
-        var taskVarMap = containerRecordTask.taskVar
+        var taskVarMap = containerRecordTask.taskVar.dropLargeVariables()
         taskVarMap[Element::id.name] = taskId
         taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
         taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount

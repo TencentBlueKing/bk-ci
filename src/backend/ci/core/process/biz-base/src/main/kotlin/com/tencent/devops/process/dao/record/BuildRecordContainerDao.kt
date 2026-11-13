@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -38,6 +39,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordConta
 import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import com.tencent.devops.process.pojo.task.PipelineContainerBuild
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -171,6 +174,36 @@ class BuildRecordContainerDao {
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    /**
+     * 从指定 Job、指定一次执行的记录里取出某个大变量的引用串。只查这一行。
+     */
+    fun getLargeVariableReference(
+        dslContext: DSLContext,
+        query: LargeVariableRecordQuery
+    ): String? {
+        val containerId = (query.scope as? LargeVariableScope.Job)?.containerId ?: return null
+        val jsonPath = BuildRecordVarPath.largeVariable(
+            BuildRecordVarPath.BK_LARGE_VARIABLES, query.varName
+        ) ?: return null
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            val reference = JooqUtils.jsonExtract(
+                t1 = CONTAINER_VAR,
+                t2 = jsonPath,
+                removeDoubleQuotes = true
+            )
+            return dslContext.select(reference)
+                .from(this)
+                .where(
+                    PROJECT_ID.eq(query.projectId)
+                        .and(PIPELINE_ID.eq(query.pipelineId))
+                        .and(BUILD_ID.eq(query.buildId))
+                        .and(EXECUTE_COUNT.eq(query.executeCount))
+                        .and(CONTAINER_ID.eq(containerId))
+                )
+                .fetchOne(reference)
         }
     }
 

@@ -61,6 +61,79 @@ internal class MarketAtomTaskTest {
         )
     }
 
+    @Test
+    fun jsonLargeVariableInAtomInputShouldKeepValidJson() {
+        val payload = "{\"msg\":\"hello \\\"bk\\\"\",\"line\":\"a\\nb\",\"items\":[1,true]}"
+        val variables = mapOf("payload" to overflowRef())
+        val inputParam = mapOf(
+            "simple" to "\${{ payload }}",
+            "struct" to mapOf("desc" to "\${{ payload }}")
+        )
+
+        val replaced = newReplacement(inputParam, variables, setOf("payload")) { payload }
+
+        Assertions.assertEquals(payload, replaced["simple"])
+        val struct = JsonUtil.toMap(replaced["struct"]!!)
+        Assertions.assertEquals(payload, struct["desc"])
+    }
+
+    @Test
+    fun nonJsonLargeVariableInAtomInputShouldKeepOuterJsonValid() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val variables = mapOf("payload" to overflowRef())
+        val inputParam = mapOf(
+            "simple" to "\${{ payload }}",
+            "struct" to mapOf("desc" to "\${{ payload }}")
+        )
+
+        val replaced = newReplacement(inputParam, variables, setOf("payload")) { payload }
+
+        Assertions.assertEquals(payload, replaced["simple"])
+        val struct = JsonUtil.toMap(replaced["struct"]!!)
+        Assertions.assertEquals(payload, struct["desc"])
+    }
+
+    @Test
+    fun normalJsonVariableInAtomInputShouldKeepOuterJsonValid() {
+        val payload = "{\"first\":1}{\"second\":2}"
+        val variables = mapOf("payload" to payload)
+        val inputParam = mapOf(
+            "simple" to "\${{ payload }}",
+            "struct" to mapOf("desc" to "\${{ payload }}")
+        )
+
+        val replaced = newReplacement(inputParam, variables)
+
+        Assertions.assertEquals(payload, replaced["simple"])
+        val struct = JsonUtil.toMap(replaced["struct"]!!)
+        Assertions.assertEquals(payload, struct["desc"])
+    }
+
+    @Test
+    fun scriptExpressionShouldKeepLargeJsonValueRaw() {
+        val payload = "{\"msg\":\"hello \\\"bk\\\"\",\"line\":\"a\\nb\"}"
+        val variables = mapOf("payload" to overflowRef())
+        val context = EnvReplacementParser.getCustomExecutionContextByMap(
+            variables = variables,
+            overflowKeys = setOf("payload"),
+            overflowLoader = { payload }
+        )
+
+        val command = "echo \${{ payload }}"
+        Assertions.assertEquals(
+            "echo $payload",
+            EnvReplacementParser.parse(
+                value = command,
+                contextMap = variables,
+                onlyExpression = true,
+                contextPair = context,
+                functions = SpecialFunctions.functions,
+                overflowKeys = setOf("payload"),
+                overflowLoader = { payload }
+            )
+        )
+    }
+
     private fun originReplacement(
         inputMap: Map<String, Any>,
         variables: Map<String, String>
@@ -85,7 +158,7 @@ internal class MarketAtomTaskTest {
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         inputMap.forEach { (name, value) ->
             atomParams[name] = EnvReplacementParser.parse(
-                value = JsonUtil.toJson(value),
+                value = copyInputValue(value),
                 contextMap = variables,
                 contextPair = Pair(context, nameValue),
                 functions = SpecialFunctions.functions
@@ -93,6 +166,47 @@ internal class MarketAtomTaskTest {
         }
         return atomParams
     }
+
+    private fun newReplacement(
+        inputMap: Map<String, Any>,
+        variables: Map<String, String>,
+        overflowKeys: Set<String>,
+        overflowLoader: (String) -> String?
+    ): Map<String, String> {
+        val atomParams = mutableMapOf<String, String>()
+        val context = EnvReplacementParser.getCustomExecutionContextByMap(
+            variables = variables,
+            overflowKeys = overflowKeys,
+            overflowLoader = overflowLoader
+        )
+        inputMap.forEach { (name, value) ->
+            atomParams[name] = EnvReplacementParser.parse(
+                value = copyInputValue(value),
+                contextMap = variables,
+                onlyExpression = true,
+                contextPair = context,
+                functions = SpecialFunctions.functions,
+                overflowKeys = overflowKeys,
+                overflowLoader = overflowLoader
+            )
+        }
+        return atomParams
+    }
+
+    private fun copyInputValue(value: Any?): Any? = when (value) {
+        is Map<*, *> -> LinkedHashMap<Any?, Any?>(value.size).apply {
+            value.forEach { (key, item) -> this[key] = copyInputValue(item) }
+        }
+        is List<*> -> ArrayList<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        is Set<*> -> LinkedHashSet<Any?>(value.size).apply {
+            value.forEach { add(copyInputValue(it)) }
+        }
+        else -> value
+    }
+
+    private fun overflowRef() = "__BK_OVF__:1:1:${"a".repeat(64)}"
 
     class CredentialRuntimeNamedValue(
         override val key: String = "settings"

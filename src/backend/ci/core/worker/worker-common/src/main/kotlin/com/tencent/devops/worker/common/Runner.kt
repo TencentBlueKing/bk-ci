@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -66,6 +67,7 @@ import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -236,7 +238,7 @@ object Runner {
         var waitCount = 0
         loop@ while (true) {
             logger.info("Start to claim the task")
-            val buildTask = EngineService.claimTask()
+            val buildTask = BuildVarOverflowExprSupport.replaceClassicTaskParams(EngineService.claimTask())
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
@@ -364,6 +366,8 @@ object Runner {
                 .filter { it.sensitive == true }
                 .map { it.value.toString() }
                 .filterNot { it.isBlank() }
+                // 敏感大变量下发的是引用串，不是密文本身，真实值在按需加载时再登记
+                .filterNot { BuildVarOverflowUtils.isOverflowReference(it) }
                 .toList()
                 .takeIf { it.isNotEmpty() }
                 ?.let { SensitiveValueService.addSensitiveValues(it) }
@@ -476,6 +480,10 @@ object Runner {
             }
             if (customEnv.isNullOrEmpty()) return
             val jobVariables = jobBuildVariables.variables.toMutableMap()
+            val (overflowKeys, overflowLoader) = BuildVarOverflowExprSupport.resolveOverflowOptions(
+                variables = jobVariables,
+                prefetchTexts = customEnv.mapNotNull { it.value }
+            )
             customEnv.forEach {
                 if (!it.key.isNullOrBlank()) {
                     // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
@@ -484,7 +492,9 @@ object Runner {
                         contextMap = jobVariables,
                         onlyExpression = dialect.supportUseExpression(),
                         functions = SpecialFunctions.functions,
-                        output = SpecialFunctions.output
+                        output = SpecialFunctions.output,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
                     )
                     jobVariables["envs.${it.key}"] = value
                     taskBuildVariable[it.key!!] = value

@@ -53,5 +53,7 @@ data class TaskBuildEndParam(
     @get:Schema(title = "错误代码", required = false)
     var errorCode: Int? = null,
     @get:Schema(title = "错误信息", required = false)
-    var errorMsg: String? = null
+    var errorMsg: String? = null,
+    @get:Schema(title = "本次执行产生的大变量引用串（变量名 -> 引用串）", required = false)
+    val largeVariables: Map<String, String>? = null
 )

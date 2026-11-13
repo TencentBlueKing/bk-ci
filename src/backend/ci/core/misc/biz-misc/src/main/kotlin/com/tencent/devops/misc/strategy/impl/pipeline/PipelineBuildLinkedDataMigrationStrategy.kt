@@ -38,7 +38,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     }
 
-    // 非归档状态下的处理器
+    // 非归档状态下的处理器（运行期 / 执行明细表，归档场景不保留）
     private val nonArchiveHandlers = listOf(
         // 迁移T_PIPELINE_BUILD_DETAIL相关表数据
         object : RecordHandler<TPipelineBuildDetailRecord> {
@@ -46,13 +46,6 @@ class PipelineBuildLinkedDataMigrationStrategy(
                 processDataMigrateDao.getPipelineBuildDetailRecords(dslContext, projectId, buildIds)
             override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildDetailRecord>) =
                 processDataMigrateDao.migratePipelineBuildDetailData(migratingDslContext, records)
-        },
-        // 迁移T_PIPELINE_BUILD_VAR相关表数据
-        object : RecordHandler<TPipelineBuildVarRecord> {
-            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
-                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
-            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
-                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
         },
         // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
         object : RecordHandler<TPipelinePauseValueRecord> {
@@ -91,8 +84,15 @@ class PipelineBuildLinkedDataMigrationStrategy(
         }
     )
 
-    // 所有状态下的处理器
+    // 所有状态下的处理器（归档与非归档都迁移）
     private val commonHandlers = listOf(
+        // 迁移T_PIPELINE_BUILD_VAR 变量主表：归档库要支持构建变量查询（含大变量引用串），故归档/非归档都迁。
+        object : RecordHandler<TPipelineBuildVarRecord> {
+            override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
+                processDataMigrateDao.getPipelineBuildVarRecords(dslContext, projectId, buildIds)
+            override fun migrate(migratingDslContext: DSLContext, records: List<TPipelineBuildVarRecord>) =
+                processDataMigrateDao.migratePipelineBuildVarData(migratingDslContext, records)
+        },
         // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
         object : RecordHandler<TPipelineTriggerReviewRecord> {
             override fun fetch(dslContext: DSLContext, projectId: String, buildIds: List<String>) =
@@ -219,7 +219,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
 
         ListUtils.partition(buildIds, PageMigrationUtil.SHORT_PAGE_SIZE).forEach { batchIds ->
             with(context) {
-                // 非归档状态下迁移额外表
+                // 运行期 / 执行明细表仅非归档场景迁移
                 if (archiveFlag != true) {
                     migrateHandlerGroup(
                         handlers = nonArchiveHandlers,
@@ -230,7 +230,7 @@ class PipelineBuildLinkedDataMigrationStrategy(
                     )
                 }
 
-                // 迁移通用表
+                // 迁移通用表（含 T_PIPELINE_BUILD_VAR 变量主表，归档/非归档都迁）
                 migrateHandlerGroup(
                     handlers = commonHandlers,
                     buildIds = batchIds,

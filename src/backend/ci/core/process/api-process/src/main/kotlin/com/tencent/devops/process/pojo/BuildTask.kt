@@ -60,7 +60,9 @@ data class BuildTask(
     @get:Schema(title = "容器类型", required = false)
     val containerType: String? = null,
     @get:Schema(title = "签名token", required = false)
-    val signToken: String? = null
+    val signToken: String? = null,
+    @get:Schema(title = "为true时引擎未替换传统方言参数中的变量，由构建机负责替换", required = false)
+    val replaceVarOnWorker: Boolean? = null
 ) {
 
     /**

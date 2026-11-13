@@ -42,8 +42,11 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.dao.record.BuildRecordVarPath
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -53,6 +56,8 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
@@ -76,6 +81,8 @@ import java.time.LocalDateTime
 class TaskBuildRecordService(
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
+    private val recordContainerDao: BuildRecordContainerDao,
+    private val recordStageDao: BuildRecordStageDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     recordModelService: PipelineRecordModelService,
@@ -83,7 +90,7 @@ class TaskBuildRecordService(
     pipelineBuildDao: PipelineBuildDao,
     pipelineResourceVersionDao: PipelineResourceVersionDao,
     stageTagService: StageTagService,
-    buildRecordModelDao: BuildRecordModelDao,
+    private val buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
     redisOperation: RedisOperation,
     pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
@@ -312,6 +319,36 @@ class TaskBuildRecordService(
         )
     }
 
+    /**
+     * 取 [query] 指定范围内、某一次执行的大变量引用串。
+     *
+     * 先按组件查：插件写的大变量落在自己那一行 `TASK_VAR` 上，同名变量各留各的。
+     * 组件记录里没有，再查流水线级快照——Stage 审核入参、Job 级互斥信息这类不经插件产生的大变量
+     * 只在构建结束时统一快照进 `MODEL_VAR`，不落到 Job、Stage 的记录行上。
+     *
+     * 两处都没有时返回 null，这不是「变量不存在」：调用方会退回变量表里的当前值
+     * （最后一次写入，不区分执行次数）。构建还在跑、快照还没写时就是这种情况。
+     */
+    fun getLargeVariableReference(
+        query: LargeVariableRecordQuery,
+        queryDslContext: DSLContext? = null
+    ): String? {
+        val context = queryDslContext ?: dslContext
+        val componentReference = when (query.scope) {
+            is LargeVariableScope.Task -> recordTaskDao.getLargeVariableReference(context, query)
+            is LargeVariableScope.Job -> recordContainerDao.getLargeVariableReference(context, query)
+            is LargeVariableScope.Stage -> recordStageDao.getLargeVariableReference(context, query)
+            LargeVariableScope.Pipeline -> null
+        }
+        if (componentReference != null) return componentReference
+        val pipelineQuery = if (query.scope == LargeVariableScope.Pipeline) {
+            query
+        } else {
+            query.copy(scope = LargeVariableScope.Pipeline)
+        }
+        return buildRecordModelDao.getLargeVariableReference(context, pipelineQuery)
+    }
+
     fun taskEnd(taskBuildEndParam: TaskBuildEndParam): Pair<List<PipelineTaskStatusInfo>, BuildRecordTask?> {
 
         val projectId = taskBuildEndParam.projectId
@@ -384,6 +421,8 @@ class TaskBuildRecordService(
                 recordTask.generateTaskTimeCost()?.let {
                     taskVar[Element::timeCost.name] = it
                 }
+                // 只写本插件这一次执行的引用串。别的插件、Job、Stage 上的同名变量留在它们自己的记录行里
+                taskBuildEndParam.largeVariables?.let { taskVar[BK_LARGE_VARIABLES_TASK_VAR] = it }
                 // 自动重试时，retryCountAuto + 1
                 if (taskBuildEndParam.buildStatus == BuildStatus.RETRY) {
                     taskVar[Element::retryCountAuto.name] =
@@ -662,5 +701,17 @@ class TaskBuildRecordService(
     companion object {
         private val logger = LoggerFactory.getLogger(TaskBuildRecordService::class.java)
         private const val TASK_PAUSE_TAG_VAR = "taskPause"
+
+        /**
+         * 插件执行记录里存放大变量引用串的键，值为 `变量名 -> __BK_OVF__:<len>:<executeCount>:<sha256>`。
+         *
+         * 放在 T_PIPELINE_BUILD_RECORD_TASK 而不是 T_PIPELINE_BUILD_VAR / T_PIPELINE_BUILD_TASK：
+         * 后两者是分区表，只保留数周，且变量表按 (projectId, buildId, key) 唯一，重试会把上一次的值覆盖掉；
+         * 只有 T_PIPELINE_BUILD_RECORD_* 按执行次数逐次留存，才能回看任意一次执行当时的内容。
+         *
+         * 这个键不属于构建详情模型，合成详情模型时由 PipelineRecordModelService 摘掉；
+         * 取用一律走 [getLargeVariableReference]。
+         */
+        const val BK_LARGE_VARIABLES_TASK_VAR = BuildRecordVarPath.BK_LARGE_VARIABLES
     }
 }
