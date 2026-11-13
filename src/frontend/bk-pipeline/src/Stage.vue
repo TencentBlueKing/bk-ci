@@ -12,7 +12,7 @@
         :user-name="reactiveData.userName"
         :stage-status="stageStatusCls"
       />
-      <span :title="stageTitle" :class="stageTitleCls">
+      <span v-bk-tooltips="stageTitleTips" :class="stageTitleCls">
         <Logo
           v-if="!!stageStatusIcon"
           v-bk-tooltips="isStageSkip ? t('skipStageDesc') : { disabled: true }"
@@ -196,6 +196,7 @@ import {
 import { t } from "./locale";
 import {
     eventBus,
+    formatRangeTime,
     getOuterHeight,
     hashID,
     isTriggerContainer,
@@ -292,6 +293,21 @@ const showDeleteStage = computed(() => {
 
 const stageTitle = computed(() => {
   return props.stage ? props.stage.name : "stage";
+});
+
+const stageTitleTips = computed(() => {
+  // 触发阶段、未执行（无开始时间）等场景不展示起止，悬停保持阶段名提示
+  const timeRange = isTriggerStage.value
+    ? ""
+    : formatRangeTime(props.stage?.startTime, props.stage?.endTime);
+  if (!timeRange) {
+    return { delay: [300, 0], content: stageTitle.value };
+  }
+  const runningLabel = props.stage?.endTime ? "" : ` ${t("started")}`;
+  return {
+    delay: [300, 0],
+    content: `${t("startEndTime")}：${timeRange}${runningLabel}`,
+  };
 });
 
 const stageDisabled = computed(() => {
