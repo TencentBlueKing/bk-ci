@@ -461,6 +461,7 @@ class PipelineBuildQualityService(
                     pipelineId = task.pipelineId,
                     userId = task.starter,
                     buildId = task.buildId,
+                    executeCount = task.executeCount,
                     refreshTypes = RefreshType.RECORD.binary
                 )
             )
