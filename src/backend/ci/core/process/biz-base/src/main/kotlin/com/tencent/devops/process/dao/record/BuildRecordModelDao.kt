@@ -50,7 +50,7 @@ class BuildRecordModelDao {
 
     fun createRecord(dslContext: DSLContext, record: BuildRecordModel) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
-            dslContext.insertInto(this)
+            val insert = dslContext.insertInto(this)
                 .set(BUILD_ID, record.buildId)
                 .set(PROJECT_ID, record.projectId)
                 .set(PIPELINE_ID, record.pipelineId)
@@ -64,7 +64,14 @@ class BuildRecordModelDao {
                 .set(ERROR_INFO, record.errorInfoList?.let { JsonUtil.toJson(it, false) })
                 .set(CANCEL_USER, record.cancelUser)
                 .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                .execute()
+            // 局部重试继承上一轮起始时间时一并写下，否则触发阶段会把它刷成当前时间。
+            // 全新构建和整条重跑的起始时间为空，仍由后续更新写入。
+            val inheritedStart = record.startTime
+            if (inheritedStart != null) {
+                insert.set(START_TIME, inheritedStart)
+                    .set(QUEUE_TIME, record.queueTime)
+            }
+            insert.execute()
         }
     }
 

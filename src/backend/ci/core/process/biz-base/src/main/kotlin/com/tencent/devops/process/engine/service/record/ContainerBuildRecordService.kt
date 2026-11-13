@@ -169,7 +169,11 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        /**
+         * 子 Job 整体重跑时清掉起始时间。只重跑中间插件时保留上一轮起始时间，结束时间置空，本轮结束再写。
+         */
+        refreshContainerStart: Boolean = true
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
@@ -183,7 +187,8 @@ class ContainerBuildRecordService(
         }
         val newContainer = oldContainer.copy(
             executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            startTime = if (refreshContainerStart) null else oldContainer.startTime,
+            endTime = null, timestamps = mapOf(), containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId

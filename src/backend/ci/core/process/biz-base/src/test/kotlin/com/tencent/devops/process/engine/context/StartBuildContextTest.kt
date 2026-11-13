@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
@@ -517,5 +518,61 @@ class StartBuildContextTest : TestBase() {
                 }
             }
         }
+    }
+
+    @Test
+    fun refreshRuntimeStartOnlyOnWholeRetry() {
+        val stages = genStages(stageSize = 2, jobSize = 2, elementSize = 2, needFinally = true)
+        val stage1 = stages[1]
+        val stage2 = stages[2]
+        val finallyStage = stages.last().copy(finally = true)
+        val job = stage1.containers[0]
+        val otherJob = stage1.containers[1]
+        val firstTaskId = job.elements[0].id!!
+        val laterTaskId = job.elements[1].id!!
+
+        params.remove(PIPELINE_RETRY_START_TASK_ID)
+        val rebuild = initDefaultStartBuildContext()
+        Assertions.assertEquals(true, rebuild.refreshStageRuntime(stage1))
+        Assertions.assertEquals(true, rebuild.refreshContainerRuntime(stage1, job))
+
+        params[PIPELINE_RETRY_START_TASK_ID] = laterTaskId
+        val continueTask = initDefaultStartBuildContext()
+        Assertions.assertEquals(false, continueTask.refreshStageRuntime(stage1))
+        Assertions.assertEquals(true, continueTask.refreshStageRuntime(stage2))
+        Assertions.assertEquals(true, continueTask.refreshStageRuntime(finallyStage))
+        Assertions.assertEquals(false, continueTask.refreshContainerRuntime(stage1, job))
+        Assertions.assertEquals(true, continueTask.refreshContainerRuntime(stage1, otherJob))
+
+        params[PIPELINE_RETRY_START_TASK_ID] = firstTaskId
+        params[PIPELINE_SKIP_FAILED_TASK] = false.toString()
+        val wholeJob = initDefaultStartBuildContext()
+        Assertions.assertEquals(false, wholeJob.refreshStageRuntime(stage1))
+        Assertions.assertEquals(true, wholeJob.refreshContainerRuntime(stage1, job))
+
+        params[PIPELINE_RETRY_START_TASK_ID] = firstTaskId
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val skipFirst = initDefaultStartBuildContext()
+        Assertions.assertEquals(false, skipFirst.refreshContainerRuntime(stage1, job))
+
+        params[PIPELINE_RETRY_START_TASK_ID] = stage1.id!!
+        params.remove(PIPELINE_SKIP_FAILED_TASK)
+        params.remove(PIPELINE_RETRY_ALL_FAILED_CONTAINER)
+        val wholeStage = initDefaultStartBuildContext()
+        Assertions.assertEquals(true, wholeStage.stageRetry)
+        Assertions.assertEquals(true, wholeStage.refreshStageRuntime(stage1))
+        Assertions.assertEquals(true, wholeStage.refreshContainerRuntime(stage1, job))
+
+        params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = true.toString()
+        val failedJobs = initDefaultStartBuildContext()
+        Assertions.assertEquals(false, failedJobs.refreshStageRuntime(stage1))
+        Assertions.assertEquals(true, failedJobs.refreshStageRuntime(stage2))
+        Assertions.assertEquals(true, failedJobs.refreshContainerRuntime(stage1, job))
+
+        params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = false.toString()
+        params[PIPELINE_SKIP_FAILED_TASK] = true.toString()
+        val skipFailedInStage = initDefaultStartBuildContext()
+        Assertions.assertEquals(false, skipFailedInStage.refreshStageRuntime(stage1))
+        Assertions.assertEquals(false, skipFailedInStage.refreshContainerRuntime(stage1, job))
     }
 }

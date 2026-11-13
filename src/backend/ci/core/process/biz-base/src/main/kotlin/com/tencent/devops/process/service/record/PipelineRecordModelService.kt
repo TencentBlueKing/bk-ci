@@ -166,6 +166,7 @@ class PipelineRecordModelService @Autowired constructor(
             stageVarMap[Stage::executeCount.name] = buildRecordStage.executeCount
             putRuntimeTime(
                 varMap = stageVarMap,
+                status = buildRecordStage.status,
                 startTime = buildRecordStage.startTime,
                 endTime = buildRecordStage.endTime
             )
@@ -255,6 +256,7 @@ class PipelineRecordModelService @Autowired constructor(
         containerVarMap[Container::matrixGroupFlag.name] = recordContainer.matrixGroupFlag ?: false
         putRuntimeTime(
             varMap = containerVarMap,
+            status = recordContainer.status,
             startTime = recordContainer.startTime,
             endTime = recordContainer.endTime
         )
@@ -267,12 +269,18 @@ class PipelineRecordModelService @Autowired constructor(
      * 起止时间直接取记录表存的值，不从 timeCost 反推，也不改动任何耗时字段。
      * 没有开始时间时不单独补结束时间：未执行、跳过的记录只有结束时间，
      * 若只返回结束时间，前端会算出一个负数或无意义的区间。
+     *
+     * 跳过的记录一律不展示起止时间。跳过都是在真正执行之前判定的，区间里没有用户的执行。
+     * 否则同样是「整段跳过」，带矩阵 Job 的阶段因为要下发矩阵父容器才能发现子 Job 全被跳过，
+     * 真的进过运行态并留下起止时间，而只有普通 Job 的阶段在第一次事件里就判成跳过，两者展示不一致。
      */
     private fun putRuntimeTime(
         varMap: MutableMap<String, Any>,
+        status: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?
     ) {
+        if (status == BuildStatus.SKIP.name) return
         val start = startTime ?: return
         varMap[START_TIME_FIELD] = start.timestampmilli()
         endTime?.let { varMap[END_TIME_FIELD] = it.timestampmilli() }
@@ -390,6 +398,7 @@ class PipelineRecordModelService @Autowired constructor(
         taskVarMap[Element::asyncStatus.name] = containerRecordTask.asyncStatus ?: ""
         putRuntimeTime(
             varMap = taskVarMap,
+            status = containerRecordTask.status,
             startTime = containerRecordTask.startTime,
             endTime = containerRecordTask.endTime
         )

@@ -1362,7 +1362,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount, cancelUser = null,
                 modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
-                startTime = startTime, endTime = endTime, errorInfoList = null,
+                // 起始时间只写一次。局部重试建记录时已继承上一轮起始时间，这里再写会把流水线起点刷成现在
+                startTime = if (recordModel.startTime == null) startTime else null,
+                endTime = endTime, errorInfoList = null,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }

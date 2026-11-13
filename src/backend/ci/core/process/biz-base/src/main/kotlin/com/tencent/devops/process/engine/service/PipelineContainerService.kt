@@ -353,7 +353,12 @@ class PipelineContainerService @Autowired constructor(
                     pipelineTaskService.batchUpdate(transactionContext, updateTasks)
                 }
                 child.status = BuildStatus.QUEUE
-                child.startTime = null
+                // 子 Job 整体重跑才清起始时间；只重跑中间插件时保留，结束时间留到本轮结束再写
+                val refreshChildStart = skipTaskIds.isEmpty() &&
+                    resetTaskIds.containsAll(childTasks.map { it.taskId })
+                if (refreshChildStart) {
+                    child.startTime = null
+                }
                 child.endTime = null
                 child.executeCount = context.executeCount
                 child.controlOption.agentReuseMutex?.runtimeAgentOrEnvId = null
@@ -368,7 +373,8 @@ class PipelineContainerService @Autowired constructor(
                     oldExecuteCount = oldExecuteCount,
                     newExecuteCount = context.executeCount,
                     resetTaskIds = resetTaskIds,
-                    skipTaskIds = skipTaskIds
+                    skipTaskIds = skipTaskIds,
+                    refreshContainerStart = refreshChildStart
                 )
             }
         }
@@ -554,6 +560,8 @@ class PipelineContainerService @Autowired constructor(
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var needStartVM = false // 是否需要启动构建
         var needUpdateContainer = false
+        // 矩阵局部重试保留了子容器：父容器是续上，不刷新起始时间
+        var matrixKeptPartial = false
         var taskSeq = 0
         val containerElements = container.elements
         val newBuildFlag = lastTimeBuildTasks.isEmpty()
@@ -741,6 +749,7 @@ class PipelineContainerService @Autowired constructor(
                 prepareMatrixGroupRetry(context = context, matrixContainer = container)
             if (partialRetried) {
                 // 让父矩阵容器重新进入排队（走下方 needUpdateContainer 分支重置状态），并保留 groupContainers
+                matrixKeptPartial = true
                 needUpdateContainer = true
             } else {
                 container.retryFreshMatrixOption()
@@ -788,7 +797,15 @@ class PipelineContainerService @Autowired constructor(
                         if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                             dbRecord.run {
                                 status = BuildStatus.QUEUE
-                                startTime = null
+                                // 矩阵父容器在局部重试里只是续上。其余按 Stage/Job 是否整体重跑决定
+                                val refreshStart = if (matrixKeptPartial) {
+                                    false
+                                } else {
+                                    context.refreshContainerRuntime(stage, container)
+                                }
+                                if (refreshStart) {
+                                    startTime = null
+                                }
                                 endTime = null
                                 executeCount = context.executeCount
                                 /*重试时重置构建机互斥组名称，以便变量更改时能生效*/
