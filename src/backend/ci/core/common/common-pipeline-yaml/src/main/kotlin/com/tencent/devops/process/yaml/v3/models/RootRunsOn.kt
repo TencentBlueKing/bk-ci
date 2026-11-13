@@ -110,7 +110,7 @@ data class RootRunsOn(
 
     fun toYaml(): Any {
         // 只有环境名、且没有工作空间时，沿用历史的字符串写法
-        if (avatarId == null && desktopId == null && poolId == null && workspace == null) {
+        if (listOf(avatarId, desktopId, poolId, workspace).all { it == null }) {
             return poolName ?: SELF
         }
         return this
