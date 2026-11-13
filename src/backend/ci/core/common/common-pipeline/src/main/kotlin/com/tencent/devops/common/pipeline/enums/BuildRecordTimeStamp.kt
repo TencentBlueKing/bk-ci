@@ -37,7 +37,22 @@ data class BuildRecordTimeStamp(
     @get:Schema(title = "结束时间", required = true)
     val endTime: Long?
 ) {
-    fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)
+    // 开始时刻缺失时无法计算区间，返回 0，不能拿结束时刻的时间戳当时长
+    fun between() = if (startTime == null) 0 else (endTime ?: startTime) - startTime
+
+    /**
+     * 补齐没有收尾的时间戳：等待/排队期间构建直接结束（审核超时、Job 超时、取消）时，
+     * 只有开始时刻没有结束时刻。按所属层级的结束时刻 [defaultEndTime] 补齐，
+     * 否则 [between] 会把这段等待算成 0，等待时长会落进用户耗时或系统耗时。
+     *
+     * 只补开始时刻已有、结束时刻为空的情况，其余原样返回。
+     */
+    fun fixEndTime(defaultEndTime: Long): BuildRecordTimeStamp {
+        if (startTime == null || endTime != null) {
+            return this
+        }
+        return copy(endTime = defaultEndTime.coerceAtLeast(startTime))
+    }
 
     fun insert2TimeLine(timeline: MutableList<BuildRecordTimeLine.Moment>) {
         if (startTime != null && endTime != null) {

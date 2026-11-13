@@ -366,15 +366,17 @@ class TaskBuildRecordService(
                         taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
                     }
                 }
+                // 插件在等待中直接结束（人工审核超时、Job超时、构建取消）时等待时间戳没有收尾，
+                // 这里按结束时刻补齐，让记录表自洽。耗时计算另有兜底，见 generateTaskTimeCost
                 var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null
-                if (recordTask.status == BuildStatus.PAUSE.name) {
+                val unclosedWait = recordTask.timestamps.filterKeys { it.taskCheckWait() }
+                    .filterValues { it.startTime != null && it.endTime == null }
+                if (unclosedWait.isNotEmpty()) {
                     timestamps = mergeTimestamps(
-                        recordTask.timestamps,
-                        mapOf(
-                            BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                                BuildRecordTimeStamp(null, now.timestampmilli())
-                        )
+                        unclosedWait.mapValues { BuildRecordTimeStamp(null, now.timestampmilli()) },
+                        recordTask.timestamps
                     )
+                    recordTask.timestamps = timestamps
                 }
                 // 重置暂停任务暂停状态位
                 recordTask.taskVar.remove(TASK_PAUSE_TAG_VAR)
