@@ -71,6 +71,22 @@ object BuildEndPositionCollector {
     }
 
     /**
+     * 脚本上报的错误信息按换行保留前几行，供结论条展示。
+     * 错误列表仍使用完整 errorMsg。
+     */
+    fun toLineLimitedReason(
+        raw: String?,
+        maxLines: Int = 2,
+        maxLength: Int = REASON_DISPLAY_MAX
+    ): String? {
+        val text = raw?.replace("\r\n", "\n")?.replace('\r', '\n')?.trimEnd()
+            ?.takeIf { it.isNotEmpty() } ?: return null
+        val clipped = text.split('\n').take(maxLines).joinToString("\n").trimEnd()
+        if (clipped.length <= maxLength) return clipped
+        return clipped.take(maxLength) + "..."
+    }
+
+    /**
      * 失败/超时类位置：失败插件、审核驳回、执行前暂停被终止、Job 超时插件，
      * 以及没有任何插件错误的互斥组 / Job 超时容器。
      */

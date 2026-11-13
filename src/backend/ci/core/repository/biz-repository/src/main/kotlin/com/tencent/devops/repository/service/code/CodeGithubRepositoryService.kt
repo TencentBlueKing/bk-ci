@@ -47,7 +47,6 @@ import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
-import com.tencent.devops.scm.pojo.GitFileInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -207,19 +206,6 @@ class CodeGithubRepositoryService @Autowired constructor(
     }
 
     override fun getPacProjectId(userId: String, repoUrl: String): String? = null
-
-    override fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord,
-        retry: Boolean
-    ) = Unit
-
-    override fun getGitFileTree(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord
-    ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 

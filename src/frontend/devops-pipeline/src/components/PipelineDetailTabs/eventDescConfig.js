@@ -6,12 +6,57 @@
 export const EVENT_DESC_SLOT_NAMES = [
     'branch', 'commit', 'user', 'issue', 'mr', 'source', 'tag', 'note',
     'review', 'pr', 'change', 'action', 'revision', 'remoteUser', 'pipeline',
-    'event', 'targetPipeline', 'name', 'version', 'oldName', 'newName'
+    'event', 'targetPipeline', 'name', 'version', 'oldName', 'newName',
+    'size', 'repo', 'buildNo'
 ]
 
 export const BUILD_NUM_LINK_REG = /^<a href="([^"]+)" target="_blank">([^<]+)<\/a>$/
 
 export const toText = value => (value === undefined || value === null ? '' : String(value))
+
+const STRIP_TAG_REG = /<[^>]+>/g
+
+/** 匹配字符串中内嵌的 <a> 标签，兼容 target/_blank 等任意属性顺序 */
+const ANCHOR_TAG_REG = /<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/i
+
+/**
+ * 解析字符串中可能内嵌的 <a> 标签，返回可安全渲染的片段数组。
+ * 仅保留 http/https/相对路径 的合法链接，其余降级为纯文本，避免 XSS。
+ * @param {string} value
+ * @returns {Array<{ type: 'text'|'link', text: string, href?: string }>}
+ */
+export function parseAnchors (value) {
+    const str = toText(value)
+    if (!str) {
+        return []
+    }
+    const segments = []
+    const reg = new RegExp(ANCHOR_TAG_REG.source, 'gi')
+    let match
+    let lastIndex = 0
+    while ((match = reg.exec(str)) !== null) {
+        if (match.index > lastIndex) {
+            segments.push({ type: 'text', text: str.slice(lastIndex, match.index) })
+        }
+        const href = safeUrl(match[1])
+        const text = match[2].replace(STRIP_TAG_REG, '')
+        segments.push(href ? { type: 'link', href, text } : { type: 'text', text })
+        lastIndex = reg.lastIndex
+    }
+    if (lastIndex < str.length) {
+        segments.push({ type: 'text', text: str.slice(lastIndex) })
+    }
+    // 合并相邻纯文本段，避免渲染出多余空白
+    return segments.reduce((acc, seg) => {
+        const prev = acc[acc.length - 1]
+        if (seg.type === 'text' && prev && prev.type === 'text') {
+            prev.text += seg.text
+        } else {
+            acc.push({ ...seg })
+        }
+        return acc
+    }, [])
+}
 
 const textParam = index => params => ({ type: 'text', text: toText(params[index]) })
 const userParam = index => params => ({ type: 'user', text: toText(params[index]) })
@@ -24,6 +69,28 @@ const mapParams = mapping => params => Object.entries(mapping).reduce((acc, [nam
     acc[name] = mapper(params)
     return acc
 }, {})
+const repoParam = index => params => {
+    const repo = toText(params[index])
+    if (!repo) {
+        return { type: 'text', text: '' }
+    }
+    return {
+        type: 'i18n',
+        text: repo === 'custom' ? 'bkArtifactRepoCustom' : 'bkArtifactRepoPipeline'
+    }
+}
+const artifactArrivedParams = mapParams({
+    name: linkParam(0, 1),
+    size: textParam(2),
+    pipeline: linkParam(3, 4),
+    user: userParam(5),
+    repo: repoParam(6)
+})
+const artifactImageArrivedParams = mapParams({
+    name: linkParam(0, 1),
+    pipeline: linkParam(2, 3),
+    user: userParam(4)
+})
 
 const tgitIssueParams = mapParams({
     issue: linkParam(0, 1, '!'),
@@ -154,6 +221,9 @@ export const EVENT_DESC_PARAM_MAPPERS = {
         user: userParam(1)
     }),
     bkRepoEnablePacEventDesc: mapParams({
+        user: userParam(0)
+    }),
+    bkRepoDisablePacEventDesc: mapParams({
         user: userParam(0)
     }),
     // bkGit* 事件（通用 Git 平台，参数格式同 bkTgit*）
@@ -287,7 +357,10 @@ export const EVENT_DESC_PARAM_MAPPERS = {
     bkTapdBugStatusChangeEventDesc: tapdItemParams,
     bkTapdStoryBugLinkEventDesc: tapdItemParams,
     bkTapdStoryBugUnlinkEventDesc: tapdItemParams,
-    bkTapdGenericEventDesc: tapdGenericParams
+    bkTapdGenericEventDesc: tapdGenericParams,
+    bkArtifactFileArrivedEventDesc: artifactArrivedParams,
+    bkArtifactFolderArrivedEventDesc: artifactArrivedParams,
+    bkArtifactImageArrivedEventDesc: artifactImageArrivedParams
 }
 
 /**

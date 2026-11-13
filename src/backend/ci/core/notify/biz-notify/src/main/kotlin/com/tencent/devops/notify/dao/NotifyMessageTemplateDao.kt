@@ -143,6 +143,24 @@ class NotifyMessageTemplateDao {
     }
 
     /**
+     * 获取 RTX 模板的 markdown 正文
+     * @param dslContext 数据库操作对象
+     * @param commonTemplateId 公共模板 ID
+     * @return BODY_MD 原值；记录不存在时返回 null，字段为空串或空白时原样返回
+     */
+    fun getRtxNotifyMessageTemplateBodyMd(
+        dslContext: DSLContext,
+        commonTemplateId: String
+    ): String? {
+        with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.select(BODY_MD)
+                .from(this)
+                .where(COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .fetchOne(BODY_MD)
+        }
+    }
+
+    /**
      * 获取邮件消息模板
      */
     fun getEmailNotifyMessageTemplate(

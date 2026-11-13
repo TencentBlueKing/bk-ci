@@ -191,7 +191,7 @@
                                         >
                                             <span
                                                 :class="{ 'arrival-policy-tip': item.tip }"
-                                                v-bk-tooltips="item.tip ? { content: item.tip, placements: ['top'] } : { disabled: true }"
+                                                v-bk-tooltips="item.tip ? { content: item.tip, placements: ['top'], allowHTML: true, maxWidth: 460 } : { disabled: true }"
                                             >{{ item.label }}</span>
                                         </bk-radio>
                                         <p class="arrival-policy-desc">{{ item.desc }}</p>
@@ -441,7 +441,7 @@
                         {
                             validator: (val) => {
                                 if (!val && val !== 0) return true
-                                return /^(?:[1-9]|[1-9][0-9]|1[0-9]{2}|200)$/.test(val)
+                                return /^(?:[1-9]|[1-9][0-9]|[1-4][0-9]{2}|500)$/.test(val)
                             },
                             message: this.$t('settings.maxConRunningQueueSizeTips'),
                             trigger: 'blur'

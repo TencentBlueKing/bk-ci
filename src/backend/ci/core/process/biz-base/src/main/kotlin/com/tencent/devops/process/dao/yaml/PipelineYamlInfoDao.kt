@@ -273,6 +273,7 @@ class PipelineYamlInfoDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .and(RESOURCE_TYPE.eq(YamlResourceType.PIPELINE.name))
                 .let {
                     if (directory.isNullOrBlank()) {
                         it
@@ -295,6 +296,7 @@ class PipelineYamlInfoDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .and(RESOURCE_TYPE.eq(YamlResourceType.PIPELINE.name))
                 .limit(limit)
                 .offset(offset)
                 .fetch {

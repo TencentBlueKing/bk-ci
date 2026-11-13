@@ -654,7 +654,8 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, String> = emptyMap(),
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        version: Int? = null
     ): String? {
 
         if (checkPermission) {
@@ -681,14 +682,20 @@ class PipelineBuildFacadeService(
         try {
             // 定时触发不存在调试的情况
             val (pipeline, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
+                projectId, pipelineId, version
             )
             if (pipeline.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
-            if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-            )
+            if (version == null && pipeline.latestVersionStatus?.isNotReleased() == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
+            }
+            if (version != null && resource.status != VersionStatus.BRANCH) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION,
+                    params = arrayOf(version.toString())
+                )
+            }
 
             /**
              * 验证流水线参数构建启动参数
@@ -712,7 +719,7 @@ class PipelineBuildFacadeService(
                 channelCode = pipeline.channelCode,
                 isMobile = false,
                 resource = resource,
-                signPipelineVersion = null,
+                signPipelineVersion = version,
                 frequencyLimit = false
             ).id
         } finally {
@@ -3076,7 +3083,7 @@ class PipelineBuildFacadeService(
             )
         }
         if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
-            val replayEventId = pipelineTriggerEventService.getTriggerDetail(
+            val replayEventId = pipelineTriggerEventService.getBuildTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
@@ -3388,7 +3395,7 @@ class PipelineBuildFacadeService(
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         return when (StartType.toStartType(buildInfo.trigger)) {
             StartType.WEB_HOOK -> {
-                pipelineTriggerEventService.getTriggerDetail(
+                pipelineTriggerEventService.getBuildTriggerDetail(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId

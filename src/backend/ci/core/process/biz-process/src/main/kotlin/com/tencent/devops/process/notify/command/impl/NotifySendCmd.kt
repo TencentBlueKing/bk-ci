@@ -1,6 +1,7 @@
 package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.notify.command.NotifyCmd
@@ -30,8 +31,14 @@ abstract class NotifySendCmd(val client: Client) : NotifyCmd {
         )
     }
 
-    protected fun getNotifyTemplateCode(type: Int, detailFlag: Boolean): String {
-        return if (detailFlag) {
+    protected fun getNotifyTemplateCode(
+        type: Int,
+        detailFlag: Boolean,
+        channelCode: ChannelCode?
+    ): String {
+        // 创作流渠道默认使用详情模板
+        val useDetailTemplate = detailFlag || channelCode == ChannelCode.CREATIVE_STREAM
+        return if (useDetailTemplate) {
             when (type) {
                 BluekingNotifySendCmd.TYPE_STARTUP ->
                     PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode

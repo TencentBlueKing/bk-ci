@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.26
+**文档版本：** 1.0.27
 
 **文档描述：** devops_ci_project的数据库文档
 | 表名                  | 说明       |
@@ -521,6 +521,7 @@
 |  13   | USER_TYPE |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 用户类型0普通用户1公共账号  |
 |  14   | BUSINESS_LINE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 业务线ID  |
 |  15   | BUSINESS_LINE_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 业务线名称  |
+|  16   | FULL_DEPARTMENTS |   text   | 65535 |   0    |    Y     |  N   |       | 完整部门链路，JSON数组，按祖先到当前组织排列  |
 
 **表名：** <a>T_USER_DAILY_FIRST_AND_LAST_LOGIN</a>
 

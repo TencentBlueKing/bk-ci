@@ -47,7 +47,9 @@ include_dict = {
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
     'bkCiPrivateUrl': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}',
     'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}',
-    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}'
+    'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}',
+    'bkCiDevopsToken': '{{ include "bkci.devopsToken" . }}',
+    'bkCiArtifactWebhookSecret': '{{ include "bkci.webhookSecret" (dict "name" "artifact" "context" .) | quote }}'
 }
 
 # 正则匹配 __BK_XXX__
@@ -159,11 +161,17 @@ with open(output_value_yaml, 'w') as value_file:
         value_file.write(line)
 
     value_file.write('\nconfig:\n')
+    # 由模板 include 渲染，不会进入 camelize_set，仍需要写到 values 里供覆盖。
+    camelize_set.add('bkCiDevopsToken')
     for camelize in sorted(camelize_set):
         default_value = '""'
         if camelize.lower().endswith("port"):
             default_value = '80'
-        value = str(default_value_dict.get(camelize, default_value))
+        value = default_value_dict.get(camelize, default_value)
+        if value is None or value == "":
+            value = '""'
+        else:
+            value = str(value)
         value_file.write('  '+camelize+': '+value+'\n')
 
 # 更新依赖

@@ -2,13 +2,16 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.26
+**文档版本：** 1.0.27
 
 **文档描述：** devops_ci_environment的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
 | T_AGENT_BATCH_INSTALL_TOKEN |  |
 | T_AGENT_FAILURE_NOTIFY_USER |  |
+| T_AGENT_INSTALL_SESSION | 第三方构建机安装会话表 |
+| T_AGENT_INSTALL_SESSION_NODE | 第三方构建机安装会话节点结果表 |
+| T_AGENT_INSTALL_SESSION_TAG | 第三方构建机安装会话标签快照表 |
 | T_AGENT_PIPELINE_REF |  |
 | T_AGENT_SHARE_PROJECT |  |
 | T_ENV | 环境信息表 |
@@ -57,6 +60,67 @@
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | USER_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 用户ID  |
 |  3   | NOTIFY_TYPES |   varchar   | 32 |   0    |    Y     |  N   |       | 通知类型  |
+
+**表名：** <a>T_AGENT_INSTALL_SESSION</a>
+
+**说明：** 第三方构建机安装会话表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   varchar   | 64 |   0    |    N     |  Y   |       | 安装会话ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | MODE |   varchar   | 16 |   0    |    N     |  N   |       | 会话模式：FIRST_IMPORT/REINSTALL  |
+|  4   | CREATED_BY |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
+|  5   | OS |   varchar   | 16 |   0    |    N     |  N   |       | 操作系统  |
+|  6   | AGENT_CONFIG |   text   | 65535 |   0    |    N     |  N   |       | 构建机安装配置项Json  |
+|  7   | TARGET_AGENT_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 重装目标构建机ID  |
+|  8   | TARGET_NODE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 重装目标节点ID  |
+|  9   | CONFIG_FINGERPRINT |   varchar   | 64 |   0    |    N     |  N   |       | 安装配置指纹  |
+|  10   | TOKEN_HASH |   varchar   | 64 |   0    |    N     |  N   |       | 会话令牌摘要  |
+|  11   | TOKEN_CIPHER |   varchar   | 2048 |   0    |    N     |  N   |       | 加密后的会话令牌  |
+|  12   | STATUS |   varchar   | 16 |   0    |    N     |  N   |       | 会话状态：ACTIVE/EXPIRED/REVOKED  |
+|  13   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
+|  14   | PREVIOUS_SESSION_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 前序会话ID  |
+|  15   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+|  16   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
+
+**表名：** <a>T_AGENT_INSTALL_SESSION_NODE</a>
+
+**说明：** 第三方构建机安装会话节点结果表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | SESSION_ID |   varchar   | 64 |   0    |    N     |  N   |       | 安装会话ID  |
+|  3   | AGENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 构建机ID  |
+|  4   | NODE_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 节点ID  |
+|  5   | STATUS |   varchar   | 16 |   0    |    N     |  N   |       | 节点安装状态  |
+|  6   | HOSTNAME |   varchar   | 128 |   0    |    Y     |  N   |       | 主机名  |
+|  7   | IP |   varchar   | 64 |   0    |    Y     |  N   |       | IP地址  |
+|  8   | ERROR_MESSAGE |   text   | 65535 |   0    |    Y     |  N   |       | 失败原因  |
+|  9   | STARTED_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 开始安装时间  |
+|  10   | FINISHED_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 安装完成时间  |
+|  11   | AGENT_VERSION |   varchar   | 128 |   0    |    Y     |  N   |       | 构建机版本  |
+|  12   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+|  13   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
+
+**表名：** <a>T_AGENT_INSTALL_SESSION_TAG</a>
+
+**说明：** 第三方构建机安装会话标签快照表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | SESSION_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 安装会话ID  |
+|  2   | TAG_KEY_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签键ID  |
+|  3   | TAG_VALUE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签值ID  |
+|  4   | TAG_KEY_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签键名称快照  |
+|  5   | TAG_VALUE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 标签值名称快照  |
 
 **表名：** <a>T_AGENT_PIPELINE_REF</a>
 

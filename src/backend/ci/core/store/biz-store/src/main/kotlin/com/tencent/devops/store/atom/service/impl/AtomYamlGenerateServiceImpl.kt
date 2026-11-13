@@ -323,11 +323,14 @@ class AtomYamlGenerateServiceImpl @Autowired constructor(
             val and = I18nUtil.getCodeLanMessage(messageCode = AND)
             val or = I18nUtil.getCodeLanMessage(messageCode = OR)
             val timeToSelect = I18nUtil.getCodeLanMessage(messageCode = TIMETOSELECT)
-            val link = if (rely["operation"] == "AND") and else or
+            // 与前端 rely 判断一致：缺省按 AND；NOT 表示所有条件都不满足
+            val operation = rely["operation"] ?: "AND"
+            val link = if (operation == "OR") or else and
+            val comparator = if (operation == "NOT") "!=" else "="
 
             append(", $dang")
             expression.forEachIndexed { index, exp ->
-                append(" [${exp["key"]}] = [${exp["value"]}] ")
+                append(" [${exp["key"]}] $comparator [${exp["value"]}] ")
                 if (index < expression.size - 1) append(link)
             }
             append(timeToSelect)

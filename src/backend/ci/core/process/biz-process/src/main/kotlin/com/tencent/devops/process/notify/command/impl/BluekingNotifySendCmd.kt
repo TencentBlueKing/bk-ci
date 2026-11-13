@@ -49,7 +49,11 @@ class BluekingNotifySendCmd @Autowired constructor(
                         )
                     }.toSet()
                     sendNotifyByTemplate(
-                        templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                        templateCode = getNotifyTemplateCode(
+                            shutdownType,
+                            successSubscription.detailFlag,
+                            commandContext.channelCode
+                        ),
                         receivers = receivers,
                         notifyType = successSubscription.types.filter {
                             it != PipelineSubscriptionType.WEWORK_GROUP
@@ -58,10 +62,14 @@ class BluekingNotifySendCmd @Autowired constructor(
                         bodyParams = commandContext.notifyValue,
                         markdownContent = false
                     )
-                    // 企业微信通知组的模板和企业微信通知用的是同一个模板,但是企业微信通知没有markdown选项,所以需要单独发送
+                    // 企业微信群通知单独发送
                     if (successSubscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
                         sendNotifyByTemplate(
-                            templateCode = getNotifyTemplateCode(shutdownType, successSubscription.detailFlag),
+                            templateCode = getNotifyTemplateCode(
+                                shutdownType,
+                                successSubscription.detailFlag,
+                                commandContext.channelCode
+                            ),
                             receivers = receivers,
                             notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,
@@ -93,7 +101,11 @@ class BluekingNotifySendCmd @Autowired constructor(
                         )
                     }.toSet()
                     sendNotifyByTemplate(
-                        templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                        templateCode = getNotifyTemplateCode(
+                            shutdownType,
+                            failSubscription.detailFlag,
+                            commandContext.channelCode
+                        ),
                         receivers = receivers,
                         notifyType = failSubscription.types.filter {
                             it != PipelineSubscriptionType.WEWORK_GROUP
@@ -102,10 +114,14 @@ class BluekingNotifySendCmd @Autowired constructor(
                         bodyParams = commandContext.notifyValue,
                         markdownContent = false
                     )
-                    // 企业微信通知组的模板和企业微信通知用的是同一个模板,但是企业微信通知没有markdown选项,所以需要单独发送
+                    // 企业微信群通知单独发送
                     if (failSubscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
                         sendNotifyByTemplate(
-                            templateCode = getNotifyTemplateCode(shutdownType, failSubscription.detailFlag),
+                            templateCode = getNotifyTemplateCode(
+                                shutdownType,
+                                failSubscription.detailFlag,
+                                commandContext.channelCode
+                            ),
                             receivers = receivers,
                             notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
                             titleParams = commandContext.notifyValue,

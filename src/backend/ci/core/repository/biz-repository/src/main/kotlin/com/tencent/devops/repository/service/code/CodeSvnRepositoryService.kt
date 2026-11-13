@@ -48,7 +48,6 @@ import com.tencent.devops.repository.pojo.enums.RepoCredentialType
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -278,19 +277,6 @@ class CodeSvnRepositoryService @Autowired constructor(
     }
 
     override fun getPacProjectId(userId: String, repoUrl: String): String? = null
-
-    override fun pacCheckEnabled(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord,
-        retry: Boolean
-    ) = Unit
-
-    override fun getGitFileTree(
-        projectId: String,
-        userId: String,
-        record: TRepositoryRecord
-    ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 

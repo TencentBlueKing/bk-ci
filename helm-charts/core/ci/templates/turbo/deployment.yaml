@@ -70,6 +70,8 @@ spec:
               value: {{ .Values.common.jvmOption }}
             - name: TURBO_SERVICE_PREFIX
               value: {{ include "bkci.names.fullname" . }}-
+            - name: MALLOC_ARENA_MAX
+              value: {{ .Values.java.mallocArenaMax | quote }}
           ports:
             - name: http
               containerPort: 8080
