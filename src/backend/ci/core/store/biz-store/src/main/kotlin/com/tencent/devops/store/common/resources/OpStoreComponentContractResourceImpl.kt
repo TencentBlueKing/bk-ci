@@ -103,7 +103,7 @@ class OpStoreComponentContractResourceImpl @Autowired constructor(
         version: String
     ): Result<Int> {
         return Result(
-            storeComponentContractExtractService.reportExtractFail(
+            data = storeComponentContractExtractService.reportExtractFail(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
