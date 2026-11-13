@@ -42,7 +42,10 @@ export default {
             switch (true) {
                 case container.timeCost !== undefined: {
                     const { totalCost, executeCost, systemCost } = container.timeCost
-                    const timeRange = formatRangeTime(container.startTime, container.endTime, this.reactiveData?.buildStartTime)
+                    // 触发器容器不展示起止时间
+                    const timeRange = isTriggerContainer(container)
+                        ? ""
+                        : formatRangeTime(container.startTime, container.endTime)
                     const runningLabel = container.endTime ? "" : ` ${this.t("started")}`
                     const costStr = `${this.t("userTime")}：${convertMStoString(
                         executeCost

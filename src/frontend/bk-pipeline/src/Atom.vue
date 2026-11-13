@@ -493,7 +493,6 @@ const atomTimeRange = computed(() => {
   const timeRange = formatRangeTime(
     startTime,
     props.atom?.endTime,
-    reactiveData?.buildStartTime,
   );
   if (!timeRange) return "";
   const runningLabel = props.atom?.endTime ? "" : ` ${t("started")}`;
