@@ -61,6 +61,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -219,6 +220,17 @@ class PipelineBuildRetryService @Autowired constructor(
                 }
             }
 
+            // 环境类运行资源的节点是上次启动时选定的。Stage/Job/插件重试不会重新带上启动参数，
+            // 这里沿用上次的节点，避免被「必须指定运行节点」拦住。
+            reusePreviousRuntimeNode(
+                channelCode = buildInfo.channelCode,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                paramMap = paramMap,
+                webHookStartParam = webHookStartParam
+            )
+
             // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
             pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, resource.model)
 
@@ -263,6 +275,28 @@ class PipelineBuildRetryService @Autowired constructor(
                 )
             }
         }
+    }
+
+    /**
+     * 重试沿用上一次已经跑过的节点。整次重试已经把启动参数抄进 [paramMap]，这里只补缺。
+     */
+    private fun reusePreviousRuntimeNode(
+        channelCode: ChannelCode,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        paramMap: MutableMap<String, BuildParameters>,
+        webHookStartParam: Map<String, BuildParameters>
+    ) {
+        // 只有该渠道会把节点当成启动必填项。其它流水线的 Stage 重试不能因为同名变量被改派
+        if (channelCode != ChannelCode.CREATIVE_STREAM) return
+        if (!paramMap[NODE_AGENT_ID]?.value?.toString().isNullOrBlank()) return
+        val previous = webHookStartParam[NODE_AGENT_ID]?.takeIf { it.value.toString().isNotBlank() }
+            ?: buildVariableService.getVariable(projectId, pipelineId, buildId, NODE_AGENT_ID)
+                ?.takeIf { it.isNotBlank() }
+                ?.let { BuildParameters(key = NODE_AGENT_ID, value = it, readOnly = true) }
+            ?: return
+        paramMap[NODE_AGENT_ID] = previous
     }
 
     private fun runningBuildRetry(
