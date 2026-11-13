@@ -14,7 +14,6 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactEvent
-import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
@@ -42,7 +41,6 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
     private val webhookTriggerBuildService: WebhookTriggerBuildService,
     private val artifactTriggerMatcher: ArtifactTriggerMatcher,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val createStreamTriggerSupportService: CreateStreamTriggerSupportService,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao
 ) {
 
@@ -154,8 +152,7 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
             )
             when (atomResponse.matchStatus) {
                 MatchStatus.SUCCESS -> {
-                    startPipeline(
-                        event = event,
+                    webhookTriggerBuildService.startPipeline(
                         context = context,
                         pipelineInfo = pipelineInfo,
                         resource = resource,
@@ -184,28 +181,5 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
             context.failedMatchElements = failedMatchElements
             webhookTriggerManager.fireMatchFailed(context)
         }
-    }
-
-    private fun startPipeline(
-        event: ArtifactWebhookTriggerEvent,
-        context: WebhookTriggerContext,
-        pipelineInfo: PipelineInfo,
-        resource: PipelineResourceVersion,
-        startParams: Map<String, Any>
-    ) {
-        val oauthUserId = pipelineRepositoryService.getPipelineOauthUser(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId
-        ) ?: pipelineInfo.lastModifyUser
-        val externalStartParams = createStreamTriggerSupportService.externalWebhookStartParams(
-            pipelineInfo = pipelineInfo,
-            userId = oauthUserId
-        )
-        webhookTriggerBuildService.startPipeline(
-            context = context,
-            pipelineInfo = pipelineInfo,
-            resource = resource,
-            startParams = startParams + externalStartParams
-        )
     }
 }
