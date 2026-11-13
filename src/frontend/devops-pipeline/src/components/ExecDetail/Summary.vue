@@ -488,7 +488,7 @@
       }
       .version-changed-info {
         color: $warningColor;
-        margin: -16px 0 0 4px;
+        margin-left: 4px;
       }
 
       .exec-remark {
