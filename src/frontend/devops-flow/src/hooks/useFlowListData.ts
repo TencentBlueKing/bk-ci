@@ -532,8 +532,11 @@ export function useFlowListData(styles?: Styles) {
    */
   function goEdit(row: ContentTableItem) {
     router.push({
-      name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-      params: { flowId: row.pipelineId },
+      name: ROUTE_NAMES.FLOW_DETAIL,
+      params: {
+        projectId: row.projectId,
+        flowId: row.pipelineId,
+      },
     })
   }
 

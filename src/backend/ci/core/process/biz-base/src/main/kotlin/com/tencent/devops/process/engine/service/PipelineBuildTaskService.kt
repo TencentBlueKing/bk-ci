@@ -156,6 +156,14 @@ class PipelineBuildTaskService @Autowired constructor(
         val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subProjectId!!, buildTask.subBuildId!!)
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
+                // 只传父构建上已经确认的操作人。jobEnd 把任务收成取消时也会走到这里，
+                // 这时没有真人取消，不能用任务启动人或子流水线代持人冒充。
+                val parentOperator = pipelineBuildRecordService.getInheritedCancelOperator(
+                    projectId = buildTask.projectId,
+                    buildId = buildId,
+                    executeCount = buildTask.executeCount ?: 1
+                )
+                val operatorTip = parentOperator?.let { "，Operator:$it" }.orEmpty()
                 val tasks = pipelineTaskService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
@@ -164,7 +172,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     val executeCount = task["executeCount"] ?: 1
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        message = "Cancelled by pipeline[${buildTask.pipelineId}]$operatorTip",
                         tag = taskId.toString(),
                         containerHashId = containerId.toString(),
                         executeCount = executeCount as Int,
@@ -175,10 +183,11 @@ class PipelineBuildTaskService @Autowired constructor(
                 if (tasks.isEmpty()) {
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        message = "cancelled by pipeline[${buildTask.pipelineId}]$operatorTip",
                         tag = "",
                         containerHashId = "",
-                        executeCount = 1,
+                        // 这条日志打在父构建上，执行次数要跟父构建对齐
+                        executeCount = buildTask.executeCount ?: 1,
                         jobId = null,
                         stepId = null
                     )
@@ -189,16 +198,11 @@ class PipelineBuildTaskService @Autowired constructor(
                 val parentBuildNum = pipelineRuntimeService.getBuildInfo(
                     buildTask.projectId, buildId
                 )?.buildNum
-                // 父构建的取消人在cancelBuild中已先于取消事件同步落库，此处可直接读取
-                val parentOperator = pipelineBuildRecordService.getBuildCancelUser(
-                    projectId = buildTask.projectId,
-                    buildId = buildId,
-                    executeCount = buildTask.executeCount ?: 1
-                )
                 pipelineRuntimeService.cancelBuild(
                     projectId = subBuildInfo.projectId,
                     pipelineId = subBuildInfo.pipelineId,
                     buildId = subBuildInfo.buildId,
+                    // 事件沿用子构建启动人推进关机，取消人由下面的 buildEndInfo 决定，不受这里影响
                     userId = subBuildInfo.startUser,
                     executeCount = subBuildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED,

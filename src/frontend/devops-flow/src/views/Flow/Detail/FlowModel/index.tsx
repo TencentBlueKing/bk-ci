@@ -113,12 +113,7 @@ export default defineComponent({
     }
 
     return () => (
-      <div
-        class={[
-          styles.flowModel,
-          isVariablePanelOpen.value && !modeStore.isCodeMode && styles.withVariablePanel,
-        ]}
-      >
+      <div class={styles.flowModel}>
         <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
@@ -142,7 +137,12 @@ export default defineComponent({
                   />
                 </div>
               ) : (
-                <div class={styles.uiModeWrapper}>
+                <div
+                  class={[
+                    styles.uiModeWrapper,
+                    props.visibleVariablePanel && isVariablePanelOpen.value && styles.withVariablePanel,
+                  ]}
+                >
                   {!isFlowEmpty.value && flowModelWithoutTriggerStage.value ? (
                     <BkPipeline
                       editable={false}

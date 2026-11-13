@@ -1,0 +1,7 @@
+{{- if .Values.configmap.enabled -}}
+{{- $names := list "auth" "ai" "artifactory" "dispatch" "environment" "log" "metrics" "misc" "notify" "openapi" "process" "project" "quality" "repository" "store" "ticket" "websocket" "common" "dockerhost" -}}
+{{- range $name := $names }}
+---
+{{ include "bkci.ms.configmap" (dict "name" $name "root" $) }}
+{{- end }}
+{{- end }}

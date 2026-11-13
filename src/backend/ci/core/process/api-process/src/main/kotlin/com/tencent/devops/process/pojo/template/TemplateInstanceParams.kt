@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
@@ -53,6 +54,8 @@ data class TemplateInstanceParams(
     val repoHashId: String? = null,
     @get:Schema(title = "yaml文件路径", required = false)
     val filePath: String? = null,
+    @get:Schema(title = "yaml文件代码库类型", required = false)
+    val scmType: ScmType? = null,
     @get:Schema(title = "触发器", required = false)
     val triggerElements: List<Element>? = null,
     /**

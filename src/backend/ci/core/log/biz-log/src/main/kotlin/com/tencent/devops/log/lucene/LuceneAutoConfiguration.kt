@@ -36,6 +36,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceLuceneImpl
 import com.tencent.devops.log.service.BuildLogPrintService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -56,8 +57,8 @@ class LuceneAutoConfiguration {
 
     @Value("\${log.lucene.dataDirectory}")
     private val dataDirectory: String? = null
-    @Value("\${log.lucene.indexMaxSize}")
-    private val indexMaxSize: Int? = Int.MAX_VALUE
+    @Value("\${log.lucene.indexMaxSize:1000000}")
+    private val indexMaxSize: Int = DEFAULT_INDEX_MAX_SIZE
 
     @Bean
     @Primary
@@ -65,6 +66,12 @@ class LuceneAutoConfiguration {
         if (dataDirectory.isNullOrBlank()) {
             throw IllegalArgumentException("Lucene storage path not config: log.lucene.dataDirectory")
         }
+        logger.warn(
+            "Log storage type is lucene, dataDirectory={}. " +
+                "This mode is local to the log process. Run a single replica or mount a shared data directory. " +
+                "log.storage.type=elasticsearch does not enter this path.",
+            dataDirectory
+        )
         return LuceneClient(dataDirectory!!, indexService, redisOperation)
     }
 
@@ -78,11 +85,11 @@ class LuceneAutoConfiguration {
         @Autowired logStorageBean: LogStorageBean,
         @Autowired buildLogPrintService: BuildLogPrintService
     ): LogService {
-        if (indexMaxSize == null || indexMaxSize!! <= 0) {
+        if (indexMaxSize <= 0) {
             throw IllegalArgumentException("Lucene index max size of build invaild: log.lucene.indexMaxSize")
         }
         return LogServiceLuceneImpl(
-            indexMaxSize = indexMaxSize!!,
+            indexMaxSize = indexMaxSize,
             luceneClient = luceneClient,
             indexService = indexService,
             logStatusService = logStatusService,
@@ -90,5 +97,10 @@ class LuceneAutoConfiguration {
             logStorageBean = logStorageBean,
             buildLogPrintService = buildLogPrintService
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(LuceneAutoConfiguration::class.java)
+        private const val DEFAULT_INDEX_MAX_SIZE = 1_000_000
     }
 }

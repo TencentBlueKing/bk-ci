@@ -987,6 +987,14 @@ open class MarketAtomTask : ITask() {
 
             // 若插件执行失败返回错误信息
             if (!success) {
+                // RunScript 的 ::set-error 直接作为步骤错误。没打合法命令时仍保留原来的插件结果包装。
+                if (isRunScriptUserError(atomCode, atomResult)) {
+                    throw TaskExecuteException(
+                        errorMsg = atomResult.message ?: "",
+                        errorType = ErrorType.USER,
+                        errorCode = atomResult.errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR
+                    )
+                }
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, " +
                         "errorCode: ${atomResult.errorCode}, message: ${atomResult.message}",
@@ -1000,6 +1008,20 @@ open class MarketAtomTask : ITask() {
                 )
             }
         }
+    }
+
+    /**
+     * RunScript 作者上报的错误码是 8 开头的 6 位数字，且不是插件自己的 800001–800006。
+     * 这类错误的结论和错误列表用上报原文，不再套上 [Finish task]。
+     */
+    private fun isRunScriptUserError(atomCode: String, atomResult: AtomResult): Boolean {
+        if (atomCode != "run") return false
+        val code = atomResult.errorCode ?: return false
+        if (code in RUN_ATOM_OWN_ERROR_CODES) return false
+        val text = code.toString()
+        if (text.length != 6 || !text.startsWith("8")) return false
+        val message = atomResult.message ?: return false
+        return message.isNotBlank() && !message.startsWith("[Finish task]")
     }
 
     private fun deletePluginFile(atomWorkspace: File) {
@@ -1258,5 +1280,6 @@ open class MarketAtomTask : ITask() {
         private const val DEFAULT_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE = 209715200L
         private const val DEFAULT_THIRD_HOST_MAX_ATOM_FILE_CACHE_SIZE = 2147483648L
         private val logger = LoggerFactory.getLogger(MarketAtomTask::class.java)
+        private val RUN_ATOM_OWN_ERROR_CODES = setOf(800001, 800002, 800003, 800004, 800005, 800006)
     }
 }

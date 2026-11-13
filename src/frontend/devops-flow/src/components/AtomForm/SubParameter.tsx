@@ -137,10 +137,10 @@ export default defineComponent({
       
       if (!param?.url) return ''
       const urlQueryParams = {
-        ...props.atomValue,
         projectId: route.params.projectId,
         pipelineId: route.params.flowId,
         buildId: route.params.buildNo,
+        ...props.atomValue,
       }
       const [url] = generateReqUrl(param.url, urlQueryParams)
       if (!url) return ''

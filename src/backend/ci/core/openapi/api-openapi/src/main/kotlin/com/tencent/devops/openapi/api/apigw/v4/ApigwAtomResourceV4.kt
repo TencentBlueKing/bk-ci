@@ -40,6 +40,7 @@ import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomSelectResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
@@ -47,6 +48,7 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractInfo
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import io.swagger.v3.oas.annotations.Operation
@@ -197,6 +199,64 @@ interface ApigwAtomResourceV4 {
         @QueryParam("serviceScope")
         serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
+
+    @Operation(summary = "获取插件运行时契约，没有契约时返回空", tags = ["v4_user_atom_contract", "v4_app_atom_contract"])
+    @GET
+    @Path("/atom_contract")
+    fun getAtomContract(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "插件代码", required = true)
+        @QueryParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "视图类型：card（默认，精简卡片）/ full（完整契约）", required = false)
+        @QueryParam("view")
+        @DefaultValue("card")
+        view: String?
+    ): Result<StoreComponentContractInfo?>
+
+    @Operation(
+        summary = "插件选型检索：按检索词从全商店召回有运行时契约的插件，返回可用状态与不适用场景",
+        tags = ["v4_user_atom_select", "v4_app_atom_select"]
+    )
+    @GET
+    @Path("/atom_select")
+    fun selectAtoms(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目编码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "英文逗号分隔的检索词，最多 8 个，例如 COS,对象存储,上传,upload", required = true)
+        @QueryParam("keywords")
+        keywords: String,
+        @Parameter(description = "job类型：AGENT（编译环境）/ AGENT_LESS（无编译环境）", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
+        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @QueryParam("os")
+        os: String?,
+        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @QueryParam("category")
+        category: String? = AtomCategoryEnum.TASK.name,
+        @Parameter(description = "返回条数，1～20，默认 10", required = false)
+        @QueryParam("limit")
+        limit: Int? = null
+    ): Result<AtomSelectResp>
 
     @Operation(summary = "获取所有流水线插件信息", tags = ["v4_user_atom_search"])
     @GET
