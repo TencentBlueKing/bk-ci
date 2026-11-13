@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -444,9 +445,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             channelCode = channelCode
         ).copy(
             pipelineAsCodeSettings = pipelineAsCodeSettings,
-            labels = request.labels,
-            envHashId = request.envHashId
-        )
+            labels = request.labels
+        ).also { setting ->
+            // 新建时必须选运行资源；旧入参只带 envHashId 时按环境资源兼容处理
+            val runtimeResource = request.runtimeResource
+                ?: request.envHashId?.takeIf { it.isNotBlank() }?.let { RuntimeResource(resourceId = it) }
+            runtimeResource?.let(setting::applyRuntimeResource)
+        }
 
         return pipelineInfoFacadeService.createPipeline(
             userId = userId,
@@ -602,6 +607,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = resource.status,
             latestVersion = pipelineInfo.version,
             envHashId = setting.envHashId,
+            runtimeResource = setting.runtimeResource(),
             draftVersion = resource.draftVersion
         )
     }

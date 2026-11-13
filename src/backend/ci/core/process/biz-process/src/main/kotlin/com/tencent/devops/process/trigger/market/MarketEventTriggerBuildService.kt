@@ -274,7 +274,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
     }
 
     /**
-     * 创作流流水线随机获取环境节点参数
+     * 创作流流水线按运行资源解析出一台构建机的启动参数
      */
     private fun resolveCreativeStreamParams(
         userId: String,
@@ -287,10 +287,9 @@ class MarketEventTriggerBuildService @Autowired constructor(
             projectId = pipelineInfo.projectId,
             pipelineId = pipelineInfo.pipelineId
         )
-        val envHashId = setting?.envHashId
-        if (envHashId.isNullOrBlank()) {
+        if (setting == null) {
             logger.warn(
-                "creative stream pipeline has no envHashId|${pipelineInfo.projectId}|${pipelineInfo.pipelineId}"
+                "creative stream pipeline setting not found|${pipelineInfo.projectId}|${pipelineInfo.pipelineId}"
             )
             return emptyMap()
         }
@@ -298,17 +297,19 @@ class MarketEventTriggerBuildService @Autowired constructor(
             projectId = pipelineInfo.projectId,
             pipelineId = pipelineInfo.pipelineId
         ) ?: pipelineInfo.lastModifyUser
-        val nodeList = creativeStreamService.getEnvNodeList(
-            userId = pipelineAuthorizer,
-            projectId = pipelineInfo.projectId,
-            envHashId = envHashId
-        ).filter { it.isNotBlank() }
+        val nodeList = creativeStreamService.getRuntimeResourceNodeList(
+            pipelineInfo = pipelineInfo,
+            pipelineSetting = setting,
+            userId = pipelineAuthorizer
+        ).orEmpty()
         if (nodeList.isEmpty()) {
             logger.warn(
-                "creative stream env node list is empty|${pipelineInfo.projectId}|$envHashId"
+                "creative stream node list is empty|${pipelineInfo.projectId}|" +
+                    "${setting.runtimeResource()}"
             )
             return emptyMap()
         }
+        // 单体运行资源只有一台，环境资源随机挑选，避免同一环境下的节点被集中调度
         val agentHashId = nodeList.random()
         return creativeStreamService.creativeStreamParams(
             projectId = pipelineInfo.projectId,

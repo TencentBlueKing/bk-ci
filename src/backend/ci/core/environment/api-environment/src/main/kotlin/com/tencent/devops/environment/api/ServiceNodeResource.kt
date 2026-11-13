@@ -38,6 +38,7 @@ import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.environment.pojo.NodeAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -57,6 +58,21 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceNodeResource {
+    @Operation(summary = "根据工作空间查询 agent 信息（内部接口，不校验用户节点权限）")
+    @GET
+    @Path("/get_node_agent_detail_by_workspaceName")
+    fun getNodeAgentDetailByWorkspaceName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "节点所属项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "创作流工作空间标识，对应 createWorkspaceId", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<NodeAgentDetail?>
+
     @Operation(summary = "获取用户有权限使用的服务器列表")
     @GET
     @Path("/projects/{projectId}/listUsableServerNodes")

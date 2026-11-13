@@ -81,6 +81,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentActionD
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.NodeAgentDetail
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
@@ -127,6 +128,25 @@ class NodeService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
+    }
+
+    /**
+     * 按所属项目和工作空间查询节点摘要，供内部服务复用，不校验用户节点权限或在线状态。
+     * 工作空间标识对应 createWorkspaceId；agent 或关联节点不存在时返回空。
+     */
+    fun getNodeAgentDetailByWorkspaceName(projectId: String, workspaceName: String): NodeAgentDetail? {
+        val agent = thirdPartyAgentDao.getAgentByWorkspaceName(dslContext, projectId, listOf(workspaceName))
+            .firstOrNull() ?: return null
+        val nodeId = agent.nodeId ?: return null
+        val node = nodeDao.get(dslContext, projectId, nodeId) ?: return null
+        return NodeAgentDetail(
+            agentHashId = HashUtil.encodeLongId(agent.id),
+            displayName = node.displayName,
+            ip = agent.ip,
+            workspaceName = agent.createWorkspaceName,
+            nodeId = nodeId,
+            os = agent.os
+        )
     }
 
     @ActionAuditRecord(

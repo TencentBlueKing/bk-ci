@@ -245,6 +245,9 @@ const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
 
 const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
 
+// 运行资源级工作空间，Job 未指定工作空间时回落到该值
+const val NODE_WORKSPACE = "BK_CI_NODE_WORKSPACE"
+
 /**
  * 保存流水线编排的最大个数
  */

@@ -3503,12 +3503,12 @@ class PipelineBuildFacadeService(
             )
         )
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            // 查出环境信息
+            // 单体运行资源（数字分身 / 云桌面）固定一台机器，不展示「运行节点」，由启动时按运行资源解析
             val envHashId = pipelineRepositoryService.getSettingByPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineVersion = version
-            )?.envHashId
+            )?.runtimeResource()?.envHashId
             envHashId?.let {
                 val payload = mapOf(
                     "type" to "remote",

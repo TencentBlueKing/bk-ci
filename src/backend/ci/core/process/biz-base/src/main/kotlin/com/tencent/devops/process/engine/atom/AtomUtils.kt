@@ -611,7 +611,7 @@ object AtomUtils {
         val atomDetail = incompatibleAtoms.distinctBy { it.atomName to it.supportedOsList }
             .joinToString(separator = "\n") { atom ->
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM,
+                    messageCode = ProcessMessageCode.ERROR_ATOM_RUN_ENV_OS_INCOMPATIBLE_ITEM,
                     params = arrayOf(
                         atom.atomName,
                         atom.supportedOsList.joinToString(separator = " / ") { osDisplayName(it) },
@@ -646,7 +646,7 @@ object AtomUtils {
     private fun jobOsIncompatibleException(incompatibleAtoms: List<OsIncompatibleAtom>): ErrorCodeException {
         val atomDetail = incompatibleAtoms.distinct().joinToString(separator = "\n") { atom ->
             I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_ATOM_JOB_OS_INCOMPATIBLE_ITEM,
+                messageCode = ProcessMessageCode.ERROR_ATOM_JOB_OS_INCOMPATIBLE_ITEM,
                 params = arrayOf(
                     atom.jobName,
                     osDisplayName(atom.targetOs.name),

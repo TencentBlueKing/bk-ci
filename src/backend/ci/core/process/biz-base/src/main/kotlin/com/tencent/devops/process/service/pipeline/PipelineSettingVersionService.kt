@@ -267,7 +267,12 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.pipelineAsCodeSettings = settingVersion.pipelineAsCodeSettings
         settingInfo.failIfVariableInvalid = settingVersion.failIfVariableInvalid
         settingInfo.buildCancelPolicy = settingVersion.buildCancelPolicy ?: settingInfo.buildCancelPolicy
+        // 运行资源四选一，整组回放，避免混用不同版本的类型与标识
         settingInfo.envHashId = settingVersion.envHashId
+        settingInfo.envName = settingVersion.envName
+        settingInfo.runtimeResourceType = settingVersion.runtimeResourceType
+        settingInfo.runtimeResourceId = settingVersion.runtimeResourceId
+        settingInfo.runtimeResourceWorkspace = settingVersion.runtimeResourceWorkspace
         if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
             labelNames.clear()
             pipelineGroupService.getGroups(userId, projectId).forEach { group ->

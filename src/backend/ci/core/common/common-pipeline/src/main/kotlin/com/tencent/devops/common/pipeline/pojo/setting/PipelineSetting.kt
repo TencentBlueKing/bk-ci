@@ -112,8 +112,48 @@ data class PipelineSetting(
     @get:Schema(title = "环境hashId", required = false)
     var envHashId: String? = null,
     @get:Schema(title = "环境名称", required = false)
-    var envName: String? = null
+    var envName: String? = null,
+    @get:Schema(title = "运行资源类型", required = false)
+    var runtimeResourceType: RuntimeResourceType? = null,
+    @get:Schema(title = "单体运行资源标识(avatar-id/desktop-id)", required = false)
+    var runtimeResourceId: String? = null,
+    @get:Schema(title = "运行资源级工作空间", required = false)
+    var runtimeResourceWorkspace: String? = null
 ) {
+
+    /**
+     * 还原运行资源。环境类资源的标识仍沿用 [envHashId]/[envName]，
+     * 单体资源的标识存放在 [runtimeResourceId]。
+     */
+    fun runtimeResource(): RuntimeResource? = RuntimeResource.of(
+        runtimeResourceType = runtimeResourceType,
+        runtimeResourceId = runtimeResourceId,
+        envHashId = envHashId,
+        envName = envName,
+        workspace = runtimeResourceWorkspace
+    )
+
+    /** 按运行资源回写各存储字段，保证四选一互斥，不会残留上一次选择的标识 */
+    fun applyRuntimeResource(resource: RuntimeResource) {
+        runtimeResourceType = resource.type
+        runtimeResourceId = resource.workspaceName
+        envHashId = resource.envHashId
+        envName = resource.resourceName?.takeIf { resource.group }
+        runtimeResourceWorkspace = resource.workspace
+    }
+
+    /**
+     * 复制/分享流水线到目标环境：沿用工作空间，同时清掉单体资源标识，
+     * 避免「数字分身」等单体标识与环境标识同时残留。
+     */
+    fun applyTargetEnv(envHashId: String?) = applyRuntimeResource(
+        RuntimeResource(
+            // 源头是单体资源时无法推断目标环境属于分身还是云桌面，按只绑定环境的历史数据处理
+            type = runtimeResourceType?.takeIf { it.group },
+            resourceId = envHashId,
+            workspace = runtimeResourceWorkspace
+        )
+    )
 
     companion object {
 

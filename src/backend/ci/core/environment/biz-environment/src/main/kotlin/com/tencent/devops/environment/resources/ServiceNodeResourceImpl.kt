@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.pojo.NodeAgentDetail
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
@@ -56,6 +57,15 @@ class ServiceNodeResourceImpl @Autowired constructor(
     private val envService: EnvService,
     private val agentService: ThirdPartAgentService
 ) : ServiceNodeResource {
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun getNodeAgentDetailByWorkspaceName(
+        userId: String,
+        projectId: String,
+        workspaceName: String
+    ): Result<NodeAgentDetail?> {
+        return Result(nodeService.getNodeAgentDetailByWorkspaceName(projectId, workspaceName))
+    }
 
     @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeByNodeType(projectId: String, nodeType: NodeType): Result<List<NodeBaseInfo>> {

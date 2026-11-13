@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -61,8 +62,10 @@ data class PipelineVersionWithModel(
     val versionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
-    @get:Schema(title = "运行环境HashId", required = false)
+    @get:Schema(title = "运行环境HashId，已由 runtimeResource 取代，仅兼容旧前端", required = false)
     val envHashId: String? = null,
+    @get:Schema(title = "运行资源，四选一", required = false)
+    val runtimeResource: RuntimeResource? = null,
     @get:Schema(title = "该版本来源的草稿版本", required = false)
     val draftVersion: Int? = null
 )

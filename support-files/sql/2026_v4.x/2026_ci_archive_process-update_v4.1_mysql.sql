@@ -94,6 +94,29 @@ BEGIN
             ADD COLUMN `AUTO_SUMMARY` text DEFAULT NULL COMMENT 'AI自动生成的流水线摘要' AFTER `LOCKED`;
     END IF;
 
+    -- 创作流运行资源：数字分身/数字分身环境/云桌面/云桌面环境四选一，环境类资源的标识仍沿用 ENV_HASH_ID/ENV_NAME
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'RUNTIME_RESOURCE_TYPE') THEN
+        ALTER TABLE `T_PIPELINE_SETTING`
+            ADD COLUMN `RUNTIME_RESOURCE_TYPE` varchar(32) DEFAULT NULL COMMENT '运行资源类型',
+            ADD COLUMN `RUNTIME_RESOURCE_ID` varchar(256) DEFAULT NULL COMMENT '单体运行资源标识(avatar-id/desktop-id)',
+            ADD COLUMN `RUNTIME_RESOURCE_WORKSPACE` varchar(512) DEFAULT NULL COMMENT '运行资源级工作空间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'RUNTIME_RESOURCE_TYPE') THEN
+        ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+            ADD COLUMN `RUNTIME_RESOURCE_TYPE` varchar(32) DEFAULT NULL COMMENT '运行资源类型',
+            ADD COLUMN `RUNTIME_RESOURCE_ID` varchar(256) DEFAULT NULL COMMENT '单体运行资源标识(avatar-id/desktop-id)',
+            ADD COLUMN `RUNTIME_RESOURCE_WORKSPACE` varchar(512) DEFAULT NULL COMMENT '运行资源级工作空间';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

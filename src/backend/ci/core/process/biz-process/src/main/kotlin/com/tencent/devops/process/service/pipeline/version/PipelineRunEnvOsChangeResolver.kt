@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
@@ -67,11 +69,11 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
         setting: PipelineSetting
     ): PipelineRunEnvOsChange? {
         if (!isRunEnvSpecifiedBySetting(channelCode)) return null
-        return resolveByEnvHashId(
+        return resolveByRuntimeResource(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            currentEnvHashId = setting.envHashId,
+            current = setting.runtimeResource(),
             channelCode = channelCode
         )
     }
@@ -91,21 +93,21 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
      * 无论本次是否变更过环境都返回校验目标：只在变更时校验会漏掉「环境不变但新增了不适配插件」
      * 以及「新建时所选环境与模板插件不适配」两类场景。
      */
-    private fun resolveByEnvHashId(
+    private fun resolveByRuntimeResource(
         userId: String,
         projectId: String,
         pipelineId: String,
-        currentEnvHashId: String?,
+        current: RuntimeResource?,
         channelCode: ChannelCode
     ): PipelineRunEnvOsChange? {
-        val currentId = currentEnvHashId?.takeIf { it.isNotBlank() } ?: return null
-        val currentOs = resolveEnvOs(userId, projectId, currentId) ?: return null
+        val currentResource = current?.takeIf { !it.resourceId.isNullOrBlank() } ?: return null
+        val currentOs = resolveResourceOs(userId, projectId, currentResource) ?: return null
         return PipelineRunEnvOsChange(
             previousOs = resolvePreviousOs(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                currentEnvHashId = currentId,
+                currentResource = currentResource,
                 currentOs = currentOs
             ),
             currentOs = currentOs,
@@ -125,37 +127,52 @@ class PipelineRunEnvOsChangeResolver @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        currentEnvHashId: String,
+        currentResource: RuntimeResource,
         currentOs: OS
     ): OS? {
-        // 变更前没有运行环境：新建流水线无历史 setting，已有流水线也可能是首次指定环境。
+        // 变更前没有运行资源：新建流水线无历史 setting，已有流水线也可能是首次指定运行资源。
         // 此时返回 null 而非 currentOs，两者不可混同：后者会让调用方以为本次没换过系统
-        val previousId = pipelineSettingVersionService.getLatestSettingVersion(
+        val previous = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,
             pipelineId = pipelineId
-        )?.envHashId?.takeIf { it.isNotBlank() } ?: return null
-        // 环境未变更是绝对多数场景，同一环境的操作系统必然相同，在此提前返回，避免无谓的解析
-        if (previousId == currentEnvHashId) return currentOs
-        // 换了环境，其操作系统可能与当前相同(如同为 Linux 的两个环境)，由调用方按需比较。
+        )?.runtimeResource() ?: return null
+        // 运行资源未变更是绝对多数场景，同一资源的操作系统必然相同，在此提前返回，避免无谓的解析
+        if (previous.resourceId == currentResource.resourceId && previous.group == currentResource.group) {
+            return currentOs
+        }
+        // 换了运行资源，其操作系统可能与当前相同(如同为 Linux 的两个环境)，由调用方按需比较。
         // 解析失败时按「与当前相同」处理而不返回 null：这属于环境服务不可用等外部原因，
-        // 与「变更前没有运行环境」是两回事，混同会把存量编排判成本次新引入而阻断保存
-        return resolveEnvOs(userId, projectId, previousId) ?: currentOs
+        // 与「变更前没有运行资源」是两回事，混同会把存量编排判成本次新引入而阻断保存
+        return resolveResourceOs(userId, projectId, previous) ?: currentOs
     }
 
     /**
-     * 解析环境的操作系统。内置环境本地即可映射，只有自定义环境才需要查询 environment 服务。
+     * 解析运行资源的操作系统。
+     *
+     * 环境资源查 environment 服务（内置环境本地即可映射）；
+     * 单体资源（数字分身 / 云桌面）绑定的是工作空间而非环境，操作系统取自那台构建机。
      *
      * 解析失败时返回 null 表示放弃本次校验而不阻断保存：操作系统适配性属于增强校验，
      * 不应因环境服务不可用导致用户无法保存草稿。
      */
-    private fun resolveEnvOs(userId: String, projectId: String, envHashId: String): OS? {
-        OS.entries.find { AllCreateNodeEnv.hashId(it) == envHashId }?.let { return it }
+    private fun resolveResourceOs(userId: String, projectId: String, resource: RuntimeResource): OS? {
+        val resourceId = resource.resourceId ?: return null
+        if (!resource.group) {
+            return runCatching {
+                client.get(ServiceNodeResource::class).getNodeAgentDetailByWorkspaceName(
+                    userId = userId, projectId = projectId, workspaceName = resourceId
+                ).data?.os?.let { os -> OS.entries.find { it.name.equals(os, true) } }
+            }.onFailure {
+                logger.warn("Failed to resolve run node os|$projectId|$resourceId", it)
+            }.getOrNull()
+        }
+        OS.entries.find { AllCreateNodeEnv.hashId(it) == resourceId }?.let { return it }
         return try {
             client.get(ServiceEnvironmentResource::class)
-                .get(userId = userId, projectId = projectId, envHashId = envHashId, checkPermission = false)
+                .get(userId = userId, projectId = projectId, envHashId = resourceId, checkPermission = false)
                 .data?.os
         } catch (ignored: Throwable) {
-            logger.warn("Failed to resolve run env os|$projectId|$envHashId", ignored)
+            logger.warn("Failed to resolve run env os|$projectId|$resourceId", ignored)
             null
         }
     }

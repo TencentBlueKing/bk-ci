@@ -16,6 +16,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.pojo.WorkspaceBaseInfo
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import org.jooq.DSLContext
@@ -30,7 +31,8 @@ class CreateStreamTriggerSupportService constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     fun listEventSubscriber(
@@ -153,38 +155,37 @@ class CreateStreamTriggerSupportService constructor(
         envHashId: String
     ): List<String> {
         logger.info("get env node list|$projectId|$envHashId|$userId")
-        return try {
-            client.get(ServiceEnvironmentResource::class).listNodesByEnvIdsNew(
-                projectId = projectId,
-                envHashIds = listOf(envHashId),
-                userId = userId,
-                page = -1
-            ).data?.records
-        } catch (ignored: Exception) {
-            logger.warn("get env node list failed", ignored)
-            listOf()
-        }?.map { it.agentHashId ?: "" } ?: listOf()
+        return runtimeResourceResolver.listEnvAgentHashIds(
+            projectId = projectId,
+            userId = userId,
+            envHashId = envHashId
+        )
     }
 
-    fun getEnvNodeList(
+    /**
+     * 列出创作流可执行的构建机。
+     *
+     * 单体运行资源（数字分身 / 云桌面）固定一台，环境资源列出环境下的全部节点。
+     */
+    fun getRuntimeResourceNodeList(
         pipelineInfo: PipelineInfo,
         pipelineSetting: PipelineSetting,
         userId: String
     ): List<String>? {
-        val pipelineId = pipelineInfo.pipelineId
+        if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) return null
         val projectId = pipelineInfo.projectId
-        return if (pipelineInfo.channelCode == ChannelCode.CREATIVE_STREAM) {
-            val envHashId = pipelineSetting.envHashId?.takeIf { it.isNotBlank() } ?: run {
-                logger.warn("pipeline[$pipelineId] setting not found")
-                return null
-            }
-            getEnvNodeList(
-                projectId = projectId,
-                envHashId = envHashId,
-                userId = userId
-            )
+        val resource = pipelineSetting.runtimeResource() ?: run {
+            logger.warn("pipeline[${pipelineInfo.pipelineId}] runtime resource not configured")
+            return null
+        }
+        return if (resource.group) {
+            resource.envHashId?.let {
+                runtimeResourceResolver.listEnvAgentHashIds(projectId, userId, it)
+            }.orEmpty()
         } else {
-            null
+            listOfNotNull(
+                runtimeResourceResolver.resolveAgentHashId(projectId, userId, resource)
+            )
         }
     }
 
@@ -203,23 +204,24 @@ class CreateStreamTriggerSupportService constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )?.let {
-            val list = getEnvNodeList(
+            val resource = it.runtimeResource()
+            val list = getRuntimeResourceNodeList(
                 pipelineInfo = pipelineInfo,
                 pipelineSetting = it,
                 userId = userId
             ) ?: listOf()
             logger.info(
-                "creative stream pipeline[$pipelineId] resolved nodes from env[${it.envHashId}]: $list"
+                "creative stream pipeline[$pipelineId] resolved nodes from resource[$resource]: $list"
             )
             if (list.isEmpty()) {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY,
-                        params = arrayOf(it.envHashId ?: "")
+                        params = arrayOf(resource?.resourceId ?: "")
                     )
                 )
             }
-            // 现阶段取环境下的第一个节点，后续根据实际需求进行调整
+            // 环境资源现阶段取环境下的第一个节点，后续根据实际需求进行调整
             externalStartParams.putAll(
                 creativeStreamParams(
                     projectId = projectId,

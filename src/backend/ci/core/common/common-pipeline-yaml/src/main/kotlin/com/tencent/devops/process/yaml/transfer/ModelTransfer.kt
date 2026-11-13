@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.RUNTIME_RESOURCE_NOT_UNIQUE
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
@@ -44,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersio
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
@@ -61,7 +63,7 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
-import com.tencent.devops.process.yaml.v3.models.CreativeRunsOn
+import com.tencent.devops.process.yaml.v3.models.RootRunsOn
 import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
@@ -134,13 +136,24 @@ class ModelTransfer @Autowired constructor(
             ),
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
             buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
-            envHashId = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                CreativeRunsOn.parse(yaml.runsOn).poolId
-            } else null,
-            envName = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                CreativeRunsOn.parse(yaml.runsOn).poolName
-            } else null
-        )
+        ).also { setting ->
+            if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                parseRuntimeResource(yaml.runsOn)?.let(setting::applyRuntimeResource)
+            }
+        }
+    }
+
+    /** 解析根级 `runs-on`，并校验四个运行资源键只填了一个 */
+    private fun parseRuntimeResource(rawRunsOn: Any?): RuntimeResource? {
+        val runsOn = RootRunsOn.parse(rawRunsOn)
+        val specifiedKeys = runsOn.specifiedKeys()
+        if (specifiedKeys.size > 1) {
+            throw PipelineTransferException(
+                RUNTIME_RESOURCE_NOT_UNIQUE,
+                arrayOf(specifiedKeys.joinToString(", "))
+            )
+        }
+        return runsOn.toRuntimeResource()
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
@@ -366,9 +379,8 @@ class ModelTransfer @Autowired constructor(
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
         if (modelInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-            yaml.runsOn = CreativeRunsOn.fromSetting(
-                envHashId = modelInput.setting.envHashId,
-                envName = modelInput.setting.envName
+            yaml.runsOn = RootRunsOn.fromRuntimeResource(
+                modelInput.setting.runtimeResource()
             ).toYaml()
         }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)

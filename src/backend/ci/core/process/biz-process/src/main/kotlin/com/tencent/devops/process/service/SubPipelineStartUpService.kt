@@ -601,7 +601,8 @@ class SubPipelineStartUpService @Autowired constructor(
             userId
         }
         val subPipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
-        val list = subPipelineSetting?.envHashId?.let { env ->
+        // 子创作流绑定单台数字分身/云桌面时不展示「运行节点」，由子构建启动时按自身运行资源解析
+        val list = subPipelineSetting?.runtimeResource()?.envHashId?.let { env ->
             client.get(ServiceEnvironmentResource::class).listNodesNew(
                 userId = oauthUser,
                 projectId = projectId,

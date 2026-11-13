@@ -207,9 +207,8 @@ class CreativeFlowCopyService @Autowired constructor(
                     checkPermission = true,
                     savedSetting = sourceSetting?.copy(
                         projectId = targetProjectId,
-                        pipelineName = targetName,
-                        envHashId = request.targetEnvHashId
-                    ),
+                        pipelineName = targetName
+                    )?.apply { applyTargetEnv(request.targetEnvHashId) },
                     versionStatus = VersionStatus.RELEASED
                 )
             }
@@ -356,9 +355,8 @@ class CreativeFlowCopyService @Autowired constructor(
                 channelCode = ChannelCode.CREATIVE_STREAM,
                 setting = sourceSetting?.copy(
                     projectId = targetProjectId,
-                    pipelineName = targetName,
-                    envHashId = targetEnvHashId
-                ),
+                    pipelineName = targetName
+                )?.apply { applyTargetEnv(targetEnvHashId) },
                 checkPermission = true,
                 versionStatus = VersionStatus.RELEASED
             )
@@ -378,9 +376,8 @@ class CreativeFlowCopyService @Autowired constructor(
                 channelCode = ChannelCode.CREATIVE_STREAM,
                 setting = sourceSetting?.copy(
                     projectId = targetProjectId,
-                    pipelineName = renamed,
-                    envHashId = targetEnvHashId
-                ),
+                    pipelineName = renamed
+                )?.apply { applyTargetEnv(targetEnvHashId) },
                 checkPermission = true,
                 versionStatus = VersionStatus.RELEASED
             )

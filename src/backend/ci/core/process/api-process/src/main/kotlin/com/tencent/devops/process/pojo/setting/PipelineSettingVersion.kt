@@ -29,6 +29,8 @@ package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -87,8 +89,23 @@ data class PipelineSettingVersion(
     @get:Schema(title = "环境hashId", required = false)
     var envHashId: String? = null,
     @get:Schema(title = "环境名称", required = false)
-    var envName: String? = null
+    var envName: String? = null,
+    @get:Schema(title = "运行资源类型", required = false)
+    var runtimeResourceType: RuntimeResourceType? = null,
+    @get:Schema(title = "单体运行资源标识(avatar-id/desktop-id)", required = false)
+    var runtimeResourceId: String? = null,
+    @get:Schema(title = "运行资源级工作空间", required = false)
+    var runtimeResourceWorkspace: String? = null
 ) {
+    /** 语义同 [PipelineSetting.runtimeResource] */
+    fun runtimeResource(): RuntimeResource? = RuntimeResource.of(
+        runtimeResourceType = runtimeResourceType,
+        runtimeResourceId = runtimeResourceId,
+        envHashId = envHashId,
+        envName = envName,
+        workspace = runtimeResourceWorkspace
+    )
+
     companion object {
 
         // 该方法列出所有需要作为修改比对版本的参数，如果有修改则增加版本
@@ -113,7 +130,10 @@ data class PipelineSettingVersion(
             failIfVariableInvalid = setting.failIfVariableInvalid,
             buildCancelPolicy = setting.buildCancelPolicy,
             envHashId = setting.envHashId,
-            envName = setting.envName
+            envName = setting.envName,
+            runtimeResourceType = setting.runtimeResourceType,
+            runtimeResourceId = setting.runtimeResourceId,
+            runtimeResourceWorkspace = setting.runtimeResourceWorkspace
         )
     }
 }

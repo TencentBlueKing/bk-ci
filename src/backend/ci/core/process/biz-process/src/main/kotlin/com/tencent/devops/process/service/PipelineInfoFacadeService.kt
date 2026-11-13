@@ -574,12 +574,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            // 如果是渠道是创作流，环境hashId不能为空
-            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envHashId.isNullOrBlank()) {
+            // 创作流必须绑定运行资源：数字分身、数字分身环境、云桌面、云桌面环境四选一
+            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.runtimeResource() == null) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                    params = arrayOf(PipelineSetting::envHashId.name)
+                    params = arrayOf(PipelineSetting::runtimeResourceType.name)
                 )
             }
 

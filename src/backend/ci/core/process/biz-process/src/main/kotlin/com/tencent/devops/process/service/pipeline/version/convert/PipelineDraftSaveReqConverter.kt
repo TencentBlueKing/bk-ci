@@ -221,9 +221,9 @@ class PipelineDraftSaveReqConverter(
         requestChannelCode: ChannelCode,
         setting: PipelineSetting
     ): PipelineRunEnvOsChange? {
-        // envHashId 是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存无运行环境可校验。
+        // 运行资源是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存无运行环境可校验。
         // 该判断置于最前，普通流水线保存草稿不会为解析渠道产生额外查询
-        if (setting.envHashId.isNullOrBlank()) return null
+        if (setting.runtimeResource() == null) return null
         val channelCode = if (isNewPipeline) {
             requestChannelCode
         } else {

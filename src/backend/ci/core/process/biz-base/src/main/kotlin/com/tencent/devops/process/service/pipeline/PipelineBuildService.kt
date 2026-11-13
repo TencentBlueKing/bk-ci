@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -71,6 +72,7 @@ import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.NODE_HASH_ID
 import com.tencent.devops.process.utils.NODE_OS
+import com.tencent.devops.process.utils.NODE_WORKSPACE
 import com.tencent.devops.process.utils.PIPELINE_BUILD_DEBUG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -117,6 +119,7 @@ class PipelineBuildService(
     private val buildIdGenerator: BuildIdGenerator,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineStartupPermissionExtService: PipelineStartupPermissionExtService,
+    private val runtimeResourceResolver: RuntimeResourceResolver,
     private val client: Client
 ) {
     companion object {
@@ -140,7 +143,8 @@ class PipelineBuildService(
         val pipelineAuthorizer: String? = null,
         val pipelineDialectType: String,
         val failIfVariableInvalid: Boolean? = false,
-        val envHashId: String? = null
+        val envHashId: String? = null,
+        val runtimeResource: RuntimeResource? = null
     )
 
     @ActionAuditRecord(
@@ -272,7 +276,8 @@ class PipelineBuildService(
                 },
                 pipelineDialectType = pipelineDialectType.name,
                 failIfVariableInvalid = setting.failIfVariableInvalid,
-                envHashId = setting.envHashId
+                envHashId = setting.envHashId,
+                runtimeResource = setting.runtimeResource()
             )
             initPipelineParamMap(initContext)
 
@@ -293,10 +298,11 @@ class PipelineBuildService(
                     .map { it.id }
                     .toMutableList()
                     .let {
-                        // 创作流启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID]为内置变量
+                        // 运行资源由设置指定的渠道，启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID、NODE_WORKSPACE]为内置变量
                         if (channelCode == ChannelCode.CREATIVE_STREAM) {
                             it.add(NODE_AGENT_ID)
                             it.add(NODE_ENV_HASH_ID)
+                            it.add(NODE_WORKSPACE)
                         }
                         it
                     },
@@ -481,8 +487,37 @@ class PipelineBuildService(
      * 初始化节点/Agent 相关参数
      */
     private fun initNodeAgentParams(ctx: InitParamContext) {
-        val agentIdValue = ctx.startValues?.get(NODE_AGENT_ID)
-            ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+        val resource = ctx.runtimeResource
+        // 运行资源级工作空间对所有启动方式生效，Job 未指定时由 DispatchTypeBuilder 回落到该值
+        resource?.workspace?.takeIf(String::isNotBlank)?.let { workspace ->
+            ctx.pipelineParamMap[NODE_WORKSPACE] = BuildParameters(
+                key = NODE_WORKSPACE, value = workspace, readOnly = true
+            )
+        }
+        val startedAgentId = (
+            ctx.startValues?.get(NODE_AGENT_ID) ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+            )?.takeIf(String::isNotBlank)
+        val agentIdValue = when {
+            // 没有绑定运行资源：沿用启动方传入的节点
+            resource == null -> startedAgentId
+            // 绑定环境只圈定了范围，到底在哪台机器上执行由触发方选定；触发方没传就是接入方的问题，直接拒绝启动，
+            // 否则会在环境内落到一台与触发语义无关的机器上
+            resource.group -> startedAgentId ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
+                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+            )
+            // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId。
+            // 资源被释放等原因换不出机器时直接拒绝启动：继续走下去只会在派发阶段以一个与原因无关的报错失败，
+            // 而且启动方传入的节点还会把「不能改派」的约束绕过去
+            else -> runtimeResourceResolver.resolveAgentHashId(
+                projectId = ctx.pipeline.projectId,
+                userId = ctx.pipelineAuthorizer ?: ctx.userId,
+                resource = resource
+            )?.takeIf(String::isNotBlank) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+            )
+        }
         agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(ctx.pipeline.projectId, agentId).data

@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -251,7 +252,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
         channelCode: ChannelCode = ChannelCode.BS
     ): IPreJob {
         val runsOnValue = if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            null
+            // 运行资源配在根级 runs-on 上，Job 级只保留工作空间，避免转 YAML 时丢失。
+            // self-hosted 显式置空，否则会多序列化出一个此处无意义的 `self-hosted: false`
+            (job.dispatchType as? CreateAgentIdDispatchType)?.workspace?.takeIf { it.isNotBlank() }
+                ?.let { RunsOn(selfHosted = null, workspace = it) }
         } else {
             dispatchTransfer.makeRunsOn(job)?.fix(
                 jobId = job.jobId.toString(),
