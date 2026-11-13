@@ -2168,7 +2168,8 @@ class PipelineRepositoryService constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                params = arrayOf(setting.pipelineName)
             )
         }
 

@@ -900,6 +900,9 @@ object ProcessMessageCode {
     // 创建流水线失败
     const val BK_YAML_PIPELINE_CREATE_FAILED = "bkYamlPipelineCreateFailed"
 
+    // 创建模板失败
+    const val BK_YAML_TEMPLATE_CREATE_FAILED = "bkYamlTemplateCreateFailed"
+
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
 

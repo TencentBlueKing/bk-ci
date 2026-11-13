@@ -41,6 +41,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_R
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_RENAME_SUCCESS
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_PIPELINE_UPDATE_SUCCESS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_YAML_TEMPLATE_CREATE_FAILED
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailCombination
@@ -243,7 +244,11 @@ class WebhookTriggerEventListener(
         return when (actionType) {
             YamlPipelineActionType.CREATE -> {
                 PipelineTriggerDetailMessageCode(
-                    messageCode = BK_YAML_PIPELINE_CREATE_FAILED
+                    messageCode = if (fileType == YamlFileType.TEMPLATE) {
+                        BK_YAML_TEMPLATE_CREATE_FAILED
+                    } else {
+                        BK_YAML_PIPELINE_CREATE_FAILED
+                    }
                 )
             }
 
