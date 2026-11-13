@@ -35,6 +35,7 @@ const store = {
         currentSelectedModel: {},
         nodeTagList: [],
         nodeCount: {},
+        nodeSourceCount: {},
         selectionTagList: [],
         envList: []
     },
