@@ -21,5 +21,13 @@ data class IamGroupInfoVo(
     @get:Schema(title = "用户组模板数")
     val templateCount: Int? = 0,
     @get:Schema(title = "是否为项目成员组")
-    val projectMemberGroup: Boolean? = null
+    val projectMemberGroup: Boolean? = null,
+    @get:Schema(title = "是否为项目管理员组")
+    val adminGroup: Boolean = false,
+    @get:Schema(
+        title = "拥有任意范围使用权限的敏感资源类型",
+        description = "仅包含资源范围为任意的使用权限，取值 repertory、credential、cert、env_node，" +
+            "顺序为代码库、凭据、证书、第三方构建机"
+    )
+    val sensitiveResourceTypes: List<String> = emptyList()
 )

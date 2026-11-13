@@ -496,6 +496,21 @@ class RbacPermissionResourceGroupPermissionService(
         ).count { it.memberType != MemberType.TEMPLATE.type }
     }
 
+    override fun listSensitiveResourceTypes(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Map<Int, List<String>> {
+        val groupActions = resourceGroupPermissionDao.listProjectLevelActionsByGroupIds(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = iamGroupIds,
+            actions = SensitiveGroupPermission.useActions
+        )
+        return groupActions.mapValues { (_, actions) ->
+            SensitiveGroupPermission.resourceTypesOf(actions)
+        }
+    }
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,
