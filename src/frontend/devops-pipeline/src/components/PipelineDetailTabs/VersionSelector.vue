@@ -452,6 +452,15 @@
                             }
                         }
                     }
+
+                    // 默认选中项不在已加载的分页中时，自动继续加载下一页直到找到
+                    if (this.value
+                        && !this.activeVersion
+                        && this.hasNext
+                        && !this.versionList.some(item => item.version === this.value)
+                    ) {
+                        await this.loadMore()
+                    }
                 } catch (error) {
                     console.log(error)
                 } finally {
