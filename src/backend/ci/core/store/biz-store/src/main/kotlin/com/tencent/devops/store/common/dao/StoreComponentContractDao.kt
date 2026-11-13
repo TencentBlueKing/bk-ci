@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreComponentContract
 import com.tencent.devops.model.store.tables.records.TStoreComponentContractRecord
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractBrief
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractCoverageEnum
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractWriteReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -37,6 +38,7 @@ import org.jooq.DSLContext
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -123,6 +125,65 @@ class StoreComponentContractDao {
                 .fetch()
                 .map { it.value1() }
                 .toSet()
+        }
+    }
+
+    fun listBriefs(dslContext: DSLContext, storeType: StoreTypeEnum): List<StoreComponentContractBrief> {
+        with(TStoreComponentContract.T_STORE_COMPONENT_CONTRACT) {
+            val descriptionLength = DSL.coalesce(DSL.charLength(GENERATED_DESCRIPTION), 0)
+            return dslContext.select(
+                STORE_CODE,
+                BASED_ON_VERSION,
+                SOURCE_COMMIT,
+                COVERAGE,
+                STALE_FLAG,
+                descriptionLength,
+                UPDATE_TIME
+            ).from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .orderBy(STORE_CODE.asc())
+                .fetch { record ->
+                    StoreComponentContractBrief(
+                        storeCode = record.value1(),
+                        basedOnVersion = record.value2(),
+                        sourceCommit = record.value3(),
+                        coverage = record.value4(),
+                        staleFlag = record.value5() == true,
+                        descriptionLength = record.value6(),
+                        updateTime = record.value7()
+                    )
+                }
+        }
+    }
+
+    /**
+     * 只在库中契约仍基于给定版本（和非空的提交）时更新说明，返回更新行数
+     */
+    @Suppress("LongParameterList")
+    fun updateDescription(
+        dslContext: DSLContext,
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        basedOnVersion: String,
+        sourceCommit: String?,
+        description: String?
+    ): Int {
+        with(TStoreComponentContract.T_STORE_COMPONENT_CONTRACT) {
+            val conditions = mutableListOf(
+                STORE_TYPE.eq(storeType.type.toByte()),
+                STORE_CODE.eq(storeCode),
+                BASED_ON_VERSION.eq(basedOnVersion)
+            )
+            if (!sourceCommit.isNullOrBlank()) {
+                conditions.add(SOURCE_COMMIT.eq(sourceCommit))
+            }
+            return dslContext.update(this)
+                .set(GENERATED_DESCRIPTION, description)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(conditions)
+                .execute()
         }
     }
 
