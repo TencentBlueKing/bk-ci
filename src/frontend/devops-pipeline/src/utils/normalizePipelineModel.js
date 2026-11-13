@@ -1,3 +1,15 @@
+export const DOCKER_WORKSPACE_NO_MOUNT = '__NO_MOUNT__'
+
+export function isDockerWorkspaceMounted (dispatchType) {
+    if (dispatchType?.workspace === DOCKER_WORKSPACE_NO_MOUNT) return false
+    return dispatchType?.dockerInfo?.options?.mountWorkspace !== false
+}
+
+export function dockerWorkspaceValue (dispatchType) {
+    const workspace = dispatchType?.workspace
+    return workspace === DOCKER_WORKSPACE_NO_MOUNT ? '' : (workspace || '')
+}
+
 export function normalizePipelineModel (model) {
     const traverse = (node) => {
         if (Array.isArray(node)) {
@@ -29,6 +41,9 @@ export function normalizeDispatchType (dispatchType) {
 
     const dockerInfo = dispatchType.dockerInfo
     if (!dockerInfo || typeof dockerInfo !== 'object') {
+        if (dispatchType.workspace === DOCKER_WORKSPACE_NO_MOUNT) {
+            dispatchType.workspace = ''
+        }
         return
     }
 
@@ -38,6 +53,33 @@ export function normalizeDispatchType (dispatchType) {
     } else if (dockerInfo.imageType === 'BKSTORE') {
         dockerInfo.image = ''
         dockerInfo.credential = ''
+    }
+
+    normalizeMountWorkspace(dispatchType, dockerInfo)
+}
+
+function normalizeMountWorkspace (dispatchType, dockerInfo) {
+    const legacyNoMount = dispatchType.workspace === DOCKER_WORKSPACE_NO_MOUNT
+    if (legacyNoMount) {
+        dispatchType.workspace = ''
+    }
+    if (!dockerInfo || typeof dockerInfo !== 'object') return
+
+    if (legacyNoMount) {
+        dockerInfo.options = {
+            ...(dockerInfo.options && typeof dockerInfo.options === 'object' ? dockerInfo.options : {}),
+            mountWorkspace: false
+        }
+        return
+    }
+
+    const options = dockerInfo.options
+    if (!options || typeof options !== 'object') return
+    if (!Object.prototype.hasOwnProperty.call(options, 'mountWorkspace')) return
+    if (options.mountWorkspace === false) return
+    delete options.mountWorkspace
+    if (!Object.keys(options).length) {
+        dockerInfo.options = undefined
     }
 }
 
