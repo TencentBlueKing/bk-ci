@@ -104,24 +104,24 @@ interface ICommand {
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
-                        if (key == CI_TOKEN_CONTEXT) {
-                            CIKeywordsService.getOrRequestToken()
-                        } else {
-                            CredentialUtils.getCredential(
+                        when {
+                            key == CI_TOKEN_CONTEXT -> CIKeywordsService.getOrRequestToken()
+                            CREDENTIAL_REFERENCE_REGEX.matches(key) -> CredentialUtils.getCredential(
                                 credentialId = key,
                                 showErrorLog = false,
                                 acrossProjectId = acrossTargetProjectId
                             )[0]
+                            else -> CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
                         }
-                    } catch (ignore: Exception) {
-                        if (key == CI_TOKEN_CONTEXT) {
-                            null
-                        } else {
-                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                        }
+                    } catch (_: Exception) {
+                        null
                     }
                 }
             )
         }
+    }
+
+    companion object {
+        private val CREDENTIAL_REFERENCE_REGEX = Regex("^[0-9a-zA-Z_]+$")
     }
 }
