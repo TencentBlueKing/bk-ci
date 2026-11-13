@@ -63,6 +63,8 @@ specs/
 .cursorrules
 CODEBUDDY.md
 AGENTS.md
+# Share the frontend-specific collaboration guide.
+!src/frontend/AGENTS.md
 openspec/*
 !openspec/changes/
 openspec/changes/*
