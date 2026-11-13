@@ -325,10 +325,12 @@ class ThirdPartyAgentBuildDao {
      * 不使用 "ID IN (SELECT MAX(ID) ... GROUP BY ...)"：那种写法要回表扫 agent 的全部历史记录再分组，
      * 历史多时达到百万行级别；这里先由外层按 AGENT_ID + STATUS 取出少量运行中/排队中的行，
      * 再逐行用 IDX_BVE(BUILD_ID, VM_SEQ_ID, ...) 确认后面没有更新的记录，结果集一致。
+     * @param status 不为空时只和同状态的记录比较，即取"该状态下的最新一行"，与按状态过滤后再 GROUP BY 取 MAX(ID) 的口径一致
      */
     private fun notExistsNewerRecord(
         dslContext: DSLContext,
-        t: TDispatchThirdpartyAgentBuild
+        t: TDispatchThirdpartyAgentBuild,
+        status: Int? = null
     ): Condition {
         val n = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("n")
         return DSL.notExists(
@@ -338,6 +340,7 @@ class ThirdPartyAgentBuildDao {
                 .and(n.VM_SEQ_ID.eq(t.VM_SEQ_ID))
                 .and(n.AGENT_ID.eq(t.AGENT_ID))
                 .and(n.ID.gt(t.ID))
+                .and(if (status != null) n.STATUS.eq(status) else DSL.noCondition())
         )
     }
 
@@ -379,33 +382,32 @@ class ThirdPartyAgentBuildDao {
         offset: Int,
         limit: Int
     ): List<TDispatchThirdpartyAgentBuildRecord> {
-        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            // 过滤条件抽出来，子查询和主查询共用
-            val conditions = mutableListOf<Condition>()
-            conditions.add(AGENT_ID.eq(agentId))
-            if (status != null) {
-                conditions.add(STATUS.eq(PipelineTaskStatus.parse(status).status))
-            }
-            if (pipelineId != null) {
-                conditions.add(PIPELINE_ID.eq(pipelineId))
-            }
-            if (jobId != null) {
-                conditions.add(JOB_ID.eq(jobId))
-            }
-
-            // 子查询：每个 (buildId, vmSeqId) 组取主键最大的一条（最新插入 = 最新执行）
-            val latestIds = dslContext.select(DSL.max(ID))
-                .from(this)
-                .where(conditions)
-                .groupBy(BUILD_ID, VM_SEQ_ID)
-
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .and(ID.`in`(latestIds))
-                .orderBy(CREATED_TIME.desc())
-                .limit(offset, limit)
-                .fetch()
+        val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
+        val statusValue = status?.let { PipelineTaskStatus.parse(it).status }
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t.AGENT_ID.eq(agentId))
+        if (statusValue != null) {
+            conditions.add(t.STATUS.eq(statusValue))
         }
+        if (pipelineId != null) {
+            conditions.add(t.PIPELINE_ID.eq(pipelineId))
+        }
+        if (jobId != null) {
+            conditions.add(t.JOB_ID.eq(jobId))
+        }
+
+        // 每个 (buildId, vmSeqId) 只取主键最大的一条（最新插入 = 最新执行）。
+        // 不用 "ID IN (SELECT MAX(ID) ... GROUP BY ...)"：那种写法子查询和主查询各回表扫一遍 agent 全部历史，
+        // 再对整行做 filesort，历史多的 agent 每页都是秒级。
+        // PIPELINE_ID / JOB_ID 在同一 (buildId, vmSeqId) 内不变，NOT EXISTS 里只需补上 STATUS 即可保持原口径。
+        // 排序用 ID 而不是 CREATED_TIME：CREATED_TIME 只在插入时写入，与自增 ID 同序；按 ID 排序可直接沿
+        // idx_agent_id(AGENT_ID, 隐含主键 ID) 倒序扫描，凑够 offset + limit 行就停止，且同一秒内的记录分页稳定。
+        return dslContext.selectFrom(t)
+            .where(conditions)
+            .and(notExistsNewerRecord(dslContext, t, statusValue))
+            .orderBy(t.ID.desc())
+            .limit(offset, limit)
+            .fetch()
     }
 
     fun listLatestBuildPipelines(
