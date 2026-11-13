@@ -44,7 +44,7 @@
             <template v-else-if="!isDebugExec">
                 <bk-dropdown-menu
                     trigger="click"
-                    :disabled="loading || isCurPipelineLocked"
+                    :disabled="loading || isCurPipelineLocked || isCurPipelineYamlLocked"
                 >
                     <div
                         class="rebuild-dropdown-trigger"
@@ -63,7 +63,7 @@
                     >
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked
+                                'disabled': loading || isCurPipelineLocked || isCurPipelineYamlLocked
                             }]"
                             v-perm="{
                                 hasPermission: canExecute,
@@ -91,12 +91,8 @@
                         </li>
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked || !canReplay
+                                'disabled': loading || isCurPipelineLocked || replayChecking || isCurPipelineYamlLocked
                             }]"
-                            v-bk-tooltips="{
-                                content: this.$t('history.canNotReplayTips'),
-                                disabled: canReplay
-                            }"
                             v-perm="{
                                 hasPermission: canExecute,
                                 disablePermissionApi: true,
@@ -112,9 +108,11 @@
                             {{ $t("history.rePlay") }}
                             <bk-popover
                                 :z-index="3000"
-                                :disabled="!canReplay"
                             >
-                                <i class="bk-icon icon-info-circle" />
+                                <i
+                                    class="bk-icon icon-info-circle"
+                                    @click.stop
+                                />
                                 <template slot="content">
                                     <p>{{ $t('history.rePlayTips1') }}</p>
                                     <p>{{ $t('history.rePlayTips2') }}</p>
@@ -191,7 +189,7 @@
                 >
                     <li
                         :class="['dropdown-item', {
-                            'disabled': reuseParamsLoading || isCurPipelineLocked
+                            'disabled': reuseParamsLoading || isCurPipelineLocked || isCurPipelineYamlLocked
                         }]"
                         v-perm="{
                             hasPermission: canExecute,
@@ -282,14 +280,15 @@
                 isShowConfirmDialog: false,
                 draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
-                canReplay: true
+                replayChecking: false
             }
         },
         computed: {
             ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus', 'execInfo']),
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
-                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
             RESOURCE_ACTION () {
@@ -359,11 +358,6 @@
                 }
             }
         },
-        mounted () {
-            if (!this.archiveFlag) {
-                this.fetchPipelineRePlayStatus()
-            }
-        },
         methods: {
             ...mapMutations('common', ['SET_HAS_DRAFT']),
             ...mapActions(
@@ -393,9 +387,19 @@
                 }
             },
             async handleClick (type = 'reBuild') {
-                // 如果是rePlay且canReplay为false，不进行后续逻辑
-                if (type === 'rePlay' && !this.canReplay) {
-                    return
+                let replayBuildId
+                if (type === 'rePlay') {
+                    if (this.loading || this.replayChecking || this.isCurPipelineLocked) return
+                    replayBuildId = this.$route.params.buildNo
+                    const replayCheck = await this.checkCanReplay(replayBuildId)
+                    if (!replayCheck || replayCheck.stale) return
+                    if (!replayCheck.canReplay) {
+                        this.$showTips({
+                            message: replayCheck.message || this.$t('history.canNotReplayTips'),
+                            theme: 'warning'
+                        })
+                        return
+                    }
                 }
                 const h = this.$createElement
                 const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
@@ -420,9 +424,11 @@
                             h('p', this.$t('history.rePlayInfo2'))
                         ]),
                     confirmFn: async () => {
+                        if (type === 'rePlay' && this.$route.params.buildNo !== replayBuildId) return
                         try {
                             this.loading = true
-                            await this.retry(type, this.execDetail?.id)
+                            const targetBuildId = type === 'rePlay' ? replayBuildId : this.execDetail?.id
+                            await this.retry(type, targetBuildId)
                         } catch (err) {
                             this.handleError(err, {
                                 projectId: this.$route.params.projectId,
@@ -530,10 +536,10 @@
                         isTemplate: false,
                         pipelineInfo: this.pipelineInfo
                     })
-                    
+
                     this.draftStatus = result.status
                     this.draftSaveInfo = result.draftSaveInfo
-                    
+
                     // 状态为NORMAL时，直接编辑
                     if (this.draftStatus === DRAFT_STATUS.NORMAL) {
                         this.goEdit()
@@ -556,7 +562,7 @@
                         version: this.pipelineInfo?.releaseVersion
                     })
                     await this.requestPipelineSummary(this.$route.params)
-                    
+
                     if (res.version) {
                         this.goEdit(res.version)
                     }
@@ -591,21 +597,43 @@
                 })
             },
 
-            async fetchPipelineRePlayStatus () {
+            async checkCanReplay (buildId) {
+                this.replayChecking = true
                 try {
                     const res = await this.requestPipelineRePlayStatus({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        buildId: this.$route.params.buildNo
+                        buildId
                     })
-                    this.canReplay = res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY
+                    if (this.$route.params.buildNo !== buildId) {
+                        return { stale: true }
+                    }
+                    // store 失败时 resolve 错误对象，不会进入 catch
+                    if (this.isReplayStatusRequestFailed(res)) {
+                        return { canReplay: true }
+                    }
+                    return {
+                        canReplay: res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY,
+                        message: res.message
+                    }
                 } catch (err) {
                     console.error(err)
+                    if (this.$route.params.buildNo !== buildId) {
+                        return { stale: true }
+                    }
+                    return { canReplay: true }
+                } finally {
+                    this.replayChecking = false
                 }
             },
-            
+            isReplayStatusRequestFailed (res) {
+                if (!res || typeof res !== 'object') return true
+                if (res.httpStatus || res.code || res.config || res.response) return true
+                return typeof res.status === 'number'
+            },
+
             async handleReuseParamsExecute () {
-                if (this.reuseParamsLoading || this.isCurPipelineLocked) return
+                if (this.reuseParamsLoading || this.isCurPipelineLocked || this.isCurPipelineYamlLocked) return
                 try {
                     this.reuseParamsLoading = true
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params

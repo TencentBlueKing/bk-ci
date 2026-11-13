@@ -211,6 +211,16 @@ class PipelineBuildService(
                 pipelineVersion = signPipelineVersion
             )
         }
+        // UI 禁用对所有版本生效，YAML 禁用只对本次启动版本生效
+        if (pipeline.locked == true ||
+            pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                setting = setting
+            )
+        ) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         if (setting!!.failIfVariableInvalid == true) {
             failIfVariableInvalid(pipelineParamMap)
         }

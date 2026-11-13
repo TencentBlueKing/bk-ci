@@ -344,9 +344,26 @@ class BuildEndInfoResolver @Autowired constructor(
             ?: element?.errorMsg?.takeIf { it.isNotBlank() }
             ?: context.buildTasks.firstOrNull { it.taskId == taskId }?.errorMsg?.takeIf { it.isNotBlank() }
         if (!message.isNullOrBlank()) {
-            return copy(reason = BuildEndPositionCollector.toDisplayReason(message))
+            val reason = if (isUserReportedScriptError(errorCode, message)) {
+                BuildEndPositionCollector.toLineLimitedReason(message)
+            } else {
+                BuildEndPositionCollector.toDisplayReason(message)
+            }
+            return copy(reason = reason)
         }
         return copy(reasonCode = ProcessMessageCode.BK_BUILD_END_FAIL_PLUGIN)
+    }
+
+    /**
+     * RunScript 作者上报的错误：8 开头 6 位，且不是插件自带的 800001–800006。
+     * 结论条只展示前两行，完整内容留在 errorMsg。
+     */
+    private fun isUserReportedScriptError(errorCode: Int?, message: String): Boolean {
+        if (message.startsWith("[Finish task]")) return false
+        val code = errorCode ?: return false
+        if (code in 800001..800006) return false
+        val text = code.toString()
+        return text.length == 6 && text.startsWith("8")
     }
 
     private fun EndPosition.findModelElement(index: ModelPositionIndex): Element? {

@@ -31,28 +31,35 @@ function _M:isInWhiteList(whiteList)
   local headers=ngx.req.get_headers()
   local result = false
   local clientIp = ""
-  -- 将白名单转为table格式
+  -- 将白名单转为table格式。空字符串不是有效条目。
   if type(whiteList) == "string" then
+    if whiteList == "" then
+      return false
+    end
     whiteList = {whiteList}
   end
+  if type(whiteList) ~= "table" then
+    return false
+  end
+  -- 空候选不能参与比较：白名单里的空字符串会和缺失头部匹配，导致全部放行
   -- 判断X-DEVOPS-REAL-IP是否在名单中（单IP）
   clientIp = headers["X-DEVOPS-REAL-IP"] or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
+  if clientIp ~= "" and arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
   -- 判断X-REAL-IP是否在名单中（单IP）
   clientIp = headers["X-REAL-IP"] or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
+  if clientIp ~= "" and arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
   -- 判断X-DEVOPS-TOKEN是否在名单中（单IP）
   clientIp = headers["X-DEVOPS-TOKEN"] or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
+  if clientIp ~= "" and arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
   -- 判断remote_addr是否在名单中（单IP）
   clientIp = ngx.var.remote_addr or ""
-  if arrayUtil:isInArray(clientIp,whiteList) then
+  if clientIp ~= "" and arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
   -- 判断X_FORWARDED_FOR是否在名单中（多IP，逗号分隔）

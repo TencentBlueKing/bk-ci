@@ -16,6 +16,101 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.9
+## 2026-11-05
+### Changelog since v4.2.0-rc.8
+### Summary
+Key changes in this release:
+
+**Features**
+- Enhanced pipeline concurrency: raised the hard limit on the concurrency upper bound, added a handling strategy for newly arriving tasks in the concurrency queue, and enabled variable placeholders for the matrix job max concurrency
+- Added cause-and-effect summaries to the build detail page and running-state status for easier build traceability
+- Enhanced PAC: non-default branches can register scheduled triggers by their own branch YAML, and the Gongfeng collaboration edition supports PAC
+- Stage and plugin reviews support WeCom card buttons
+- Enhanced Environment Management: searching nodes supports batch IPs, importing build machines supports specifying concurrency and labels, a node task detail view is added, and the third-party build machine scheduling lock is optimized
+- Added backend management capability for the AI module
+- The Git event trigger plugin adds a switch to write back quality gate reports
+- Personal projects are automatically enabled when a user logs in
+
+**Bug Fixes**
+- Fixed the issue where publishing a copied new instance would overwrite the original instance
+- Fixed the pipeline template update instantiation failure
+- Fixed the issue where clicking cancel when a job's plugin executes very fast could fail to cancel the job
+- Fixed the issue where configuring log storage as lucene caused background errors when running pipelines and logs could not be found on the page
+
+#### New Features
+
+##### Pipeline
+- [New] feat: Optimize the time calculation issue of some build detail pages [Link](http://github.com/TencentBlueKing/bk-ci/issues/11448)
+- [New] bug: PAC YAML file deletion does not need to verify whether there is pipeline deletion permission [Link](http://github.com/TencentBlueKing/bk-ci/issues/13689)
+- [New] feat: Raise the hard limit of the pipeline concurrency upper bound [Link](http://github.com/TencentBlueKing/bk-ci/issues/13731)
+- [New] feat: Stage and plugin reviews support WeCom card buttons [Link](http://github.com/TencentBlueKing/bk-ci/issues/13390)
+- [New] feat: [PAC] Non-default branches can register scheduled triggers by their own branch YAML [Link](http://github.com/TencentBlueKing/bk-ci/issues/13742)
+- [New] feat: Add cause-and-effect summary to the status of the build detail page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13477)
+- [New] feat: Clear invalid fields when switching options during UI to YAML conversion [Link](http://github.com/TencentBlueKing/bk-ci/issues/13698)
+- [New] feat: Pipeline concurrency queue supports a handling strategy when new tasks arrive [Link](http://github.com/TencentBlueKing/bk-ci/issues/12840)
+- [New] feat: Git event trigger plugin adds a switch to write back quality gate reports [Link](http://github.com/TencentBlueKing/bk-ci/issues/13682)
+- [New] feat: Add cause-and-effect summary to the running-state build detail [Link](http://github.com/TencentBlueKing/bk-ci/issues/13559)
+- [New] feat: Add cause-and-effect summary to the build detail page in non-end status [Link](http://github.com/TencentBlueKing/bk-ci/issues/13519)
+- [New] feat: Support multi-line variable values when the bash plugin outputs variables [Link](http://github.com/TencentBlueKing/bk-ci/issues/12879)
+- [New] feat: Add cause-and-effect summary to the status of the build detail page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13457)
+
+##### Repository
+- [New] feat: Gongfeng collaboration edition supports PAC [Link](http://github.com/TencentBlueKing/bk-ci/issues/13315)
+
+##### Store
+- [New] feat: The store component list query interface adds an install type return field [Link](http://github.com/TencentBlueKing/bk-ci/issues/13781)
+
+##### Environment Management
+- [New] feat: Searching nodes supports batch IP input by users [Link](http://github.com/TencentBlueKing/bk-ci/issues/13343)
+- [New] feat: Optimize the third-party build machine environment scheduling lock [Link](http://github.com/TencentBlueKing/bk-ci/issues/13743)
+- [New] feat: Add a view to the node task detail in environment management [Link](http://github.com/TencentBlueKing/bk-ci/issues/13340)
+- [New] feat: Support specifying concurrency and labels when importing build machines [Link](http://github.com/TencentBlueKing/bk-ci/issues/13550)
+
+##### Project Management
+- [New] feat: Automatically enable personal projects when a user logs in [Link](http://github.com/TencentBlueKing/bk-ci/issues/13762)
+
+##### Others
+- [New] feat: The matrix job max concurrency supports variable placeholders [Link](http://github.com/TencentBlueKing/bk-ci/issues/13737)
+- [New] feat: Optimize the JDK image certificate for bk-ci [Link](http://github.com/TencentBlueKing/bk-ci/issues/13794)
+- [New] feat: Multi-tenant subpath branch syncs the trunk [Link](http://github.com/TencentBlueKing/bk-ci/issues/13520)
+- [New] feat: The APIGW pipeline template detail interface returns branch version data [Link](http://github.com/TencentBlueKing/bk-ci/issues/13728)
+- [New] feat: Supplement the backend management capability of the AI module [Link](http://github.com/TencentBlueKing/bk-ci/issues/13535)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: Optimize pipeline cancellation logic [Link](http://github.com/TencentBlueKing/bk-ci/issues/13433)
+
+##### Environment Management
+- [Improved] bug: Handle the case where there is no pipelineId when jumping to the environment management pipeline/Job/Creation Flow view detail [Link](http://github.com/TencentBlueKing/bk-ci/issues/13709)
+
+##### Others
+- [Improved] perf: Optimize the container restart scenario [Link](http://github.com/TencentBlueKing/bk-ci/issues/13732)
+- [Improved] perf: Optimize data cleanup logic [Link](http://github.com/TencentBlueKing/bk-ci/issues/13786)
+- [Improved] perf: Optimize Creation Flow details [Link](http://github.com/TencentBlueKing/bk-ci/issues/13755)
+- [Improved] perf: Add an authorization URL to the interface that determines whether the user has completed Gongfeng OAuth [Link](http://github.com/TencentBlueKing/bk-ci/issues/13717)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] bug: Optimize the slow query of the T_PIPELINE_TRIGGER_DETAIL table [Link](http://github.com/TencentBlueKing/bk-ci/issues/13783)
+- [Fixed] fix: Fix the issue where publishing a copied new instance would overwrite the original instance [Link](http://github.com/TencentBlueKing/bk-ci/issues/13780)
+- [Fixed] bug: Fix the pipeline template update instantiation failure [Link](http://github.com/TencentBlueKing/bk-ci/issues/13773)
+- [Fixed] bug: Checking "Do not trigger during WIP stage" in the TGit trigger does not take effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/13744)
+- [Fixed] feat: Optimize the search function of Creation Flow orchestration plugins [Link](http://github.com/TencentBlueKing/bk-ci/issues/13527)
+- [Fixed] fix: When a variable alias contains a percent sign, editing the variable cannot be saved [Link](http://github.com/TencentBlueKing/bk-ci/issues/13740)
+- [Fixed] bug: When a job's plugin executes very fast, clicking cancel sometimes fails to cancel the job [Link](http://github.com/TencentBlueKing/bk-ci/issues/13581)
+- [Fixed] The file type variable upload of the pipeline gets stuck [Link](http://github.com/TencentBlueKing/bk-ci/issues/13719)
+- [Fixed] bug: When a PAC pipeline has many branch versions and the official version is pushed to a later page, it cannot be executed [Link](http://github.com/TencentBlueKing/bk-ci/issues/13697)
+- [Fixed] bug: Configuring a fail-continue plugin plus a plugin with the run condition "only run when a previous plugin fails" may cause the job to fail to cancel [Link](http://github.com/TencentBlueKing/bk-ci/issues/13676)
+
+##### Log Service
+- [Fixed] When configuring log storage as lucene, running a pipeline causes background errors and the page cannot find logs [Link](http://github.com/TencentBlueKing/bk-ci/issues/5007)
+
+##### Others
+- [Fixed] bug: The Creation Flow SubParameter component request parameters should prioritize the projectId/pipelineId/buildId in the plugin fields [Link](http://github.com/TencentBlueKing/bk-ci/issues/13756)
+
 # v4.2.0-rc.8
 ## 2026-10-13
 ### Changelog since v4.2.0-rc.7

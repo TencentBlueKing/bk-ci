@@ -47,7 +47,7 @@ import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
-import com.tencent.devops.process.trigger.market.MarketEventRequestService
+import com.tencent.devops.process.trigger.artifact.ArtifactWebhookRequestService
 import com.tencent.devops.process.trigger.tapd.TapdWebhookRequestService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -73,8 +73,8 @@ class WebhookRequestService(
     private val webhookGrayCompareService: WebhookGrayCompareService,
     private val webhookManager: WebhookManager,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val marketEventRequestService: MarketEventRequestService,
-    private val tapdWebhookRequestService: TapdWebhookRequestService
+    private val tapdWebhookRequestService: TapdWebhookRequestService,
+    private val artifactWebhookRequestService: ArtifactWebhookRequestService
 ) {
 
     companion object {
@@ -188,8 +188,15 @@ class WebhookRequestService(
                 )
             }
 
+            replayEvent.triggerType == PipelineTriggerType.ARTIFACT.name -> {
+                artifactWebhookRequestService.replay(
+                    replayEvent = replayEvent,
+                    sourceTriggerEvent = triggerEvent
+                )
+            }
+
             else -> {
-                handleStoreEvent(replayEvent, triggerEvent)
+                logger.info("unsupported replay trigger type|${replayEvent.eventId}|${replayEvent.triggerType}")
             }
         }
     }
@@ -263,17 +270,6 @@ class WebhookRequestService(
                     matcher = matcher
                 )
             }
-        }
-    }
-
-    /**
-     * 回放研发商店注册的触发事件
-     * 注：目前此处仅对接远程桌面相关事件
-     */
-    fun handleStoreEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
-        with(replayEvent) {
-            // 使用MarketEventRequestService的公共方法处理事件分发逻辑
-            marketEventRequestService.dispatchCdsTriggerEvent(triggerEvent, pipelineId = replayEvent.pipelineId)
         }
     }
 

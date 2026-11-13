@@ -133,6 +133,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+import com.tencent.devops.process.utils.MatrixConcurrencyUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -755,14 +756,24 @@ class PipelineRepositoryService constructor(
 
     private fun matrixYamlCheck(option: MatrixControlOption?) {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
+        // 使用变量配置最大并发数时，实际值需运行时解析，此处不做数值校验
+        if (!option.maxConcurrencyVar.isNullOrBlank()) {
+            checkMatrixYaml(option)
+            return
+        }
+        // 未配置并发数时取默认值，属于合法配置；已配置则必须与模板实例化时的要求一致，落在1-MAX之间
+        val maxConcurrency = option.maxConcurrency
+        if (maxConcurrency != null && !MatrixConcurrencyUtils.isValid(maxConcurrency)) {
             throw InvalidParamException(
-                "matrix maxConcurrency number(${option.maxConcurrency}) " +
-                    "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                "matrix maxConcurrency($maxConcurrency) is invalid, " +
+                    "must be an integer between ${MatrixConcurrencyUtils.MIN_MATRIX_CONCURRENCY} " +
+                    "and $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
+        checkMatrixYaml(option)
+    }
+
+    private fun checkMatrixYaml(option: MatrixControlOption) {
         MatrixYamlCheckUtils.checkYaml(
             MatrixPipelineInfo(
                 include = option.includeCaseStr,
@@ -2657,15 +2668,32 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         locked: Boolean,
-        transactionContext: DSLContext? = null
+        transactionContext: DSLContext? = null,
+        lockReason: String?
     ): Boolean {
-        return pipelineInfoDao.update(
+        return pipelineInfoDao.updateLock(
             dslContext = transactionContext ?: dslContext,
-            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = locked
+            locked = locked,
+            lockUser = userId,
+            lockReason = lockReason.takeIf { locked }
         )
+    }
+
+    /**
+     * 运行时是否被 YAML 禁用，disable-pipeline 只对开启 PAC 的流水线生效，
+     * 存量数据通过 RUN_LOCK_TYPE = LOCK 表示 YAML 禁用
+     */
+    fun isYamlLockedOnRun(projectId: String, pipelineId: String, setting: PipelineSetting?): Boolean {
+        if (setting == null) {
+            return false
+        }
+        if (setting.runLockType == PipelineRunLockType.LOCK) {
+            return true
+        }
+        return setting.yamlLocked == true &&
+            pipelineYamlInfoDao.get(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId) != null
     }
 
     fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {

@@ -28,9 +28,9 @@
             async function copyTxt () {
                 try {
                     await copyToClipboard(props.value)
-                    bkMessage({ theme: 'success', message: t('copySuc') })
+                    bkMessage({ theme: 'success', message: t('copySuc'), zIndex: 9999})
                 } catch (error) {
-                    bkMessage({ theme: 'error', message: error.message })
+                    bkMessage({ theme: 'error', message: error.message, zIndex: 9999 })
                 }
             }
 

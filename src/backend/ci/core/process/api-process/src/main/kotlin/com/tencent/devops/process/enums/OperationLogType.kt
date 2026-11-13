@@ -39,6 +39,8 @@ enum class OperationLogType(val description: String) {
     RELEASE_MASTER_VERSION("正式版本完成时：「发布版本 P1.T2.0」"),
     DISABLE_PIPELINE("禁用流水线时：「禁用了流水线」"),
     ENABLE_PIPELINE("启用流水线时：「启用了流水线」"),
+    DISABLE_PIPELINE_YAML("YAML禁用流水线时：「YAML禁用了流水线」"),
+    ENABLE_PIPELINE_YAML("YAML启用流水线时：「YAML启用了流水线」"),
     ADD_PIPELINE_OWNER("添加流水线成员时：「添加 xxx,yyy 为执行者」"),
     ADD_PIPELINE_TO_GROUP("将流水线添加到流水线组时：「添加到流水线组 a」"),
     MOVE_PIPELINE_OUT_OF_GROUP("将流水线移出流水线组时：「从流水线组 a 中移出」"),

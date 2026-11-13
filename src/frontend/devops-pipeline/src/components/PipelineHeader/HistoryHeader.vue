@@ -1,5 +1,11 @@
 <template>
     <div class="pipeline-history-header">
+        <div
+            style="display: none;"
+            :key="Date.now()"
+        >
+            <pipeline-disabled-tooltip id="pipelineDisabledTooltip" />
+        </div>
         <component
             :is="breadCrumb"
             v-bind="breadCrumbProps"
@@ -108,6 +114,7 @@
                 <template v-if="editAndExecutable">
                     <span
                         v-if="!archiveFlag"
+                        :key="Date.now()"
                         v-bk-tooltips="tooltip"
                     >
                         <bk-button
@@ -171,6 +178,7 @@
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import DraftConfirmDialog from './DraftConfirmDialog.vue'
     import useDraftStatus from '@/hook/useDraftStatus'
+    import PipelineDisabledTooltip from '@/components/PipelineDisabledTooltip.vue'
 
     export default {
         components: {
@@ -183,7 +191,8 @@
             VersionDiffEntry,
             RollbackEntry,
             DraftConfirmDialog,
-            InstanceReleaseBtn
+            InstanceReleaseBtn,
+            PipelineDisabledTooltip
         },
         props: {
             isSwitchPipeline: Boolean
@@ -203,7 +212,6 @@
                 draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
                 loading: false,
-                isPipelineIdChanged: false
             }
         },
         computed: {
@@ -216,6 +224,7 @@
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
                 isReleaseVersion: 'atom/isReleaseVersion',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
@@ -279,7 +288,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return (!this.isCurPipelineLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
+                return (!this.isCurPipelineLocked && !this.isCurPipelineYamlLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
@@ -316,14 +325,24 @@
                 return this.editAndExecutable || this.isEditCurrentDraft ? 'edit' : 'rollback'
             },
             tooltip () {
-                return this.executable
-                    ? {
-                        disabled: true
-                    }
-                    : {
-                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                if (this.executable) {
+                    return { disabled: true }
+                }
+                // 禁用态：展示禁用人/时间/原因等详细信息
+                if (this.isCurPipelineLocked || this.isCurPipelineYamlLocked) {
+                    return {
+                        allowHTML: true,
+                        width: 320,
+                        theme: 'light',
+                        content: '#pipelineDisabledTooltip',
+                        placement: 'bottom-end',
                         delay: [300, 0]
                     }
+                }
+                return {
+                    content: this.$t(!(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
+                    delay: [300, 0]
+                }
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
@@ -360,7 +379,8 @@
                 'setSwitchingPipelineVersion',
                 'setShowVariable',
                 'requestPipelineSummary',
-                'requestTemplateSummary'
+                'requestTemplateSummary',
+                'togglePropertyPanel'
             ]),
             ...mapActions({
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
@@ -498,6 +518,11 @@
                     const cacheKey = `pac_branch_${this.$route.params.projectId}_${this.$route.params.pipelineId}`
                     sessionStorage.setItem(cacheKey, this.activePipelineVersion.versionName)
                 }
+                // 执行预览页不会拉取插件/触发器数据，若属性面板处于打开状态则先关闭，避免跳转后侧边栏空白
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
                 this.$router.push({
                     name: 'executePreview',
                     query,

@@ -2,6 +2,7 @@ package com.tencent.devops.process.notify.command
 
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.command.CmdContext
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 
@@ -15,7 +16,8 @@ data class BuildNotifyContext(
     val buildStatus: BuildStatus,
     val projectId: String,
     val pipelineId: String,
-    val buildId: String
+    val buildId: String,
+    var channelCode: ChannelCode? = null
 ) : CmdContext(
     executeCount = executeCount,
     variables = variables,

@@ -100,6 +100,15 @@ external:
       secret: __BK_CI_TAPD_WEBHOOK_SECRET__
       # TAPD 站点访问地址（scheme://host[:port]），用于组装工单详情页链接（ci.event_url）
       webUrl: __BK_CI_TAPD_WEBHOOK_WEB_URL__
+    artifact:
+      # 制品库回调地址，注册 webhook 时下发给制品库
+      callbackUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/webhook/artifact
+      # 回调密钥，注册时下发、回调时校验；留空时拒绝所有回调，且无法保存带制品到达触发器的流水线
+      secret: __BK_CI_ARTIFACT_WEBHOOK_SECRET__
+      rate-limit:
+        # 同一制品仓库在窗口内最多处理的回调事件数，超出直接丢弃，<=0 表示不限制
+        window-seconds: 60
+        max-count: 100
 
 sharding:
   databaseShardingStrategy:

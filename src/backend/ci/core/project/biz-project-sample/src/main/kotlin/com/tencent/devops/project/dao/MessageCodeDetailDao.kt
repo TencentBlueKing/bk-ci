@@ -37,21 +37,19 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
-/**
- * code数据库操作类
- * @author: carlyin
- * @since: 2018-11-09
- * @version: $Revision$ $Date$ $LastChangedBy$
- *
- */
 @Suppress("ALL")
 @Repository
 class MessageCodeDetailDao {
 
-    fun getMessageCodeDetails(dslContext: DSLContext, messageCode: String?, page: Int?, pageSize: Int?): Result<TMessageCodeDetailRecord>? {
+    fun getMessageCodeDetails(
+        dslContext: DSLContext,
+        messageCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<TMessageCodeDetailRecord>? {
         with(TMessageCodeDetail.T_MESSAGE_CODE_DETAIL) {
             val conditions = mutableListOf<Condition>()
-            if (null != messageCode && messageCode.isNotBlank()) {
+            if (!messageCode.isNullOrBlank()) {
                 conditions.add(MESSAGE_CODE.contains(messageCode))
             }
             val baseStep = dslContext.selectFrom(this).where(conditions)
@@ -69,7 +67,7 @@ class MessageCodeDetailDao {
     ): Long {
         with(TMessageCodeDetail.T_MESSAGE_CODE_DETAIL) {
             val conditions = mutableListOf<Condition>()
-            if (null != messageCode && messageCode.isNotBlank()) {
+            if (!messageCode.isNullOrBlank()) {
                 conditions.add(MESSAGE_CODE.contains(messageCode))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
@@ -106,7 +104,13 @@ class MessageCodeDetailDao {
         }
     }
 
-    fun updateMessageCodeDetail(dslContext: DSLContext, messageCode: String, messageDetailZhCn: String, messageDetailZhTw: String, messageDetailEn: String) {
+    fun updateMessageCodeDetail(
+        dslContext: DSLContext,
+        messageCode: String,
+        messageDetailZhCn: String,
+        messageDetailZhTw: String,
+        messageDetailEn: String
+    ) {
         with(TMessageCodeDetail.T_MESSAGE_CODE_DETAIL) {
             dslContext.update(this)
                 .set(MESSAGE_DETAIL_ZH_CN, messageDetailZhCn)

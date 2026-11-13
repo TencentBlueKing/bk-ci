@@ -73,6 +73,7 @@ import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
@@ -113,10 +114,10 @@ class ModelTransfer @Autowired constructor(
             // YAML 是完整声明。不写 sub-group 用空白表示清空，避免沿用库里的旧标识。
             concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
             runLockType = when {
-                yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                 else -> PipelineRunLockType.MULTIPLE
             },
+            yamlLocked = yaml.disablePipeline == true,
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
@@ -359,8 +360,7 @@ class ModelTransfer @Autowired constructor(
         yaml.concurrency = makeConcurrency(modelInput)
         yaml.customBuildNum = makeBuildNum(modelInput)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
-        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
-            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.disablePipeline = modelInput.setting.yamlDisabled().nullIfDefault(false)
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
@@ -567,66 +567,100 @@ class ModelTransfer @Autowired constructor(
         // TAPD 触发独立聚合，与代码库触发平级
         val tapdTrigger = elementTransfer.tapdTriggers2Yaml(triggers, modelInput.aspectWrapper)
             .map { it.toPre(modelInput.version) }
-        when (modelInput.version) {
-            YamlVersion.V2_0 -> {
-                // 融合默认git触发器 + 基础触发器
-                if (scmTrigger[modelInput.defaultScmType] != null &&
-                    scmTrigger[modelInput.defaultScmType]!!.size == 1
-                ) {
-                    val res = scmTrigger[modelInput.defaultScmType]!!.first().toPre(modelInput.version) as PreTriggerOn
-                    return listOf(
-                        res.copy(
-                            manual = baseTrigger?.manual,
-                            schedules = baseTrigger?.schedules,
-                            remote = baseTrigger?.remote
-                        )
-                    )
-                }
-                // 只带基础触发器
-                if (baseTrigger != null) {
-                    return listOf(baseTrigger)
-                }
-                // 不带触发器
-                return emptyList()
-            }
-
-            YamlVersion.V3_0 -> {
-                val trigger = mutableListOf<IPreTriggerOn>()
-                val triggerV3 = mutableListOf<IPreTriggerOn>()
-                scmTrigger.map { on ->
-                    on.value.forEach { pre ->
-                        triggerV3.add(pre.toPre(modelInput.version).also {
-                            it as PreTriggerOnV3
-                            if (!it.repoName.isNullOrBlank() || on.key != ScmType.CODE_GIT) {
-                                it.type = on.key.alis
-                            }
-                        })
-                    }
-                }
-                tapdTrigger.forEach { pre ->
-                    (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
-                    triggerV3.add(pre)
-                }
-                if (baseTrigger != null) {
-                    when (triggerV3.size) {
-                        // 只带基础触发器
-                        0 -> return listOf(baseTrigger)
-                        // 融合一个git触发器 + 基础触发器
-                        1 -> return listOf(
-                            (triggerV3.first() as PreTriggerOnV3).copy(
-                                manual = baseTrigger.manual,
-                                schedules = baseTrigger.schedules,
-                                remote = baseTrigger.remote
-                            )
-                        )
-                        // 队列首插入基础触发器
-                        else -> trigger.add(0, baseTrigger)
-                    }
-                }
-                trigger.addAll(triggerV3)
-                return trigger
-            }
+        // 统一框架触发器（如制品到达）：注册表驱动，已带 type 标识，与代码库触发平级
+        val registryTrigger = elementTransfer.registryTriggers2Yaml(
+            triggers, modelInput.version, modelInput.aspectWrapper
+        )
+        return when (modelInput.version) {
+            YamlVersion.V2_0 -> makeTriggerOnV2(modelInput, scmTrigger, baseTrigger)
+            YamlVersion.V3_0 -> makeTriggerOnV3(
+                version = modelInput.version,
+                scmTrigger = scmTrigger,
+                tapdTrigger = tapdTrigger,
+                registryTrigger = registryTrigger,
+                baseTrigger = baseTrigger
+            )
         }
+    }
+
+    private fun makeTriggerOnV2(
+        modelInput: ModelTransferInput,
+        scmTrigger: Map<ScmType, List<TriggerOn>>,
+        baseTrigger: IPreTriggerOn?
+    ): List<IPreTriggerOn> {
+        val defaultScm = scmTrigger[modelInput.defaultScmType]
+        // 融合默认git触发器 + 基础触发器
+        if (defaultScm != null && defaultScm.size == 1) {
+            val res = defaultScm.first().toPre(modelInput.version) as PreTriggerOn
+            return listOf(
+                res.copy(
+                    manual = baseTrigger?.manual,
+                    schedules = baseTrigger?.schedules,
+                    remote = baseTrigger?.remote
+                )
+            )
+        }
+        // 只带基础触发器 / 不带触发器
+        return if (baseTrigger != null) listOf(baseTrigger) else emptyList()
+    }
+
+    private fun makeTriggerOnV3(
+        version: YamlVersion,
+        scmTrigger: Map<ScmType, List<TriggerOn>>,
+        tapdTrigger: List<IPreTriggerOn>,
+        registryTrigger: List<IPreTriggerOn>,
+        baseTrigger: IPreTriggerOn?
+    ): List<IPreTriggerOn> {
+        val triggerV3 = collectTriggerOnV3(version, scmTrigger, tapdTrigger)
+        triggerV3.addAll(registryTrigger)
+        return mergeBaseTriggerOnV3(baseTrigger, triggerV3)
+    }
+
+    private fun collectTriggerOnV3(
+        version: YamlVersion,
+        scmTrigger: Map<ScmType, List<TriggerOn>>,
+        tapdTrigger: List<IPreTriggerOn>
+    ): MutableList<IPreTriggerOn> {
+        val triggerV3: MutableList<IPreTriggerOn> = scmTrigger.flatMap { (scmType, triggerOns) ->
+            triggerOns.map { pre ->
+                val preV3 = pre.toPre(version) as PreTriggerOnV3
+                if (!preV3.repoName.isNullOrBlank() || scmType != ScmType.CODE_GIT) {
+                    preV3.type = scmType.alis
+                }
+                preV3
+            }
+        }.toMutableList()
+        tapdTrigger.forEach { pre ->
+            (pre as? PreTriggerOnV3)?.type = TriggerType.TAPD.alis
+            triggerV3.add(pre)
+        }
+        return triggerV3
+    }
+
+    private fun mergeBaseTriggerOnV3(
+        baseTrigger: IPreTriggerOn?,
+        triggerV3: List<IPreTriggerOn>
+    ): List<IPreTriggerOn> {
+        if (baseTrigger == null) return triggerV3
+        return when (triggerV3.size) {
+            // 只带基础触发器
+            0 -> listOf(baseTrigger)
+            1 -> listOf(mergeSingleTriggerOnV3(baseTrigger, triggerV3.first() as PreTriggerOnV3))
+            // 队列首插入基础触发器
+            else -> listOf(baseTrigger) + triggerV3
+        }
+    }
+
+    private fun mergeSingleTriggerOnV3(
+        baseTrigger: IPreTriggerOn,
+        only: PreTriggerOnV3
+    ): IPreTriggerOn {
+        // 融合唯一触发器（代码库 / TAPD / 通用框架触发器）+ 基础触发器
+        return only.copy(
+            manual = baseTrigger.manual,
+            schedules = baseTrigger.schedules,
+            remote = baseTrigger.remote
+        )
     }
 
     private fun makeSyntaxDialect(setting: PipelineSetting): String? {
