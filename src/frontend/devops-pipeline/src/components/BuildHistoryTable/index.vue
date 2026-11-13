@@ -198,7 +198,7 @@
                                 <p
                                     class="artifact-entry history-text-link"
                                     @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
-                                    v-html="`${$t('history.fileUnit', [props.row.artifactList.length])}<span>（${props.row.sumSize}）</span>`"
+                                    v-html="`${getArtifactUnitHtml(props.row)}<span>（${props.row.sumSize}）</span>`"
                                 />
                                 <div
                                     v-if="props.row.shortUrl"
@@ -452,6 +452,7 @@
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"
+            :draggable="false"
             :width="900"
             ext-cls="history-dialog"
             header-position="left"
@@ -865,6 +866,8 @@
                     let shortUrl = ''
                     const appVersions = []
                     let sumSize = 0
+                    let fileCount = 0
+                    let folderCount = 0
                     const artifactories = hasArtifactories
                         ? item.artifactList.map((artifactory) => {
                             if (artifactory.shortUrl) {
@@ -872,6 +875,11 @@
                             }
                             if (artifactory.appVersion) {
                                 appVersions.push(`${artifactory.appVersion} (${artifactory.name})`)
+                            }
+                            if (artifactory.folder) {
+                                folderCount++
+                            } else {
+                                fileCount++
                             }
                             sumSize += artifactory.size
                             return {
@@ -909,6 +917,8 @@
                         visibleMaterial:
                             Array.isArray(item.material) ? item.material.slice(0, !active ? 1 : 3) : [],
                         sumSize: convertFileSize(sumSize, 'B'),
+                        fileCount,
+                        folderCount,
                         artifactories,
                         stageStatus,
                         showAll: false,
@@ -1306,6 +1316,15 @@
             hideArtifactoriesPopup () {
                 this.isShowMoreArtifactories = false
                 this.visibleIndex = -1
+            },
+            getArtifactUnitHtml (row) {
+                if (row.fileCount > 0 && row.folderCount > 0) {
+                    return this.$t('history.fileFolderUnit', [row.fileCount, row.folderCount])
+                }
+                if (row.folderCount > 0) {
+                    return this.$t('history.folderUnit', [row.folderCount])
+                }
+                return this.$t('history.fileUnit', [row.fileCount])
             },
             showArtifactoriesPopup (e, index = -1) {
                 this.visibleIndex = index
