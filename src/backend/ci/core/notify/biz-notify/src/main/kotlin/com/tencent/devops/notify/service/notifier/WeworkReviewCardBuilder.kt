@@ -543,16 +543,19 @@ object WeworkReviewCardBuilder {
         if (detail != null && rows.size < LIST_LIMIT) {
             rows.add(detail)
         }
-        val quote = plainQuote(reviewDesc).takeIf { it.isNotBlank() }?.let {
+        val note = plainQuote(reviewDesc).takeIf { it.isNotBlank() }?.let { clip(it, QUOTE_LIMIT) }
+        val quote = note?.let {
             WeworkTemplateCardQuoteArea(
                 title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明"),
-                quoteText = clip(it, QUOTE_LIMIT)
+                quoteText = it
             )
         }
+        // 没有自定义参数时，引用区在机器人卡片上经常不展示，审核说明要同时放进正文。
+        val paramText = paramSubTitle(scene, reviewParams)
         return CardLayout(
             rows = rows.takeIf { it.isNotEmpty() },
             quote = quote,
-            subTitle = paramSubTitle(scene, reviewParams)
+            subTitle = paramText ?: note?.let { clip(it, SUBTITLE_LIMIT) }
         )
     }
 

@@ -49,7 +49,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("https://example.com/pc", rows.last().url)
         assertEquals("审核说明", first.quoteArea!!.title)
         assertEquals("重要审核XXX", first.quoteArea!!.quoteText)
-        assertNull(first.subTitleText)
+        assertEquals("重要审核XXX", first.subTitleText)
         assertEquals("通过", first.buttonList!![0].text)
         assertEquals(0, first.buttonList!![0].type)
         assertEquals("驳回", first.buttonList!![1].text)
