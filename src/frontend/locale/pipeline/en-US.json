@@ -2026,6 +2026,7 @@
   "bkArtifactImageArrivedEventDesc": "Image [{name}] arrived, source: {pipeline}, by {user}",
   "bkArtifactRepoPipeline": "Pipeline repository",
   "bkArtifactRepoCustom": "Custom repository",
+  "bkCdsTriggerDesc": "Cloud Desktop [{name}] has the [{action}] operation performed by [{user}]",
   "invalidCodeMode": "Switch to Code Mode Failed",
   "draftExecRecords": "Debug Records",
   "draftExecDetail": "Debug Details",

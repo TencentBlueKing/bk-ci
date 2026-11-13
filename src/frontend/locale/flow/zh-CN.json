@@ -820,7 +820,8 @@
         "bkArtifactFolderArrivedEventDesc": "制品目录 [{name}] {size}到达，来源：{pipeline}，由 {user} 上传，{repo}",
         "bkArtifactImageArrivedEventDesc": "镜像 [{name}] 到达，来源：{pipeline}，由 {user} 推送",
         "bkArtifactRepoPipeline": "流水线仓库",
-        "bkArtifactRepoCustom": "自定义仓库"
+        "bkArtifactRepoCustom": "自定义仓库",
+        "bkCdsTriggerDesc": "云桌面[{name}]被[{user}]执行了[{action}]操作"
       }
     },
     "delegation": {
