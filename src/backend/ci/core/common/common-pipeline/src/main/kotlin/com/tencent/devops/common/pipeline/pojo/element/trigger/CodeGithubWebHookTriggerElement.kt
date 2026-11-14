@@ -139,6 +139,7 @@ data class CodeGithubWebHookTriggerElement(
             CodeEventType.PULL_REQUEST -> {
                 listOf(
                     TriggerElementPropUtils.selector(name = "action", value = includeMrAction),
+                    TriggerElementPropUtils.vuexInput(name = "includeUsers", value = includeUsers?.joinToString(",")),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers),
