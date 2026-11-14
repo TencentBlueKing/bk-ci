@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -189,6 +190,36 @@ interface ApigwBuildResourceV4 {
         @QueryParam("skip")
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
+
+    @Operation(summary = "重新构建-按原触发方式和启动参数重新触发", tags = ["v4_app_build_replay", "v4_user_build_replay"])
+    @POST
+    @Path("/build_replay")
+    fun replayByBuild(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @Parameter(description = "构建ID(构建ID和构建号，二选其一填入)", required = false)
+        @QueryParam("buildId")
+        buildId: String?,
+        @Parameter(description = "构建号(构建ID和构建号，二选其一填入)", required = false)
+        @QueryParam("buildNumber")
+        buildNumber: Int?,
+        @Parameter(description = "强制触发", required = false)
+        @QueryParam("forceTrigger")
+        forceTrigger: Boolean? = false
+    ): Result<BuildReplayResult>
 
     @Operation(
         summary = "查看构建状态信息,#4295增加stageStatus等",
