@@ -14,7 +14,7 @@ class ArtifactEventHandlerManager(
     private val handlers: List<ArtifactEventHandler>
 ) {
     fun getEventDesc(event: ArtifactEvent): I18Variable {
-        return resolve(event).getEventDesc(event)
+        return getHandler(event).getEventDesc(event)
     }
 
     fun evaluate(
@@ -23,9 +23,7 @@ class ArtifactEventHandlerManager(
         params: ArtifactTriggerParam,
         event: ArtifactEvent
     ): WebhookMatchResult {
-        val handler = handlers.find { it.support(event) }
-            ?: return WebhookMatchResult(isMatch = false, reason = "no handler support event")
-        return handler.evaluate(
+        return getHandler(event).evaluate(
             projectId = projectId,
             pipelineId = pipelineId,
             triggerParams = params,
@@ -34,10 +32,10 @@ class ArtifactEventHandlerManager(
     }
 
     fun outputs(event: ArtifactEvent): Map<String, Any> {
-        return resolve(event).outputs(event)
+        return getHandler(event).outputs(event)
     }
 
-    private fun resolve(event: ArtifactEvent): ArtifactEventHandler {
+    private fun getHandler(event: ArtifactEvent): ArtifactEventHandler {
         return handlers.find { it.support(event) }
             ?: throw IllegalArgumentException("no handler for ${event::class.simpleName}")
     }
