@@ -159,6 +159,9 @@ class ContainerBuildRecordService(
      * 前端 StatusIcon 将 QUEUE 与 RUNNING/PREPARE_ENV 同样渲染为“转圈”，
      * 若此处置 QUEUE 会导致子Job/插件在真正被调度运行前就提前出现“运行中”转圈；
      * 置 null 时走 defaultStatus 不转圈，待引擎实际下发后再刷新为运行态。
+     *
+     * [skipTaskIds] 里的插件（本次失败跳过的）原样克隆，保留上一次的状态与耗时；
+     * [containerStatus] 非空且为结束态时，表示子Job本次不再执行，容器记录保留原有起止时间和耗时。
      */
     fun cloneMatrixChildRecordsForRetry(
         transactionContext: DSLContext?,
@@ -169,39 +172,50 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        containerStatus: BuildStatus? = null
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
+        // #13577 单步骤失败跳过时子 Job 已是结束态，保留原有起止时间和耗时。
+        // 普通重试 containerStatus 为空，继续清空，避免详情在真正调度前就转圈。
+        val finished = containerStatus?.isFinish() == true
         val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
-            remove(Container::timeCost.name)
-            remove(Container::startEpoch.name)
-            remove(Container::startVMStatus.name)
+            if (!finished) {
+                remove(Container::timeCost.name)
+                remove(Container::startEpoch.name)
+                remove(Container::startVMStatus.name)
+            }
         }
+        val now = LocalDateTime.now()
         val newContainer = oldContainer.copy(
-            executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            executeCount = newExecuteCount,
+            status = containerStatus?.name,
+            startTime = if (finished) oldContainer.startTime ?: now else null,
+            endTime = if (finished) oldContainer.endTime ?: now else null,
+            timestamps = mapOf(),
+            containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
         )
         val newTasks = oldTasks.map { task ->
-            val skip = skipTaskIds.contains(task.taskId)
-            val reset = skip || resetTaskIds.contains(task.taskId)
+            // #13577 失败跳过的步骤按原样克隆：状态、起止时间、耗时都留着上一次失败的结果，
+            // 看得出它执行过并失败了，同时不参与本次执行。
+            // 这里不能像普通Job那样靠“不写记录、按 executeCount 回落”来实现：矩阵详情走
+            // BuildRecordTaskDao.getLatestMatrixRecords，它按 CONTAINER_ID 取最新执行次数后再整批回表，
+            // 少写一行的结果是这个步骤在详情里直接消失，而不是回落到上一次。
+            val clearRuntime = !skipTaskIds.contains(task.taskId) && resetTaskIds.contains(task.taskId)
             task.copy(
                 executeCount = newExecuteCount,
-                status = when {
-                    skip -> BuildStatus.SKIP.name
-                    reset -> null
-                    else -> task.status
-                },
-                startTime = if (reset) null else task.startTime,
-                endTime = if (reset) null else task.endTime,
-                timestamps = if (reset) mapOf() else task.timestamps,
-                asyncStatus = if (reset) null else task.asyncStatus
+                status = if (clearRuntime) null else task.status,
+                startTime = if (clearRuntime) null else task.startTime,
+                endTime = if (clearRuntime) null else task.endTime,
+                timestamps = if (clearRuntime) mapOf() else task.timestamps,
+                asyncStatus = if (clearRuntime) null else task.asyncStatus
             )
         }
         batchSave(ctx, listOf(newContainer), newTasks)
