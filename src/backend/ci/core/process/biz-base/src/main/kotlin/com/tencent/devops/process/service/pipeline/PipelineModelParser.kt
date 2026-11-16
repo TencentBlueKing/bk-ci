@@ -283,7 +283,8 @@ class PipelineModelParser @Autowired constructor(
                         )
                     }
                     logger.info(
-                        "parse template descriptor by version name|$projectId|$templateId|$templateVersionName"
+                        "parse template descriptor by version name|$projectId|$templateId|" +
+                                "$templateVersionName|$parsedTemplateId|$parsedTemplateVersion"
                     )
                     pipelineTemplateInfoDao.get(
                         dslContext = dslContext,
@@ -293,6 +294,25 @@ class PipelineModelParser @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
                         params = arrayOf(templateId!!)
                     )
+                    // 同一版本名可能对应多个版本(如分支版本),已解析过的版本需锁定,只有重新实例化才更新
+                    parsedTemplateVersion?.takeIf { parsedTemplateId == templateId }?.let { parsedVersion ->
+                        val parsedResource = pipelineTemplateResourceDao.getLatestRecord(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            templateId = templateId!!,
+                            version = parsedVersion
+                        ) ?: throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND,
+                            params = arrayOf(templateId!!, parsedVersion.toString())
+                        )
+                        if (parsedResource.versionName == templateVersionName) {
+                            return parsedResource
+                        }
+                        logger.info(
+                            "template version name changed, parse by version name|$projectId|$templateId|" +
+                                    "$parsedVersion|${parsedResource.versionName}|$templateVersionName"
+                        )
+                    }
                     pipelineTemplateResourceDao.getLatestRecord(
                         dslContext = dslContext,
                         projectId = projectId,
