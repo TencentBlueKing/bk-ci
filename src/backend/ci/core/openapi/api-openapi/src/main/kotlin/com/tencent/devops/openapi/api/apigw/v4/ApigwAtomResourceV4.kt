@@ -241,7 +241,10 @@ interface ApigwAtomResourceV4 {
         @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "英文逗号分隔的检索词，最多 8 个，例如 COS,对象存储,上传,upload", required = true)
+        @Parameter(
+            description = "检索词，逗号、顿号或空白分隔，最多 8 个，例如 COS,对象存储,上传,upload；等于插件代码或插件名时置顶",
+            required = true
+        )
         @QueryParam("keywords")
         keywords: String,
         @Parameter(description = "job类型：AGENT（编译环境）/ AGENT_LESS（无编译环境）", required = false)

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.atom.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.util.AtomSelectScorer
 import com.tencent.devops.store.common.dao.StoreComponentContractDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -38,12 +39,13 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 /**
- * 插件契约选型字段的本地缓存。多实例部署时其他实例最多滞后一个过期周期
+ * 插件契约选型字段和插件名称的本地缓存。多实例部署时其他实例最多滞后一个过期周期
  */
 @Component
 class AtomSelectionIndexCache @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeComponentContractDao: StoreComponentContractDao
+    private val storeComponentContractDao: StoreComponentContractDao,
+    private val atomDao: AtomDao
 ) {
 
     private val cache = Caffeine.newBuilder()
@@ -51,9 +53,27 @@ class AtomSelectionIndexCache @Autowired constructor(
         .expireAfterWrite(EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build<String, List<AtomSelectScorer.Entry>>()
 
+    private val nameCache = Caffeine.newBuilder()
+        .maximumSize(1)
+        .expireAfterWrite(EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, Map<String, List<String>>>()
+
     fun entries(): List<AtomSelectScorer.Entry> = cache.get(KEY) { load() }
 
+    /**
+     * 插件名（去空白、转小写）到插件代码的映射，同名插件都保留
+     */
+    fun codesByName(): Map<String, List<String>> = nameCache.get(KEY) { loadNames() }
+
     fun invalidate() = cache.invalidate(KEY)
+
+    private fun loadNames(): Map<String, List<String>> {
+        val names = atomDao.listLatestAtomNames(dslContext)
+        logger.info("atom name index loaded|${names.size}")
+        return names.entries
+            .filter { it.value.isNotBlank() }
+            .groupBy({ AtomSelectScorer.normalizeName(it.value) }, { it.key })
+    }
 
     private fun load(): List<AtomSelectScorer.Entry> {
         val records = storeComponentContractDao.listSelectionFields(dslContext, StoreTypeEnum.ATOM)

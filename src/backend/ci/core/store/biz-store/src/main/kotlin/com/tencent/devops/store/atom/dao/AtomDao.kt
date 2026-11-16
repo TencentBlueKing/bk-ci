@@ -1513,6 +1513,20 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    /**
+     * 列出全部未删除插件最新版本的名称，供选型检索按名称精确置顶
+     */
+    fun listLatestAtomNames(dslContext: DSLContext): Map<String, String> {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ATOM_CODE, NAME)
+                .from(this)
+                .where(LATEST_FLAG.eq(true))
+                .and(DELETE_FLAG.eq(false))
+                .fetch()
+                .associate { it.value1() to it.value2() }
+        }
+    }
+
     fun getAtomCodeSrc(dslContext: DSLContext, atomCode: String): String? {
         with(TAtom.T_ATOM) {
             return dslContext.select(CODE_SRC)
