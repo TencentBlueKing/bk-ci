@@ -164,6 +164,15 @@ private data class ServiceScopeResolvedFields(
     val osWriteResult: OsWriteResult
 )
 
+/**
+ * 插件名称索引快照：主键 ID 用于游标翻页，atomCode/name 用于名称精确匹配
+ */
+data class AtomNameSnapshot(
+    val id: String,
+    val atomCode: String,
+    val name: String
+)
+
 @Suppress("ALL")
 @Repository
 class AtomDao : AtomBaseDao() {
@@ -1514,16 +1523,27 @@ class AtomDao : AtomBaseDao() {
     }
 
     /**
-     * 列出全部未删除插件最新版本的名称，供选型检索按名称精确置顶
+     * 按主键 ID 游标取一批未删除插件最新版本的 code/name。
+     * 分批循环放在业务层，DAO 只负责单批查询，避免一次 fetch 出全量结果。
      */
-    fun listLatestAtomNames(dslContext: DSLContext): Map<String, String> {
+    fun listLatestAtomNamesAfterId(
+        dslContext: DSLContext,
+        afterId: String?,
+        limit: Int
+    ): List<AtomNameSnapshot> {
         with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, NAME)
+            val conditions = mutableListOf(
+                LATEST_FLAG.eq(true),
+                DELETE_FLAG.eq(false)
+            )
+            afterId?.let { conditions.add(ID.gt(it)) }
+            return dslContext.select(ID, ATOM_CODE, NAME)
                 .from(this)
-                .where(LATEST_FLAG.eq(true))
-                .and(DELETE_FLAG.eq(false))
+                .where(conditions)
+                .orderBy(ID.asc())
+                .limit(limit)
                 .fetch()
-                .associate { it.value1() to it.value2() }
+                .map { AtomNameSnapshot(id = it.value1(), atomCode = it.value2(), name = it.value3()) }
         }
     }
 
@@ -1805,5 +1825,10 @@ class AtomDao : AtomBaseDao() {
                     Pair(it.value1() as String, it.value2())
                 }
         }
+    }
+
+    companion object {
+        // 名称索引单批拉取上限，防止一次查询把全量插件名读进内存
+        const val ATOM_NAME_BATCH_LIMIT = 500
     }
 }

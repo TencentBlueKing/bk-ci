@@ -68,8 +68,29 @@ class AtomSelectionIndexCache @Autowired constructor(
     fun invalidate() = cache.invalidate(KEY)
 
     private fun loadNames(): Map<String, List<String>> {
-        val names = atomDao.listLatestAtomNames(dslContext)
-        logger.info("atom name index loaded|${names.size}")
+        val names = LinkedHashMap<String, String>()
+        var afterId: String? = null
+        var batchCount = 0
+        while (true) {
+            val batch = atomDao.listLatestAtomNamesAfterId(
+                dslContext = dslContext,
+                afterId = afterId,
+                limit = AtomDao.ATOM_NAME_BATCH_LIMIT
+            )
+            if (batch.isEmpty()) {
+                break
+            }
+            batchCount++
+            batch.forEach { snapshot ->
+                // putIfAbsent：脏数据出现同一 atomCode 多条最新记录时保留先拉到的一条
+                names.putIfAbsent(snapshot.atomCode, snapshot.name)
+            }
+            afterId = batch.last().id
+            if (batch.size < AtomDao.ATOM_NAME_BATCH_LIMIT) {
+                break
+            }
+        }
+        logger.info("atom name index loaded|${names.size}|batches=$batchCount")
         return names.entries
             .filter { it.value.isNotBlank() }
             .groupBy({ AtomSelectScorer.normalizeName(it.value) }, { it.key })
