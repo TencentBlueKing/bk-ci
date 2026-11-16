@@ -346,7 +346,7 @@ object WeworkReviewCardBuilder {
                 cardAction = cardAction,
                 buttonList = listOf(
                     WeworkTemplateCardButton(
-                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_CONFIRM, "确认提交"),
+                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_CONFIRM, "同意"),
                         style = 1,
                         type = 0,
                         key = WeworkReviewCardConst.buttonKey(
@@ -355,7 +355,7 @@ object WeworkReviewCardBuilder {
                         )
                     ),
                     WeworkTemplateCardButton(
-                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_EDIT, "修改参数"),
+                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_EDIT, "修改"),
                         style = 3,
                         type = 1,
                         url = modifyUrl
