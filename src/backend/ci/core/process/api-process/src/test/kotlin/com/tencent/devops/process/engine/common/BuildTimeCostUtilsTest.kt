@@ -114,7 +114,13 @@ internal class BuildTimeCostUtilsTest {
         val start = LocalDateTime.now().minusSeconds(10)
         val container = genContainer(start = start, end = start.plusSeconds(5))
         val (cost, _) = container.generateContainerTimeCost(
-            listOf(genReviewTask(start = start, end = start.plusSeconds(6), reviewWait = BuildRecordTimeStamp(null, null)))
+            listOf(
+                genReviewTask(
+                    start = start,
+                    end = start.plusSeconds(6),
+                    reviewWait = BuildRecordTimeStamp(null, null)
+                )
+            )
         )
         Assertions.assertEquals(6000L, cost?.totalCost)
         Assertions.assertEquals(6000L, cost?.executeCost)
