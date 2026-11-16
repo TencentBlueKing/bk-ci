@@ -78,20 +78,23 @@ object BuildTimeCostUtils {
     ): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, containerRecords.map { it.startTime to it.endTime }
+        )
+        val totalCost = windowEnd - windowStart
         val (executeMoments, waitMoments, queueMoments) = mergeContainerTimeLines(containerRecords)
         val stageCheckWaitMoments = mutableListOf<BuildRecordTimeLine.Moment>()
         timestamps.toList().forEach { (type, time) ->
             if (!type.stageCheckWait()) return@forEach
             logWhenNull(time, "$buildId|STAGE|$stageId|${type.name}")
             // 准入、准出审核期间构建被终止时审核时间戳没有收尾，按阶段的结束时刻补齐
-            time.fixEndTime(endTime.timestampmilli()).insert2TimeLine(stageCheckWaitMoments)
+            time.fixEndTime(windowEnd).insert2TimeLine(stageCheckWaitMoments)
         }
         return partitionTimeCost(
             totalCost = totalCost,
-            executeMoments = executeMoments,
-            waitMoments = mergeTimeLine(waitMoments, stageCheckWaitMoments),
-            queueMoments = queueMoments,
+            executeMoments = executeMoments.clampTo(windowStart, windowEnd),
+            waitMoments = mergeTimeLine(waitMoments, stageCheckWaitMoments).clampTo(windowStart, windowEnd),
+            queueMoments = queueMoments.clampTo(windowStart, windowEnd),
             // Job 排队发生在 Stage 墙钟内，归入等待，避免并行时被交集算法丢进系统耗时
             queueInWait = true
         )
@@ -102,14 +105,17 @@ object BuildTimeCostUtils {
     ): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, containerRecords.map { it.startTime to it.endTime }
+        )
+        val totalCost = windowEnd - windowStart
         val (executeMoments, waitMoments, queueMoments) = mergeContainerTimeLines(containerRecords)
         // 矩阵子 Job 并行。卡片上的四项互斥，相加等于总耗时。
         return partitionTimeCost(
             totalCost = totalCost,
-            executeMoments = executeMoments,
-            waitMoments = waitMoments,
-            queueMoments = queueMoments,
+            executeMoments = executeMoments.clampTo(windowStart, windowEnd),
+            waitMoments = waitMoments.clampTo(windowStart, windowEnd),
+            queueMoments = queueMoments.clampTo(windowStart, windowEnd),
             queueInWait = false
         )
     }
@@ -125,14 +131,17 @@ object BuildTimeCostUtils {
         val containerTimeLine = BuildRecordTimeLine()
         val startTime = startTime ?: taskRecords.firstOrNull()?.startTime ?: return Pair(null, containerTimeLine)
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, taskRecords.map { it.startTime to it.endTime }
+        )
+        val totalCost = windowEnd - windowStart
         timestamps.toList().forEach { (type, time) ->
             if (!type.containerCheckQueue()) return@forEach
             logWhenNull(
                 time, "$buildId|CONTAINER|$containerId|${type.name}"
             )
             // 互斥、构建机资源排队期间 Job 被取消或超时时排队时间戳没有收尾，按 Job 的结束时刻补齐
-            time.fixEndTime(endTime.timestampmilli()).insert2TimeLine(containerTimeLine.queueCostMoments)
+            time.fixEndTime(windowEnd).insert2TimeLine(containerTimeLine.queueCostMoments)
         }
         taskRecords.forEach { record ->
             val taskTimeLine = BuildRecordTimeLine()
@@ -141,6 +150,8 @@ object BuildTimeCostUtils {
             containerTimeLine.waitCostMoments.addAll(taskTimeLine.waitCostMoments)
             containerTimeLine.executeCostMoments.addAll(taskTimeLine.executeCostMoments)
         }
+        // 时间线会被上层 Stage 聚合，裁剪后存，保证各层的子区间都落在自己的墙钟窗口内
+        containerTimeLine.clampTo(windowStart, windowEnd)
         return Pair(
             partitionTimeCost(
                 totalCost = totalCost,
@@ -217,6 +228,48 @@ object BuildTimeCostUtils {
             return cost
         }
         return (jobCosts.keys + dependencies.keys).maxOfOrNull { longest(it) } ?: 0L
+    }
+
+    /**
+     * 父层的墙钟窗口必须盖住子层，否则用户耗时会超过总耗时，系统耗时被挤成负数后夹到 0，四项相加也对不上。
+     *
+     * 各层的起止时刻由不同的消费者各自写入，子层探出父层记录窗口几十到几百毫秒是常态：
+     * 典型如无编译环境里只有一个人工审核插件的 Job，插件先被置为运行中，Job 记录随后才刷新开始时间。
+     * 这里按记录窗口与子层窗口的并集取，只认有开始时刻的子层（跳过未执行的）。
+     */
+    private fun coverChildren(
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        children: List<Pair<LocalDateTime?, LocalDateTime?>>
+    ): Pair<Long, Long> {
+        var windowStart = startTime.timestampmilli()
+        var windowEnd = endTime.timestampmilli()
+        children.forEach { (childStart, childEnd) ->
+            if (childStart == null) return@forEach
+            windowStart = minOf(windowStart, childStart.timestampmilli())
+            childEnd?.let { windowEnd = maxOf(windowEnd, it.timestampmilli()) }
+        }
+        return Pair(windowStart, maxOf(windowStart, windowEnd))
+    }
+
+    /**
+     * 把子区间裁剪到 [[start], [end]] 窗口内，落在窗口外的部分丢弃，裁空的区间不保留
+     */
+    private fun List<BuildRecordTimeLine.Moment>.clampTo(
+        start: Long,
+        end: Long
+    ): List<BuildRecordTimeLine.Moment> = mapNotNull { moment ->
+        val momentStart = moment.startTime.coerceIn(start, end)
+        val momentEnd = moment.endTime.coerceIn(start, end)
+        if (momentEnd > momentStart) BuildRecordTimeLine.Moment(momentStart, momentEnd) else null
+    }
+
+    private fun BuildRecordTimeLine.clampTo(start: Long, end: Long) {
+        listOf(executeCostMoments, waitCostMoments, queueCostMoments).forEach { moments ->
+            val clamped = moments.clampTo(start, end)
+            moments.clear()
+            moments.addAll(clamped)
+        }
     }
 
     private fun mergeContainerTimeLines(

@@ -2,9 +2,12 @@ package com.tencent.devops.process.engine.common
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -82,6 +85,99 @@ internal class BuildTimeCostUtilsTest {
         taskVar = mutableMapOf(), classType = "manualReviewUserTask", atomCode = "manualReviewUserTask",
         startTime = start, endTime = end,
         timestamps = mapOf(BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to reviewWait)
+    )
+
+    /**
+     * Job 记录和它名下步骤记录由不同消费者写入，步骤可能先于 Job 记录被置为运行中
+     * （无编译环境里只有一个人工审核插件的 Job 必现）。Job 的墙钟窗口要盖住步骤，
+     * 否则总耗时会小于用户耗时，系统耗时被夹成 0，四项相加也对不上
+     */
+    @Test
+    fun containerWindowCoversTaskStartedBeforeJobRecord() {
+        val taskStart = LocalDateTime.now().minusSeconds(10)
+        val taskEnd = taskStart.plusNanos(9026L * 1000 * 1000)
+        val container = genContainer(start = taskStart.plusNanos(166L * 1000 * 1000), end = taskEnd)
+        val (cost, _) = container.generateContainerTimeCost(
+            listOf(genReviewTask(start = taskStart, end = taskEnd, reviewWait = BuildRecordTimeStamp(null, null)))
+        )
+        Assertions.assertEquals(9026L, cost?.totalCost)
+        Assertions.assertEquals(9026L, cost?.executeCost)
+        Assertions.assertEquals(0L, cost?.systemCost)
+        assertCostBalanced(cost)
+    }
+
+    /**
+     * 步骤异步收尾晚于 Job 记录的结束时刻，窗口同样要跟着扩
+     */
+    @Test
+    fun containerWindowCoversTaskEndedAfterJobRecord() {
+        val start = LocalDateTime.now().minusSeconds(10)
+        val container = genContainer(start = start, end = start.plusSeconds(5))
+        val (cost, _) = container.generateContainerTimeCost(
+            listOf(genReviewTask(start = start, end = start.plusSeconds(6), reviewWait = BuildRecordTimeStamp(null, null)))
+        )
+        Assertions.assertEquals(6000L, cost?.totalCost)
+        Assertions.assertEquals(6000L, cost?.executeCost)
+        assertCostBalanced(cost)
+    }
+
+    /**
+     * 步骤落在 Job 窗口内时窗口不变，Job 启动、回收的空档仍算系统耗时
+     */
+    @Test
+    fun containerWindowKeepsSystemCostWhenTaskInside() {
+        val start = LocalDateTime.now().minusSeconds(20)
+        val container = genContainer(start = start, end = start.plusSeconds(10))
+        val (cost, timeLine) = container.generateContainerTimeCost(
+            listOf(
+                genReviewTask(
+                    start = start.plusSeconds(2),
+                    end = start.plusSeconds(8),
+                    reviewWait = BuildRecordTimeStamp(null, null)
+                )
+            )
+        )
+        Assertions.assertEquals(10000L, cost?.totalCost)
+        Assertions.assertEquals(6000L, cost?.executeCost)
+        Assertions.assertEquals(4000L, cost?.systemCost)
+        Assertions.assertEquals(1, timeLine.executeCostMoments.size)
+        assertCostBalanced(cost)
+    }
+
+    /**
+     * Job 还在跑（没有结束时刻）时按当前时刻算，各项依然自洽
+     */
+    @Test
+    fun runningContainerTimeCostBalanced() {
+        val start = LocalDateTime.now().minusSeconds(10)
+        val container = genContainer(start = start, end = null)
+        val (cost, _) = container.generateContainerTimeCost(
+            listOf(genReviewTask(start = start, end = null, reviewWait = BuildRecordTimeStamp(null, null)))
+        )
+        Assertions.assertTrue((cost?.totalCost ?: 0) >= (cost?.executeCost ?: 0))
+        assertCostBalanced(cost)
+    }
+
+    private fun assertCostBalanced(cost: BuildRecordTimeCost?) {
+        Assertions.assertNotNull(cost)
+        cost!!
+        Assertions.assertTrue(cost.totalCost >= cost.executeCost, "总耗时不能小于用户耗时")
+        Assertions.assertEquals(
+            cost.totalCost,
+            cost.executeCost + cost.waitCost + cost.queueCost + cost.systemCost,
+            "四项相加应等于总耗时"
+        )
+    }
+
+    private fun genContainer(
+        start: LocalDateTime?,
+        end: LocalDateTime?,
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp> = mapOf()
+    ) = BuildRecordContainer(
+        buildId = "b-1", projectId = "p-1", pipelineId = "pl-1", resourceVersion = 1,
+        stageId = "stage-1", containerId = "1", executeCount = 1,
+        containerVar = mutableMapOf(), containerType = "normal",
+        startTime = start, endTime = end, timestamps = timestamps
     )
 
     @Test
