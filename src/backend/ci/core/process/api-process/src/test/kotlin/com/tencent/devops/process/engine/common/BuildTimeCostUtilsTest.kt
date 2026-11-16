@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -163,6 +164,53 @@ internal class BuildTimeCostUtilsTest {
             listOf(genReviewTask(start = start, end = null, reviewWait = BuildRecordTimeStamp(null, null)))
         )
         Assertions.assertTrue((cost?.totalCost ?: 0) >= (cost?.executeCost ?: 0))
+        assertCostBalanced(cost)
+    }
+
+    /**
+     * 矩阵子 Job 局部重试时，没有重跑的插件会连同上一轮的起止一起被复制进本轮记录。
+     * 这种整段落在本轮开始之前的步骤不能拉伸 Job 的墙钟窗口，否则两轮之间等人重试的空档
+     * 会被算成本轮的系统耗时（现象：卡片上几十分钟的系统耗时，用户耗时只有一两秒）
+     */
+    @Test
+    fun containerWindowIgnoresPreviousRoundTaskRecords() {
+        val roundStart = LocalDateTime.now().minusMinutes(5)
+        val container = genContainer(start = roundStart, end = roundStart.plusMinutes(5))
+        val (cost, _) = container.generateContainerTimeCost(
+            listOf(
+                // 上一轮跑过、本轮没重跑的步骤
+                genReviewTask(
+                    start = roundStart.minusMinutes(25),
+                    end = roundStart.minusMinutes(24),
+                    reviewWait = BuildRecordTimeStamp(null, null)
+                ),
+                genReviewTask(
+                    start = roundStart.plusMinutes(1),
+                    end = roundStart.plusMinutes(2),
+                    reviewWait = BuildRecordTimeStamp(null, null)
+                )
+            )
+        )
+        Assertions.assertEquals(300_000L, cost?.totalCost)
+        Assertions.assertEquals(60_000L, cost?.executeCost)
+        Assertions.assertEquals(240_000L, cost?.systemCost)
+        assertCostBalanced(cost)
+    }
+
+    /**
+     * 矩阵组的窗口同样不被上一轮残留的子 Job 记录拉长
+     */
+    @Test
+    fun matrixWindowIgnoresPreviousRoundContainerRecords() {
+        val roundStart = LocalDateTime.now().minusMinutes(5)
+        val matrix = genContainer(start = roundStart, end = roundStart.plusMinutes(5))
+        val cost = matrix.generateMatrixTimeCost(
+            listOf(
+                genContainer(start = roundStart.minusMinutes(25), end = roundStart.minusMinutes(24)),
+                genContainer(start = roundStart.plusMinutes(1), end = roundStart.plusMinutes(2))
+            )
+        )
+        Assertions.assertEquals(300_000L, cost?.totalCost)
         assertCostBalanced(cost)
     }
 

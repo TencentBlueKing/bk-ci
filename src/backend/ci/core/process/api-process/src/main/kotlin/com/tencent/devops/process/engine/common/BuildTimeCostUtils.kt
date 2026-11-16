@@ -243,6 +243,10 @@ object BuildTimeCostUtils {
      * 各层的起止时刻由不同的消费者各自写入，子层探出父层记录窗口几十到几百毫秒是常态：
      * 典型如无编译环境里只有一个人工审核插件的 Job，插件先被置为运行中，Job 记录随后才刷新开始时间。
      * 这里按记录窗口与子层窗口的并集取，只认有开始时刻的子层（跳过未执行的）。
+     *
+     * 整个区间都落在本层开始之前的子层不算数：矩阵子 Job 局部重试时，没有重跑的插件会连同上一轮的
+     * 起止一起被复制进本轮记录，拿它去拉伸窗口，两轮之间等人重试的空档又会被算成本轮的系统耗时。
+     * 真正该补的那种探出只有几十到几百毫秒，区间一定延续到本层开始之后。
      */
     private fun coverChildren(
         startTime: LocalDateTime,
@@ -253,8 +257,10 @@ object BuildTimeCostUtils {
         var windowEnd = endTime.timestampmilli()
         children.forEach { (childStart, childEnd) ->
             if (childStart == null) return@forEach
+            val childEndMilli = childEnd?.timestampmilli()
+            if (childEndMilli != null && childEndMilli < startTime.timestampmilli()) return@forEach
             windowStart = minOf(windowStart, childStart.timestampmilli())
-            childEnd?.let { windowEnd = maxOf(windowEnd, it.timestampmilli()) }
+            childEndMilli?.let { windowEnd = maxOf(windowEnd, it) }
         }
         return Pair(windowStart, maxOf(windowStart, windowEnd))
     }
