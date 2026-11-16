@@ -68,7 +68,12 @@
             :pipeline-id="$route.params.pipelineId"
             :pipeline-name="pipelineName"
             :lock="isCurPipelineLocked"
-            :pac-enabled="pacEnabled"
+            :yaml-locked="isCurPipelineYamlLocked"
+            :lock-user="pipelineInfo?.lockUser"
+            :lock-time="pipelineInfo?.lockTime"
+            :lock-reason="pipelineInfo?.lockReason"
+            :yaml-info="yamlInfo"
+            :yaml-branch-name="yamlBranchName"
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
         />
@@ -115,20 +120,27 @@
             }
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo', 'activePipelineVersion']),
             ...mapState('pipelines', ['pipelineActionState']),
-            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
+            ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked', 'isCurPipelineYamlLocked', 'isBranchVersion']),
             ...mapState('common', [
                 'hasProjectPermission'
             ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
+            // 当前查看的是分支版本时，YAML 禁用提示需展示分支名
+            yamlBranchName () {
+                return this.isBranchVersion ? (this.activePipelineVersion?.versionName || '') : ''
+            },
             pipelineName () {
                 return this.pipelineInfo?.pipelineName ?? ''
             },
             curPipelineId () {
                 return this.pipelineInfo?.pipelineId
+            },
+            yamlInfo () {
+                return this.pipelineInfo?.yamlInfo ?? {}
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
@@ -231,7 +243,7 @@
                     ],
                     [
                         {
-                            label: this.isCurPipelineLocked ? 'enable' : 'disable',
+                            label: this.isCurPipelineLocked || this.isCurPipelineYamlLocked ? 'enable' : 'disable',
                             handler: () => this.disablePipeline(),
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,

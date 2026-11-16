@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.atom.AtomSelectResp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -251,4 +252,31 @@ interface ServiceAtomResource {
         @QueryParam("pageSize")
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
+
+    @Operation(summary = "按检索词从全商店召回有运行时契约的候选插件")
+    @GET
+    @Path("/projectCodes/{projectCode}/select")
+    fun selectAtoms(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "英文逗号分隔的检索词，最多 8 个", required = true)
+        @QueryParam("keywords")
+        keywords: String,
+        @Parameter(description = "job类型：AGENT / AGENT_LESS", required = false)
+        @QueryParam("jobType")
+        jobType: String?,
+        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @QueryParam("os")
+        os: String?,
+        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @QueryParam("category")
+        category: String? = AtomCategoryEnum.TASK.name,
+        @Parameter(description = "返回条数，1～20", required = false)
+        @QueryParam("limit")
+        limit: Int? = null
+    ): Result<AtomSelectResp>
 }

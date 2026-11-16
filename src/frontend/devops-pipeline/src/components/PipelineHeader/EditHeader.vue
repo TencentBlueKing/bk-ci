@@ -79,7 +79,12 @@
                 }"
                 @click="exec(true)"
             >
-                {{ $t("debug") }}
+                <span
+                    v-bk-tooltips="{
+                        content: $t('draftYamlLockedTips'),
+                        disabled: !isCurPipelineYamlLocked
+                    }"
+                >{{ $t("debug") }}</span>
             </bk-button>
             <PipelineEditMoreAction
                 :can-debug="canDebug"
@@ -130,7 +135,7 @@
         data () {
             return {
                 lasterDraftInfo: null,
-                isConflictDraft: false,
+                isConflictDraft: false
             }
         },
         computed: {
@@ -148,6 +153,7 @@
             ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName'
@@ -165,7 +171,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             canDebug () {
-                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
+                return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked && !this.isCurPipelineYamlLocked
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion ?? ''
@@ -366,7 +372,7 @@
                 normalizePipelineModel(pipeline)
 
                 // 请求执行构建
-                const { version } = await this.saveDraftPipeline({
+                const res = await this.saveDraftPipeline({
                     projectId,
                     pipelineId,
                     baseVersion: this.pipelineInfo?.baseVersion,
@@ -375,10 +381,13 @@
                     modelAndSetting,
                     yaml: pipelineYaml
                 })
+                const { version, yamlLocked } = res?.data ?? {}
                 await this.savePipelineSnapshot()
                 this.setPipelineEditing(false)
 
                 await this.requestPipelineSummary(this.$route.params)
+                // 保存草稿后以草稿返回的 yamlLocked 为准（summary 为流水线级摘要，会覆盖版本接口的值）
+                this.$store.commit('atom/UPDATE_PIPELINE_INFO', { yamlLocked: !!yamlLocked })
                 this.$router.replace({
                     params: {
                         ...this.$route.params,

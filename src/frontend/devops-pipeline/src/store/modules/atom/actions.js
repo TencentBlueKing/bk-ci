@@ -24,7 +24,7 @@ import {
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from '@/store/constants'
-import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
+import { CODE_MODE, UI_MODE, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { areDeeplyEqual, hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
@@ -86,6 +86,7 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
+    UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
@@ -147,6 +148,20 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
     }
 
+    // 切换版本时同步 YAML 禁用状态（版本接口仅返回 yamlLocked，如 a 版本禁用但分支版本未必禁用）
+    if (pipelineRes?.yamlLocked !== undefined) {
+        commit(UPDATE_PIPELINE_INFO, { yamlLocked: pipelineRes.yamlLocked })
+    }
+    // 初始进入分支版本页面时 activePipelineVersion 为空（仅手动切换/执行预览时设置），
+    // 用版本详情响应初始化，保证 isBranchVersion 判断及分支名展示在初始进入时就正确
+    if (!state.activePipelineVersion && pipelineRes?.versionStatus === VERSION_STATUS_ENUM.BRANCH) {
+        commit(SELECT_PIPELINE_VERSION, {
+            version: pipelineRes.version,
+            versionName: pipelineRes.versionName,
+            status: pipelineRes.versionStatus
+        })
+    }
+
     setTimeout(() => {
         dispatch('savePipelineSnapshot')
     }, 500) // 延迟500ms确保所有组件初始化和副作用完成
@@ -177,7 +192,7 @@ export default {
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
-    requestPipelineSummary ({ commit }, { projectId, pipelineId, archiveFlag }) {
+    requestPipelineSummary ({ commit, state }, { projectId, pipelineId, archiveFlag }) {
         let url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
 
         if (archiveFlag !== undefined && archiveFlag !== null) {
@@ -185,6 +200,13 @@ export default {
         }
 
         return request.get(url).then(response => {
+            // 当前查看的是分支版本时，yamlLocked 以版本接口为准，summary（detail）刷新时保留版本接口写入的值
+            if (state.activePipelineVersion?.status === VERSION_STATUS_ENUM.BRANCH) {
+                response.data = {
+                    ...response.data,
+                    yamlLocked: state.pipelineInfo?.yamlLocked ?? false
+                }
+            }
             commit(SET_PIPELINE_INFO, response.data)
             return response.data
         })

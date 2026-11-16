@@ -360,7 +360,13 @@ export const EVENT_DESC_PARAM_MAPPERS = {
     bkTapdGenericEventDesc: tapdGenericParams,
     bkArtifactFileArrivedEventDesc: artifactArrivedParams,
     bkArtifactFolderArrivedEventDesc: artifactArrivedParams,
-    bkArtifactImageArrivedEventDesc: artifactImageArrivedParams
+    bkArtifactImageArrivedEventDesc: artifactImageArrivedParams,
+    // 云桌面事件：{0}=云桌面名, {1}=触发用户, {2}=操作
+    bkCdsTriggerDesc: mapParams({
+        name: textParam(0),
+        user: userParam(1),
+        action: textParam(2)
+    })
 }
 
 /**

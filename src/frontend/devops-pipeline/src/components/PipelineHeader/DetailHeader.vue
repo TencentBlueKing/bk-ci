@@ -44,7 +44,7 @@
             <template v-else-if="!isDebugExec">
                 <bk-dropdown-menu
                     trigger="click"
-                    :disabled="loading || isCurPipelineLocked"
+                    :disabled="loading || isCurPipelineLocked || isCurPipelineYamlLocked"
                 >
                     <div
                         class="rebuild-dropdown-trigger"
@@ -63,7 +63,7 @@
                     >
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked
+                                'disabled': loading || isCurPipelineLocked || isCurPipelineYamlLocked
                             }]"
                             v-perm="{
                                 hasPermission: canExecute,
@@ -91,7 +91,7 @@
                         </li>
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked || replayChecking
+                                'disabled': loading || isCurPipelineLocked || replayChecking || isCurPipelineYamlLocked
                             }]"
                             v-perm="{
                                 hasPermission: canExecute,
@@ -189,7 +189,7 @@
                 >
                     <li
                         :class="['dropdown-item', {
-                            'disabled': reuseParamsLoading || isCurPipelineLocked
+                            'disabled': reuseParamsLoading || isCurPipelineLocked || isCurPipelineYamlLocked
                         }]"
                         v-perm="{
                             hasPermission: canExecute,
@@ -287,7 +287,8 @@
             ...mapState('atom', ['execDetail', 'pipelineInfo', 'saveStatus', 'execInfo']),
             ...mapState('common', ['hasDraft']),
             ...mapGetters({
-                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isCurPipelineYamlLocked: 'atom/isCurPipelineYamlLocked'
             }),
             ...mapState('pipelines', ['executeStatus']),
             RESOURCE_ACTION () {
@@ -632,7 +633,7 @@
             },
 
             async handleReuseParamsExecute () {
-                if (this.reuseParamsLoading || this.isCurPipelineLocked) return
+                if (this.reuseParamsLoading || this.isCurPipelineLocked || this.isCurPipelineYamlLocked) return
                 try {
                     this.reuseParamsLoading = true
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params

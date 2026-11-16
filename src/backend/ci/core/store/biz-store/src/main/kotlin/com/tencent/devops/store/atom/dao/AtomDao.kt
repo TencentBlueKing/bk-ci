@@ -131,7 +131,9 @@ data class AtomQueryParam(
     val queryFitAgentBuildLessAtomFlag: Boolean?,
     val queryProjectAtomFlag: Boolean = true,
     val installed: Boolean? = null,
-    val ownerStoreCode: String? = null
+    val ownerStoreCode: String? = null,
+    // 仅内部调用使用，对外接口不要暴露
+    val atomCodes: Collection<String>? = null
 )
 
 /**
@@ -1031,6 +1033,7 @@ class AtomDao : AtomBaseDao() {
         if (!param.ownerStoreCode.isNullOrEmpty()) {
             conditions.add(tAtom.OWNER_STORE_CODE.eq(param.ownerStoreCode))
         }
+        param.atomCodes?.let { conditions.add(tAtom.ATOM_CODE.`in`(it)) }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
         return conditions
     }

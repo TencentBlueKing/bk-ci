@@ -418,6 +418,7 @@
                     >
                         <bk-button
                             v-if="retryable(props.row)"
+                            :disabled="isCurPipelineLocked"
                             text
                             theme="primary"
                             size="small"

@@ -823,7 +823,8 @@
         "bkArtifactFolderArrivedEventDesc": "Artifact directory [{name}] {size}arrived, source {pipeline}, by {user}, {repo}",
         "bkArtifactImageArrivedEventDesc": "Image [{name}] arrived, source: {pipeline}, by {user}",
         "bkArtifactRepoPipeline": "Pipeline repository",
-        "bkArtifactRepoCustom": "Custom repository"
+        "bkArtifactRepoCustom": "Custom repository",
+        "bkCdsTriggerDesc": "Cloud Desktop [{name}] has the [{action}] operation performed by [{user}]"
       }
     },
     "delegation": {

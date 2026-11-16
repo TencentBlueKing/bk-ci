@@ -813,13 +813,16 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             }
         }
-        // 记录该构建取消人信息
-        pipelineBuildRecordService.updateBuildCancelUser(
-            projectId = projectId,
-            buildId = buildId,
-            executeCount = executeCount,
-            cancelUserId = userId
-        )
+        // 只把真人操作人记成取消人。系统取消的 userId 往往是构建启动人或新构建的触发人，
+        // 父级联再拿这个值往下传，就会把子流水线的权限代持人显示成取消人。
+        BuildEndInfo.inheritedCancelOperator(buildEndInfo, userId)?.let { cancelUserId ->
+            pipelineBuildRecordService.updateBuildCancelUser(
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = executeCount,
+                cancelUserId = cancelUserId
+            )
+        }
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
@@ -2404,7 +2407,8 @@ class PipelineRuntimeService @Autowired constructor(
                         ),
                     tag = "QueueInterceptor",
                     containerHashId = "",
-                    executeCount = 1,
+                    // 重试后的构建被并发挤出时，日志要落在当前执行次数上，否则只能在第 1 次里看到
+                    executeCount = buildInfo?.executeCount ?: 1,
                     jobId = null, stepId = "QueueInterceptor"
                 )
             }
