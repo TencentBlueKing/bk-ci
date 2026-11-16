@@ -273,6 +273,9 @@ class PipelineRecordModelService @Autowired constructor(
      * 跳过的记录一律不展示起止时间。跳过都是在真正执行之前判定的，区间里没有用户的执行。
      * 否则同样是「整段跳过」，带矩阵 Job 的阶段因为要下发矩阵父容器才能发现子 Job 全被跳过，
      * 真的进过运行态并留下起止时间，而只有普通 Job 的阶段在第一次事件里就判成跳过，两者展示不一致。
+     *
+     * 局部重试里从中途续上的 Stage、Job，准备本轮记录时已经把上一轮的起始时间写进了变量，
+     * 展示以它为准（本轮之前就开始了）；记录表上的起止只记本轮，留给耗时计算。
      */
     private fun putRuntimeTime(
         varMap: MutableMap<String, Any>,
@@ -280,9 +283,13 @@ class PipelineRecordModelService @Autowired constructor(
         startTime: LocalDateTime?,
         endTime: LocalDateTime?
     ) {
-        if (status == BuildStatus.SKIP.name) return
+        if (status == BuildStatus.SKIP.name) {
+            varMap.remove(START_TIME_FIELD)
+            varMap.remove(END_TIME_FIELD)
+            return
+        }
         val start = startTime ?: return
-        varMap[START_TIME_FIELD] = start.timestampmilli()
+        varMap.putIfAbsent(START_TIME_FIELD, start.timestampmilli())
         endTime?.let { varMap[END_TIME_FIELD] = it.timestampmilli() }
     }
 

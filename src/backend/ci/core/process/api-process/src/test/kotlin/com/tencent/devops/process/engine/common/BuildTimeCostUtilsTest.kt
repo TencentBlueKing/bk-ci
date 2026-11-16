@@ -5,9 +5,11 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -174,6 +176,58 @@ internal class BuildTimeCostUtilsTest {
             "四项相加应等于总耗时"
         )
     }
+
+    /**
+     * 局部重试：记录上的触发、起始时间继承自上一轮，页面要展示构建最初的起点，
+     * 但耗时只能算本轮，否则上一轮结束到这次重试之间等人处理的空档会被算成系统耗时
+     */
+    @Test
+    fun buildTimeCostCountsCurrentRoundOnly() {
+        val firstRoundQueue = LocalDateTime.now().minusDays(3)
+        val roundStart = LocalDateTime.now().minusMinutes(30)
+        val cost = genBuildModel(
+            queueTime = firstRoundQueue,
+            startTime = firstRoundQueue.plusSeconds(2),
+            endTime = roundStart.plusMinutes(30),
+            roundStart = roundStart
+        ).generateBuildTimeCost(emptyList())
+        Assertions.assertEquals(30 * 60 * 1000L, cost.totalCost)
+        // 本轮没有排队，上一轮的起始时间落在本轮窗口之前
+        Assertions.assertEquals(0L, cost.queueCost)
+        Assertions.assertEquals(30 * 60 * 1000L, cost.systemCost)
+    }
+
+    /**
+     * 第一次执行时本轮起点就是触发时刻，口径与原来一致
+     */
+    @Test
+    fun buildTimeCostFirstRoundKeepsQueueCost() {
+        val queueTime = LocalDateTime.now().minusMinutes(10)
+        val cost = genBuildModel(
+            queueTime = queueTime,
+            startTime = queueTime.plusMinutes(1),
+            endTime = queueTime.plusMinutes(10),
+            roundStart = queueTime
+        ).generateBuildTimeCost(emptyList())
+        Assertions.assertEquals(10 * 60 * 1000L, cost.totalCost)
+        Assertions.assertEquals(60 * 1000L, cost.queueCost)
+    }
+
+    private fun genBuildModel(
+        queueTime: LocalDateTime,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        roundStart: LocalDateTime
+    ) = BuildRecordModel(
+        buildId = "b-1", projectId = "p-1", pipelineId = "pl-1", resourceVersion = 1,
+        buildNum = 1, executeCount = 2, modelVar = mutableMapOf(),
+        queueTime = queueTime, startUser = "u", startType = "MANUAL",
+        startTime = startTime, endTime = endTime,
+        timestamps = mapOf(
+            BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                BuildRecordTimeStamp(roundStart.timestampmilli(), null)
+        )
+    )
 
     private fun genContainer(
         start: LocalDateTime?,

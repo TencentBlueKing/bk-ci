@@ -83,7 +83,9 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.criticalPathCost
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -197,6 +199,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val recordModelDao: BuildRecordModelDao,
+    private val recordStageDao: BuildRecordStageDao,
+    private val recordContainerDao: BuildRecordContainerDao,
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -1435,6 +1439,7 @@ class PipelineRuntimeService @Autowired constructor(
         } else {
             // 未指定重试起点即整条流水线重跑，起始时间留空，等触发阶段按当前时间写入。
             // 指定了起点（Stage/Job/插件续上）则继承上一轮的触发时间与起始时间，只让结束时间在本轮结束时重写。
+            // 耗时不按这对起止算：本轮真正的起点记在 BUILD_CONCURRENCY_QUEUE 时间戳上，见 BuildTimeCostUtils
             val previous = if (context.retryStartTaskId.isNullOrBlank()) {
                 null
             } else {
@@ -1475,22 +1480,22 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineContainerService.batchUpdate(
                 transactionContext, updateExistsContainer.map { it.first }
             )
-            saveContainerRecords(updateExistsContainer, containerBuildRecords, context.resourceVersion)
+            saveContainerRecords(transactionContext, updateExistsContainer, containerBuildRecords, context)
         }
         if (buildContainers.isNotEmpty()) {
             pipelineContainerService.batchSave(
                 transactionContext, buildContainers.map { it.first }
             )
-            saveContainerRecords(buildContainers, containerBuildRecords, context.resourceVersion)
+            saveContainerRecords(transactionContext, buildContainers, containerBuildRecords, context)
         }
 
         if (updateExistsStage.isNotEmpty()) {
             pipelineStageService.batchUpdate(transactionContext, updateExistsStage)
-            saveStageRecords(updateExistsStage, stageBuildRecords, context.resourceVersion)
+            saveStageRecords(transactionContext, updateExistsStage, stageBuildRecords, context)
         }
         if (buildStages.isNotEmpty()) {
             pipelineStageService.batchSave(transactionContext, buildStages)
-            saveStageRecords(buildStages, stageBuildRecords, context.resourceVersion)
+            saveStageRecords(transactionContext, buildStages, stageBuildRecords, context)
         }
         pipelineBuildRecordService.batchSave(
             transactionContext, modelRecord, stageBuildRecords,
@@ -1498,11 +1503,39 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    /**
+     * 取上一轮记录里展示用的起始时间。
+     *
+     * 不能拿运行时表的起始时间当展示值：那一列每轮开跑都会被重写（Job 超时监控、运行时耗时都依赖本轮的值），
+     * 续上第二次就会把展示的起点也带成上一轮的。记录表里的这个变量是一路继承下来的，取它才是最初那次的起点。
+     */
+    private fun inheritedStartTime(recordVar: Map<String, Any>, recordStartTime: LocalDateTime?): Long? {
+        return (recordVar[Container::startTime.name] as? Number)?.toLong() ?: recordStartTime?.timestampmilli()
+    }
+
+    /**
+     * 本轮续上了上一轮的 Job 时返回上一轮的记录，整体重跑、首次执行、运行中重试都返回 null。
+     * 运行时表的起始时间在整体重跑时已被清空，留着值就说明是中途续上。
+     */
+    private fun previousContainerRecord(
+        transactionContext: DSLContext,
+        build: PipelineBuildContainer,
+        context: StartBuildContext
+    ): BuildRecordContainer? {
+        if (context.retryOnRunningBuild || context.executeCount <= 1 || build.startTime == null) return null
+        return recordContainerDao.getLatestRecord(
+            dslContext = transactionContext, projectId = build.projectId, pipelineId = build.pipelineId,
+            buildId = build.buildId, containerId = build.containerId, executeCount = context.executeCount - 1
+        )
+    }
+
     private fun saveContainerRecords(
+        transactionContext: DSLContext,
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
-        resourceVersion: Int
+        context: StartBuildContext
     ) {
+        val resourceVersion = context.resourceVersion
         buildContainers.forEach { (build, detail) ->
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
@@ -1530,6 +1563,14 @@ class PipelineRuntimeService @Autowired constructor(
                     JsonUtil.toMutableMap(it)
                 }
             }
+            // 局部重试续上的 Job：记录表只留本轮的起止，否则两轮之间等人重试的空档会被算进本轮耗时；
+            // 最初那次的起始时间转存到变量里，只给详情页展示
+            val previous = previousContainerRecord(transactionContext, build, context)
+            if (previous != null) {
+                containerVar[Container::startTime.name] = inheritedStartTime(
+                    recordVar = previous.containerVar, recordStartTime = previous.startTime
+                ) ?: build.startTime!!.timestampmilli()
+            }
             containerBuildRecords.add(
                 BuildRecordContainer(
                     projectId = build.projectId, pipelineId = build.pipelineId,
@@ -1537,7 +1578,8 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
-                    matrixGroupId = build.matrixGroupId, status = null, startTime = build.startTime,
+                    matrixGroupId = build.matrixGroupId, status = null,
+                    startTime = if (previous != null) null else build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
@@ -1545,18 +1587,37 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun saveStageRecords(
+        transactionContext: DSLContext,
         updateStageExistsRecord: MutableList<PipelineBuildStage>,
         stageBuildRecords: MutableList<BuildRecordStage>,
-        resourceVersion: Int
+        context: StartBuildContext
     ) {
+        // 与 Job 同一口径：续上的 Stage 记录表只留本轮起止，最初那次的起始时间转存到变量里给展示用
+        val previousStages by lazy {
+            recordStageDao.getLatestRecords(
+                dslContext = transactionContext, projectId = context.projectId,
+                pipelineId = context.pipelineId, buildId = context.buildId,
+                executeCount = context.executeCount - 1
+            ).associateBy { it.stageId }
+        }
         updateStageExistsRecord.forEach { build ->
+            val stageVar = mutableMapOf<String, Any>(Stage::name.name to (build.name ?: ""))
+            val resumeAble = !context.retryOnRunningBuild && context.executeCount > 1 && build.startTime != null
+            val previous = if (resumeAble) previousStages[build.stageId] else null
+            if (previous != null) {
+                stageVar[Stage::startTime.name] = inheritedStartTime(
+                    recordVar = previous.stageVar, recordStartTime = previous.startTime
+                ) ?: build.startTime!!.timestampmilli()
+            }
             stageBuildRecords.add(
                 BuildRecordStage(
                     projectId = build.projectId, pipelineId = build.pipelineId,
-                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    resourceVersion = context.resourceVersion, buildId = build.buildId,
                     stageId = build.stageId, stageSeq = build.seq,
-                    executeCount = build.executeCount, stageVar = mutableMapOf(Stage::name.name to (build.name ?: "")),
-                    timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
+                    executeCount = build.executeCount, stageVar = stageVar,
+                    timestamps = mapOf(),
+                    startTime = if (previous != null) null else build.startTime,
+                    endTime = build.endTime
                 )
             )
         }

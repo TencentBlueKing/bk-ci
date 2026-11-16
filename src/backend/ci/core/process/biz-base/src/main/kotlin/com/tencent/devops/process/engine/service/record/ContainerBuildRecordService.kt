@@ -180,14 +180,26 @@ class ContainerBuildRecordService(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
+        // 续上的子 Job 与普通 Job 同一口径：记录表只留本轮起止，上一轮的起始时间转存到变量里给展示用，
+        // 不进耗时计算，否则两轮之间等人重试的空档会被算成本轮的系统耗时
+        val resumed = !refreshContainerStart && newExecuteCount != oldExecuteCount
         val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
             remove(Container::timeCost.name)
             remove(Container::startEpoch.name)
             remove(Container::startVMStatus.name)
+            if (newExecuteCount != oldExecuteCount) {
+                if (resumed) {
+                    // 连续多轮续上时保留最早记下的那个起始时间
+                    oldContainer.startTime?.let { putIfAbsent(Container::startTime.name, it.timestampmilli()) }
+                } else {
+                    // 子 Job 整体重跑，上一轮继承来的展示起点要清掉，本轮重新记
+                    remove(Container::startTime.name)
+                }
+            }
         }
         val newContainer = oldContainer.copy(
             executeCount = newExecuteCount, status = null,
-            startTime = if (refreshContainerStart) null else oldContainer.startTime,
+            startTime = if (refreshContainerStart || resumed) null else oldContainer.startTime,
             endTime = null, timestamps = mapOf(), containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(

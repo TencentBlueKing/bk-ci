@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -49,7 +50,12 @@ object BuildTimeCostUtils {
         val startTime = startTime ?: return BuildRecordTimeCost()
         // 构建级别的总耗时从触发入队列算起。Stage 之间串行，各自的墙钟分段可以直接相加。
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(queueTime, endTime).toMillis()
+        // 局部重试时记录上的触发、起始时间继承自上一轮（页面要展示构建最初的起点），
+        // 耗时只算本轮：本轮入队时刻记在并发排队时间戳上，拿它当起点，
+        // 否则上一轮结束到这次重试之间等人处理的空档会被算成本轮的系统耗时
+        val roundStart = timestamps[BuildTimestampType.BUILD_CONCURRENCY_QUEUE]?.startTime
+            ?.coerceAtLeast(queueTime.timestampmilli()) ?: queueTime.timestampmilli()
+        val totalCost = (endTime.timestampmilli() - roundStart).notNegative()
         var executeCost = 0L
         var waitCost = 0L
         stageRecords.forEach { record ->
@@ -61,8 +67,9 @@ object BuildTimeCostUtils {
             // stage 的等待已包含该 Stage 内 Job 排队（互斥、第三方构建机、构建机复用）
             waitCost += stageCost.waitCost
         }
-        // 给前端展示的构建排队时间仅为触发到开始，不含构建开始后的 Job 资源等待
-        val queueCost = Duration.between(queueTime, startTime).toMillis()
+        // 给前端展示的构建排队时间仅为触发到开始，不含构建开始后的 Job 资源等待。
+        // 续上的那轮起始时间是上一轮的，落在本轮窗口之前，这时本轮没有排队
+        val queueCost = (startTime.timestampmilli() - roundStart).notNegative()
         val systemCost = totalCost - executeCost - queueCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
