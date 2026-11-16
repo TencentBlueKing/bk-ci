@@ -35,7 +35,9 @@ import org.quartz.JobExecutionException
 import org.quartz.listeners.JobListenerSupport
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
+@Service
 class QuartzTraceJobListener @Autowired constructor(
     val pipelineTriggerMeasureService: PipelineTriggerMeasureService
 ) : JobListenerSupport() {

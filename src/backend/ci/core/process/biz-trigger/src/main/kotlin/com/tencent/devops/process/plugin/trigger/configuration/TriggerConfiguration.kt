@@ -29,6 +29,7 @@ package com.tencent.devops.process.plugin.trigger.configuration
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.stream.ScsConsumerBuilder
@@ -40,33 +41,21 @@ import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerBuildListener
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerChangerListener
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineJobBean
-import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzService
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzSchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzTraceJobListener
-import com.tencent.devops.process.service.CreateStreamTriggerSupportService
-import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
-import com.tencent.devops.process.trigger.client.TriggerProcessClient
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * process 与 trigger 共用这份定时触发配置，由各自部署配置中的 trigger.standalone.timer.enabled 决定本服务是否加载
+ * @version 1.0
  */
+
 @Configuration
 @EnableConfigurationProperties(QuartzProperties::class)
-@ConditionalOnProperty(
-    prefix = "trigger.standalone.timer",
-    name = ["enabled"],
-    havingValue = "true",
-    matchIfMissing = true
-)
 @SuppressWarnings("TooManyFunctions")
 class TriggerConfiguration {
     @Bean
@@ -98,45 +87,7 @@ class TriggerConfiguration {
     )
 
     @Bean
-    fun quartzTraceJobListener(
-        pipelineTriggerMeasureService: PipelineTriggerMeasureService
-    ) = QuartzTraceJobListener(pipelineTriggerMeasureService)
-
-    @Bean
-    fun pipelineQuartzService(
-        pipelineTimerService: PipelineTimerService,
-        schedulerManager: SchedulerManager
-    ) = PipelineQuartzService(pipelineTimerService, schedulerManager)
-
-    @Bean
-    fun pipelineTimerChangerListener(
-        pipelineEventDispatcher: PipelineEventDispatcher,
-        schedulerManager: SchedulerManager
-    ) = PipelineTimerChangerListener(pipelineEventDispatcher, schedulerManager)
-
-    @Bean
-    @SuppressWarnings("LongParameterList")
-    fun pipelineTimerBuildListener(
-        pipelineEventDispatcher: PipelineEventDispatcher,
-        triggerProcessClient: TriggerProcessClient,
-        pipelineTimerService: PipelineTimerService,
-        scmProxyService: ScmProxyService,
-        triggerEventService: PipelineTriggerEventService,
-        pipelineRepositoryService: PipelineRepositoryService,
-        pipelineTriggerMeasureService: PipelineTriggerMeasureService,
-        creativeStreamService: CreateStreamTriggerSupportService,
-        pipelineYamlFacadeService: PipelineYamlFacadeService
-    ) = PipelineTimerBuildListener(
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        triggerProcessClient = triggerProcessClient,
-        pipelineTimerService = pipelineTimerService,
-        scmProxyService = scmProxyService,
-        triggerEventService = triggerEventService,
-        pipelineRepositoryService = pipelineRepositoryService,
-        pipelineTriggerMeasureService = pipelineTriggerMeasureService,
-        creativeStreamService = creativeStreamService,
-        pipelineYamlFacadeService = pipelineYamlFacadeService
-    )
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     /**
      * 定时构建队列--- 并发一般
