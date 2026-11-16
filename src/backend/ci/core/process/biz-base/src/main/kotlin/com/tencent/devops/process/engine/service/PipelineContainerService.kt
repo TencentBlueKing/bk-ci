@@ -330,17 +330,19 @@ class PipelineContainerService @Autowired constructor(
                     skipFailedTask = context.skipFailedTask,
                     wholeJob = batchRetry
                 )
-                // #13577 子 Job 只有一个用户步骤且正在失败跳过：不再重置开关机任务，子 Job 直接结束。
-                // 开关机和收尾步骤不算用户步骤，否则会把“只有一个业务插件”误判成多步骤而重新拉起构建机。
+                // #13577 失败跳过且没有任何用户步骤会再跑：不再重置开关机任务，子 Job 直接结束。
+                // 还有用户步骤要重排，或有没被跳过的失败/取消留在子 Job 里时不收口，
+                // 否则会把一个仍然失败的子 Job 记成成功。开关机和收尾步骤不算用户步骤。
                 val userTasks = childTasks.filter { task ->
                     !VMUtils.isVMTask(task.taskId) && task.additionalOptions?.elementPostInfo == null
                 }
                 val closeChild = context.skipFailedTask &&
                     !tiedToAgentReuse(context, matrixContainer) &&
-                    userTasks.size == 1 &&
-                    skipTaskIds.contains(userTasks.single().taskId)
+                    userTasks.any { skipTaskIds.contains(it.taskId) } &&
+                    userTasks.none { resetTaskIds.contains(it.taskId) } &&
+                    childTasks.none { !skipTaskIds.contains(it.taskId) && taskBrokenForClose(it) }
                 val tasksToReset = if (closeChild) emptySet() else resetTaskIds
-                val tasksToSkip = if (closeChild) setOf(userTasks.single().taskId) else skipTaskIds
+                val tasksToSkip = skipTaskIds
                 val updateTasks = mutableListOf<PipelineBuildTask>()
                 childTasks.forEach { task ->
                     when {
@@ -592,16 +594,23 @@ class PipelineContainerService @Autowired constructor(
         }
         if (!containerEnable) container.setContainerEnable(false)
 
-        // #13577 只有一个启用的用户步骤，且该步骤正在失败跳过时，直接收口，不再为了标记跳过而启动构建机。
-        // 收尾步骤（elementPostInfo）不算用户步骤。矩阵父容器走 prepareMatrixGroupRetry，这里排除。
+        // #13577 失败跳过，且这次没有任何插件会真正执行时，直接收口，不再为了标记跳过而启动构建机。
+        // 矩阵父容器走 prepareMatrixGroupRetry，这里排除。复用链上的 Job 仍要开机。
         val userSteps = containerElements.filter { element ->
             element.elementEnabled() && element.additionalOptions?.elementPostInfo == null
         }
-        val closeWithoutStart = context.skipFailedTask &&
-            container.matrixGroupFlag != true &&
+        // 前三个条件先挡掉全新构建和普通重试，后面的遍历只在失败跳过时才做。
+        val skippingStepIds = if (
+            !newBuildFlag && context.skipFailedTask && container.matrixGroupFlag != true
+        ) {
+            userSteps.filter { context.inSkipStage(stage, it) }.mapNotNull { it.id }.toSet()
+        } else {
+            emptySet()
+        }
+        val closeWithoutStart = skippingStepIds.isNotEmpty() &&
             !tiedToAgentReuse(context, container) &&
-            userSteps.size == 1 &&
-            context.inSkipStage(stage, userSteps.single())
+            userSteps.none { userStepWillRun(context, stage, container, it, lastTimeBuildTasks) } &&
+            noBrokenTaskLeft(container, lastTimeBuildTasks, skippingStepIds)
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -713,7 +722,7 @@ class PipelineContainerService @Autowired constructor(
                                 target = pair.first,
                                 executeCount = context.executeCount,
                                 atomElement = pair.second,
-                                // 单步骤不再启动 Job，收尾步骤不能留在排队，否则引擎仍会去拉起容器
+                                // 本次不再启动 Job 时，收尾步骤不能留在排队，否则引擎仍会去拉起容器
                                 initialStatus = if (closeWithoutStart) BuildStatus.SKIP else null
                             )
                             updateExistsTask.add(pair.first)
@@ -801,7 +810,7 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
-        // #13577 单步骤失败跳过不再准备构建机
+        // #13577 本次没有插件会真正执行，不再准备构建机
         if (closeWithoutStart) {
             needStartVM = false
         }
@@ -1113,6 +1122,73 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.version = originVersion
             }
             target.taskParams = atomElement.genTaskParams() // 更新参数
+        }
+    }
+
+    /**
+     * 本次重试这个用户步骤会不会真的被排队执行。
+     * 分支与 [prepareBuildContainerTasks] 准备循环里的提前 return 一一对应：
+     * 本次失败跳过的会被置成 SKIP；初始状态已结束的走不到重置；
+     * [StartBuildContext.needSkipTaskWhenRetry] 为真且历史已成功或已失败的保留原状态；
+     * 其余（含未执行、已取消）都会被重置为排队。
+     */
+    private fun userStepWillRun(
+        context: StartBuildContext,
+        stage: Stage,
+        container: Container,
+        element: Element,
+        lastTimeBuildTasks: Collection<PipelineBuildTask>
+    ): Boolean {
+        if (context.inSkipStage(stage, element)) {
+            return false
+        }
+        if (element.initStatus(
+                rerun = context.needRerunTask(stage = stage, container = container)
+            ).isFinish()
+        ) {
+            return false
+        }
+        if (!context.needSkipTaskWhenRetry(stage, container, element.id)) {
+            return true
+        }
+        val target = findLastTimeBuildTask(
+            lastTimeBuildTasks = lastTimeBuildTasks,
+            container = container,
+            retryStartTaskId = element.id
+        )
+        return try {
+            !(target == null || target.status.isSuccess() || target.status.isFailure())
+        } catch (ignored: Exception) { // 状态值异常时准备循环也会跳过它
+            logger.warn("[${context.buildId}]|CLOSE_CHECK_BAD_STATUS|${element.id}|$ignored")
+            false
+        }
+    }
+
+    /**
+     * 收口时除被跳过的步骤外，其它任务都带着上一次的状态原样留下，
+     * 里面若还有失败或取消（开关机失败、开了失败继续的前置步骤、仍失败的收尾步骤），
+     * 把 Job 记成成功就会把这些失败藏掉，因此不能收口。未执行不算问题：本来就没跑过。
+     */
+    private fun noBrokenTaskLeft(
+        container: Container,
+        lastTimeBuildTasks: Collection<PipelineBuildTask>,
+        skippingTaskIds: Set<String>
+    ): Boolean {
+        return lastTimeBuildTasks.none { task ->
+            task.containerId == container.id &&
+                !skippingTaskIds.contains(task.taskId) &&
+                taskBrokenForClose(task)
+        }
+    }
+
+    /**
+     * 收口时这个任务会不会把一个没解决的失败留在 Job 里。状态值异常时按会留下处理。
+     */
+    private fun taskBrokenForClose(task: PipelineBuildTask): Boolean {
+        return try {
+            task.status.isFailure() || task.status.isCancel()
+        } catch (ignored: Exception) {
+            true
         }
     }
 
