@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 
 @Schema(title = "版本仓库-文件信息")
 data class FileInfo(
@@ -61,7 +62,9 @@ data class FileInfo(
     @get:Schema(title = "crc64ecma", required = false)
     var crc64ecma: String? = null,
     @get:Schema(title = "docker registry", required = false)
-    var registry: String? = null
+    var registry: String? = null,
+    @get:Schema(title = "nodeMetadata数据", required = false)
+    val nodeMetadata: List<MetadataModel> ?= emptyList()
 ) : Comparable<FileInfo> {
     constructor(
         name: String,
