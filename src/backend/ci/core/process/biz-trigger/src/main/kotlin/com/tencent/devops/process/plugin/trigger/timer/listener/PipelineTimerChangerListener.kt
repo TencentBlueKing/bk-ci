@@ -37,14 +37,12 @@ import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 /**
  *  MQ实现的流水线定时调度器变更处理，保证所有节点都能收到变更消息，保持同步
  *
  * @version 1.0
  */
-@Component
 class PipelineTimerChangerListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val schedulerManager: SchedulerManager

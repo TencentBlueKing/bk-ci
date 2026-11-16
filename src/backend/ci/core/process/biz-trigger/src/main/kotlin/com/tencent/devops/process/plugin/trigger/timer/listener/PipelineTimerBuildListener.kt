@@ -77,7 +77,6 @@ import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.client.TriggerProcessClient
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 /**
@@ -85,7 +84,6 @@ import java.time.LocalDateTime
  *
  * @version 1.0
  */
-@Component
 class PipelineTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val triggerProcessClient: TriggerProcessClient,

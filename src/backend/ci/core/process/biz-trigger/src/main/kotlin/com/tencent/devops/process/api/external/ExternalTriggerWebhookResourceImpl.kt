@@ -9,10 +9,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
 /**
  * artifact 路径与 process 的 ExternalWebhookResourceImpl 相同，同进程加载会导致 Jersey 资源冲突，
- * 只能在 trigger 独立部署（trigger.standalone.enabled=true）时加载
+ * 只能在 trigger 独立部署（trigger.standalone.api.enabled=true）时加载
  */
 @RestResource
-@ConditionalOnProperty(prefix = "trigger.standalone", name = ["enabled"], havingValue = "true")
+@ConditionalOnProperty(prefix = "trigger.standalone.api", name = ["enabled"], havingValue = "true")
 class ExternalTriggerWebhookResourceImpl @Autowired constructor(
     private val artifactWebhookRequestService: ArtifactWebhookRequestService,
     private val tapdWebhookRequestService: TapdWebhookRequestService
