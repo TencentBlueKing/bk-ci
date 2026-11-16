@@ -258,6 +258,55 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
+    fun `configured notify title becomes the card headline`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+                reviewType = "ATOM",
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "1",
+                    "reviewUrl" to "https://example.com/pc",
+                    "notifyTitle" to "**测试人工审核通知标题**",
+                    "triggerUser" to "royalhuang"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val card = plan!!.receiverCards.getValue("royalhuang")
+        assertEquals("测试人工审核通知标题", card.mainTitle.title)
+        assertEquals("<Royal流水线测试>人工审核", card.mainTitle.desc)
+    }
+
+    @Test
+    fun `default template title does not replace the card headline`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+                reviewType = "ATOM",
+                titleParams = mapOf(
+                    "content" to "项目【Royal流水线测试】下的流水线【stage-review-notice】#1 构建处于待审核状态"
+                ),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "1",
+                    "reviewUrl" to "https://example.com/pc"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val card = plan!!.receiverCards.getValue("royalhuang")
+        assertEquals("<Royal流水线测试>人工审核", card.mainTitle.title)
+        assertEquals("当前构建需要您审核后继续", card.mainTitle.desc)
+    }
+
+    @Test
     fun `markdown flag keeps the original template and skips the card`() {
         val plan = WeworkReviewCardBuilder.build(
             request = reviewRequest(
@@ -322,15 +371,17 @@ class WeworkReviewCardBuilderTest {
         receivers: MutableSet<String>,
         titleParams: Map<String, String> = emptyMap(),
         bodyParams: Map<String, String>,
-        markdown: Boolean = false
+        markdown: Boolean = false,
+        templateCode: String = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
+        reviewType: String = "STAGE"
     ) = SendNotifyMessageTemplateRequest(
-        templateCode = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
+        templateCode = templateCode,
         receivers = receivers,
         titleParams = titleParams,
         bodyParams = bodyParams,
         markdownContent = markdown,
         callbackData = mapOf(
-            "reviewType" to "STAGE",
+            "reviewType" to reviewType,
             "projectId" to "royalpipeline",
             "pipelineId" to "p-1",
             "buildId" to "b-1",

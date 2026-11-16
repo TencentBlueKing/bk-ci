@@ -214,6 +214,10 @@ object WeworkReviewCardBuilder {
             val perCallback = callback.toMutableMap()
             perCallback["receiver"] = receiver
             val copy = CardCopy(receiverLanguage(receiver))
+            val productTitle = reviewTitle(projectName, copy)
+            // 未勾选 Markdown 时，用户配置的通知标题作为大标题；项目名退到灰色副标题。
+            // 未配置时保持「<项目名>人工审核」和原来的操作说明。
+            val customTitle = plainQuote(body["notifyTitle"].orEmpty())
             val card = buildCard(
                 taskId = taskId,
                 scene = scene,
@@ -227,8 +231,8 @@ object WeworkReviewCardBuilder {
                 reviewDesc = reviewDesc,
                 reviewUrl = reviewUrl,
                 reviewAppUrl = reviewAppUrl,
-                mainTitleText = reviewTitle(projectName, copy),
-                mainDesc = mainDesc(scene, isStage, copy),
+                mainTitleText = if (customTitle.isNotBlank()) clip(customTitle, TITLE_LIMIT) else productTitle,
+                mainDesc = if (customTitle.isNotBlank()) productTitle else mainDesc(scene, isStage, copy),
                 reviewParams = reviewParams.map { it.localize(copy) },
                 reviewUsers = reviewUsers.ifEmpty { receivers },
                 reviewGroups = reviewGroups,
