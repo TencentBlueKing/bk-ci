@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER
 import com.tencent.devops.common.api.constant.CommonMessageCode.RUNTIME_RESOURCE_NOT_UNIQUE
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
@@ -46,7 +47,9 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -138,13 +141,13 @@ class ModelTransfer @Autowired constructor(
             buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
         ).also { setting ->
             if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                parseRuntimeResource(yaml.runsOn)?.let(setting::applyRuntimeResource)
+                parseRuntimeResource(yaml.runsOn, yamlInput)?.let(setting::applyRuntimeResource)
             }
         }
     }
 
     /** 解析根级 `runs-on`，并校验四个运行资源键只填了一个 */
-    private fun parseRuntimeResource(rawRunsOn: Any?): RuntimeResource? {
+    private fun parseRuntimeResource(rawRunsOn: Any?, yamlInput: YamlTransferInput): RuntimeResource? {
         val runsOn = RootRunsOn.parse(rawRunsOn)
         val specifiedKeys = runsOn.specifiedKeys()
         if (specifiedKeys.size > 1) {
@@ -153,7 +156,43 @@ class ModelTransfer @Autowired constructor(
                 arrayOf(specifiedKeys.joinToString(", "))
             )
         }
-        return runsOn.toRuntimeResource()
+        return runsOn.toRuntimeResource()?.let { resolvePool(it, yamlInput) }
+    }
+
+    /**
+     * `pool-id` / `pool-name` 本身不带类型。保存前按环境记录补上 hashId、环境名，
+     * 以及能确定的类型：创作环境是数字分身环境，云桌面环境是云桌面环境。
+     * 补不上类型时仍只绑环境，回显保持「原创作环境」。
+     *
+     * 只写了环境名却查不到时必须拒绝保存，否则 [RuntimeResource.of] 视为未配置，旧的 pool-id 会留在库里。
+     * 已经写了 pool-id 但暂时查不到环境时，保留这个 id 继续保存。
+     */
+    private fun resolvePool(resource: RuntimeResource, yamlInput: YamlTransferInput): RuntimeResource {
+        if (!resource.group) return resource
+        val envHashId = resource.resourceId?.trim()?.takeIf { it.isNotEmpty() }
+        val envName = resource.resourceName?.trim()?.takeIf { it.isNotEmpty() }
+        if (envHashId == null && envName == null) return resource
+        val env = if (envHashId != null) {
+            transferCache.findEnvByHashId(yamlInput.userId, yamlInput.projectCode, envHashId)
+        } else {
+            transferCache.findEnvByName(yamlInput.userId, yamlInput.projectCode, envName!!)
+        }
+        if (env == null) {
+            if (envHashId != null) return resource
+            throw PipelineTransferException(DISPATCH_NOT_SUPPORT_TRANSFER, arrayOf(envName!!))
+        }
+        return resource.copy(
+            type = runtimeTypeOf(env.envType),
+            resourceId = env.envHashId,
+            resourceName = env.name
+        )
+    }
+
+    /** 环境记录上的类型。不看环境内节点，节点类型编码不稳定。 */
+    private fun runtimeTypeOf(envType: String?): RuntimeResourceType? = when (envType) {
+        EnvType.CREATE.name -> RuntimeResourceType.AVATAR_GROUP
+        EnvType.DEVX.name -> RuntimeResourceType.DESKTOP_GROUP
+        else -> null
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {

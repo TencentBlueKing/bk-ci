@@ -82,8 +82,7 @@ data class RootRunsOn(
     /**
      * 还原为运行资源。
      *
-     * 只填了 `pool-id`/`pool-name` 时无法区分数字分身环境与云桌面环境，
-     * 此处保持 type 为空（与只绑定了环境的历史数据语义一致），由环境资源类型在展示层还原。
+     * 只填了 `pool-id`/`pool-name` 时此处 type 先为空；创作流 Code 保存前会按环境记录补全类型与环境名。
      */
     fun toRuntimeResource(): RuntimeResource? = when {
         !avatarId.isNullOrBlank() -> RuntimeResource(
