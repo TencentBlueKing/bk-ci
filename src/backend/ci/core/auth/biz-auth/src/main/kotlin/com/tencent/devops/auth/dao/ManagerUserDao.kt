@@ -135,6 +135,14 @@ class ManagerUserDao {
         }
     }
 
+    fun getAllUsers(dslContext: DSLContext): List<String> {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            return dslContext.selectDistinct(USER_ID).from(this)
+                .where(END_TIME.gt(LocalDateTime.now()))
+                .fetch(USER_ID, String::class.java)
+        }
+    }
+
     companion object {
         const val HALF_A_YEAR = 182
         const val EXPIRE_TIME = 7
