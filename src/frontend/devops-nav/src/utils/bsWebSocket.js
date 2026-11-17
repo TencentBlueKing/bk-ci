@@ -11,6 +11,10 @@ function uuid () {
     return id
 }
 
+function callMethod (target, method) {
+    if (target && typeof target[method] === 'function') target[method]()
+}
+
 class BlueShieldWebSocket {
     constructor () {
         this.connectErrTime = 1
@@ -29,7 +33,7 @@ class BlueShieldWebSocket {
     }
 
     connect () {
-        if (this.isConnecting || this.stompClient?.connected || !navigator.onLine) return
+        if (this.isConnecting || (this.stompClient || {}).connected || !navigator.onLine) return
         clearTimeout(this.retryTimer)
         this.retryTimer = null
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
@@ -42,7 +46,7 @@ class BlueShieldWebSocket {
             const wasConnected = stompClient.connected
             socket.isClosing = true
             try {
-                stompOnClose?.call(socket, err)
+                if (stompOnClose) stompOnClose.call(socket, err)
             } finally {
                 socket.isClosing = false
             }
@@ -68,14 +72,14 @@ class BlueShieldWebSocket {
         this.stompClient = {}
         try {
             if (stompClient.connected) {
-                stompClient.disconnect?.()
+                callMethod(stompClient, 'disconnect')
             } else {
-                stompClient.ws?.close?.()
+                callMethod(stompClient.ws, 'close')
             }
         } catch (error) {
             console.error(error)
             try {
-                stompClient.ws?.close?.()
+                callMethod(stompClient.ws, 'close')
             } catch (closeError) {
                 console.error(closeError)
             }
@@ -96,7 +100,8 @@ class BlueShieldWebSocket {
         this.reconnectRefreshPending = true
         this.connectCallBack.push(() => {
             this.reconnectRefreshPending = false
-            const route = window.devops?.$router?.currentRoute
+            const router = window.devops && window.devops.$router
+            const route = router && router.currentRoute
             if (!this.detectHasWebsocket(route)) return
             this.handleMessage({
                 body: JSON.stringify({
@@ -196,7 +201,7 @@ class BlueShieldWebSocket {
         const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
-        const projectId = router.params?.projectId || cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = (router.params || {}).projectId || cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
         if (hasWebSocket) {
@@ -260,19 +265,19 @@ class BlueShieldWebSocket {
         clearTimeout(this.retryTimer)
         this.retryTimer = null
         const stompClient = this.stompClient
-        if (!stompClient?.ws) return
+        if (!stompClient || !stompClient.ws) return
 
         stompClient.intentionalClose = true
         this.isConnecting = false
         try {
             if (stompClient.connected) {
-                stompClient.disconnect?.()
+                callMethod(stompClient, 'disconnect')
             } else {
-                stompClient.ws.close?.()
+                callMethod(stompClient.ws, 'close')
             }
         } catch (error) {
             try {
-                stompClient.ws.close?.()
+                callMethod(stompClient.ws, 'close')
             } catch (closeError) {
                 console.error(closeError)
             }

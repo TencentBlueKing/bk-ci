@@ -11,6 +11,15 @@ function escapeHtml (value) {
     return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char])
 }
 
+function hasControlChar (value, { includeC1 = false, extra = '' } = {}) {
+    const text = String(value)
+    for (let index = 0; index < text.length; index++) {
+        const code = text.charCodeAt(index)
+        if (code <= 0x1f || code === 0x7f || (includeC1 && code >= 0x80 && code <= 0x9f) || extra.includes(text[index])) return true
+    }
+    return false
+}
+
 function decodeEntitiesOnce (value) {
     let valid = true
     const decoded = String(value).replace(/&([^;\s]{1,32});/g, (entity, name) => {
@@ -29,9 +38,9 @@ function decodeEntitiesOnce (value) {
 
 function safeHref (source) {
     const raw = String(source || '').replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/g, '')
-    if (/[\u0000-\u001f\u007f]/.test(raw)) return ''
+    if (hasControlChar(raw)) return ''
     const decoded = decodeEntitiesOnce(raw)
-    if (!decoded.valid || /[\u0000-\u001f\u007f]/.test(decoded.value)) return ''
+    if (!decoded.valid || hasControlChar(decoded.value)) return ''
     if (/^https?:\/\//i.test(decoded.value)) {
         try {
             const url = new URL(decoded.value)
@@ -50,7 +59,7 @@ function safeHref (source) {
         } catch (error) {
             return ''
         }
-        if (decodedSegment === '.' || decodedSegment === '..' || /[\/\\\u0000-\u001f\u007f\u0080-\u009f]/.test(decodedSegment)) return ''
+        if (decodedSegment === '.' || decodedSegment === '..' || hasControlChar(decodedSegment, { includeC1: true, extra: '/\\' })) return ''
     }
     try {
         const trustedOrigin = 'https://console-link.invalid'
@@ -60,7 +69,7 @@ function safeHref (source) {
         if (typeof window === 'undefined' || typeof window.__prefixSameOriginUrl !== 'function') return canonicalHref
 
         const prefixRoot = window.__prefixSameOriginUrl('/console')
-        if (typeof prefixRoot !== 'string' || !prefixRoot.startsWith('/') || prefixRoot.startsWith('//') || /[?#\\\u0000-\u001f\u007f-\u009f]/.test(prefixRoot)) return ''
+        if (typeof prefixRoot !== 'string' || !prefixRoot.startsWith('/') || prefixRoot.startsWith('//') || hasControlChar(prefixRoot, { includeC1: true, extra: '?#\\' })) return ''
         const rawRootPath = prefixRoot.split(/[?#]/, 1)[0]
         if (/%(?:2f|5c|25)/i.test(rawRootPath)) return ''
         for (const segment of rawRootPath.split('/')) {
@@ -70,7 +79,7 @@ function safeHref (source) {
             } catch (error) {
                 return ''
             }
-            if (decodedSegment === '.' || decodedSegment === '..' || /[\/\\\u0000-\u001f\u007f\u0080-\u009f]/.test(decodedSegment)) return ''
+            if (decodedSegment === '.' || decodedSegment === '..' || hasControlChar(decodedSegment, { includeC1: true, extra: '/\\' })) return ''
         }
         const rootUrl = new URL(prefixRoot, trustedOrigin)
         if (rootUrl.origin !== trustedOrigin || !/(?:^|\/)console$/.test(rootUrl.pathname)) return ''
@@ -81,7 +90,7 @@ function safeHref (source) {
             } catch (error) {
                 return ''
             }
-            if (decodedSegment === '.' || decodedSegment === '..' || /[\/\\\u0000-\u001f\u007f-\u009f]/.test(decodedSegment)) return ''
+            if (decodedSegment === '.' || decodedSegment === '..' || hasControlChar(decodedSegment, { includeC1: true, extra: '/\\' })) return ''
         }
 
         const consoleSuffix = url.pathname.slice('/console'.length)
@@ -89,7 +98,7 @@ function safeHref (source) {
         const expectedRawHref = `${prefixRoot}${consoleSuffix}${suffixAndFragment}`
         const expectedCanonicalHref = `${rootUrl.pathname}${consoleSuffix}${suffixAndFragment}`
         const prefixedHref = window.__prefixSameOriginUrl(canonicalHref)
-        if (typeof prefixedHref !== 'string' || !prefixedHref.startsWith('/') || prefixedHref.startsWith('//') || /[\\\u0000-\u001f\u007f-\u009f]/.test(prefixedHref)) return ''
+        if (typeof prefixedHref !== 'string' || !prefixedHref.startsWith('/') || prefixedHref.startsWith('//') || hasControlChar(prefixedHref, { includeC1: true, extra: '\\' })) return ''
         if (prefixedHref !== expectedRawHref) return ''
         const prefixedUrl = new URL(prefixedHref, trustedOrigin)
         if (prefixedUrl.origin !== trustedOrigin || prefixedUrl.pathname !== `${rootUrl.pathname}${consoleSuffix}`) return ''
@@ -176,9 +185,11 @@ function parseAnsi (source, links = []) {
         const esc = text[index] === '\u001b' || text[index] === '\u009b'
         const bare = text[index] === '[' && /^\[(?:\d+(?:;\d+)*)?m/.test(text.slice(index))
         if (esc || bare) {
-            const match = text.slice(index).match(esc ? /^(?:\u001b\[[0-?]*[ -/]*[@-~]|\u009b[0-?]*[ -/]*[@-~])/ : /^\[(?:\d+(?:;\d+)*)?m/)
+            const match = esc
+                ? text.slice(index + 1).match(text[index] === '\u009b' ? /^[0-?]*[ -/]*[@-~]/ : /^\[[0-?]*[ -/]*[@-~]/)
+                : text.slice(index).match(/^\[(?:\d+(?:;\d+)*)?m/)
             if (match) {
-                const sequence = match[0]
+                const sequence = esc ? text[index] + match[0] : match[0]
                 if (/m$/.test(sequence)) {
                     flush()
                     const codes = sequence.slice(sequence.indexOf('[') + 1, -1).split(';')
@@ -320,7 +331,7 @@ export function parseLogLine (source) {
         const cached = FORMAT_CACHE.get(input)
         if (cached.raw === raw && cached.sourceKey === sourceKey) return cached.value
     }
-    if (!/[\u001b\u009b\u009d\u0000-\u001f\u007f\u0080-\u009f<>&\[\r\n\t\b]/.test(raw)) {
+    if (!hasControlChar(raw, { includeC1: true, extra: '<>&[' })) {
         const value = { plainText: raw, segments: [{ text: raw, color: '', href: '' }], marker: null, sourceKey }
         if (input) FORMAT_CACHE.set(input, { raw, sourceKey, value })
         return value

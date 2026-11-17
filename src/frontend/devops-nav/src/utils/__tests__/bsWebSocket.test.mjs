@@ -51,7 +51,7 @@ function loadWebSocketClass ({ useRouteChange = false } = {}) {
         sockets.push(this)
         this.close = () => {
             this.closed = true
-            this.onclose?.({ code: 1000 })
+            if (this.onclose) this.onclose({ code: 1000 })
         }
     }
 

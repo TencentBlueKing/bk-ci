@@ -1836,7 +1836,7 @@ test('sizes the shared line number column to the widest displayed line number', 
 
 test('getRawLogText preserves ANSI while getLogText strips for search', () => {
     const log = { message: '\u001b[31mfail\u001b[0m' }
-    assert.match(adapter.getRawLogText(log), /\u001b\[31m/)
+    assert.ok(adapter.getRawLogText(log).includes('\u001b[31m'))
     assert.equal(adapter.getLogText(log), 'fail')
 })
 
