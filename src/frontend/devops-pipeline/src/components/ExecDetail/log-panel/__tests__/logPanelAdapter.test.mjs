@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 import Vue, { isReactive, markRaw, shallowRef } from 'vue'
 import * as adapter from '../logPanelAdapter.js'
-import * as devMock from '../logPanelDevMock.js'
+import * as devMock from './logPanelDevMock.fixture.mjs'
 import * as logStructure from '../logLineStructure.js'
 import * as logTail from '../logPanelTail.js'
 import * as virtualWindow from '../logVirtualWindow.js'
@@ -368,7 +368,7 @@ test('Step keeps configuration as the top tab and exposes parameters as an inlin
     assert.match(source, /if \(key === 'progress'\) return/)
     assert.match(source, /detailData: this\.progressPanelData/)
     assert.match(source, /this\.progressDetailData = data \|\| null/)
-    assert.match(source, /this\.devLogMock \? \(this\.devLogMock\.progressDetailData \|\| null\) : this\.progressDetailData/)
+    assert.match(source, /progressPanelData \(\) \{\s*if \(this\.isHistoricalExecuteCount\) return null\s*return this\.progressDetailData/)
     assert.match(source, /tabLabel \(name\)/)
     assert.match(source, /name === 'setting'.*execDetail\.setting/)
     assert.doesNotMatch(source, /name === 'params'.*execDetail\.parameter/)
@@ -2905,9 +2905,9 @@ test('search-stress dev fixture is lazy, searchable across the full log, and pro
 
     const panel = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
     const reloadBody = panel.match(/reload \(\) \{([\s\S]*?)\n\s{12}},\n\s{12}applyResult/)[1]
-    assert.match(reloadBody, /\['search-stress', 'format-stress-100k'\]\.includes\(this\.devMockState\) && process\.env\.NODE_ENV === 'development'[\s\S]*createLogPanelFormatStressLogs\('development'\)[\s\S]*createLogPanelSearchStressLogs\('development'\)[\s\S]*this\.applyResponse\([\s\S]*return[\s\S]*getLogPanelLatest/)
-    assert.match(panel, /devMockState \(state, previousState\) \{[\s\S]*this\.clearSearchForContext\(\)[\s\S]*this\.reload\(\)/)
-    assert.match(panel, /scheduleAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)[\s\S]*if \(this\.devMockState \|\| this\.finished && !this\.hasAfter\) return/)
+    assert.match(reloadBody, /getLogPanelLatest/)
+    assert.doesNotMatch(panel, /devMockState|devMockLoading|logPanelDevMock/)
+    assert.match(panel, /scheduleAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)[\s\S]*if \(this\.finished && !this\.hasAfter\) return/)
 })
 
 test('search-stress mock intersects level and subTag filters without rewriting line numbers', () => {
@@ -2945,7 +2945,7 @@ test('search-stress mock intersects level and subTag filters without rewriting l
     assert.deepEqual(emitted, [['levels-change', ['INFO', 'WARN', 'ERROR', 'DEBUG']]])
 
     const step = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
-    assert.match(step, /\['search-stress', 'format-stress-100k'\]\.includes\(this\.devMockState\) && process\.env\.NODE_ENV === 'development'[\s\S]*filterLogPanelDevMockLogs\([\s\S]*request\.levels[\s\S]*request\.subTag[\s\S]*matchedTotal: logs\.length[\s\S]*subTags: \['compile', 'test', 'deploy'\]/)
+    assert.doesNotMatch(step, /logPanelDevMock|devMockState/)
 })
 
 test('timeout mocks match Figma display codes, thresholds, and messages without losing job evidence', () => {
@@ -3001,8 +3001,8 @@ test('status mock overlays clear stale mutually exclusive fields from real histo
         assert.equal(projected.nodeName, mock.nodeName ?? null, `${state} node name`)
     }
     const plugin = readFileSync(new URL('../../plugin.vue', import.meta.url), 'utf8')
-    assert.match(plugin, /if \(!this\.isHistoricalExecuteCount && this\.devLogMock\) return this\.devLogMock\.summaryError[\s\S]*?: null/)
-    assert.match(plugin, /if \(this\.isHistoricalExecuteCount\) return \[\][\s\S]*return this\.devLogMock[\s\S]*this\.progressSubtasksSnapshot/)
+    assert.doesNotMatch(plugin, /devLogMock|logPanelDevMock/)
+    assert.match(plugin, /this\.progressSubtasksSnapshot/)
 })
 
 test('all fourteen Figma frames have selectable fixtures and renderable conclusion models', () => {
@@ -3299,7 +3299,7 @@ test('conclusion subtask expansion is limited to the running development fixture
     assert.match(plugin, /:has-subtasks="canExpandProgressSubtasks && !!displayProgressSubtasks\.length"/)
     assert.match(plugin, /:progress-expanded="canExpandProgressSubtasks && progressExpanded"/)
     assert.match(plugin, /:subtasks="canExpandProgressSubtasks \? displayProgressSubtasks : \[\]"/)
-    assert.match(plugin, /canExpandProgressSubtasks \(\) \{[\s\S]*?this\.devLogMock[\s\S]*?running-subtasks[\s\S]*?this\.displayProgressSubtasks\.length/)
+    assert.match(plugin, /canExpandProgressSubtasks \(\) \{[\s\S]*?this\.displayProgressSubtasks\.length > 0/)
     assert.match(plugin, /'currentElement\.status' \(status\)[\s\S]*?if \(!shouldFetchTaskProgress\(status\)\) \{\s*this\.resetProgressState\(\)/)
     assert.match(plugin, /'currentElement\.id': function \(\)[\s\S]*?this\.resetProgressState\(\)/)
 })
@@ -3337,7 +3337,6 @@ test('leaving running-subtasks mock reloads progress for the same real RUNNING t
         contextKey: 'same-task|1|RUNNING',
         currentContextKey: 'same-task|1|RUNNING'
     }), false)
-    assert.match(plugin, /'\$route\.query\.logMockState' \(value, previousValue\)[\s\S]*?applyProgressMockTransition\(previousMock\?\.state \|\| null, nextMock\?\.state \|\| null, this\.currentElement\.status/)
 })
 
 test('header and queue components preserve centered slots and dev-only mock wiring', () => {
@@ -3373,27 +3372,16 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(container, /\.position-code\s*\{[\s\S]*font-size:\s*12px;[\s\S]*line-height:\s*20px/)
     assert.match(container, /\.head-tab\s*\{[\s\S]*span\s*\{[\s\S]*font-size:\s*12px;[\s\S]*line-height:\s*20px/)
     assert.match(container, /\.head-tab\s*\{[\s\S]*height:\s*26px;[\s\S]*line-height:\s*20px/)
-    assert.match(job, /if \(process\.env\.NODE_ENV !== 'development'\) return null[\s\S]*resolveLogPanelDevMock\(this\.\$route\.query\.logMockState\)/)
-    assert.match(job, /:dev-mock-loading="!!devLogMock\?\.forceLoading"/)
-    assert.match(job, /:dev-mock-state="devLogMock\?\.state \|\| ''"/)
-    assert.match(job, /queueExpanded:\s*Boolean\(this\.devLogMock\?\.queueExpanded\)/)
-    assert.match(job, /queueDetailModel \(\) \{\s*return resolveJobQueueDetail\(this\.devLogMock\?\.queueDetail \|\| this\.queueResponse/)
+    assert.doesNotMatch(job, /logPanelDevMock|devLogMock/)
+    assert.doesNotMatch(plugin, /logPanelDevMock|devLogMock/)
+    assert.doesNotMatch(panel, /logPanelDevMock|devMockState|devMockLoading/)
     assert.match(job, /:title="headerTitle"/)
     assert.match(job, /headerTitle \(\) \{\s*const title = \(this\.displayJob\.name[\s\S]*?return !this\.isHistoricalExecuteCount && this\.queueDetailModel \? `\$\{title\} · \$\{this\.\$t\('logPanel\.queue\.mutexQueue'\)\}` : title/)
-    assert.match(job, /devLogMock\?\.labelKey[\s\S]*this\.\$t\(this\.devLogMock\.labelKey\)/)
-    assert.match(plugin, /if \(process\.env\.NODE_ENV !== 'development'\) return null[\s\S]*resolveLogPanelDevMock\(this\.\$route\.query\.logMockState\)/)
-    assert.match(plugin, /:dev-mock-loading="!!devLogMock\?\.forceLoading"/)
-    assert.match(plugin, /:dev-mock-state="devLogMock\?\.state \|\| ''"/)
-    assert.match(panel, /devMockState:\s*\{\s*type:\s*String,\s*default:\s*''\s*\}/)
-    assert.match(panel, /devMockState \(state, previousState\) \{\s*if \(state === previousState\) return\s*this\.clearSearchForContext\(\)[\s\S]*this\.reload\(\)/)
-    assert.match(panel, /mounted \(\) \{\s*if \(!this\.devMockLoading\) this\.reload\(\)/)
-    assert.match(panel, /loadAfter \(\) \{\s*this\.requestTimer = null\s*if \(this\.devMockState \|\| this\.loadingAfter/)
-    assert.match(panel, /scheduleAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)[\s\S]*if \(this\.devMockState \|\| this\.finished && !this\.hasAfter\) return/)
+    assert.match(panel, /mounted \(\) \{\s*this\.reload\(\)/)
+    assert.match(panel, /loadAfter \(\) \{\s*this\.requestTimer = null\s*if \(this\.loadingAfter/)
+    assert.match(panel, /scheduleAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)[\s\S]*if \(this\.finished && !this\.hasAfter\) return/)
     assert.match(panel, /invalidate \(\) \{[\s\S]*clearTimeout\(this\.requestTimer\)[\s\S]*this\.requestTimer = null/)
-    assert.match(plugin, /showHeaderTabs \(\)[\s\S]*devMockTabsVisible/)
-    assert.match(plugin, /this\.devMockTabsTimer = setTimeout/)
-    assert.match(plugin, /displayProgressSubtasks \(\)[\s\S]*this\.devLogMock[\s\S]*this\.progressSubtasksSnapshot/)
-    assert.match(plugin, /devLogMock\?\.labelKey[\s\S]*this\.\$t\(this\.devLogMock\.labelKey\)/)
+    assert.match(plugin, /this\.progressSubtasksSnapshot/)
     assert.match(toolbar, /width:\s*148px/)
     assert.match(toolbar, /\.toolbar-action \{ display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center;/)
     assert.match(toolbar, /\.level-summary \{ display: block; width: 44px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; \}/)
@@ -3485,7 +3473,7 @@ test('background after polling does not render a visible loading indicator', () 
     const stepPanel = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
     const linesView = readFileSync(new URL('../LogLinesView.vue', import.meta.url), 'utf8')
     assert.match(stepPanel, /this\.loadingAfter\s*=\s*true/)
-    assert.match(stepPanel, /if \(this\.devMockState \|\| this\.loadingAfter[\s\S]*this\.finished && !this\.hasAfter/)
+    assert.match(stepPanel, /if \(this\.loadingAfter[\s\S]*this\.finished && !this\.hasAfter/)
     assert.doesNotMatch(stepPanel, /:loading-after="loadingAfter"/)
     assert.match(stepPanel, /:loading-before="loadingBefore"/)
     assert.match(linesView, /v-if="loadingBefore"[\s\S]*\{\{ \$t\('loading'\) \}\}/)
@@ -3509,23 +3497,19 @@ test('historical conclusion bars remain visible while actions stay gated', () =>
     assert.match(plugin, /currentNodeError \(\) \{[\s\S]*?return resolveNodeLogError/)
     assert.match(plugin, /activeErorr \(\) \{\s*return this\.currentNodeError/)
     assert.match(plugin, /const gated = this\.actionsEnabled && !this\.\$route\.query\?\.archiveFlag && this\.conclusionVisible/)
-    assert.match(plugin, /handleStepAction \(skip\) \{\s*if \(this\.devLogMock\) \{\s*this\.showMockActionNotice\(\)\s*return/)
-    assert.match(plugin, /handleMockablePanelAction \(action\) \{\s*if \(this\.devLogMock\) \{\s*this\.showMockActionNotice\(\)\s*return/)
-    assert.match(plugin, /showMockActionNotice \(\) \{\s*if \(this\.\$bkMessage\) this\.\$bkMessage\(/)
-    assert.match(plugin, /const mockActionsVisible = Boolean\(this\.devLogMock\) && this\.conclusionVisible/)
-    assert.match(plugin, /canRetry: !this\.isHistoricalExecuteCount && \(this\.devLogMock \? mockActionsVisible && !!this\.devLogMock\.canRetry : gated && !!currentElement\.canRetry\)/)
-    assert.match(plugin, /canSkip: !this\.isHistoricalExecuteCount && \(this\.devLogMock \? mockActionsVisible && !!this\.devLogMock\.canSkip : gated && !!currentElement\.canSkip\)/)
+    assert.match(plugin, /canRetry: !this\.isHistoricalExecuteCount && gated && !!currentElement\.canRetry/)
+    assert.match(plugin, /canSkip: !this\.isHistoricalExecuteCount && gated && !!currentElement\.canSkip/)
     assert.match(job, /retryableStep \(\)[\s\S]*find\(step => step\?\.canRetry \|\| step\?\.canSkip\)/)
     assert.match(job, /:pending-action="pendingAction"/)
     assert.match(job, /@retry="handleStepAction\(false\)"/)
     assert.match(job, /@skip="handleStepAction\(true\)"/)
     assert.match(job, /canRetry: gated && !!this\.retryableStep\?\.canRetry/)
     assert.match(job, /canSkip: gated && !!this\.retryableStep\?\.canSkip/)
-    assert.match(plugin, /continueConfig: !this\.isHistoricalExecuteCount && \(this\.devLogMock \? mockActionsVisible : gated\) && status === 'PAUSE'/)
-    assert.match(plugin, /review: !this\.isHistoricalExecuteCount && \(this\.devLogMock \? mockActionsVisible : gated\) && status === 'REVIEWING'/)
+    assert.match(plugin, /continueConfig: !this\.isHistoricalExecuteCount && gated && status === 'PAUSE'/)
+    assert.match(plugin, /review: !this\.isHistoricalExecuteCount && gated && status === 'REVIEWING'/)
     assert.match(plugin, /const cancelDisplay = [\s\S]*resolveCancelDisplay\(/)
-    assert.match(plugin, /parentBuildLabel: this\.devLogMock\?\.parentCanceled \|\| cancelConclusion\?\.type === 'parent' \? 'logPanel\.status\.parentBuild' : ''/)
-    assert.match(plugin, /paramsElement \(\) \{\s*if \(this\.devLogMock\) \{\s*return \{ \.\.\.this\.currentElement, status: this\.devLogMock\.status \|\| this\.currentElement\.status \}/)
+    assert.match(plugin, /parentBuildLabel: cancelConclusion\?\.type === 'parent' \? 'logPanel\.status\.parentBuild' : ''/)
+    assert.match(plugin, /paramsElement \(\) \{\s*return resolveParamsElementSource/)
 })
 
 test('execute-count selector is not duplicated in the log toolbar', () => {
@@ -3577,7 +3561,6 @@ test('controlled progress detail delegates loading, errors, and retry to the par
     assert.match(plugin, /if \(!isPoll\) \{\s*this\.progressLoading = true\s*this\.progressError = false/)
     assert.match(plugin, /this\.progressError = true/)
     assert.match(plugin, /if \(!this\.isProgressContextCurrent\(currentRequestId, currentContextKey\)\) return\s*this\.progressError = false\s*this\.progressDetailData = data \|\| null/)
-    assert.match(plugin, /if \(this\.devLogMock\) \{\s*this\.stopProgressPoll\(\)\s*return/)
     assert.match(panel, /controlled \? externalLoading : loading/)
     assert.match(panel, /controlled && externalError[\s\S]*progressDetail\.loadFailed[\s\S]*\$emit\('retry'\)/)
     assert.match(panel, /if \(props\.controlled\) \{\s*progressData\.value = props\.detailData[\s\S]*return/)
@@ -3585,14 +3568,10 @@ test('controlled progress detail delegates loading, errors, and retry to the par
     assert.match(panel, /controlled: \{\s*type: Boolean/)
 })
 
-test('dev mock parameter states use the projected status instead of real failed params', () => {
+test('not-executed parameter states report notExecuted without requiring failed params', () => {
     for (const state of ['PAUSE', 'QUEUE', 'WAITING', 'PREPARE_ENV', 'DEPENDENT_WAITING', 'UNEXEC', 'SKIP', 'DISABLED']) {
-        const mock = { scope: 'step', status: state }
-        const projected = devMock.applyLogPanelDevMock({ status: 'FAILED', data: { input: { stale: true } } }, mock, 'step')
-        assert.equal(adapter.buildParamsModel(projected).notExecuted, true, state)
+        assert.equal(adapter.buildParamsModel({ status: state, data: { input: { stale: true } } }).notExecuted, true, state)
     }
-    const plugin = readFileSync(new URL('../../plugin.vue', import.meta.url), 'utf8')
-    assert.match(plugin, /paramsElement \(\) \{\s*if \(this\.devLogMock\) \{\s*return \{ \.\.\.this\.currentElement, status: this\.devLogMock\.status \|\| this\.currentElement\.status \}/)
 })
 
 test('log status fallback uses the project circle icon without changing known mappings', () => {
@@ -4749,12 +4728,10 @@ test('dev UNEXEC mock suppresses logs even when the real step completed', () => 
     const loadingMock = devMock.resolveLogPanelDevMock('loading', 'development')
     const effectiveUnexecuted = devMock.applyLogPanelDevMock({ status: 'SUCCEED' }, unexecutedMock, 'step')
     assert.equal(effectiveUnexecuted.status, 'UNEXEC')
-    assert.equal(adapter.shouldLoadStepLog({ status: 'SUCCEED', devMock: unexecutedMock }), false)
     assert.equal(adapter.shouldLoadStepLog({ status: 'SUCCEED' }), true)
     assert.equal(adapter.shouldLoadStepLog({ status: 'UNEXEC' }), false)
-    assert.equal(adapter.shouldLoadStepLog({ status: 'SUCCEED', devMock: loadingMock }), true)
     const plugin = readFileSync(new URL('../../plugin.vue', import.meta.url), 'utf8')
-    assert.match(plugin, /canRenderLog \(\) \{\s*if \(this\.isHistoricalExecuteCount\) return true\s*return shouldLoadStepLog\(\{ status: this\.currentElement\.status, devMock: this\.devLogMock \}\)/)
+    assert.match(plugin, /canRenderLog \(\) \{\s*if \(this\.isHistoricalExecuteCount\) return true\s*return shouldLoadStepLog\(\{ status: this\.currentElement\.status \}\)/)
     assert.match(plugin, /shouldMountLog \(\) \{[\s\S]*shouldMountLogPanel/)
     assert.match(plugin, /canShowConclusion \(\) \{\s*if \(this\.isHistoricalExecuteCount\)[\s\S]*?return this\.canRenderLog \|\| this\.currentElement\.status === 'UNEXEC'/)
     assert.match(plugin, /<log-conclusion-bar[\s\S]*v-if="currentTab === 'log' && showConclusion"/)
@@ -6527,7 +6504,7 @@ test('progress subtasks retain a terminal snapshot and expose the expand action 
     const conclusion = readFileSync(new URL('../LogConclusionBar.vue', import.meta.url), 'utf8')
     assert.match(plugin, /progressSubtasksSnapshot/)
     assert.match(plugin, /progressExpandInitKey/)
-    assert.match(plugin, /return this\.devLogMock[\s\S]*this\.progressSubtasks\.length[\s\S]*this\.progressSubtasksSnapshot/)
+    assert.match(plugin, /this\.progressSubtasks\.length \? this\.progressSubtasks : this\.progressSubtasksSnapshot/)
     assert.match(conclusion, /v-if="progress !== null && progress !== undefined \|\| hasSubtasks"/)
     assert.match(conclusion, /v-if="hasSubtasks"/)
 })

@@ -3,7 +3,7 @@
         class="step-log-panel"
     >
         <div
-            v-if="devMockLoading || loadingInitial"
+            v-if="loadingInitial"
             class="log-panel-loading"
             role="status"
             :aria-label="$t('loading')"
@@ -116,7 +116,6 @@
         withDisplayLineNumbers
     } from './logPanelAdapter'
     import { countNewLogPanelLines, mergeLogPanelLines, nextAfterCursor } from './logPanelTail'
-    import { createLogPanelFormatStressLogs, createLogPanelSearchStressLogs, filterLogPanelDevMockLogs } from './logPanelDevMock'
     import { buildLogStructure, isLogStructureFilterEligible, projectLogStructure, resolveLogGroupAncestors } from './logLineStructure.js'
 
     export default {
@@ -140,8 +139,6 @@
             locateTarget: { type: Object, default: null },
             emptyLineText: { type: String, default: '' },
             controls: { type: Object, required: true },
-            devMockLoading: { type: Boolean, default: false },
-            devMockState: { type: String, default: '' },
             taskStatus: { type: String, default: '' }
         },
         data () {
@@ -217,24 +214,6 @@
             },
         },
         watch: {
-            devMockState (state, previousState) {
-                if (state === previousState) return
-                this.clearSearchForContext()
-                if (this.devMockLoading) {
-                    this.invalidate()
-                    this.loadingInitial = true
-                    this.logs = []
-                    return
-                }
-                this.reload()
-            },
-            devMockLoading (loading) {
-                if (!loading) return
-                this.clearSearchForContext()
-                this.invalidate()
-                this.loadingInitial = true
-                this.logs = []
-            },
             executeCount () {
                 this.collapsedGroupIds = []
                 if (!this.contextKey) {
@@ -313,7 +292,7 @@
             this.ensureLevelsControl()
         },
         mounted () {
-            if (!this.devMockLoading) this.reload()
+            this.reload()
             this.$nextTick(() => {
                 this.suppressLevelsReload = false
             })
@@ -411,36 +390,6 @@
                 this.maxTimestamp = null
                 this.beforeCursor = null
                 let latestSucceeded = false
-                if (['search-stress', 'format-stress-100k'].includes(this.devMockState) && process.env.NODE_ENV === 'development') {
-                    const request = this.requestParams()
-                    const logs = filterLogPanelDevMockLogs(
-                        this.devMockState === 'format-stress-100k'
-                            ? createLogPanelFormatStressLogs('development')
-                            : createLogPanelSearchStressLogs('development'),
-                        request.levels,
-                        request.subTag
-                    )
-                    const response = {
-                        status: 0,
-                        logs,
-                        hasBefore: false,
-                        hasAfter: false,
-                        finished: true,
-                        matchedTotal: logs.length,
-                        subTags: ['compile', 'test', 'deploy']
-                    }
-                    this.applyResponse(normalizeLogPanelResponse(response, { strictLatest: true }), 'latest', response, generation)
-                    latestSucceeded = response.status === 0 && !response.cleaned && !response.emptyStatus
-                    this.loadingInitial = false
-                    const search = String(this.controls.search || '')
-                    this.$nextTick(() => {
-                        if (generation !== this.generation || search !== String(this.controls.search || '')) return
-                        if (this.controls.search) this.continueSearchBackfill()
-                        else this.scrollToBottom()
-                        this.$emit('logs-loaded')
-                    })
-                    return
-                }
                 this.getLogPanelLatest(this.requestParams()).then(response => {
                     if (generation !== this.generation) return
                     const result = normalizeLogPanelResponse(response, { strictLatest: true })
@@ -718,7 +667,7 @@
             },
             loadAfter () {
                 this.requestTimer = null
-                if (this.devMockState || this.loadingAfter || (!this.logs.length && this.finished) || (this.finished && !this.hasAfter)) return
+                if (this.loadingAfter || (!this.logs.length && this.finished) || (this.finished && !this.hasAfter)) return
                 this.loadingAfter = true
                 const generation = this.generation
                 const view = this.$refs.linesView
@@ -767,7 +716,7 @@
             scheduleAfter () {
                 clearTimeout(this.requestTimer)
                 this.requestTimer = null
-                if (this.devMockState || this.finished && !this.hasAfter) return
+                if (this.finished && !this.hasAfter) return
                 const delay = Math.min(10000, 1000 * (2 ** Math.min(this.afterRetries, 3)))
                 const generation = this.generation
                 this.requestTimer = setTimeout(() => {
@@ -776,7 +725,6 @@
                 }, delay)
             },
             resumeLogPolling () {
-                if (this.devMockState) return
                 if (this.loadingInitial || this.loadingAfter) {
                     this.pendingStatusResume = true
                     return

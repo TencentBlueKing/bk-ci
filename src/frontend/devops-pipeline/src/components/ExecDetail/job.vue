@@ -106,8 +106,6 @@
                     :execute-count="activeExecuteCount"
                     :archive-flag="$route.query.archiveFlag"
                     :controls="realLogControls"
-                    :dev-mock-loading="!!devLogMock?.forceLoading"
-                    :dev-mock-state="devLogMock?.state || ''"
                     ref="realLog"
                     @error="handleLogError"
                     @permission="handleLogPermission"
@@ -151,7 +149,6 @@
     import { convertMStoString } from '@/utils/util'
     import LogConclusionBar from './log-panel/LogConclusionBar'
     import { buildConclusion, countConditionSkippedSteps, isJobConditionSkipped, resolveCancelConclusion, resolveCancelDisplay, resolveConclusionElapsed, resolveElapsedTimestamp, resolveJobQueueDetail, resolveNodeLogError, resolveJobFailureStep, isJobExecTimeoutCancel, isJobSystemAgentTermination, resolveJobExecTimeoutCode, resolveFallbackCancelLabelKey, resolveCancelUserId, isTaskElapsedStatus, isConcurrencyQueueCandidate, isVisibleConcurrencyQueueResponse, canShowJobConclusion, shouldClearQueueAfterError, buildHistoricalRecordRequest, validateHistoricalLogRecord, resolveHistoricalJobSnapshot, shouldMountLogPanel, shouldShowLocateLog, shouldShowStandaloneExecuteCount, resolveJobDirectoryItems, encodeDownloadFileName } from './log-panel/logPanelAdapter'
-    import { applyLogPanelDevMock, resolveLogPanelDevMock } from './log-panel/logPanelDevMock'
     import JobLogPanel from './log-panel/JobLogPanel'
     import LogPanelToolbar from './log-panel/LogPanelToolbar'
     import LogExecuteCountSelect from './log-panel/LogExecuteCountSelect'
@@ -237,7 +234,7 @@
                     const job = editingElementPos.containerGroupIndex === undefined
                         ? currentStage.containers[editingElementPos.containerIndex]
                         : currentStage.containers[editingElementPos.containerIndex].groupContainers[editingElementPos.containerGroupIndex]
-                    return applyLogPanelDevMock(job, this.devLogMock, 'job')
+                    return job || {}
                 } catch (_) {
                     return {}
                 }
@@ -333,11 +330,6 @@
                 return !this.isHistoricalExecuteCount && this.queueDetailModel ? `${title} · ${this.$t('logPanel.queue.mutexQueue')}` : title
             },
 
-            devLogMock () {
-                if (process.env.NODE_ENV !== 'development') return null
-                return resolveLogPanelDevMock(this.$route.query.logMockState)
-            },
-
             positionCode () {
                 const { stageIndex, containerIndex } = this.editingElementPos
                 return `${stageIndex + 1}-${containerIndex + 1}`
@@ -355,17 +347,13 @@
                 const status = String(this.displayJob.status || '').toUpperCase()
                 const canDisplayConclusion = this.isHistoricalExecuteCount ? this.displayConclusionAvailable : this.conclusionVisible
                 if (!canDisplayConclusion || !['FAILED', 'HEARTBEAT_TIMEOUT', 'EXEC_TIMEOUT'].includes(status)) return null
-                if (this.devLogMock) {
-                    const error = this.devLogMock.summaryError
-                    return error ? { ...error, errorMsg: error.errorMsg || (error.errorMsgKey ? this.$t(error.errorMsgKey) : '') } : null
-                }
                 return resolveNodeLogError(this.displayExecDetail.errorInfoList, { id: '', containerId: this.displayJob.id }, this.displayJob)
             },
             jobFailureStep () {
                 const job = this.displayJob
                 const error = this.jobErrorSummary
                 const canDisplayConclusion = this.isHistoricalExecuteCount ? this.displayConclusionAvailable : this.conclusionVisible
-                if (this.devLogMock || !canDisplayConclusion || String(job.status || '').toUpperCase() !== 'FAILED' || this.setupFailed || error?.errorCode || error?.errorMsg) return null
+                if (!canDisplayConclusion || String(job.status || '').toUpperCase() !== 'FAILED' || this.setupFailed || error?.errorCode || error?.errorMsg) return null
                 const step = resolveJobFailureStep(job.elements, this.displayExecDetail.errorInfoList, job)
                 return step && (step.name || step.taskName) ? step : null
             },
@@ -388,10 +376,10 @@
                     : []
             },
             queueDetailModel () {
-                return resolveJobQueueDetail(this.devLogMock?.queueDetail || this.queueResponse, {
+                return resolveJobQueueDetail(this.queueResponse, {
                     projectId: this.$route.params.projectId,
                     formatDuration: convertMStoString,
-                    receivedAt: this.devLogMock?.queueDetail?.serverTime || this.queueReceivedAt,
+                    receivedAt: this.queueReceivedAt,
                     now: this.elapsedNow
                 })
             },
@@ -440,9 +428,7 @@
                 return {
                     ...model,
                     tone: cancelDisplay || systemCanceledEvidence && !jobTimeoutEvidence ? 'canceled' : model.tone,
-                    label: this.devLogMock?.labelKey
-                        ? this.$t(this.devLogMock.labelKey)
-                        : jobTimeoutEvidence
+                    label: jobTimeoutEvidence
                         ? translated
                         : cancelDisplay
                         ? cancelDisplay.label
@@ -453,9 +439,7 @@
                         : queueDetail
                         ? job.status === 'LOOP_WAITING' ? job.status : this.$t('logPanel.queue.mutexQueue')
                         : translated === key ? job.status : translated,
-                    message: this.devLogMock?.parentCanceled
-                        ? this.$t('logPanel.status.parentCanceledDetail', [this.$t(this.devLogMock.parentCanceled.nameKey), this.devLogMock.parentCanceled.buildNum, this.devLogMock.parentCanceled.cancelUser])
-                        : jobTimeoutCancel
+                    message: jobTimeoutCancel
                         ? displayDetail.buildEndInfo?.reason || model.message
                         : jobTimeoutCode
                         ? this.$t('logPanel.status.jobSelfTimeout', [model.timeoutThreshold])
@@ -464,21 +448,15 @@
                         : cancelDisplay
                         ? cancelDisplay.message
                         : queueDetail
-                        ? ''
-                        : this.devLogMock?.state === 'queue' || this.devLogMock?.state === 'queue-expanded'
-                        ? (queueDetail?.running.length ? this.$t('logPanel.queue.waitingReason') : '')
-                        : queueDetail?.running.length
-                        ? this.$t('logPanel.queue.waitingReason')
-                        : this.devLogMock?.messageKey ? this.$t(this.devLogMock.messageKey)
+                        ? (queueDetail.running.length ? this.$t('logPanel.queue.waitingReason') : '')
                         : this.jobFailureStep ? this.$t('logPanel.status.failedByStep', [this.jobFailureStep.name || this.jobFailureStep.taskName || ''])
                         : model.message,
                     statusMessageKey: queueDetail || conditionSkipped || conditionSkipCount ? '' : model.statusMessageKey,
-                    cancelUserId: cancelDisplay?.cancelUserId
-                        || (this.devLogMock && Object.prototype.hasOwnProperty.call(this.devLogMock, 'cancelUserId') ? this.devLogMock.cancelUserId : resolveCancelUserId(cancelConclusion, model.cancelUserId)),
-                    parentBuildLabel: this.devLogMock?.parentCanceled || cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',
+                    cancelUserId: cancelDisplay?.cancelUserId || resolveCancelUserId(cancelConclusion, model.cancelUserId),
+                    parentBuildLabel: cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',
                     parentBuildUrl: cancelDisplay?.parentBuildUrl || cancelConclusion?.parentBuildUrl || '',
                     queueDetail,
-                    queueExpanded: Boolean(this.devLogMock?.queueExpanded),
+                    queueExpanded: false,
                     conditionSkipSummary: conditionSkipped
                         ? this.conditionSkipReason || this.$t('logPanel.status.conditionSkipped')
                         : conditionSkipCount ? this.$t('logPanel.status.conditionSkipSummary', [conditionSkipCount]) : '',
@@ -497,19 +475,15 @@
             isQueueCandidate () {
                 return isConcurrencyQueueCandidate(this.execDetail.status)
             },
-            isQueueMockActive () {
-                return process.env.NODE_ENV === 'development' && Boolean(this.devLogMock?.queueDetail)
-            },
             canRenderLog () {
                 if (this.isHistoricalExecuteCount) return true
-                return Boolean(this.devLogMock?.forceLoading) || !['UNEXEC', 'WAITING', 'DISABLED'].includes(this.currentJob.status)
+                return !['UNEXEC', 'WAITING', 'DISABLED'].includes(this.currentJob.status)
             },
             shouldMountLog () {
                 return shouldMountLogPanel({
                     isHistoricalExecuteCount: this.isHistoricalExecuteCount,
                     historyRecordState: this.historyRecordState,
-                    status: this.isHistoricalExecuteCount ? this.displayJob.status : this.currentJob.status,
-                    devMock: this.devLogMock
+                    status: this.isHistoricalExecuteCount ? this.displayJob.status : this.currentJob.status
                 })
             },
             canShowConclusion () {
@@ -597,10 +571,6 @@
             },
             async fetchHistoricalDetail () {
                 if (!this.isHistoricalExecuteCount) return
-                if (this.devLogMock) {
-                    this.historyRecordState = 'unavailable'
-                    return
-                }
                 const requestId = ++this.historyRequestId
                 const contextKey = this.historyContextKey
                 const context = this.historyRequestContext
@@ -657,10 +627,6 @@
                 if (this.$bkMessage) this.$bkMessage({ theme: 'warning', message: this.$t('logPanel.locateSummaryMiss'), limit: 1 })
             },
             handleStepAction (skip) {
-                if (this.devLogMock) {
-                    this.showMockActionNotice()
-                    return
-                }
                 if (this.pendingAction || !this.retryableStep) return
                 const action = skip ? 'skip' : 'retry'
                 this.pendingAction = action
@@ -671,15 +637,12 @@
                     this.pendingAction = ''
                 })
             },
-            showMockActionNotice () {
-                if (this.$bkMessage) this.$bkMessage({ theme: 'primary', message: this.$t('logPanel.mockActionNotice'), limit: 1 })
-            },
             startElapsedTimer () {
                 this.stopElapsedTimer()
                 const start = resolveElapsedTimestamp(this.currentJob.startEpoch)
                     ?? resolveElapsedTimestamp(this.currentJob.startTime)
                 const hasStart = start !== null
-                if ((isTaskElapsedStatus(this.currentJob.status) && hasStart) || this.queueResponse?.visible === true || this.isQueueMockActive) {
+                if ((isTaskElapsedStatus(this.currentJob.status) && hasStart) || this.queueResponse?.visible === true) {
                     this.elapsedNow = Date.now()
                     this.elapsedTimer = setInterval(() => {
                         this.elapsedNow = Date.now()
@@ -703,11 +666,11 @@
                 this.queueResponse = null
                 this.queueClosed = false
                 this.queueForbidden = false
-                if (this.isQueueCandidate && !this.isQueueMockActive) this.fetchConcurrencyQueue()
+                if (this.isQueueCandidate) this.fetchConcurrencyQueue()
             },
             refreshQueueForStatus (previousStatus) {
                 this.clearQueueTimer()
-                if (this.isQueueCandidate && !this.isQueueMockActive) this.fetchConcurrencyQueue()
+                if (this.isQueueCandidate) this.fetchConcurrencyQueue()
                 else if (isConcurrencyQueueCandidate(previousStatus)) this.fetchConcurrencyQueue(true)
                 else this.invalidateQueueRequests()
             },
@@ -722,7 +685,7 @@
                 }, 3000)
             },
             async fetchConcurrencyQueue (finalRequest = false) {
-                if (this.queueClosed || this.isQueueMockActive) return
+                if (this.queueClosed) return
                 const requestId = ++this.queueRequestId
                 const contextKey = this.queueContextKey
                 const { projectId, pipelineId } = this.$route.params

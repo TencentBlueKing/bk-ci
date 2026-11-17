@@ -3,7 +3,7 @@ import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import { existsSync, readFileSync } from 'node:fs'
 import { findLogMatchIds, getLogIssueLevel, getLogText, renderLogHtml } from '../logPanelAdapter.js'
-import { createLogPanelFormatStressLogs, createLogPanelSearchStressLogs, filterLogPanelDevMockLogs, resolveLogPanelDevMock } from '../logPanelDevMock.js'
+import { createLogPanelFormatStressLogs, createLogPanelSearchStressLogs, filterLogPanelDevMockLogs, resolveLogPanelDevMock } from './logPanelDevMock.fixture.mjs'
 import { parseLogLine, renderFormattedLogHtml } from '../logLineFormat.js'
 
 test('100k format fixture is development-only, deterministic, and keeps the 10k search fixture', () => {

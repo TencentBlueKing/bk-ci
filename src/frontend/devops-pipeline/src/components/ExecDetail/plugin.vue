@@ -137,8 +137,6 @@
                     :archive-flag="$route.query.archiveFlag"
                     :empty-line-text="stepEmptyLineText"
                     :controls="realLogControls"
-                    :dev-mock-loading="!!devLogMock?.forceLoading"
-                    :dev-mock-state="devLogMock?.state || ''"
                     ref="realLog"
                     @error="handleLogError"
                     @permission="handleLogPermission"
@@ -192,7 +190,6 @@
         shouldShowProgressTab,
         buildConclusion,
         shouldLoadStepLog,
-        applyProgressMockTransition,
         buildParamsRecordRequest,
         buildParamsModel,
         hasCustomRunCondition,
@@ -224,7 +221,6 @@
         validateHistoricalLogRecord,
         resolveHistoricalPluginSnapshot
     } from './log-panel/logPanelAdapter'
-    import { applyLogPanelDevMock, resolveLogPanelDevMock } from './log-panel/logPanelDevMock'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
 
@@ -278,8 +274,6 @@
                 paramsLoadError: '',
                 progressExpanded: false,
                 progressExpandInitKey: '',
-                devMockTabsVisible: false,
-                devMockTabsTimer: null,
                 progressPercent: null,
                 progressSubtasks: [],
                 progressSubtasksSnapshot: [],
@@ -321,7 +315,7 @@
                     const container = containerGroupIndex !== undefined
                         ? stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex]
                         : stages[stageIndex].containers[containerIndex]
-                    return applyLogPanelDevMock(container, this.devLogMock, 'job')
+                    return container || {}
                 } catch (_) {
                     return {}
                 }
@@ -331,7 +325,7 @@
                 const {
                     editingElementPos: { elementIndex }
                 } = this
-                return applyLogPanelDevMock(this.container.elements?.[elementIndex] ?? {}, this.devLogMock, 'step')
+                return this.container.elements?.[elementIndex] ?? {}
             },
 
             supportsLocalHistory () {
@@ -412,13 +406,8 @@
                 return this.currentTab === 'log' && this.isHistoricalExecuteCount && this.historyRecordState !== 'ready'
             },
 
-            devLogMock () {
-                if (process.env.NODE_ENV !== 'development') return null
-                return resolveLogPanelDevMock(this.$route.query.logMockState)
-            },
-
             showHeaderTabs () {
-                return !this.devLogMock?.delayTabsMs || this.devMockTabsVisible
+                return true
             },
             positionCode () {
                 return positionCode(this.editingElementPos)
@@ -434,9 +423,6 @@
             },
 
             durationText () {
-                if (!this.isHistoricalExecuteCount && this.devLogMock?.elapsed !== undefined && this.currentElement.status === 'RUNNING') {
-                    return convertMStoString(this.devLogMock.elapsed)
-                }
                 if (isTaskElapsedStatus(this.displayElement.status)) {
                     const start = resolveElapsedTimestamp(this.displayElement.startEpoch)
                         ?? resolveElapsedTimestamp(this.displayElement.startTime)
@@ -458,7 +444,7 @@
                 const displayDetail = this.displayExecDetail
                 const status = currentElement.status
                 const jobStatus = container.status
-                const jobTimeoutCode = this.isHistoricalExecuteCount ? currentElement.errorCode : (this.devLogMock?.timeoutEvidenceCode ?? currentElement.errorCode)
+                const jobTimeoutCode = currentElement.errorCode
                 const cancelConclusion = resolveCancelConclusion(displayDetail.buildEndInfo, {
                     taskId: currentElement.id,
                     containerId: container.containerId || container.id,
@@ -478,26 +464,22 @@
                     errorMsg: nodeError?.errorMsg || currentElement.errorMsg
                 }
                 const gated = this.actionsEnabled && !this.$route.query?.archiveFlag && this.conclusionVisible && !this.isHistoricalExecuteCount
-                const mockActionsVisible = Boolean(this.devLogMock) && this.conclusionVisible
-                const conclusionContainer = !this.isHistoricalExecuteCount && this.devLogMock?.scope === 'step' && this.devLogMock.nodeName
-                    ? { ...container, nodeName: this.devLogMock.nodeName }
-                    : container
-                const model = buildConclusion(element, conclusionContainer, {
+                const model = buildConclusion(element, container, {
                     projectId: this.$route.params.projectId,
                     now: this.elapsedNow,
-                    cancelUserId: this.isHistoricalExecuteCount ? (displayDetail.cancelUserId || '') : this.devLogMock ? (this.devLogMock.cancelUserId || '') : (displayDetail.cancelUserId || ''),
+                    cancelUserId: displayDetail.cancelUserId || '',
                     effectiveStatus,
                     jobStatus: jobTimeoutEvidence ? 'EXEC_TIMEOUT' : jobStatus,
                     stepStatus: currentElement.status,
                     element: currentElement,
                     container,
                     hideNode: ['FAILED', 'EXEC_TIMEOUT', 'HEARTBEAT_TIMEOUT'].includes(String(container.startVMStatus || '').toUpperCase()),
-                    canRetry: !this.isHistoricalExecuteCount && (this.devLogMock ? mockActionsVisible && !!this.devLogMock.canRetry : gated && !!currentElement.canRetry),
-                    canSkip: !this.isHistoricalExecuteCount && (this.devLogMock ? mockActionsVisible && !!this.devLogMock.canSkip : gated && !!currentElement.canSkip),
-                    continueConfig: !this.isHistoricalExecuteCount && (this.devLogMock ? mockActionsVisible : gated) && status === 'PAUSE',
-                    review: !this.isHistoricalExecuteCount && (this.devLogMock ? mockActionsVisible : gated) && status === 'REVIEWING',
+                    canRetry: !this.isHistoricalExecuteCount && gated && !!currentElement.canRetry,
+                    canSkip: !this.isHistoricalExecuteCount && gated && !!currentElement.canSkip,
+                    continueConfig: !this.isHistoricalExecuteCount && gated && status === 'PAUSE',
+                    review: !this.isHistoricalExecuteCount && gated && status === 'REVIEWING',
                     locateLog: shouldShowLocateLog(effectiveStatus) && this.shouldMountLog,
-                    conditionLink: !this.isHistoricalExecuteCount && !this.devLogMock && hasCustomRunCondition(currentElement)
+                    conditionLink: !this.isHistoricalExecuteCount && hasCustomRunCondition(currentElement)
                 })
                 const conditionSkipped = !this.isHistoricalExecuteCount && isConditionSkipped(currentElement)
                 const fallbackCancelKey = cancelConclusion ? '' : resolveFallbackCancelLabelKey({ status: effectiveStatus, cancelUserId: model.cancelUserId, buildEndInfo: displayDetail.buildEndInfo })
@@ -506,20 +488,14 @@
                 return {
                     ...model,
                     tone: cancelDisplay ? 'canceled' : model.tone,
-                    message: this.devLogMock?.parentCanceled
-                        ? this.$t('logPanel.status.parentCanceledDetail', [this.$t(this.devLogMock.parentCanceled.nameKey), this.devLogMock.parentCanceled.buildNum, this.devLogMock.parentCanceled.cancelUser])
-                        : this.devLogMock?.messageKey
-                        ? this.$t(this.devLogMock.messageKey)
-                        : systemCanceledEvidence
+                    message: systemCanceledEvidence
                         ? this.$t('logPanel.status.systemCanceledDetail')
                         : cancelDisplay
                         ? cancelDisplay.message
                         : effectiveStatus === 'EXEC_TIMEOUT'
                         ? this.$t(jobTimeoutEvidence ? 'logPanel.status.jobTimeout' : 'logPanel.status.stepTimeout', jobTimeoutEvidence ? [container.name, model.timeoutThreshold] : [model.timeoutThreshold])
                         : model.message,
-                    label: this.devLogMock?.labelKey
-                        ? this.$t(this.devLogMock.labelKey)
-                        : cancelDisplay
+                    label: cancelDisplay
                         ? cancelDisplay.label
                         : fallbackCancelKey
                         ? this.$t(`logPanel.status.${fallbackCancelKey}`)
@@ -528,7 +504,7 @@
                         : systemCanceledEvidence
                         ? this.$t('logPanel.status.systemCanceled')
                         : translated === key ? effectiveStatus : translated,
-                    parentBuildLabel: this.devLogMock?.parentCanceled || cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',
+                    parentBuildLabel: cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',
                     parentBuildUrl: cancelDisplay?.parentBuildUrl || cancelConclusion?.parentBuildUrl || '',
                     cancelUserId: cancelDisplay?.cancelUserId || resolveCancelUserId(cancelConclusion, model.cancelUserId),
                     conditionSkipSummary: conditionSkipped
@@ -547,9 +523,6 @@
                 return !!this.paramsModel.notExecuted
             },
             paramsElement () {
-                if (this.devLogMock) {
-                    return { ...this.currentElement, status: this.devLogMock.status || this.currentElement.status }
-                }
                 return resolveParamsElementSource({
                     execDetail: this.execDetail,
                     paramsExecDetail: this.paramsExecDetail,
@@ -569,14 +542,13 @@
             },
             canRenderLog () {
                 if (this.isHistoricalExecuteCount) return true
-                return shouldLoadStepLog({ status: this.currentElement.status, devMock: this.devLogMock })
+                return shouldLoadStepLog({ status: this.currentElement.status })
             },
             shouldMountLog () {
                 return shouldMountLogPanel({
                     isHistoricalExecuteCount: this.isHistoricalExecuteCount,
                     historyRecordState: this.historyRecordState,
-                    status: this.isHistoricalExecuteCount ? this.displayElement.status : this.currentElement.status,
-                    devMock: this.devLogMock
+                    status: this.isHistoricalExecuteCount ? this.displayElement.status : this.currentElement.status
                 })
             },
             canShowConclusion () {
@@ -599,25 +571,19 @@
             },
             displayProgressPercent () {
                 if (this.isHistoricalExecuteCount) return null
-                if (this.devLogMock?.progress !== undefined) return this.devLogMock.progress
                 return resolveDisplayProgressPercent(this.currentElement.status, this.progressPercent)
             },
             displayProgressSubtasks () {
                 if (this.isHistoricalExecuteCount) return []
-                return this.devLogMock
-                    ? (this.devLogMock.subtasks || [])
-                    : (this.progressSubtasks.length ? this.progressSubtasks : this.progressSubtasksSnapshot)
+                return this.progressSubtasks.length ? this.progressSubtasks : this.progressSubtasksSnapshot
             },
             canExpandProgressSubtasks () {
                 if (this.isHistoricalExecuteCount) return false
-                if (this.devLogMock) {
-                    return this.devLogMock.state === 'running-subtasks' && this.currentElement.status === 'RUNNING'
-                }
                 return this.displayProgressSubtasks.length > 0
             },
             progressPanelData () {
                 if (this.isHistoricalExecuteCount) return null
-                return this.devLogMock ? (this.devLogMock.progressDetailData || null) : this.progressDetailData
+                return this.progressDetailData
             },
             componentList () {
                 return {
@@ -672,9 +638,6 @@
                 const timeoutTerminated = isJobTimeoutTerminatedStep(status, element.errorCode, errorInfoList, { id: element.id, containerId: container.id })
                 const canDisplayConclusion = this.isHistoricalExecuteCount ? this.displayConclusionAvailable : this.conclusionVisible
                 if (!canDisplayConclusion || !['FAILED', 'HEARTBEAT_TIMEOUT', 'EXEC_TIMEOUT'].includes(status) && !timeoutTerminated) return null
-                if (!this.isHistoricalExecuteCount && this.devLogMock) return this.devLogMock.summaryError
-                    ? { ...this.devLogMock.summaryError, errorMsg: this.devLogMock.summaryError.errorMsg || this.$t(this.devLogMock.summaryError.errorMsgKey) }
-                    : null
                 return resolveNodeLogError(
                     errorInfoList,
                     { id: element.id, containerId: container.id },
@@ -772,19 +735,6 @@
                     this.ensureCurrentTab()
                 }
             },
-            '$route.query.logMockState' (value, previousValue) {
-                this.syncDevMockState()
-                const previousMock = resolveLogPanelDevMock(previousValue)
-                const nextMock = this.devLogMock
-                applyProgressMockTransition(previousMock?.state || null, nextMock?.state || null, this.currentElement.status, {
-                    stopPoll: () => this.stopProgressPoll(),
-                    invalidate: () => {
-                        this.progressRequestId += 1
-                    },
-                    reset: () => this.resetProgressState(),
-                    fetch: () => this.fetchProgress()
-                })
-            },
             'currentElement.id': function () {
                 this.stopElapsedTimer()
                 this.stopProgressPoll()
@@ -815,16 +765,14 @@
         },
 
         mounted () {
-            this.syncDevMockState()
             this.startElapsedTimer()
-            if (!this.devLogMock) this.fetchProgress()
+            this.fetchProgress()
         },
 
         beforeDestroy () {
             this.invalidateHistoricalDetail()
             this.stopElapsedTimer()
             this.stopProgressPoll()
-            clearTimeout(this.devMockTabsTimer)
             this.progressRequestId += 1
             this.invalidateParamsRecord()
         },
@@ -845,10 +793,6 @@
             },
             async fetchHistoricalDetail () {
                 if (!this.isHistoricalExecuteCount) return
-                if (this.devLogMock) {
-                    this.historyRecordState = 'unavailable'
-                    return
-                }
                 const requestId = ++this.historyRequestId
                 const contextKey = this.historyContextKey
                 const context = this.historyRequestContext
@@ -886,18 +830,6 @@
                     if (contextKey !== `${this.currentElement.id}|${this.execDetail.id}` || this.currentTab !== 'log') return
                     this.$refs.conclusionExecuteCountSelect?.focusTrigger?.()
                 })
-            },
-            syncDevMockState () {
-                clearTimeout(this.devMockTabsTimer)
-                this.devMockTabsTimer = null
-                const mock = this.devLogMock
-                this.progressExpanded = Boolean(mock?.progressExpanded)
-                this.devMockTabsVisible = !mock?.delayTabsMs
-                if (mock?.delayTabsMs) {
-                    this.devMockTabsTimer = setTimeout(() => {
-                        this.devMockTabsVisible = true
-                    }, mock.delayTabsMs)
-                }
             },
             handleLogError (error) {
                 this.realLogError = error?.message || String(error || '')
@@ -947,10 +879,6 @@
                 })
             },
             async fetchProgress ({ isPoll = false, requestId, contextKey } = {}) {
-                if (this.devLogMock) {
-                    this.stopProgressPoll()
-                    return
-                }
                 if (!isPoll) {
                     this.stopProgressPoll()
                     requestId = ++this.progressRequestId
@@ -1021,10 +949,6 @@
                 if (this.$bkMessage) this.$bkMessage({ theme: 'warning', message: this.$t('logPanel.locateSummaryMiss'), limit: 1 })
             },
             handleStepAction (skip) {
-                if (this.devLogMock) {
-                    this.showMockActionNotice()
-                    return
-                }
                 if (this.pendingAction) return
                 const action = skip ? 'skip' : 'retry'
                 this.pendingAction = action
@@ -1036,15 +960,8 @@
                 })
             },
             handleMockablePanelAction (action) {
-                if (this.devLogMock) {
-                    this.showMockActionNotice()
-                    return
-                }
                 if (action === 'review') this.$emit('review', this.currentElement)
                 else this.selectTab('setting')
-            },
-            showMockActionNotice () {
-                if (this.$bkMessage) this.$bkMessage({ theme: 'primary', message: this.$t('logPanel.mockActionNotice'), limit: 1 })
             },
 
             handleExecuteChange (executeCount) {

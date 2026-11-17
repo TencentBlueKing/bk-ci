@@ -95,14 +95,12 @@ export function shouldShowProgressTab ({ data, percent, subtasks = [], error = f
         || (Array.isArray(subtasks) && subtasks.length > 0)
 }
 
-export function shouldLoadStepLog ({ status, devMock = null } = {}) {
-    if (devMock?.forceLoading) return true
-    const effectiveStatus = devMock?.status || status
-    return !['UNEXEC', 'WAITING', 'DISABLED'].includes(String(effectiveStatus || '').toUpperCase())
+export function shouldLoadStepLog ({ status } = {}) {
+    return !['UNEXEC', 'WAITING', 'DISABLED'].includes(String(status || '').toUpperCase())
 }
 
-export function shouldMountLogPanel ({ isHistoricalExecuteCount = false, historyRecordState = 'idle', status, devMock = null } = {}) {
-    if (!isHistoricalExecuteCount) return shouldLoadStepLog({ status, devMock })
+export function shouldMountLogPanel ({ isHistoricalExecuteCount = false, historyRecordState = 'idle', status } = {}) {
+    if (!isHistoricalExecuteCount) return shouldLoadStepLog({ status })
     if (historyRecordState === 'ready') return shouldLoadStepLog({ status })
     return historyRecordState === 'unavailable'
 }
@@ -1551,7 +1549,6 @@ export function resolveJobDirectoryItems (items = [], executeCount) {
 }
 
 export function resolveJobQueueDetail (response = null, context = {}) {
-    if (context.environment === 'development' && context.devMock?.queueDetail) return context.devMock.queueDetail
     const result = response?.data ?? response
     const data = result?.data ?? result
     if (Number(result?.status ?? 0) !== 0 || data?.visible !== true) return null
