@@ -35,6 +35,8 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -51,10 +53,13 @@ class PipelineExtendsNotifyConfiguration {
         @Autowired pipelineUrlBean: PipelineUrlBean,
         @Autowired projectCacheService: ProjectCacheService,
         @Autowired pipelineRepositoryService: PipelineRepositoryService,
+        @Autowired buildVariableService: BuildVariableService,
+        @Autowired pipelineContextService: PipelineContextService,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher
     ) = PipelineBuildNotifyListener(
         client, pipelineUrlBean, projectCacheService,
-        pipelineRepositoryService, pipelineEventDispatcher
+        pipelineRepositoryService, buildVariableService, pipelineContextService,
+        pipelineEventDispatcher
     )
 
     /**
