@@ -100,9 +100,7 @@
             } catch (e) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: (e && e.message === 'EMPTY_CONVENTION')
-                        ? this.$t('convention.loadErrorDesc')
-                        : ((e && e.message) || this.$t('convention.retry'))
+                    message: (e && e.message) || this.$t('convention.retry')
                 })
             } finally {
                 this.submitting = false

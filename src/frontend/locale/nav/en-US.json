@@ -260,9 +260,6 @@
     "button": "Agree and continue",
     "tip": "Please select the checkbox first",
     "done": "Agreed",
-    "retry": "Agreement was not saved, please try again",
-    "loadErrorTitle": "Failed to load the convention",
-    "loadErrorDesc": "Unable to confirm whether you have agreed to the BK-CI Use Convention. Please try again. You cannot continue until this is confirmed.",
-    "retryCheck": "Retry"
+    "retry": "Agreement was not saved, please try again"
   }
 }

@@ -13,20 +13,7 @@
         <template v-if="projectList">
             <Header />
             <main>
-                <empty-tips
-                    v-if="conventionError"
-                    :title="$t('convention.loadErrorTitle')"
-                    :desc="$t('convention.loadErrorDesc')"
-                >
-                    <bk-button
-                        theme="primary"
-                        :loading="conventionStatus === 'checking'"
-                        @click="retryConvention"
-                    >
-                        {{ $t('convention.retryCheck') }}
-                    </bk-button>
-                </empty-tips>
-                <template v-else-if="conventionPassed">
+                <template v-if="conventionPassed">
                     <template v-if="hasProjectList">
                         <empty-tips
                             v-if="!hasProject"
@@ -97,7 +84,7 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { Action, Getter, State } from 'vuex-class'
+    import { Getter, State } from 'vuex-class'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import ConventionDialog from '../components/ConventionDialog/index.vue'
     import Header from '../components/Header/index.vue'
@@ -119,7 +106,6 @@
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
-        @Action checkConvention
         
 
         get loadingOption (): object {
@@ -164,23 +150,8 @@
             return this.conventionStatus === 'passed'
         }
 
-        get conventionError (): boolean {
-            return this.conventionStatus === 'error'
-        }
-
         get curProjectCode (): string {
             return this.$route.params.projectId
-        }
-
-        async retryConvention () {
-            try {
-                await this.checkConvention(this.$i18n.locale)
-            } catch (e) {
-                this.$bkMessage({
-                    message: (e && e.message) || this.$t('convention.loadErrorDesc'),
-                    theme: 'error'
-                })
-            }
         }
 
         switchProject () {
