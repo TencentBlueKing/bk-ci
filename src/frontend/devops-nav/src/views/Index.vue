@@ -13,62 +13,79 @@
         <template v-if="projectList">
             <Header />
             <main>
-                <template v-if="hasProjectList">
-                    <empty-tips
-                        v-if="!hasProject"
-                        :title="$t('accessDeny.title')"
-                        :desc="$t('accessDeny.desc')"
+                <empty-tips
+                    v-if="conventionError"
+                    :title="$t('convention.loadErrorTitle')"
+                    :desc="$t('convention.loadErrorDesc')"
+                >
+                    <bk-button
+                        theme="primary"
+                        :loading="conventionStatus === 'checking'"
+                        @click="retryConvention"
                     >
-                        <bk-button
-                            v-if="curProjectCode"
-                            theme="primary"
-                            @click="handleApplyJoin"
+                        {{ $t('convention.retryCheck') }}
+                    </bk-button>
+                </empty-tips>
+                <template v-else-if="conventionPassed">
+                    <template v-if="hasProjectList">
+                        <empty-tips
+                            v-if="!hasProject"
+                            :title="$t('accessDeny.title')"
+                            :desc="$t('accessDeny.desc')"
                         >
-                            {{ $t('accessDeny.applyJoin') }}
-                        </bk-button>
-                        <bk-button
-                            @click="switchProject"
+                            <bk-button
+                                v-if="curProjectCode"
+                                theme="primary"
+                                @click="handleApplyJoin"
+                            >
+                                {{ $t('accessDeny.applyJoin') }}
+                            </bk-button>
+                            <bk-button
+                                @click="switchProject"
+                            >
+                                {{ $t('accessDeny.switchProject') }}
+                            </bk-button>
+                        </empty-tips>
+                        <empty-tips
+                            v-else-if="isDisableProject"
+                            :title="$t('accessDeny.projectBan')"
+                            :desc="$t('accessDeny.projectBanDesc')"
                         >
-                            {{ $t('accessDeny.switchProject') }}
-                        </bk-button>
-                    </empty-tips>
-                    <empty-tips
-                        v-else-if="isDisableProject"
-                        :title="$t('accessDeny.projectBan')"
-                        :desc="$t('accessDeny.projectBanDesc')"
-                    >
-                        <bk-button
-                            theme="primary"
-                            @click="switchProject"
-                        >
-                            {{ $t('accessDeny.switchProject') }}
-                        </bk-button>
-                        <a
-                            target="_blank"
-                            class="empty-btns-item"
-                            href="/console/pm"
-                        ><bk-button theme="success">{{ $t("projectManage") }}</bk-button></a>
-                    </empty-tips>
+                            <bk-button
+                                theme="primary"
+                                @click="switchProject"
+                            >
+                                {{ $t('accessDeny.switchProject') }}
+                            </bk-button>
+                            <a
+                                target="_blank"
+                                class="empty-btns-item"
+                                href="/console/pm"
+                            ><bk-button theme="success">{{ $t("projectManage") }}</bk-button></a>
+                        </empty-tips>
 
-                    <!--<empty-tips v-else-if='isApprovalingProject' title='无法访问该项目' desc='你正在访问的项目正在处于审核中，禁止访问'>
-                        <bk-button type='primary' @click='switchProject'>切换项目</bk-button>
-                    </empty-tips>-->
+                        <!--<empty-tips v-else-if='isApprovalingProject' title='无法访问该项目' desc='你正在访问的项目正在处于审核中，禁止访问'>
+                            <bk-button type='primary' @click='switchProject'>切换项目</bk-button>
+                        </empty-tips>-->
+                    </template>
+                    <template v-if="projectApprovalStatus === 1">
+                        <section class="devops-empty-tips">
+                            <bk-exception
+                                class="exception-wrap-item project-exception-part"
+                                :type="403"
+                                scene="part"
+                            >
+                                <span class="bk-exception-title">{{ $t('projectCreatingTitle') }}</span>
+                                <div class="bk-exception-description">{{ $t('projectCreatingDesc', [curProject.projectName]) }}</div>
+                            </bk-exception>
+                        </section>
+                    </template>
+                    <router-view v-else-if="!hasProjectList || (isOnlineProject || isApprovalingProject)" />
                 </template>
-                <template v-if="projectApprovalStatus === 1">
-                    <section class="devops-empty-tips">
-                        <bk-exception
-                            class="exception-wrap-item project-exception-part"
-                            :type="403"
-                            scene="part"
-                        >
-                            <span class="bk-exception-title">{{ $t('projectCreatingTitle') }}</span>
-                            <div class="bk-exception-description">{{ $t('projectCreatingDesc', [curProject.projectName]) }}</div>
-                        </bk-exception>
-                    </section>
-                </template>
-                <router-view v-else-if="!hasProjectList || (isOnlineProject || isApprovalingProject)" />
             </main>
         </template>
+
+        <convention-dialog />
 
         <apply-project-dialog
             ref="applyProjectDialog"
@@ -80,30 +97,34 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { Getter, State } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import ConventionDialog from '../components/ConventionDialog/index.vue'
     import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
 
     @Component({
         components: {
             Header,
-            ApplyProjectDialog
+            ApplyProjectDialog,
+            ConventionDialog
         }
     })
     export default class Index extends Vue {
         @State currentNotice
         @State projectList
         @State headerConfig
+        @State conventionStatus
         @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
+        @Action checkConvention
         
 
         get loadingOption (): object {
             return {
-                isLoading: this.projectList === null
+                isLoading: this.projectList === null || this.conventionStatus === 'checking'
             }
         }
 
@@ -139,8 +160,27 @@
             return this.headerConfig.showProjectList
         }
 
+        get conventionPassed (): boolean {
+            return this.conventionStatus === 'passed'
+        }
+
+        get conventionError (): boolean {
+            return this.conventionStatus === 'error'
+        }
+
         get curProjectCode (): string {
             return this.$route.params.projectId
+        }
+
+        async retryConvention () {
+            try {
+                await this.checkConvention(this.$i18n.locale)
+            } catch (e) {
+                this.$bkMessage({
+                    message: (e && e.message) || this.$t('convention.loadErrorDesc'),
+                    theme: 'error'
+                })
+            }
         }
 
         switchProject () {

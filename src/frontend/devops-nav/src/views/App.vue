@@ -20,6 +20,7 @@
         @Action getAnnouncement
         @Action setAnnouncement
         @Action getPlatformPreData
+        @Action checkConvention
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -34,6 +35,15 @@
 
         async created () {
             this.getPlatformPreData()
+            try {
+                await this.checkConvention(this.$i18n.locale)
+            } catch (e) {
+                // status 已置为 error（fail-closed），提示用户可在页面重试
+                this.$bkMessage({
+                    message: (e && e.message) || this.$t('convention.loadErrorDesc'),
+                    theme: 'error'
+                })
+            }
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

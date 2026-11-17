@@ -39,6 +39,8 @@ import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 // @ts-ignore
 import('bk-magic-vue/dist/bk-magic-vue.min.css')
+import { BkXssFilterDirective } from '@blueking/xss-filter'
+import { CONVENTION_XSS_OPTIONS } from '@/utils/convention-xss'
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -51,6 +53,9 @@ declare module 'vue/types/vue' {
 }
 
 Vue.use(bkMagic)
+Vue.use(BkXssFilterDirective, {
+    defaultOptions: CONVENTION_XSS_OPTIONS
+})
 Vue.use(PermissionDirective(handleProjectNoPermission))
 
 Vue.component('AsideNav', AsideNav)

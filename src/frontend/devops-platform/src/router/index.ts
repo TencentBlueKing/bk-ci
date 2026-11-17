@@ -9,6 +9,8 @@ const SystemManage = () => import('@/views/SystemManage/index');
 const CodeSourceManage = () => import('@/views/RepositoryService/CodeSourceManage');
 // 新增代码源
 const CodeConfigForm = () => import('@/views/RepositoryService/CodeConfigForm');
+// 蓝盾公约
+const ConventionAdmin = () => import('@/views/Convention/ConventionAdmin.vue');
 
 const router = createRouter({
   history: createWebHistory('platform'),
@@ -35,6 +37,11 @@ const router = createRouter({
           path: 'systemManage',
           name: 'SystemManage',
           component: SystemManage,
+        },
+        {
+          path: 'convention',
+          name: 'Convention',
+          component: ConventionAdmin,
         },
       ]
     },
