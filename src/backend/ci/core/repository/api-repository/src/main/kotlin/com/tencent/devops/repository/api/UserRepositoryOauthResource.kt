@@ -138,7 +138,13 @@ interface UserRepositoryOauthResource {
 
     @GET
     @Path("/{scmCode}/authorize")
-    @Operation(summary = "跳转到OAuth授权页面")
+    @Operation(
+        summary = "跳转到OAuth授权页面",
+        description = "构建态、OpenAPI等非用户态场景生成的授权链接统一经此接口中转，" +
+                "以点击链接的蓝盾登录用户作为授权操作人，再302跳转到代码源授权页。" +
+                "避免生成链接时传入的userId(如公共账号)被记为操作人，导致重新授权后token的操作人被篡改。" +
+                "浏览器需通过api-html入口访问，未登录时网关会跳转到登录页"
+    )
     fun authorize(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
