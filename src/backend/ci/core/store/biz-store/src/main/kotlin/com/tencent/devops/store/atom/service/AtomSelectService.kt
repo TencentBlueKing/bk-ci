@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.util.AtomSelectScorer
@@ -86,6 +87,7 @@ class AtomSelectService @Autowired constructor(
         if (candidateCodes.isEmpty()) {
             return AtomSelectResp(contractCount = entries.size, items = emptyList())
         }
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         val atoms = atomService.serviceGetPipelineAtoms(
             userId = userId,
             queryParam = AtomQueryParam(
@@ -100,10 +102,12 @@ class AtomSelectService @Autowired constructor(
                 fitOsFlag = true,
                 queryFitAgentBuildLessAtomFlag = true,
                 queryProjectAtomFlag = false,
+                tenantId = tenantId,
                 atomCodes = candidateCodes
             ),
             page = 1,
-            pageSize = candidateCodes.size
+            pageSize = candidateCodes.size,
+            tenantId = tenantId
         ).data?.records ?: emptyList()
 
         val ranked = atoms.sortedWith(
