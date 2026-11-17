@@ -1,8 +1,16 @@
 <template>
     <span class="container-type">
-        <span v-if="!containerType.showIcon" v-bk-tooltips="containerType.tooltip">
-            {{ containerType.content }}
-        </span>
+        <bk-popover
+            v-if="!containerType.showIcon"
+            :delay="[300, 0]"
+            :disabled="!containerType.showTips"
+            placement="top"
+        >
+            <span>{{ containerType.content }}</span>
+            <template #content>
+                <div class="container-time-range-tips" v-html="containerType.tipsContent"></div>
+            </template>
+        </bk-popover>
         <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{ containerType.content }}
         </Logo>
     </span>
@@ -39,6 +47,8 @@ export default {
                 disabled: true,
             }
             let showIcon = true
+            let showTips = false
+            let tipsContent = ""
             switch (true) {
                 case container.timeCost !== undefined: {
                     const { totalCost, executeCost, systemCost } = container.timeCost
@@ -50,13 +60,10 @@ export default {
                     const costStr = `${this.t("userTime")}：${convertMStoString(
                         executeCost
                     )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`
-                    tooltip = {
-                        delay: [300, 0],
-                        allowHtml: true,
-                        content: timeRange
-                            ? `<div class="container-time-range-tips">${this.t("startEndTime")}：${timeRange}${runningLabel}<br>${costStr}</div>`
-                            : costStr,
-                    }
+                    showTips = true
+                    tipsContent = timeRange
+                        ? `${this.t("startEndTime")}：${timeRange}${runningLabel}<br>${costStr}`
+                        : costStr
                     content = convertMStoString(totalCost)
                     showIcon = false
                     break
@@ -88,6 +95,8 @@ export default {
                 tooltip,
                 content,
                 showIcon,
+                showTips,
+                tipsContent,
             }
         },
     },
