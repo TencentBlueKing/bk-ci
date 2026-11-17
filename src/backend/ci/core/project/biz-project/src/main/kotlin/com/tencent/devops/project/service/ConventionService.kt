@@ -214,14 +214,13 @@ class ConventionService(
     }
 
     private fun csv(value: String): String {
-        val safe = if (value.startsWith("=") || value.startsWith("+") ||
-            value.startsWith("-") || value.startsWith("@")
-        ) {
-            "'$value"
-        } else {
-            value
-        }
+        val safe = if (isSpreadsheetFormula(value)) "'$value" else value
         return "\"" + safe.replace("\"", "\"\"") + "\""
+    }
+
+    private fun isSpreadsheetFormula(value: String): Boolean {
+        val first = value.firstOrNull() ?: return false
+        return first in SPREADSHEET_FORMULA_PREFIX
     }
 
     companion object {
@@ -230,6 +229,7 @@ class ConventionService(
         private const val DEFAULT_PAGE = 1
         private const val DEFAULT_PAGE_SIZE = 20
         private const val MAX_PAGE_SIZE = 100
+        private val SPREADSHEET_FORMULA_PREFIX = charArrayOf('=', '+', '-', '@')
         private val logger = LoggerFactory.getLogger(ConventionService::class.java)
     }
 }
