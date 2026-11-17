@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="admin-page"
-    v-bkloading="{ isLoading }"
-  >
+  <div class="admin-page">
     <header class="admin-head">
       <h1>{{ t('蓝盾公约') }}</h1>
     </header>
@@ -18,53 +15,59 @@
         :label="t('公约正文')"
       >
         <div class="admin-stack">
-          <section class="panel">
-            <div class="panel-bar">
-              <bk-radio-group v-model="contentLang">
-                <bk-radio-button label="zh">{{ t('中文') }}</bk-radio-button>
-                <bk-radio-button label="en">English</bk-radio-button>
-              </bk-radio-group>
-              <bk-button
-                v-if="!editing"
-                theme="primary"
-                @click="startEdit"
-              >
-                {{ t('编辑') }}
-              </bk-button>
-            </div>
-            <template v-if="editing">
-              <bk-input
-                v-model="draft"
-                class="html-input"
-                type="textarea"
-                :rows="12"
-              />
-              <div class="save-row">
-                <bk-button @click="stopEdit">
-                  {{ t('取消') }}
-                </bk-button>
-                <span
-                  class="save-wrap"
-                  v-bk-tooltips="saveTip ? { content: saveTip } : { disabled: true }"
+          <bk-loading
+            class="panel-loading"
+            :loading="bodyLoading"
+          >
+            <section class="panel">
+              <div class="panel-bar">
+                <bk-radio-group v-model="contentLang">
+                  <bk-radio-button label="zh">{{ t('中文') }}</bk-radio-button>
+                  <bk-radio-button label="en">English</bk-radio-button>
+                </bk-radio-group>
+                <bk-button
+                  v-if="!editing"
+                  theme="primary"
+                  :disabled="bodyLoading"
+                  @click="startEdit"
                 >
-                  <bk-button
-                    theme="primary"
-                    :disabled="!!saveTip || saving"
-                    :loading="saving"
-                    @click="save"
-                  >
-                    {{ t('保存') }}
-                  </bk-button>
-                </span>
+                  {{ t('编辑') }}
+                </bk-button>
               </div>
-              <h2>{{ t('预览') }}</h2>
-              <ConventionHtml :html="draft" />
-            </template>
-            <ConventionHtml
-              v-else
-              :html="savedHtml"
-            />
-          </section>
+              <template v-if="editing">
+                <bk-input
+                  v-model="draft"
+                  class="html-input"
+                  type="textarea"
+                  :rows="12"
+                />
+                <div class="save-row">
+                  <bk-button @click="stopEdit">
+                    {{ t('取消') }}
+                  </bk-button>
+                  <span
+                    class="save-wrap"
+                    v-bk-tooltips="saveTip ? { content: saveTip } : { disabled: true }"
+                  >
+                    <bk-button
+                      theme="primary"
+                      :disabled="!!saveTip || saving"
+                      :loading="saving"
+                      @click="save"
+                    >
+                      {{ t('保存') }}
+                    </bk-button>
+                  </span>
+                </div>
+                <h2>{{ t('预览') }}</h2>
+                <ConventionHtml :html="draft" />
+              </template>
+              <ConventionHtml
+                v-else
+                :html="savedHtml"
+              />
+            </section>
+          </bk-loading>
         </div>
       </bk-tab-panel>
       <bk-tab-panel
@@ -72,52 +75,58 @@
         :label="t('签署记录')"
       >
         <div class="admin-stack">
-          <section class="panel records-panel">
-            <div class="filters">
-              <bk-input
-                v-model="keyword"
-                class="record-search"
-                clearable
-                :placeholder="t('搜索用户')"
-                @clear="onSearch"
-                @enter="onSearch"
-                @input="onKeywordChange"
-              />
-              <span
-                class="export-wrap"
-                v-bk-tooltips="recordCount ? { disabled: true } : { content: t('没有可导出的签署记录') }"
-              >
-                <bk-button
-                  :disabled="!recordCount || exporting"
-                  :loading="exporting"
-                  @click="exportRows"
+          <bk-loading
+            class="panel-loading"
+            :loading="recordsLoading"
+          >
+            <section class="panel records-panel">
+              <div class="filters">
+                <bk-input
+                  v-model="keyword"
+                  class="record-search"
+                  clearable
+                  :disabled="recordsLoading"
+                  :placeholder="t('搜索用户')"
+                  @clear="onSearch"
+                  @enter="onSearch"
+                  @input="onKeywordChange"
+                />
+                <span
+                  class="export-wrap"
+                  v-bk-tooltips="recordCount ? { disabled: true } : { content: t('没有可导出的签署记录') }"
                 >
-                  {{ t('导出') }}
-                </bk-button>
-              </span>
-            </div>
-            <bk-table
-              class="records-table"
-              remote-pagination
-              :data="records"
-              :pagination="pagination"
-              :empty-text="tableEmpty"
-              @page-value-change="onPage"
-              @page-limit-change="onLimit"
-            >
-              <bk-table-column
-                :label="t('用户')"
-                prop="userId"
-                :width="240"
-                show-overflow-tooltip
-              />
-              <bk-table-column
-                :label="t('签署时间')"
-                prop="agreeTime"
-                :width="180"
-              />
-            </bk-table>
-          </section>
+                  <bk-button
+                    :disabled="!recordCount || exporting || recordsLoading"
+                    :loading="exporting"
+                    @click="exportRows"
+                  >
+                    {{ t('导出') }}
+                  </bk-button>
+                </span>
+              </div>
+              <bk-table
+                class="records-table"
+                remote-pagination
+                :data="records"
+                :pagination="pagination"
+                :empty-text="tableEmpty"
+                @page-value-change="onPage"
+                @page-limit-change="onLimit"
+              >
+                <bk-table-column
+                  :label="t('用户')"
+                  prop="userId"
+                  :width="240"
+                  show-overflow-tooltip
+                />
+                <bk-table-column
+                  :label="t('签署时间')"
+                  prop="agreeTime"
+                  :width="180"
+                />
+              </bk-table>
+            </section>
+          </bk-loading>
         </div>
       </bk-tab-panel>
     </bk-tab>
@@ -137,7 +146,8 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const isLoading = ref(false)
+const bodyLoading = ref(true)
+const recordsLoading = ref(false)
 const saving = ref(false)
 const exporting = ref(false)
 const activeTab = ref('body')
@@ -174,7 +184,7 @@ const tableEmpty = computed(() => (
 async function loadBody() {
   const seq = ++bodySeq
   const lang = contentLang.value
-  isLoading.value = true
+  bodyLoading.value = true
   try {
     const data = await http.getBody(lang)
     if (seq !== bodySeq || contentLang.value !== lang) return
@@ -187,7 +197,7 @@ async function loadBody() {
     Message({ theme: 'error', message: e.message || t('加载失败') })
   } finally {
     if (seq === bodySeq) {
-      isLoading.value = false
+      bodyLoading.value = false
     }
   }
 }
@@ -199,7 +209,7 @@ async function loadRecords() {
     page: page.value,
     pageSize: pageSize.value,
   }
-  isLoading.value = true
+  recordsLoading.value = true
   try {
     const data = await http.getAgreements(query)
     if (
@@ -217,7 +227,7 @@ async function loadRecords() {
     Message({ theme: 'error', message: e.message || t('加载失败') })
   } finally {
     if (seq === recordsSeq) {
-      isLoading.value = false
+      recordsLoading.value = false
     }
   }
 }
@@ -334,7 +344,11 @@ watch(contentLang, () => {
   padding: 16px 24px 24px;
   background: #f5f7fa;
 }
+.panel-loading {
+  min-height: 320px;
+}
 .panel {
+  min-height: 320px;
   padding: 16px;
   background: #fff;
   border-radius: 2px;
