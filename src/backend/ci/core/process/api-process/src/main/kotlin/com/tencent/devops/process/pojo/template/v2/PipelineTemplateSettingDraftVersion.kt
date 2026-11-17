@@ -52,7 +52,9 @@ data class PipelineTemplateSettingDraftVersion(
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     val failIfVariableInvalid: Boolean?,
     @get:Schema(title = "构建取消权限策略", required = false)
-    val buildCancelPolicy: BuildCancelPolicy?
+    val buildCancelPolicy: BuildCancelPolicy?,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     /**
      * 将模板草稿配置转换为流水线配置
@@ -80,7 +82,8 @@ data class PipelineTemplateSettingDraftVersion(
             maxConRunningQueueSize = maxConRunningQueueSize,
             failIfVariableInvalid = failIfVariableInvalid ?: false,
             buildCancelPolicy = buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION,
-            pipelineAsCodeSettings = pipelineAsCodeSettings
+            pipelineAsCodeSettings = pipelineAsCodeSettings,
+            yamlLocked = yamlLocked
         )
     }
 }

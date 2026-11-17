@@ -117,7 +117,9 @@ export default defineComponent({
         webhookSourceTarget: 'branch',
         parentPipelineName: isSubFlow.value ? 'sub-flow' : 'pipeline',
         parentBuildNum: 'sharp',
-        materialName: isTAPD.value ? tapdIconTypeMap[props.material.webhookEventType] : scmIcon,
+        materialName: isTAPD.value
+          ? tapdIconTypeMap[props.material.webhookEventType]
+          : scmIcon,
         materialId: 'link'
       }
     })

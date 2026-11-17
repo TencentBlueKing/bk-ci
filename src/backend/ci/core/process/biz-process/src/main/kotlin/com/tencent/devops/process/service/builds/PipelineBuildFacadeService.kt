@@ -289,6 +289,19 @@ class PipelineBuildFacadeService(
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
+        val versionSetting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = resource.version
+        )
+        if (pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = versionSetting
+            )
+        ) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
         val triggerContainer = resource.model.getTriggerContainer()
 
         var canManualStartup = false

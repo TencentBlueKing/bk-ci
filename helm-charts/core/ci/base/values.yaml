@@ -36,6 +36,19 @@ nginx-ingress-controller:
 configmap:
   enabled: true
 
+# Secret 配置
+secret:
+  devopsToken:
+    # 是否自动生成 token 并存入 Secret；关闭时不创建 Secret，只使用 config.bkCiDevopsToken
+    autoGenerate: true
+  # 触发器 webhook 回调密钥，共用 Secret <release>-bk-ci-webhook-secrets，键名即 Secret 中的 key（小驼峰）
+  # autoGenerate 为 true 时自动生成并存入 Secret；为 false 时只使用 config.bkCi<Key>WebhookSecret
+  # 存量留空即不校验的来源须设为 false，否则升级后会突然开启校验，导致存量 webhook 失效
+  webhookSecrets:
+    # 制品到达触发
+    artifact:
+      autoGenerate: true
+
 # 镜像配置
 gatewayImage:
   registry: __image_registry__

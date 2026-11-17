@@ -508,4 +508,68 @@ class BuildEndInfoAlignTest {
         Assertions.assertEquals("指标超标", merged.reason)
         Assertions.assertNull(merged.reasonCode)
     }
+
+    @Test
+    fun `inherited operator follows the user through any parent depth`() {
+        val root = BuildEndInfo.ofCancelUser(
+            operator = "xxx",
+            reasonCode = "bkBuildCancelUserManual"
+        )
+        Assertions.assertEquals(
+            "xxx",
+            BuildEndInfo.inheritedCancelOperator(root, "oauth-holder")
+        )
+
+        var operator: String? = "xxx"
+        repeat(5) { depth ->
+            val info = BuildEndInfo.ofCancelParentPipeline(
+                reasonCode = "bkBuildCancelParentPipeline",
+                parentPipelineInfo = ParentPipelineInfo(
+                    projectId = "p",
+                    pipelineId = "pipe",
+                    buildId = "b$depth",
+                    operator = operator
+                )
+            )
+            operator = BuildEndInfo.inheritedCancelOperator(info, "layer-$depth-holder")
+            Assertions.assertEquals("xxx", operator)
+        }
+    }
+
+    @Test
+    fun `inherited operator is empty for system cancel and parent cancel without a user`() {
+        val system = BuildEndInfo.ofCancelSystem(reasonCode = "bkBuildCancelSystemConcurrencyPriority")
+        Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(system, "newer-build-starter"))
+
+        val parentWithoutUser = BuildEndInfo.ofCancelParentPipeline(
+            reasonCode = "bkBuildCancelParentPipeline",
+            parentPipelineInfo = ParentPipelineInfo(
+                projectId = "p",
+                pipelineId = "pipe",
+                buildId = "b",
+                operator = null
+            )
+        )
+        Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(parentWithoutUser, "oauth-holder"))
+        Assertions.assertNull(
+            BuildEndInfo.inheritedCancelOperator(parentWithoutUser, BuildEndInfo.SYSTEM_CANCEL_USER)
+        )
+    }
+
+    @Test
+    fun `inherited operator falls back to stored cancel user only before end info is saved`() {
+        Assertions.assertEquals("xxx", BuildEndInfo.inheritedCancelOperator(null, "xxx"))
+        Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, BuildEndInfo.SYSTEM_CANCEL_USER))
+        Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, " "))
+        Assertions.assertNull(BuildEndInfo.inheritedCancelOperator(null, null))
+    }
+
+    @Test
+    fun `confirmed operator keeps real users and drops the system placeholder`() {
+        Assertions.assertEquals("xxx", BuildEndInfo.confirmedOperator("xxx"))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(BuildEndInfo.SYSTEM_CANCEL_USER))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(""))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator("  "))
+        Assertions.assertNull(BuildEndInfo.confirmedOperator(null))
+    }
 }

@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -136,7 +137,11 @@ open class BaseBuildRecordService(
                 endTime = null,
                 errorInfoList = null,
                 cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
-                    ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
+                    ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) {
+                        BuildEndInfo.SYSTEM_CANCEL_USER
+                    } else {
+                        null
+                    },
                 timestamps = null
             )
             message = "Will not update"

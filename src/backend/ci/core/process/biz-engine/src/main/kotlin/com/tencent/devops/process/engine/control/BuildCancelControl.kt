@@ -155,7 +155,10 @@ class BuildCancelControl @Autowired constructor(
                     pipelineId = event.pipelineId,
                     buildId = event.buildId,
                     buildStatus = event.status,
-                    cancelUser = event.userId,
+                    // 与 cancelBuild 的取消人口径保持一致：系统取消时事件里的 userId 是启动人，
+                    // 不能覆盖成取消人，否则取消入口刚落的 System 占位又被改回真人。
+                    cancelUser = BuildEndInfo.inheritedCancelOperator(event.buildEndInfo, event.userId)
+                        ?: BuildEndInfo.SYSTEM_CANCEL_USER,
                     executeCount = buildInfo.executeCount ?: 1,
                     buildEndInfo = event.buildEndInfo
                 )

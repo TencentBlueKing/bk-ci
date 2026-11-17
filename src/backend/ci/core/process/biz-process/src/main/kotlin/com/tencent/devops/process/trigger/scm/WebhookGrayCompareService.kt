@@ -75,7 +75,7 @@ class WebhookGrayCompareService @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineYamlService: PipelineYamlService,
-    private val webhookTriggerMatcher: WebhookTriggerMatcher
+    private val scmWebhookTriggerMatcher: ScmWebhookTriggerMatcher
 ) {
 
     private val executor = ThreadPoolUtil.getThreadPoolExecutor(
@@ -376,7 +376,7 @@ class WebhookGrayCompareService @Autowired constructor(
             if (!element.elementEnabled()) {
                 return@elements
             }
-            val atomResponse = webhookTriggerMatcher.matches(
+            val atomResponse = scmWebhookTriggerMatcher.matches(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 repository = repository,

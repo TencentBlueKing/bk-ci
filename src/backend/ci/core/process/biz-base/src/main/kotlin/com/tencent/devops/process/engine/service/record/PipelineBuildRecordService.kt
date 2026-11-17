@@ -49,13 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.EndPosition
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.BuildEndPositionCollector
@@ -65,8 +58,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_EVENT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_WAREHOUSE_EVENTS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
@@ -358,55 +350,18 @@ class PipelineBuildRecordService @Autowired constructor(
             queryDslContext = queryDslContext
         )
         watcher.start("parseTriggerInfo")
-        // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
         val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
-            triggerContainer.elements.find { it.status == BuildStatus.SUCCEED.name }?.let {
-                when (it) {
-                    is CodeGitWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Git")
-                        )
-                    }
-                    is CodeTGitWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Git")
-                        )
-                    }
-                    is CodeGithubWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("GitHub")
-                        )
-                    }
-                    is CodeGitlabWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("Gitlab")
-                        )
-                    }
-                    is CodeP4WebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("P4")
-                        )
-                    }
-                    is CodeSVNWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("SVN")
-                        )
-                    }
-                    is TapdWebHookTriggerElement -> {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_EVENT,
-                            params = arrayOf("TAPD")
-                        )
-                    }
-                    else -> null
-                }
-            } ?: I18nUtil.getCodeLanMessage(messageCode = BK_WAREHOUSE_EVENTS)
+            val classType = triggerContainer.elements
+                .find { it.status == BuildStatus.SUCCEED.name }
+                ?.getClassType()
+            val alias = classType?.let {
+                I18nUtil.getCodeLanMessage(messageCode = "$it.alias", defaultMessage = "")
+            }
+            if (alias.isNullOrBlank()) {
+                I18nUtil.getCodeLanMessage(messageCode = BK_CI_DEFAULT_WEBHOOK_TRIGGER_ALIAS)
+            } else {
+                alias
+            }
         } else {
             StartType.toReadableString(
                 buildInfo.trigger,
@@ -559,7 +514,7 @@ class PipelineBuildRecordService @Autowired constructor(
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList,
             artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
-                userId = userId,
+                userId = userId ?: buildInfo.startUser,
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             ),
@@ -647,7 +602,7 @@ class PipelineBuildRecordService @Autowired constructor(
         val positions = BuildEndPositionCollector.collectCancelPositions(model)
         // update() 在没有取消人时会写入 System，表示系统取消，不是真实操作人。
         // 阶段准入驳回走的就是这条路径，不能展示成「用户取消」。
-        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != "System"
+        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != BuildEndInfo.SYSTEM_CANCEL_USER
         val info = if (hasUser) {
             BuildEndInfo(
                 endType = BuildEndType.CANCEL_USER,
@@ -1327,6 +1282,21 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             executeCount = executeCount
+        )
+    }
+
+    /**
+     * 父构建取消子构建时要继续传递的操作人。
+     * 取消人在取消入口里先于取消事件同步落库，这里只查取消人列，不整行读 MODEL_VAR 解析终态详情。
+     * 系统取消没有真人操作，取消人列是 [BuildEndInfo.SYSTEM_CANCEL_USER] 占位或空，此时不往下传。
+     */
+    fun getInheritedCancelOperator(
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        return BuildEndInfo.confirmedOperator(
+            getBuildCancelUser(projectId = projectId, buildId = buildId, executeCount = executeCount)
         )
     }
 

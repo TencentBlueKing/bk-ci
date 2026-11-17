@@ -1,0 +1,27 @@
+version: v3.0
+name: combo-base-git-trigger-test
+on:
+  - schedules:
+      - cron: "0 0 1 * *"
+    manual: enabled
+    remote: enabled
+  - repo-name: aliasName/xxx
+    type: git
+    push:
+      branches:
+        - master
+    mr:
+      target-branches:
+        - master
+stages:
+  - name: stage-1
+    jobs:
+      job1:
+        name: test-job
+        runs-on:
+          pool-name: docker
+        steps:
+          - name: test-step
+            uses: linuxScript@1.*
+            with:
+              script: "echo hello"
