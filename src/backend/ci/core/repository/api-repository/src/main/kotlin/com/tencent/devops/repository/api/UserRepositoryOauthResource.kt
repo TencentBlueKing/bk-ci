@@ -44,9 +44,11 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "AUTH_RESOURCE", description = "用户态-iam资源映射")
 @Path("/user/repositories/oauth/")
@@ -133,4 +135,22 @@ interface UserRepositoryOauthResource {
         @QueryParam("scmCode")
         scmCode: String
     ): Result<List<OauthUserVo>>
+
+    @GET
+    @Path("/{scmCode}/authorize")
+    @Operation(summary = "跳转到OAuth授权页面")
+    fun authorize(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
+        @QueryParam("redirectUrl")
+        redirectUrl: String,
+        @Parameter(description = "目标授权用户名", required = false)
+        @QueryParam("oauthUserId")
+        oauthUserId: String? = ""
+    ): Response
 }
