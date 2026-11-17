@@ -64,7 +64,7 @@ data class FileInfo(
     @get:Schema(title = "docker registry", required = false)
     var registry: String? = null,
     @get:Schema(title = "nodeMetadata数据", required = false)
-    val nodeMetadata: List<MetadataModel> ?= emptyList()
+    val nodeMetadata: List<MetadataModel>? = emptyList()
 ) : Comparable<FileInfo> {
     constructor(
         name: String,

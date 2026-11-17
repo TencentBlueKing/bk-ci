@@ -1117,7 +1117,6 @@ class BkRepoClient constructor(
         doRequest(request)
     }
 
-
     @SuppressWarnings("ReturnCount")
     fun allowDownload(
         userId: String,
