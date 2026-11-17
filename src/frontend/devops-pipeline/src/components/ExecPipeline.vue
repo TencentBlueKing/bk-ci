@@ -112,7 +112,6 @@
                         :cancel-user-id="cancelUserId"
                         :user-name="userName"
                         :pipeline="curPipeline"
-                        :build-start-time="execDetail?.queueTime"
                         v-bind="$attrs"
                         @click="handlePipelineClick"
                         @stage-check="handleStageCheck"
