@@ -237,7 +237,7 @@
                 const box = this.$refs.box
                 const text = box?.querySelector('.lp-text')
                 if (!text || typeof window === 'undefined') {
-                    return { wrap: this.wrap, showTime, indexVersion, width: Math.max(1, (this.containerWidth || 0) - 64), fontFamily: 'Menlo, Monaco, Consolas, Courier, monospace', fontSize: '12px', lineHeight: '20px', whiteSpace: this.wrap ? 'pre-wrap' : 'pre', wordBreak: this.wrap ? 'break-all' : 'normal' }
+                    return { wrap: this.wrap, showTime, indexVersion, width: Math.max(1, (this.containerWidth || 0) - 64), fontFamily: 'Menlo, monospace', fontSize: '12px', lineHeight: '20px', whiteSpace: this.wrap ? 'pre-wrap' : 'pre', wordBreak: this.wrap ? 'break-all' : 'normal' }
                 }
                 const style = window.getComputedStyle(text)
                 return {
@@ -1262,7 +1262,7 @@
     min-height: 0;
     overflow: auto;
     padding: 8px 24px;
-    font-family: Menlo, Monaco, Consolas, Courier, monospace;
+    font-family: Menlo, monospace;
     font-size: 12px;
     line-height: 20px;
     color: #c4c6cc;
