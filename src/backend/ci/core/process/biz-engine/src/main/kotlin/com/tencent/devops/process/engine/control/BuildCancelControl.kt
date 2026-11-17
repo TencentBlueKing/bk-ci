@@ -334,7 +334,13 @@ class BuildCancelControl @Autowired constructor(
                 if (container.status.isNullOrBlank() || BuildStatus.parse(container.status).isFinish()) {
                     return@nextC
                 }
-                collectEndPositions(endPositions, ctx, container, containerSeq)
+                // 矩阵父容器只是分裂出的 Job 的分组，页面上不是一个独立 Job。
+                // 已经有子 Job 时，取消位置只记子 Job；父容器仍要走取消，否则矩阵组状态不会收口。
+                val matrixChildren = container.fetchGroupContainers()
+                val matrixShell = container.matrixGroupFlag == true && !matrixChildren.isNullOrEmpty()
+                if (!matrixShell) {
+                    collectEndPositions(endPositions, ctx, container, containerSeq)
+                }
                 cancelContainerPendingTask(
                     stageId = ctx.stageId,
                     event = event,
@@ -342,7 +348,7 @@ class BuildCancelControl @Autowired constructor(
                     container = container,
                     executeCount = executeCount
                 )
-                container.fetchGroupContainers()?.forEach matrix@{ c ->
+                matrixChildren?.forEach matrix@{ c ->
                     if (c.status.isNullOrBlank() || BuildStatus.parse(c.status).isFinish()) {
                         return@matrix
                     }

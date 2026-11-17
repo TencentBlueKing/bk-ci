@@ -427,6 +427,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 modelCancelPositions = modelCancelPositions,
                 latestStatusAtEnd = { pos -> latestStatusAtEnd(pos, model) }
             )
+            ?.withoutMatrixGroupShells(model)
             ?.refineUserCancelCount()
         val buildEndInfo = (
             storedEndInfo ?: synthesizeEndInfo(

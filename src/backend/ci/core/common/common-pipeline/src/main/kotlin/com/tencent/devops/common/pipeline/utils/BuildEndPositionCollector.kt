@@ -99,7 +99,34 @@ object BuildEndPositionCollector {
      * 未执行（UNEXEC）的后续步骤不进入卡片，避免把整条流水线都列进去。
      */
     fun collectCancelPositions(model: Model): List<EndPosition> {
-        return traverseModel(model) { ctx -> collectCancelFromContainer(ctx) }
+        // 矩阵父容器不是独立 Job。已经分裂出子 Job 时，取消位置只记子 Job。
+        return traverseModel(model, skipMatrixGroupShell = true) { ctx -> collectCancelFromContainer(ctx) }
+    }
+
+    /**
+     * 去掉矩阵父容器的位置。
+     *
+     * 取消落库时父容器和它分裂出的子 Job 会被各记一条，读取侧再按模型补插件，
+     * 卡片就会比编排图上的 Job 多出父容器那几行。父容器下还没有子 Job 位置时保留，
+     * 避免矩阵尚未分裂就被取消时一条位置都不剩。
+     */
+    fun dropMatrixGroupShells(model: Model, positions: List<EndPosition>): List<EndPosition> {
+        if (positions.isEmpty()) return positions
+        val present = positions.map { it.containerId }.filter { it.isNotBlank() }.toSet()
+        val shells = mutableSetOf<String>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                if (container.matrixGroupFlag != true) return@forEach
+                val childIds = container.fetchGroupContainers().orEmpty().mapNotNull { child ->
+                    child.containerId?.takeIf { it.isNotBlank() } ?: child.id?.takeIf { it.isNotBlank() }
+                }
+                if (childIds.none { it in present }) return@forEach
+                container.containerId?.takeIf { it.isNotBlank() }?.let { shells.add(it) }
+                container.id?.takeIf { it.isNotBlank() }?.let { shells.add(it) }
+            }
+        }
+        if (shells.isEmpty()) return positions
+        return positions.filterNot { it.containerId in shells }
     }
 
     /**
@@ -140,6 +167,7 @@ object BuildEndPositionCollector {
 
     private fun traverseModel(
         model: Model,
+        skipMatrixGroupShell: Boolean = false,
         collect: (ContainerWalk) -> Unit
     ): List<EndPosition> {
         val positions = mutableListOf<EndPosition>()
@@ -148,24 +176,30 @@ object BuildEndPositionCollector {
             val stageId = stage.id ?: return@forEachIndexed
             val stageName = stage.name.orEmpty()
             stage.containers.forEachIndexed { containerIndex, container ->
-                collect(
-                    ContainerWalk(
-                        positions = positions,
-                        stageIndex = stageIndex,
-                        stageName = stageName,
-                        stageId = stageId,
-                        container = container,
-                        containerSeq = containerIndex + 1,
-                        matrixFlag = false
+                val matrixChildren = container.fetchGroupContainers()
+                val skipShell = skipMatrixGroupShell &&
+                    container.matrixGroupFlag == true &&
+                    !matrixChildren.isNullOrEmpty()
+                if (!skipShell) {
+                    collect(
+                        ContainerWalk(
+                            positions = positions,
+                            stageIndex = stageIndex,
+                            stageName = stageName,
+                            stageId = stageId,
+                            container = container,
+                            containerSeq = containerIndex + 1,
+                            matrixFlag = false
+                        )
                     )
-                )
+                }
                 // 卡片只留前 POSITION_MAX_SIZE 个，顺序就是这次遍历的顺序。
                 // 一个容器必须收完再停：里面没有插件错误时，收尾才会补 Job 超时或互斥组那一行。
                 // 停在容器之间再截断，留下的位置与走完整个编排后 take 相同。
                 if (positions.size >= POSITION_MAX_SIZE) {
                     return positions.take(POSITION_MAX_SIZE)
                 }
-                container.fetchGroupContainers()?.forEach { matrixContainer ->
+                matrixChildren?.forEach { matrixContainer ->
                     collect(
                         ContainerWalk(
                             positions = positions,
