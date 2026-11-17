@@ -44,7 +44,7 @@ object Versions {
     const val Resilience4j = "2.2.0"
     const val jgit = "5.13.3.202401111512-r"
     // 2.0.5 保留主干无租户重载，并增加 tenantId 重载；单租户不传租户头，行为与 2.0.3/2.0.4 一致
-    const val iam = "2.0.5-SNAPSHOT"
+    const val iam = "2.1.0"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
     const val audit = "2.0.1"
