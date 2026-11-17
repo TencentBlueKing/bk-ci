@@ -108,6 +108,9 @@ object ProjectMessageCode {
     const val PROJECT_FAVOR_SUCC = "2119060" // 项目收藏成功
     const val PROJECT_FAVOR_CANCEL_SUCC = "2119061" // 项目取消收藏成功
     const val ENUM_LABEL_CANNOT_DELETE = "2119063" // 内置项目标签不允许删除
+    const val CONVENTION_CONTENT_EMPTY = "2119064" // 公约正文不能为空
+    const val CONVENTION_CONTENT_TOO_LONG = "2119065" // 公约正文过长
+    const val CONVENTION_USER_EMPTY = "2119066" // 用户不能为空
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败
