@@ -183,19 +183,17 @@ class ContainerBuildRecordService(
         // 续上的子 Job 与普通 Job 同一口径：记录表只留本轮起止，上一轮的起始时间转存到变量里给展示用，
         // 不进耗时计算，否则两轮之间等人重试的空档会被算成本轮的系统耗时
         val resumed = !refreshContainerStart && newExecuteCount != oldExecuteCount
-        val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
-            remove(Container::timeCost.name)
-            remove(Container::startEpoch.name)
-            remove(Container::startVMStatus.name)
-            if (newExecuteCount != oldExecuteCount) {
-                if (resumed) {
-                    // 连续多轮续上时保留最早记下的那个起始时间
-                    oldContainer.startTime?.let { putIfAbsent(Container::startTime.name, it.timestampmilli()) }
-                } else {
-                    // 子 Job 整体重跑，上一轮继承来的展示起点要清掉，本轮重新记
-                    remove(Container::startTime.name)
-                }
-            }
+        val newContainerVar = oldContainer.containerVar.toMutableMap()
+        newContainerVar.remove(Container::timeCost.name)
+        newContainerVar.remove(Container::startEpoch.name)
+        newContainerVar.remove(Container::startVMStatus.name)
+        // 执行次数变了才动展示起点：续上时保留最早记下的那个，整体重跑则清掉，本轮重新记
+        val inheritedStart = oldContainer.startTime?.timestampmilli()
+        when {
+            newExecuteCount == oldExecuteCount -> Unit
+            resumed && inheritedStart != null ->
+                newContainerVar.putIfAbsent(Container::startTime.name, inheritedStart)
+            !resumed -> newContainerVar.remove(Container::startTime.name)
         }
         val newContainer = oldContainer.copy(
             executeCount = newExecuteCount, status = null,
