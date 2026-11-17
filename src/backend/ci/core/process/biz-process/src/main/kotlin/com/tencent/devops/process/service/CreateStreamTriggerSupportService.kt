@@ -16,8 +16,8 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.pojo.WorkspaceBaseInfo
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

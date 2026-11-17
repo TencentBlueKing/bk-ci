@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerResourceConfigResource
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
@@ -15,6 +17,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -267,16 +270,36 @@ class TransferCacheService @Autowired constructor(
         }.onFailure { logger.warn("get env by name failed. projectId=$projectId, envName=$envName", it) }
             .getOrNull()
     }
+
+    /**
+     * 取流水线当前已保存的运行资源。保存时调用，不缓存。
+     * 供 YAML 侧沿用用户在 UI 上选过的运行资源类型，`pool-id` / `pool-name` 本身不带类型。
+     */
+    fun findSavedRuntimeResource(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode
+    ): RuntimeResource? {
+        if (projectId.isBlank() || pipelineId.isBlank()) return null
+        return runCatching {
+            client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            ).data?.runtimeResource()
+        }.onFailure {
+            logger.warn("get saved runtime resource failed. projectId=$projectId, pipelineId=$pipelineId", it)
+        }.getOrNull()
+    }
 }
 
 /** 保存运行资源时反查到的环境，只保留回写设置需要的字段 */
 data class RuntimeEnvRef(
     val envHashId: String,
-    val name: String,
-    val envType: String
+    val name: String
 )
 
 private fun EnvWithPermission.toRuntimeEnvRef(): RuntimeEnvRef? {
     val hashId = envHashId.takeIf { it.isNotBlank() } ?: return null
-    return RuntimeEnvRef(envHashId = hashId, name = name, envType = envType)
+    return RuntimeEnvRef(envHashId = hashId, name = name)
 }

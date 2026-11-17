@@ -46,12 +46,11 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersio
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
-import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
-import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
@@ -66,13 +65,13 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
-import com.tencent.devops.process.yaml.v3.models.RootRunsOn
 import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.RootRunsOn
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
@@ -160,9 +159,8 @@ class ModelTransfer @Autowired constructor(
     }
 
     /**
-     * `pool-id` / `pool-name` 本身不带类型。保存前按环境记录补上 hashId、环境名，
-     * 以及能确定的类型：创作环境是数字分身环境，云桌面环境是云桌面环境。
-     * 补不上类型时仍只绑环境，回显保持「原创作环境」。
+     * `pool-id` / `pool-name` 本身不带类型。保存前补上 hashId 和环境名。
+     * 类型只在能确定时写入，判定见 [runtimeTypeOf]。
      *
      * 只写了环境名却查不到时必须拒绝保存，否则 [RuntimeResource.of] 视为未配置，旧的 pool-id 会留在库里。
      * 已经写了 pool-id 但暂时查不到环境时，保留这个 id 继续保存。
@@ -182,17 +180,27 @@ class ModelTransfer @Autowired constructor(
             throw PipelineTransferException(DISPATCH_NOT_SUPPORT_TRANSFER, arrayOf(envName!!))
         }
         return resource.copy(
-            type = runtimeTypeOf(env.envType),
+            type = runtimeTypeOf(env, yamlInput),
             resourceId = env.envHashId,
             resourceName = env.name
         )
     }
 
-    /** 环境记录上的类型。不看环境内节点，节点类型编码不稳定。 */
-    private fun runtimeTypeOf(envType: String?): RuntimeResourceType? = when (envType) {
-        EnvType.CREATE.name -> RuntimeResourceType.AVATAR_GROUP
-        EnvType.DEVX.name -> RuntimeResourceType.DESKTOP_GROUP
-        else -> null
+    /**
+     * 数字分身环境和云桌面环境在环境表里都是 EnvType.CREATE，环境记录本身区分不出来，节点来源也区分不出来
+     * （AgentPropsSource 的三个取值全是云桌面侧的来源，没有代表数字分身的值），所以这里不做任何推测。
+     *
+     * 唯一能确定类型的情况：这次写的还是流水线上已经保存过的那个环境，此时沿用用户在 UI 上选过的类型。
+     * 换了环境或流水线还没保存过运行资源时一律留空，按只绑定环境的历史数据处理，回显「原创作环境」。
+     */
+    private fun runtimeTypeOf(env: RuntimeEnvRef, yamlInput: YamlTransferInput): RuntimeResourceType? {
+        val pipelineId = yamlInput.pipelineInfo?.pipelineId ?: return null
+        val saved = transferCache.findSavedRuntimeResource(
+            projectId = yamlInput.projectCode,
+            pipelineId = pipelineId,
+            channelCode = yamlInput.channelCode
+        ) ?: return null
+        return saved.type?.takeIf { it.group && saved.resourceId == env.envHashId }
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
