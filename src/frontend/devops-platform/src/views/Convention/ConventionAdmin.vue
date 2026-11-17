@@ -253,7 +253,8 @@ async function save() {
 function onTabChange(name) {
   const tab = name === 'records' ? 'records' : 'body'
   if ((route.query.tab || 'body') === tab) return
-  router.replace({ name: 'Convention', query: { tab } })
+  // 只改 query，避免 name 跳转触发多余 path 同步
+  router.replace({ query: { ...route.query, tab } })
 }
 
 function onSearch() {
