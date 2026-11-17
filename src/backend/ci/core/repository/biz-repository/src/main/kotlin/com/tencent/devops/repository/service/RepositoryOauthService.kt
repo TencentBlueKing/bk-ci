@@ -297,7 +297,9 @@ class RepositoryOauthService @Autowired constructor(
         }
         val scheme = uri?.scheme?.lowercase()
         val host = uri?.host?.lowercase()
-        if ((scheme != "http" && scheme != "https") || host.isNullOrBlank() || !allowRedirectHosts().contains(host)) {
+        val isHttpScheme = scheme == "http" || scheme == "https"
+        val isAllowedHost = !host.isNullOrBlank() && allowRedirectHosts().contains(host)
+        if (!isHttpScheme || !isAllowedHost) {
             logger.warn("oauth redirect url [$redirectUrl] is not allowed")
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
