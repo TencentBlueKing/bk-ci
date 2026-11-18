@@ -11,6 +11,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/oomprotect"
 )
 
 type ExitErrorType struct {
@@ -32,6 +33,14 @@ const (
 var exitError atomic.Pointer[ExitErrorType]
 
 func AddExitError(enum ExitErrorEnum, msg string) {
+	// 探测进程被杀和网络超时属于可恢复故障。原来的 88 会让 daemon 一起退出，
+	// 即使设置 -1000 也无法阻止主动退出。开启保护后暂停接单 30 秒，继续心跳/收尾。
+	// 卸载、文件丢失、权限等其他退出原因保持现有语义，不一概屏蔽退出。
+	if oomprotect.Enabled() && (enum == ExitJdkError || enum == ExitWorkerError || enum == ExitTimeOutError) {
+		oomprotect.Pause()
+		logs.Errorf("OOM protection: pause builds instead of exiting: %s: %s", enum, msg)
+		return
+	}
 	logs.Errorf("AddExitError|%s|%s", enum, msg)
 	exitError.Store(&ExitErrorType{
 		ErrorEnum: enum,
