@@ -10,6 +10,9 @@ server:
   port: __BK_CI_AI_API_PORT__
 
 ai:
+  codecc:
+    # 仅 CodeCC MCP 使用；其他既有 MCP 继续保持 15 秒。
+    mcp-timeout-seconds: 60
   llm:
     # ---- 平台侧通用默认值 ----
     # 以下字段作为所有 model 的默认值，每个 model 仅在需要差异化时显式覆盖。
