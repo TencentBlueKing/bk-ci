@@ -74,6 +74,8 @@ bkCiOpenapiApiAuth: false
 bkCiOpenapiApiBluekingEnable: false
 bkCiMqDefaultBinder: core-rabbit
 bkTenantEnabled: false
+# 平台制品库项目前缀。单租户留空。多租户填平台租户 ID，初始化、网关和后端共用
+bkCiBkrepoProjectPrefix: ""
 bkApigwUserUrl: http://bkapi.example.com
 bkApigwCmsiUrl: http://bkapi.example.com
 # 与 application-project.yml 的 __BK_CI_USER_WEB_APIGW_URL__ 对应。单租户留空。

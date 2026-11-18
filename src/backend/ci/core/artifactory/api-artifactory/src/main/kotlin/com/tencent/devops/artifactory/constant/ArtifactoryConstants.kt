@@ -49,17 +49,8 @@ private const val BKREPO_DEVOPS_PROJECT_ID = "devops"
 private const val BKREPO_STORE_PROJECT_ID = "bk-store"
 private const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
 
-fun bkRepoDevopsProjectId() = TenantUtils.parseEnglishName(
-    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
-    tenantEnglishName = BKREPO_DEVOPS_PROJECT_ID
-)
+fun bkRepoDevopsProjectId() = TenantUtils.bkrepoPlatformProjectId(BKREPO_DEVOPS_PROJECT_ID)
 
-fun bkRepoStoreProjectId() = TenantUtils.parseEnglishName(
-    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
-    tenantEnglishName = BKREPO_STORE_PROJECT_ID
-)
+fun bkRepoStoreProjectId() = TenantUtils.bkrepoPlatformProjectId(BKREPO_STORE_PROJECT_ID)
 
-fun bkRepoStaticProjectId() = TenantUtils.parseEnglishName(
-    tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
-    tenantEnglishName = BKREPO_STATIC_PROJECT_ID
-)
+fun bkRepoStaticProjectId() = TenantUtils.bkrepoPlatformProjectId(BKREPO_STATIC_PROJECT_ID)

@@ -86,7 +86,9 @@ config = {
     },
     bkrepo = {
         domain = "__BK_REPO_FQDN__",
-        authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
+        authorization = "__BK_CI_BKREPO_AUTHORIZATION__",
+        -- 平台制品库项目前缀。单租户留空；多租户与初始化任务使用同一个值
+        projectPrefix = "__BK_CI_BKREPO_PROJECT_PREFIX__"
     },
     jwtPrivateKey = "__BK_CI_JWT_RSA_PRIVATE_KEY__",
     bkci = { host = "__BK_CI_FQDN__", port = 80 },

@@ -49,6 +49,7 @@ overrides:
   path-to-regexp@>=1.0.0 <1.9.0: 1.9.0
   path-to-regexp@>=2.0.0: 8.4.0
   vite@<7.3.2: 7.3.2
+  less: 4.2.2
   rollup@<4.22.4: '>=4.22.4'
   cookie@<0.7.0: '>=0.7.0'
   elliptic@<6.5.6: '>=6.5.6'
@@ -123,7 +124,7 @@ importers:
         version: 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(@zkochan/js-yaml@0.0.7)(eslint@7.32.0(supports-color@8.1.1))(nx@19.5.1)(supports-color@8.1.1)
       '@nx/vite':
         specifier: 19.5.1
-        version: 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
+        version: 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
       '@nx/webpack':
         specifier: 19.5.1
         version: 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(bufferutil@4.1.0)(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.27.3)(html-webpack-plugin@5.6.6(webpack@5.100.2))(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue-tsc@3.3.1(typescript@3.4.5))(webpack-cli@6.0.1)
@@ -335,13 +336,13 @@ importers:
         version: 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))
       '@vitejs/plugin-vue':
         specifier: ^5.0.0
-        version: 5.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
+        version: 5.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
       '@vitejs/plugin-vue-jsx':
         specifier: ^3.1.0
-        version: 3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
+        version: 3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
       '@vitejs/plugin-vue2':
         specifier: ^2.3.3
-        version: 2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
+        version: 2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))
       eslint:
         specifier: ^8.56.0
         version: 8.57.1(supports-color@8.1.1)
@@ -356,13 +357,13 @@ importers:
         version: 1.97.3
       vite:
         specifier: 7.3.2
-        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
   bk-pipeline-vue2:
     devDependencies:
       '@vitejs/plugin-vue2':
         specifier: 2.3.3
-        version: 2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@2.7.16)
+        version: 2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@2.7.16)
       '@vue/compiler-sfc':
         specifier: 2.7.16
         version: 2.7.16
@@ -374,7 +375,7 @@ importers:
         version: 8.1.0
       vite:
         specifier: 7.3.2
-        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue:
         specifier: 2.7.16
         version: 2.7.16
@@ -1008,16 +1009,16 @@ importers:
         version: 22.19.15
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.1.0
-        version: 2.3.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+        version: 2.3.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       '@vitejs/plugin-vue':
         specifier: ^6.0.1
-        version: 6.0.7(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
+        version: 6.0.7(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       '@vitejs/plugin-vue-jsx':
         specifier: ^5.1.1
-        version: 5.1.5(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
+        version: 5.1.5(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       '@vitest/eslint-plugin':
         specifier: ^1.3.23
-        version: 1.6.17(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@1.13.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
+        version: 1.6.17(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@1.13.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
       '@vue/eslint-config-prettier':
         specifier: ^10.2.0
         version: 10.2.0(@types/eslint@9.6.1)(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(prettier@3.6.2)
@@ -1062,16 +1063,16 @@ importers:
         version: 5.9.3
       vite:
         specifier: 7.3.2
-        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vite-plugin-html:
         specifier: ^3.2.2
-        version: 3.2.2(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+        version: 3.2.2(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       vite-plugin-vue-devtools:
         specifier: ^8.0.3
-        version: 8.1.2(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
+        version: 8.1.2(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
       vue-draggable-plus:
         specifier: ^0.6.0
         version: 0.6.1(@types/sortablejs@1.15.9)
@@ -1143,14 +1144,14 @@ importers:
         specifier: ^9.27.0
         version: 9.33.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
       less:
-        specifier: ^4.2.0
-        version: 4.5.1
+        specifier: 4.2.2
+        version: 4.2.2
       less-loader:
         specifier: ^12.2.0
-        version: 12.3.1(less@4.5.1)(webpack@5.100.2)
+        version: 12.3.1(less@4.2.2)(webpack@5.100.2)
       peer-cli-service-webpack:
         specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.5.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
+        version: 0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.2.2)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
       postcss:
         specifier: ~8.4.16
         version: 8.4.49
@@ -1217,7 +1218,7 @@ importers:
         version: 2.0.0(supports-color@8.1.1)
       '@vitejs/plugin-vue':
         specifier: ^2.3.1
-        version: 2.3.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.4.38(typescript@4.9.5))
+        version: 2.3.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.4.38(typescript@4.9.5))
       '@vitejs/plugin-vue-jsx':
         specifier: ^1.3.10
         version: 1.3.10(supports-color@8.1.1)
@@ -1247,7 +1248,7 @@ importers:
         version: 4.9.5
       vite:
         specifier: 7.3.2
-        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+        version: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue-tsc:
         specifier: ^0.34.9
         version: 0.34.17(typescript@4.9.5)
@@ -1521,17 +1522,17 @@ importers:
         specifier: ^9.27.0
         version: 9.33.0(eslint@7.32.0(supports-color@8.1.1))(supports-color@8.1.1)
       less:
-        specifier: ^4.2.0
-        version: 4.5.1
+        specifier: 4.2.2
+        version: 4.2.2
       less-loader:
         specifier: ^12.2.0
-        version: 12.3.1(less@4.5.1)(webpack@5.100.2)
+        version: 12.3.1(less@4.2.2)(webpack@5.100.2)
       lodash-es:
         specifier: ^4.18.1
         version: 4.18.1
       peer-cli-service-webpack:
         specifier: 0.0.2
-        version: 0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.5.1)(lodash@4.18.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
+        version: 0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.2.2)(lodash@4.18.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1)
       postcss:
         specifier: ~8.4.16
         version: 8.4.49
@@ -1857,10 +1858,10 @@ importers:
         version: 20.19.37
       '@vitejs/plugin-vue':
         specifier: ^5.2.1
-        version: 5.2.4(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
+        version: 5.2.4(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
       '@vitejs/plugin-vue-jsx':
         specifier: ^3.1.0
-        version: 3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
+        version: 3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
       '@vue/eslint-config-prettier':
         specifier: ^8.0.0
         version: 8.0.0(@types/eslint@9.6.1)(eslint@8.57.1(supports-color@8.1.1))(prettier@3.6.2)
@@ -1917,10 +1918,10 @@ importers:
         version: 8.56.1(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.4.5)
       vite:
         specifier: 7.3.2
-        version: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+        version: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vite-plugin-vue-devtools:
         specifier: ^7.0.18
-        version: 7.7.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
+        version: 7.7.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
 
   devops-quality:
     dependencies:
@@ -11770,14 +11771,14 @@ packages:
     resolution: {integrity: sha512-C+uDBV7kS7W5fJlUjq5mPBeBVhYpTIm5gB09APT9o3n/ILeaXVsiSFTbZpTJCJwQ/Crczfn3DmfQFwxYusWFug==, tarball: https://mirrors.tencent.com/npm/less-loader/-/less-loader-11.1.0.tgz}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      less: ^3.5.0 || ^4.0.0
+      less: 4.2.2
       webpack: 5.100.2
 
   less-loader@11.1.4:
     resolution: {integrity: sha512-6/GrYaB6QcW6Vj+/9ZPgKKs6G10YZai/l/eJ4SLwbzqNTBsAqt5hSLVF47TgsiBxV1P6eAU0GYRH3YRuQU9V3A==, tarball: https://mirrors.tencent.com/npm/less-loader/-/less-loader-11.1.4.tgz}
     engines: {node: '>= 14.15.0'}
     peerDependencies:
-      less: ^3.5.0 || ^4.0.0
+      less: 4.2.2
       webpack: 5.100.2
 
   less-loader@12.3.1:
@@ -11785,7 +11786,7 @@ packages:
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
-      less: ^3.5.0 || ^4.0.0
+      less: 4.2.2
       webpack: 5.100.2
     peerDependenciesMeta:
       '@rspack/core':
@@ -11793,14 +11794,9 @@ packages:
       webpack:
         optional: true
 
-  less@4.1.3:
-    resolution: {integrity: sha512-w16Xk/Ta9Hhyei0Gpz9m7VS8F28nieJaL/VyShID7cYvP6IL5oHeL6p4TXSDJqZE/lNv0oJ2pGVjJsRkfwm5FA==, tarball: https://mirrors.tencent.com/npm/less/-/less-4.1.3.tgz}
+  less@4.2.2:
+    resolution: {integrity: sha512-tkuLHQlvWUTeQ3doAqnHbNn8T6WX1KA8yvbKG9x4VtKtIjHsVKQZCH11zRgAfbDAXC2UNIg/K9BYAAcEzUIrNg==, tarball: https://mirrors.tencent.com/npm/less/-/less-4.2.2.tgz}
     engines: {node: '>=6'}
-    hasBin: true
-
-  less@4.5.1:
-    resolution: {integrity: sha512-UKgI3/KON4u6ngSsnDADsUERqhZknsVZbnuzlRZXLQCmfC/MDld42fTydUE9B+Mla1AL6SJ/Pp6SlEFi/AVGfw==, tarball: https://mirrors.tencent.com/npm/less/-/less-4.5.1.tgz}
-    engines: {node: '>=14'}
     hasBin: true
 
   levn@0.3.0:
@@ -16702,7 +16698,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       jiti: '>=1.21.0'
-      less: ^4.0.0
+      less: 4.2.2
       lightningcss: ^1.21.0
       sass: ^1.70.0
       sass-embedded: ^1.70.0
@@ -16929,13 +16925,13 @@ packages:
 
   vue-i18n@8.18.2:
     resolution: {integrity: sha512-0X5nBTCZAVjlwcrPaYJwNs3iipBBTv0AUHwQUOa8yP3XbQGWKbRHqBb3OhCYtum/IHDD21d/df5Xd2VgyxbxfA==, tarball: https://mirrors.tencent.com/npm/vue-i18n/-/vue-i18n-8.18.2.tgz}
-    deprecated: Vue I18n v8.x has reached EOL and is no longer actively maintained. About maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
+    deprecated: v9 and v10 no longer supported. please migrate to v11. about maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
     peerDependencies:
       vue: ^2
 
   vue-i18n@8.26.1:
     resolution: {integrity: sha512-N6GpogueNQqmAye6lkUySlrXAZqBs9DYz8+8LHxm4IV7hEP/KWQL9VUCV8oJ0DS1asUTlvI2qKm2MydRgoPJFQ==, tarball: https://mirrors.tencent.com/npm/vue-i18n/-/vue-i18n-8.26.1.tgz}
-    deprecated: Vue I18n v8.x has reached EOL and is no longer actively maintained. About maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
+    deprecated: v9 and v10 no longer supported. please migrate to v11. about maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
     peerDependencies:
       vue: ^2
 
@@ -20730,9 +20726,9 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nrwl/vite@19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
+  '@nrwl/vite@19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
-      '@nx/vite': 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
+      '@nx/vite': 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -20952,17 +20948,17 @@ snapshots:
   '@nx/nx-win32-x64-msvc@19.5.1':
     optional: true
 
-  '@nx/vite@19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
+  '@nx/vite@19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
-      '@nrwl/vite': 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
+      '@nrwl/vite': 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))
       '@nx/devkit': 19.5.1(nx@19.5.1)
       '@nx/js': 19.5.1(@babel/traverse@7.29.0(supports-color@8.1.1))(@types/node@22.19.15)(nx@19.5.1)(supports-color@8.1.1)(typescript@3.4.5)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@3.4.5)
       '@swc/helpers': 0.5.19
       enquirer: 2.3.6
       tsconfig-paths: 4.2.0
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vitest: 1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vitest: 1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -20993,8 +20989,8 @@ snapshots:
       css-loader: 6.11.0(webpack@5.100.2)
       css-minimizer-webpack-plugin: 5.0.1(clean-css@5.3.3)(csso@5.0.5)(esbuild@0.27.3)(webpack@5.100.2)
       fork-ts-checker-webpack-plugin: 7.2.13(typescript@3.4.5)(vue-template-compiler@2.7.16)(webpack@5.100.2)
-      less: 4.1.3
-      less-loader: 11.1.0(less@4.1.3)(webpack@5.100.2)
+      less: 4.2.2
+      less-loader: 11.1.0(less@4.2.2)(webpack@5.100.2)
       license-webpack-plugin: 4.0.2(webpack@5.100.2)
       loader-utils: 2.0.4
       mini-css-extract-plugin: 2.4.7(webpack@5.100.2)
@@ -22554,9 +22550,9 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vitejs/plugin-basic-ssl@2.3.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))':
+  '@vitejs/plugin-basic-ssl@2.3.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
   '@vitejs/plugin-vue-jsx@1.3.10(supports-color@8.1.1)':
     dependencies:
@@ -22569,70 +22565,70 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue-jsx@3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
+  '@vitejs/plugin-vue-jsx@3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
       '@vue/babel-plugin-jsx': 1.5.0(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.4.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue-jsx@3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
+  '@vitejs/plugin-vue-jsx@3.1.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
       '@vue/babel-plugin-jsx': 1.5.0(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@3.4.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue-jsx@5.1.5(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
+  '@vitejs/plugin-vue-jsx@5.1.5(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/plugin-syntax-typescript': 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))
       '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
       '@rolldown/pluginutils': 1.0.1
       '@vue/babel-plugin-jsx': 2.0.1(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue2@2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@2.7.16)':
+  '@vitejs/plugin-vue2@2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@2.7.16)':
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 2.7.16
 
-  '@vitejs/plugin-vue2@2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
+  '@vitejs/plugin-vue2@2.3.3(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@3.4.5)
 
-  '@vitejs/plugin-vue@2.3.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.4.38(typescript@4.9.5))':
+  '@vitejs/plugin-vue@2.3.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.4.38(typescript@4.9.5))':
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.4.38(typescript@4.9.5)
 
-  '@vitejs/plugin-vue@5.2.4(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
+  '@vitejs/plugin-vue@5.2.4(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
     dependencies:
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.4.5)
 
-  '@vitejs/plugin-vue@5.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
+  '@vitejs/plugin-vue@5.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@3.4.5))':
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@3.4.5)
 
-  '@vitejs/plugin-vue@6.0.7(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
+  '@vitejs/plugin-vue@6.0.7(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
 
-  '@vitest/eslint-plugin@1.6.17(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@1.13.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
+  '@vitest/eslint-plugin@1.6.17(@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@1.13.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
       '@typescript-eslint/scope-manager': 8.58.0
       '@typescript-eslint/utils': 8.58.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
@@ -22640,7 +22636,7 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.56.1(@typescript-eslint/parser@1.13.0(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1)))(eslint@9.39.4(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       typescript: 5.9.3
-      vitest: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
+      vitest: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -22658,13 +22654,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))':
+  '@vitest/mocker@3.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -23062,14 +23058,14 @@ snapshots:
     dependencies:
       '@vue/devtools-kit': 7.7.9
 
-  '@vue/devtools-core@7.7.9(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
+  '@vue/devtools-core@7.7.9(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))':
     dependencies:
       '@vue/devtools-kit': 7.7.9
       '@vue/devtools-shared': 7.7.9
       mitt: 3.0.1
       nanoid: 5.1.6
       pathe: 2.0.3
-      vite-hot-client: 2.1.0(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite-hot-client: 2.1.0(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       vue: 3.5.29(typescript@5.4.5)
     transitivePeerDependencies:
       - vite
@@ -29630,38 +29626,24 @@ snapshots:
       - encoding
       - supports-color
 
-  less-loader@11.1.0(less@4.1.3)(webpack@5.100.2):
+  less-loader@11.1.0(less@4.2.2)(webpack@5.100.2):
     dependencies:
       klona: 2.0.6
-      less: 4.1.3
+      less: 4.2.2
       webpack: 5.100.2(esbuild@0.27.3)(uglify-js@3.19.3)(webpack-cli@6.0.1)
 
-  less-loader@11.1.4(less@4.5.1)(webpack@5.100.2):
+  less-loader@11.1.4(less@4.2.2)(webpack@5.100.2):
     dependencies:
-      less: 4.5.1
+      less: 4.2.2
       webpack: 5.100.2(esbuild@0.27.3)(uglify-js@3.19.3)(webpack-cli@6.0.1)
 
-  less-loader@12.3.1(less@4.5.1)(webpack@5.100.2):
+  less-loader@12.3.1(less@4.2.2)(webpack@5.100.2):
     dependencies:
-      less: 4.5.1
+      less: 4.2.2
     optionalDependencies:
       webpack: 5.100.2(esbuild@0.27.3)(uglify-js@3.19.3)(webpack-cli@6.0.1)
 
-  less@4.1.3:
-    dependencies:
-      copy-anything: 2.0.6
-      parse-node-version: 1.0.1
-      tslib: 2.8.1
-    optionalDependencies:
-      errno: 0.1.8
-      graceful-fs: 4.2.11
-      image-size: 0.5.5
-      make-dir: 2.1.0
-      mime: 1.6.0
-      needle: 3.3.1
-      source-map: 0.6.1
-
-  less@4.5.1:
+  less@4.2.2:
     dependencies:
       copy-anything: 2.0.6
       parse-node-version: 1.0.1
@@ -31468,7 +31450,7 @@ snapshots:
       sha.js: 2.4.12
       to-buffer: 1.2.2
 
-  peer-cli-service-webpack@0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.5.1)(lodash@4.18.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
+  peer-cli-service-webpack@0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.2.2)(lodash@4.18.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
     dependencies:
       '@blueking/cli-utils': 2.0.1
       babel-loader: 9.2.1(@babel/core@7.29.0(supports-color@8.1.1))(webpack@5.100.2)
@@ -31484,7 +31466,7 @@ snapshots:
       fork-ts-checker-webpack-plugin: 9.1.0(typescript@5.9.3)(webpack@5.100.2)
       html-webpack-plugin: 5.6.6(webpack@5.100.2)
       joi: 17.13.3
-      less-loader: 11.1.4(less@4.5.1)(webpack@5.100.2)
+      less-loader: 11.1.4(less@4.2.2)(webpack@5.100.2)
       mini-css-extract-plugin: 2.10.0(webpack@5.100.2)
       ora: 5.4.1
       path-browserify: 1.0.1
@@ -31582,7 +31564,7 @@ snapshots:
       - webpack-cli
       - whiskers
 
-  peer-cli-service-webpack@0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.5.1)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
+  peer-cli-service-webpack@0.0.2(@babel/core@7.29.0(supports-color@8.1.1))(@vue/compiler-sfc@3.5.29)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(esbuild@0.27.3)(eslint@7.32.0(supports-color@8.1.1))(less@4.2.2)(postcss@8.4.49)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(uglify-js@3.19.3)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.38(typescript@4.9.5))(webpack-cli@6.0.1):
     dependencies:
       '@blueking/cli-utils': 2.0.1
       babel-loader: 9.2.1(@babel/core@7.29.0(supports-color@8.1.1))(webpack@5.100.2)
@@ -31598,7 +31580,7 @@ snapshots:
       fork-ts-checker-webpack-plugin: 9.1.0(typescript@5.9.3)(webpack@5.100.2)
       html-webpack-plugin: 5.6.6(webpack@5.100.2)
       joi: 17.13.3
-      less-loader: 11.1.4(less@4.5.1)(webpack@5.100.2)
+      less-loader: 11.1.4(less@4.2.2)(webpack@5.100.2)
       mini-css-extract-plugin: 2.10.0(webpack@5.100.2)
       ora: 5.4.1
       path-browserify: 1.0.1
@@ -35657,27 +35639,27 @@ snapshots:
       remove-trailing-separator: 1.1.0
       replace-ext: 1.0.1
 
-  vite-dev-rpc@1.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-dev-rpc@1.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       birpc: 2.9.0
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-hot-client: 2.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-hot-client: 2.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
 
-  vite-hot-client@2.1.0(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-hot-client@2.1.0(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
-  vite-hot-client@2.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-hot-client@2.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
-  vite-node@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
+  vite-node@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       pathe: 1.1.2
       picocolors: 1.1.1
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -35692,13 +35674,13 @@ snapshots:
       - tsx
       - yaml
 
-  vite-node@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
+  vite-node@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -35713,7 +35695,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite-plugin-html@3.2.2(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-html@3.2.2(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       '@rollup/pluginutils': 4.2.1
       colorette: 2.0.20
@@ -35727,9 +35709,9 @@ snapshots:
       html-minifier-terser: 6.1.0
       node-html-parser: 5.4.2
       pathe: 0.2.0
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
 
-  vite-plugin-inspect@0.8.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-inspect@0.8.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.3.0(rollup@4.59.0)
@@ -35740,12 +35722,12 @@ snapshots:
       perfect-debounce: 1.0.0
       picocolors: 1.1.1
       sirv: 3.0.2
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - rollup
       - supports-color
 
-  vite-plugin-inspect@11.3.3(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-inspect@11.3.3(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       ansis: 4.3.1
       debug: 4.4.3(supports-color@8.1.1)
@@ -35755,42 +35737,42 @@ snapshots:
       perfect-debounce: 2.1.0
       sirv: 3.0.2
       unplugin-utils: 0.3.1
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-dev-rpc: 1.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-dev-rpc: 1.1.0(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-vue-devtools@7.7.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5)):
+  vite-plugin-vue-devtools@7.7.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5)):
     dependencies:
-      '@vue/devtools-core': 7.7.9(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
+      '@vue/devtools-core': 7.7.9(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.4.5))
       '@vue/devtools-kit': 7.7.9
       '@vue/devtools-shared': 7.7.9
       execa: 9.6.1
       sirv: 3.0.2
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-plugin-inspect: 0.8.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
-      vite-plugin-vue-inspector: 5.3.2(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-plugin-inspect: 0.8.9(rollup@4.59.0)(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite-plugin-vue-inspector: 5.3.2(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       vue: 3.5.29(typescript@5.4.5)
     transitivePeerDependencies:
       - '@nuxt/kit'
       - rollup
       - supports-color
 
-  vite-plugin-vue-devtools@8.1.2(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3)):
+  vite-plugin-vue-devtools@8.1.2(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.29(typescript@5.9.3)):
     dependencies:
       '@vue/devtools-core': 8.1.2(vue@3.5.29(typescript@5.9.3))
       '@vue/devtools-kit': 8.1.2
       '@vue/devtools-shared': 8.1.2
       sirv: 3.0.2
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-plugin-inspect: 11.3.3(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
-      vite-plugin-vue-inspector: 6.0.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-plugin-inspect: 11.3.3(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      vite-plugin-vue-inspector: 6.0.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       vue: 3.5.29(typescript@5.9.3)
     transitivePeerDependencies:
       - '@nuxt/kit'
       - supports-color
 
-  vite-plugin-vue-inspector@5.3.2(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-vue-inspector@5.3.2(supports-color@8.1.1)(vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
@@ -35801,11 +35783,11 @@ snapshots:
       '@vue/compiler-dom': 3.5.29
       kolorist: 1.8.0
       magic-string: 0.30.21
-      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-vue-inspector@6.0.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
+  vite-plugin-vue-inspector@6.0.0(supports-color@8.1.1)(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)):
     dependencies:
       '@babel/core': 7.29.0(supports-color@8.1.1)
       '@babel/plugin-proposal-decorators': 7.29.0(@babel/core@7.29.0(supports-color@8.1.1))(supports-color@8.1.1)
@@ -35816,11 +35798,11 @@ snapshots:
       '@vue/compiler-dom': 3.5.29
       kolorist: 1.8.0
       magic-string: 0.30.21
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2):
+  vite@7.3.2(@types/node@20.19.37)(jiti@1.21.7)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
@@ -35832,13 +35814,13 @@ snapshots:
       '@types/node': 20.19.37
       fsevents: 2.3.3
       jiti: 1.21.7
-      less: 4.5.1
+      less: 4.2.2
       sass: 1.97.3
       stylus: 0.59.0(supports-color@8.1.1)
       terser: 5.46.0
       yaml: 2.8.2
 
-  vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2):
+  vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
@@ -35850,31 +35832,13 @@ snapshots:
       '@types/node': 22.19.15
       fsevents: 2.3.3
       jiti: 2.7.0
-      less: 4.1.3
+      less: 4.2.2
       sass: 1.97.3
       stylus: 0.59.0(supports-color@8.1.1)
       terser: 5.46.0
       yaml: 2.8.2
 
-  vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2):
-    dependencies:
-      esbuild: 0.27.3
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
-      postcss: 8.5.8
-      rollup: 4.59.0
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 22.19.15
-      fsevents: 2.3.3
-      jiti: 2.7.0
-      less: 4.5.1
-      sass: 1.97.3
-      stylus: 0.59.0(supports-color@8.1.1)
-      terser: 5.46.0
-      yaml: 2.8.2
-
-  vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
+  vitest@1.6.1(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -35893,8 +35857,8 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-node: 1.6.1(@types/node@22.19.15)(jiti@2.7.0)(less@4.1.3)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-node: 1.6.1(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.19.15
@@ -35912,11 +35876,11 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
+  vitest@3.2.4(@types/node@22.19.15)(jiti@2.7.0)(jsdom@27.4.0(bufferutil@4.1.0)(supports-color@8.1.1)(utf-8-validate@5.0.10))(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
+      '@vitest/mocker': 3.2.4(vite@7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -35934,8 +35898,8 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
-      vite-node: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(less@4.5.1)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
+      vite: 7.3.2(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(terser@5.46.0)(yaml@2.8.2)
+      vite-node: 3.2.4(@types/node@22.19.15)(jiti@2.7.0)(less@4.2.2)(sass@1.97.3)(stylus@0.59.0(supports-color@8.1.1))(supports-color@8.1.1)(terser@5.46.0)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.19.15

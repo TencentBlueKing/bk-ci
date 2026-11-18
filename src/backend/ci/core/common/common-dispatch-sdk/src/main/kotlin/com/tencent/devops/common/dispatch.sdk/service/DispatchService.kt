@@ -135,6 +135,7 @@ class DispatchService constructor(
         commonConfig.devopsDevnetProxyGateway?.let {
             customBuildEnv[ENV_DEVOPS_GATEWAY] = it
         }
+        commonConfig.putBkrepoProjectPrefix(customBuildEnv)
 
         return DispatchMessage(
             id = secretInfo.hashId,

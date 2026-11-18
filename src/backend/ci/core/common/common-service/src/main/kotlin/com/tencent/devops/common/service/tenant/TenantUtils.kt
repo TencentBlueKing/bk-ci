@@ -32,6 +32,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         appCode = environment["bk.apigw.appCode"] ?: ""
         appSecret = environment["bk.apigw.appSecret"] ?: ""
         disableEsb = environment["bk.apigw.disableEsb"] == "true"
+        bkrepoProjectPrefix = environment["bkrepo.projectPrefix"]?.trim()?.trim('.') ?: ""
     }
 
     companion object {
@@ -39,6 +40,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private var appCode = ""
         private var appSecret = ""
         private var disableEsb: Boolean = false
+        private var bkrepoProjectPrefix = ""
 
         private const val DEFAULT_TENANT_ID_FOR_SINGLE = "default"
         public const val DEFAULT_TENANT_ID_FOR_MULTI = "default"
@@ -71,6 +73,19 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 生成英文名称
          */
+        /**
+         * 平台制品库项目名。前缀来自 BK_CI_BKREPO_PROJECT_PREFIX，与初始化和网关一致。
+         * 空前缀保持原名；名称里已经带点时不再追加。
+         */
+        fun bkrepoPlatformProjectId(baseName: String): String {
+            val prefix = bkrepoProjectPrefix
+            return if (prefix.isEmpty() || baseName.contains(".")) {
+                baseName
+            } else {
+                "$prefix.$baseName"
+            }
+        }
+
         fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
             return if (tenantEnglishName.contains(".")) {
                 tenantEnglishName

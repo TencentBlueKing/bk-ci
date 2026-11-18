@@ -88,9 +88,13 @@ if ngx.var.url_prefix ~= nil then
         ngx.var.url_prefix = "http://" .. ngx.var.target .. "/resource/bk-plugin-fe/"
     else
         local bkStoreId = "bk-store"
-        -- 已部署环境的插件静态资源在 system.bk-store，不能改去不存在的 default.bk-store
-        if config.tenant.enabled then
-            bkStoreId = "system." .. bkStoreId
+        -- 与初始化、后端共用 BK_CI_BKREPO_PROJECT_PREFIX。空前缀保持 bk-store，有前缀则为 {前缀}.bk-store
+        local prefix = config.bkrepo.projectPrefix
+        if prefix ~= nil and prefix ~= "" and not string.find(prefix, "__BK_", 1, true) then
+            prefix = string.gsub(prefix, "%.$", "")
+            if prefix ~= "" then
+                bkStoreId = prefix .. "." .. bkStoreId
+            end
         end
         ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/" .. bkStoreId .. "/static/"
     end

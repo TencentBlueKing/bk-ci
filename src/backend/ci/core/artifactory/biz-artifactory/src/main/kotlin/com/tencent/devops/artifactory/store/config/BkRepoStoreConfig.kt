@@ -51,9 +51,6 @@ class BkRepoStoreConfig {
 
     // 获取项目名称
     fun getBkrepoStoreProjectName(): String {
-        return TenantUtils.parseEnglishName(
-            tenantId = TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI,
-            tenantEnglishName = bkrepoStoreProjectName
-        )
+        return TenantUtils.bkrepoPlatformProjectId(bkrepoStoreProjectName)
     }
 }

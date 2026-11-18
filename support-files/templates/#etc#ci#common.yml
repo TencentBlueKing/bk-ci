@@ -492,6 +492,8 @@ bkrepo:
   staticRepoPrefixUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/generic/{0}/{1}
   staticUserName: __BK_REPO_USERNAME__
   staticPassword: __BK_REPO_PASSWORD__
+  # 平台制品库项目前缀。单租户留空；多租户填平台租户 ID，初始化、网关和后端共用
+  projectPrefix: __BK_CI_BKREPO_PROJECT_PREFIX__
 
 # 企业微信api配置
 wechatWork:
