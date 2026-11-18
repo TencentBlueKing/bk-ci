@@ -96,6 +96,16 @@ class TGitOAuthService @Autowired constructor(
         return AuthorizeResult(403, getOauthUrl(id))
     }
 
+    fun getOauthUrl(userId: String, redirectUrl: String): String {
+        return getOauthUrl(
+            gitProjectId = null,
+            userId = userId,
+            redirectUrlType = RedirectUrlTypeEnum.SPEC,
+            redirectUrl = redirectUrl,
+            resetType = null
+        ).url
+    }
+
     fun getProject(
         userId: String,
         projectId: String,

@@ -26,6 +26,7 @@ import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
 import com.tencent.devops.repository.service.hub.ScmUserApiService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -46,6 +47,7 @@ class RepositoryOauthService @Autowired constructor(
     private val scmTokenApiService: ScmTokenApiService,
     private val scmUserApiService: ScmUserApiService,
     val githubOAuthService: GithubOAuthService,
+    private val tGitOAuthService: TGitOAuthService,
     private val commonConfig: CommonConfig
 ) {
 
@@ -184,6 +186,10 @@ class RepositoryOauthService @Autowired constructor(
                     repoHashId = null,
                     operator = userId
                 ).redirectUrl
+            }
+
+            ScmType.CODE_TGIT.name -> {
+                tGitOAuthService.getOauthUrl(userId = userId, redirectUrl = redirectUrl)
             }
 
             else -> {
