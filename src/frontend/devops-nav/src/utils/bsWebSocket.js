@@ -1,5 +1,6 @@
 import cookie from 'js-cookie'
 import SockJS from 'sockjs-client'
+import { installRealtimeHost } from '../../../common-lib/websocket/bridge'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -20,14 +21,27 @@ class BlueShieldWebSocket {
         this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
-        
-        this.connect()
+        this.useV2 = false
+        this.realtimeHost = installRealtimeHost({
+            getFrame: () => document.getElementById('iframe-box'),
+            onActive: () => {
+                this.useV2 = true
+                clearTimeout(this.retryTimer)
+                this.connectCallBack = []
+                this.isConnecting = false
+                this.stompClient?.disconnect?.()
+            },
+            onIdle: () => { this.useV2 = false }
+        })
+        this.retryTimer = setTimeout(() => this.connect(), 500)
         this.closePageDisConnect()
         this.onlineConnect()
         this.offlineDisconnect()
     }
 
     connect () {
+        if (this.useV2 || this.isConnecting || this.stompClient?.connected || !navigator.onLine) return
+        clearTimeout(this.retryTimer)
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
@@ -79,16 +93,12 @@ class BlueShieldWebSocket {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
             }
-        }, (err) => {
-            if (this.connectErrTime <= 8) {
-                console.log('websocket connection retrying')
-                this.connectErrTime++
-                const time = Math.random() * 60000
-                setTimeout(() => this.connect(), time)
-            } else {
-                this.isConnecting = false
-                window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
-            }
+        }, () => {
+            this.isConnecting = false
+            if (this.useV2) return
+            clearTimeout(this.retryTimer)
+            const time = Math.min(60000, 1000 * 2 ** Math.min(this.connectErrTime++, 6))
+            this.retryTimer = setTimeout(() => this.connect(), time * (0.8 + Math.random() * 0.4))
         })
     }
 
@@ -145,10 +155,11 @@ class BlueShieldWebSocket {
     }
 
     changeRoute (router) {
+        if (this.useV2) return
         const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
-        const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = router.params?.projectId || cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
         if (hasWebSocket) {
@@ -162,6 +173,11 @@ class BlueShieldWebSocket {
     }
 
     loginOut (from) {
+        if (this.useV2) {
+            this.realtimeHost.reset()
+            this.hasConnect = false
+            return
+        }
         const data = { sessionId: this.uuid, userId: this.userName, page: from.path }
         if (this.hasConnect) {
             this.ensureSendMessage(() => {
@@ -190,13 +206,13 @@ class BlueShieldWebSocket {
             // a标签也会触发这个事件，需要屏蔽
             if (tagName === 'A') return
             navigator.sendBeacon(`/websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
-            this.stompClient.disconnect()
+            this.stompClient?.disconnect?.()
             this.hasConnect = false
         })
     }
 
     offlineDisconnect () {
-        window.addEventListener('offline', () => this.stompClient.disconnect())
+        window.addEventListener('offline', () => this.stompClient?.disconnect?.())
     }
 
     onlineConnect () {

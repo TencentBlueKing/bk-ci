@@ -131,6 +131,11 @@ export const FlowTable = defineComponent({
       WS_ID,
     )
     websocketRegister.registerOnReconnect(() => loadContentDataWithGroupId(props.groupId), WS_ID)
+    watch(
+      () => [projectId.value, ...flowTableList.value.map(item => item.pipelineId)].join(':'),
+      () => websocketRegister.setTopics(WS_ID, flowTableList.value.slice(0, 128).map(item => `ps:${projectId.value}:${item.pipelineId}`)),
+      { immediate: true },
+    )
     onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
 
     onMounted(async () => {

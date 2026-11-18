@@ -30,8 +30,6 @@ package com.tencent.devops.websocket.cron
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.websocket.utils.WsRedisUtils
-import com.tencent.devops.common.websocket.utils.WsRedisUtils.cleanPageSessionByPage
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.lock.WebsocketCronLock
@@ -73,10 +71,6 @@ class ClearTimeoutCron(
     private fun longSessionLog() {
         val longSessionList = websocketService.getLongSessionPage()
         logger.warn("this page sessionSize more ${websocketService.getMaxSession()}, $longSessionList")
-        longSessionList.forEach {
-            cleanPageSessionByPage(redisOperation, it)
-            logger.warn("this page[$it] outSize, delete page session")
-        }
         websocketService.clearLongSessionPage()
     }
 
@@ -95,24 +89,7 @@ class ClearTimeoutCron(
                         val timeout: Long = it.substringAfter("&").toLong()
                         val userId = it.substringAfter("#").substringBefore("&")
                         val sessionId = it.substringBefore("#")
-                        if (nowTime > timeout) {
-                            logger.info("websocket timer timeout $bucket|$it|$userId|$sessionId")
-                            val sessionPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
-                            WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)
-                            if (sessionPage != null) {
-                                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
-                                WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                            } else {
-                                // sessionId没有匹配到页面且超时, 需把session从userId-sessionId内删除
-                                WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                            }
-                            // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
-                            if (websocketService.isCacheSession(sessionId)) {
-                                websocketService.removeCacheSession(sessionId)
-                            } else {
-                                clearSessionByMq(userId, sessionId)
-                            }
-                        } else {
+                        if (nowTime <= timeout) {
                             newRedisData.add(it)
                         }
                     } catch (e: Exception) {
