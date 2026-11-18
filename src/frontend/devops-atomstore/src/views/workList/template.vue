@@ -200,7 +200,7 @@
                         > {{ $t('store.下架') }} </span>
                         <span
                             style="margin-right:0"
-                            @click="delete (props.row)"
+                            @click="deleteHandle(props.row)"
                             v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"
                         > {{ $t('store.移除') }} </span>
                     </template>
@@ -501,21 +501,26 @@
                 return `${year} ${time}`
             },
 
-            async delete (row) {
-                let message = this.$t('store.移除成功')
-                let theme = 'success'
-                try {
-                    this.isLoading = true
+            deleteHandle (row) {
+                this.$bkInfo({
+                    title: this.$t('store.确认要删除？'),
+                    confirmFn: async () => {
+                        let message = this.$t('store.移除成功')
+                        let theme = 'success'
+                        try {
+                            this.isLoading = true
 
-                    await this.deleteTemplate(row.templateCode)
-                    this.requestList()
-                } catch (err) {
-                    message = err.message || err
-                    theme = 'error'
-                } finally {
-                    this.$bkMessage({ message, theme })
-                    this.isLoading = false
-                }
+                            await this.deleteTemplate(row.templateCode)
+                            this.requestList()
+                        } catch (err) {
+                            message = err.message || err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({ message, theme })
+                            this.isLoading = false
+                        }
+                    }
+                })
             },
 
             async pageCountChanged (currentLimit) {
