@@ -1,135 +1,174 @@
 <template>
   <div class="admin-page">
-    <header class="admin-head">
+    <header class="page-title">
       <h1>{{ t('蓝盾公约') }}</h1>
     </header>
+    <nav class="page-tabs">
+      <button
+        type="button"
+        :class="{ 'is-on': activeTab === 'body' }"
+        @click="onTabChange('body')"
+      >
+        {{ t('公约正文') }}
+      </button>
+      <button
+        type="button"
+        :class="{ 'is-on': activeTab === 'records' }"
+        @click="onTabChange('records')"
+      >
+        {{ t('签署记录') }}
+      </button>
+    </nav>
 
-    <bk-tab
-      v-model:active="activeTab"
-      class="admin-tabs"
-      type="card-tab"
-      @change="onTabChange"
+    <div
+      v-if="activeTab === 'body'"
+      class="workspace"
     >
-      <bk-tab-panel
-        name="body"
-        :label="t('公约正文')"
+      <bk-loading
+        class="panel-loading"
+        :loading="bodyLoading"
       >
-        <div class="admin-stack">
-          <bk-loading
-            class="panel-loading"
-            :loading="bodyLoading"
+        <div class="tool-row">
+          <div
+            class="lang-switch"
+            role="group"
+            :aria-label="t('中文')"
           >
-            <section class="panel">
-              <div class="panel-bar">
-                <bk-radio-group v-model="contentLang">
-                  <bk-radio-button label="zh">{{ t('中文') }}</bk-radio-button>
-                  <bk-radio-button label="en">English</bk-radio-button>
-                </bk-radio-group>
-                <bk-button
-                  v-if="!editing"
-                  theme="primary"
-                  :disabled="bodyLoading"
-                  @click="startEdit"
-                >
-                  {{ t('编辑') }}
-                </bk-button>
-              </div>
-              <template v-if="editing">
-                <bk-input
-                  v-model="draft"
-                  class="html-input"
-                  type="textarea"
-                  :rows="12"
-                />
-                <div class="save-row">
-                  <bk-button @click="stopEdit">
-                    {{ t('取消') }}
-                  </bk-button>
-                  <span
-                    class="save-wrap"
-                    v-bk-tooltips="saveTip ? { content: saveTip } : { disabled: true }"
-                  >
-                    <bk-button
-                      theme="primary"
-                      :disabled="!!saveTip || saving"
-                      :loading="saving"
-                      @click="save"
-                    >
-                      {{ t('保存') }}
-                    </bk-button>
-                  </span>
-                </div>
-                <h2>{{ t('预览') }}</h2>
-                <ConventionHtml :html="draft" />
-              </template>
-              <ConventionHtml
-                v-else
-                :html="savedHtml"
-              />
-            </section>
-          </bk-loading>
-        </div>
-      </bk-tab-panel>
-      <bk-tab-panel
-        name="records"
-        :label="t('签署记录')"
-      >
-        <div class="admin-stack">
-          <bk-loading
-            class="panel-loading"
-            :loading="recordsLoading"
+            <button
+              type="button"
+              :class="{ 'is-on': contentLang === 'zh' }"
+              @click="contentLang = 'zh'"
+            >
+              {{ t('中文') }}
+            </button>
+            <button
+              type="button"
+              :class="{ 'is-on': contentLang === 'en' }"
+              @click="contentLang = 'en'"
+            >
+              English
+            </button>
+          </div>
+          <div
+            v-if="editing"
+            class="tool-actions"
           >
-            <section class="panel records-panel">
-              <div class="filters">
-                <bk-input
-                  v-model="keyword"
-                  class="record-search"
-                  clearable
-                  :disabled="recordsLoading"
-                  :placeholder="t('搜索用户')"
-                  @clear="onSearch"
-                  @enter="onSearch"
-                  @input="onKeywordChange"
-                />
-                <span
-                  class="export-wrap"
-                  v-bk-tooltips="recordCount ? { disabled: true } : { content: t('没有可导出的签署记录') }"
-                >
-                  <bk-button
-                    :disabled="!recordCount || exporting || recordsLoading"
-                    :loading="exporting"
-                    @click="exportRows"
-                  >
-                    {{ t('导出') }}
-                  </bk-button>
-                </span>
-              </div>
-              <bk-table
-                class="records-table"
-                remote-pagination
-                :data="records"
-                :pagination="pagination"
-                :empty-text="tableEmpty"
-                @page-value-change="onPage"
-                @page-limit-change="onLimit"
+            <span
+              class="save-wrap"
+              v-bk-tooltips="saveTip ? { content: saveTip } : { disabled: true }"
+            >
+              <bk-button
+                theme="primary"
+                class="tool-btn"
+                :disabled="!!saveTip || saving"
+                :loading="saving"
+                @click="save"
               >
-                <bk-table-column
-                  :label="t('用户')"
-                  prop="userId"
-                  :width="240"
-                  show-overflow-tooltip
-                />
-                <bk-table-column
-                  :label="t('签署时间')"
-                  prop="agreeTime"
-                  :width="180"
-                />
-              </bk-table>
-            </section>
-          </bk-loading>
+                {{ t('保存') }}
+              </bk-button>
+            </span>
+            <bk-button
+              class="tool-btn"
+              :disabled="saving"
+              @click="stopEdit"
+            >
+              {{ t('取消') }}
+            </bk-button>
+          </div>
+          <bk-button
+            v-else
+            theme="primary"
+            class="tool-btn"
+            :disabled="bodyLoading"
+            @click="startEdit"
+          >
+            {{ t('编辑') }}
+          </bk-button>
         </div>
-      </bk-tab-panel>
-    </bk-tab>
+        <div
+          v-if="editing"
+          class="edit-split"
+        >
+          <section class="editor">
+            <div class="editor-head">{{ t('HTML 正文') }}</div>
+            <textarea
+              v-model="draft"
+              class="editor-input"
+              spellcheck="false"
+            />
+          </section>
+          <section class="edit-preview">
+            <div class="editor-head">{{ t('预览') }}</div>
+            <div class="preview-body">
+              <ConventionHtml :html="draft" />
+            </div>
+          </section>
+        </div>
+        <section
+          v-else
+          class="content-card"
+        >
+          <ConventionHtml :html="savedHtml" />
+        </section>
+      </bk-loading>
+    </div>
+
+    <div
+      v-else
+      class="workspace"
+    >
+      <bk-loading
+        class="panel-loading"
+        :loading="recordsLoading"
+      >
+        <div class="tool-row records-tools">
+          <bk-input
+            v-model="keyword"
+            class="record-search"
+            clearable
+            :disabled="recordsLoading"
+            :placeholder="t('搜索用户')"
+            @clear="onSearch"
+            @enter="onSearch"
+            @input="onKeywordChange"
+          />
+          <span
+            class="export-wrap"
+            v-bk-tooltips="recordCount ? { disabled: true } : { content: t('没有可导出的签署记录') }"
+          >
+            <bk-button
+              class="tool-btn export-btn"
+              :disabled="!recordCount || exporting || recordsLoading"
+              :loading="exporting"
+              @click="exportRows"
+            >
+              {{ t('导出') }}
+            </bk-button>
+          </span>
+        </div>
+        <bk-table
+          class="records-table"
+          remote-pagination
+          :data="records"
+          :pagination="pagination"
+          :empty-text="tableEmpty"
+          @page-value-change="onPage"
+          @page-limit-change="onLimit"
+        >
+          <bk-table-column
+            :label="t('用户')"
+            prop="userId"
+            :width="240"
+            show-overflow-tooltip
+          />
+          <bk-table-column
+            :label="t('签署时间')"
+            prop="agreeTime"
+            :width="180"
+          />
+        </bk-table>
+      </bk-loading>
+    </div>
   </div>
 </template>
 
@@ -263,7 +302,6 @@ async function save() {
 function onTabChange(name) {
   const tab = name === 'records' ? 'records' : 'body'
   if ((route.query.tab || 'body') === tab) return
-  // 只改 query，避免 name 跳转触发多余 path 同步
   router.replace({ query: { ...route.query, tab } })
 }
 
@@ -321,87 +359,251 @@ watch(contentLang, () => {
 
 <style scoped>
 .admin-page {
+  flex: 1;
   min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fa;
 }
-.admin-head {
+.page-title {
   display: flex;
   align-items: center;
   height: 52px;
+  margin: 0;
+  padding: 0 24px;
+  background: #fff;
+}
+.page-title h1 {
+  margin: 0;
+  color: #313238;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.page-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  height: 42px;
   padding: 0 24px;
   background: #fff;
   border-bottom: 1px solid #dcdee5;
 }
-.admin-head h1 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: #313238;
+.page-tabs button {
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #4d4f56;
+  font-size: 14px;
+  line-height: 22px;
+  cursor: pointer;
 }
-.admin-tabs {
-  background: #fff;
+.page-tabs button.is-on {
+  border-bottom-color: #1768ef;
+  color: #1768ef;
 }
-.admin-stack {
-  padding: 16px 24px 24px;
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 24px;
   background: #f5f7fa;
 }
 .panel-loading {
+  flex: 1;
   min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.panel {
-  min-height: 320px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 2px;
-}
-.records-panel {
-  padding-bottom: 8px;
-}
-.records-table :deep(.bk-table-head table),
-.records-table :deep(.bk-table-body table) {
-  width: 420px !important;
-}
-.filters {
+.tool-row {
   display: flex;
   align-items: center;
+  gap: 16px;
+  height: 32px;
+}
+.records-tools {
   gap: 8px;
-  margin-bottom: 12px;
 }
-.record-search {
-  width: 240px;
+.tool-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
 }
-.export-wrap,
-.save-wrap {
+.tool-row > .tool-btn {
+  margin-left: auto;
+}
+.tool-btn {
+  width: 64px;
+}
+.export-btn {
+  width: auto;
+  min-width: 64px;
+}
+.tool-btn :deep(.bk-button),
+.tool-actions :deep(.bk-button) {
+  width: 64px;
+  height: 32px;
+  padding: 0;
+  border-radius: 2px;
+}
+:deep(.tool-btn.bk-button-primary),
+.tool-actions :deep(.bk-button.bk-button-primary) {
+  background-color: #1768ef;
+  border-color: #1768ef;
+  color: #fff;
+}
+:deep(.tool-btn.bk-button-primary:hover),
+:deep(.tool-btn.bk-button-primary:active),
+.tool-actions :deep(.bk-button.bk-button-primary:hover),
+.tool-actions :deep(.bk-button.bk-button-primary:active) {
+  background-color: #1768ef;
+  border-color: #1768ef;
+  color: #fff;
+}
+.lang-switch {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 122px;
+  height: 32px;
+  padding: 4px;
+  border: 0;
+  border-radius: 16px;
+  background: #eaebf0;
+}
+.lang-switch button {
+  flex: 1 1 0;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #4d4f56;
+  font-size: 12px;
+  line-height: 24px;
+  cursor: pointer;
+}
+.lang-switch button.is-on {
+  background: #fff;
+  color: #3a84ff;
+}
+.content-card {
+  padding: 24px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+.edit-split {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+.edit-preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: -1px;
+}
+.edit-split > .editor .editor-head {
+  border-radius: 2px 0 0 0;
+}
+.edit-split > .edit-preview .editor-head {
+  border-radius: 0 2px 0 0;
+}
+.edit-split > .editor .editor-input {
+  border-radius: 0 0 0 2px;
+}
+.preview-body {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  margin-top: -1px;
+  padding: 24px;
+  overflow: auto;
+  border: 1px solid #dcdee5;
+  border-radius: 0 0 2px 0;
+  background: #fff;
+}
+.edit-split > .editor,
+.edit-split > .edit-preview {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 650px;
+}
+.editor {
+  display: flex;
+  flex-direction: column;
+}
+.editor-head {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 9px;
+  border: 1px solid #dcdee5;
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
+  background: #f5f7fa;
+  color: #313238;
+  font-size: 14px;
+  line-height: 22px;
+}
+.editor-input {
+  flex: 1;
+  box-sizing: border-box;
+  height: 615px;
+  margin-top: -1px;
+  padding: 4px 8px;
+  border: 1px solid #dcdee5;
+  border-radius: 0 0 2px 2px;
+  background: #fff;
+  color: #4d4f56;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 20px;
+  resize: none;
+}
+.edit-split > .editor .editor-input:focus {
+  position: relative;
+  z-index: 1;
+  border: 1px solid #3a84ff;
+  outline: 0;
+  box-shadow: 0 0 3px 0 #a3c5fd;
+}
+.save-wrap,
+.export-wrap {
   display: inline-block;
 }
 .export-wrap {
   margin-left: auto;
 }
-.export-wrap :deep(button[disabled]),
-.save-wrap :deep(button[disabled]) {
+.save-wrap :deep(button[disabled]),
+.export-wrap :deep(button[disabled]) {
   pointer-events: none;
 }
-.panel-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+.record-search {
+  width: 240px;
+  height: 32px;
 }
-.html-input :deep(textarea) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 20px;
+.records-table {
+  border-radius: 2px;
+  background: #fff;
+  overflow: hidden;
 }
-.save-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
+.records-table :deep(.bk-table-head table),
+.records-table :deep(.bk-table-body table) {
+  width: 420px !important;
 }
-h2 {
-  margin: 24px 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 22px;
-  color: #313238;
+.records-table :deep(th),
+.records-table :deep(td) {
+  height: 42px;
+  box-sizing: border-box;
 }
 </style>

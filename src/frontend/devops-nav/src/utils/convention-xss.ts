@@ -1,11 +1,14 @@
-/** 公约 HTML 白名单，对齐联调文档 */
+/** 公约 HTML 白名单，对齐联调文档 / 原型 */
 export const CONVENTION_XSS_OPTIONS = {
     whiteList: {
         p: [],
         ol: [],
         ul: [],
         li: [],
-        strong: [],
+        h1: [],
+        h2: [],
+        h3: [],
+        strong: ['style'],
         em: [],
         br: [],
         a: ['href', 'title', 'target', 'rel'],
