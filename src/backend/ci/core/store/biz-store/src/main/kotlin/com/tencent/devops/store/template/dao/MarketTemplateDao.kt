@@ -837,10 +837,6 @@ class MarketTemplateDao {
         TenantUtils.isMultiTenantMode() && !tenantId.isNullOrBlank()
 
     private fun tenantVisibleCondition(field: Field<String>, tenantId: String?) =
-        if (tenantId == TenantUtils.DEFAULT_TENANT_ID_FOR_MULTI) {
-            // 迁移窗口：尚未回填的空租户只对默认租户可见
-            field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
-        } else {
-            field.`in`(tenantId, TenantUtils.getTenantId())
-        }
+        // 安装初始化的公共组件没有租户，所有租户都要能看到；指定了租户的只对当前租户可见
+        field.`in`(tenantId, TenantUtils.getTenantId()).or(field.isNull)
 }

@@ -114,7 +114,7 @@
             const hash = this.$route.hash
             
             if (showProjectList) {
-                const reg = /^\/?[\w\-]+\/(([\w\-]+)\/?)(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(([^/]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
                 const { projectId } = this.$route.params
                 const initPath = matchResult ? matchResult[3] : ''
