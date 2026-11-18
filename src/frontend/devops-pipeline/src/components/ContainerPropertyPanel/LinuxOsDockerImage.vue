@@ -116,6 +116,20 @@
                 </enum-input>
             </form-field>
 
+            <form-field>
+                <atom-checkbox
+                    :value="mountWorkspace"
+                    :text="$t('editPage.mountWorkspace')"
+                    name="mountWorkspace"
+                    :handle-change="changeMountWorkspace"
+                    :disabled="!editable"
+                >
+                </atom-checkbox>
+                <i
+                    class="bk-icon icon-info-circle"
+                    v-bk-tooltips="mountWorkspaceTooltip"
+                ></i>
+            </form-field>
             <form-field
                 label="Volumes"
             >
@@ -151,7 +165,7 @@
                 :error-msg="$t('editPage.dockerCpuLimitInvalid')"
             >
                 <bk-input
-                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    :placeholder="$t('editPage.dockerResourceFollow')"
                     :value="buildCpuLimit"
                     :disabled="!editable"
                     @change="(val) => changeOptions('cpus', val)"
@@ -164,7 +178,7 @@
                 :error-msg="$t('editPage.dockerMemoryLimitInvalid')"
             >
                 <bk-input
-                    :placeholder="$t('editPage.dockerResourceUnlimited')"
+                    :placeholder="$t('editPage.dockerResourceFollow')"
                     :value="buildMemoryLimit"
                     :disabled="!editable"
                     @change="(val) => changeOptions('memory', val)"
@@ -211,6 +225,7 @@
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import InputParameterArray from '@/components/AtomFormComponent/InputParameterArray'
+    import { DOCKER_WORKSPACE_NO_MOUNT, isDockerWorkspaceMounted } from '@/utils/normalizePipelineModel'
     export default {
         name: 'LinuxOsDockerImage',
         components: {
@@ -280,6 +295,20 @@
             },
             buildImagePullPolicy () {
                 return this.container.dispatchType?.dockerInfo?.imagePullPolicy ?? 'if-not-present'
+            },
+            mountWorkspace () {
+                return isDockerWorkspaceMounted(this.container.dispatchType)
+            },
+            mountWorkspaceTooltip () {
+                return {
+                    content: [
+                        this.$t('editPage.mountWorkspaceOnTips'),
+                        this.$t('editPage.mountWorkspaceOffTips')
+                    ].join('\n'),
+                    placements: ['top'],
+                    maxWidth: 360,
+                    extCls: 'mount-workspace-tooltip'
+                }
             },
             buildImage () {
                 return this.container.dispatchType?.dockerInfo?.image ?? ''
@@ -375,26 +404,28 @@
         methods: {
             handleeEnableDockerChange () {
                 this.enableDocker = !this.enableDocker
-                let { dispatchType } = this.container
-                dispatchType = this.enableDocker
-                    ? {
-                        ...dispatchType,
-                        dockerInfo: {
-                            ...dispatchType.dockerInfo,
-                            imageType: 'THIRD',
-                            imagePullPolicy: 'if-not-present'
+                const dispatchType = { ...(this.container.dispatchType || {}) }
+                const legacyNoMount = dispatchType.workspace === DOCKER_WORKSPACE_NO_MOUNT
+                if (legacyNoMount) {
+                    dispatchType.workspace = ''
+                }
+                if (this.enableDocker) {
+                    const dockerInfo = {
+                        ...(dispatchType.dockerInfo || {}),
+                        imageType: 'THIRD',
+                        imagePullPolicy: 'if-not-present'
+                    }
+                    if (legacyNoMount) {
+                        dockerInfo.options = {
+                            ...(dockerInfo.options || {}),
+                            mountWorkspace: false
                         }
                     }
-                    : {
-                        ...dispatchType,
-                        dockerInfo: undefined
-                    }
-                this.handleContainerChange(
-                    'dispatchType',
-                    Object.assign({
-                        ...dispatchType
-                    })
-                )
+                    dispatchType.dockerInfo = dockerInfo
+                } else {
+                    dispatchType.dockerInfo = undefined
+                }
+                this.handleContainerChange('dispatchType', dispatchType)
             },
 
             changeImageType (name, value) {
@@ -449,6 +480,30 @@
                 )
             },
 
+            changeMountWorkspace (name, checked) {
+                const dispatchType = this.container.dispatchType || {}
+                const dockerInfo = { ...(dispatchType.dockerInfo || {}) }
+                const options = { ...(dockerInfo.options || {}) }
+                if (checked) {
+                    delete options.mountWorkspace
+                } else {
+                    options.mountWorkspace = false
+                }
+                if (Object.keys(options).length) {
+                    dockerInfo.options = options
+                } else {
+                    delete dockerInfo.options
+                }
+                const nextDispatch = {
+                    ...dispatchType,
+                    dockerInfo
+                }
+                if (dispatchType.workspace === DOCKER_WORKSPACE_NO_MOUNT) {
+                    nextDispatch.workspace = ''
+                }
+                this.handleContainerChange('dispatchType', nextDispatch)
+            },
+
             changeOptions (name, value) {
                 this.handleContainerChange(
                     'dispatchType',
@@ -485,6 +540,12 @@
 </script>
 
 <style lang="scss">
+    .mount-workspace-tooltip,
+    .mount-workspace-tooltip .tippy-content,
+    .mount-workspace-tooltip .bk-tooltip-content {
+        white-space: pre-line;
+    }
+
     .linux-docker-image-container {
         padding: 5px 20px 15px;
         margin-top: 10px;
