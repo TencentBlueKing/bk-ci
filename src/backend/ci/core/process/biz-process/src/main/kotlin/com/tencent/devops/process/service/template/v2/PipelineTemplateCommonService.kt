@@ -41,7 +41,8 @@ class PipelineTemplateCommonService(
         )
         if (count > 0) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS,
+                params = arrayOf(name)
             )
         }
         if (templateId != null) {
