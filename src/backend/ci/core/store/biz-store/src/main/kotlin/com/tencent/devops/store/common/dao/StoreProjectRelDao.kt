@@ -291,11 +291,20 @@ class StoreProjectRelDao {
             if (!instanceId.isNullOrBlank()) {
                 conditions.add(INSTANCE_ID.eq(instanceId))
             }
-            val baseQuery = dslContext.select(STORE_CODE, VERSION)
+            val records = dslContext.select(STORE_CODE, VERSION)
                 .from(this)
                 .where(conditions)
                 .and(STORE_TYPE.eq(storeType))
-            return baseQuery.groupBy(STORE_CODE).fetch().intoMap(STORE_CODE, VERSION)
+                .orderBy(UPDATE_TIME.desc(), ID.desc())
+                .fetch()
+            val versions = mutableMapOf<String, String?>()
+            records.forEach { record ->
+                val storeCode = record[STORE_CODE]
+                if (!versions.containsKey(storeCode)) {
+                    versions[storeCode] = record[VERSION]
+                }
+            }
+            return versions
         }
     }
 
