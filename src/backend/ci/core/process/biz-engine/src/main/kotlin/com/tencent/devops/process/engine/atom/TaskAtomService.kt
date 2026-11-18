@@ -53,11 +53,13 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -76,6 +78,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
     private val taskBuildRecordService: TaskBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -226,6 +229,16 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = atomResponse.errorCode,
                 errorMsg = atomResponse.errorMsg
             )
+            if (VmOperateTaskGenerator.isStartVM(task)) {
+                containerBuildRecordService.containerStarted(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    containerId = task.containerId,
+                    executeCount = task.executeCount ?: 1,
+                    containerBuildStatus = atomResponse.buildStatus
+                )
+            }
             labels[PipelineBuildStatusBroadCastEvent.Labels::specialStep.name] = VMUtils.getVmLabel(task.taskId)
             labels[PipelineBuildStatusBroadCastEvent.Labels::stepName.name] = task.taskName
             // 系统控制类插件不涉及到Detail编排状态修改
