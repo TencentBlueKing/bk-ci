@@ -55,6 +55,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_TIMER_
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_YAML_BRANCH_TIME
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV
 import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -208,7 +209,10 @@ class PipelineTimerBuildListener @Autowired constructor(
     }
 
     /**
-     * 创作流定时触发
+     * 创作流定时触发。
+     *
+     * 运行资源决定到点启动几次构建：绑定单台机器时启动一次，由启动流程解析出那台机器；
+     * 绑定环境时环境下每个节点各启动一次，触发器里勾选了节点就只跑勾中的那些。
      */
     private fun PipelineTimerBuildEvent.creativeStreamTimer(
         params: Map<String, String> = emptyMap(),
@@ -219,66 +223,75 @@ class PipelineTimerBuildListener @Autowired constructor(
             pipelineId = pipelineId,
             taskId = taskId
         ) as? TimerTriggerElement ?: return
-        when (triggerElement.nodeType) {
-            TimerNodeType.NODE_LIST -> {
-                val agentHashIdList = triggerElement.nodes ?: listOf()
-                if (agentHashIdList.isEmpty()) {
-                    saveTriggerEvent(
-                        projectId = projectId,
-                        userId = userId,
-                        pipelineId = pipelineId,
-                        reasonDetail = PipelineTriggerFailedErrorCode(
-                            BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
-                        )
-                    )
-                    return
-                }
-                agentHashIdList.forEach { agentHashId ->
-                    val creativeStreamParams = creativeStreamService.creativeStreamParams(
-                        projectId = projectId,
-                        agentHashId = agentHashId,
-                        userId = userId
-                    )
-                    timerTriggerPipeline(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        params = params.plus(creativeStreamParams),
-                        channelCode = timerChannelCode,
-                        taskId = taskId
-                    )
-                }
-            }
-            TimerNodeType.ENV_ALL, null -> {
-                val envHashId = pipelineRepositoryService.getSetting(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )?.envHashId ?: ""
-                val envNodeList = creativeStreamService.getEnvNodeList(
-                    projectId = projectId,
-                    envHashId = envHashId,
-                    userId = userId
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
+        val resource = setting.runtimeResource()
+        // 绑定单台机器：不存在「选节点」的概念，到点按当前运行资源启动一次，
+        // 机器已释放等解析不出来的情况由启动流程报错，这里不提前拦
+        if (resource?.group == false) {
+            timerTriggerPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                params = params,
+                channelCode = timerChannelCode,
+                taskId = taskId
+            )
+            return
+        }
+        // 环境下当前真实可用的节点。触发器里存的节点是配置时的快照，节点被移出环境后不会跟着更新，
+        // 必须以环境为准做一次过滤，否则会在一台已经不属于本运行资源的机器上触发
+        val envNodeList = creativeStreamService.getRuntimeResourceNodeList(
+            pipelineInfo = pipelineInfo,
+            pipelineSetting = setting,
+            userId = userId
+        ).orEmpty()
+        val configuredNodes = triggerElement.nodes?.takeIf {
+            triggerElement.nodeType == TimerNodeType.NODE_LIST
+        }
+        if (triggerElement.nodeType == TimerNodeType.NODE_LIST && configuredNodes.isNullOrEmpty()) {
+            saveTriggerEvent(
+                projectId = projectId,
+                userId = userId,
+                pipelineId = pipelineId,
+                reasonDetail = PipelineTriggerFailedErrorCode(
+                    BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
                 )
-                if (envNodeList.isEmpty()) {
-                    logger.info("[$pipelineId]|env node list is empty")
-                    return
-                }
-                envNodeList.forEach { agentHashId ->
-                    val creativeStreamParams = creativeStreamService.creativeStreamParams(
-                        projectId = projectId,
-                        agentHashId = agentHashId,
-                        userId = userId
+            )
+            return
+        }
+        val targetNodes = configuredNodes?.filter { envNodeList.contains(it) } ?: envNodeList
+        if (targetNodes.isEmpty()) {
+            logger.info("[$pipelineId]|no runnable node in runtime resource|nodeType=${triggerElement.nodeType}")
+            // 勾选的节点全被移出环境是配置与环境脱节，记一条失败事件让用户能查到原因；
+            // 整个环境空了属于环境侧的状态，沿用原来静默跳过的处理
+            if (configuredNodes != null) {
+                saveTriggerEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    reasonDetail = PipelineTriggerFailedErrorCode(
+                        errorCode = ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
+                        params = listOf(resource?.resourceName ?: resource?.resourceId ?: "")
                     )
-                    timerTriggerPipeline(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        params = params.plus(creativeStreamParams),
-                        channelCode = timerChannelCode,
-                        taskId = taskId
-                    )
-                }
+                )
             }
+            return
+        }
+        targetNodes.forEach { agentHashId ->
+            val creativeStreamParams = creativeStreamService.creativeStreamParams(
+                projectId = projectId,
+                agentHashId = agentHashId,
+                userId = userId
+            )
+            timerTriggerPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                params = params.plus(creativeStreamParams),
+                channelCode = timerChannelCode,
+                taskId = taskId
+            )
         }
     }
 
