@@ -1,6 +1,7 @@
 <template>
     <section class="plugin-log">
         <bk-log-search
+            ref="logSearch"
             :execute-count="executeCount"
             @change-execute="changeExecute"
             class="log-tools"
@@ -27,7 +28,14 @@
             :execute-count="taskProgressExecuteCount"
             :task-status="taskProgressStatus"
         />
+        <div
+            v-if="emptyStatus"
+            class="log-empty"
+        >
+            {{ $t(`logStatus.${emptyStatus}`) }}
+        </div>
         <bk-log
+            v-show="!emptyStatus"
             class="bk-log"
             ref="scroll"
             :enable-a-i="enableAI"
@@ -75,6 +83,9 @@
             executeCount: {
                 type: Number
             },
+            activeExecuteCount: {
+                type: Number
+            },
             progressTaskId: {
                 type: String,
                 default: ''
@@ -102,7 +113,7 @@
                     tag: this.type === 'pluginLog' ? this.id : undefined,
                     jobId: this.type === 'containerLog' ? this.id : undefined,
                     subTag: '',
-                    currentExe: this.executeCount,
+                    currentExe: this.activeExecuteCount ?? this.executeCount,
                     lineNo: 0,
                     debug: false
                 },
@@ -110,7 +121,8 @@
                 clearIds: [],
                 showDebug: false,
                 enableAI: false,
-                aiTips: ''
+                aiTips: '',
+                emptyStatus: ''
             }
         },
 
@@ -144,7 +156,7 @@
 
             downloadAllLink () {
                 const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
-                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=${this.postData.currentExe}&fileName=${fileName}`
             },
 
             currentJob () {
@@ -173,6 +185,17 @@
                 return currentJob.elements?.[elementIndex] ?? {}
             },
 
+            buildStillRunning () {
+                return [
+                    'RUNNING',
+                    'PREPARE_ENV',
+                    'QUEUE',
+                    'LOOP_WAITING',
+                    'CALL_WAITING',
+                    'WAITING'
+                ].includes(this.execDetail?.status)
+            },
+
             currentTaskStatus () {
                 return this.currentElement?.status ?? ''
             },
@@ -191,6 +214,13 @@
 
             showTaskProgressDetail () {
                 return !!this.progressTaskId
+            }
+        },
+
+        watch: {
+            executeCount (value, oldValue) {
+                if (oldValue === undefined || Number(this.postData.currentExe) !== Number(oldValue)) return
+                this.$refs.logSearch?.changeExecute?.(value)
             }
         },
 
@@ -318,6 +348,7 @@
             getLog () {
                 const id = hashID()
                 this.getLog.id = id
+                if (this.postData.lineNo <= 0) this.emptyStatus = ''
                 let logMethod = this.getAfterLog
                 if (this.postData.lineNo <= 0) logMethod = this.getInitLog
 
@@ -327,10 +358,14 @@
 
                         const scroll = this.$refs.scroll
                         res = res.data || {}
+                        if ([2, 3, '2', '3'].includes(res.status)) {
+                            this.emptyStatus = [2, '2'].includes(res.status) ? 'clean' : 'closed'
+                            return
+                        }
                         if (res.status !== 0) {
                             const errMessage = res.message ?? this.$t('history.logErr')
 
-                            scroll.handleApiErr(errMessage)
+                            scroll?.handleApiErr?.(errMessage)
                             return
                         }
 
@@ -359,6 +394,7 @@
                         }
                     })
                     .catch((err) => {
+                        if (this.clearIds.includes(id)) return
                         if (err.status === 403) {
                             handlePipelineNoPermission({
                                 projectId: this.$route.params.projectId,
@@ -372,6 +408,8 @@
             },
 
             tagChange (val) {
+                this.closeLog()
+                this.emptyStatus = ''
                 this.postData.subTag = val
                 this.postData.lineNo = 0
                 this.closeLog()
@@ -379,7 +417,10 @@
             },
 
             changeExecute (execute) {
+                this.closeLog()
+                this.emptyStatus = ''
                 this.postData.currentExe = execute
+                this.$emit('execute-change', execute)
                 this.postData.lineNo = 0
                 this.closeLog()
                 this.getLog()
@@ -397,7 +438,7 @@
 
             toggleShowDebugLog () {
                 this.showDebug = !this.showDebug
-                this.$refs.scroll.changeExecute()
+                this.$refs.scroll?.changeExecute?.()
                 this.postData.debug = this.showDebug
                 this.postData.lineNo = 0
                 this.closeLog()
@@ -419,13 +460,20 @@
                     const logStatusRes = await this.getLogStatus(pluginData)
                     const data = logStatusRes.data || {}
                     const logMode = data.logMode || ''
-                    downloadLink
-                        = logMode === 'ARCHIVED'
-                            ? await this.getDownloadLogFromArtifactory(pluginData)
-                            : this.downloadLink
-                    if (logMode === 'LOCAL') {
+                    if (logMode === 'ARCHIVED') {
+                        downloadLink = await this.getDownloadLogFromArtifactory(pluginData)
+                    } else if (logMode === 'LOCAL' && this.buildStillRunning) {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog'), limit: 1 })
                         return
+                    } else if (logMode === 'ARCHIVE_FAILED' || logMode === 'LOCAL') {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: this.$t('history.archiveLogFailed'),
+                            limit: 1
+                        })
+                        downloadLink = this.downloadLink
+                    } else {
+                        downloadLink = this.downloadLink
                     }
                 }
                 location.href = downloadLink
@@ -440,6 +488,14 @@
   flex-direction: column;
   flex: 1 1 auto;
   overflow-y: auto;
+  .log-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    color: #979ba5;
+    font-size: 13px;
+  }
   .log-tools {
     position: absolute;
     right: 20px;

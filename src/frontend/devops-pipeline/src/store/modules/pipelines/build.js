@@ -150,6 +150,11 @@ const actions = {
             return response.data
         })
     },
+    requestConcurrencyQueue ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/concurrencyQueue`).then(response => {
+            return response.data
+        })
+    },
     /**
      * 获取当前流水线的历史记录
      *

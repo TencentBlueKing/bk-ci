@@ -570,7 +570,10 @@ export default {
     },
 
     fetchAtomsOutput: async ({ commit, state, getters }) => {
-        const elements = getters.getAllElements(state.pipeline?.stages)
+        const stages = state.pipeline?.stages
+        if (!Array.isArray(stages) || !stages.length) return
+        const elements = getters.getAllElements(stages)
+        if (!Array.isArray(elements) || !elements.length) return
         const arr = elements.map(ele => `${ele.atomCode}@${ele.version}`)
         const data = Array.from(new Set(arr))
         try {
@@ -872,17 +875,31 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
-    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
+    fetchPipelineExecDetail: async (
+        _,
+        { projectId, buildNo, pipelineId, ...query }
+    ) => {
+        const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
+            params: query
+        })
+        return response.data
+    },
+    requestPipelineExecDetail: async (
+        { commit, dispatch },
+        { projectId, buildNo, pipelineId, skipSetPipelineDetail = false, ...query }
+    ) => {
         try {
             const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
                 params: query
             })
-            dispatch('setPipelineDetail', response.data)
+            if (!skipSetPipelineDetail) dispatch('setPipelineDetail', response.data)
+            return response.data
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
             }
-            rootCommit(commit, FETCH_ERROR, e)
+            if (!skipSetPipelineDetail) rootCommit(commit, FETCH_ERROR, e)
+            throw e
         }
     },
     requestPipelineExecDetailByBuildNum: async ({ commit }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
@@ -987,6 +1004,27 @@ export default {
                 subTag,
                 debug
             }
+        })
+    },
+
+    getLogPanelLatest ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/latest`, {
+            params: query
+        })
+    },
+
+    getLogPanelBefore ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/before`, {
+            params: query
+        })
+    },
+
+    getLogPanelAfter ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: query
         })
     },
 

@@ -11,16 +11,21 @@ function uuid () {
     return id
 }
 
+function callMethod (target, method) {
+    if (target && typeof target[method] === 'function') target[method]()
+}
+
 class BlueShieldWebSocket {
     constructor () {
         this.connectErrTime = 1
         this.connectCallBack = []
+        this.reconnectRefreshPending = false
         this.isConnecting = false
         this.hasConnect = false
         this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
-        
+
         this.connect()
         this.closePageDisConnect()
         this.onlineConnect()
@@ -28,49 +33,104 @@ class BlueShieldWebSocket {
     }
 
     connect () {
+        if (this.isConnecting || (this.stompClient || {}).connected || !navigator.onLine) return
+        clearTimeout(this.retryTimer)
+        this.retryTimer = null
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
-        this.stompClient = Stomp.over(socket)
-        this.stompClient.debug = null
-        this.stompClientConnect()
+        const stompClient = Stomp.over(socket)
+        this.stompClient = stompClient
+        stompClient.debug = null
+        this.stompClientConnect(socket)
+        const stompOnClose = socket.onclose
         socket.onclose = (err) => {
+            const wasConnected = stompClient.connected
+            socket.isClosing = true
             try {
-                console.log(err, socket, this.stompClient)
-                if (err.code === 1006) { // 异常断开
-                    const vm = window.devops
-                    const currentRoute = vm.$router.currentRoute
-                    if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
-                        if (currentRoute.path.indexOf('executeDetail') > -1 || currentRoute.path.indexOf('execute-detail') > -1) {
-                            console.log('executeDetail page close reconnect', currentRoute.path)
-                            this.connectCallBack.push(() => {
-                                this.handleMessage({
-                                    body: JSON.stringify({
-                                        webSocketType: 'IFRAME',
-                                        page: currentRoute.path,
-                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
-                                    })
-                                })
-                            })
-                        }
-                        console.log('other page close reconnect')
-                        socket.onclose = null
-                        this.connect()
-                    }
-                } else {
-                    console.log('websocket close event.code: ', err.code)
-                }
-            } catch (error) {
-                console.error(error)
+                if (stompOnClose) stompOnClose.call(socket, err)
+            } finally {
+                socket.isClosing = false
             }
+            this.handleSocketClose(wasConnected, stompClient)
         }
     }
 
-    stompClientConnect () {
+    handleSocketClose (wasConnected, stompClient) {
+        try {
+            if (stompClient !== this.stompClient || stompClient.intentionalClose) return
+            this.handleConnectionFailure(stompClient, wasConnected)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    handleConnectionFailure (stompClient, reconnectImmediately) {
+        if (stompClient !== this.stompClient || stompClient.closeHandled || stompClient.intentionalClose) return
+
+        stompClient.closeHandled = true
+        this.isConnecting = false
+        this.queueReconnectRefresh()
+        this.stompClient = {}
+        try {
+            if (stompClient.connected) {
+                callMethod(stompClient, 'disconnect')
+            } else {
+                callMethod(stompClient.ws, 'close')
+            }
+        } catch (error) {
+            console.error(error)
+            try {
+                callMethod(stompClient.ws, 'close')
+            } catch (closeError) {
+                console.error(closeError)
+            }
+        }
+
+        if (reconnectImmediately) {
+            clearTimeout(this.retryTimer)
+            this.retryTimer = null
+            this.connect()
+        } else {
+            this.scheduleReconnect()
+        }
+    }
+
+    queueReconnectRefresh () {
+        if (this.reconnectRefreshPending) return
+
+        this.reconnectRefreshPending = true
+        this.connectCallBack.push(() => {
+            this.reconnectRefreshPending = false
+            const router = window.devops && window.devops.$router
+            const route = router && router.currentRoute
+            if (!this.detectHasWebsocket(route)) return
+            this.handleMessage({
+                body: JSON.stringify({
+                    webSocketType: 'IFRAME',
+                    page: route.path,
+                    message: JSON.stringify('WEBSOCKET_RECONNECT')
+                })
+            })
+        })
+    }
+
+    scheduleReconnect () {
+        if (this.retryTimer) return
+        const time = Math.min(60000, 1000 * 2 ** Math.min(this.connectErrTime++, 6))
+        this.retryTimer = setTimeout(() => {
+            this.retryTimer = null
+            this.connect()
+        }, time * (0.8 + Math.random() * 0.4))
+    }
+
+    stompClientConnect (socket) {
         this.isConnecting = true
-        
-        this.stompClient.connect({}, () => {
+
+        const stompClient = this.stompClient
+        stompClient.connect({}, () => {
+            if (stompClient !== this.stompClient) return
             console.log('websocket connected', this.connectCallBack)
             this.isConnecting = false
-            this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
+            stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.handleMessage(res)
             })
             this.connectErrTime = 1
@@ -79,16 +139,9 @@ class BlueShieldWebSocket {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
             }
-        }, (err) => {
-            if (this.connectErrTime <= 8) {
-                console.log('websocket connection retrying')
-                this.connectErrTime++
-                const time = Math.random() * 60000
-                setTimeout(() => this.connect(), time)
-            } else {
-                this.isConnecting = false
-                window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
-            }
+        }, () => {
+            if (stompClient !== this.stompClient || socket.isClosing) return
+            this.handleConnectionFailure(stompClient, false)
         })
     }
 
@@ -148,7 +201,7 @@ class BlueShieldWebSocket {
         const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
-        const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = (router.params || {}).projectId || cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
         if (hasWebSocket) {
@@ -190,13 +243,16 @@ class BlueShieldWebSocket {
             // a标签也会触发这个事件，需要屏蔽
             if (tagName === 'A') return
             navigator.sendBeacon(`/websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
-            this.stompClient.disconnect()
+            this.disconnectStompClient()
             this.hasConnect = false
         })
     }
 
     offlineDisconnect () {
-        window.addEventListener('offline', () => this.stompClient.disconnect())
+        window.addEventListener('offline', () => {
+            this.queueReconnectRefresh()
+            this.disconnectStompClient()
+        })
     }
 
     onlineConnect () {
@@ -204,6 +260,30 @@ class BlueShieldWebSocket {
             if (!this.isConnecting) this.connect()
         })
     }
+
+    disconnectStompClient () {
+        clearTimeout(this.retryTimer)
+        this.retryTimer = null
+        const stompClient = this.stompClient
+        if (!stompClient || !stompClient.ws) return
+
+        stompClient.intentionalClose = true
+        this.isConnecting = false
+        try {
+            if (stompClient.connected) {
+                callMethod(stompClient, 'disconnect')
+            } else {
+                callMethod(stompClient.ws, 'close')
+            }
+        } catch (error) {
+            try {
+                callMethod(stompClient.ws, 'close')
+            } catch (closeError) {
+                console.error(closeError)
+            }
+        }
+    }
 }
 
 export default new BlueShieldWebSocket()
+ 

@@ -1023,7 +1023,8 @@
             }
         },
         mounted () {
-            webSocketMessage.installWsMessage(this.requestHistory)
+            webSocketMessage.installWsMessage(() => this.requestHistory())
+            webSocketMessage.registeOnReconnect(() => this.requestHistory())
             window.addEventListener('resize', this.updateTableHeight)
         },
 
