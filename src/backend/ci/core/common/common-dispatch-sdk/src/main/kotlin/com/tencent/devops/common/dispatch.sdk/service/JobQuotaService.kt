@@ -327,7 +327,8 @@ class JobQuotaService constructor(
                 allNodeConcurrency = event.allNodeConcurrency,
                 dispatchQueueStartTimeMilliSecond = event.dispatchQueueStartTimeMilliSecond,
                 actionType = event.actionType,
-                delayMills = event.delayMills
+                delayMills = event.delayMills,
+                retryTime = event.retryTime
             )
         } else {
             event

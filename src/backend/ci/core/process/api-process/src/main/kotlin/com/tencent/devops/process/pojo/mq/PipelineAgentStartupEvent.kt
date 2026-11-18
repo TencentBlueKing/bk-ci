@@ -66,7 +66,8 @@ data class PipelineAgentStartupEvent(
     val jobTimeoutMinutes: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
-    val stageId: String? = null
+    val stageId: String? = null,
+    override var retryTime: Int = 1
 ) : IPipelineEvent(
     actionType = actionType,
     source = source,
@@ -74,5 +75,6 @@ data class PipelineAgentStartupEvent(
     pipelineId = pipelineId,
     userId = userId,
     delayMills = delayMills,
+    retryTime = retryTime,
     routeKeySuffix = routeKeySuffix
 )

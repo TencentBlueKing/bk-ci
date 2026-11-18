@@ -82,7 +82,8 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
                     dockerRoutingType = dockerRoutingType,
                     routeKeySuffix = routeKeySuffix,
                     actionType = actionType,
-                    delayMills = delayMills
+                    delayMills = delayMills,
+                    retryTime = retryTime
                 )
             )
         }
@@ -107,7 +108,8 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
                     dispatchType = dispatchType,
                     routeKeySuffix = routeKeySuffix,
                     actionType = actionType,
-                    delayMills = delayMills
+                    delayMills = delayMills,
+                    retryTime = retryTime
                 )
             )
         }
