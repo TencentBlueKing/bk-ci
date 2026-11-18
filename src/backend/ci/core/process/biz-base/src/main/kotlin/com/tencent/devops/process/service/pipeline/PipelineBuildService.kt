@@ -497,15 +497,31 @@ class PipelineBuildService(
         val startedAgentId = (
             ctx.startValues?.get(NODE_AGENT_ID) ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
             )?.takeIf(String::isNotBlank)
+        // 重放和重新执行都会把原构建的环境带过来，此时以它为准：两者都是要复现原来那次执行，
+        // 不能用流水线之后改成的运行资源。新触发的事件不带这个值，仍走设置里的环境
+        val startedEnvHashId = (
+            ctx.startValues?.get(NODE_ENV_HASH_ID) ?: ctx.pipelineParamMap[NODE_ENV_HASH_ID]?.value?.toString()
+            )?.takeIf(String::isNotBlank)
         val agentIdValue = when {
             // 没有绑定运行资源：沿用启动方传入的节点
             resource == null -> startedAgentId
             // 绑定环境只圈定了范围，到底在哪台机器上执行由触发方选定；触发方没传就是接入方的问题，直接拒绝启动，
             // 否则会在环境内落到一台与触发语义无关的机器上
-            resource.group -> startedAgentId ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
-                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
-            )
+            resource.group -> {
+                val agentId = startedAgentId ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
+                    params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+                )
+                // 节点可能在上次构建之后被移出环境，重新执行、重放事件都会带着它启动。
+                // 重放校验的是原事件的环境，此时设置里的环境名对不上这个 hashId，不能拿来报错
+                checkAgentInEnv(
+                    ctx = ctx,
+                    envHashId = startedEnvHashId ?: resource.envHashId,
+                    resourceName = resource.resourceName.takeIf { startedEnvHashId == null },
+                    agentId = agentId
+                )
+                agentId
+            }
             // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId。
             // 资源被释放等原因换不出机器时直接拒绝启动：继续走下去只会在派发阶段以一个与原因无关的报错失败，
             // 而且启动方传入的节点还会把「不能改派」的约束绕过去
@@ -529,12 +545,41 @@ class PipelineBuildService(
             agentInfo?.nodeId?.takeIf(String::isNotBlank)?.let { nodeId ->
                 paramMap[NODE_HASH_ID] = BuildParameters(key = NODE_HASH_ID, value = nodeId, readOnly = true)
             }
-            ctx.envHashId?.takeIf(String::isNotBlank)?.let { envHashId ->
+            (startedEnvHashId ?: ctx.envHashId)?.takeIf(String::isNotBlank)?.let { envHashId ->
                 paramMap[NODE_ENV_HASH_ID] = BuildParameters(
                     key = NODE_ENV_HASH_ID, value = envHashId, readOnly = true
                 )
             }
         }
+    }
+
+    /**
+     * 校验运行节点确实属于本次构建要用的那个环境。
+     *
+     * 节点由触发方选定，环境来自流水线设置或原事件，两者会随时间脱节：节点被移出环境后，
+     * 重新执行、重放事件仍会带着这个节点启动，构建就跑在了一台已经不属于该运行资源的机器上。
+     *
+     * 只在能明确证明「节点不属于该环境」时才拒绝启动。列不出节点一律放行：环境服务异常、
+     * 流水线授权人对内置的全量创作环境没有项目管理员权限等情况都会返回空列表，
+     * 把这些当成校验不通过会把本来能跑的构建拦死。环境确实为空的场景由触发侧负责拦截。
+     */
+    private fun checkAgentInEnv(
+        ctx: InitParamContext,
+        envHashId: String?,
+        resourceName: String?,
+        agentId: String
+    ) {
+        val targetEnvHashId = envHashId?.takeIf(String::isNotBlank) ?: return
+        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIds(
+            projectId = ctx.pipeline.projectId,
+            userId = ctx.pipelineAuthorizer ?: ctx.userId,
+            envHashId = targetEnvHashId
+        )
+        if (envAgentIds.isEmpty() || envAgentIds.contains(agentId)) return
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
+            params = arrayOf(resourceName ?: targetEnvHashId)
+        )
     }
 
     /**

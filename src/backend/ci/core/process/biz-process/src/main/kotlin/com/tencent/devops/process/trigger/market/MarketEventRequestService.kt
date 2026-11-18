@@ -107,7 +107,9 @@ class MarketEventRequestService constructor(
     fun dispatchCdsTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
         pipelineId: String? = null,
-        workspaceBaseInfo: WorkspaceBaseInfo? = null
+        workspaceBaseInfo: WorkspaceBaseInfo? = null,
+        // 重放要沿用原事件的运行资源，不能按流水线当前的运行资源重新解析，详见 CdsWebhookTriggerEvent.startParams
+        replay: Boolean = false
     ) {
         // 1. 从triggerEvent中提取事件数据
         val eventBody = triggerEvent.eventBody as? GenericWebhookEventBody ?: run {
@@ -172,7 +174,8 @@ class MarketEventRequestService constructor(
                     envHashId = triggerEvent.eventSource ?: "",
                     requestTime = System.currentTimeMillis(),
                     agentHashId = agentHashId,
-                    cdsName = finalWorkspaceBaseInfo?.displayName ?: ""
+                    cdsName = finalWorkspaceBaseInfo?.displayName ?: "",
+                    replay = replay
                 )
             )
         }

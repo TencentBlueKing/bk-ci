@@ -15,6 +15,7 @@ import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOption
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.enums.CreateEnvType
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
@@ -296,10 +297,12 @@ class TransferCacheService @Autowired constructor(
 /** 保存运行资源时反查到的环境，只保留回写设置需要的字段 */
 data class RuntimeEnvRef(
     val envHashId: String,
-    val name: String
+    val name: String,
+    /** 环境限定的节点类型，存量环境未限定时为空 */
+    val nodeSource: CreateEnvType?
 )
 
 private fun EnvWithPermission.toRuntimeEnvRef(): RuntimeEnvRef? {
     val hashId = envHashId.takeIf { it.isNotBlank() } ?: return null
-    return RuntimeEnvRef(envHashId = hashId, name = name)
+    return RuntimeEnvRef(envHashId = hashId, name = name, nodeSource = nodeSource)
 }

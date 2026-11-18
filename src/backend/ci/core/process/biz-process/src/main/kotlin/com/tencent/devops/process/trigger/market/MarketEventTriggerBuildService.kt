@@ -28,6 +28,7 @@ import com.tencent.devops.process.trigger.event.GenericWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.utils.NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -329,7 +330,14 @@ class MarketEventTriggerBuildService @Autowired constructor(
             CI_NODE_ID to workspaceName, // 云桌面ID (ins-xxx)
             CI_NODE_IP to cdsIp, // 云桌面IP
             CI_NODE_NAME to cdsName // 云桌面名称
-        )
+        ).apply {
+            // 重放要以原构建的运行资源执行：节点本就取自原事件，环境也必须一并带上，
+            // 否则会按流水线当前的运行资源落到另一个环境，变成「原节点 + 新环境」。
+            // 仅重放时携带，新事件照常按流水线当前的运行资源校验，运行资源的约束不会被绕过
+            if (replay && envHashId.isNotBlank()) {
+                put(NODE_ENV_HASH_ID, envHashId)
+            }
+        }
     }
 
     companion object {

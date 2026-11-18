@@ -28,5 +28,7 @@ data class CdsWebhookTriggerEvent(
     @get:Schema(title = "agentHashId", required = true)
     val agentHashId: String,
     @get:Schema(title = "云桌面名称", required = true)
-    val cdsName: String
+    val cdsName: String,
+    @get:Schema(title = "是否为事件重放", required = false)
+    val replay: Boolean = false
 ) : IEvent()

@@ -63,8 +63,8 @@ enum class RuntimeResourceType(@get:JsonValue val code: String) {
 /**
  * 流水线绑定的运行资源。
  *
- * [type] 为空代表历史数据（只存了环境信息、无法区分分身或云桌面），
- * 此时按环境资源处理，运行时行为与 [RuntimeResourceType.AVATAR_GROUP] 一致。
+ * 本功能上线前只存了环境信息、没有类型的历史数据，统一按数字分身环境处理，
+ * 还原时由 [of] 补成 [RuntimeResourceType.AVATAR_GROUP]，所以 [type] 在有资源标识时总是非空。
  */
 @Schema(title = "流水线运行资源")
 data class RuntimeResource(
@@ -81,6 +81,9 @@ data class RuntimeResource(
         /**
          * 由存储字段还原运行资源：环境类资源的标识沿用 envHashId/envName，
          * 单体资源的标识存放在 runtimeResourceId。标识为空时视为未配置运行资源。
+         *
+         * 没有类型只有环境的是本功能上线前的存量数据，产品侧确认这些环境都是数字分身环境，
+         * 统一补成 [RuntimeResourceType.AVATAR_GROUP]，不再保留「类型未知」这个中间态。
          */
         fun of(
             runtimeResourceType: RuntimeResourceType?,
@@ -93,7 +96,7 @@ data class RuntimeResource(
             val resourceId = (if (single) runtimeResourceId else envHashId)?.takeIf { it.isNotBlank() }
                 ?: return null
             return RuntimeResource(
-                type = runtimeResourceType,
+                type = runtimeResourceType ?: RuntimeResourceType.AVATAR_GROUP,
                 resourceId = resourceId,
                 resourceName = envName?.takeIf { !single },
                 workspace = workspace

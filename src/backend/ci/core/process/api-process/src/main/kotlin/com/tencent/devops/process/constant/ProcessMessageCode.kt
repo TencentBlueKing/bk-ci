@@ -572,6 +572,8 @@ object ProcessMessageCode {
     const val ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED = "2101506"
     const val ERROR_RUNTIME_RESOURCE_NODE_REQUIRED = "2101508" // 运行资源为环境[{0}]，启动时必须指定运行节点
     const val ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED = "2101509" // 运行资源[{0}]未找到可用的执行机器，请检查该资源是否已释放
+    // 运行节点已不在运行资源环境[{0}]内，无法执行，请确认该节点是否已被移除
+    const val ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV = "2101510"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

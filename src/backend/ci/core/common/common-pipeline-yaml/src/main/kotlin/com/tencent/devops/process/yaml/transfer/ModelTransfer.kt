@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.environment.pojo.enums.CreateEnvType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -160,7 +161,7 @@ class ModelTransfer @Autowired constructor(
 
     /**
      * `pool-id` / `pool-name` 本身不带类型。保存前补上 hashId 和环境名。
-     * 类型只在能确定时写入，判定见 [runtimeTypeOf]。
+     * 类型的判定见 [runtimeTypeOf]。
      *
      * 只写了环境名却查不到时必须拒绝保存，否则 [RuntimeResource.of] 视为未配置，旧的 pool-id 会留在库里。
      * 已经写了 pool-id 但暂时查不到环境时，保留这个 id 继续保存。
@@ -187,20 +188,27 @@ class ModelTransfer @Autowired constructor(
     }
 
     /**
-     * 数字分身环境和云桌面环境在环境表里都是 EnvType.CREATE，环境记录本身区分不出来，节点来源也区分不出来
-     * （AgentPropsSource 的三个取值全是云桌面侧的来源，没有代表数字分身的值），所以这里不做任何推测。
+     * 环境自身限定的节点类型是唯一可靠的判据：创建环境时限定了只收数字分身或只收云桌面节点，两者一一对应。
+     * 环境用途 EnvType 做不到这件事，两种环境都是 EnvType.CREATE。
      *
-     * 唯一能确定类型的情况：这次写的还是流水线上已经保存过的那个环境，此时沿用用户在 UI 上选过的类型。
-     * 换了环境或流水线还没保存过运行资源时一律留空，按只绑定环境的历史数据处理，回显「原创作环境」。
+     * 未限定节点类型的存量环境（[RuntimeEnvRef.nodeSource] 为空）退而求其次：这次写的还是流水线上已经
+     * 保存过的那个环境时，沿用用户在 UI 上选过的类型，不把他的显式选择冲掉；
+     * 换了环境或从没保存过运行资源，就按产品对存量环境的约定当作数字分身环境。
      */
-    private fun runtimeTypeOf(env: RuntimeEnvRef, yamlInput: YamlTransferInput): RuntimeResourceType? {
-        val pipelineId = yamlInput.pipelineInfo?.pipelineId ?: return null
-        val saved = transferCache.findSavedRuntimeResource(
-            projectId = yamlInput.projectCode,
-            pipelineId = pipelineId,
-            channelCode = yamlInput.channelCode
-        ) ?: return null
-        return saved.type?.takeIf { it.group && saved.resourceId == env.envHashId }
+    private fun runtimeTypeOf(env: RuntimeEnvRef, yamlInput: YamlTransferInput): RuntimeResourceType {
+        when (env.nodeSource) {
+            CreateEnvType.IEG_IMATE -> return RuntimeResourceType.AVATAR_GROUP
+            CreateEnvType.CLOUD_DESKTOP_NODE -> return RuntimeResourceType.DESKTOP_GROUP
+            null -> Unit
+        }
+        val savedType = yamlInput.pipelineInfo?.pipelineId?.let { pipelineId ->
+            transferCache.findSavedRuntimeResource(
+                projectId = yamlInput.projectCode,
+                pipelineId = pipelineId,
+                channelCode = yamlInput.channelCode
+            )
+        }?.let { saved -> saved.type?.takeIf { it.group && saved.resourceId == env.envHashId } }
+        return savedType ?: RuntimeResourceType.AVATAR_GROUP
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
