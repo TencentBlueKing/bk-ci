@@ -11,12 +11,93 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class GithubWebhookElementParamsTest {
+
+    @Test
+    fun shouldConvertIncludedUsersFromFormJson() {
+        val element = JsonUtil.to(
+            """{
+                "@type": "codeGithubWebHookTrigger",
+                "repositoryHashId": "repo-hash-id",
+                "repositoryType": "ID",
+                "eventType": "PULL_REQUEST",
+                "includeUsers": ["alice", "bob"]
+            }""".trimIndent(),
+            CodeGithubWebHookTriggerElement::class.java
+        )
+        val params = GithubWebhookElementParams().getWebhookElementParams(element, emptyMap())!!
+
+        assertEquals(listOf("alice", "bob"), element.includeUsers)
+        assertEquals("alice,bob", params.includeUsers)
+        assertEquals("open,reopen,push-update", params.includeMrAction)
+    }
+
+    @Test
+    fun shouldConvertPullRequestIncludedUsersAndResolveVariables() {
+        val params = includedUserParams(listOf("alice", "\${prOperator}"), mapOf("prOperator" to "bob"))
+
+        assertEquals("alice,bob", params.includeUsers)
+        assertEquals("open,reopen,push-update", params.includeMrAction)
+    }
+
+    @Test
+    fun shouldKeepMissingAndEmptyIncludedUsersUnrestricted() {
+        assertEquals("", includedUserParams(null).includeUsers)
+        assertEquals("", includedUserParams(emptyList()).includeUsers)
+    }
+
+    @Test
+    fun shouldKeepIncludedUsersUnsetForNonPullRequestEvents() {
+        for (eventType in CodeEventType.values().filter { it != CodeEventType.PULL_REQUEST }) {
+            val params = GithubWebhookElementParams().getWebhookElementParams(
+                element = CodeGithubWebHookTriggerElement(
+                    repositoryHashId = "repo-hash-id",
+                    repositoryType = TriggerRepositoryType.ID,
+                    eventType = eventType,
+                    includeUsers = listOf("alice"),
+                    excludeUsers = "bot"
+                ),
+                variables = emptyMap()
+            )!!
+
+            assertNull(params.includeUsers, "eventType=$eventType")
+            assertEquals("bot", params.excludeUsers)
+        }
+    }
+
+    @Test
+    fun shouldExposeIncludedUsersInPullRequestTriggerConditions() {
+        val element = CodeGithubWebHookTriggerElement(
+            eventType = CodeEventType.PULL_REQUEST,
+            includeUsers = listOf("alice", "bob")
+        )
+
+        assertEquals(listOf("alice", "bob"), element.triggerCondition().single { it.name == "includeUsers" }.value)
+        assertEquals(
+            false,
+            element.copy(includeUsers = emptyList()).triggerCondition().any { it.name == "includeUsers" }
+        )
+    }
+
+    private fun includedUserParams(
+        users: List<String>?,
+        variables: Map<String, String> = emptyMap()
+    ) = GithubWebhookElementParams().getWebhookElementParams(
+        element = CodeGithubWebHookTriggerElement(
+            repositoryHashId = "repo-hash-id",
+            repositoryType = TriggerRepositoryType.ID,
+            eventType = CodeEventType.PULL_REQUEST,
+            includeUsers = users
+        ),
+        variables = variables
+    )!!
 
     @Test
     fun `should convert issue assignee and label filters`() {
