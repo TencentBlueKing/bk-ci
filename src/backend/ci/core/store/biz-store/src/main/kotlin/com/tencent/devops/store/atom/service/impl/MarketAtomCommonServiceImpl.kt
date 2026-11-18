@@ -55,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.model.store.tables.records.TAtomVersionLogRecord
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
@@ -784,6 +785,28 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         val currentNum = if (status == AtomStatusEnum.RELEASED.status) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun getOrCreateAtomVersionLog(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        atomCode: String
+    ): TAtomVersionLogRecord? {
+        marketAtomVersionLogDao.getAtomVersionOrNull(dslContext, atomId)?.let {
+            return it
+        }
+        if (marketAtomDao.countReleaseAtomByCode(dslContext, atomCode) > 0) {
+            return null
+        }
+        marketAtomVersionLogDao.addMarketAtomVersionIfAbsent(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            releaseType = ReleaseTypeEnum.NEW.releaseType.toByte(),
+            versionContent = ""
+        )
+        return marketAtomVersionLogDao.getAtomVersionOrNull(dslContext, atomId)
     }
 
     override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean): AtomRunInfo {

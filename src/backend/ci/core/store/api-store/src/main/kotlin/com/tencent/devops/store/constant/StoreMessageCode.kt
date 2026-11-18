@@ -188,4 +188,5 @@ object StoreMessageCode {
     const val STORE_ATOM_BUILD_START_FAIL = "2120950" // 研发商店：插件构建启动失败，请稍后重试
     const val STORE_BRANCH_TEST_REPO_REQUIRED = "2120951" // 研发商店：仅代码库来源的插件支持分支测试版本
     const val STORE_ATOM_FORMAL_VERSION_NOT_FOUND = "2120952" // 研发商店：插件暂无正式版本，请先发布正式版本
+    const val STORE_ATOM_VERSION_LOG_MISSING = "2120953" // 研发商店：插件版本缺少版本发布记录
 }

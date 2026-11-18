@@ -1223,7 +1223,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
-        val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val atomReleaseRecord = marketAtomCommonService.getOrCreateAtomVersionLog(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomCode = atomCode
+        ) ?: throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_VERSION_LOG_MISSING)
         return handleAtomRelease(
             userId = userId,
             releaseFlag = releaseFlag,

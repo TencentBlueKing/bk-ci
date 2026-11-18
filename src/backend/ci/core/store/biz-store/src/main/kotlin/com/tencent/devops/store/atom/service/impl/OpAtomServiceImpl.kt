@@ -52,10 +52,10 @@ import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
-import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.service.AtomNotifyService
 import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.common.dao.LabelDao
@@ -113,7 +113,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomFeatureDao: MarketAtomFeatureDao,
-    private val marketAtomVersionLogDao: MarketAtomVersionLogDao,
+    private val marketAtomCommonService: MarketAtomCommonService,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
     private val labelDao: LabelDao,
@@ -344,7 +344,12 @@ class OpAtomServiceImpl @Autowired constructor(
             } else {
                 AtomStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val atomReleaseRecord = marketAtomCommonService.getOrCreateAtomVersionLog(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomCode = atomCode
+        ) ?: throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_VERSION_LOG_MISSING)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomReleaseRecord.releaseType.toInt())!!
         // 入库信息
         marketAtomDao.approveAtomFromOp(

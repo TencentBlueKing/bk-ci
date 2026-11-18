@@ -29,11 +29,13 @@ package com.tencent.devops.store.atom.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.model.store.tables.records.TAtomVersionLogRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import org.jooq.DSLContext
 
 interface MarketAtomCommonService {
 
@@ -67,6 +69,17 @@ interface MarketAtomCommonService {
     ): Boolean
 
     fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
+
+    /**
+     * 读取版本日志；仅当插件没有已发布版本时，可为缺失版本补一条 NEW、空版本说明的记录。
+     * 已有记录不做修改；已有已发布版本且当前日志缺失时返回 null。
+     */
+    fun getOrCreateAtomVersionLog(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        atomCode: String
+    ): TAtomVersionLogRecord?
 
     fun handleAtomCache(
         atomId: String,
