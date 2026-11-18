@@ -52,7 +52,6 @@ import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
-import java.net.URLDecoder
 
 @RestResource
 @Suppress("ALL")
@@ -102,7 +101,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(
             repositoryService.serviceGet(
                 projectId,
-                buildConfig(URLDecoder.decode(repositoryId, "UTF-8"), repositoryType)
+                buildConfig(repositoryId, repositoryType)
             )
         )
     }
