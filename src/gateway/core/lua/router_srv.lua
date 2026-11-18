@@ -88,8 +88,9 @@ if ngx.var.url_prefix ~= nil then
         ngx.var.url_prefix = "http://" .. ngx.var.target .. "/resource/bk-plugin-fe/"
     else
         local bkStoreId = "bk-store"
+        -- 已部署环境的插件静态资源在 system.bk-store，不能改去不存在的 default.bk-store
         if config.tenant.enabled then
-            bkStoreId = "default." .. bkStoreId
+            bkStoreId = "system." .. bkStoreId
         end
         ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/" .. bkStoreId .. "/static/"
     end
