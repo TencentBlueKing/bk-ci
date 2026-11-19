@@ -9,6 +9,7 @@
             @click="showMatrixPanel"
         >
             <div
+                v-bk-tooltips="matrixTimeTips"
                 class="matrix-name"
                 @click.stop="toggleMatrixOpen()"
             >
@@ -58,7 +59,7 @@ import Logo from './Logo'
 import StatusIcon from './StatusIcon'
 import { CLICK_EVENT_NAME, STATUS_MAP } from './constants'
 import { localeMixins } from './locale'
-import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
+import { eventBus, formatRangeTime, getDependOnDesc, isTriggerContainer } from './util'
     
     export default {
         components: {
@@ -97,6 +98,20 @@ import { eventBus, getDependOnDesc, isTriggerContainer } from './util'
             }
         },
         computed: {
+            // 分组名称悬停展示整组起止：最早开始 ~ 最晚结束；有实例仍在运行时只展示开始
+            matrixTimeTips () {
+                const jobs = (this.matrix?.groupContainers || []).filter(job => job.startTime);
+                if (!jobs.length) return { disabled: true };
+                const startTime = Math.min(...jobs.map(job => job.startTime));
+                const hasRunning = jobs.some(job => !job.endTime);
+                const endTime = hasRunning ? undefined : Math.max(...jobs.map(job => job.endTime));
+                const timeRange = formatRangeTime(startTime, endTime);
+                const runningLabel = endTime ? '' : ` ${this.t('started')}`;
+                return {
+                    delay: [300, 0],
+                    content: `${this.t('startEndTime')}：${timeRange}${runningLabel}`
+                };
+            },
             restProps () {
                 const { matrix, ...restProps } = this.$props
                 return restProps

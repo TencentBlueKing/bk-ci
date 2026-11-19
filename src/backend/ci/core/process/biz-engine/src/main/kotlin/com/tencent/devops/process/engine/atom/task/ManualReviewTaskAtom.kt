@@ -221,16 +221,22 @@ class ManualReviewTaskAtom(
                     "reviewStage" to "[${task.taskSeq}]${param.name.ifBlank { "人工审核" }}",
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to notifyGroup.joinToString(separator = ",")
-                ),
+                ).apply {
+                    // 只在用户填写了通知标题时下发。留空时 titleParams.content 会被补成默认长标题，
+                    // 卡片不能把那句默认文案当成用户标题。
+                    if (notifyTitle.isNotBlank()) {
+                        this["notifyTitle"] = notifyTitle
+                    }
+                },
                 position = null,
-                stageId = null,
-                taskId = param.id,
+                stageId = task.stageId,
+                taskId = param.id ?: task.taskId,
                 callbackData = mapOf(
                     "reviewType" to "ATOM",
                     "projectId" to projectCode,
                     "pipelineId" to pipelineId,
                     "buildId" to buildId,
-                    "elementId" to (param.id ?: ""),
+                    "elementId" to (param.id ?: task.taskId),
                     "reviewUsers" to reviewUsersList.joinToString(","),
                     "hasRequiredParams" to (param.params.any { it.required == true }).toString(),
                     "suggestRequired" to (param.suggestRequired == true).toString(),

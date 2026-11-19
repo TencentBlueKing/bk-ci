@@ -134,6 +134,31 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
+    /**
+     * 查询用户组在项目下「任意」范围的操作。
+     * 任意范围在同步时记为 relatedResourceType=project 且 relatedResourceCode=项目ID。
+     */
+    fun listProjectLevelActionsByGroupIds(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<Int>,
+        actions: Collection<String>
+    ): Map<Int, Set<String>> {
+        if (iamGroupIds.isEmpty() || actions.isEmpty()) return emptyMap()
+        return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
+            dslContext.select(IAM_GROUP_ID, ACTION)
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(IAM_GROUP_ID.`in`(iamGroupIds))
+                .and(ACTION.`in`(actions))
+                .and(RELATED_RESOURCE_TYPE.eq(ResourceTypeId.PROJECT))
+                .and(RELATED_RESOURCE_CODE.eq(projectCode))
+                .fetch()
+                .groupBy({ it.value1() }, { it.value2() })
+                .mapValues { (_, groupActions) -> groupActions.toSet() }
+        }
+    }
+
     fun listByRelatedResource(
         dslContext: DSLContext,
         projectCode: String,

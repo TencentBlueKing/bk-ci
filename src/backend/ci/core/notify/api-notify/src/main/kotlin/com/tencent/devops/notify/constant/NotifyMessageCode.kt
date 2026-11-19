@@ -71,8 +71,8 @@ object NotifyMessageCode {
     const val BK_REVIEW_CARD_REJECT = "bkReviewCardReject" // 驳回
     const val BK_REVIEW_CARD_DETAIL = "bkReviewCardDetail" // 详情
     const val BK_REVIEW_CARD_OPEN_BUILD = "bkReviewCardOpenBuild" // 查看构建
-    const val BK_REVIEW_CARD_CONFIRM = "bkReviewCardConfirm" // 确认提交
-    const val BK_REVIEW_CARD_EDIT = "bkReviewCardEdit" // 修改参数
+    const val BK_REVIEW_CARD_CONFIRM = "bkReviewCardConfirm" // 同意
+    const val BK_REVIEW_CARD_EDIT = "bkReviewCardEdit" // 修改
     const val BK_REVIEW_CARD_SUBMIT = "bkReviewCardSubmit" // 参数确认无误，提交
     const val BK_REVIEW_CARD_REJECT_COMMENT = "bkReviewCardRejectComment" // 驳回并填写意见
     const val BK_REVIEW_CARD_DESKTOP = "bkReviewCardDesktop" // 电脑端查看详情

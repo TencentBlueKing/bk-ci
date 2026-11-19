@@ -152,7 +152,11 @@ class ReviewReminderService @Autowired constructor(
                     ),
                     // 企业微信组
                     NotifyUtils.WEWORK_GROUP_KEY to (weworkGroup.joinToString(separator = ","))
-                ),
+                ).apply {
+                    if (!param.notifyTitle.isNullOrBlank()) {
+                        this["notifyTitle"] = notifyTitle
+                    }
+                },
                 position = null,
                 stageId = null,
                 taskId = taskId,
