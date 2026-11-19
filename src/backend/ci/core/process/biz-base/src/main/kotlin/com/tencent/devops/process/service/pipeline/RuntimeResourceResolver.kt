@@ -27,10 +27,13 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -85,11 +88,12 @@ class RuntimeResourceResolver(
     ): List<String> = listEnvAgentHashIdsOrNull(projectId, userId, envHashId) ?: emptyList()
 
     /**
-     * 同 [listEnvAgentHashIds]，但把「查不到环境」和「环境下没有节点」区分开：
-     * 查询失败返回 null，查询成功返回节点列表（环境为空或已被删除时是空列表）。
+     * 同 [listEnvAgentHashIds]，但把「这个环境里没有可用节点」和「这次问不到」区分开：
+     * 返回空列表代表环境确实没有该节点（环境被清空，或环境本身已被删除），
+     * 返回 null 代表查询本身失败，拿不到任何结论。
      *
-     * 校验节点归属要靠这个区分：空列表是「这个环境里确实没有这台机器」的证据，必须拒绝执行；
-     * 而查询失败只说明这次问不到，不能据此判定节点不合法。
+     * 校验节点归属要靠这个区分：空列表是「这台机器不属于该环境」的证据，必须拒绝执行；
+     * 查询失败不能反过来判定节点不合法，否则环境服务抖动会把正常构建拦死。
      */
     fun listEnvAgentHashIdsOrNull(
         projectId: String,
@@ -102,12 +106,40 @@ class RuntimeResourceResolver(
             userId = userId,
             page = -1
         ).data?.records?.mapNotNull { it.agentHashId?.takeIf(String::isNotBlank) }
+    } catch (ignored: RemoteServiceException) {
+        // 跨服务调用：环境服务的错误码被网关转成了数值
+        envNotExistsOrNull(ignored.errorCode == ENV_NOT_EXISTS_CODE, projectId, envHashId, ignored)
+    } catch (ignored: ErrorCodeException) {
+        // 同进程直接调用到环境服务的实现时，拿到的是原始异常
+        envNotExistsOrNull(
+            ignored.errorCode == EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS, projectId, envHashId, ignored
+        )
     } catch (ignored: Exception) {
         logger.warn("list env node failed|$projectId|$envHashId", ignored)
         null
     }
 
+    /**
+     * 环境已被删除时按「环境里没有这台机器」处理（空列表），其余错误按查询失败处理（null）。
+     * 删掉环境和清空环境对「这个节点还能不能跑」是同一个结论，不能因为前者报错就放行。
+     */
+    private fun envNotExistsOrNull(
+        envNotExists: Boolean,
+        projectId: String,
+        envHashId: String,
+        cause: Exception
+    ): List<String>? = if (envNotExists) {
+        logger.warn("env not exists|$projectId|$envHashId")
+        emptyList()
+    } else {
+        logger.warn("list env node failed|$projectId|$envHashId", cause)
+        null
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RuntimeResourceResolver::class.java)
+
+        /** 环境服务返回的「环境不存在」错误码，经网关后以数值形式出现在 [RemoteServiceException] 上 */
+        private val ENV_NOT_EXISTS_CODE = EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS.toInt()
     }
 }

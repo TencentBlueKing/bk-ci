@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
-import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.AllCreateNodeEnv
