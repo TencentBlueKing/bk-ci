@@ -4293,22 +4293,22 @@ test('resolveExecTimeoutThreshold falls back when timeoutVar is empty string', (
     }, 'job'), '20m')
 })
 
-test('builds mutually exclusive Step and Set up job query targets', () => {
-    assert.deepEqual(adapter.buildLogTarget({ id: 'e-1' }, 'hash-1'), { tag: 'e-1' })
-    assert.deepEqual(adapter.buildLogTarget({ id: 'startVM-job-1', isSetup: true }, 'hash-1'), { jobId: 'hash-1' })
+test('builds Step and Set up job query targets by tag like the legacy job log', () => {
+    assert.deepEqual(adapter.buildLogTarget({ id: 'e-1' }), { tag: 'e-1' })
+    assert.deepEqual(adapter.buildLogTarget({ id: 'startVM-job-1', isSetup: true }), { tag: 'startVM-job-1' })
     assert.deepEqual(adapter.buildLogTarget({
         id: 'hook-1',
         additionalOptions: { elementPostInfo: true }
-    }, 'hash-1'), { tag: 'hook-1' })
-    assert.deepEqual(adapter.buildLogTarget({ id: 'e-1', jobId: 'other' }, 'hash-1'), { tag: 'e-1' })
+    }), { tag: 'hook-1' })
+    assert.deepEqual(adapter.buildLogTarget({ id: 'e-1', jobId: 'other' }), { tag: 'e-1' })
 })
 
 test('hasLogTarget is true only when tag or jobId is present', () => {
     assert.equal(adapter.hasLogTarget({ tag: 'e-1' }), true)
     assert.equal(adapter.hasLogTarget({ jobId: 'hash-1' }), true)
     assert.equal(adapter.hasLogTarget({}), false)
-    assert.equal(adapter.hasLogTarget(adapter.buildLogTarget({ isSetup: true }, '')), false)
-    assert.equal(adapter.hasLogTarget(adapter.buildLogTarget({}, 'hash-1')), false)
+    assert.equal(adapter.hasLogTarget(adapter.buildLogTarget({ isSetup: true })), false)
+    assert.equal(adapter.hasLogTarget(adapter.buildLogTarget({})), false)
 })
 
 test('buildConclusion consumes cancelUserId and timeout from context only', () => {

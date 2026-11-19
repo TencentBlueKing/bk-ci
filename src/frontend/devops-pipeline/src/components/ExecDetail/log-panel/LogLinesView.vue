@@ -1295,6 +1295,7 @@
     text-align: right;
     color: #979ba5;
     font-variant-numeric: tabular-nums;
+    user-select: none;
 }
 .lp-group-toggle { display: inline-flex; flex: 0 0 12px; align-items: center; justify-content: center; width: 12px; height: 20px; padding: 0; color: #979ba5; background: transparent; border: 0; cursor: pointer; }
 .lp-group-toggle:hover, .lp-group-toggle:focus-visible { color: #f0f1f5; }

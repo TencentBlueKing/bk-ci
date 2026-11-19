@@ -862,7 +862,7 @@
     .log-panel-load-error button { padding: 4px 12px; color: #3a84ff; background: transparent; border: 1px solid #3a84ff; border-radius: 2px; cursor: pointer; }
     .log-panel-load-error button:disabled { opacity: .5; cursor: not-allowed; }
     .log-panel-status-empty { flex: 1; padding: 8px 24px; font: 12px/20px "Microsoft YaHei", sans-serif; color: #979ba5; background: #2c2d34; }
-    .log-panel-status-empty .log-line-number { display: inline-block; min-width: 4ch; margin-right: 17px; text-align: right; color: #979ba5; font-variant-numeric: tabular-nums; }
+    .log-panel-status-empty .log-line-number { display: inline-block; min-width: 4ch; margin-right: 17px; text-align: right; color: #979ba5; font-variant-numeric: tabular-nums; user-select: none; }
     .log-panel-error { margin: 8px 20px 0; color: #f06e6e; font: 12px/20px "Microsoft YaHei", sans-serif; }
     .loading-spinner { width: 32px; height: 32px; border: 2px solid #4d4f56; border-top-color: #3a84ff; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }

@@ -1464,10 +1464,8 @@ export function resolveExecTimeoutThreshold (source = {}, scope = 'step') {
     return formatTimeoutValue(raw ?? '')
 }
 
-export function buildLogTarget (item = {}, rootJobId = '') {
-    if (item.isSetup) {
-        return rootJobId ? { jobId: String(rootJobId) } : {}
-    }
+// 准备 Job 也按启动插件 ID（startVM-{jobId}）作为 tag 过滤，不能用 jobId 拉取整个 Job 日志
+export function buildLogTarget (item = {}) {
     if (item.id) return { tag: String(item.id) }
     return {}
 }

@@ -812,6 +812,7 @@ test('LogLinesView captures only intersecting rows and guards delayed anchor res
     assert.match(source, /v-for="row in visibleRows"/)
     assert.match(source, /'--lp-line-number-width': lineNumberColumnWidth \+ 'ch'/)
     assert.doesNotMatch(source, /:style="\{ width: lineNumberColumnWidth/)
+    assert.match(source, /\.lp-lineno \{[^}]*user-select: none;/)
     assert.match(source, /renderLines: shallowRef\(\[\]\)/)
     assert.match(source, /this\.\$watch\('displayLines', next => \{\s*this\.renderLines = next/)
     assert.match(source, /lineNumberColumnWidth \(\) \{\s*return resolveLogLineNumberColumnWidth\(this\.renderLines\)/)

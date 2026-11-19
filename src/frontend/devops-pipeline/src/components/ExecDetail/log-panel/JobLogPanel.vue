@@ -81,7 +81,7 @@
                 }, {})
             },
             logTarget () {
-                return buildLogTarget(this.selectedItem, this.rootJobId)
+                return buildLogTarget(this.selectedItem)
             },
             hasLogTarget () {
                 return checkLogTarget(this.logTarget)
