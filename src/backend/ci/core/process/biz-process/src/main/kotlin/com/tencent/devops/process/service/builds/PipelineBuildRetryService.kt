@@ -62,6 +62,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -290,13 +291,17 @@ class PipelineBuildRetryService @Autowired constructor(
     ) {
         // 只有该渠道会把节点当成启动必填项。其它流水线的 Stage 重试不能因为同名变量被改派
         if (channelCode != ChannelCode.CREATIVE_STREAM) return
-        if (!paramMap[NODE_AGENT_ID]?.value?.toString().isNullOrBlank()) return
-        val previous = webHookStartParam[NODE_AGENT_ID]?.takeIf { it.value.toString().isNotBlank() }
-            ?: buildVariableService.getVariable(projectId, pipelineId, buildId, NODE_AGENT_ID)
-                ?.takeIf { it.isNotBlank() }
-                ?.let { BuildParameters(key = NODE_AGENT_ID, value = it, readOnly = true) }
-            ?: return
-        paramMap[NODE_AGENT_ID] = previous
+        // 节点和它所属的环境要一起沿用：只带节点的话，启动时拿不到原构建认定的环境，
+        // 就无从判断这个节点是不是已经被移出环境了
+        listOf(NODE_AGENT_ID, NODE_ENV_HASH_ID).forEach { key ->
+            if (!paramMap[key]?.value?.toString().isNullOrBlank()) return@forEach
+            val previous = webHookStartParam[key]?.takeIf { it.value.toString().isNotBlank() }
+                ?: buildVariableService.getVariable(projectId, pipelineId, buildId, key)
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { BuildParameters(key = key, value = it, readOnly = true) }
+                ?: return@forEach
+            paramMap[key] = previous
+        }
     }
 
     private fun runningBuildRetry(

@@ -507,21 +507,10 @@ class PipelineBuildService(
             resource == null -> startedAgentId
             // 绑定环境只圈定了范围，到底在哪台机器上执行由触发方选定；触发方没传就是接入方的问题，直接拒绝启动，
             // 否则会在环境内落到一台与触发语义无关的机器上
-            resource.group -> {
-                val agentId = startedAgentId ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
-                    params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
-                )
-                // 节点可能在上次构建之后被移出环境，重新执行、重放事件都会带着它启动。
-                // 重放校验的是原事件的环境，此时设置里的环境名对不上这个 hashId，不能拿来报错
-                checkAgentInEnv(
-                    ctx = ctx,
-                    envHashId = startedEnvHashId ?: resource.envHashId,
-                    resourceName = resource.resourceName.takeIf { startedEnvHashId == null },
-                    agentId = agentId
-                )
-                agentId
-            }
+            resource.group -> startedAgentId ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
+                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+            )
             // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId。
             // 资源被释放等原因换不出机器时直接拒绝启动：继续走下去只会在派发阶段以一个与原因无关的报错失败，
             // 而且启动方传入的节点还会把「不能改派」的约束绕过去
@@ -534,7 +523,24 @@ class PipelineBuildService(
                 params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
             )
         }
+        // 节点可能在上次构建之后被移出环境，重新执行、重放事件都会带着它启动。
+        // 这里不看 runtimeResource 是否解析得出来：重新执行读的是快照版本的设置，
+        // 本功能上线前保存的版本里没有运行资源字段，整组回放后 resource 为 null，
+        // 但启动参数里仍带着原构建认定的环境，那才是该校验的对象。
+        // 用原构建的环境校验时，设置里的环境名对不上这个 hashId，不能拿来报错。
+        // 绑定单台机器时执行对象由平台解析，不存在「节点属不属于环境」的问题，不参与校验
+        val checkEnvHashId = if (resource?.group == false) {
+            null
+        } else {
+            startedEnvHashId ?: resource?.envHashId
+        }
         agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
+            checkAgentInEnv(
+                ctx = ctx,
+                envHashId = checkEnvHashId,
+                resourceName = resource?.resourceName?.takeIf { startedEnvHashId == null },
+                agentId = agentId
+            )
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(ctx.pipeline.projectId, agentId).data
             val paramMap = ctx.pipelineParamMap
