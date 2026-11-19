@@ -2548,6 +2548,12 @@ test('LogGroupBar arrows follow actual overflow, reset when overflow disappears,
     vm.measure()
     assert.equal(vm.hasOverflow, false, '450px of labels fit the 480px content width without arrows')
 
+    root.clientWidth = 1032
+    track.scrollWidth = 800
+    vm.measure()
+    assert.equal(vm.hasOverflow, false, 'group chips use the full row width instead of a fixed 480px cap')
+    root.clientWidth = 512
+
     track.scrollWidth = 800
     track.clientWidth = 432
     vm.measure()
@@ -3418,6 +3424,7 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(groupBar, /class="devops-icon icon-angle-left"/)
     assert.match(groupBar, /class="devops-icon icon-angle-right"/)
     assert.doesNotMatch(groupBar, /\.lgb-control\s*\{[^}]*margin:\s*0 auto/)
+    assert.doesNotMatch(groupBar, /480/)
     assert.doesNotMatch(groupBar, /import Logo|components:\s*\{\s*Logo\s*\}/)
     assert.match(paramsView, /class="devops-icon icon-clock pm-state-icon"/)
     assert.match(paramsView, /class="devops-icon icon-angle-down pm-caret"/)

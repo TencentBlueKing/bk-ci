@@ -127,7 +127,7 @@
                 if (!root || !track) return
                 const style = typeof window !== 'undefined' ? window.getComputedStyle(root) : null
                 const horizontalPadding = (parseFloat(style?.paddingLeft) || 0) + (parseFloat(style?.paddingRight) || 0)
-                const available = Math.max(0, Math.min(480, root.clientWidth - horizontalPadding))
+                const available = Math.max(0, root.clientWidth - horizontalPadding)
                 const nextOverflow = track.scrollWidth > available + 1
                 if (nextOverflow !== this.hasOverflow) {
                     this.hasOverflow = nextOverflow
@@ -163,7 +163,7 @@
     display: flex;
     align-items: center;
     width: max-content;
-    max-width: min(480px, 100%);
+    max-width: 100%;
     min-width: 0;
 }
 .lgb-control.has-overflow { width: 100%; }
