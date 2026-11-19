@@ -186,3 +186,12 @@ on:
 
 **Q：通过 OpenAPI 或自动化任务改的工单能触发吗？**
 可以。可视化中「监听的事件来源」默认包含 `api`、`web`、`auto_task`；只想响应页面操作时只勾选 `web`。PAC 不支持该项，所有来源都会触发。
+
+## 插件表单国际化
+
+- `T_ATOM.PROPS` 保存默认语言文案；当前默认语言为 `zh_CN`，中文界面直接使用 PROPS 中的中文。
+- `en_US` / `ja_JP` 等非默认语言由 `T_I18N_MESSAGE` 按 `ATOM.codeTapdWebHookTrigger.1.0.0.input...` key 替换。
+- 修改 PROPS 或 i18n 后，需清理 `STORE_ATOM_TASK_JSON_KEY:codeTapdWebHookTrigger`、相关 `BK_I18N_MESSAGE:*` 缓存，并硬刷新页面清理前端 `atomModalMap`。
+
+
+- 状态过滤字段位于「状态设置」分组，置于「处理人设置」之后；复用现有 `devops-select` group children 能力，不修改前端代码。
