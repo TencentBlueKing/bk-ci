@@ -82,7 +82,20 @@ class RuntimeResourceResolver(
         projectId: String,
         userId: String,
         envHashId: String
-    ): List<String> = try {
+    ): List<String> = listEnvAgentHashIdsOrNull(projectId, userId, envHashId) ?: emptyList()
+
+    /**
+     * 同 [listEnvAgentHashIds]，但把「查不到环境」和「环境下没有节点」区分开：
+     * 查询失败返回 null，查询成功返回节点列表（环境为空或已被删除时是空列表）。
+     *
+     * 校验节点归属要靠这个区分：空列表是「这个环境里确实没有这台机器」的证据，必须拒绝执行；
+     * 而查询失败只说明这次问不到，不能据此判定节点不合法。
+     */
+    fun listEnvAgentHashIdsOrNull(
+        projectId: String,
+        userId: String,
+        envHashId: String
+    ): List<String>? = try {
         client.get(ServiceEnvironmentResource::class).listNodesByEnvIdsNew(
             projectId = projectId,
             envHashIds = listOf(envHashId),
@@ -92,7 +105,7 @@ class RuntimeResourceResolver(
     } catch (ignored: Exception) {
         logger.warn("list env node failed|$projectId|$envHashId", ignored)
         null
-    } ?: emptyList()
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(RuntimeResourceResolver::class.java)

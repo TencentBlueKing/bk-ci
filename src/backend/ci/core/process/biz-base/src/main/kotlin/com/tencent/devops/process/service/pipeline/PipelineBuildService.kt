@@ -559,9 +559,9 @@ class PipelineBuildService(
      * 节点由触发方选定，环境来自流水线设置或原事件，两者会随时间脱节：节点被移出环境后，
      * 重新执行、重放事件仍会带着这个节点启动，构建就跑在了一台已经不属于该运行资源的机器上。
      *
-     * 只在能明确证明「节点不属于该环境」时才拒绝启动。列不出节点一律放行：环境服务异常、
-     * 流水线授权人对内置的全量创作环境没有项目管理员权限等情况都会返回空列表，
-     * 把这些当成校验不通过会把本来能跑的构建拦死。环境确实为空的场景由触发侧负责拦截。
+     * 查得到环境节点就按结果判定：节点不在列表里一律拒绝，包括环境已被清空或删除导致列表为空的情况，
+     * 这正是「快照里的环境已经不存在了」要拦住的场景。
+     * 只有查询本身失败（环境服务异常等）才放行，那时拿不到任何证据，不能反过来判定节点不合法。
      */
     private fun checkAgentInEnv(
         ctx: InitParamContext,
@@ -570,12 +570,12 @@ class PipelineBuildService(
         agentId: String
     ) {
         val targetEnvHashId = envHashId?.takeIf(String::isNotBlank) ?: return
-        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIds(
+        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsOrNull(
             projectId = ctx.pipeline.projectId,
             userId = ctx.pipelineAuthorizer ?: ctx.userId,
             envHashId = targetEnvHashId
-        )
-        if (envAgentIds.isEmpty() || envAgentIds.contains(agentId)) return
+        ) ?: return
+        if (envAgentIds.contains(agentId)) return
         throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
             params = arrayOf(resourceName ?: targetEnvHashId)
