@@ -30,11 +30,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.image.service.ImageFeatureService
+import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import com.tencent.devops.store.image.service.ImageFeatureService
-import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -54,12 +54,14 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
 
     override fun getImageStatusByCodeAndVersion(
         imageCode: String,
-        imageVersion: String
+        imageVersion: String,
+        tenantId: String?
     ): Result<String> {
         return Result(
             imageService.getImageStatusByCodeAndVersion(
                 imageCode = imageCode,
-                imageVersion = imageVersion
+                imageVersion = imageVersion,
+                tenantId = tenantId
             )
         )
     }
@@ -68,11 +70,11 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         return Result(
             // 公共镜像视为默认安装
             imageFeatureService.isImagePublic(imageCode) ||
-                storeProjectService.isInstalledByProject(
-                    projectCode = projectCode,
-                    storeCode = imageCode,
-                    storeType = StoreTypeEnum.IMAGE.type.toByte()
-                )
+                    storeProjectService.isInstalledByProject(
+                        projectCode = projectCode,
+                        storeCode = imageCode,
+                        storeType = StoreTypeEnum.IMAGE.type.toByte()
+                    )
         )
     }
 
@@ -97,12 +99,18 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getImagesByCodeAndVersion(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
+    override fun getImagesByCodeAndVersion(
+        userId: String,
+        tenantId: String?,
+        imageCode: String,
+        version: String?
+    ): Result<ImageDetail> {
         return Result(
             imageService.getImageDetailByCodeAndVersion(
                 userId = userId,
                 imageCode = imageCode,
-                imageVersion = version
+                imageVersion = version,
+                tenantId = tenantId
             )
         )
     }

@@ -1,6 +1,6 @@
-import './authority-directive.scss';
 import ajax from '../ajax/index';
 import { version } from '../utils/vue';
+import './authority-directive.scss';
 
 // vue2 和 vue3 使用的弹框不一样，使用变量接收传入的值
 let handleShowDialog;
@@ -12,6 +12,7 @@ const DEFAULT_OPTIONS = {
   disablePermissionApi: false,
   tooltips: '',
 };
+const defaultAjaxPrefix = window.PUBLIC_URL_PREFIX || ''
 
 /**
  * 初始化
@@ -111,7 +112,7 @@ function destroy(cloneEl, vNode) {
  * 判断是否有权限
  * @param {*} data 权限数据包
  */
-function validatePermission(data, ajaxPrefix) {
+function validatePermission(data, ajaxPrefix = defaultAjaxPrefix) {
   return new Promise((resolve) => {
     if (!data) return resolve(true);
     const { projectId, resourceType, resourceCode, action } = data;
@@ -161,7 +162,7 @@ function validatePermission(data, ajaxPrefix) {
 }
 
 // 通过接口判断有无权限
-async function updatePerms(el, data, vNode, ajaxPrefix) {
+async function updatePerms(el, data, vNode, ajaxPrefix = defaultAjaxPrefix) {
   const hasPermission = await validatePermission(data.permissionData, ajaxPrefix);
   const cloneData = JSON.parse(JSON.stringify(data));
   cloneData.hasPermission = hasPermission;
@@ -169,7 +170,7 @@ async function updatePerms(el, data, vNode, ajaxPrefix) {
 }
 
 // vue2 使用的权限指令
-export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
+export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = defaultAjaxPrefix) {
   handleShowDialog = handleNoPermission;
   return class {
     static install(Vue) {
@@ -202,7 +203,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
 }
 
 // vue3 使用的权限指令
-export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
+export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = defaultAjaxPrefix) {
   handleShowDialog = handleNoPermission;
   return class {
     static install(app) {

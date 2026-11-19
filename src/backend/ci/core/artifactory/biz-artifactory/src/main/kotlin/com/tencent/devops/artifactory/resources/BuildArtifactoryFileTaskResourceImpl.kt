@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PR
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -80,12 +81,17 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
     }
 
     fun checkUserPermission(userId: String, projectId: String) {
-        val projectSet = client.get(ServiceProjectResource::class).list(userId).data!!.map { it.projectCode }.toSet()
+        val projectSet = client.get(ServiceProjectResource::class)
+            .list(
+                userId = userId,
+                productIds = null,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            ).data!!.map { it.projectCode }.toSet()
         if (!projectSet.contains(projectId)) {
             throw PermissionForbiddenException(
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
-                        params = arrayOf(userId, projectId)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
                 ),
                 params = arrayOf("user[$userId]->project[$projectId]")
             )

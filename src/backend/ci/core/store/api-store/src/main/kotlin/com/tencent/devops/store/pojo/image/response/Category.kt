@@ -51,10 +51,10 @@ data class Category(
     @get:Schema(title = "范畴图标链接", required = true)
     val iconUrl: String,
 
-    @get:Schema(title = "创建时间", required = true)
+    @get:Schema(title = "创建时间（毫秒时间戳）", required = true)
     val createTime: Long,
 
-    @get:Schema(title = "修改时间", required = true)
+    @get:Schema(title = "修改时间（毫秒时间戳）", required = true)
     val updateTime: Long
 
 )

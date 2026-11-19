@@ -617,6 +617,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         collation: PipelineCollation?,
         showDelete: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>> {
+
         checkParam(userId, projectId)
         return Result(
             pipelineListFacadeService.listViewPipelines(

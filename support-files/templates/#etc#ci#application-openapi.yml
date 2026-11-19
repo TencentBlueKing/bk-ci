@@ -9,10 +9,16 @@ spring:
 server:
   port: __BK_CI_OPENAPI_API_PORT__
 
-# 是否开启apifilter和aspect功能
+# 是否开启apifilter和aspect功能。auth 与 blueKing.enable 同时为 true 时，
+# 从蓝鲸网关 X-Bkapi-JWT 解析用户并写入 X-DEVOPS-UID。
 api:
+  blueKing:
+    enable: __BK_CI_OPENAPI_API_BLUEKING_ENABLE__
   gateway:
-    auth: false
+    auth: __BK_CI_OPENAPI_API_AUTH__
+    pub:
+      file:
+        outer: __BK_CI_OPENAPI_API_PUB_OUTER__
 
 # 是否开启openAPI 切面内校验path内project的开关。打开后若openAPI接口内没有projectId相关字段，需要对应接口需要加@IgnoreProjectId
 openapi:

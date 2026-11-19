@@ -4,6 +4,7 @@
     :resource-type="resourceType"
     :resource-code="projectCode"
     :project-code="projectCode"
+    :ajax-prefix="ajaxPrefix"
     :rename-group-name="handelRenameGroupName"
   />
 </template>
@@ -24,6 +25,7 @@ export default {
     const { t } = useI18n();
     return {
       resourceType: 'project',
+      ajaxPrefix: window.PUBLIC_URL_PREFIX,
       t,
     };
   },

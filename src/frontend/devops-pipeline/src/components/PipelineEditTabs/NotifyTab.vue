@@ -96,7 +96,25 @@
                                 {{ field.label }}
                             </div>
                             <div class="info-content">
-                                {{ getShowContent(field.col, item[field.col]) }}
+                                <template v-if="field.col === 'users'">
+                                    <template v-if="splitNotifyTokens(item.users).length">
+                                        <span
+                                            v-for="(token, idx) in splitNotifyTokens(item.users)"
+                                            :key="`${idx}-${token}`"
+                                        >
+                                            <bk-user-display-name
+                                                v-if="isPlainUserId(token)"
+                                                :user-id="token"
+                                            />
+                                            <template v-else>{{ token }}</template>
+                                            <template v-if="idx < splitNotifyTokens(item.users).length - 1">,</template>
+                                        </span>
+                                    </template>
+                                    <span v-else>--</span>
+                                </template>
+                                <template v-else>
+                                    {{ getShowContent(field.col, item[field.col]) }}
+                                </template>
                             </div>
                         </div>
                     
@@ -269,6 +287,15 @@
             ]),
             getRenderInfo (type) {
                 return this[type]
+            },
+            splitNotifyTokens (val) {
+                if (!val || val === '--') {
+                    return []
+                }
+                return String(val).split(/[,;；，]/).map(s => s.trim()).filter(Boolean)
+            },
+            isPlainUserId (token) {
+                return Boolean(token) && !/\$\{\{/.test(token) && !token.startsWith('$')
             },
             getShowContent (col, val) {
                 let res = ''

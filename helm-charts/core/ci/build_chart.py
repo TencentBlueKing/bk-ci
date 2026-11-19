@@ -49,6 +49,8 @@ include_dict = {
     'bkRepoPrivateUrl': '{{ if empty .Values.config.bkRepoPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkRepoPrivateUrl }}{{ end }}',
     'bkCiFrontendHost': '{{ printf "%s-frontend" (include "bkci.names.fullname" .) }}',
     'bkCiDevopsToken': '{{ include "bkci.devopsToken" . }}',
+    # 新 key 未出现时回落到旧 key，避免存量 values 只写了 bkCiSyncCronEnabled
+    'bkCiAuthSyncCronEnabled': '{{ include "bkci.authSyncCronEnabled" . }}',
     'bkCiArtifactWebhookSecret': '{{ include "bkci.webhookSecret" (dict "name" "artifact" "context" .) | quote }}'
 }
 

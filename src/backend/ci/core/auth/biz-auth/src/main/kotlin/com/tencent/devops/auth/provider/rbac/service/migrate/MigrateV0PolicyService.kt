@@ -52,10 +52,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.service.tenant.TenantUtils
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "NestedBlockDepth", "TooManyFunctions")
 class MigrateV0PolicyService constructor(
@@ -150,7 +151,7 @@ class MigrateV0PolicyService constructor(
         if (migrateTaskStatus != MigrateIamApiService.SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS) {
             logger.info(
                 "$migrateTaskId migrate task status $migrateTaskStatus not success, " +
-                    "sleep ${MigrateIamApiService.SLEEP_LOOP_IAM_GET_MIGRATE_TASK}(s)"
+                        "sleep ${MigrateIamApiService.SLEEP_LOOP_IAM_GET_MIGRATE_TASK}(s)"
             )
             Thread.sleep(MigrateIamApiService.SLEEP_LOOP_IAM_GET_MIGRATE_TASK)
             loopTaskStatus(migrateTaskId)
@@ -183,7 +184,8 @@ class MigrateV0PolicyService constructor(
             val resources = permission.resources
 
             if (resources.isNotEmpty() && resources[0].type == AuthResourceType.PIPELINE_DEFAULT.value &&
-                resources[0].paths.isNotEmpty()) {
+                resources[0].paths.isNotEmpty()
+            ) {
                 val groupIdOfPipelineActionGroup = getGroupIdOfPipelineActionGroup(
                     projectCode = projectCode,
                     resourceCode = resources[0].paths[0][0].id,
@@ -272,13 +274,16 @@ class MigrateV0PolicyService constructor(
                     rbacActions.remove(action)
                     rbacActions.add(oldActionMappingNewAction[action]!!)
                 }
+
                 skipActions.contains(action) -> {
                     logger.info("skip $action action")
                     rbacActions.remove(action)
                 }
+
                 certActions.contains(action) && !rbacActions.contains(CERT_VIEW) -> {
                     rbacActions.add(CERT_VIEW)
                 }
+
                 envNodeActions.contains(action) && !rbacActions.contains(ENV_NODE_VIEW) -> {
                     rbacActions.add(ENV_NODE_VIEW)
                 }
@@ -477,7 +482,8 @@ class MigrateV0PolicyService constructor(
                 V2PageInfoDTO().apply {
                     page = PageUtil.DEFAULT_PAGE
                     pageSize = PageUtil.DEFAULT_PAGE_SIZE
-                }
+                },
+                TenantUtils.getTenantIdByEnglishName(projectCode)
             ).results.firstOrNull { it.name == groupName }?.id.toString()
             groupIdOfPipelineActionGroupList.forEach {
                 logger.info("add subject template to group of pipeline:$it|$subjectTemplateId")
@@ -532,7 +538,7 @@ class MigrateV0PolicyService constructor(
             memberId = member.id,
             memberType = member.type,
             expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
-                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
+                    TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
             iamGroupId = groupId
         )
     }

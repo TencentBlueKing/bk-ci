@@ -28,9 +28,9 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.member.StoreMemberItem
 import com.tencent.devops.store.pojo.common.member.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 @Suppress("ALL")
 interface StoreMemberService {
@@ -68,7 +68,8 @@ interface StoreMemberService {
         collaborationFlag: Boolean? = false,
         sendNotify: Boolean = true,
         checkPermissionFlag: Boolean = true,
-        testProjectCode: String? = null
+        testProjectCode: String? = null,
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
@@ -79,7 +80,8 @@ interface StoreMemberService {
         id: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        checkPermissionFlag: Boolean = true
+        checkPermissionFlag: Boolean = true,
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**

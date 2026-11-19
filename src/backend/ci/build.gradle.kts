@@ -9,7 +9,7 @@ allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.9.0") +
+    version = (System.getProperty("ci_version")?.takeIf { it.isNotBlank() } ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // 加载boot的插件

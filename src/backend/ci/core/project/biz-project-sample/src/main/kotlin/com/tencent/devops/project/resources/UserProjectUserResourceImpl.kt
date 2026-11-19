@@ -27,20 +27,26 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.TenantInfoForDisplay
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.UserCacheService
 import com.tencent.devops.project.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class UserProjectUserResourceImpl @Autowired constructor(
     private val userService: UserService,
     private val userCacheService: UserCacheService
 ) : UserProjectUserResource {
+
+    @Value("\${bk-user.webUrl:}")
+    private val bkUserWebUrl: String? = null
 
     override fun get(userId: String): Result<ProjectUser> {
 
@@ -49,12 +55,34 @@ class UserProjectUserResourceImpl @Autowired constructor(
             ProjectUser(
                 chineseName = staff.chineseName,
                 avatarUrl = "",
-                username = staff.username
+                username = staff.username,
+                timeZone = staff.timeZone
             )
         )
     }
 
     override fun getDetail(userId: String): Result<UserDeptDetail> {
         return Result(userCacheService.getDetailFromCache(userId))
+    }
+
+    override fun tenantInfoForDisplay(
+        userId: String,
+        tenantId: String?,
+        timeZone: String?
+    ): Result<TenantInfoForDisplay> {
+        // 时区由网关鉴权调用蓝鲸 get_bk_token_userinfo 写入 X-BK-USER-TIMEZONE；缺省/空则兜底东八区
+        // 用户展示名网关仅多租户开启时下发；单租户保持与主干一致，不触发 /api/v3/open-web/tenant/...
+        val multiTenant = TenantUtils.isMultiTenantMode()
+        return Result(
+            TenantInfoForDisplay(
+                tenantId = if (multiTenant) (tenantId ?: "") else "",
+                apiBaseUrl = if (multiTenant) (bkUserWebUrl?.takeIf { it.isNotBlank() } ?: "") else "",
+                timeZone = timeZone?.takeIf { it.isNotBlank() } ?: DEFAULT_DISPLAY_TIME_ZONE
+            )
+        )
+    }
+
+    companion object {
+        private const val DEFAULT_DISPLAY_TIME_ZONE = "Asia/Shanghai"
     }
 }

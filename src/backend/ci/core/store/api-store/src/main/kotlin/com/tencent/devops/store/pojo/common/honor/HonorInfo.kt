@@ -43,6 +43,6 @@ data class HonorInfo(
     val honorName: String,
     @get:Schema(title = "是否佩戴")
     val mountFlag: Boolean,
-    @get:Schema(title = "创建时间")
+    @get:Schema(title = "创建时间（毫秒时间戳）")
     val createTime: LocalDateTime
 )

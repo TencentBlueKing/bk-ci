@@ -19,8 +19,8 @@ class OpUserManageResourceImpl(
         return Result(true)
     }
 
-    override fun syncUserInfoData(userIds: List<String>): Result<Boolean> {
-        userManageService.syncUserInfoData(userIds)
+    override fun syncUserInfoData(userIds: List<String>, tenantId: String?): Result<Boolean> {
+        userManageService.syncUserInfoData(userIds, tenantId)
         return Result(true)
     }
 

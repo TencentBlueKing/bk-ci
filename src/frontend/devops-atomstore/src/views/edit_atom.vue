@@ -266,17 +266,25 @@
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <div class="bk-form-item name-form-item is-required">
+                <div
+                    class="bk-form-item name-form-item is-required"
+                    ref="publisherError"
+                >
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-select v-model="atomForm.publisher">
-                            <bk-option
-                                v-for="publisher in publishersList"
-                                :key="publisher.id"
-                                :id="publisher.publisherCode"
-                                :name="publisher.publisherName"
-                            ></bk-option>
-                        </bk-select>
+                        <BkUserSelector
+                            v-model="atomForm.publisher"
+                            :api-base-url="$tenantApiBaseUrl || undefined"
+                            :tenant-id="$tenantId || undefined"
+                            :placeholder="$t('store.请输入发布者')"
+                            @change="formErrors.publisherError = false"
+                        />
+                        <div
+                            v-if="formErrors.publisherError"
+                            class="error-tips"
+                        >
+                            {{ $t('store.发布者不能为空') }}
+                        </div>
                     </div>
                 </div>
                 <div
@@ -392,7 +400,10 @@
                         <bk-input v-model="atomForm.branch"></bk-input>
                     </div>
                 </div>
-                <div class="bk-form-item release-package-form-item is-required">
+                <div
+                    class="bk-form-item release-package-form-item is-required"
+                    ref="releasePackageError"
+                >
                     <label class="bk-label"> {{ $t('store.发布包') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-file-upload
@@ -455,17 +466,20 @@
 </template>
 
 <script>
+    import api from '@/api'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+    import bkFileUpload from '@/components/common/file-upload'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
-    import api from '@/api'
+    import BkUserSelector from '@blueking/bk-user-selector/vue2'
+    import '@blueking/bk-user-selector/vue2/vue2.css'
     
     export default {
         components: {
             selectLogo,
             bkFileUpload,
-            breadCrumbs
+            breadCrumbs,
+            BkUserSelector
         },
         data () {
             return {
@@ -553,8 +567,11 @@
                     logoUrlError: false,
                     sortError: false,
                     envError: false,
-                    releaseTypeError: false
+                    releaseTypeError: false,
+                    releasePackageError: false,
+                    publisherError: false
                 },
+                hasReleasePackage: false,
                 versionMap: {},
                 publishersList: [],
                 containerList: [],
@@ -611,6 +628,8 @@
             'atomForm.releaseType' (val) {
                 this.curVersion = this.versionMap[val] || ''
                 this.formErrors.releaseTypeError = false
+                this.hasReleasePackage = false
+                this.formErrors.releasePackageError = false
             }
         },
         async created () {
@@ -781,10 +800,9 @@
                 }
             },
 
-            uploadPackageSuccess (data) {
-                if (data.atomEnvRequests && data.atomEnvRequests.length) {
-                    this.formErrors.releasePackageError = false
-                }
+            uploadPackageSuccess () {
+                this.hasReleasePackage = true
+                this.formErrors.releasePackageError = false
             },
 
             uploadPackageErr (message) {
@@ -794,6 +812,14 @@
                         theme: 'error'
                     })
                 }
+            },
+
+            isPublisherEmpty () {
+                const publisher = this.atomForm.publisher
+                if (Array.isArray(publisher)) {
+                    return !publisher.some(item => String(item || '').trim())
+                }
+                return !String(publisher || '').trim()
             },
 
             checkValid () {
@@ -836,9 +862,24 @@
                     errorCount++
                 }
 
+                if (this.isPublisherEmpty()) {
+                    this.formErrors.publisherError = true
+                    ref = ref || 'publisherError'
+                    errorCount++
+                }
+
+                if (!this.hasReleasePackage) {
+                    this.formErrors.releasePackageError = true
+                    ref = ref || 'releasePackageError'
+                    errorCount++
+                }
+
                 if (errorCount > 0) {
                     const errorEle = this.$refs[ref]
-                    if (errorEle) errorEle.$el.scrollIntoView()
+                    const targetElement = errorEle && (errorEle.$el || errorEle)
+                    if (targetElement && targetElement.scrollIntoView) {
+                        targetElement.scrollIntoView()
+                    }
                     return false
                 }
 

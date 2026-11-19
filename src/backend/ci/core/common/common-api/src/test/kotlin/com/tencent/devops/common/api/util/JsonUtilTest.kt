@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.annotation.SkipLogField
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -195,6 +196,34 @@ class JsonUtilTest {
         Assertions.assertNull(skipEmptyMap["emptyList"])
     }
 
+    @Test
+    fun longAcceptsLegacyDateTimeAndEpochMillis() {
+        val json = """{"createTime":"2023-07-21 17:32:09","updateTime":1689931929000}"""
+        val bean = JsonUtil.to(json, TimeFields::class.java)
+        val expected = LocalDateTime.of(2023, 7, 21, 17, 32, 9)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        Assertions.assertEquals(expected, bean.createTime)
+        Assertions.assertEquals(1689931929000L, bean.updateTime)
+
+        val numericString = JsonUtil.to("""{"createTime":"1689931929000","updateTime":1}""", TimeFields::class.java)
+        Assertions.assertEquals(1689931929000L, numericString.createTime)
+
+        val nullable = JsonUtil.to("""{"createTime":null}""", OptionalTime::class.java)
+        Assertions.assertNull(nullable.createTime)
+
+        val textualNull = JsonUtil.to("""{"createTime":"null"}""", OptionalTime::class.java)
+        Assertions.assertNull(textualNull.createTime)
+    }
+
+    @Test
+    fun longStillRejectsNonDateString() {
+        Assertions.assertThrows(Exception::class.java) {
+            JsonUtil.to("""{"createTime":"not-a-time","updateTime":1}""", TimeFields::class.java)
+        }
+    }
+
     data class NameAndValue(
         val key: String,
         @SkipLogField
@@ -221,5 +250,14 @@ class JsonUtilTest {
         val localTime: LocalTime,
         val localDateTime: LocalDateTime,
         val emptyList: List<String>
+    )
+
+    data class TimeFields(
+        val createTime: Long,
+        val updateTime: Long
+    )
+
+    data class OptionalTime(
+        val createTime: Long?
     )
 }

@@ -34,18 +34,19 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsDat
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.metrics.dao.ProjectBuildSummaryDao
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.service.CacheProjectInfoService
 import com.tencent.devops.metrics.service.ProjectBuildSummaryService
+import java.time.LocalDate
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 
 @Service
 class ProjectBuildSummaryServiceImpl @Autowired constructor(
@@ -99,7 +100,8 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
                 logger.info("Project [${projectVO.englishName}] has disabled, skip user count")
                 return
             }
-            if (authUserAndDeptApi.checkUserDeparted(userId)) {
+            val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            if (authUserAndDeptApi.checkUserDeparted(userId, tenantId)) {
                 logger.debug("This user does not need to be save, because he has departed|$userId")
                 return
             }

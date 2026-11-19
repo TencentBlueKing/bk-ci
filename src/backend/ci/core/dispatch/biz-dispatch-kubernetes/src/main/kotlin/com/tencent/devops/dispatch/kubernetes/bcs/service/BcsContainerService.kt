@@ -206,16 +206,18 @@ class BcsContainerService @Autowired constructor(
                     cpu = cpu,
                     mem = mem,
                     disk = disk,
-                    env = mapOf(
-                        ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to dispatchMessages.id,
-                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
-                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
-                        "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Bcs",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName,
-                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+                    env = commonConfig.withBkrepoProjectPrefix(
+                        mapOf(
+                            ENV_KEY_PROJECT_ID to projectId,
+                            ENV_KEY_AGENT_ID to dispatchMessages.id,
+                            ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                            ENV_KEY_GATEWAY to dispatchMessages.gateway,
+                            "TERM" to "xterm-256color",
+                            SLAVE_ENVIRONMENT to "Bcs",
+                            ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
+                            BUILDER_NAME to builderName,
+                            ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+                        )
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
@@ -278,16 +280,18 @@ class BcsContainerService @Autowired constructor(
                 userId = userId,
                 name = builderName,
                 param = BcsStartBuilderParams(
-                    env = mapOf(
-                        ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to dispatchMessages.id,
-                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
-                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
-                        "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Bcs",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName,
-                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+                    env = commonConfig.withBkrepoProjectPrefix(
+                        mapOf(
+                            ENV_KEY_PROJECT_ID to projectId,
+                            ENV_KEY_AGENT_ID to dispatchMessages.id,
+                            ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                            ENV_KEY_GATEWAY to dispatchMessages.gateway,
+                            "TERM" to "xterm-256color",
+                            SLAVE_ENVIRONMENT to "Bcs",
+                            ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
+                            BUILDER_NAME to builderName,
+                            ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
+                        )
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )

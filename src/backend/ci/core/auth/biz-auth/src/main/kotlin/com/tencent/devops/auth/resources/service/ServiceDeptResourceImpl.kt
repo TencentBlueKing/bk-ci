@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.resources.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -40,27 +41,34 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
 ) : ServiceDeptResource {
-    override fun getParentDept(userId: String): Result<Int> {
-        return Result("", deptService.getUserParentDept(userId))
+    override fun getParentDept(userId: String, tenantId: String?): Result<Int> {
+        return Result("", deptService.getUserParentDept(userId, tenantId))
     }
 
-    override fun getDeptByName(userId: String, deptName: String): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByName(deptName, userId))
+    override fun getDeptByName(userId: String, tenantId: String?, deptName: String): Result<DeptInfoVo?> {
+        return Result(deptService.getDeptByName(deptName, userId, tenantId))
     }
 
-    override fun getUserInfo(userId: String, name: String): Result<UserAndDeptInfoVo?> {
-        return Result(deptService.getUserInfo(name))
+    override fun getUserInfo(userId: String, tenantId: String?, name: String): Result<UserAndDeptInfoVo?> {
+        return Result(deptService.getUserInfo(name, tenantId))
     }
 
-    override fun checkUserDeparted(name: String): Result<Boolean> {
-        return Result(deptService.isUserDeparted(name))
+    override fun checkUserDeparted(name: String, tenantId: String?): Result<Boolean> {
+        return Result(deptService.isUserDeparted(name, tenantId))
     }
 
-    override fun getLeader(userId: String): Result<BkUserInfo?> {
-        return Result(deptService.getLeader(userId))
+    override fun listUserInfos(
+        memberIds: List<String>,
+        tenantId: String?
+    ): Result<List<UserAndDeptInfoVo>> {
+        return Result(deptService.listMemberInfos(memberIds, ManagerScopesEnum.USER, tenantId))
     }
 
-    override fun getUserDeptIds(userId: String): Result<Set<String>> {
-        return Result(deptService.getUserDeptInfo(userId))
+    override fun getLeader(userId: String, tenantId: String?): Result<BkUserInfo?> {
+        return Result(deptService.getLeader(userId, tenantId))
+    }
+
+    override fun getUserDeptIds(userId: String, tenantId: String?): Result<Set<String>> {
+        return Result(deptService.getUserDeptInfo(userId, tenantId))
     }
 }

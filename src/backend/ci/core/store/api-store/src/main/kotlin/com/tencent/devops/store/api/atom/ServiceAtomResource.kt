@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
@@ -74,6 +75,9 @@ interface ServiceAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
         @DefaultValue("PIPELINE")
@@ -132,6 +136,9 @@ interface ServiceAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomVersionInfo(
+        @Parameter(description = "租户ID", required = true)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
@@ -179,6 +186,9 @@ interface ServiceAtomResource {
     @Path("/codes/{atomCode}/classify/info")
     @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getAtomClassifyInfo(
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String

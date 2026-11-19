@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.api.image
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -94,6 +95,9 @@ interface ServiceStoreImageResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
@@ -116,7 +120,10 @@ interface ServiceStoreImageResource {
         imageCode: String,
         @Parameter(description = "镜像版本", required = false)
         @PathParam("imageVersion")
-        imageVersion: String
+        imageVersion: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<String>
 
     @Operation(summary = "根据code和版本号判断镜像是否发布")

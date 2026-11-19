@@ -47,7 +47,11 @@ class SimpleProjectExtService @Autowired constructor(
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
     ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+        client.get(ServiceBkRepoResource::class).createProjectResource(
+            userId = userId,
+            tenantId = projectCreateInfo.tenantId,
+            projectId = projectCreateInfo.englishName
+        )
         // 同步共享制品开关配置到 BkRepo，默认为 true
         val enableShareArtifact = projectCreateInfo.properties?.enableShareArtifact ?: true
         updateShareArtifact(userId, projectCreateInfo.englishName, enableShareArtifact)

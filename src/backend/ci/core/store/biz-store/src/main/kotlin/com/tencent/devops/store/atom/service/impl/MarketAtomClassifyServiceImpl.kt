@@ -32,6 +32,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomClassifyDao
+import com.tencent.devops.store.atom.service.MarketAtomClassifyService
+import com.tencent.devops.store.common.service.AbstractClassifyService
+import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
@@ -39,16 +42,13 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomClassifyService
-import com.tencent.devops.store.common.service.AbstractClassifyService
-import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 插件市场-插件分类业务逻辑类
@@ -104,8 +104,8 @@ class MarketAtomClassifyServiceImpl : MarketAtomClassifyService, AbstractClassif
         return Result(marketAtomClassifyList)
     }
 
-    override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
-        val atomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode)
+    override fun getAtomClassifyInfo(atomCode: String, tenantId: String?): Result<AtomClassifyInfo?> {
+        val atomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
         return if (atomRecord != null) {
             val classifyRecord = classifyService.getClassify(atomRecord.classifyId).data
             Result(classifyRecord?.let {

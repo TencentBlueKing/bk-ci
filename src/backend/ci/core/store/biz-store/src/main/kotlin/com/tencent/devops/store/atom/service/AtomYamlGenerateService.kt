@@ -33,13 +33,15 @@ interface AtomYamlGenerateService {
         atomCode: String?,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        tenantId: String? = null
     ): String
 
     fun generateCiV2Yaml(
         atomCode: String,
         os: String?,
         classType: String?,
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        tenantId: String? = null
     ): String
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -54,6 +55,9 @@ interface ServiceBkRepoResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String

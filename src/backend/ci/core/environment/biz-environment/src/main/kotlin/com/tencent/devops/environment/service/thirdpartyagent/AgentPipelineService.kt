@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -40,7 +41,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.format.DateTimeFormatter
 
 @Service
 class AgentPipelineService @Autowired constructor(
@@ -143,11 +143,7 @@ class AgentPipelineService @Autowired constructor(
                 vmSeqId = it.vmSeqId,
                 jobId = it.jobId,
                 jobName = it.jobName,
-                lastBuildTime = if (null == it.lastBuildTime) {
-                    ""
-                } else {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                }
+                lastBuildTime = it.lastBuildTime?.timestampmilli()
             )
         }
     }

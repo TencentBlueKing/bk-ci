@@ -36,59 +36,62 @@ import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
 interface DeptService {
-    fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo?
+    /**
+     * 获取用户所在部门ID(只取第一个组织)
+     */
+    fun getUserParentDept(userId: String, tenantId: String?): Int
 
-    fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
+    /**
+     * 根据组织名称获取组织信息
+     */
+    fun getDeptByName(deptName: String, userId: String, tenantId: String?): DeptInfoVo?
 
-    fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum,
-        exactLookups: Boolean? = false
-    ): List<UserAndDeptInfoVo?>
-
-    fun getDeptUser(deptId: Int, accessToken: String?): List<String>?
-
-    // 获取用户组织上一级组织
-    fun getUserParentDept(userId: String): Int
-
-    fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
-
-    fun getUserDeptInfo(userId: String): Set<String>
+    /**
+     * 获取用户所在部门的ID列表(只取第一个组织)
+     */
+    fun getUserDeptInfo(userId: String, tenantId: String?): Set<String>
 
     @Deprecated("老接口，已废弃")
-    fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
+    fun getUserInfo(userId: String, name: String, tenantId: String? = null): UserAndDeptInfoVo?
 
     // 获取单个用户信息
-    fun getUserInfo(userId: String): UserAndDeptInfoVo?
+    fun getUserInfo(userId: String, tenantId: String? = null): UserAndDeptInfoVo?
 
-    fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo?
+    fun getUserInfoFromExternal(userId: String, tenantId: String?): UserAndDeptInfoVo?
 
-    fun getLeader(userId: String): BkUserInfo?
+    fun getLeader(userId: String, tenantId: String?): BkUserInfo?
 
     // 获取成员信息
     fun getMemberInfo(
         memberId: String,
-        memberType: ManagerScopesEnum
+        memberType: ManagerScopesEnum,
+        tenantId: String?
     ): UserAndDeptInfoVo
 
     // 获取成员信息
     fun listMemberInfos(
         memberIds: List<String>,
-        memberType: ManagerScopesEnum
+        memberType: ManagerScopesEnum,
+        tenantId: String?
     ): List<UserAndDeptInfoVo>
 
     // 传入成员名单，筛选出其中离职的成员
     fun listDepartedMembers(
-        memberIds: List<String>
+        memberIds: List<String>,
+        tenantId: String?
     ): List<String>
 
-    fun isUserDeparted(userId: String): Boolean
+    /**
+     * 判断用户是否离职
+     */
+    fun isUserDeparted(
+        userId: String,
+        tenantId: String? = null
+    ): Boolean
 
-    fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity): DeptInfoVo
+    fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): DeptInfoVo
 
-    fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo
+    fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity, tenantId: String?): BkUserInfoVo
 
-    fun getUserDeptDetails(userId: String): BkDeptDetailsVo?
+    fun getUserDeptDetails(userId: String, tenantId: String?): BkDeptDetailsVo?
 }

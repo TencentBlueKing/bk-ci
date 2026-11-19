@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
@@ -135,7 +136,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
                     ccAppId = projectInfoRequest.ccAppId,
                     ccAppName = projectInfoRequest.cc_app_name,
                     kind = projectInfoRequest.kind,
-                    secrecy = projectInfoRequest.secrecyFlag
+                    secrecy = projectInfoRequest.secrecyFlag,
+                    tenantId = TenantUtils.getTenantId(projectInfoRequest.tenantId)
                 )
             )
         )

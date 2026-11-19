@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
@@ -141,7 +142,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                         englishName = dbProjectRecord.englishName,
                         ccAppId = projectInfoRequest.ccAppId,
                         ccAppName = projectInfoRequest.cc_app_name,
-                        kind = projectInfoRequest.kind
+                        kind = projectInfoRequest.kind,
+                        tenantId = TenantUtils.getTenantId(projectInfoRequest.tenantId)
                     )
                 )
             )

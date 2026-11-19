@@ -38,7 +38,7 @@ data class ActivityInfo(
     val englishName: String? = "NEW",
     @get:Schema(title = "链接")
     val link: String,
-    @get:Schema(title = "创建时间", description = "create_time")
+    @get:Schema(title = "创建时间（毫秒时间戳）", description = "create_time")
     @JsonProperty("create_time")
-    val createTime: String?
+    val createTime: Long?
 )

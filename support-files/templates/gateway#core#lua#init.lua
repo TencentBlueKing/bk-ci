@@ -86,7 +86,9 @@ config = {
     },
     bkrepo = {
         domain = "__BK_REPO_FQDN__",
-        authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
+        authorization = "__BK_CI_BKREPO_AUTHORIZATION__",
+        -- 平台制品库项目前缀。单租户留空；多租户与初始化任务使用同一个值
+        projectPrefix = "__BK_CI_BKREPO_PROJECT_PREFIX__"
     },
     jwtPrivateKey = "__BK_CI_JWT_RSA_PRIVATE_KEY__",
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
@@ -100,6 +102,18 @@ config = {
         },
         special_domain = {},
         auto_prefix = ""
+    },
+    tenant = {
+        -- 未传、空串或非 true 都按单租户启动，避免占位符被渲染成空后 Lua 语法错误
+        enabled = ("__BK_TENANT_ENABLED__" == "true")
+    },
+    bk_login = {
+        host = "__BK_PAAS_PRIVATE_URL__",
+        path = "__BK_LOGIN_PATH__"
+    },
+    apigw = {
+        app_code = "__BK_CI_APP_CODE__",
+        app_secret = "__BK_CI_APP_TOKEN__"
     },
     external_auth = {
         base_url = "",

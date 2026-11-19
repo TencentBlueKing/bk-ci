@@ -27,14 +27,15 @@
 
 package com.tencent.devops.store.api.template
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.TemplateDetail
-import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
 import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
+import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -63,7 +64,10 @@ interface ServiceTemplateResource {
     fun list(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<MarketTemplateResp>
 
     @Operation(summary = "安装模板到项目")
@@ -73,6 +77,9 @@ interface ServiceTemplateResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>

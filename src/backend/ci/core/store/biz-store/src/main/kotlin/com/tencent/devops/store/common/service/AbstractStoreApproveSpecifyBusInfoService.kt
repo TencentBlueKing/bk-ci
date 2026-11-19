@@ -46,7 +46,8 @@ abstract class AbstractStoreApproveSpecifyBusInfoService {
         storeType: StoreTypeEnum,
         storeCode: String,
         approveId: String,
-        storeApproveRequest: StoreApproveRequest
+        storeApproveRequest: StoreApproveRequest,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

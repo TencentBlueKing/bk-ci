@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
@@ -246,7 +247,8 @@ class PublishersDataServiceImpl @Autowired constructor(
                 userId = userId,
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
-            )) {
+            )
+        ) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = GET_INFO_NO_PERMISSION,
                 params = arrayOf(storeCode),
@@ -358,7 +360,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 thirdLevelDeptId = if (it.businessLineId.isNullOrBlank()) it.centerId.toLong() else it.deptId.toLong(),
                 thirdLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.centerName else it.deptName,
                 fourthLevelDeptId =
-                if (it.businessLineId.isNullOrBlank()) it.groupId.toLong() else it.centerId.toLong(),
+                    if (it.businessLineId.isNullOrBlank()) it.groupId.toLong() else it.centerId.toLong(),
                 fourthLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.groupName else it.centerName,
                 bgName = it.bgName
             )
@@ -397,12 +399,17 @@ class PublishersDataServiceImpl @Autowired constructor(
         val deptInfos = mutableListOf<DeptInfo>()
         var parentDeptId = 0
         deptNames.forEachIndexed { index, deptName ->
-            val deptVo = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
+            val deptVo = client.get(ServiceDeptResource::class).getDeptByName(
+                userId = userId,
+                tenantId = TenantUtils.getTenantId(),
+                deptName = deptName
+            ).data
             val targetDept: DeptInfo? = when (index) {
                 0 -> {
                     // 第一级直接取第一个元素
                     deptVo?.results?.getOrNull(0)
                 }
+
                 else -> {
                     // 其他层级遍历查找父ID匹配项
                     deptVo?.results?.firstOrNull { it.parent == parentDeptId }

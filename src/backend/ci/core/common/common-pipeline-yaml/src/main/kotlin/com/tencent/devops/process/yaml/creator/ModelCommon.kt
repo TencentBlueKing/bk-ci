@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.creator
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -75,6 +76,7 @@ object ModelCommon {
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
                 userId = userId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode),
                 channelCode = channelCode,
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )

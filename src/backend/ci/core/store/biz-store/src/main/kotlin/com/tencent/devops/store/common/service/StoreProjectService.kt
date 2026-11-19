@@ -50,7 +50,8 @@ interface StoreProjectService {
     fun getInstalledProjects(
         userId: String,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        tenantId: String?
     ): Result<List<InstalledProjRespItem>>
 
     /**
@@ -61,7 +62,8 @@ interface StoreProjectService {
         storeId: String,
         installStoreReq: InstallStoreReq,
         publicFlag: Boolean,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
@@ -73,7 +75,8 @@ interface StoreProjectService {
         storeCode: String,
         storeType: StoreTypeEnum,
         projectCodeList: ArrayList<String>,
-        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
+        tenantId: String? = null
     ): Result<Boolean>
 
     /**
