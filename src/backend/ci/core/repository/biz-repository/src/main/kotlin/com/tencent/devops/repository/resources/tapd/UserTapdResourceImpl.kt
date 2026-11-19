@@ -27,20 +27,49 @@
 
 package com.tencent.devops.repository.resources.tapd
 
+import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.tapd.UserTapdResource
 import com.tencent.devops.repository.sdk.tapd.service.ITapdOauthService
+import com.tencent.devops.repository.sdk.tapd.service.TapdDropdownService
+import com.tencent.devops.scm.pojo.tapd.TapdStatusOption
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspaceOption
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
 
 @RestResource
 class UserTapdResourceImpl @Autowired constructor(
-    val tapdOauthService: ITapdOauthService
+    private val tapdOauthService: ITapdOauthService,
+    private val tapdDropdownService: TapdDropdownService
 ) : UserTapdResource {
 
     override fun appInstall(userId: String): Response {
         val uri = UriBuilder.fromUri(tapdOauthService.appInstallUrl(userId = userId)).build()
         return Response.temporaryRedirect(uri).build()
+    }
+
+    override fun listWorkspaces(userId: String): Result<List<TapdWorkspaceOption>> {
+        if (userId.isBlank()) {
+            throw InvalidParamException(message = "userId is blank", params = arrayOf("userId"))
+        }
+        return Result(tapdDropdownService.workspaceOptions(userId = userId))
+    }
+
+    override fun listStatuses(
+        userId: String,
+        workspaceId: String,
+        eventType: String
+    ): Result<List<TapdStatusOption>> {
+        if (userId.isBlank()) {
+            throw InvalidParamException(message = "userId is blank", params = arrayOf("userId"))
+        }
+        if (workspaceId.isBlank()) {
+            throw InvalidParamException(message = "workspaceId is blank", params = arrayOf("workspaceId"))
+        }
+        return Result(
+            tapdDropdownService.statusOptions(workspaceId = workspaceId, eventType = eventType)
+        )
     }
 }

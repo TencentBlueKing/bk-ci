@@ -41,7 +41,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(description = "TAPD 缺陷字段纯信息")
 data class TapdBugFieldConfig(
     @JsonProperty("priority_label")
-    val priorityLabel: TapdBugField? = null
+    val priorityLabel: TapdBugField? = null,
+    @JsonProperty("status")
+    val status: TapdStatusField? = null
 )
 
 /**

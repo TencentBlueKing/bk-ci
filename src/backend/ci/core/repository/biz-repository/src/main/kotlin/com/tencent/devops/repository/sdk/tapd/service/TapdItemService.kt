@@ -28,13 +28,19 @@
 package com.tencent.devops.repository.sdk.tapd.service
 
 import com.tencent.devops.repository.sdk.tapd.AutoRetryTapdClient
+import com.tencent.devops.repository.sdk.tapd.request.AppInstalledWorkspacesRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetBugFieldRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetBugRequest
+import com.tencent.devops.repository.sdk.tapd.request.GetStoryFieldRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetStoryRequest
 import com.tencent.devops.repository.sdk.tapd.request.GetWorkspaceInfoRequest
+import com.tencent.devops.repository.sdk.tapd.request.GrantedWorkspacesRequest
+import com.tencent.devops.repository.sdk.tapd.request.UserParticipantProjectsRequest
+import com.tencent.devops.scm.pojo.tapd.ParticipantWorkspaceResponse
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdStoryFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -112,7 +118,142 @@ class TapdItemService @Autowired constructor(
         }
     }
 
+    override fun listParticipantWorkspaces(nick: String, status: String?): List<ParticipantWorkspaceResponse> {
+        if (nick.isBlank()) {
+            logger.warn("invalid tapd participant workspaces query")
+            return emptyList()
+        }
+        return try {
+            val result = autoRetryTapdClient.execute(
+                UserParticipantProjectsRequest(nick = nick, status = status)
+            )
+            if (result.status != TAPD_SUCCESS_STATUS) {
+                logger.warn(
+                    "tapd participant workspaces unexpected status|status=${result.status}|info=${result.info}"
+                )
+                emptyList()
+            } else {
+                result.data.orEmpty()
+            }
+        } catch (ignored: Exception) {
+            logger.warn("fail to list tapd participant workspaces", ignored)
+            emptyList()
+        }
+    }
+
+    override fun listGrantedWorkspaceIds(): Set<String>? {
+        return try {
+            val ids = mutableSetOf<String>()
+            var page = 1
+            while (page <= MAX_PAGE) {
+                val result = autoRetryTapdClient.execute(
+                    GrantedWorkspacesRequest(limit = PAGE_SIZE, page = page)
+                )
+                if (result.status != TAPD_SUCCESS_STATUS) {
+                    logger.warn(
+                        "tapd granted workspaces unexpected status|status=${result.status}|info=${result.info}"
+                    )
+                    return null
+                }
+                val data = result.data ?: return null
+                val list = data.list ?: return null
+                list.forEach { item ->
+                    item.app?.workspaceId?.takeIf { it.isNotBlank() }?.let(ids::add)
+                }
+                val count = data.pager?.count ?: list.size
+                if (list.isEmpty() || page * PAGE_SIZE >= count) break
+                page++
+            }
+            ids
+        } catch (ignored: Exception) {
+            logger.warn("fail to list tapd granted workspaces", ignored)
+            null
+        }
+    }
+
+    override fun listInstalledWorkspaceIds(): Set<String>? {
+        return try {
+            val ids = mutableSetOf<String>()
+            var page = 1
+            while (page <= MAX_PAGE) {
+                val result = autoRetryTapdClient.execute(
+                    AppInstalledWorkspacesRequest(page = page, perPage = PAGE_SIZE)
+                )
+                if (result.status != TAPD_SUCCESS_STATUS) {
+                    logger.warn(
+                        "tapd installed workspaces unexpected status|status=${result.status}|info=${result.info}"
+                    )
+                    return null
+                }
+                val data = result.data ?: return null
+                val list = data.workspaces.orEmpty()
+                list.forEach { item ->
+                    item.workspaceId?.takeIf { it.isNotBlank() }?.let(ids::add)
+                }
+                val total = maxOf(data.total, list.size)
+                if (list.isEmpty() || page * PAGE_SIZE >= total) break
+                page++
+            }
+            ids
+        } catch (ignored: Exception) {
+            logger.warn("fail to list tapd installed workspaces", ignored)
+            null
+        }
+    }
+
+    override fun getStoryFieldConfig(workspaceId: String): TapdStoryFieldConfig? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd story field query|workspaceId=$workspaceId")
+            return null
+        }
+        return try {
+            val result = autoRetryTapdClient.execute(
+                GetStoryFieldRequest(workspaceId = workspaceId)
+            )
+            if (result.status != TAPD_SUCCESS_STATUS) {
+                logger.warn(
+                    "tapd story fields unexpected status|status=${result.status}|info=${result.info}"
+                )
+                null
+            } else {
+                result.data
+            }
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd story fields|workspaceId=$workspaceId", ignored)
+            null
+        }
+    }
+
+    override fun getBugFieldConfig(workspaceId: String, allOptions: Boolean): TapdBugFieldConfig? {
+        if (workspaceId.isBlank()) {
+            logger.warn("invalid tapd bug field config query|workspaceId=$workspaceId")
+            return null
+        }
+        return try {
+            val result = autoRetryTapdClient.execute(
+                GetBugFieldRequest(
+                    workspaceId = workspaceId,
+                    allOptions = if (allOptions) 1 else null
+                )
+            )
+            if (result.status != TAPD_SUCCESS_STATUS) {
+                logger.warn(
+                    "tapd bug fields unexpected status|status=${result.status}|info=${result.info}"
+                )
+                null
+            } else {
+                result.data
+            }
+        } catch (ignored: Exception) {
+            logger.warn("fail to query tapd bug field config|workspaceId=$workspaceId", ignored)
+            null
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TapdItemService::class.java)
+        private const val TAPD_SUCCESS_STATUS = 1
+        private const val PAGE_SIZE = 200
+        private const val MAX_PAGE = 10
     }
 }

@@ -92,6 +92,12 @@ data class TapdRule(
     @get:Schema(title = "labels-ignore")
     @JsonProperty("labels-ignore")
     val labelsIgnore: List<String>? = null,
+    @get:Schema(title = "statuses")
+    @JsonProperty("statuses")
+    val statuses: List<String>? = null,
+    @get:Schema(title = "statuses-ignore")
+    @JsonProperty("statuses-ignore")
+    val statusesIgnore: List<String>? = null,
     @get:Schema(title = "priorities")
     @JsonProperty("priorities")
     val priorities: List<String>? = null

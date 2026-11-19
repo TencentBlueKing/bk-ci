@@ -34,6 +34,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_RIGGER_EVENT_FROM_NOT_MATCH
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STATUS_IGNORED
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STATUS_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_ACTION_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TRIGGER_PRIORITY_NOT_MATCH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.OWNER_IGNORED
@@ -42,6 +44,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_IGNORED
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_NOT_MATCH
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.TapdStatusFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.util.WebhookUtils
@@ -54,6 +57,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getCurrentStatus
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
 import org.springframework.stereotype.Service
 
@@ -189,6 +193,22 @@ class TapdEventTriggerMatcher {
                 params = listOf()
             ).toJsonStr()
         )
+        // 状态过滤：排除优先，空监听等价监听全部状态
+        val currentStatus = body.getCurrentStatus()
+        val statusFilter = TapdStatusFilter(
+            pipelineId = taskId,
+            triggerOn = currentStatus,
+            included = input.includeStatuses?.parseEnv(variables) ?: emptyList(),
+            excluded = input.excludeStatuses?.parseEnv(variables) ?: emptyList(),
+            includedFailedReason = I18Variable(
+                code = BK_TAPD_STATUS_NOT_MATCH,
+                params = listOf(currentStatus)
+            ).toJsonStr(),
+            excludedFailedReason = I18Variable(
+                code = BK_TAPD_STATUS_IGNORED,
+                params = listOf(currentStatus)
+            ).toJsonStr()
+        )
         // 当前处理人过滤
         val finalTriggerOwner = triggerOwner.split(";").firstOrNull() ?: ""
         val ownerFilter = UserFilter(
@@ -208,7 +228,7 @@ class TapdEventTriggerMatcher {
         )
         listOf(
             eventFromFilter, actionFilter, userFilter,
-            labelFilter, priorityFilter, ownerFilter
+            labelFilter, priorityFilter, statusFilter, ownerFilter
         )
     }
 

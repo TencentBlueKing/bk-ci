@@ -1029,7 +1029,7 @@ object ScriptYmlUtils {
      * 将 `on.story` / `on.bug` 承载的 Any（YAML 解析产物，通常为 Map）反序列化为 [TapdRule]。
      *
      * 与 `p4EventRule` 类似，YAML 中每个事件（story / bug）以子对象形式书写，
-     * 由 [TapdRule] 承载 action / users / labels / priorities 等过滤条件。
+     * 由 [TapdRule] 承载 action / users / labels / statuses / priorities 等过滤条件。
      */
     private fun tapdEventRule(rule: Any?): TapdRule? {
         if (rule == null) return null

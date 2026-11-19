@@ -874,6 +874,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeLabels = rule.labels?.join(),
                     excludeLabels = rule.labelsIgnore?.join(),
                     includePriority = rule.priorities?.join(),
+                    includeStatuses = rule.statuses,
+                    excludeStatuses = rule.statusesIgnore,
                     includeOwner = rule.owners,
                     excludeOwner = rule.ownersIgnore
                 )

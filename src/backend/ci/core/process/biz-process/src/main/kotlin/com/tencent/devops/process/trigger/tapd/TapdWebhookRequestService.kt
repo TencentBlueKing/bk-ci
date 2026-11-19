@@ -28,7 +28,6 @@
 package com.tencent.devops.process.trigger.tapd
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.TapdEventAction
@@ -37,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
@@ -62,6 +62,7 @@ import com.tencent.devops.process.service.TapdSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getCurrentStatus
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
@@ -102,7 +103,9 @@ class TapdWebhookRequestService(
     }
 
     fun dispatch(body: Map<String, Any>): Result<Boolean> {
-        logger.info("Receive TapdWebhook|${JsonUtil.toJson(body, false)}")
+        logger.info(
+            "Receive TapdWebhook|event=${body[TAPD_KEY_EVENT]}|workspaceId=${body[TAPD_KEY_WORKSPACE_ID]}"
+        )
         val rawEvent = body[TAPD_KEY_EVENT]?.toString() ?: run {
             logger.warn("Tapd webhook missing event field")
             return Result(false)
@@ -133,7 +136,10 @@ class TapdWebhookRequestService(
     }
 
     fun handleRequest(event: TapdWebhookRequestEvent) {
-        logger.info("Receive TapdWebhookRequestEvent|${JsonUtil.toJson(event, false)}")
+        logger.info(
+            "Receive TapdWebhookRequestEvent|workspaceId=${event.workspaceId}|" +
+                "eventType=${event.eventType}|eventAction=${event.eventAction}|rawEvent=${event.rawEvent}"
+        )
         val (eventType, eventAction) = parseEvent(
             eventTypeRaw = event.eventType,
             eventActionRaw = event.eventAction,
@@ -186,7 +192,10 @@ class TapdWebhookRequestService(
      * 反查 [PipelineTriggerEvent.eventBody]，与首次触发共用同一段「解析 body -> 匹配 -> 组装启动参数」的逻辑。
      */
     fun replay(replayEvent: ReplayWebhookEvent, sourceTriggerEvent: PipelineTriggerEvent) {
-        logger.info("Receive tapd replay event|${JsonUtil.toJson(replayEvent, false)}")
+        logger.info(
+            "Receive tapd replay event|projectId=${replayEvent.projectId}|" +
+                "pipelineId=${replayEvent.pipelineId}|eventId=${replayEvent.eventId}"
+        )
         val body = extractReplayBody(sourceTriggerEvent) ?: return
         val rawEvent = body[TAPD_KEY_EVENT] ?: run {
             logger.warn("tapd replay missing event field|eventId=${sourceTriggerEvent.eventId}")
@@ -224,7 +233,7 @@ class TapdWebhookRequestService(
     }
 
     /**
-     * 为原始 body 补充派生字段（workspaceName / objectUrl / objectId），并追加对象基础信息。
+     * 为原始 body 补充派生字段（workspaceName / objectUrl / objectId / currentStatus），并追加对象基础信息。
      */
     private fun enrichBody(
         body: Map<String, Any?>,
@@ -252,6 +261,7 @@ class TapdWebhookRequestService(
             put(TAPD_KEY_WORKSPACE_NAME, workspaceName)
             put(TAPD_KEY_OBJECT_URL, objectUrl)
             put(TAPD_KEY_OBJECT_ID, objectId)
+            put(TAPD_KEY_CURRENT_STATUS, body.getCurrentStatus())
         }
     }
 

@@ -43,15 +43,18 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_TITLE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_BUG_ID
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_PREFIX
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_NEW_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OBJECT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OBJECT_URL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TITLE
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_NAME
@@ -102,6 +105,19 @@ object TapdWebhookUtils {
             key
         }
         return this[finalKey]?.toString() ?: ""
+    }
+
+    /**
+     * 读取单据当前状态（变更后状态优先）
+     *
+     * 优先使用请求阶段归一化的 current_status；兼容历史事件中直接带的 new_status；
+     * 创建等事件使用 status 兜底。不会读取 old_status。
+     */
+    fun Map<String, Any?>.getCurrentStatus(): String {
+        return this[TAPD_KEY_CURRENT_STATUS]?.toString()?.takeIf { it.isNotBlank() }
+            ?: this[TAPD_KEY_NEW_STATUS]?.toString()?.takeIf { it.isNotBlank() }
+            ?: this[TAPD_KEY_STATUS]?.toString()?.takeIf { it.isNotBlank() }
+            ?: ""
     }
 
     /**

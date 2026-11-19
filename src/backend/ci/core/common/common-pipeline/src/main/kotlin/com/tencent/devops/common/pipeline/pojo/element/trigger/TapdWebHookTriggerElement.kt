@@ -104,6 +104,10 @@ data class TapdWebHookTriggerInput(
     val excludeLabels: String? = null,
     @get:Schema(title = "监听优先级", required = false)
     val includePriority: String? = null,
+    @get:Schema(title = "监听状态，英文状态 key；为空表示监听所有状态", required = false)
+    val includeStatuses: List<String>? = null,
+    @get:Schema(title = "排除状态，英文状态 key；命中时不触发", required = false)
+    val excludeStatuses: List<String>? = null,
     @get:Schema(title = "监听处理人", required = false)
     val includeOwner: List<String>? = null,
     @get:Schema(title = "忽略处理人", required = false)
