@@ -431,26 +431,26 @@
                     label: jobTimeoutEvidence
                         ? translated
                         : cancelDisplay
-                        ? cancelDisplay.label
-                        : fallbackCancelKey
-                        ? this.$t(`logPanel.status.${fallbackCancelKey}`)
-                        : systemCanceledEvidence
-                        ? this.$t('logPanel.status.systemCanceled')
-                        : queueDetail
-                        ? job.status === 'LOOP_WAITING' ? job.status : this.$t('logPanel.queue.mutexQueue')
-                        : translated === key ? job.status : translated,
+                            ? cancelDisplay.label
+                            : fallbackCancelKey
+                                ? this.$t(`logPanel.status.${fallbackCancelKey}`)
+                                : systemCanceledEvidence
+                                    ? this.$t('logPanel.status.systemCanceled')
+                                    : queueDetail
+                                        ? job.status === 'LOOP_WAITING' ? job.status : this.$t('logPanel.queue.mutexQueue')
+                                        : translated === key ? job.status : translated,
                     message: jobTimeoutCancel
                         ? displayDetail.buildEndInfo?.reason || model.message
                         : jobTimeoutCode
-                        ? this.$t('logPanel.status.jobSelfTimeout', [model.timeoutThreshold])
-                        : systemCanceledEvidence
-                        ? this.$t('logPanel.status.systemCanceledDetail')
-                        : cancelDisplay
-                        ? cancelDisplay.message
-                        : queueDetail
-                        ? (queueDetail.running.length ? this.$t('logPanel.queue.waitingReason') : '')
-                        : this.jobFailureStep ? this.$t('logPanel.status.failedByStep', [this.jobFailureStep.name || this.jobFailureStep.taskName || ''])
-                        : model.message,
+                            ? this.$t('logPanel.status.jobSelfTimeout', [model.timeoutThreshold])
+                            : systemCanceledEvidence
+                                ? this.$t('logPanel.status.systemCanceledDetail')
+                                : cancelDisplay
+                                    ? cancelDisplay.message
+                                    : queueDetail
+                                        ? (queueDetail.running.length ? this.$t('logPanel.queue.waitingReason') : '')
+                                        : this.jobFailureStep ? this.$t('logPanel.status.failedByStep', [this.jobFailureStep.name || this.jobFailureStep.taskName || ''])
+                                            : model.message,
                     statusMessageKey: queueDetail || conditionSkipped || conditionSkipCount ? '' : model.statusMessageKey,
                     cancelUserId: cancelDisplay?.cancelUserId || resolveCancelUserId(cancelConclusion, model.cancelUserId),
                     parentBuildLabel: cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',

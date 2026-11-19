@@ -3417,6 +3417,7 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(logLines, /@supports selector\(::-webkit-scrollbar\)[\s\S]*scrollbar-width:\s*auto;[\s\S]*scrollbar-color:\s*auto;[\s\S]*::-webkit-scrollbar-track,[\s\S]*::-webkit-scrollbar-corner[\s\S]*background:\s*transparent;[\s\S]*::-webkit-scrollbar-thumb:hover\s*\{\s*background:\s*rgba\(240, 241, 245, \.36\)/)
     assert.match(groupBar, /class="devops-icon icon-angle-left"/)
     assert.match(groupBar, /class="devops-icon icon-angle-right"/)
+    assert.doesNotMatch(groupBar, /\.lgb-control\s*\{[^}]*margin:\s*0 auto/)
     assert.doesNotMatch(groupBar, /import Logo|components:\s*\{\s*Logo\s*\}/)
     assert.match(paramsView, /class="devops-icon icon-clock pm-state-icon"/)
     assert.match(paramsView, /class="devops-icon icon-angle-down pm-caret"/)

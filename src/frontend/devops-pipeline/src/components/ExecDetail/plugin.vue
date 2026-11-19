@@ -491,19 +491,19 @@
                     message: systemCanceledEvidence
                         ? this.$t('logPanel.status.systemCanceledDetail')
                         : cancelDisplay
-                        ? cancelDisplay.message
-                        : effectiveStatus === 'EXEC_TIMEOUT'
-                        ? this.$t(jobTimeoutEvidence ? 'logPanel.status.jobTimeout' : 'logPanel.status.stepTimeout', jobTimeoutEvidence ? [container.name, model.timeoutThreshold] : [model.timeoutThreshold])
-                        : model.message,
+                            ? cancelDisplay.message
+                            : effectiveStatus === 'EXEC_TIMEOUT'
+                                ? this.$t(jobTimeoutEvidence ? 'logPanel.status.jobTimeout' : 'logPanel.status.stepTimeout', jobTimeoutEvidence ? [container.name, model.timeoutThreshold] : [model.timeoutThreshold])
+                                : model.message,
                     label: cancelDisplay
                         ? cancelDisplay.label
                         : fallbackCancelKey
-                        ? this.$t(`logPanel.status.${fallbackCancelKey}`)
-                        : effectiveStatus === 'UNEXEC'
-                        ? this.$t('logPanel.status.notExecutedLabel')
-                        : systemCanceledEvidence
-                        ? this.$t('logPanel.status.systemCanceled')
-                        : translated === key ? effectiveStatus : translated,
+                            ? this.$t(`logPanel.status.${fallbackCancelKey}`)
+                            : effectiveStatus === 'UNEXEC'
+                                ? this.$t('logPanel.status.notExecutedLabel')
+                                : systemCanceledEvidence
+                                    ? this.$t('logPanel.status.systemCanceled')
+                                    : translated === key ? effectiveStatus : translated,
                     parentBuildLabel: cancelConclusion?.type === 'parent' ? 'logPanel.status.parentBuild' : '',
                     parentBuildUrl: cancelDisplay?.parentBuildUrl || cancelConclusion?.parentBuildUrl || '',
                     cancelUserId: cancelDisplay?.cancelUserId || resolveCancelUserId(cancelConclusion, model.cancelUserId),

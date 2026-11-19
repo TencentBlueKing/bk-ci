@@ -165,7 +165,6 @@
     width: max-content;
     max-width: min(480px, 100%);
     min-width: 0;
-    margin: 0 auto;
 }
 .lgb-control.has-overflow { width: 100%; }
 .lgb-nav {
