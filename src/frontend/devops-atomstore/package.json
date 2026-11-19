@@ -41,7 +41,6 @@
     "css-loader": "^6.4.0",
     "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1", 
-    "eslint-friendly-formatter": "~4.0.1",
     "eslint-import-resolver-node": "^0.3.9",
     "eslint-loader": "^2.1.2",   
     "eslint-plugin-promise": "^5.1.1", 
