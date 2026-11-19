@@ -76,8 +76,19 @@
                 @stick-bottom-change="onStickBottomChange"
                 @locate="locate"
                 @toggle-group="toggleLogGroup"
+                @view-large-variable="openLargeVariable"
             />
         </div>
+        <large-variable-dialog
+            :value="largeVariable.visible"
+            :variable-key="largeVariable.key"
+            :length="largeVariable.length"
+            :state="largeVariable.state"
+            :content="largeVariable.value"
+            :error-message="largeVariable.errorMessage"
+            @input="closeLargeVariable"
+            @retry="fetchLargeVariable"
+        />
     </section>
 </template>
 
@@ -86,6 +97,8 @@
     import { markRaw, shallowRef } from 'vue'
     import LogGroupBar from './LogGroupBar'
     import LogLinesView from './LogLinesView'
+    import LargeVariableDialog from './LargeVariableDialog'
+    import { resolveLargeVariableResult } from './logLargeVariable'
     import {
         findLogMatchIds,
         formatLogTime,
@@ -120,7 +133,7 @@
 
     export default {
         name: 'StepLogPanel',
-        components: { LogGroupBar, LogLinesView },
+        components: { LogGroupBar, LogLinesView, LargeVariableDialog },
         props: {
             projectId: { type: String, required: true },
             pipelineId: { type: String, required: true },
@@ -176,7 +189,9 @@
                 highlightedLogId: '',
                 searchBackfillStopped: false,
                 collapsedGroupIds: [],
-                pendingStatusResume: false
+                pendingStatusResume: false,
+                largeVariable: { visible: false, key: '', length: 0, tag: '', state: 'loading', value: '', errorMessage: '' },
+                largeVariableSeq: 0
             }
         },
         computed: {
@@ -301,7 +316,51 @@
             this.invalidate()
         },
         methods: {
-            ...mapActions('atom', ['getLogPanelLatest', 'getLogPanelBefore', 'getLogPanelAfter', 'getLogStatus', 'getDownloadLogFromArtifactory']),
+            ...mapActions('atom', ['getLogPanelLatest', 'getLogPanelBefore', 'getLogPanelAfter', 'getLogStatus', 'getDownloadLogFromArtifactory', 'getBuildVariableValue']),
+            openLargeVariable (payload = {}) {
+                this.largeVariable = {
+                    visible: true,
+                    key: payload.key || '',
+                    length: Number(payload.length) || 0,
+                    tag: payload.tag || this.tag || '',
+                    state: 'loading',
+                    value: '',
+                    errorMessage: ''
+                }
+                this.fetchLargeVariable()
+            },
+            closeLargeVariable () {
+                this.largeVariableSeq += 1
+                this.largeVariable = { ...this.largeVariable, visible: false }
+            },
+            async fetchLargeVariable () {
+                const seq = ++this.largeVariableSeq
+                const { key, tag } = this.largeVariable
+                this.largeVariable = { ...this.largeVariable, state: 'loading', value: '', errorMessage: '' }
+                const params = {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    buildId: this.buildId,
+                    key,
+                    executeCount: this.executeCount,
+                    taskId: tag,
+                    archiveFlag: this.archiveFlag
+                }
+                Object.keys(params).forEach(name => {
+                    if (params[name] === undefined || params[name] === null || params[name] === '') delete params[name]
+                })
+                try {
+                    const res = await this.getBuildVariableValue(params)
+                    if (seq !== this.largeVariableSeq) return
+                    const result = resolveLargeVariableResult(res?.data)
+                    this.largeVariable = { ...this.largeVariable, state: result.state, value: result.value }
+                } catch (error) {
+                    if (seq !== this.largeVariableSeq) return
+                    this.largeVariable = isPermissionError(error)
+                        ? { ...this.largeVariable, state: 'noPermission' }
+                        : { ...this.largeVariable, state: 'error', errorMessage: error?.message || '' }
+                }
+            },
             invalidate () {
                 this.generation += 1
                 this.pendingStatusResume = false

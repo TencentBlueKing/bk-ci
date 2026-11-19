@@ -122,6 +122,11 @@
 <script>
     import { markRaw, shallowRef } from 'vue'
     import { getLogIssueLevel, getLogText, renderLogHtml, resolveLogLineNumberColumnWidth, shouldShowLogMinimap, withDisplayLineNumbers } from './logPanelAdapter'
+    import { parseLargeVariableLogLine } from './logLargeVariable'
+
+    function escapeText (value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]))
+    }
     import LogErrorMinimap from './LogErrorMinimap'
     import {
         captureAnchorFromDom,
@@ -239,7 +244,7 @@
                 const box = this.$refs.box
                 const text = box?.querySelector('.lp-text')
                 if (!text || typeof window === 'undefined') {
-                    return { wrap: this.wrap, showTime, indexVersion, width: Math.max(1, (this.containerWidth || 0) - 64), fontFamily: 'Menlo, monospace', fontSize: '12px', lineHeight: '20px', whiteSpace: this.wrap ? 'pre-wrap' : 'pre', wordBreak: this.wrap ? 'break-all' : 'normal' }
+                    return { wrap: this.wrap, showTime, indexVersion, width: Math.max(1, (this.containerWidth || 0) - 64), fontFamily: 'Menlo, Consolas, monospace', fontSize: '12px', lineHeight: '20px', whiteSpace: this.wrap ? 'pre-wrap' : 'pre', wordBreak: this.wrap ? 'break-all' : 'normal' }
                 }
                 const style = window.getComputedStyle(text)
                 return {
@@ -392,6 +397,13 @@
                 return Number.isFinite(Number(count)) ? Number(count) : 0
             },
             onLineClick (line, event) {
+                if (event?.target?.closest?.('.lp-ovf-view')) {
+                    const ref = parseLargeVariableLogLine(getLogText(line))
+                    if (ref?.queryable) {
+                        this.$emit('view-large-variable', { key: ref.key, length: ref.length, tag: line?.tag, lineNo: line?.lineNo })
+                    }
+                    return
+                }
                 const groupId = line?._logGroup?.id
                 if (groupId === undefined || groupId === null) return
                 if (event?.target?.closest?.('a')) return
@@ -406,7 +418,15 @@
                 return resolveLineKey(line, index)
             },
             renderLineHtml (line) {
-                return renderLogHtml(line, this.keyword)
+                const ref = parseLargeVariableLogLine(getLogText(line))
+                if (!ref) return renderLogHtml(line, this.keyword)
+                const prefix = ref.queryable ? `output(${ref.kind}): ` : `input(${ref.kind}): ${ref.label}`
+                const parts = [renderLogHtml(`${prefix}${ref.key}`, this.keyword)]
+                if (ref.queryable) {
+                    parts.push(`<button type="button" class="lp-ovf-view">${escapeText(this.$t('logPanel.largeVariable.view'))}</button>`)
+                }
+                parts.push(`<span class="lp-ovf-size">${escapeText(this.$t('logPanel.largeVariable.approxChars', [ref.length]))}</span>`)
+                return parts.join(' ')
             },
             rebuildHeightIndex () {
                 const heights = { ...this.heightMap }
@@ -1272,10 +1292,10 @@
     min-height: 0;
     overflow: auto;
     padding: 8px 24px;
-    font-family: Menlo, monospace;
+    font-family: Menlo, Consolas, monospace;
     font-size: 12px;
     line-height: 20px;
-    color: #c4c6cc;
+    color: #f0f1f5;
 }
 .lp-line {
     display: flex;
@@ -1312,17 +1332,29 @@
 .lp-time {
     flex-shrink: 0;
     min-width: 23ch;
-    color: #959da5;
+    color: #83828c;
     font-variant-numeric: tabular-nums;
 }
 .lp-text { flex: 1; min-width: 0; white-space: pre; }
 ::v-deep .lp-text a,
 ::v-deep .lp-text a:visited { color: #3c96ff; }
+::v-deep .lp-ovf-view {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #3c96ff;
+    font: inherit;
+    line-height: 20px;
+    cursor: pointer;
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 1px solid #3c96ff; outline-offset: 1px; }
+}
+::v-deep .lp-ovf-size { color: #83828c; }
 .lp-lines.is-wrap .lp-text { white-space: pre-wrap; word-break: break-all; }
 .lp-lines:not(.is-wrap) .lp-line { width: max-content; min-width: 100%; }
 .lp-lines:not(.is-wrap) .lp-text { flex: 0 0 auto; }
-.lp-line.is-warn .lp-text { color: #ff9c01; }
-.lp-line.is-error .lp-text { color: #ff6666; }
+.lp-line.is-warn .lp-text { color: #e18732; }
+.lp-line.is-error .lp-text { color: #d25050; }
 .lp-indicator {
     display: block;
     margin: 0 auto 8px;

@@ -5,7 +5,7 @@ const ANSI_COLORS = {
 }
 const FORMAT_CACHE = new WeakMap()
 const VALID_MARKER = /^##\[(command|info|warning|warn|error|debug|group|endgroup)(?:\s+([^\]]*))?\]\s*/i
-const MARKER_COLORS = { command: '#5fb4e1', info: '#c4c6cc', warning: '#ff9c01', warn: '#ff9c01', error: '#ff6666', debug: '#83828c' }
+const MARKER_COLORS = { command: '#5fb4e1', info: '#f0f1f5', warning: '#e18732', warn: '#e18732', error: '#d25050', debug: '#83828c' }
 
 function escapeHtml (value) {
     return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char])

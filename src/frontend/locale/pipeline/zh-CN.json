@@ -3044,6 +3044,16 @@
     },
     "loadError": "日志加载失败",
     "loadUnavailable": "新版日志接口不可用",
-    "reloadLogs": "重新加载日志"
+    "reloadLogs": "重新加载日志",
+    "largeVariable": {
+      "view": "输出过大未展示全文，点击查看",
+      "approxChars": "约 {0} 字符",
+      "expired": "内容已过期或暂不可用",
+      "notFound": "未找到该变量",
+      "copy": "复制",
+      "copied": "复制成功",
+      "retry": "重试",
+      "loadFailed": "加载变量值失败"
+    }
   }
 }

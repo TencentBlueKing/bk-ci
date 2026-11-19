@@ -3044,6 +3044,16 @@
     },
     "loadError": "Failed to load logs",
     "loadUnavailable": "The new log interface is unavailable",
-    "reloadLogs": "Reload logs"
+    "reloadLogs": "Reload logs",
+    "largeVariable": {
+      "view": "Output too large to display, click to view",
+      "approxChars": "About {0} characters",
+      "expired": "Content expired or temporarily unavailable",
+      "notFound": "Variable not found",
+      "copy": "Copy",
+      "copied": "Copied",
+      "retry": "Retry",
+      "loadFailed": "Failed to load variable value"
+    }
   }
 }

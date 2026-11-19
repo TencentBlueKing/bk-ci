@@ -1028,6 +1028,10 @@ export default {
         })
     },
 
+    getBuildVariableValue ({ commit }, { projectId, pipelineId, buildId, ...params }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/variables/value`, { params })
+    },
+
     fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },

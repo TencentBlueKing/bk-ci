@@ -96,9 +96,9 @@ test('ANSI foreground segments, resets, and search across color boundaries share
     assert.equal(parseLogLine('plain [31mred[m default').segments[0].color, '')
     assert.deepEqual(parseLogLine('plain [31mred[m default').segments.map(segment => segment.color), ['', '#ff6666', ''])
     assert.equal(parseLogLine('##[command]echo hello').segments[0].color, '#5fb4e1')
-    assert.equal(parseLogLine('##[info]informational').segments[0].color, '#c4c6cc')
-    assert.equal(parseLogLine('##[warning]careful').segments[0].color, '#ff9c01')
-    assert.equal(parseLogLine('##[error]broken').segments[0].color, '#ff6666')
+    assert.equal(parseLogLine('##[info]informational').segments[0].color, '#f0f1f5')
+    assert.equal(parseLogLine('##[warning]careful').segments[0].color, '#e18732')
+    assert.equal(parseLogLine('##[error]broken').segments[0].color, '#d25050')
     assert.equal(parseLogLine('##[debug]diagnostic').segments[0].color, '#83828c')
     const ansiColors = ['#000000', '#ff6666', '#7fca54', '#ff9c01', '#5fb4e1', '#ff00ff', '#00ffff', '#ffffff', '#83828c']
     const ansiCodes = [30, 31, 32, 33, 34, 35, 36, 37, 90]

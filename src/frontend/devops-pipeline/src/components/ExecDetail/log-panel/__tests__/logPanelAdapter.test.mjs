@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 import Vue, { isReactive, markRaw, shallowRef } from 'vue'
 import * as adapter from '../logPanelAdapter.js'
+import * as largeVariable from '../logLargeVariable.js'
 import * as devMock from './logPanelDevMock.fixture.mjs'
 import * as logStructure from '../logLineStructure.js'
 import * as logTail from '../logPanelTail.js'
@@ -18,6 +19,8 @@ function loadComponentOptions (path, dependencies, globals = {}) {
     const values = {
         angleDownIcon: '/mock-angle-down.svg',
         LogExecuteCountSelect: {},
+        LargeVariableDialog: {},
+        resolveLargeVariableResult: largeVariable.resolveLargeVariableResult,
         isConditionSkipped: adapter.isConditionSkipped,
         isJobConditionSkipped: adapter.isJobConditionSkipped,
         resolveConditionSkipReason: adapter.resolveConditionSkipReason,
@@ -3465,11 +3468,12 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(panel, /\.log-panel-empty, \.log-panel-loading\s*\{[^}]*background:\s*#2c2d34/)
     assert.match(panel, /\.log-panel-empty, \.log-panel-loading\s*\{[^}]*font:\s*12px\/20px "Microsoft YaHei", sans-serif/)
     assert.match(panel, /\.log-panel-error\s*\{[^}]*font:\s*12px\/20px "Microsoft YaHei", sans-serif/)
-    assert.match(logLines, /\.lp-lines\s*\{[\s\S]*font-family:\s*Menlo, monospace;[\s\S]*font-size:\s*12px;[\s\S]*line-height:\s*20px;[\s\S]*color:\s*#c4c6cc;/)
-    assert.match(logLines, /fontFamily: 'Menlo, monospace', fontSize: '12px', lineHeight: '20px'/)
-    assert.match(logLines, /\.lp-time\s*\{[^}]*color:\s*#959da5;/)
-    assert.match(logLines, /\.lp-line\.is-warn \.lp-text \{ color: #ff9c01; \}/)
-    assert.match(logLines, /\.lp-line\.is-error \.lp-text \{ color: #ff6666; \}/)
+    assert.match(logLines, /\.lp-lines\s*\{[\s\S]*font-family:\s*Menlo, Consolas, monospace;[\s\S]*font-size:\s*12px;[\s\S]*line-height:\s*20px;[\s\S]*color:\s*#f0f1f5;/)
+    assert.match(logLines, /fontFamily: 'Menlo, Consolas, monospace', fontSize: '12px', lineHeight: '20px'/)
+    assert.match(logLines, /\.lp-lineno\s*\{[^}]*color:\s*#979ba5;/)
+    assert.match(logLines, /\.lp-time\s*\{[^}]*color:\s*#83828c;/)
+    assert.match(logLines, /\.lp-line\.is-warn \.lp-text \{ color: #e18732; \}/)
+    assert.match(logLines, /\.lp-line\.is-error \.lp-text \{ color: #d25050; \}/)
     assert.match(panel, /\.loading-spinner\s*\{\s*width:\s*32px;\s*height:\s*32px/)
     assert.match(jobDirectory, /elapsedNow: Date\.now\(\),[\s\S]*elapsedTimer: null/)
     assert.match(jobDirectory, /setInterval\(\(\) => \{[\s\S]*this\.elapsedNow = Date\.now\(\)/)
@@ -6814,4 +6818,15 @@ test('Job setup failure exposes locate before an error summary exists and locate
         $refs: { realLog: { selectedId: 'task-1', locateItem: (...args) => located.push(args) } }
     })
     assert.deepEqual(located, [['startVM-job-1']])
+})
+
+test('large variable placeholder is delegated from log lines and queried with task context', () => {
+    const linesSource = readFileSync(new URL('../LogLinesView.vue', import.meta.url), 'utf8')
+    const panelSource = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
+    assert.match(linesSource, /closest\?\.\('\.lp-ovf-view'\)/)
+    assert.match(linesSource, /\$emit\('view-large-variable'/)
+    assert.match(panelSource, /@view-large-variable="openLargeVariable"/)
+    assert.match(panelSource, /taskId: tag/)
+    assert.match(panelSource, /executeCount: this\.executeCount/)
+    assert.match(panelSource, /tag: payload\.tag \|\| this\.tag/)
 })

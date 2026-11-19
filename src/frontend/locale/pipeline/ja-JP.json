@@ -3039,6 +3039,16 @@
     },
     "loadError": "ログの読み込みに失敗しました",
     "loadUnavailable": "新しいログインターフェースを利用できません",
-    "reloadLogs": "ログを再読み込み"
+    "reloadLogs": "ログを再読み込み",
+    "largeVariable": {
+      "view": "出力が大きすぎるため全文を表示していません。クリックして表示",
+      "approxChars": "約 {0} 文字",
+      "expired": "内容の有効期限が切れたか、一時的に利用できません",
+      "notFound": "変数が見つかりません",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "retry": "再試行",
+      "loadFailed": "変数値の読み込みに失敗しました"
+    }
   }
 }
