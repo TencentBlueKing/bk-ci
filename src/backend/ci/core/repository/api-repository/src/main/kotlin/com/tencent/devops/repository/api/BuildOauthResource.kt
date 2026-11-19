@@ -82,10 +82,42 @@ interface BuildOauthResource {
         userId: String
     ): Result<GithubToken?>
 
+    @Operation(summary = "获取tgit代码库accessToken信息")
+    @GET
+    @Path("/tgit/{userId}")
+    fun tGitGet(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<GitToken?>
+
     @Operation(summary = "获取授权链接")
     @GET
     @Path("/git/oauthUrl")
     fun gitOauthUrl(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @QueryParam("userId")
+        userId: String
+    ): Result<String>
+
+    @Operation(summary = "获取tgit授权链接")
+    @GET
+    @Path("/tgit/oauthUrl")
+    fun tGitOauthUrl(
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
@@ -146,6 +178,8 @@ interface BuildOauthResource {
         buildId: String,
         @Parameter(description = "代码库标识", required = true)
         @PathParam("scmCode")
-        scmCode: String
+        scmCode: String,
+        @QueryParam("userId")
+        userId: String
     ): Result<String>
 }
