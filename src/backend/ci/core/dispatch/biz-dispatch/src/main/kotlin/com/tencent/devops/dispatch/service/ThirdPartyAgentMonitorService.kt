@@ -47,6 +47,7 @@ import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.utils.redis.AgentAskCache
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -70,6 +71,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val client: Client,
     private val commonConfig: CommonConfig,
     private val dslContext: DSLContext,
+    private val agentAskCache: AgentAskCache,
     private val buildLogPrinter: BuildLogPrinter,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
@@ -273,6 +275,9 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
             if (outTime) {
                 thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE, null)
+                // 已领取的任务可能在 agent 上启动前超时。在这段时间里队列可能被查空，所以回队后要清除空标记，
+                // 让该 agent 的下一次轮询就能查到任务，避免在回队等待之外再等一个缓存周期。
+                agentAskCache.invalidateBuild(record.agentId)
                 val sb = StringBuilder()
                 sb.append(
                     I18nUtil.getCodeLanMessage(
