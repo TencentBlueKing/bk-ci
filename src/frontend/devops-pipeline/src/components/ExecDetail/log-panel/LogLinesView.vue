@@ -41,11 +41,13 @@
                     logLineClass(row.line),
                     {
                         'is-highlighted': String(row.line.lineNo ?? '') === String(currentLocateLineNo ?? ''),
-                        'is-locate': String(row.line.lineNo ?? '') === String(currentLocateLineNo ?? '')
+                        'is-locate': String(row.line.lineNo ?? '') === String(currentLocateLineNo ?? ''),
+                        'is-group-header': Boolean(row.line._logGroup)
                     }
                 ]"
                 :data-line-no="row.line.lineNo"
                 :data-line-key="row.key"
+                @click="onLineClick(row.line, $event)"
             >
                 <span
                     class="lp-lineno"
@@ -388,6 +390,14 @@
             groupIssueCount (line, level) {
                 const count = line?._logGroup?.issueCounts?.[level]
                 return Number.isFinite(Number(count)) ? Number(count) : 0
+            },
+            onLineClick (line, event) {
+                const groupId = line?._logGroup?.id
+                if (groupId === undefined || groupId === null) return
+                if (event?.target?.closest?.('a')) return
+                const selection = typeof window !== 'undefined' ? window.getSelection?.() : null
+                if (selection && !selection.isCollapsed && selection.toString()) return
+                this.$emit('toggle-group', groupId)
             },
             logLineClass (line) {
                 return 'is-' + (getLogIssueLevel(line) || String(line.level || 'INFO').toLowerCase())
@@ -1289,6 +1299,9 @@
 .lp-group-toggle { display: inline-flex; flex: 0 0 12px; align-items: center; justify-content: center; width: 12px; height: 20px; padding: 0; color: #979ba5; background: transparent; border: 0; cursor: pointer; }
 .lp-group-toggle:hover, .lp-group-toggle:focus-visible { color: #f0f1f5; }
 .lp-group-toggle:focus-visible { outline: 1px solid #3a84ff; }
+.lp-line.is-group-header { cursor: pointer; }
+.lp-line.is-group-header:hover { background: rgba(255, 255, 255, .06); }
+.lp-line.is-group-header:hover .lp-group-toggle { color: #f0f1f5; }
 .lp-line > .lp-group-toggle + *,
 .lp-line > .lp-group-issue-count + * { margin-left: 4px; }
 .lp-group-issue-count { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 3px; font-size: 11px; line-height: 20px; }
