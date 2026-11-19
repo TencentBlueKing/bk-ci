@@ -46,6 +46,19 @@ export default defineComponent({
         .map(el => el.stepId!)
     })
 
+    /** 用新数组 + 浅拷贝 flowModel，确保 Table/Switcher 能感知启用等字段变化 */
+    const commitElements = (nextElements: Element[]) => {
+      const model = flowModel.flowModel.value
+      const container = model?.stages?.[0]?.containers?.[0]
+      if (!model || !container) return
+
+      container.elements = nextElements
+      flowModel.updateFlowModel({
+        ...model,
+        stages: [...model.stages],
+      })
+    }
+
     watch(isTriggerPanelVisible, (visible) => {
       if (!visible) {
         editingTriggerIndex.value = null
@@ -90,32 +103,23 @@ export default defineComponent({
 
     // 切换启用状态
     const handleToggleEnable = (index: number, enabled: boolean) => {
-      const event = flowModel.triggerEvents.value[index]
-      if (!event) return
-
-      // 更新flowModel中的enable状态
-      const triggerStage = flowModel.flowModel.value?.stages?.[0]
-      if (!triggerStage) return
-
-      const container = triggerStage.containers?.[0]
-      if (!container) return
-
-      const element = container.elements?.[index]
+      const elements = triggerElements.value
+      const element = elements[index]
       if (!element) return
 
-      // 直接更新元素
-      container.elements[index] = {
-        ...element,
-        additionalOptions: {
-          ...element.additionalOptions,
-          enable: enabled,
-        } as any, // 使用类型断言避免类型检查问题
-      }
-
-      // 触发更新
-      if (flowModel.flowModel.value) {
-        flowModel.updateFlowModel(flowModel.flowModel.value)
-      }
+      commitElements(
+        elements.map((el, i) =>
+          i === index
+            ? {
+                ...el,
+                additionalOptions: {
+                  ...el.additionalOptions,
+                  enable: enabled,
+                } as any,
+              }
+            : el
+        )
+      )
     }
 
     // 删除触发事件
@@ -128,39 +132,21 @@ export default defineComponent({
         return
       }
 
-      const triggerStage = flowModel.flowModel.value?.stages?.[0]
-      if (!triggerStage) return
-
-      const container = triggerStage.containers?.[0]
-      if (!container || !container.elements) return
-
-      // 直接删除元素
-      container.elements.splice(index, 1)
-
-      // 触发更新
-      if (flowModel.flowModel.value) {
-        flowModel.updateFlowModel(flowModel.flowModel.value)
-      }
+      commitElements(triggerElements.value.filter((_, i) => i !== index))
     }
 
     const handleTriggerSave = (element: Element) => {
-      const container = triggerContainer.value
       const index = editingTriggerIndex.value
-      if (!container || index === null) return
-      if (!container.elements) {
-        container.elements = []
-      }
+      if (index === null) return
 
-      if (isCreatingTrigger.value && index >= container.elements.length) {
-        container.elements.push(element)
+      const elements = [...triggerElements.value]
+      if (isCreatingTrigger.value && index >= elements.length) {
+        elements.push(element)
       } else {
-        container.elements[index] = element
+        elements[index] = element
       }
 
-      if (flowModel.flowModel.value) {
-        flowModel.updateFlowModel(flowModel.flowModel.value)
-      }
-
+      commitElements(elements)
       isTriggerPanelVisible.value = false
     }
 
@@ -188,15 +174,19 @@ export default defineComponent({
       },
       {
         label: t('flow.content.enableStatus'),
-        render: ({ row, index }: { row: Element; index: number }) => (
-          <Switcher
-            modelValue={row.additionalOptions?.enable ?? true}
-            size="small"
-            theme="primary"
-            disabled={!row.atomCode}
-            onChange={(val: boolean) => handleToggleEnable(index, val)}
-          />
-        ),
+        render: ({ row, index }: { row: Element; index: number }) => {
+          const enabled = row.additionalOptions?.enable ?? true
+          return (
+            <Switcher
+              key={`${row.stepId ?? index}-${enabled}`}
+              modelValue={enabled}
+              size="small"
+              theme="primary"
+              disabled={!row.atomCode}
+              onChange={(val: boolean) => handleToggleEnable(index, val)}
+            />
+          )
+        },
       },
       {
         label: t('flow.content.actions'),
