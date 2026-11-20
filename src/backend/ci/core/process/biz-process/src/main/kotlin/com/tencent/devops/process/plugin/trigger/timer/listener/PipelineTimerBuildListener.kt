@@ -74,7 +74,6 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
-import com.tencent.devops.process.trigger.client.TriggerProcessClient
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -88,7 +87,7 @@ import java.time.LocalDateTime
 @Component
 class PipelineTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val triggerProcessClient: TriggerProcessClient,
+    private val serviceTimerBuildResource: ServiceTimerBuildResource,
     private val pipelineTimerService: PipelineTimerService,
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
@@ -295,17 +294,15 @@ class PipelineTimerBuildListener @Autowired constructor(
         taskId: String,
         version: Int? = null
     ): String? {
-        val buildResult = triggerProcessClient.call(projectId, ServiceTimerBuildResource::class) {
-            it.timerTrigger(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                params = params,
-                channelCode = channelCode,
-                channelCodeHeader = channelCode,
-                version = version
-            )
-        }
+        val buildResult = serviceTimerBuildResource.timerTrigger(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = params,
+            channelCode = channelCode,
+            channelCodeHeader = channelCode,
+            version = version
+        )
         // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
         if (buildResult.data.isNullOrBlank()) {
             pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)

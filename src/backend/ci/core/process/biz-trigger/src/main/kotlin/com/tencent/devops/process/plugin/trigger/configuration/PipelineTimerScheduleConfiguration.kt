@@ -29,35 +29,41 @@ package com.tencent.devops.process.plugin.trigger.configuration
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerChangeEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
-import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerBuildListener
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerChangerListener
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineJobBean
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzService
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzSchedulerManager
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzTraceJobListener
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * @version 1.0
+ * 定时任务加载与调度，到点投递 PipelineTimerBuildEvent，由 process 消费执行
+ *
+ * process 与 trigger 共用，由各自部署配置中的 trigger.standalone.timer.enabled 决定本服务是否加载
  */
-
 @Configuration
 @EnableConfigurationProperties(QuartzProperties::class)
+@ConditionalOnProperty(
+    prefix = "trigger.standalone.timer",
+    name = ["enabled"],
+    havingValue = "true",
+    matchIfMissing = true
+)
 @SuppressWarnings("TooManyFunctions")
-class TriggerConfiguration {
+class PipelineTimerScheduleConfiguration {
     @Bean
     @SuppressWarnings("LongParameterList")
     fun pipelineJobBean(
@@ -87,15 +93,21 @@ class TriggerConfiguration {
     )
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun quartzTraceJobListener(
+        pipelineTriggerMeasureService: PipelineTriggerMeasureService
+    ) = QuartzTraceJobListener(pipelineTriggerMeasureService)
 
-    /**
-     * 定时构建队列--- 并发一般
-     */
-    @EventConsumer(groupName = "process\${service-suffix}-timerTriggerConsumer")
-    fun timerTriggerConsumer(
-        @Autowired buildListener: PipelineTimerBuildListener
-    ) = ScsConsumerBuilder.build<PipelineTimerBuildEvent> { buildListener.run(it) }
+    @Bean
+    fun pipelineQuartzService(
+        pipelineTimerService: PipelineTimerService,
+        schedulerManager: SchedulerManager
+    ) = PipelineQuartzService(pipelineTimerService, schedulerManager)
+
+    @Bean
+    fun pipelineTimerChangerListener(
+        pipelineEventDispatcher: PipelineEventDispatcher,
+        schedulerManager: SchedulerManager
+    ) = PipelineTimerChangerListener(pipelineEventDispatcher, schedulerManager)
 
     /**
      * 构建定时构建定时变化的广播交换机

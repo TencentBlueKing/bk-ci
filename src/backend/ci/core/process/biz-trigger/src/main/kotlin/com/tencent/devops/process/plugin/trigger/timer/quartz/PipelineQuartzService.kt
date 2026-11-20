@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
 import jakarta.annotation.PreDestroy
 import org.apache.commons.lang3.StringUtils
@@ -62,7 +61,6 @@ import org.apache.commons.lang3.StringUtils
  * 调度服务框架
  * @version 1.0
  */
-@Service
 class PipelineQuartzService @Autowired constructor(
     private val pipelineTimerService: PipelineTimerService,
     private val schedulerManager: SchedulerManager
