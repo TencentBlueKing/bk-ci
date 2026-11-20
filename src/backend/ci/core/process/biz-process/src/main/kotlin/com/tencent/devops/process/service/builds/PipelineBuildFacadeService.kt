@@ -125,7 +125,6 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
-import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -137,7 +136,6 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -3019,7 +3017,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         userId: String,
         forceTrigger: Boolean
-    ): BuildReplayResult {
+    ): BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -3108,17 +3106,13 @@ class PipelineBuildFacadeService(
                 )
             } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
         }
-        val replayBuildId = buildManualStartup(
+        return buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = buildInfo.channelCode,
             values = startParameters,
             startType = StartType.MANUAL
-        )
-        return BuildReplayResult(
-            status = BuildReplayStatus.REPLAY_SUCCESS,
-            id = replayBuildId.id
         )
     }
 
@@ -3394,12 +3388,12 @@ class PipelineBuildFacadeService(
         )
     }
 
-    fun replayStatus(
+    fun canReplay(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): BuildReplayResult {
+    ): Boolean {
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         return when (StartType.toStartType(buildInfo.trigger)) {
@@ -3408,19 +3402,10 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId
-                )?.let {
-                    BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-                } ?: BuildReplayResult(
-                    status = BuildReplayStatus.CANNOT_REPLAY,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
-                    )
-                )
+                ) != null
             }
 
-            else -> {
-                BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-            }
+            else -> true
         }
     }
 

@@ -61,7 +61,6 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -313,7 +312,7 @@ interface ServiceBuildResource {
         @Parameter(description = "强制触发", required = false)
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
-    ): Result<BuildReplayResult>
+    ): Result<BuildId>
 
     @Operation(summary = "手动停止流水线")
     @DELETE

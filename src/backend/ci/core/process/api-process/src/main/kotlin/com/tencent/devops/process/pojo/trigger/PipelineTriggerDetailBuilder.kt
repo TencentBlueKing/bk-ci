@@ -85,6 +85,8 @@ class PipelineTriggerDetailBuilder {
         this.reasonDetail = reasonDetail
     }
 
+    fun getReasonDetail() = reasonDetail
+
     fun buildNum(buildNum: String) = apply {
         this.buildNum = buildNum
     }

@@ -58,6 +58,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.client.TriggerProcessClient
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
@@ -137,9 +138,6 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
         sampleEventDispatcher.dispatch(this)
     }
 
-    /**
-     * @return 触发成功的构建ID，未触发返回 null
-     */
     @Suppress("CyclomaticComplexMethod")
     fun trigger(
         projectId: String,
@@ -150,7 +148,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
         webhook: Webhook,
         eventTime: LocalDateTime? = null,
         isYaml: Boolean = false
-    ): String? {
+    ): WebhookTriggerResult {
         val context = WebhookTriggerContext(projectId = projectId, pipelineId = pipelineId, eventId = eventId)
         var status = PipelineTriggerReason.TRIGGER_SUCCESS
         val watcher = Watcher("new WebhookTrigger|$projectId|$pipelineId|$version|${repository.repoHashId}")
@@ -215,7 +213,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                             resource = resource,
                             startParams = atomResponse.outputVars
                         )
-                        return context.buildId?.id
+                        return context.toTriggerResult()
                     }
                 }
             }
@@ -247,7 +245,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                 )
             }
         }
-        return null
+        return context.toTriggerResult()
     }
 
     fun yamlTrigger(event: PipelineYamlFileEvent) {

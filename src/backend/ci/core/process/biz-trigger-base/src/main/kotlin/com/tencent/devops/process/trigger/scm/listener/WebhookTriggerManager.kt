@@ -27,6 +27,10 @@
 
 package com.tencent.devops.process.trigger.scm.listener
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,12 +46,21 @@ class WebhookTriggerManager @Autowired constructor(
     }
 
     fun fireError(context: WebhookTriggerContext, exception: Exception) {
+        context.reasonDetail = when (exception) {
+            is ErrorCodeException -> PipelineTriggerFailedErrorCode(
+                errorCode = exception.errorCode,
+                params = exception.params?.toList()
+            )
+
+            else -> PipelineTriggerFailedMsg(exception.message ?: "unknown error")
+        }
         webhookTriggerListeners.forEach { listener ->
             listener.onError(context = context, exception = exception)
         }
     }
 
     fun fireMatchFailed(context: WebhookTriggerContext) {
+        context.reasonDetail = PipelineTriggerFailedMatch(elements = context.failedMatchElements!!)
         webhookTriggerListeners.forEach { listener ->
             listener.onMatchFailed(context = context)
         }

@@ -71,7 +71,6 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -273,7 +272,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         forceTrigger: Boolean?
-    ): Result<BuildReplayResult> {
+    ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {

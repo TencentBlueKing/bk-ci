@@ -1,8 +1,10 @@
+import { replayFlow } from '@/api/executeDetail'
 import { CommonHeader } from '@/components/CommonHeader'
 import FlowSelector from '@/components/FlowHeader/FlowSelector'
 import { SvgIcon } from '@/components/SvgIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecuteDetail, type ExecuteInfo } from '@/hooks/useExecuteDetail'
+import { HttpError } from '@/utils/http/error'
 import { Button, InfoBox, Message, Popover } from 'bkui-vue'
 import { computed, defineComponent, h, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -24,8 +26,7 @@ export default defineComponent({
     const projectId = computed(() => route.params.projectId as string)
     const flowId = computed(() => route.params.flowId as string)
     const btnLoading = ref(false)
-    const { flowInfo, isRunning, isDebugExec, stopExecute, silentRefreshExecuteDetail, requestRePlayFlow } =
-      useExecuteDetail()
+    const { flowInfo, isRunning, isDebugExec, stopExecute, silentRefreshExecuteDetail } = useExecuteDetail()
     const isCurPipelineLocked = computed(() => flowInfo.value?.locked)
 
     const handleFlowDetail = () => {
@@ -59,14 +60,46 @@ export default defineComponent({
       }
     }
 
-    const retry = async (buildId: string, forceTrigger = false) => {
-      const res = await requestRePlayFlow({
-        projectId: projectId.value,
-        pipelineId: flowId.value,
-        buildId,
-        forceTrigger,
+    // 网络、超时、HTTP 错误已由 httpClient 统一提示
+    const showRetryError = (err: any) => {
+      if (err instanceof HttpError && err.type !== 'business') return
+      Message({
+        message: err?.message || err,
+        theme: 'error',
       })
-      if (res && res.id) {
+    }
+
+    const retry = async (buildId: string, forceTrigger = false) => {
+      let res
+      try {
+        res = await replayFlow({
+          projectId: projectId.value,
+          pipelineId: flowId.value,
+          buildId,
+          forceTrigger,
+        })
+      } catch (err: any) {
+        if ((err?.status ?? err?.business?.code ?? err?.code) !== 2101272) throw err
+        btnLoading.value = false
+        InfoBox({
+          title: t('flow.execute.rePlay'),
+          content: err?.message,
+          width: 500,
+          onConfirm: async () => {
+            try {
+              btnLoading.value = true
+              await retry(buildId, true)
+              return true
+            } catch (e) {
+              showRetryError(e)
+            } finally {
+              btnLoading.value = false
+            }
+          },
+        })
+        return
+      }
+      if (res?.id) {
         const params: Record<string, any> = {
           ...route.params,
           projectId: projectId.value,
@@ -88,22 +121,6 @@ export default defineComponent({
         Message({
           message: t('flow.execute.rebuildSuc'),
           theme: 'success',
-        })
-      } else if (res?.code === 2101272) {
-        btnLoading.value = false
-        InfoBox({
-          title: t('flow.execute.rePlay'),
-          content: res?.message,
-          width: 500,
-          onConfirm: async () => {
-            try {
-              btnLoading.value = true
-              await retry(buildId, true)
-              return true
-            } catch (err) {
-              btnLoading.value = false
-            }
-          },
         })
       } else {
         throw Error(t('flow.execute.rebuildFail'))
@@ -135,10 +152,7 @@ export default defineComponent({
             return true
           } catch (err) {
             console.log('error:', err)
-            Message({
-              message: (err as Error)?.message || err,
-              theme: 'error',
-            })
+            showRetryError(err)
           } finally {
             btnLoading.value = false
           }

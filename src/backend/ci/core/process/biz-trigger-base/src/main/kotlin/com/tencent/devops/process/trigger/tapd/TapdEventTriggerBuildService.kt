@@ -43,6 +43,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import jakarta.ws.rs.core.Response
@@ -74,10 +75,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TapdEventTriggerBuildService::class.java)
     }
 
-    /**
-     * @return 触发成功的构建ID，未触发返回 null
-     */
-    fun tapdWebhookTrigger(event: TapdWebhookTriggerEvent): String? {
+    fun tapdWebhookTrigger(event: TapdWebhookTriggerEvent): WebhookTriggerResult {
         logger.info("Receive tapd webhook trigger event[${JsonUtil.toJson(event, false)}]")
         val context = WebhookTriggerContext(
             projectId = event.projectId,
@@ -94,7 +92,7 @@ class TapdEventTriggerBuildService @Autowired constructor(
             )
             webhookTriggerManager.fireError(context, ignored)
         }
-        return context.buildId?.id
+        return context.toTriggerResult()
     }
 
     private fun doTrigger(event: TapdWebhookTriggerEvent, context: WebhookTriggerContext) = with(event) {

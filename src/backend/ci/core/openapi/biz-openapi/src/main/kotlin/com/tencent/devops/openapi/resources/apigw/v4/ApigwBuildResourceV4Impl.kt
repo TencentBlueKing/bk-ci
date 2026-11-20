@@ -48,7 +48,6 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -272,7 +271,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildId: String?,
         buildNumber: Int?,
         forceTrigger: Boolean?
-    ): Result<BuildReplayResult> {
+    ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V4|$userId|replay by build|$projectId|$pipelineId|$buildId|$buildNumber")
 
         val checkPipelineId = if (buildId.isNullOrBlank()) {

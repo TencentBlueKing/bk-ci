@@ -254,12 +254,6 @@
     import ReleaseButton from './ReleaseButton'
     import DraftConfirmDialog from './DraftConfirmDialog.vue'
     import useDraftStatus from '@/hook/useDraftStatus'
-    const PIPELINE_REPLAY_STATUS = {
-        REPLAYING: 'REPLAYING',
-        REPLAY_SUCCESS: 'REPLAY_SUCCESS',
-        CANNOT_REPLAY: 'CANNOT_REPLAY',
-        CAN_REPLAY: 'CAN_REPLAY'
-    }
     export default {
         components: {
             PipelineBreadCrumb,
@@ -276,7 +270,6 @@
             return {
                 loading: false,
                 reuseParamsLoading: false,
-                timesNum: 1,
                 isShowConfirmDialog: false,
                 draftStatus: DRAFT_STATUS.NORMAL,
                 draftSaveInfo: null,
@@ -366,10 +359,9 @@
                     'requestRetryPipeline',
                     'requestTerminatePipeline',
                     'requestRePlayPipeline',
-                    'requestPipelineRePlayStatus',
+                    'requestPipelineCanReplay',
                     'rollbackPipelineVersion',
-                    'requestPipelineSummary',
-                    'requestRePlayEventDetail'
+                    'requestPipelineSummary'
                 ]
             ),
             ...mapActions('atom', ['fetchBuildParamsByBuildId', 'setTempParamSet']),
@@ -395,7 +387,7 @@
                     if (!replayCheck || replayCheck.stale) return
                     if (!replayCheck.canReplay) {
                         this.$showTips({
-                            message: replayCheck.message || this.$t('history.canNotReplayTips'),
+                            message: this.$t('history.canNotReplayTips'),
                             theme: 'warning'
                         })
                         return
@@ -466,10 +458,6 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res?.eventId && res.status === PIPELINE_REPLAY_STATUS.REPLAYING) {
-                    // 等待轮询完成
-                    const pollingResult = await this.fetchRePlayEventDetail(res.eventId)
-                    return pollingResult
                 } else if (res?.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
@@ -493,7 +481,7 @@
                         }
                     })
                 } else {
-                    throw Error(this.$t('subpage.rebuildFail'))
+                    throw res?.message ? res : Error(this.$t('subpage.rebuildFail'))
                 }
             },
             /**
@@ -600,7 +588,7 @@
             async checkCanReplay (buildId) {
                 this.replayChecking = true
                 try {
-                    const res = await this.requestPipelineRePlayStatus({
+                    const res = await this.requestPipelineCanReplay({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
                         buildId
@@ -609,13 +597,7 @@
                         return { stale: true }
                     }
                     // store 失败时 resolve 错误对象，不会进入 catch
-                    if (this.isReplayStatusRequestFailed(res)) {
-                        return { canReplay: true }
-                    }
-                    return {
-                        canReplay: res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY,
-                        message: res.message
-                    }
+                    return { canReplay: typeof res === 'boolean' ? res : true }
                 } catch (err) {
                     console.error(err)
                     if (this.$route.params.buildNo !== buildId) {
@@ -626,12 +608,6 @@
                     this.replayChecking = false
                 }
             },
-            isReplayStatusRequestFailed (res) {
-                if (!res || typeof res !== 'object') return true
-                if (res.httpStatus || res.code || res.config || res.response) return true
-                return typeof res.status === 'number'
-            },
-
             async handleReuseParamsExecute () {
                 if (this.reuseParamsLoading || this.isCurPipelineLocked || this.isCurPipelineYamlLocked) return
                 try {
@@ -667,51 +643,6 @@
                     })
                 } finally {
                     this.reuseParamsLoading = false
-                }
-            },
-            async fetchRePlayEventDetail (eventId) {
-                try {
-                    this.loading = true
-                    const res = await this.requestRePlayEventDetail({
-                        projectId: this.projectId,
-                        eventId
-                    })
-                    if (!res.records.length) {
-                        // 用于webhook触发的构建任务轮询获取构建状态（超3次返回为空时，则直接报错重放失败提示）
-                        if (this.timesNum > 3) {
-                            this.timesNum = 1
-                            this.loading = false
-                            this.$showTips({
-                                message: this.$t('history.rePlayFailed'),
-                                theme: 'error'
-                            })
-                            return true
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 5000))
-                        this.timesNum++
-                        return await this.fetchRePlayEventDetail(eventId)
-                    } else {
-                        const successStatus = res.records[0].status === 'SUCCEED'
-                        if (successStatus) {
-                            this.$router.replace({
-                                name: 'pipelinesDetail',
-                                params: {
-                                    ...this.$route.params,
-                                    projectId: this.projectId,
-                                    pipelineId: this.pipelineId,
-                                    buildNo: res?.records[0]?.buildId,
-                                    type: 'executeDetail'
-                                }
-                            })
-                        }
-                        this.loading = false
-                        this.$showTips({
-                            message: res.records[0].reason,
-                            theme: successStatus ? 'success': 'error'
-                        })
-                    }
-                } catch (err) {
-                    console.error(err)
                 }
             }
         }

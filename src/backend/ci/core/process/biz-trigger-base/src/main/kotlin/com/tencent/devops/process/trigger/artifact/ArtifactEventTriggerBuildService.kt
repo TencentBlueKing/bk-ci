@@ -18,6 +18,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.ArtifactWebhookTriggerEvent
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import jakarta.ws.rs.core.Response
@@ -48,10 +49,7 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ArtifactEventTriggerBuildService::class.java)
     }
 
-    /**
-     * @return 触发成功的构建ID，未触发返回 null
-     */
-    fun artifactWebhookTrigger(event: ArtifactWebhookTriggerEvent): String? {
+    fun artifactWebhookTrigger(event: ArtifactWebhookTriggerEvent): WebhookTriggerResult {
         logger.info("Receive artifact webhook trigger event[${JsonUtil.toJson(event, false)}]")
         val context = WebhookTriggerContext(
             projectId = event.projectId,
@@ -68,7 +66,7 @@ class ArtifactEventTriggerBuildService @Autowired constructor(
             )
             webhookTriggerManager.fireError(context, ignored)
         }
-        return context.buildId?.id
+        return context.toTriggerResult()
     }
 
     private fun doTrigger(event: ArtifactWebhookTriggerEvent, context: WebhookTriggerContext) = with(event) {

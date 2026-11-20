@@ -26,6 +26,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
@@ -33,6 +34,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.client.TriggerProcessClient
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import io.micrometer.core.instrument.Tags
@@ -62,15 +64,12 @@ class PipelineBuildWebhookTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookTriggerService::class.java)
     }
 
-    /**
-     * @return 触发成功的构建ID，未触发返回 null
-     */
     fun triggerSinglePipeline(
         subscriber: WebhookTriggerPipeline,
         matcher: ScmWebhookMatcher,
         triggerEvent: PipelineTriggerEvent,
         repoEventIdMap: ConcurrentHashMap<String, Long>
-    ): String? {
+    ): WebhookTriggerResult {
         val pipelineWatcher = Watcher(
             "old WebhookTrigger|${subscriber.projectId}|${subscriber.pipelineId}"
         )
@@ -78,6 +77,7 @@ class PipelineBuildWebhookTriggerService @Autowired constructor(
         val projectId = subscriber.projectId
         val pipelineId = subscriber.pipelineId
         var buildId: String? = null
+        var reasonDetail: PipelineTriggerReasonDetail? = null
         try {
             try {
                 logger.info("pipelineId is $pipelineId")
@@ -97,6 +97,7 @@ class PipelineBuildWebhookTriggerService @Autowired constructor(
                     status = PipelineTriggerReason.TRIGGER_NOT_MATCH
                 }
                 buildId = builder.getBuildId()
+                reasonDetail = builder.getReasonDetail()
                 pipelineWatcher.start("save trigger event")
                 saveTriggerEvent(
                     projectId = projectId,
@@ -107,6 +108,7 @@ class PipelineBuildWebhookTriggerService @Autowired constructor(
                 pipelineWatcher.stop()
             } catch (e: Throwable) {
                 status = PipelineTriggerReason.TRIGGER_FAILED
+                reasonDetail = reasonDetail ?: PipelineTriggerFailedMsg(e.message ?: "unknown error")
                 logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
             }
             val totalCostMills = System.currentTimeMillis() - triggerEvent.createTime.timestampmilli()
@@ -128,7 +130,7 @@ class PipelineBuildWebhookTriggerService @Autowired constructor(
         } finally {
             LogUtils.printCostTimeWE(pipelineWatcher)
         }
-        return buildId
+        return WebhookTriggerResult(buildId = buildId, reasonDetail = reasonDetail)
     }
 
     private fun saveTriggerEvent(

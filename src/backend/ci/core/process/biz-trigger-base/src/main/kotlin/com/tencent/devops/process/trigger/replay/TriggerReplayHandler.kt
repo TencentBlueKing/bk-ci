@@ -2,6 +2,7 @@ package com.tencent.devops.process.trigger.replay
 
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 
 /**
@@ -10,6 +11,13 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 interface TriggerReplayHandler {
 
     fun support(triggerType: PipelineTriggerType): Boolean
+
+    /**
+     * 重放前校验，在保存重放事件之前调用，不通过时直接抛出异常，避免留下无明细的重放事件
+     *
+     * @param sourceTriggerEvent 被重放的源触发事件
+     */
+    fun validate(userId: String, projectId: String, sourceTriggerEvent: PipelineTriggerEvent) = Unit
 
     /**
      * 重放：由处理器自行投递 MQ 异步触发
@@ -24,7 +32,7 @@ interface TriggerReplayHandler {
      *
      * @param replayEvent pipelineId 不能为空
      * @param replayTriggerEvent 重放生成的触发事件
-     * @return 触发成功的构建ID，未触发返回 null
+     * @return 触发结果，未触发时 buildId 为空，reasonDetail 为未触发原因
      */
-    fun replayBuild(replayEvent: ReplayWebhookEvent, replayTriggerEvent: PipelineTriggerEvent): String?
+    fun replayBuild(replayEvent: ReplayWebhookEvent, replayTriggerEvent: PipelineTriggerEvent): WebhookTriggerResult
 }

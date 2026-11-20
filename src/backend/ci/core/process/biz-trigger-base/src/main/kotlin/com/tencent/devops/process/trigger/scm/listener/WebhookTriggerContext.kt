@@ -31,6 +31,8 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "webhook触发上下文")
@@ -50,5 +52,9 @@ data class WebhookTriggerContext(
     @get:Schema(title = "失败匹配的插件")
     var failedMatchElements: List<PipelineTriggerFailedMatchElement>? = null,
     @get:Schema(title = "流水线启动方式，默认为[WEB_HOOK]，创作流触发时指定为[TRIGGER_EVENT]与代码库触发区分开")
-    val startType: StartType = StartType.WEB_HOOK
-)
+    val startType: StartType = StartType.WEB_HOOK,
+    @get:Schema(title = "触发失败原因")
+    var reasonDetail: PipelineTriggerReasonDetail? = null
+) {
+    fun toTriggerResult() = WebhookTriggerResult(buildId = buildId?.id, reasonDetail = reasonDetail)
+}

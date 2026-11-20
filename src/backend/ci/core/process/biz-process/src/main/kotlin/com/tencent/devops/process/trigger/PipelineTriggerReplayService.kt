@@ -10,13 +10,14 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_DETAIL_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_BUILD_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
-import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.BuildReplayResult
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.replay.TriggerReplayHandler
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
@@ -75,6 +76,7 @@ class PipelineTriggerReplayService(
         )
         val triggerEvent = getTriggerEvent(projectId = projectId, eventId = triggerDetail.eventId)
         val handler = getReplayHandler(triggerEvent)
+        handler.validate(userId = userId, projectId = projectId, sourceTriggerEvent = triggerEvent)
         val (replayEvent, replayTriggerEvent) = saveReplayEvent(
             userId = userId,
             projectId = projectId,
@@ -97,6 +99,7 @@ class PipelineTriggerReplayService(
         logger.info("replay all pipeline trigger event|$userId|$projectId|$eventId")
         val triggerEvent = getTriggerEvent(projectId = projectId, eventId = eventId)
         val handler = getReplayHandler(triggerEvent)
+        handler.validate(userId = userId, projectId = projectId, sourceTriggerEvent = triggerEvent)
         val (replayEvent, replayTriggerEvent) = saveReplayEvent(
             userId = userId,
             projectId = projectId,
@@ -108,13 +111,13 @@ class PipelineTriggerReplayService(
     }
 
     /**
-     * 重新构建，同步按最新版本触发，流水线执行权限由调用方校验
+     * 重新构建，同步按最新版本触发，未触发构建时抛出触发失败原因，流水线执行权限由调用方校验
      */
     fun replayByBuild(
         userId: String,
         projectId: String,
         triggerDetail: PipelineTriggerDetail
-    ): BuildReplayResult {
+    ): BuildId {
         logger.info("replay by build|$userId|$projectId|${triggerDetail.detailId}")
         val pipelineId = triggerDetail.pipelineId ?: throw ErrorCodeException(
             errorCode = ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY,
@@ -122,18 +125,21 @@ class PipelineTriggerReplayService(
         )
         val triggerEvent = getTriggerEvent(projectId = projectId, eventId = triggerDetail.eventId)
         val handler = getReplayHandler(triggerEvent)
+        handler.validate(userId = userId, projectId = projectId, sourceTriggerEvent = triggerEvent)
         val (replayEvent, replayTriggerEvent) = saveReplayEvent(
             userId = userId,
             projectId = projectId,
             triggerEvent = triggerEvent,
             pipelineId = pipelineId
         )
-        val buildId = handler.replayBuild(replayEvent = replayEvent, replayTriggerEvent = replayTriggerEvent)
-        return if (buildId.isNullOrBlank()) {
-            BuildReplayResult(status = BuildReplayStatus.REPLAY_FAILED, eventId = replayEvent.eventId)
-        } else {
-            BuildReplayResult(status = BuildReplayStatus.REPLAY_SUCCESS, id = buildId, eventId = replayEvent.eventId)
+        val result = handler.replayBuild(replayEvent = replayEvent, replayTriggerEvent = replayTriggerEvent)
+        val buildId = result.buildId
+        if (buildId.isNullOrBlank()) {
+            val reason = result.reasonDetail?.getReasonDetailList()?.takeIf { it.isNotEmpty() }?.joinToString("; ")
+                ?: I18nUtil.getCodeLanMessage(messageCode = PipelineTriggerReason.TRIGGER_FAILED.name)
+            throw ErrorCodeException(errorCode = ERROR_TRIGGER_REPLAY_BUILD_FAILED, params = arrayOf(reason))
         }
+        return BuildId(id = buildId, projectId = projectId, pipelineId = pipelineId)
     }
 
     private fun getTriggerEvent(projectId: String, eventId: Long): PipelineTriggerEvent {

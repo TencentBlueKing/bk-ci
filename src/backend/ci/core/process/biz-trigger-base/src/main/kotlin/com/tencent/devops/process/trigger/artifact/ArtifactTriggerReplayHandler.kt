@@ -11,6 +11,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.artifact.ArtifactEvent
 import com.tencent.devops.process.trigger.event.ArtifactWebhookTriggerEvent
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.trigger.replay.TriggerReplayHandler
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
@@ -37,11 +38,14 @@ class ArtifactTriggerReplayHandler(
         ).forEach { sampleEventDispatcher.dispatch(it) }
     }
 
-    override fun replayBuild(replayEvent: ReplayWebhookEvent, replayTriggerEvent: PipelineTriggerEvent): String? {
+    override fun replayBuild(
+        replayEvent: ReplayWebhookEvent,
+        replayTriggerEvent: PipelineTriggerEvent
+    ): WebhookTriggerResult {
         return buildTriggerEvents(
             replayEvent = replayEvent,
             sourceTriggerEvent = replayTriggerEvent
-        ).firstNotNullOfOrNull { artifactEventTriggerBuildService.artifactWebhookTrigger(it) }
+        ).firstOrNull()?.let { artifactEventTriggerBuildService.artifactWebhookTrigger(it) } ?: WebhookTriggerResult()
     }
 
     /**

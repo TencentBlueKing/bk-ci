@@ -27,11 +27,7 @@
 
 package com.tencent.devops.process.trigger.scm.listener
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -64,14 +60,6 @@ class WebhookTriggerEventListener(
     }
 
     override fun onError(context: WebhookTriggerContext, exception: Exception) {
-        val exceptionReasonDetail = when (exception) {
-            is ErrorCodeException -> PipelineTriggerFailedErrorCode(
-                errorCode = exception.errorCode,
-                params = exception.params?.toList()
-            )
-
-            else -> PipelineTriggerFailedMsg(exception.message ?: "unknown error")
-        }
         val triggerDetail = with(context) {
             PipelineTriggerDetail(
                 detailId = pipelineTriggerEventService.getDetailId(),
@@ -81,7 +69,7 @@ class WebhookTriggerEventListener(
                 pipelineId = pipelineId,
                 pipelineName = pipelineInfo?.pipelineName ?: pipelineId,
                 reason = PipelineTriggerReason.TRIGGER_FAILED.name,
-                reasonDetail = exceptionReasonDetail
+                reasonDetail = reasonDetail
             )
         }
         pipelineTriggerEventService.saveTriggerDetail(triggerDetail)
@@ -97,7 +85,7 @@ class WebhookTriggerEventListener(
                 pipelineId = pipelineId,
                 pipelineName = pipelineInfo!!.pipelineName,
                 reason = PipelineTriggerReason.TRIGGER_NOT_MATCH.name,
-                reasonDetail = PipelineTriggerFailedMatch(elements = context.failedMatchElements!!)
+                reasonDetail = reasonDetail
             )
         }
         pipelineTriggerEventService.saveTriggerDetail(triggerDetail)

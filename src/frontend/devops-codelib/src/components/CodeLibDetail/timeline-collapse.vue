@@ -277,6 +277,11 @@
                                 message: this.$t('codelib.重放成功')
                             })
                             this.$emit('replay')
+                        }).catch((err) => {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err?.message || err
+                            })
                         })
                     }
                 })
@@ -303,6 +308,11 @@
                                 message: this.$t('codelib.重放成功')
                             })
                             this.$emit('replay')
+                        }).catch((err) => {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err?.message || err
+                            })
                         })
                     }
                 })

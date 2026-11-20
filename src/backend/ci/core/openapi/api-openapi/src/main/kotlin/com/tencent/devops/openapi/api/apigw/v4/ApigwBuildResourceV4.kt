@@ -49,7 +49,6 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.MutexGroupTaskInfo
@@ -219,7 +218,7 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "强制触发", required = false)
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
-    ): Result<BuildReplayResult>
+    ): Result<BuildId>
 
     @Operation(
         summary = "查看构建状态信息,#4295增加stageStatus等",

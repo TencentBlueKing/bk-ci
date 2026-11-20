@@ -16,6 +16,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
+import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
 import com.tencent.devops.process.trigger.replay.TriggerReplayHandler
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
@@ -42,11 +43,14 @@ class TapdTriggerReplayHandler(
         ).forEach { sampleEventDispatcher.dispatch(it) }
     }
 
-    override fun replayBuild(replayEvent: ReplayWebhookEvent, replayTriggerEvent: PipelineTriggerEvent): String? {
+    override fun replayBuild(
+        replayEvent: ReplayWebhookEvent,
+        replayTriggerEvent: PipelineTriggerEvent
+    ): WebhookTriggerResult {
         return buildTriggerEvents(
             replayEvent = replayEvent,
             sourceTriggerEvent = replayTriggerEvent
-        ).firstNotNullOfOrNull { tapdEventTriggerBuildService.tapdWebhookTrigger(it) }
+        ).firstOrNull()?.let { tapdEventTriggerBuildService.tapdWebhookTrigger(it) } ?: WebhookTriggerResult()
     }
 
     /**
