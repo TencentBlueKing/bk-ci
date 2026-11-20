@@ -44,7 +44,11 @@ class AgentAskCache(
             // TODO: 各构建类型共用一个标记，agent 在 BINARY/DOCKER 之间交替询问时会互相覆盖、降低命中率。
             //  这类 agent 构建量大、队列多半不空，暂不按类型拆分。
             val marker = redis.get(key(agentId))
-            marker == BuildJobType.ALL.name || marker == type.name
+            val hit = marker == BuildJobType.ALL.name || marker == type.name
+            if (hit) {
+                logger.info("agentEmptyQueueCacheHit agentId={} buildType={}", agentId, type)
+            }
+            hit
         } catch (e: Exception) {
             logger.warn("Unable to read empty build queue for agent {}", agentId, e)
             false
