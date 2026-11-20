@@ -127,12 +127,12 @@ object PipelineBuildParamKey {
 
     // 流水线标识， 可选值为 PIPELINE、CREATIVE_STREAM
     const val CI_CATEGORY = "ci.category"
-    // 创作节点相关信息
-    // 云桌面ID
+    // 启动时指定的节点信息
+    // 节点 ID
     const val CI_NODE_ID = "ci.node_id"
-    // 云桌面名称
+    // 节点名称
     const val CI_NODE_NAME = "ci.node_name"
-    // 云桌面IP
+    // 节点 IP
     const val CI_NODE_IP = "ci.node_ip"
 
     // TAPD 变量
