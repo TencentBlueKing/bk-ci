@@ -63,6 +63,12 @@ object TapdWebhookConstant {
 
     const val TAPD_KEY_STATUS = "status"
 
+    // 更新事件中的变更后状态字段
+    const val TAPD_KEY_NEW_STATUS = "new_status"
+
+    // 派生字段：单据当前状态（变更后状态优先，创建等事件用 status 兜底）
+    const val TAPD_KEY_CURRENT_STATUS = "current_status"
+
     const val TAPD_KEY_DESCRIPTION = "description"
 
     // 派生字段：TAPD 项目名称（由 TapdWebhookRequestService 塞入 body，供构建端组装启动参数使用）

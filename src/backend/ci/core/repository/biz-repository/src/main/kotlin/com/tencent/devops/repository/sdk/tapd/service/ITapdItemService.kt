@@ -27,9 +27,11 @@
 
 package com.tencent.devops.repository.sdk.tapd.service
 
+import com.tencent.devops.scm.pojo.tapd.ParticipantWorkspaceResponse
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
+import com.tencent.devops.scm.pojo.tapd.TapdStoryFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 
 /**
@@ -56,4 +58,29 @@ interface ITapdItemService {
      * 查询 TAPD 项目信息
      */
     fun getWorkspaceInfo(workspaceId: String): TapdWorkspace?
+
+    /**
+     * 查询指定用户参与的 TAPD 项目列表
+     */
+    fun listParticipantWorkspaces(nick: String, status: String? = null): List<ParticipantWorkspaceResponse>
+
+    /**
+     * 查询应用已授权的 TAPD 项目 ID 集合；远端失败返回 null
+     */
+    fun listGrantedWorkspaceIds(): Set<String>?
+
+    /**
+     * 查询已安装当前应用的 TAPD 项目 ID 集合；远端失败返回 null
+     */
+    fun listInstalledWorkspaceIds(): Set<String>?
+
+    /**
+     * 查询 TAPD 需求字段及候选值
+     */
+    fun getStoryFieldConfig(workspaceId: String): TapdStoryFieldConfig?
+
+    /**
+     * 查询 TAPD 缺陷字段及候选值
+     */
+    fun getBugFieldConfig(workspaceId: String, allOptions: Boolean): TapdBugFieldConfig?
 }

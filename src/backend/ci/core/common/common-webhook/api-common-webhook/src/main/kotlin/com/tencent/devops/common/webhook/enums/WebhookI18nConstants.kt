@@ -305,4 +305,10 @@ object WebhookI18nConstants {
 
     // 制品触发: 镜像Tag被排除
     const val BK_ARTIFACT_TAG_IGNORED = "bkArtifactTagIgnored"
+
+    // TAPD 触发: 状态不在监听范围内
+    const val BK_TAPD_STATUS_NOT_MATCH = "bkTapdStatusNotMatch"
+
+    // TAPD 触发: 状态被排除
+    const val BK_TAPD_STATUS_IGNORED = "bkTapdStatusIgnored"
 }

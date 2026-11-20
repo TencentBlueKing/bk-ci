@@ -14,6 +14,10 @@ on:
       id: trigger_story
       action:
         - create
+      statuses:
+        - developing
+      statuses-ignore:
+        - rejected
   - type: artifact
     arrived:
       name: MSI 归档触发

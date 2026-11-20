@@ -24,16 +24,19 @@
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| TAPD 项目 ID | **必填**。TAPD 项目的 workspace ID | `20001234` |
-| 事件类型 | 需求（STORY）/ 缺陷（BUG） | — |
+| TAPD 项目 ID | **必填**。下拉仅展示当前用户参与且应用已授权/已安装的 TAPD 项目；未授权项目不展示 | `20001234` |
+| 事件类型 | 需求（STORY）/ 缺陷（BUG）；状态候选值按事件类型分别取自 TAPD OpenAPI | — |
 | 监听的事件来源 | `api` / `web` / `auto_task`（自动化任务）。默认全选；**PAC 不支持此项，等价于不限制** | — |
 | 监听的动作 | 见下方 [动作取值](#动作取值)。默认 `create,update,delete` | — |
 | 监听以下优先级 | 多个用英文逗号分隔，按工单优先级**精确匹配**。留空 = 不限制 | `High,Urgent` |
+| 监听的状态 | 多选下拉，按 TAPD 状态**英文 key** 精确匹配。留空 = 监听所有状态 | `planning,developing` |
+| 排除的状态 | 多选下拉，命中变更后的状态时不触发；**优先于监听的状态** | `rejected` |
 | 包含 / 排除以下操作人 | 按触发本次事件的 TAPD 用户过滤 | — |
 | 包含 / 排除以下标签 | 多个用英文逗号分隔，支持 `*` 通配。工单有任一标签命中包含即触发；有任一标签命中排除则不触发 | `前端,release-*` |
 | 包含 / 排除以下处理人 | 按工单**当前处理人**过滤（多个处理人时取第一个） | — |
 
-- 包含 / 排除类规则留空 = 不限制，**排除优先于包含**。
+- 包含 / 排除类规则留空 = 不限制，**排除优先于包含**；状态过滤对所有 TAPD 事件生效，按变更后的状态匹配，创建等事件使用现有状态字段兜底。
+- 状态下拉只展示中文名，模型与 PAC YAML 保存英文状态 key。
 - 人员、标签、优先级都支持 `${{ variables.xxx }}` 引用流水线变量；需要监听公共账号时，可把账号定义成流水线变量再引用。
 
 ### 动作取值
@@ -89,10 +92,15 @@ PAC v3.0 中，每个 TAPD 项目对应 `on` 列表里的一项，用 `type: tap
 | `owners` / `owners-ignore` | 包含 / 排除以下处理人 |
 | `labels` / `labels-ignore` | 包含 / 排除以下标签 |
 | `priorities` | 监听以下优先级 |
+| `statuses` | 监听的状态 |
+| `statuses-ignore` | 排除的状态 |
 
 > - **省略 `action` = 监听全部动作**，与可视化新建时的默认值（`create,update,delete`）不同，建议显式写出。
+> - `statuses` / `statuses-ignore` 使用 TAPD 状态英文 key；`statuses` 省略表示监听所有状态，`statuses-ignore` 命中时排除优先。
 > - PAC 不支持「监听的事件来源」，所有来源的事件都会参与匹配。
 > - 同一个 `workspace-id` 下 `story`、`bug` **各只能配置一个**。可视化里同一项目配了多个需求触发器时，转成 YAML 只会保留最后一个。
+> - 存量环境执行增量 DML 更新 `T_ATOM.PROPS` 后，需失效 `AtomPropsCacheManager` 中 `codeTapdWebHookTrigger` 的缓存（或等待最长 6 小时），并刷新页面清理前端 `atomModalMap`，否则新下拉和状态字段不会立即生效。
+> - 项目下拉接口仅返回已授权项目的 `{ id, name, disabled }`，状态多选下拉复用现有 `devops-select` group children 能力，无需修改前端组件代码。
 
 ### 需求和缺陷
 
@@ -110,11 +118,20 @@ on:
         - 前端
       priorities:
         - High
+      statuses:
+        - planning
+        - developing
+      statuses-ignore:
+        - rejected
     bug:
       action:
         - create
       users-ignore:
         - robot
+      statuses:
+        - new
+      statuses-ignore:
+        - closed
 ```
 
 ### 多个 TAPD 项目
@@ -156,7 +173,7 @@ on:
 ## 常见问题
 
 **Q：配了触发器却没有启动？**
-进入**流水线详情 → 触发事件**标签页，查看对应事件的未匹配原因。常见原因：没有安装 TAPD 应用；TAPD 项目 ID 填错；动作、事件来源、优先级、标签或处理人没有命中；操作人或处理人被排除；流水线被锁定。
+进入**流水线详情 → 触发事件**标签页，查看对应事件的未匹配原因。常见原因：没有安装 TAPD 应用；TAPD 项目 ID 填错；项目未在已授权列表中导致下拉不展示；动作、事件来源、优先级、标签、状态或处理人没有命中；操作人、处理人或状态被排除；流水线被锁定。
 
 **Q：修改了需求状态，为什么 `update` 没触发？**
 状态流转在 TAPD 中是独立的 `status_change` 动作，需要监听状态变更时请勾选「状态变更」。
@@ -164,5 +181,17 @@ on:
 **Q：优先级填了「高」却匹配不上？**
 优先级按 TAPD 推送的优先级取值精确匹配，请以 TAPD 项目中配置的优先级名称为准（区分大小写和中英文）。
 
+**Q：状态下拉显示中文，保存后 YAML 里是什么？**
+模型与 PAC YAML 保存 TAPD 状态英文 key，中文名仅用于下拉展示；`statuses` 留空表示监听全部状态，`statuses-ignore` 命中时排除优先。
+
 **Q：通过 OpenAPI 或自动化任务改的工单能触发吗？**
 可以。可视化中「监听的事件来源」默认包含 `api`、`web`、`auto_task`；只想响应页面操作时只勾选 `web`。PAC 不支持该项，所有来源都会触发。
+
+## 插件表单国际化
+
+- `T_ATOM.PROPS` 保存默认语言文案；当前默认语言为 `zh_CN`，中文界面直接使用 PROPS 中的中文。
+- `en_US` / `ja_JP` 等非默认语言由 `T_I18N_MESSAGE` 按 `ATOM.codeTapdWebHookTrigger.1.0.0.input...` key 替换。
+- 修改 PROPS 或 i18n 后，需清理 `STORE_ATOM_TASK_JSON_KEY:codeTapdWebHookTrigger`、相关 `BK_I18N_MESSAGE:*` 缓存，并硬刷新页面清理前端 `atomModalMap`。
+
+
+- 状态过滤字段位于「状态设置」分组，置于「处理人设置」之后；复用现有 `devops-select` group children 能力，不修改前端代码。

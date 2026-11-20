@@ -46,7 +46,7 @@ class ServiceTapdResourceImpl @Autowired constructor(
 ) : ServiceTapdResource {
 
     override fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>> {
-        return Result(tapdWorkflowService.getWorkflowStatusMap(request = request).data!!)
+        return Result(tapdWorkflowService.getWorkflowStatusMap(request = request).data.orEmpty())
     }
 
     override fun getStoryInfo(workspaceId: String, storyId: String): Result<TapdStory?> {

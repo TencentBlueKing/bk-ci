@@ -29,6 +29,9 @@ package com.tencent.devops.repository.api.tapd
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.tapd.TapdStatusOption
+import com.tencent.devops.scm.pojo.tapd.TapdWorkspaceOption
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -37,6 +40,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
@@ -54,4 +58,28 @@ interface UserTapdResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Response
+
+    @Operation(summary = "获取 TAPD 项目下拉选项")
+    @GET
+    @Path("/workspaces")
+    fun listWorkspaces(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<TapdWorkspaceOption>>
+
+    @Operation(summary = "获取 TAPD 状态下拉选项")
+    @GET
+    @Path("/statuses")
+    fun listStatuses(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String,
+        @Parameter(description = "事件类型：STORY/BUG", required = true)
+        @QueryParam("eventType")
+        eventType: String
+    ): Result<List<TapdStatusOption>>
 }

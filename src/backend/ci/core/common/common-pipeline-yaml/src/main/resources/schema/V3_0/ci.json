@@ -1019,6 +1019,18 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "statuses" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "statuses-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             },
@@ -1081,6 +1093,18 @@
                   }
                 },
                 "labels-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "statuses" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "statuses-ignore" : {
                   "type" : "array",
                   "items" : {
                     "type" : "string"
@@ -2087,6 +2111,18 @@
                 "items" : {
                   "type" : "string"
                 }
+              },
+              "statuses" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "statuses-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
               }
             }
           },
@@ -2149,6 +2185,18 @@
                 }
               },
               "labels-ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "statuses" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "statuses-ignore" : {
                 "type" : "array",
                 "items" : {
                   "type" : "string"

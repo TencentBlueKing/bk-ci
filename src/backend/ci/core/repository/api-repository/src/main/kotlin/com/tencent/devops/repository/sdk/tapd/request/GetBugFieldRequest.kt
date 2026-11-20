@@ -34,14 +34,17 @@ import com.tencent.devops.scm.pojo.tapd.TapdResult
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 
 /**
- * 查询 TAPD 缺陷详情请求
+ * 查询 TAPD 缺陷字段及候选值请求
  *
- * 接口：`GET /bugs?workspace_id=xx&id=yy`
+ * 接口：`GET /bugs/get_fields_info?workspace_id=xx&all_options=1`
  */
 data class GetBugFieldRequest(
     /** TAPD 项目 ID */
     @JsonProperty("workspace_id")
-    val workspaceId: String
+    val workspaceId: String,
+    /** 是否返回已关闭选项，1 返回，空表示不返回 */
+    @JsonProperty("all_options")
+    val allOptions: Int? = null
 ) : TapdRequest<TapdResult<TapdBugFieldConfig>>() {
 
     override fun getHttpMethod(): HttpMethod = HttpMethod.GET

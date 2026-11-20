@@ -124,8 +124,12 @@ class TriggerTransferTest {
         assertEquals(listOf("o1"), tapd.story?.owners)
         assertEquals(listOf("label1", "label2"), tapd.story?.labels)
         assertEquals(listOf("high"), tapd.story?.priorities)
+        assertEquals(listOf("developing", "resolved"), tapd.story?.statuses)
+        assertEquals(listOf("rejected"), tapd.story?.statusesIgnore)
         assertEquals("trigger_bug", tapd.bug?.id)
         assertEquals(listOf("create"), tapd.bug?.action)
+        assertEquals(listOf("new"), tapd.bug?.statuses)
+        assertEquals(listOf("closed"), tapd.bug?.statusesIgnore)
     }
 
     @Test
@@ -225,6 +229,8 @@ class TriggerTransferTest {
         val tapd = triggers.single { it.first == TriggerType.TAPD }.second
         assertEquals("12345", tapd.workspaceId)
         assertEquals(listOf("create"), tapd.story?.action)
+        assertEquals(listOf("developing"), tapd.story?.statuses)
+        assertEquals(listOf("rejected"), tapd.story?.statusesIgnore)
 
         val artifacts = triggers
             .filter { it.second.type == ArtifactTriggerConverter.TYPE }

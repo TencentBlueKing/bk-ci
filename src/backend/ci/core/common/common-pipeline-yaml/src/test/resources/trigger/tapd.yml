@@ -17,10 +17,19 @@ on:
         - label2
       priorities:
         - high
+      statuses:
+        - developing
+        - resolved
+      statuses-ignore:
+        - rejected
     bug:
       id: trigger_bug
       action:
         - create
+      statuses:
+        - new
+      statuses-ignore:
+        - closed
 stages:
   - name: stage-1
     jobs:

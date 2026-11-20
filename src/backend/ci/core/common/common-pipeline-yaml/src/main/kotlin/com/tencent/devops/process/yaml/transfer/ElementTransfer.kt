@@ -338,6 +338,8 @@ class ElementTransfer @Autowired(required = false) constructor(
             ownersIgnore = input.excludeOwner.nonEmptyOrNull(),
             labels = input.includeLabels?.takeIf { it.isNotBlank() }?.split(","),
             labelsIgnore = input.excludeLabels?.takeIf { it.isNotBlank() }?.split(","),
+            statuses = input.includeStatuses.nonEmptyOrNull(),
+            statusesIgnore = input.excludeStatuses.nonEmptyOrNull(),
             priorities = input.includePriority?.takeIf { it.isNotBlank() }?.split(",")
         )
         val current = acc[workspaceId] ?: TriggerOn(workspaceId = workspaceId)
