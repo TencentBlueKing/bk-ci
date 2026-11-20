@@ -28,100 +28,60 @@ package com.tencent.devops.dispatch.utils.redis
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.stereotype.Component
 
-/** 每台 agent 短暂记住最近一次成功的队列查空结果，ALL 查空也覆盖单一构建类型。 */
+/** 每台 agent 缓存最近一次查空的构建类型。ALL 也覆盖 BINARY 和 DOCKER。 */
 @Component
 class AgentAskCache(
-    // Lua、Hash 读取和失效操作必须使用相同的字段编码。
-    @param:Qualifier("redisStringHashOperation") private val redis: RedisOperation,
+    private val redis: RedisOperation,
     @Value("\${dispatch.agent.emptyQueueCacheSeconds:20}") private val buildTtlSeconds: Long
 ) {
     fun isBuildEmpty(agentId: String, type: BuildJobType): Boolean {
-        if (type == BuildJobType.NONE || buildTtlSeconds <= 0) return false
-        val marker = try {
-            activeMarker(redis.hget(key(agentId), BUILD), System.currentTimeMillis())
+        if (buildTtlSeconds <= 0 || type == BuildJobType.NONE) return false
+        return try {
+            // TODO: 各构建类型共用一个标记，agent 在 BINARY/DOCKER 之间交替询问时会互相覆盖、降低命中率。
+            //  这类 agent 构建量大、队列多半不空，暂不按类型拆分。
+            val marker = redis.get(key(agentId))
+            marker == BuildJobType.ALL.name || marker == type.name
         } catch (e: Exception) {
-            logger.debug("Unable to read empty build queue for agent {}", agentId, e)
-            return false
+            logger.warn("Unable to read empty build queue for agent {}", agentId, e)
+            false
         }
-        return marker == BuildJobType.ALL.name || marker == type.name
     }
 
-    private fun activeMarker(value: String?, now: Long): String? {
-        if (value == null) return null
-        val separator = value.indexOf(':')
-        if (separator < 0) return null // 查询中的 UUID
-        val expiresAt = value.substring(0, separator).toLongOrNull() ?: return null
-        return if (now < expiresAt) value.substring(separator + 1) else null
+    /**
+     * 并发入队后晚到的查空结果可能重新写入标记，TTL 从本次写入起算。
+     * 被挡住的任务最多晚 TTL 加一次 ask 间隔才被领到。
+     */
+    fun rememberEmpty(agentId: String, type: BuildJobType) {
+        if (buildTtlSeconds <= 0 || type == BuildJobType.NONE) return
+        try {
+            redis.set(key(agentId), type.name, expiredInSecond = buildTtlSeconds)
+        } catch (e: Exception) {
+            logger.warn("Unable to remember empty build queue for agent {}", agentId, e)
+        }
     }
 
-    /** 入队、改派或超时回队会清除目标 agent 的构建标记，同时作废正在进行的查空确认。 */
+    /**
+     * 入队、改派或超时回队后清除空标记。本实例关闭缓存时也要清，其他实例仍可能持有空标记。
+     *
+     * 任务此时已经入库，Redis 失败只记录日志，不重试也不回滚：旧标记最多残留到过期，
+     * 即该 agent 最多晚 TTL 加一次 ask 间隔才领到这个任务。
+     */
     fun invalidateBuild(agentId: String) {
         try {
-            redis.hdelete(key(agentId), BUILD)
+            redis.delete(key(agentId))
         } catch (e: Exception) {
             logger.warn("Unable to invalidate empty build queue for agent {}", agentId, e)
         }
     }
 
-    /** 查库前登记 UUID。只有同一轮查询成功返回空时才确认标记，Redis 异常时仍然执行领取查询。 */
-    fun <T : Any> queryAndRememberEmpty(agentId: String, type: BuildJobType, load: () -> T?): T? {
-        if (buildTtlSeconds <= 0 || type == BuildJobType.NONE) return load()
-        val marker = type.name
-        val key = key(agentId)
-        val probe = UUID.randomUUID().toString()
-        val ttl = TimeUnit.SECONDS.toMillis(buildTtlSeconds)
-        val start = System.currentTimeMillis()
-        val deadline = start + ttl.coerceAtMost(Long.MAX_VALUE - start)
-        try {
-            redis.execute(register, listOf(key), BUILD, probe, ttl.toString())
-        } catch (e: Exception) {
-            logger.debug("Unable to register ask cache probe for {}", agentId, e)
-            return load()
-        }
-        val result = load()
-        // 有效期从查询开始算。超出有效期的慢查询即使最后返回空，也不再登记命中。
-        if (result == null && System.currentTimeMillis() < deadline) {
-            try {
-                redis.execute(confirm, listOf(key), BUILD, probe, "$deadline:$marker")
-            } catch (e: Exception) {
-                logger.debug("Unable to confirm ask cache marker for {}", agentId, e)
-            }
-        }
-        return result
-    }
-
-    private fun key(agentId: String) = redis.getKeyByRedisName("dispatch:agent:askCache:$agentId")
+    // 队列表跨集群共享，缓存也按 agent 共享。
+    private fun key(agentId: String) = "dispatch:agent:emptyBuildQueue:$agentId"
 
     companion object {
-        private const val BUILD = "build"
         private val logger = LoggerFactory.getLogger(AgentAskCache::class.java)
-
-        // 只在写入时延长物理 TTL，轮询读取不会让空队列标记一直续期。
-        private val register = DefaultRedisScript(
-            """
-            redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
-            if redis.call('PTTL', KEYS[1]) < tonumber(ARGV[3]) then
-                redis.call('PEXPIRE', KEYS[1], ARGV[3])
-            end
-            return 1
-            """.trimIndent(), Long::class.javaObjectType
-        )
-
-        // 只比较本字段的 UUID。入队的 HDEL 或同字段的下一次查询都能阻止旧结果晚到回写。
-        private val confirm = DefaultRedisScript(
-            """
-            if redis.call('HGET', KEYS[1], ARGV[1]) ~= ARGV[2] then return 0 end
-            redis.call('HSET', KEYS[1], ARGV[1], ARGV[3])
-            return 1
-            """.trimIndent(), Long::class.javaObjectType
-        )
     }
 }

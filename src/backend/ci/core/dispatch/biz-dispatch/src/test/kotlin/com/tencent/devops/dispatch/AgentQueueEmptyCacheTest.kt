@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisAutoConfiguration
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AskEnable
@@ -15,14 +14,11 @@ import com.tencent.devops.dispatch.utils.redis.AgentAskCache
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import jakarta.ws.rs.NotFoundException
-import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -30,10 +26,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.core.script.RedisScript
-import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.test.util.ReflectionTestUtils
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -41,92 +33,82 @@ import java.util.concurrent.ExecutorService
 class AgentQueueEmptyCacheTest {
     private val redis = mockk<RedisOperation>()
     private val cache = AgentAskCache(redis, 20)
-    private val hashes = ConcurrentHashMap<String, ConcurrentHashMap<String, String>>()
+    private val markers = ConcurrentHashMap<String, Pair<String, Long>>()
+    private var nowSeconds = 0L
 
     @BeforeEach
     fun prepare() {
-        every { redis.getKeyByRedisName(any()) } answers { firstArg() }
-        every { redis.hget(any(), any()) } answers { hashes[firstArg<String>()]?.get(secondArg<String>()) }
-        every { redis.hdelete(any(), any<String>()) } answers {
-            hashes[firstArg<String>()]?.remove(secondArg<String>())
-            Unit
+        every { redis.get(any()) } answers {
+            markers[firstArg<String>()]?.takeIf { (_, expiresAt) -> nowSeconds < expiresAt }?.first
         }
-        // 模拟 Redis 对一次脚本的原子执行，测试可以在真实查询中插入入队或第二次探测。
-        every { redis.execute<Long>(any(), any(), *anyVararg()) } answers {
-            val key = secondArg<List<String>>().single()
-            val args = arg<Array<Any?>>(2)
-            val script = firstArg<RedisScript<Long>>().scriptAsString
-            when {
-                "'PTTL'" in script -> {
-                    hashes.computeIfAbsent(key) { ConcurrentHashMap() }[args[0] as String] = args[1] as String
-                    1L
-                }
-                "'HGET'" in script -> {
-                    val replaced = hashes[key]?.replace(args[0] as String, args[1] as String, args[2] as String)
-                    if (replaced == true) 1L else 0L
-                }
-                else -> error("Unexpected Redis script")
-            }
+        every { redis.set(any(), any(), any<Long>()) } answers {
+            markers[firstArg()] = secondArg<String>() to (nowSeconds + thirdArg<Long>())
         }
+        every { redis.delete(any<String>()) } answers { markers.remove(firstArg<String>()) != null }
     }
 
     @Test
-    fun springWiresHashFieldsAndScriptArgumentsWithIdenticalBytes() {
+    fun springUsesTheDefaultTtlForStringMarkers() {
         AnnotationConfigApplicationContext().use { context ->
-            context.beanFactory.registerSingleton("redisConnectionFactory", mockk<RedisConnectionFactory>())
-            context.beanFactory.registerSingleton("meterRegistry", SimpleMeterRegistry())
-            context.register(RedisAutoConfiguration::class.java, AgentAskCache::class.java)
+            context.beanFactory.registerSingleton("redisOperation", redis)
+            context.register(AgentAskCache::class.java)
             context.refresh()
-            val operation = ReflectionTestUtils.getField(context.getBean(AgentAskCache::class.java), "redis")
-            assertSame(context.getBean("redisStringHashOperation"), operation)
-            val template = ReflectionTestUtils.getField(operation!!, "masterRedisTemplate") as RedisTemplate<*, *>
-            // 脚本参数、Hash 字段和 Hash 值分别经不同 serializer；三者均需和 Lua 的原始字节互通。
-            for (serializer in listOf(template.valueSerializer, template.hashKeySerializer, template.hashValueSerializer)) {
-                @Suppress("UNCHECKED_CAST")
-                val strings = serializer as RedisSerializer<String>
-                for (value in listOf("build", "123456:ALL")) {
-                    assertArrayEquals(value.toByteArray(), strings.serialize(value))
-                }
-            }
+            context.getBean(AgentAskCache::class.java).rememberEmpty("a", BuildJobType.ALL)
+            verify { redis.set(any(), "ALL", 20L) }
         }
     }
 
     @Test
     fun knownEmptySkipsOnlyCompatiblePolls() {
         assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
-        assertNull(cache.queryAndRememberEmpty<String>("a", BuildJobType.BINARY) { null })
-        assertTrue(cache.isBuildEmpty("a", BuildJobType.BINARY))
-        assertFalse(cache.isBuildEmpty("a", BuildJobType.DOCKER))
-        assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
-        assertEquals("docker", cache.queryAndRememberEmpty("a", BuildJobType.DOCKER) { "docker" })
-        assertNull(cache.queryAndRememberEmpty<String>("a", BuildJobType.ALL) { null })
-        assertTrue(cache.isBuildEmpty("a", BuildJobType.DOCKER))
+        for (type in listOf(BuildJobType.BINARY, BuildJobType.DOCKER, BuildJobType.ALL)) {
+            cache.rememberEmpty("a", type)
+            for (poll in BuildJobType.values()) {
+                val expected = poll != BuildJobType.NONE && (type == BuildJobType.ALL || type == poll)
+                assertEquals(expected, cache.isBuildEmpty("a", poll), "$type / $poll")
+            }
+        }
         assertFalse(cache.isBuildEmpty("b", BuildJobType.ALL))
         cache.invalidateBuild("a")
         assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
     }
 
     @Test
-    fun staleEmptyQueryCannotOverwriteEnqueueOrAnotherProbe() {
-        // 外层 ALL 查询最后才返回空。期间任务入队，另一次 Docker 轮询已经领到它并换掉了 UUID。
-        // 如果外层还能写回 ALL，接下来的轮询就会错误地跳过所有任务类型的查询。
-        cache.queryAndRememberEmpty<String>("a", BuildJobType.ALL) {
-            cache.invalidateBuild("a")
-            assertEquals("job", cache.queryAndRememberEmpty("a", BuildJobType.DOCKER) { "job" })
-            null
+    fun lateEmptyResultExpiresEvenWhenPollsKeepHittingIt() {
+        // 模拟回队清缓存后，之前的查空结果才写入。后续轮询不会延长这次写入的 TTL。
+        cache.invalidateBuild("a")
+        nowSeconds = 3
+        cache.rememberEmpty("a", BuildJobType.ALL)
+        for (time in listOf(8L, 13L, 22L)) {
+            nowSeconds = time
+            assertTrue(cache.isBuildEmpty("a", BuildJobType.ALL))
         }
+        nowSeconds = 23
+        assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
+        verify(exactly = 1) { redis.set(any(), "ALL", 20L) }
+    }
+
+    @Test
+    fun disabledInstanceStillInvalidatesOtherInstancesMarkers() {
+        cache.rememberEmpty("a", BuildJobType.ALL)
+        val disabled = AgentAskCache(redis, 0)
+        assertFalse(disabled.isBuildEmpty("a", BuildJobType.ALL))
+        disabled.rememberEmpty("a", BuildJobType.DOCKER)
+        cache.rememberEmpty("a", BuildJobType.NONE)
+        verify(exactly = 0) { redis.get(any()) }
+        verify(exactly = 1) { redis.set(any(), any(), any<Long>()) }
+        disabled.invalidateBuild("a")
         assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
     }
 
     @Test
-    fun cacheFailureAndDisabledCacheFallBackToTheClaim() {
-        every { redis.hget(any(), any()) } throws IllegalStateException("offline")
-        every { redis.execute<Long>(any(), any(), *anyVararg()) } throws IllegalStateException("offline")
+    fun redisFailuresLeaveTheQueueUsable() {
+        every { redis.get(any()) } throws IllegalStateException("offline")
+        every { redis.set(any(), any(), any<Long>()) } throws IllegalStateException("offline")
+        every { redis.delete(any<String>()) } throws IllegalStateException("offline")
         assertFalse(cache.isBuildEmpty("a", BuildJobType.ALL))
-        assertEquals("job", cache.queryAndRememberEmpty("a", BuildJobType.ALL) { "job" })
-        val disabled = AgentAskCache(mockk(), 0)
-        assertFalse(disabled.isBuildEmpty("a", BuildJobType.ALL))
-        assertEquals("job", disabled.queryAndRememberEmpty("a", BuildJobType.ALL) { "job" })
+        cache.rememberEmpty("a", BuildJobType.ALL)
+        cache.invalidateBuild("a")
     }
 
     @Test
@@ -146,6 +128,7 @@ class AgentQueueEmptyCacheTest {
         every { agent.status } returns AgentStatus.IMPORT_OK
         every { heartbeat.agentStatus } returns AgentStatus.IMPORT_OK.name
         every { environment.newHeartbeat("p", "a", "current", request.heartbeat) } returns Result(heartbeat)
+        every { redis.getKeyByRedisName(any()) } answers { firstArg() }
         every { redis.setNxEx(any(), any(), any(), true) } returns true
         every { redis.execute<Long>(any(), any(), *anyVararg(), isRedisLock = true) } returns 1L
         every { dao.fetchOneQueueBuild(any(), "a", BuildJobType.ALL) } returns null

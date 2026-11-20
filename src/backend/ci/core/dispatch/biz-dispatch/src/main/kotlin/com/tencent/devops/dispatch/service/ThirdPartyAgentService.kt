@@ -247,16 +247,15 @@ class ThirdPartyAgentService @Autowired constructor(
                 throw NotFoundException("Fail to get the agent")
             }
 
-            // 独立领取必须先校验密钥和节点状态；聚合 ask 已经读取过本次空标记。
+            // 独立领取必须先校验密钥和节点状态再读空标记；聚合 ask 已经在提交领取前读过。
             if (checkEmptyAfterAuth && agentAskCache.isBuildEmpty(agentId, buildType)) {
                 return AgentResult(AgentStatus.IMPORT_OK, null)
             }
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
-                val build = agentAskCache.queryAndRememberEmpty(agentId, buildType) {
-                    thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId, buildType)
-                } ?: run {
+                val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId, buildType) ?: run {
+                    agentAskCache.rememberEmpty(agentId, buildType)
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
@@ -755,7 +754,6 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         val buildType = BuildJobType.toEnum(info.askEnable.build)
-        // 心跳仍逐次执行。队列查空命中时略过领取分支，未命中时真实领取只进一次线程池。
         val buildF = if (buildType != BuildJobType.NONE && !agentAskCache.isBuildEmpty(agentId, buildType)) {
             CompletableFuture.supplyAsync({
                 claimBuild(projectId, agentId, secretKey, buildType, checkEmptyAfterAuth = false)
