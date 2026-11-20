@@ -458,7 +458,6 @@
     try {
       if (!projectId.value) return
       isLoading.value = true;
-      console.log(resourceType.value,"??????????");
       const res = await http.getResourceAuthList(projectId.value, {
         page: pagination.value.current,
         pageSize: pagination.value.limit,
