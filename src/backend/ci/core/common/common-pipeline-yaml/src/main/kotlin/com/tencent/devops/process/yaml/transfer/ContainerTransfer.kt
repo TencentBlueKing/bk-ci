@@ -461,6 +461,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         val timeoutVar = job.timeoutMinutes ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES.toString()
 
         val dependOnName = job.dependOn?.joinToString(",")
+        val ifField = job.ifField
 
         return if (finalStage) {
             JobControlOption(
@@ -468,11 +469,11 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 timeout = timeout,
                 timeoutVar = timeoutVar,
                 runCondition = when {
-                    job.ifField == null -> JobRunCondition.STAGE_RUNNING
-                    IfType.SUCCESS.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
-                    IfType.FAILURE.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_FAILED
-                    IfType.CANCELLED.name == job.ifField.expression ||
-                        IfType.CANCELED.name == job.ifField.expression -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                    ifField == null -> JobRunCondition.STAGE_RUNNING
+                    IfType.SUCCESS.name == ifField.expression -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                    IfType.FAILURE.name == ifField.expression -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                    IfType.CANCELLED.name == ifField.expression ||
+                        IfType.CANCELED.name == ifField.expression -> JobRunCondition.PREVIOUS_STAGE_CANCEL
 
                     else -> JobRunCondition.STAGE_RUNNING
                 },
@@ -485,10 +486,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
             )
         } else {
             val runCondition = when {
-                job.ifField == null -> JobRunCondition.STAGE_RUNNING
-                !job.ifField.expression.isNullOrBlank() -> JobRunCondition.CUSTOM_CONDITION_MATCH
-                job.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH
-                job.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+                ifField == null -> JobRunCondition.STAGE_RUNNING
+                !ifField.expression.isNullOrBlank() -> JobRunCondition.CUSTOM_CONDITION_MATCH
+                ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH
+                ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
                 else -> JobRunCondition.STAGE_RUNNING
             }
             JobControlOption(

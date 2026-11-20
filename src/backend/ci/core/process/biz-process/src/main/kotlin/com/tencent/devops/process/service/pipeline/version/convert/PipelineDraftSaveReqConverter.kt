@@ -186,9 +186,10 @@ class PipelineDraftSaveReqConverter(
             val context = pipelineVersionCreateContextFactory.create(
                 contextParam = contextParam
             )
-            if (context.templateInstanceBasicInfo != null) {
+            val basicInfo = context.templateInstanceBasicInfo
+            if (basicInfo != null) {
                 val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params
-                val instanceParams = context.templateInstanceBasicInfo.instanceModel.getTriggerContainer().params
+                val instanceParams = basicInfo.instanceModel.getTriggerContainer().params
                 TemplateInstanceUtil.assertInstanceParamProps(
                     projectId = projectId,
                     pipelineId = newPipelineId,
@@ -198,7 +199,7 @@ class PipelineDraftSaveReqConverter(
                 validateOptionalParamsNotOverridden(
                     projectId = projectId,
                     pipelineId = newPipelineId,
-                    info = context.templateInstanceBasicInfo,
+                    info = basicInfo,
                     instanceParams = instanceParams
                 )
             }

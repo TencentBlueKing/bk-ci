@@ -120,6 +120,26 @@ class RuntimeResourceResolver(
     }
 
     /**
+     * 取环境名用于报错展示。环境可能来自历史构建参数，流水线设置里的名字未必对得上，只能按 hashId 现查。
+     * 查不到就返回 null，由调用方退回展示 hashId。
+     */
+    fun getEnvName(
+        projectId: String,
+        userId: String,
+        envHashId: String
+    ): String? = try {
+        client.get(ServiceEnvironmentResource::class).get(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId,
+            checkPermission = false
+        ).data?.name?.takeIf(String::isNotBlank)
+    } catch (ignored: Exception) {
+        logger.warn("get env name failed|$projectId|$envHashId", ignored)
+        null
+    }
+
+    /**
      * 环境已被删除时按「环境里没有这台机器」处理（空列表），其余错误按查询失败处理（null）。
      * 删掉环境和清空环境对「这个节点还能不能跑」是同一个结论，不能因为前者报错就放行。
      */

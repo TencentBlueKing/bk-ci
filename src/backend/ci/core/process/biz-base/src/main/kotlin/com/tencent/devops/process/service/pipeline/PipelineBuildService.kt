@@ -176,15 +176,6 @@ class PipelineBuildService(
         debug: Boolean? = false
     ): BuildId {
 
-        // 启动前的扩展权限校验（如基于 NODE_HASH_ID 校验节点操作权限），校验不通过会抛出异常阻断启动
-        pipelineStartupPermissionExtService.checkStartupPermission(
-            userId = userId,
-            projectId = pipeline.projectId,
-            pipelineId = pipeline.pipelineId,
-            pipelineParamMap = pipelineParamMap,
-            channelCode = channelCode
-        )
-
         var acquire = false
         val projectVO = projectCacheService.getProject(pipeline.projectId)
         if (projectVO?.enabled == false) {
@@ -280,6 +271,17 @@ class PipelineBuildService(
                 runtimeResource = setting.runtimeResource()
             )
             initPipelineParamMap(initContext)
+
+            // 启动前的扩展权限校验（基于 NODE_AGENT_ID 校验节点操作权限），校验不通过会抛出异常阻断启动。
+            // 必须放在运行资源解析之后：绑定单台机器时启动方不传节点，节点是上面解析运行资源才得出来的，
+            // 放在解析之前会因为拿不到节点而整个跳过校验，手动启动和定时触发就都绕过了节点权限
+            pipelineStartupPermissionExtService.checkStartupPermission(
+                userId = userId,
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                pipelineParamMap = pipelineParamMap,
+                channelCode = channelCode
+            )
 
             val context = StartBuildContext.init(
                 projectId = pipeline.projectId,
@@ -576,15 +578,23 @@ class PipelineBuildService(
         agentId: String
     ) {
         val targetEnvHashId = envHashId?.takeIf(String::isNotBlank) ?: return
+        val authUserId = ctx.pipelineAuthorizer ?: ctx.userId
         val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsOrNull(
             projectId = ctx.pipeline.projectId,
-            userId = ctx.pipelineAuthorizer ?: ctx.userId,
+            userId = authUserId,
             envHashId = targetEnvHashId
         ) ?: return
         if (envAgentIds.contains(agentId)) return
+        // 报错给人看，要的是环境名称。设置里的名字只在校验的就是设置里那个环境时才可信，
+        // 用历史构建带来的环境校验时按 hashId 现查；环境已被删除等查不到名字的情况才退回展示 hashId
+        val envName = resourceName ?: runtimeResourceResolver.getEnvName(
+            projectId = ctx.pipeline.projectId,
+            userId = authUserId,
+            envHashId = targetEnvHashId
+        )
         throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
-            params = arrayOf(resourceName ?: targetEnvHashId)
+            params = arrayOf(envName ?: targetEnvHashId)
         )
     }
 

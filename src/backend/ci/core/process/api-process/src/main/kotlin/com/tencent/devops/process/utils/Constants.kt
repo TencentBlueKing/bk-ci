@@ -81,6 +81,9 @@ const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chines
 const val PIPELINE_START_MOBILE = "BK_CI_IS_MOBILE" // "pipeline.start.isMobile"
 
 const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task.id"
+// 重放时按原构建的触发器校验，而重放出来的构建自身是手动触发。不把原触发器 id 传下去，
+// 「原触发器已从编排里删除」这件事在第一次重放之后就查不出来了
+const val PIPELINE_REPLAY_ORIGIN_TASK_ID = "BK_CI_REPLAY_ORIGIN_TASK_ID"
 const val PIPELINE_TRIGGER_EVENT_ID = "BK_CI_TRIGGER_EVENT_ID"
 const val PIPELINE_TRIGGER_DETAIL_ID = "BK_CI_TRIGGER_DETAIL_ID"
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"

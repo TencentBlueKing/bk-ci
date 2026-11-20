@@ -55,7 +55,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_TIMER_
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_YAML_BRANCH_TIME
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV
 import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -209,6 +208,22 @@ class PipelineTimerBuildListener @Autowired constructor(
     }
 
     /**
+     * 把启动异常转成触发记录里的失败原因，口径与 [timerTrigger] 的异常处理一致。
+     * 返回 null 表示这类异常不记录：启动流程主动放弃本次触发，不算触发失败。
+     */
+    private fun Throwable.toTriggerFailedReason(): PipelineTriggerReasonDetail? = when (this) {
+        is OperationException -> null
+        // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
+        is PermissionForbiddenException -> PipelineTriggerFailedMsg(defaultMessage ?: message ?: "")
+        is ErrorCodeException -> PipelineTriggerFailedErrorCode(
+            errorCode = errorCode,
+            params = params?.toList() ?: listOf()
+        )
+
+        else -> PipelineTriggerFailedMsg(message ?: "")
+    }
+
+    /**
      * 创作流定时触发。
      *
      * 运行资源决定到点启动几次构建：绑定单台机器时启动一次，由启动流程解析出那台机器；
@@ -239,13 +254,6 @@ class PipelineTimerBuildListener @Autowired constructor(
             )
             return
         }
-        // 环境下当前真实可用的节点。触发器里存的节点是配置时的快照，节点被移出环境后不会跟着更新，
-        // 必须以环境为准做一次过滤，否则会在一台已经不属于本运行资源的机器上触发
-        val envNodeList = creativeStreamService.getRuntimeResourceNodeList(
-            pipelineInfo = pipelineInfo,
-            pipelineSetting = setting,
-            userId = userId
-        ).orEmpty()
         val configuredNodes = triggerElement.nodes?.takeIf {
             triggerElement.nodeType == TimerNodeType.NODE_LIST
         }
@@ -260,38 +268,47 @@ class PipelineTimerBuildListener @Autowired constructor(
             )
             return
         }
-        val targetNodes = configuredNodes?.filter { envNodeList.contains(it) } ?: envNodeList
+        // 勾选了节点就按勾选的逐个触发，这里不预先判断节点还能不能用：环境节点列表是按触发人权限过滤出来的，
+        // 用它反推只能得出「不在列表里」，区分不了节点被移出环境、还是触发人没了该节点的操作权限。
+        // 两种情况启动流程都会以各自的错误码拒绝，失败原因由它给出才准确。
+        // 没勾选节点时才需要环境列表来决定触发几次，环境为空就静默跳过，沿用原有处理
+        val targetNodes = configuredNodes ?: creativeStreamService.getRuntimeResourceNodeList(
+            pipelineInfo = pipelineInfo,
+            pipelineSetting = setting,
+            userId = userId
+        ).orEmpty()
         if (targetNodes.isEmpty()) {
             logger.info("[$pipelineId]|no runnable node in runtime resource|nodeType=${triggerElement.nodeType}")
-            // 勾选的节点全被移出环境是配置与环境脱节，记一条失败事件让用户能查到原因；
-            // 整个环境空了属于环境侧的状态，沿用原来静默跳过的处理
-            if (configuredNodes != null) {
-                saveTriggerEvent(
-                    projectId = projectId,
-                    userId = userId,
-                    pipelineId = pipelineId,
-                    reasonDetail = PipelineTriggerFailedErrorCode(
-                        errorCode = ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
-                        params = listOf(resource?.resourceName ?: resource?.resourceId ?: "")
-                    )
-                )
-            }
             return
         }
         targetNodes.forEach { agentHashId ->
-            val creativeStreamParams = creativeStreamService.creativeStreamParams(
-                projectId = projectId,
-                agentHashId = agentHashId,
-                userId = userId
-            )
-            timerTriggerPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                params = params.plus(creativeStreamParams),
-                channelCode = timerChannelCode,
-                taskId = taskId
-            )
+            // 单个节点启动失败不能牵连其它节点：节点可能已被移出环境、已被删除或触发人已无操作权限，
+            // 这些都是单节点的问题，兜住异常记一条失败后继续触发剩下的节点
+            try {
+                val creativeStreamParams = creativeStreamService.creativeStreamParams(
+                    projectId = projectId,
+                    agentHashId = agentHashId,
+                    userId = userId
+                )
+                timerTriggerPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    params = params.plus(creativeStreamParams),
+                    channelCode = timerChannelCode,
+                    taskId = taskId
+                )
+            } catch (ignored: Throwable) {
+                logger.warn("[$pipelineId]|TimerTrigger node failed|agentHashId=$agentHashId", ignored)
+                ignored.toTriggerFailedReason()?.let {
+                    saveTriggerEvent(
+                        projectId = projectId,
+                        userId = userId,
+                        pipelineId = pipelineId,
+                        reasonDetail = it
+                    )
+                }
+            }
         }
     }
 

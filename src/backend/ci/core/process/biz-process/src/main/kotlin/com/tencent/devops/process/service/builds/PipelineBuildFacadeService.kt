@@ -158,6 +158,7 @@ import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
@@ -172,8 +173,10 @@ import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
@@ -222,7 +225,8 @@ class PipelineBuildFacadeService(
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
-    private val buildRunningInfoResolver: BuildRunningInfoResolver
+    private val buildRunningInfoResolver: BuildRunningInfoResolver,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -614,6 +618,14 @@ class PipelineBuildFacadeService(
                 paramProperties = triggerContainer.params, paramValues = mergedValues
             )
             yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
+
+            // 重放链上的原触发器 id 不是编排里声明的流水线变量，parseTriggerParam 不会收它，
+            // 这里显式带上，保证重放出来的构建再被重放时仍按原触发器校验
+            mergedValues[PIPELINE_REPLAY_ORIGIN_TASK_ID]?.takeIf { it.isNotBlank() }?.let {
+                paramMap[PIPELINE_REPLAY_ORIGIN_TASK_ID] = BuildParameters(
+                    key = PIPELINE_REPLAY_ORIGIN_TASK_ID, value = it, readOnly = true
+                )
+            }
 
             // 创作流流水线填充基础变量
             if (channelCode == ChannelCode.CREATIVE_STREAM) {
@@ -3028,7 +3040,8 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            keys = setOf(PIPELINE_START_TASK_ID)
+            // 原触发器 id 不是编排声明的流水线变量，进不了启动参数，只存在于构建变量里，要单独取
+            keys = setOf(PIPELINE_START_TASK_ID, PIPELINE_REPLAY_ORIGIN_TASK_ID)
         )
         // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = buildInfo.buildParameters?.filter {
@@ -3054,8 +3067,12 @@ class PipelineBuildFacadeService(
         )
         val model = resource.model
         val triggerContainer = model.getTriggerContainer()
-        // 检查触发器是否存在
-        val checkTriggerResult = forceTrigger || when (startType) {
+        // 检查触发器是否存在。定时触发的构建重放后自身变成手动触发，但要校验的仍是它最初那个定时触发器，
+        // 所以重放链上一路带着原触发器 id，否则第一次重放之后这个约束就被手动触发器顶掉了
+        val originTaskId = startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID]
+        val matchedTrigger = if (originTaskId != null) {
+            triggerContainer.elements.find { it.id == originTaskId }
+        } else when (startType) {
             StartType.WEB_HOOK, StartType.TRIGGER_EVENT -> {
                 triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
@@ -3075,7 +3092,17 @@ class PipelineBuildFacadeService(
             else -> {
                 EmptyElement()
             }
-        }?.takeIf { it.elementEnabled() } != null
+        }
+        val checkTriggerResult = forceTrigger || (
+            matchedTrigger?.takeIf { it.elementEnabled() } != null &&
+                runtimeResourceStillMatch(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = buildInfo.channelCode,
+                    startParameters = startParameters
+                )
+            )
         if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
@@ -3099,6 +3126,10 @@ class PipelineBuildFacadeService(
                 eventId = replayEventId
             )
         }
+        // 只有按 id 认定触发器的定时触发需要传递：手动、远程触发是按类型认定的，
+        // 触发器 id 在编排变更后会变，带上反而会把正常的重放判成触发条件不满足
+        (originTaskId ?: startParameters[PIPELINE_START_TASK_ID]?.takeIf { startType == StartType.TIME_TRIGGER })
+            ?.let { startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID] = it }
         val replayBuildId = buildManualStartup(
             userId = userId,
             projectId = projectId,
@@ -3111,6 +3142,42 @@ class PipelineBuildFacadeService(
             status = BuildReplayStatus.REPLAY_SUCCESS,
             id = replayBuildId.id
         )
+    }
+
+    /**
+     * 判断流水线绑定的运行资源是否仍是原构建跑的那个。
+     *
+     * 运行资源被改到别的环境、或单体资源换了一台机器之后，原构建那台机器就不再是这条流水线该跑的机器，
+     * 按「已不满足最新版本的触发条件」处理，和触发器被删掉走同一条拦截。
+     *
+     * 只认「运行资源本身被改了」这一种情况。机器还在原运行资源里、只是被移出环境或被删除，
+     * 由启动流程给出各自更准确的原因（不在环境内、找不到可用机器），这里必须放行，
+     * 否则那些场景的报错会被笼统的「触发条件不满足」盖掉。
+     * 取不到运行资源或解析失败时同样放行：没有证据不做判定。
+     */
+    private fun runtimeResourceStillMatch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        startParameters: Map<String, String>
+    ): Boolean {
+        if (channelCode != ChannelCode.CREATIVE_STREAM) return true
+        val resource = pipelineRepositoryService.getSetting(projectId, pipelineId)
+            ?.runtimeResource() ?: return true
+        return if (resource.group) {
+            // 环境类资源只比环境：原构建记下的环境和当前绑定的环境是不是同一个
+            val originEnvHashId = startParameters[NODE_ENV_HASH_ID]?.takeIf { it.isNotBlank() } ?: return true
+            originEnvHashId == resource.envHashId
+        } else {
+            // 单体资源比机器：解析不出来说明机器已释放，交给启动流程报「找不到可用的执行机器」
+            val originAgentId = startParameters[NODE_AGENT_ID]?.takeIf { it.isNotBlank() } ?: return true
+            runtimeResourceResolver.resolveAgentHashId(
+                projectId = projectId,
+                userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
+                resource = resource
+            )?.let { it == originAgentId } ?: true
+        }
     }
 
     fun getByTaskId(
