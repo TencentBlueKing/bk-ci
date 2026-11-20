@@ -211,7 +211,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ) {
         if (logo == true) {
             val relative = URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
-            if (!isSafeLogoPath(relative)) {
+            if (
+                relative.isBlank() ||
+                relative.contains("..") ||
+                relative.contains('\\') ||
+                relative.contains("://")
+            ) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("filePath")
@@ -223,13 +228,6 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         }
         response.contentType = MimeUtil.mediaType(filePath)
         downloadFile(userId, filePath, response.outputStream)
-    }
-
-    private fun isSafeLogoPath(relative: String): Boolean {
-        if (relative.isBlank()) {
-            return false
-        }
-        return listOf("..", "\\", "://").none { relative.contains(it) }
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
