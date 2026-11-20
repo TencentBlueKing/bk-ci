@@ -27,16 +27,13 @@
 
 package com.tencent.devops.process.service.pipeline.task
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TAPD_WORKSPACE_NOT_AUTHORIZED
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscription
-import com.tencent.devops.process.service.TapdSupportService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum
 import org.jooq.DSLContext
@@ -49,8 +46,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class TapdTriggerElementVersionProcessor @Autowired constructor(
-    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
-    private val tapdSupportService: TapdSupportService
+    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao
 ) : PipelineTaskVersionProcessor {
 
     companion object {
@@ -58,42 +54,6 @@ class TapdTriggerElementVersionProcessor @Autowired constructor(
     }
 
     override fun support(element: Element): Boolean = element is TapdWebHookTriggerElement
-
-    override fun postProcessBeforeSave(
-        context: PipelineVersionCreateContext,
-        pipelineResourceVersion: PipelineResourceVersion,
-        pipelineSetting: PipelineSetting,
-        element: Element,
-        variables: Map<String, String>
-    ) {
-        val triggerElement = element as? TapdWebHookTriggerElement ?: return
-        if (!triggerElement.elementEnabled()) return
-        val projectId = pipelineResourceVersion.projectId
-        val pipelineId = pipelineResourceVersion.pipelineId
-        val taskId = triggerElement.id ?: return
-        val workspaceId = EnvUtils.parseEnv(triggerElement.data.input.workspaceId, variables)
-        if (workspaceId.isBlank() || '$' in workspaceId || !workspaceId.all { it.isDigit() }) {
-            logger.warn(
-                "skip tapd authorization check|workspaceId is not a concrete id|" +
-                    "$projectId|$pipelineId|$taskId"
-            )
-            return
-        }
-        val authorized = tapdSupportService.getAuthorizedWorkspaces()
-        if (authorized == null || !authorized.known) {
-            logger.warn(
-                "skip tapd authorization check|authorized workspaces unknown|" +
-                    "$projectId|$pipelineId|$taskId|workspaceId=$workspaceId"
-            )
-            return
-        }
-        if (!authorized.workspaceIds.contains(workspaceId)) {
-            throw ErrorCodeException(
-                errorCode = ERROR_TAPD_WORKSPACE_NOT_AUTHORIZED,
-                params = arrayOf(workspaceId)
-            )
-        }
-    }
 
     override fun postProcessAfterSave(
         transactionContext: DSLContext,

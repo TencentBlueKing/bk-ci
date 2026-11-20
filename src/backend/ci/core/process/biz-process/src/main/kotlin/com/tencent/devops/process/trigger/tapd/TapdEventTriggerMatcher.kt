@@ -44,7 +44,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_IGNORED
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.USER_NOT_MATCH
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.ListContainsFilter
-import com.tencent.devops.common.webhook.service.code.filter.TapdStatusFilter
+import com.tencent.devops.common.webhook.service.code.filter.NotContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.util.WebhookUtils
@@ -195,17 +195,26 @@ class TapdEventTriggerMatcher {
         )
         // 状态过滤：排除优先，空监听等价监听全部状态
         val currentStatus = body.getCurrentStatus()
-        val statusFilter = TapdStatusFilter(
+        val includedStatuses = input.includeStatuses?.parseEnv(variables) ?: emptyList()
+        val excludedStatuses = input.excludeStatuses?.parseEnv(variables) ?: emptyList()
+        // 先执行排除过滤，命中排除状态后由过滤器链短路，保证排除优先且失败原因不被覆盖
+        val statusExcludeFilter = NotContainsFilter(
             pipelineId = taskId,
+            filterName = "tapdStatusExclude",
             triggerOn = currentStatus,
-            included = input.includeStatuses?.parseEnv(variables) ?: emptyList(),
-            excluded = input.excludeStatuses?.parseEnv(variables) ?: emptyList(),
-            includedFailedReason = I18Variable(
-                code = BK_TAPD_STATUS_NOT_MATCH,
-                params = listOf(currentStatus)
-            ).toJsonStr(),
-            excludedFailedReason = I18Variable(
+            excluded = excludedStatuses,
+            failedReason = I18Variable(
                 code = BK_TAPD_STATUS_IGNORED,
+                params = listOf(currentStatus)
+            ).toJsonStr()
+        )
+        val statusIncludeFilter = ContainsFilter(
+            pipelineId = taskId,
+            filterName = "tapdStatusInclude",
+            triggerOn = currentStatus,
+            included = includedStatuses,
+            failedReason = I18Variable(
+                code = BK_TAPD_STATUS_NOT_MATCH,
                 params = listOf(currentStatus)
             ).toJsonStr()
         )
@@ -228,7 +237,9 @@ class TapdEventTriggerMatcher {
         )
         listOf(
             eventFromFilter, actionFilter, userFilter,
-            labelFilter, priorityFilter, statusFilter, ownerFilter
+            labelFilter, priorityFilter,
+            statusExcludeFilter, statusIncludeFilter,
+            ownerFilter
         )
     }
 

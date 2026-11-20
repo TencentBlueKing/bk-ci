@@ -14,7 +14,6 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.tapd.ServiceTapdResource
-import com.tencent.devops.scm.pojo.tapd.TapdAuthorizedWorkspaces
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
@@ -38,14 +37,6 @@ class TapdSupportService(private val client: Client) {
     private val workspaceCache: Cache<String, TapdWorkspace> = Caffeine.newBuilder()
         .maximumSize(WORKSPACE_CACHE_MAX_SIZE)
         .expireAfterWrite(WORKSPACE_CACHE_EXPIRE_HOURS, TimeUnit.HOURS)
-        .build()
-
-    /**
-     * TAPD 应用已授权项目集合缓存
-     */
-    private val authorizedWorkspacesCache: Cache<String, TapdAuthorizedWorkspaces> = Caffeine.newBuilder()
-        .maximumSize(1L)
-        .expireAfterWrite(AUTHORIZED_WORKSPACES_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build()
 
     /**
@@ -124,30 +115,9 @@ class TapdSupportService(private val client: Client) {
         }
     }
 
-    /**
-     * 查询 TAPD 应用已授权项目集合
-     *
-     * 远端失败或返回 unknown 时不缓存、返回 null，调用方按失败放行处理。
-     */
-    fun getAuthorizedWorkspaces(): TapdAuthorizedWorkspaces? {
-        authorizedWorkspacesCache.getIfPresent(AUTHORIZED_WORKSPACES_CACHE_KEY)?.let { return it }
-        return try {
-            val result = client.get(ServiceTapdResource::class).authorizedWorkspaces().data
-            if (result != null && result.known) {
-                authorizedWorkspacesCache.put(AUTHORIZED_WORKSPACES_CACHE_KEY, result)
-            }
-            result
-        } catch (ignored: Exception) {
-            logger.warn("fail to query tapd authorized workspaces", ignored)
-            null
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(TapdSupportService::class.java)
         private const val WORKSPACE_CACHE_MAX_SIZE = 1000L
         private const val WORKSPACE_CACHE_EXPIRE_HOURS = 1L
-        private const val AUTHORIZED_WORKSPACES_CACHE_KEY = "tapd_authorized_workspaces"
-        private const val AUTHORIZED_WORKSPACES_CACHE_EXPIRE_MINUTES = 10L
     }
 }

@@ -67,7 +67,7 @@ class TapdDropdownServiceTest {
     )
 
     @Test
-    fun `workspace options mark unauthorized projects disabled`() {
+    fun `workspace options only return authorized projects`() {
         val service = TapdDropdownService(
             FakeItemService(
                 workspaces = listOf(
@@ -79,16 +79,15 @@ class TapdDropdownServiceTest {
             )
         )
         val options = service.workspaceOptions("v_ivfzhou")
-        assertEquals(2, options.size)
+        assertEquals(1, options.size)
+        assertEquals("70247651", options[0].id)
         assertEquals("ivfzhou-test", options[0].name)
         assertFalse(options[0].disabled)
-        assertTrue(options[1].disabled)
-        assertTrue(options[1].name.contains("蓝鲸"))
-        assertTrue(options[1].name.contains("未安装或未授权"))
+        assertTrue(options[0].name.contains("未安装或未授权").not())
     }
 
     @Test
-    fun `unknown authorization leaves options enabled`() {
+    fun `unknown authorization returns empty workspace options`() {
         val service = TapdDropdownService(
             FakeItemService(
                 workspaces = listOf(workspace("70247651", "ivfzhou-test")),
@@ -97,7 +96,7 @@ class TapdDropdownServiceTest {
             )
         )
         assertFalse(service.authorizedWorkspaces().known)
-        assertFalse(service.workspaceOptions("v_ivfzhou").first().disabled)
+        assertTrue(service.workspaceOptions("v_ivfzhou").isEmpty())
     }
 
     @Test
@@ -188,6 +187,20 @@ class TapdDropdownServiceTest {
         )
         val service = TapdDropdownService(fake)
         assertTrue(service.statusOptions("999", "STORY").isEmpty())
+        assertEquals(0, fake.storyCalls)
+    }
+
+    @Test
+    fun `status options empty when authorized workspaces unknown`() {
+        val fake = FakeItemService(
+            granted = null,
+            installed = setOf("70247651"),
+            storyField = TapdStoryFieldConfig(
+                status = TapdStatusField(options = mapOf("developing" to "实现中"))
+            )
+        )
+        val service = TapdDropdownService(fake)
+        assertTrue(service.statusOptions("70247651", "STORY").isEmpty())
         assertEquals(0, fake.storyCalls)
     }
 

@@ -3,7 +3,6 @@ package com.tencent.devops.repository.sdk.tapd.service
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.pojo.tapd.TapdAuthorizedWorkspaces
 import com.tencent.devops.scm.pojo.tapd.TapdStatusOption
 import com.tencent.devops.scm.pojo.tapd.TapdWorkspaceOption
@@ -33,9 +32,9 @@ class TapdDropdownService @Autowired constructor(
         .build()
 
     /**
-     * 当前用户可见的 TAPD 项目下拉选项
+     * 当前用户可见且应用已授权的 TAPD 项目下拉选项
      *
-     * 已授权/已安装项目可选；未安装或未授权项目仍展示但禁用，提示由后端本地化后拼接到 name。
+     * 未安装/未授权项目不再展示；授权集合未知时返回空列表，避免误展示未授权项目。
      */
     fun workspaceOptions(userId: String): List<TapdWorkspaceOption> {
         if (userId.isBlank()) {
@@ -44,27 +43,24 @@ class TapdDropdownService @Autowired constructor(
         }
         return try {
             val authorized = authorizedWorkspaces()
+            if (!authorized.known) {
+                logger.warn("tapd authorized workspaces unknown, return empty workspace options")
+                return emptyList()
+            }
             val workspaces = tapdItemService.listParticipantWorkspaces(nick = userId)
             if (workspaces.isEmpty()) {
                 logger.warn("tapd participant workspaces is empty")
                 return emptyList()
             }
-            val unauthorizedTip = workspaceNotAuthorizedTip()
             workspaces.mapNotNull { it.workspace }
-                .filter { it.id.isNotBlank() }
+                .filter { it.id.isNotBlank() && authorized.workspaceIds.contains(it.id) }
                 .distinctBy { it.id }
                 .map { workspace ->
-                    val disabled = authorized.known && !authorized.workspaceIds.contains(workspace.id)
-                    val name = if (disabled) {
-                        "${workspace.name}（$unauthorizedTip）"
-                    } else {
-                        workspace.name
-                    }
                     TapdWorkspaceOption(
                         id = workspace.id,
-                        name = name,
+                        name = workspace.name,
                         status = workspace.status,
-                        disabled = disabled
+                        disabled = false
                     )
                 }
         } catch (ignored: Exception) {
@@ -92,10 +88,10 @@ class TapdDropdownService @Autowired constructor(
         statusCache.getIfPresent(cacheKey)?.let { return it }
         return try {
             val authorized = authorizedWorkspaces()
-            if (authorized.known && !authorized.workspaceIds.contains(workspaceId)) {
+            if (!authorized.known || !authorized.workspaceIds.contains(workspaceId)) {
                 logger.warn(
-                    "tapd status options skipped for unauthorized workspace|" +
-                        "workspaceId=$workspaceId|eventType=$normalizedEventType"
+                    "tapd status options skipped for unknown or unauthorized workspace|" +
+                        "workspaceId=$workspaceId|eventType=$normalizedEventType|authorizedKnown=${authorized.known}"
                 )
                 return emptyList()
             }
@@ -123,7 +119,7 @@ class TapdDropdownService @Autowired constructor(
     }
 
     /**
-     * 聚合已授权与已安装项目；任一数据源失败时返回 unknown，保存校验与下拉禁用均按失败放行处理。
+     * 聚合已授权与已安装项目；任一数据源失败时返回 unknown，下拉数据按返回空列表处理。
      */
     fun authorizedWorkspaces(): TapdAuthorizedWorkspaces {
         authorizedCache.getIfPresent(AUTHORIZED_CACHE_KEY)?.let { return it }
@@ -149,20 +145,6 @@ class TapdDropdownService @Autowired constructor(
         }
     }
 
-    /**
-     * 生成未安装/未授权项目提示；无 Spring/请求上下文时回退默认中文，保证接口与单测稳定。
-     */
-    private fun workspaceNotAuthorizedTip(): String {
-        return try {
-            I18nUtil.getCodeLanMessage(
-                messageCode = TAPD_WORKSPACE_NOT_AUTHORIZED_MESSAGE_CODE,
-                defaultMessage = DEFAULT_TAPD_WORKSPACE_NOT_AUTHORIZED_TIP
-            ).ifBlank { DEFAULT_TAPD_WORKSPACE_NOT_AUTHORIZED_TIP }
-        } catch (ignored: Exception) {
-            DEFAULT_TAPD_WORKSPACE_NOT_AUTHORIZED_TIP
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(TapdDropdownService::class.java)
         private const val AUTHORIZED_CACHE_KEY = "tapd_authorized_workspaces"
@@ -171,7 +153,5 @@ class TapdDropdownService @Autowired constructor(
         private const val CACHE_EXPIRE_MINUTES = 10L
         private const val EVENT_TYPE_STORY = "STORY"
         private const val EVENT_TYPE_BUG = "BUG"
-        private const val TAPD_WORKSPACE_NOT_AUTHORIZED_MESSAGE_CODE = "bkTapdWorkspaceNotAuthorized"
-        private const val DEFAULT_TAPD_WORKSPACE_NOT_AUTHORIZED_TIP = "未安装或未授权，请先安装 TAPD 应用"
     }
 }

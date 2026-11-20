@@ -5,10 +5,12 @@ import com.tencent.devops.common.pipeline.enums.TapdEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerData
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STATUS_IGNORED
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TapdEventTriggerMatcherTest {
@@ -97,6 +99,26 @@ class TapdEventTriggerMatcherTest {
                 excludeStatuses = listOf("developing")
             ),
             body(currentStatus = "developing")
+        )
+        assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
+        assertNotNull(response.failedReason)
+        assertTrue(response.failedReason?.contains(BK_TAPD_STATUS_IGNORED) == true)
+    }
+
+    @Test
+    fun `blank status without included keeps old behavior`() {
+        val response = match(
+            element(excludeStatuses = listOf("rejected")),
+            body()
+        )
+        assertEquals(MatchStatus.SUCCESS, response.matchStatus)
+    }
+
+    @Test
+    fun `blank status with included is rejected`() {
+        val response = match(
+            element(includeStatuses = listOf("developing")),
+            body()
         )
         assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
         assertNotNull(response.failedReason)

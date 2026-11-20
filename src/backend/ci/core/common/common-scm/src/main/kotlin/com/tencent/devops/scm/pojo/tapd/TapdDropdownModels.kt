@@ -81,7 +81,7 @@ data class TapdStoryFieldConfig(
     val priorityLabel: TapdStatusField? = null
 )
 
-@Schema(description = "TAPD 项目下拉选项；禁用提示由后端拼接到 name，前端无需额外字段")
+@Schema(description = "TAPD 项目下拉选项；仅返回应用已授权项目")
 data class TapdWorkspaceOption(
     val id: String,
     val name: String,

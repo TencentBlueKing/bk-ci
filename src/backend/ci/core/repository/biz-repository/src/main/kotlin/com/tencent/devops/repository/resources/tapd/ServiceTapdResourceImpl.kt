@@ -35,8 +35,6 @@ import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdStory
 import com.tencent.devops.repository.sdk.tapd.service.ITapdItemService
 import com.tencent.devops.repository.sdk.tapd.service.ITapdWorkflowService
-import com.tencent.devops.repository.sdk.tapd.service.TapdDropdownService
-import com.tencent.devops.scm.pojo.tapd.TapdAuthorizedWorkspaces
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,8 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceTapdResourceImpl @Autowired constructor(
     private val tapdWorkflowService: ITapdWorkflowService,
-    private val tapdItemService: ITapdItemService,
-    private val tapdDropdownService: TapdDropdownService
+    private val tapdItemService: ITapdItemService
 ) : ServiceTapdResource {
 
     override fun getWorkflowStatusMap(request: StatusMapRequest): Result<Map<String, String>> {
@@ -68,7 +65,4 @@ class ServiceTapdResourceImpl @Autowired constructor(
         return Result(tapdItemService.getWorkspaceInfo(workspaceId = workspaceId))
     }
 
-    override fun authorizedWorkspaces(): Result<TapdAuthorizedWorkspaces> {
-        return Result(tapdDropdownService.authorizedWorkspaces())
-    }
 }

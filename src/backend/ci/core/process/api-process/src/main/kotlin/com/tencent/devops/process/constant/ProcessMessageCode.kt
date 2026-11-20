@@ -566,8 +566,6 @@ object ProcessMessageCode {
     const val ERROR_ARTIFACT_TRIGGER_ROOT_PATH = "2101505" // [{0}]路径不能为仓库根目录[/]
     // 平台未配置制品到达触发的回调地址或密钥，插件[{0}]无法生效
     const val ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED = "2101506"
-    // TAPD项目({0})未安装或未授权当前应用，请先安装应用后再保存触发器
-    const val ERROR_TAPD_WORKSPACE_NOT_AUTHORIZED = "2101507"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

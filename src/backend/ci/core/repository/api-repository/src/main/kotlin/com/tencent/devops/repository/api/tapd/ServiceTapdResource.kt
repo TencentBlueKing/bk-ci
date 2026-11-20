@@ -32,7 +32,6 @@ import com.tencent.devops.repository.sdk.tapd.request.StatusMapRequest
 import com.tencent.devops.scm.pojo.tapd.TapdBug
 import com.tencent.devops.scm.pojo.tapd.TapdBugFieldConfig
 import com.tencent.devops.scm.pojo.tapd.TapdStory
-import com.tencent.devops.scm.pojo.tapd.TapdAuthorizedWorkspaces
 import com.tencent.devops.scm.pojo.tapd.TapdWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -98,8 +97,4 @@ interface ServiceTapdResource {
         workspaceId: String
     ): Result<TapdWorkspace?>
 
-    @Operation(summary = "查询 TAPD 应用已授权项目集合")
-    @GET
-    @Path("/authorizedWorkspaces")
-    fun authorizedWorkspaces(): Result<TapdAuthorizedWorkspaces>
 }
