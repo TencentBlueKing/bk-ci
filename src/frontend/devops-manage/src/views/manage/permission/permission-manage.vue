@@ -26,7 +26,7 @@
       <template #main>
         <div class="content">
         <div class="content-btn">
-          <bk-button @click="handleReset">{{ t('批量重置') }}</bk-button>
+          <bk-button @click="handleReset">{{ t('申请使用授权') }}</bk-button>
           <div class="filter-bar">
             <bk-date-picker
               v-model="dateTimeRange"
@@ -59,6 +59,7 @@
             :key="resourceType"
             :pagination="pagination"
             remote-pagination
+            :is-row-select-enable="isRowSelectEnable"
             @select-all="handleSelectAll"
             @selection-change="handleSelectionChange"
             @page-value-change="handlePageChange"
@@ -105,7 +106,7 @@
       :key="resourceType"
       theme="primary"
       :width="740"
-      :title="t('批量重置')"
+      :title="t('申请使用授权')"
       @closed="dialogClose"
     >
       <div class="dialog">
@@ -119,7 +120,7 @@
         >
           <bk-form-item
             required
-            :label="t('重置授权人')"
+            :label="t('目标用户')"
             property="name"
             labelWidth=""
           >
@@ -139,20 +140,27 @@
         <div v-else-if="isResetFailure" class="check-failure">
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
-            <i18n-t keypath="检测到以下X项授权将无法重置，请前往处理或继续重置其余代码库授权" tag="div">
+            <div v-if="isAllAlreadyAuthorizer">
+              {{ t('所选X的授权人已是该用户，无需申请', [searchName]) }}
+            </div>
+            <div v-else-if="isPartAlreadyAuthorizer">
+              {{ t('以下X个X的授权人已是所选用户，无需申请，将提交其余X', [alreadyAuthorizerCount, searchName, searchName]) }}
+            </div>
+            <i18n-t v-else keypath="检测到以下X项授权将无法提交，请按失败原因处理或继续提交其余代码库授权" tag="div">
               <span class="tips-count">
-                {{ failedCount }}</span><span class="tips-text">{{ t('前往处理') }}</span><span class="tips-text">{{ t('继续重置其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
+                {{ failedCount }}</span><span class="tips-text">{{ t('按失败原因处理') }}</span><span class="tips-text">{{ t('继续提交其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
               </span>
             </i18n-t>
           </div>
           <bk-table
+            v-if="!isAllAlreadyAuthorizer"
             ref="resetTable"
             :data="resetTableData"
             :pagination="resetTablePagination"
             :border="['outer', 'row']"
           >
             <bk-table-column :label="searchName" width="200" prop="resourceName" show-overflow-tooltip />
-            <bk-table-column :label="t('失败原因')" prop="handoverFailedMessage" show-overflow-tooltip>
+            <bk-table-column :label="t('失败原因')" prop="failedMessage" show-overflow-tooltip>
               <template v-slot="{ row }">
                 <template v-if="row?.failedArr?.length">
                   <div class="failed-wrapper">
@@ -166,7 +174,7 @@
                     >
                         ...
                     </div>
-                    <div 
+                    <div
                       class="failed-item failed-msg expand-btn"
                       v-if="row.failedArr.length > 3"
                       text
@@ -177,11 +185,11 @@
                   </div>
                 </template>
                 <template v-else>
-                    <span
-                      class="failed-msg"
-                      v-html="row.handoverFailedMessage"
-                    >
-                    </span>
+                  <span
+                    class="failed-msg"
+                    v-html="row.failedMessage"
+                  >
+                  </span>
                 </template>
               </template>
             </bk-table-column>
@@ -200,7 +208,7 @@
           :loading="dialogLoading"
           :disabled="disabledResetBtn"
           @click="confirmReset">
-            {{ t('重置') }}
+            {{ t('提交') }}
         </bk-button>
         <bk-button
           :loading="dialogLoading"
@@ -218,7 +226,7 @@ import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { convertTime } from '@/utils/util'
-import { Message } from 'bkui-vue';
+import { Message, InfoBox } from 'bkui-vue';
 import { Success, Spinner } from 'bkui-vue/lib/icon';
 import ProjectUserSelector from '@/components/project-user-selector'
 const { t } = useI18n();
@@ -242,6 +250,10 @@ const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
+const checkResult = ref({});
+const alreadyAuthorizerCount = ref(0);
+const isAllAlreadyAuthorizer = ref(false);
+const isPartAlreadyAuthorizer = ref(false);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
 const userIds = computed(() => route.query?.userId);
 const initialResourceType  = computed(() => route.query?.resourceType || 'repertory');
@@ -284,16 +296,28 @@ const resetParams = computed(() => {
     resourceType: resourceType.value,
     fullSelection: isSelectAll.value,
     handoverChannel: 'MANAGER',
+    handoverTo: resetFormData.value.name,
     resourceAuthorizationHandoverList: isSelectAll.value ? [] : resourceAuthorizationHandoverList,
   }
   if (isSelectAll.value) {
-    params.handoverTo = resetFormData.value.name;
     params.greaterThanHandoverTime = dateTimeRange.value[0];
     params.lessThanHandoverTime = dateTimeRange.value[1];
     Object.assign(params, filterQuery.value)
   }
   return params;
 })
+/**
+ * 提交参数：勾选模式下只提交预检通过的资源，全选模式由后端过滤
+ */
+const submitParams = computed(() => {
+  const params = { ...resetParams.value };
+  if (!params.fullSelection && checkResult.value?.items?.length) {
+    const passedCodes = new Set(checkResult.value.items.filter(item => item.passed).map(item => item.resourceCode));
+    params.resourceAuthorizationHandoverList = (params.resourceAuthorizationHandoverList || [])
+      .filter(item => passedCodes.has(item.resourceCode));
+  }
+  return params;
+});
 const permissionList = ref([
   {
     name: 'codeBase',
@@ -357,6 +381,15 @@ const columns = ref([
       );
     },
   },
+  {
+    label: t('状态'),
+    field: "beingHandover",
+    render ({ row }) {
+      return row.beingHandover
+        ? t('待X确认', [row.approver])
+        : t('正常');
+    },
+  },
 ])
 const resetFormData = ref({
   name: ''
@@ -365,6 +398,9 @@ const filterQuery = computed(() => {
   return searchValue.value.reduce((query, item) => {
       if (item.id === 'handoverFroms') {
         query[item.id] = item.values?.map(value => value.id);
+      } else if (item.id === 'queryHandover') {
+        // 待确认/正常筛选，映射为 queryHandover 布尔值
+        query[item.id] = item.values?.[0]?.id === 'true';
       } else {
         query[item.id] = item.values?.map(value => value.id).join(',');
       }
@@ -383,6 +419,10 @@ const searchData = computed(() => {
     {
       name: searchName.value,
       id: 'resourceName',
+    },
+    {
+      name: t('状态'),
+      id: 'queryHandover',
     },
   ]
   return data.filter(data => {
@@ -435,6 +475,7 @@ async function getTableList () {
       pageSize: pagination.value.limit,
       projectCode: projectId.value,
       resourceType: resourceType.value,
+      operateChannel: 'MANAGER',
       ...filterQuery.value,
       greaterThanHandoverTime: dateTimeRange.value[0],
       lessThanHandoverTime: dateTimeRange.value[1],
@@ -474,9 +515,16 @@ function handleReset() {
   });
 }
 /**
- * 当前页全选事件
+ * 待确认的资源不允许勾选
+ */
+function isRowSelectEnable ({ row }) {
+  return !row.beingHandover;
+}
+/**
+ * 当前页全选事件（点击表头全选框，退出全量选择模式）
  */
 function handleSelectAll(){
+  isSelectAll.value = false;
   selectList.value = refTable.value.getSelection();
 }
 /**
@@ -491,9 +539,7 @@ function handleSelectionChange() {
  * 全量数据选择
  */
 function handleSelectAllData() {
-  if (!isSelectAll.value && selectList.value.length !== tableData.value.length) {
-    refTable.value.toggleAllSelection();
-  }
+  refTable.value.toggleAllSelection(true);
   isSelectAll.value = true;
 }
 /**
@@ -512,9 +558,12 @@ function dialogClose() {
   canLoading.value = true;
   isResetFailure.value = false;
   isResetSuccess.value = false;
+  isAllAlreadyAuthorizer.value = false;
+  isPartAlreadyAuthorizer.value = false;
   isSelectAll.value = false;
   disabledResetBtn.value = true;
   resetFormData.value.name = '';
+  checkResult.value = {};
   formRef.value?.clearValidate();
 }
 
@@ -522,9 +571,12 @@ function handleClearName () {
   canLoading.value = true;
   isResetFailure.value = false;
   isResetSuccess.value = false;
+  isAllAlreadyAuthorizer.value = false;
+  isPartAlreadyAuthorizer.value = false;
   disabledResetBtn.value = true;
   resetTableData.value = [];
   failedCount.value = 0;
+  checkResult.value = {};
 }
 
 async function handleCheckReset () {
@@ -534,29 +586,36 @@ async function handleCheckReset () {
     disabledResetBtn.value = true;
   }
   try {
-    const res = await http.resetAuthorization(projectId.value, {
-      ...resetParams.value,
-      preCheck: true
-    })
+    const res = await http.checkAuthorizationApplication(projectId.value, resetParams.value)
 
     if (!resetFormData.value.name) return // 点击input输入框清空按钮，会触发失焦事件
-    failedCount.value = res['FAILED']?.length || 0
-    if (failedCount.value) {
-      resetTableData.value = res['FAILED']?.map(i => {
-        return {
-          ...i,
-          failedArr: i.handoverFailedMessage.includes('<br/>') ? i.handoverFailedMessage.split('<br/>') : [],
-          isExpand: false
-        }
-      })
-      resetTablePagination.value.count = failedCount.value
-    }
-    isResetFailure.value = !!failedCount.value;
-    isResetSuccess.value = !failedCount.value;
+    checkResult.value = res || {};
+    const {
+      totalCount = 0,
+      validCount = 0,
+      alreadyAuthorizerCount: alreadyCount = 0,
+      checkFailedCount = 0,
+    } = checkResult.value;
+    alreadyAuthorizerCount.value = alreadyCount;
+    failedCount.value = totalCount - validCount;
+    const failedItems = (checkResult.value.items || []).filter(item => !item.passed);
+    resetTableData.value = failedItems.map(i => {
+      return {
+        ...i,
+        failedArr: i.failedMessage?.includes('<br/>') ? i.failedMessage.split('<br/>') : [],
+        isExpand: false
+      }
+    })
+    resetTablePagination.value.count = failedItems.length
+
+    isAllAlreadyAuthorizer.value = validCount === 0 && alreadyCount === totalCount;
+    isPartAlreadyAuthorizer.value = alreadyCount > 0 && checkFailedCount === 0 && validCount > 0;
+    isResetFailure.value = failedCount.value > 0;
+    isResetSuccess.value = failedCount.value === 0;
     isChecking.value = false;
     canLoading.value = false;
-    const selectFlag = isSelectAll.value ? pagination.value.count : selectList.value.length
-    disabledResetBtn.value = failedCount.value === selectFlag;
+    // 全部无法进入申请时，提交按钮置灰
+    disabledResetBtn.value = validCount === 0;
   } catch (e) {
     isChecking.value = false;
     canLoading.value = false;
@@ -570,29 +629,69 @@ function confirmReset() {
   if (canLoading.value) dialogLoading.value = true;
   formRef.value?.validate().then(async () => {
     try {
-      await http.resetAuthorization(projectId.value, resetParams.value)
-      
+      const res = await http.submitAuthorizationApplication(projectId.value, submitParams.value)
+
       dialogLoading.value = false;
       showResetDialog.value = false;
       canLoading.value = true;
-      Message({
-        theme: 'success',
-        message: t('授权已成功重置', [searchName.value]),
-      });
+      if (res?.immediateEffect) {
+        // 目标用户是申请人本人，授权直接生效
+        Message({
+          theme: 'success',
+          message: t('授权已生效'),
+        });
+      } else {
+        InfoBox({
+          type: 'success',
+          title: t('申请提交成功'),
+          content: () => h('div', {
+            style: {
+              padding: '12px',
+              background: 'rgb(245, 246, 250)',
+              color: 'rgb(77, 79, 86)',
+              textAlign: 'left',
+              fontSize: '14px',
+              lineHeight: '16px',
+            },
+          }, [
+            h('p', { style: { margin: 0 } }, t('已提交申请，等待X确认', [resetFormData.value.name])),
+            h('p', { style: { margin: 0 } }, t('可在我的交接中查看进度')),
+          ]),
+          confirmText: t('查看进度'),
+          cancelText: t('关闭'),
+          onConfirm: () => handleViewProgress(res?.flowNo || ''),
+        });
+      }
 
       await getTableList();
       
       disabledResetBtn.value = true;
       isResetSuccess.value = false;
       isResetFailure.value = false;
+      isAllAlreadyAuthorizer.value = false;
+      isPartAlreadyAuthorizer.value = false;
+      checkResult.value = {};
       refTable.value?.clearSelection();
       selectList.value = [];
       isSelectAll.value = false;
     } catch (e) {
+      dialogLoading.value = false;
+      // 过滤后没有可提交的资源，关闭弹窗并刷新列表
+      if (e?.code === 2121107) {
+        showResetDialog.value = false;
+        await getTableList();
+      }
       console.error(e)
     }
   })
 };
+
+/**
+ * 查看申请进度
+ */
+function handleViewProgress (flowNo) {
+  window.open(`/console/permission/my-handover?flowNo=${flowNo}&type=handoverFromMe`, '_blank');
+}
 
 function handleChangeDaterange (date) {
   const startTime = new Date(date[0]).getTime() || ''
@@ -628,6 +727,12 @@ function handlePageLimitChange (limit) {
 }
 
 async function getMenuList (item, keyword) {
+  if (item.id === 'queryHandover') {
+    return [
+      { id: 'true', name: t('待确认') },
+      { id: 'false', name: t('正常') },
+    ]
+  }
   if (item.id !== 'handoverFroms') return []
   const query = {
     memberType: 'user',
