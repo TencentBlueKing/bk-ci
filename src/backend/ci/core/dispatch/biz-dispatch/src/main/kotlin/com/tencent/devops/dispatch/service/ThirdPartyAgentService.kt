@@ -68,6 +68,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildWithStatu
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentUtils
+import com.tencent.devops.dispatch.utils.redis.AgentAskCache
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
@@ -98,6 +99,7 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class ThirdPartyAgentService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val agentAskCache: AgentAskCache,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val client: Client,
     private val redisOperation: RedisOperation,
@@ -146,6 +148,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     startUser = userId,
                     stageId = stageId
                 )
+                // 新入队、重试和改派都以本次写入的目标 agent 为准，成功写入后清除空标记。
+                agentAskCache.invalidateBuild(agent.agentId)
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
@@ -198,8 +202,16 @@ class ThirdPartyAgentService @Autowired constructor(
         agentId: String,
         secretKey: String,
         buildType: BuildJobType
+    ): AgentResult<ThirdPartyBuildInfo?> =
+        claimBuild(projectId, agentId, secretKey, buildType, checkEmptyAfterAuth = true)
+
+    private fun claimBuild(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildType: BuildJobType,
+        checkEmptyAfterAuth: Boolean
     ): AgentResult<ThirdPartyBuildInfo?> {
-        // Get the queue status build by buildId and agentId
         try {
             val agentResult = try {
                 client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId)
@@ -235,10 +247,15 @@ class ThirdPartyAgentService @Autowired constructor(
                 throw NotFoundException("Fail to get the agent")
             }
 
+            // 独立领取必须先校验密钥和节点状态再读空标记；聚合 ask 已经在提交领取前读过。
+            if (checkEmptyAfterAuth && agentAskCache.isBuildEmpty(agentId, buildType)) {
+                return AgentResult(AgentStatus.IMPORT_OK, null)
+            }
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
                 val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId, buildType) ?: run {
+                    agentAskCache.rememberEmpty(agentId, buildType)
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
@@ -737,9 +754,9 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         val buildType = BuildJobType.toEnum(info.askEnable.build)
-        val buildF = if (buildType != BuildJobType.NONE) {
+        val buildF = if (buildType != BuildJobType.NONE && !agentAskCache.isBuildEmpty(agentId, buildType)) {
             CompletableFuture.supplyAsync({
-                startBuild(projectId = projectId, agentId = agentId, secretKey = secretKey, buildType = buildType)
+                claimBuild(projectId, agentId, secretKey, buildType, checkEmptyAfterAuth = false)
             }, askExecutor)
         } else {
             null
