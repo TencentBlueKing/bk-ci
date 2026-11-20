@@ -209,25 +209,14 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         response: HttpServletResponse,
         logo: Boolean?
     ) {
-        if (logo == true) {
-            val relative = URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
-            if (
-                relative.isBlank() ||
-                relative.contains("..") ||
-                relative.contains('\\') ||
-                relative.contains("://")
-            ) {
-                throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("filePath")
-                )
-            }
-            // 图标在公开 static 仓库。服务端代下会带上平台凭证，校验失败时只返回 401，图片加载不出来
-            response.sendRedirect(HomeHostUtil.withPublicPath("/bk-plugin-fe/$relative"))
-            return
-        }
         response.contentType = MimeUtil.mediaType(filePath)
-        downloadFile(userId, filePath, response.outputStream)
+        val path = if (logo == true) {
+            "${bkRepoStoreProjectId()}/$REPO_NAME_STATIC/" +
+                URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
+        } else {
+            filePath
+        }
+        downloadFile(userId, path, response.outputStream)
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
