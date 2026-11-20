@@ -638,6 +638,8 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_MATRIX_MAX_CONCURRENCY_INVALID = "2101695" // {0} 中 Matrix job「{1}」的最大并发数为 {2}，须为 1-{3} 的整数
     // 矩阵Job最大并发数（支持变量）在运行时启动matrix job时解析后不在1-MAX之间
     const val ERROR_MATRIX_MAX_CONCURRENCY_INVALID = "2101696" // Matrix job「{0}」的最大并发数为 {1}，须为 1-{2} 的整数
+    const val ERROR_TRIGGER_REPLAY_BUILD_FAILED = "2101697" // 重新构建未触发构建：{0}
+    const val ERROR_TRIGGER_REPLAY_REPO_NO_PERMISSION = "2101698" // 用户[{0}]没有代码库[{1}]的使用权限，无法重放该事件
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

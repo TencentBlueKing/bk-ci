@@ -156,6 +156,6 @@ class ModelDeserializer(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelDeserializer::class.java)
-        private val PROCESS_ENGINE_SERVICES = setOf("process", "engine")
+        private val PROCESS_ENGINE_SERVICES = setOf("process", "engine", "trigger")
     }
 }
