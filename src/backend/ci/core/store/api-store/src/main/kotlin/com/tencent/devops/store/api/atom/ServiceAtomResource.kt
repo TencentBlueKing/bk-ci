@@ -263,7 +263,7 @@ interface ServiceAtomResource {
         @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "英文逗号分隔的检索词，最多 8 个", required = true)
+        @Parameter(description = "检索词，逗号、顿号或空白分隔，最多 8 个；等于插件代码或插件名时置顶", required = true)
         @QueryParam("keywords")
         keywords: String,
         @Parameter(description = "job类型：AGENT / AGENT_LESS", required = false)

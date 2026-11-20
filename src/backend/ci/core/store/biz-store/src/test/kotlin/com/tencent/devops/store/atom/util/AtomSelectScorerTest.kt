@@ -67,6 +67,28 @@ class AtomSelectScorerTest {
     }
 
     @Test
+    fun `parseQueries also splits on whitespace and chinese separators`() {
+        Assertions.assertEquals(
+            listOf("归档", "制品", "artifact", "企业微信", "机器人"),
+            AtomSelectScorer.parseQueries("归档 制品  artifact，企业微信、机器人")
+        )
+    }
+
+    @Test
+    fun `matchNames ignores case and whitespace and keeps same-name atoms`() {
+        val codesByName = mapOf(
+            "拉取构件-流水线仓库(new)" to listOf("BuildArchiveGetTask"),
+            AtomSelectScorer.normalizeName("BK AIDev 平台智能体") to listOf("bkaidev_agent", "bkaidev_agent_v2")
+        )
+        val segments = AtomSelectScorer.parseSegments("拉取构件-流水线仓库(new), bk aidev 平台智能体")
+        Assertions.assertEquals(
+            listOf("BuildArchiveGetTask", "bkaidev_agent", "bkaidev_agent_v2"),
+            AtomSelectScorer.matchNames(segments, codesByName)
+        )
+        Assertions.assertEquals(emptyList<String>(), AtomSelectScorer.matchNames(listOf("流水线仓库"), codesByName))
+    }
+
+    @Test
     fun `exact keyword beats containment which beats summary`() {
         val exact = AtomSelectScorer.score(innercos, listOf("上传文件"))
         val contained = AtomSelectScorer.score(innercos, listOf("对象存储"))
@@ -91,6 +113,55 @@ class AtomSelectScorerTest {
     fun `matching is case insensitive and keeps the caller spelling`() {
         val hit = AtomSelectScorer.score(uploadArtifactory, listOf("Upload"))
         Assertions.assertEquals(listOf("Upload"), hit.matched)
+    }
+
+    private val codebuddy = entry(
+        code = "codebuddy-in-devops",
+        keywords = "AI 代码生成,代码审查,CodeBuddy,提示词执行,流水线 AI 助手,自动编码,智能体,代码问答",
+        summary = "在蓝盾流水线中用指定模型执行 CodeBuddy Prompt，返回原始 JSON 结果与 Markdown 报告。"
+    )
+    private val rainbow = entry(
+        code = "rainbowgo",
+        keywords = "rainbow 配置同步,七彩石配置,rainbow 发布",
+        summary = "需要把七彩石或 Rainbow 配置同步到流水线时使用，支持 container 内运行。"
+    )
+
+    @Test
+    fun `short ascii query only matches whole words`() {
+        Assertions.assertEquals(0, AtomSelectScorer.score(rainbow, listOf("AI")).hitCount)
+        val hit = AtomSelectScorer.score(codebuddy, listOf("AI"))
+        Assertions.assertEquals(2, hit.score)
+        Assertions.assertTrue(hit.keywordHit)
+    }
+
+    @Test
+    fun `short ascii keyword inside a longer query only matches whole words`() {
+        val ci = entry(code = "ci", keywords = "ci", summary = null)
+        Assertions.assertEquals(0, AtomSelectScorer.score(ci, listOf("pencil")).hitCount)
+        Assertions.assertEquals(2, AtomSelectScorer.score(ci, listOf("ci 构建")).score)
+    }
+
+    @Test
+    fun `longer query still matches inside words`() {
+        Assertions.assertEquals(2, AtomSelectScorer.score(codebuddy, listOf("buddy")).score)
+    }
+
+    @Test
+    fun `summary only hit is not a keyword hit`() {
+        val hit = AtomSelectScorer.score(codebuddy, listOf("markdown 报告"))
+        Assertions.assertEquals(1, hit.score)
+        Assertions.assertFalse(hit.keywordHit)
+    }
+
+    @Test
+    fun `recall puts keyword hits before summary only hits`() {
+        val hits = AtomSelectScorer.recall(
+            entries = listOf(innercos, helm),
+            queries = listOf("静态资源上传到", "json 归档制品", "灰度"),
+            maxSize = 10
+        )
+        Assertions.assertEquals(listOf("helm", "innercos"), hits.map { it.atomCode })
+        Assertions.assertEquals(listOf(1, 2), hits.map { it.hitCount })
     }
 
     @Test

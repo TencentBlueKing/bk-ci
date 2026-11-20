@@ -87,23 +87,38 @@ class PipelineEventSubscriptionDao {
         }
     }
 
+    fun listTaskIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Set<String> {
+        with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
+            return dslContext.select(TASK_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .fetch()
+                .mapNotNull { it.value1() }
+                .toSet()
+        }
+    }
+
     /**
-     * 删除流水线下不在 taskIds 中的订阅，taskIds 为空时删除该流水线全部订阅
+     * 按完整主键删除，禁止改成 NOT IN 等范围条件，否则 RR 下会对相邻流水线的记录加 next-key lock
      */
-    fun deleteExcludeTaskIds(
+    fun deleteByTaskIds(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         taskIds: Collection<String>
     ): Int {
+        if (taskIds.isEmpty()) return 0
         with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
-            val step = dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-            if (taskIds.isNotEmpty()) {
-                step.and(TASK_ID.notIn(taskIds))
-            }
-            return step.execute()
+                .and(TASK_ID.`in`(taskIds))
+                .execute()
         }
     }
 

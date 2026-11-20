@@ -77,7 +77,11 @@ class AtomSelectService @Autowired constructor(
         checkProjectPermission(userId, projectCode)
         val entries = atomSelectionIndexCache.entries()
         val hits = AtomSelectScorer.recall(entries, queries, RECALL_SIZE).associateBy { it.atomCode }
-        val pinnedCodes = queries.filter { ATOM_CODE_REGEX.matches(it) }
+        val nameCodes = AtomSelectScorer.matchNames(
+            terms = AtomSelectScorer.parseSegments(keywords) + queries,
+            codesByName = atomSelectionIndexCache.codesByName()
+        )
+        val pinnedCodes = (queries.filter { ATOM_CODE_REGEX.matches(it) } + nameCodes).distinct()
         val candidateCodes = (pinnedCodes + hits.keys).distinct()
         if (candidateCodes.isEmpty()) {
             return AtomSelectResp(contractCount = entries.size, items = emptyList())
@@ -104,9 +108,10 @@ class AtomSelectService @Autowired constructor(
 
         val ranked = atoms.sortedWith(
             compareByDescending<AtomRespItem> { atom -> pinnedCodes.any { it.equals(atom.atomCode, true) } }
+                .thenByDescending { hits[it.atomCode]?.keywordHit ?: false }
+                .thenByDescending { it.recentExecuteNum ?: 0 }
                 .thenByDescending { hits[it.atomCode]?.hitCount ?: 0 }
                 .thenByDescending { hits[it.atomCode]?.score ?: 0 }
-                .thenByDescending { it.recentExecuteNum ?: 0 }
         ).take((limit ?: DEFAULT_LIMIT).coerceIn(1, MAX_LIMIT))
         val entryMap = entries.associateBy { it.atomCode }
         val contractCodes = ranked.map { it.atomCode }.filter { entryMap.containsKey(it) }
@@ -117,6 +122,7 @@ class AtomSelectService @Autowired constructor(
         }
         logger.info(
             "atom select|$userId|$projectCode|$queries|contracts=${entries.size}|recalled=${hits.size}" +
+                "|named=${nameCodes.size}" +
                 "|visible=${atoms.size}|returned=${ranked.size}"
         )
         return AtomSelectResp(
