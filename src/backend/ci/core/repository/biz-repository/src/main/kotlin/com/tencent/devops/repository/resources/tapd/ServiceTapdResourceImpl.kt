@@ -64,5 +64,4 @@ class ServiceTapdResourceImpl @Autowired constructor(
     override fun getWorkspaceInfo(workspaceId: String): Result<TapdWorkspace?> {
         return Result(tapdItemService.getWorkspaceInfo(workspaceId = workspaceId))
     }
-
 }

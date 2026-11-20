@@ -96,5 +96,4 @@ interface ServiceTapdResource {
         @QueryParam("workspaceId")
         workspaceId: String
     ): Result<TapdWorkspace?>
-
 }
