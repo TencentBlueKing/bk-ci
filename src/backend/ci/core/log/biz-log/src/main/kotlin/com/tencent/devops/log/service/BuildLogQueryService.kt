@@ -46,6 +46,7 @@ import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.metrics.LogMetrics
 import com.tencent.devops.log.strategy.context.UserLogPermissionCheckContext
 import com.tencent.devops.log.strategy.factory.UserLogPermissionCheckStrategyFactory
+import com.tencent.devops.log.util.LogOwnerIds
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -726,8 +727,8 @@ class BuildLogQueryService @Autowired constructor(
             logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_SKIP)
             return
         }
-        val projectMismatch = owner.projectId != projectId
-        val pipelineMismatch = !owner.pipelineId.isNullOrBlank() && owner.pipelineId != pipelineId
+        val projectMismatch = LogOwnerIds.differs(owner.projectId, projectId)
+        val pipelineMismatch = LogOwnerIds.differs(owner.pipelineId, pipelineId)
         if (!projectMismatch && !pipelineMismatch) {
             logMetrics.recordQueryOwnership(LogMetrics.RESULT_OWNER_MATCH)
             return
