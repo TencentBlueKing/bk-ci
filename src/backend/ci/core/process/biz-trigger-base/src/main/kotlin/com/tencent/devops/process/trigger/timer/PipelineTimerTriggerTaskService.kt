@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
-import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository

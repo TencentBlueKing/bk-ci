@@ -57,7 +57,7 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext

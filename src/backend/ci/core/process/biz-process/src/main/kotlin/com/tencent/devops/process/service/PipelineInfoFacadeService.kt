@@ -120,7 +120,7 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.trigger.timer.PipelineYamlBranchTimerService
-import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.util.FileExportUtil
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource

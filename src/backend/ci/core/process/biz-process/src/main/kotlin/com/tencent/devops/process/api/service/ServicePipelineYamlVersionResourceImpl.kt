@@ -6,9 +6,9 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlBranchActionReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDeployReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlPullRequestReq
-import com.tencent.devops.process.yaml.resource.IPipelineYamlResourceService
-import com.tencent.devops.process.yaml.resource.PTemplateYamlResourceService
-import com.tencent.devops.process.yaml.resource.PipelineYamlResourceService
+import com.tencent.devops.process.pac.resource.IPipelineYamlResourceService
+import com.tencent.devops.process.pac.resource.PTemplateYamlResourceService
+import com.tencent.devops.process.pac.resource.PipelineYamlResourceService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 

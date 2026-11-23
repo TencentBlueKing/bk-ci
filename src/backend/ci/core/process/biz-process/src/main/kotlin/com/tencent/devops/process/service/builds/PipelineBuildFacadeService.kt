@@ -164,7 +164,7 @@ import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerReplayService
-import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION

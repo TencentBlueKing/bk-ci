@@ -12,7 +12,7 @@ import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.trigger.event.ReplayWebhookEvent
-import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC

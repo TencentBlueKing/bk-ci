@@ -70,7 +70,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.timer.PipelineYamlBranchTimerService
 import com.tencent.devops.process.trigger.CreateStreamTriggerSupportService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.process.trigger.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService

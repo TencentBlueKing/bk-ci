@@ -34,7 +34,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
-import com.tencent.devops.process.trigger.yaml.common.YamlFileUtils
+import com.tencent.devops.process.trigger.pac.common.YamlFileUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.credential.UserOauthTokenAuthCred

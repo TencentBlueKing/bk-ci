@@ -6,7 +6,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlViewCleanupReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlViewCreateReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlViewGroupUpdateReq
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.yaml.PipelineYamlViewService
+import com.tencent.devops.process.pac.PipelineYamlViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

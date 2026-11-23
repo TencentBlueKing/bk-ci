@@ -33,7 +33,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.TriggerProcessClient
 import com.tencent.devops.process.trigger.pojo.WebhookTriggerResult
-import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import io.micrometer.core.instrument.Tags
 import jakarta.ws.rs.core.Response

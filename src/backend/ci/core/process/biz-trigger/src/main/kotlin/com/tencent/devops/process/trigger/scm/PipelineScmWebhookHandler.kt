@@ -31,7 +31,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
-import com.tencent.devops.process.trigger.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
