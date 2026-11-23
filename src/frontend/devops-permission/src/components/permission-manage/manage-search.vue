@@ -5,6 +5,8 @@
       :clearable="false"
       v-model="projectValue"
       :prefix="t('所属项目')"
+      filterable
+      highlight-keyword
       @change="handleProjectChange"
     >
       <bk-option
