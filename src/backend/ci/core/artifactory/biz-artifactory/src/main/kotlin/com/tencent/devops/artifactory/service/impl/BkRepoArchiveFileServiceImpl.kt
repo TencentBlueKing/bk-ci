@@ -218,9 +218,11 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                     params = arrayOf("filePath")
                 )
             }
-            // 相对 Location，避免 sendRedirect 按 Pod Host 拼成浏览器访问不到的绝对地址
+            // 相对 Location，避免 sendRedirect 按 Pod Host 拼成浏览器访问不到的绝对地址。
+            // 该接口是 void，Jersey 会在方法返回后改成 204，浏览器不跟随 Location。先提交 302。
             response.status = HttpServletResponse.SC_FOUND
             response.setHeader("Location", HomeHostUtil.withPublicPath("/$BK_CI_PLUGIN_FE_DIR/$relative"))
+            response.flushBuffer()
             return
         }
         response.contentType = MimeUtil.mediaType(filePath)
