@@ -35,7 +35,8 @@
     import environmentUrl from '@/scss/logo/environment.svg'
     import {
         SERVICE_RESOURCE_TYPE,
-        RES_TYPE_STORAGE_KEY
+        RES_TYPE_STORAGE_KEY,
+        isCreativeStreamServiceEnabled
     } from '@/store/constants'
     
     export default {
@@ -89,6 +90,12 @@
                     this.containerWidth = this.$refs.environmentContainer.clientWidth
                 }
             },
+            isAllowedResType (resType) {
+                if (resType === SERVICE_RESOURCE_TYPE.CREATE) {
+                    return isCreativeStreamServiceEnabled()
+                }
+                return resType === SERVICE_RESOURCE_TYPE.PIPELINE
+            },
             /**
              * 初始化资源类型
              * 优先级：URL参数 > 根据最近访问服务判断 > localStorage缓存 > 默认值
@@ -96,7 +103,7 @@
             initResType () {
                 // 1. 从URL参数获取
                 const urlResType = this.$route.params.resType
-                if (urlResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(urlResType)) {
+                if (this.isAllowedResType(urlResType)) {
                     this.currentResType = urlResType
                     return
                 }
@@ -110,7 +117,7 @@
                         // 获取最近访问的服务（按访问时间排序，第二个是上一次访问的服务）
                         if (recentVisitServiceList.length > 1) {
                             const resType = recentVisitServiceList[1]?.key
-                            if ([SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(resType)) {
+                            if (this.isAllowedResType(resType)) {
                                 this.handleResTypeChange(resType)
                                 this.currentResType = resType
                                 return
@@ -123,7 +130,7 @@
 
                 // 3. 从localStorage缓存获取
                 const cachedResType = localStorage.getItem(RES_TYPE_STORAGE_KEY)
-                if (cachedResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(cachedResType)) {
+                if (this.isAllowedResType(cachedResType)) {
                     this.handleResTypeChange(cachedResType)
                     this.currentResType = cachedResType
                     return

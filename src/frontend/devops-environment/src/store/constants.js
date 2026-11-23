@@ -26,6 +26,13 @@ export const SERVICE_RESOURCE_TYPE = {
     CREATE: 'creative-stream'
 }
 
+// 创作流服务是否出现在服务菜单里。未配置、已删除或 status 为 planning 时不展示
+export function isCreativeStreamServiceEnabled () {
+    const serviceMap = window.serviceObject && window.serviceObject.serviceMap
+    const service = serviceMap && serviceMap[SERVICE_RESOURCE_TYPE.CREATE]
+    return !!service && service.status !== 'planning'
+}
+
 // 创作流节点工作空间类型
 export const CREATE_WORKSPACE_TYPE = {
     REMOTEDEV: 'REMOTEDEV', // 普通云桌面
