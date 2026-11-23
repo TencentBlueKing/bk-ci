@@ -41,13 +41,13 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
-import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomConfigInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
@@ -91,9 +91,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
-
-    @Autowired
-    lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
 
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
@@ -263,8 +260,17 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
         val taskDataMap = getAtomConfResult.taskDataMap
         val atomId = atomInfo.id
-        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomInfo.id)
-        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
+        val atomVersionRecord = marketAtomCommonService.getOrCreateAtomVersionLog(
+            dslContext = dslContext,
+            userId = userId,
+            atomId = atomId,
+            atomCode = atomCode
+        ) ?: throw ErrorCodeException(errorCode = StoreMessageCode.STORE_ATOM_VERSION_LOG_MISSING)
+        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomVersionRecord.releaseType.toString())
+            )
         marketAtomCommonService.validateReleaseType(
             atomId = atomId,
             atomCode = atomCode,
