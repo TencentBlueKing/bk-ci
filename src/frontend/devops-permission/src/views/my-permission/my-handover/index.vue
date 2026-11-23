@@ -275,6 +275,35 @@
         ] : []
       ),
       {
+        label: t('复制审批链接'),
+        field: 'approvalUrl',
+        showOverflowTooltip: true,
+        render ({ cell }) {
+          if (!cell) return h('span', '--')
+          return h('div', {
+            style: { 'display': 'flex', 'align-items': 'center' }
+          }, [
+            withDirectives(h('span', {
+              style: {
+                'overflow': 'hidden',
+                'text-overflow': 'ellipsis',
+                'white-space': 'nowrap'
+              }
+            }, cell), [[bkTooltips, { content: cell, disabled: false }]]),
+            h(Copy, {
+              style: {
+                'margin-left': '5px',
+                'flex': '0 0 auto',
+                'cursor': 'pointer'
+              },
+              onClick () {
+                copyText(cell)
+              }
+            })
+          ])
+        }
+      },
+      {
         label: t('状态'),
         field: 'handoverStatus',
         showOverflowTooltip: true,
@@ -298,6 +327,7 @@
           )
         }
       },
+      
       {
         label: t('操作'),
         field: 'operation',
@@ -580,19 +610,22 @@
   const clearSearchValue = () => {
     searchValue.value = [];
   }
-  const handleCopyFlowNo = (value) => {
+  const copyText = (value) => {
     const textarea = document.createElement('textarea')
-      document.body.appendChild(textarea)
-      textarea.value = curHandoverInfo.value.flowNo
-      textarea.select()
-      if (document.execCommand('copy')) {
-        document.execCommand('copy')
-        Message({
-          theme: 'success',
-          message: t('复制成功')
-        })
-      }
-      document.body.removeChild(textarea)
+    document.body.appendChild(textarea)
+    textarea.value = value
+    textarea.select()
+    if (document.execCommand('copy')) {
+      document.execCommand('copy')
+      Message({
+        theme: 'success',
+        message: t('复制成功')
+      })
+    }
+    document.body.removeChild(textarea)
+  }
+  const handleCopyFlowNo = () => {
+    copyText(curHandoverInfo.value.flowNo)
   }
   const handleApprovalSuccess = async (keepOpen = false) => {
     if (!keepOpen) showHandoverDetail.value = false
