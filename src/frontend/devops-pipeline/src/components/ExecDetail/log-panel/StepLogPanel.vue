@@ -719,7 +719,9 @@
                         })
                         if (continueSearch) this.continueSearchBackfill()
                         else if (!searchActive && !searchBackfillAtStart && shouldContinueAutoBackfillAfterBefore({ succeeded: beforeSucceeded, addedCount })) {
-                            this.maybeAutoBackfill()
+                            const atTop = !this.bottomFollow && shouldScheduleBeforeRetry({ scrollTop: view?.getScrollTop() ?? 0 })
+                            if (atTop) this.loadBefore()
+                            else this.maybeAutoBackfill()
                         }
                     })
                 })

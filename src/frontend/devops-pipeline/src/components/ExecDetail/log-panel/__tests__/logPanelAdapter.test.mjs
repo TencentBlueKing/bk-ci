@@ -1365,7 +1365,7 @@ test('log panel header and job directory opt into prototype outline status icons
     assert.equal(compute({ status: 'SUCCEED', outline: false }).outlineColorStyle, null)
 })
 
-test('backfills only completed logs whose reliable total is at most 3000', () => {
+test('backfills completed logs until the reliable total is loaded, without a size cap', () => {
     assert.equal(adapter.shouldBackfillSmallLog({
         finished: true,
         hasAfter: false,
@@ -1377,9 +1377,9 @@ test('backfills only completed logs whose reliable total is at most 3000', () =>
         finished: true,
         hasAfter: false,
         hasBefore: true,
-        matchedTotal: 3001,
+        matchedTotal: 50000,
         loadedCount: 1000
-    }), false)
+    }), true)
 })
 
 test('rejects invalid matchedTotal and fully loaded sessions', () => {
@@ -4706,7 +4706,7 @@ test('plugin title includes the three-level position code and panel geometry con
     const container = readFileSync(new URL('../../detailContainer.vue', import.meta.url), 'utf8')
     assert.equal(adapter.positionCode({ stageIndex: 0, containerIndex: 0, elementIndex: 0 }), '1-1-1')
     assert.match(plugin, /:position-code="positionCode"/)
-    assert.match(container, /--log-panel-width:\s*min\(1200px, calc\(100vw - 40px\)\)/)
+    assert.match(container, /--log-panel-width:\s*max\(1200px, 90vw\)/)
     assert.match(container, /width:\s*var\(--log-panel-width\)/)
     assert.match(container, /\.log-home-close-bar\s*\{[\s\S]*right:\s*calc\(var\(--log-panel-width\) \+ 8px\);[\s\S]*top:\s*8px/)
     assert.match(container, /margin:\s*8px/)

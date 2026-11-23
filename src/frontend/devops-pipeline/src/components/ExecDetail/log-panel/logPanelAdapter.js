@@ -203,8 +203,7 @@ export function shouldBackfillSmallLog (session = {}) {
     if (!session.finished || session.hasAfter || !session.hasBefore) return false
     const { matchedTotal, loadedCount } = session
     if (!isSafeNonNegativeInteger(matchedTotal) || !isSafeNonNegativeInteger(loadedCount)) return false
-    if (matchedTotal > 3000) return false
-    return loadedCount < Math.min(matchedTotal, 3000)
+    return loadedCount < matchedTotal
 }
 
 export function shouldReloadOnLevelsChange ({ suppressLevelsReload = false } = {}) {

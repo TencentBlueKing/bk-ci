@@ -178,7 +178,7 @@
         top: 0;
         background-color: rgba(0, 0, 0, .2);
         z-index: 1000;
-        --log-panel-width: min(1200px, calc(100vw - 40px));
+        --log-panel-width: max(1200px, 90vw);
         .scroll-loading {
             position: absolute;
             bottom: 0;

@@ -759,6 +759,7 @@
                 if (this._pendingWheel) {
                     this.clientHeight = el.clientHeight
                     this.updateViewport()
+                    if (this._pendingWheel.top < 40) this.$emit('reach-top')
                     if (this.userScrollPending) {
                         this.updateFollowIntentFromScroll()
                         this.scheduleUserScrollEnd()
@@ -860,6 +861,7 @@
                         this.scrollDelta = 0
                         this.clientHeight = box.clientHeight
                         this.updateViewport()
+                        if (box.scrollTop < 40) this.$emit('reach-top')
                         this.updateFollowIntentFromScroll()
                         this.scheduleUserScrollEnd()
                     })
