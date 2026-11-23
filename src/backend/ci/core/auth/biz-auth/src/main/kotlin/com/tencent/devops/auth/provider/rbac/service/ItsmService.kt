@@ -130,7 +130,43 @@ class ItsmService constructor(
             )
             .value(listOf(value))
             .build()
-        return ItsmContentDTO.builder().formData(listOf(itsmValue)).schemes(scheme).build()
+        val formData = mutableListOf(itsmValue)
+        if (isCreateProject) {
+            formData.add(buildCreatorAdminReminder(scheme))
+        }
+        return ItsmContentDTO.builder().formData(formData).schemes(scheme).build()
+    }
+
+    private fun buildCreatorAdminReminder(scheme: MutableMap<String, ItsmScheme>): ItsmValue {
+        val reminderScheme = "creator_admin_reminder"
+        scheme[reminderScheme] = ItsmScheme.builder()
+            .attrs(
+                ItsmAttrs.builder().column(
+                    listOf(
+                        ItsmColumn.builder()
+                            .key("reminder")
+                            .name(
+                                I18nUtil.getCodeLanMessage(
+                                    AuthI18nConstants.BK_PROJECT_CREATOR_ADMIN_REMINDER_TITLE
+                                )
+                            )
+                            .type(TEXT_TYPE)
+                            .build()
+                    )
+                ).build()
+            )
+            .type("table")
+            .build()
+        val reminderValue = mapOf(
+            "reminder" to ItsmStyle.builder()
+                .value(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_CREATOR_ADMIN_REMINDER))
+                .build()
+        )
+        return ItsmValue.builder()
+            .scheme(reminderScheme)
+            .label(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_CREATOR_ADMIN_REMINDER_TITLE))
+            .value(listOf(reminderValue))
+            .build()
     }
 
     fun buildGroupApplyItsmContentDTO(): ItsmContentDTO {

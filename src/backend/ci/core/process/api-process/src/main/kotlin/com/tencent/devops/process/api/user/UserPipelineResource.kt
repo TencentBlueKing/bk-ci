@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -265,7 +266,9 @@ interface UserPipelineResource {
         pipelineId: String,
         @Parameter(description = "开启true/锁定false", required = true)
         @QueryParam("enable")
-        enable: Boolean
+        enable: Boolean,
+        @Parameter(description = "启用/禁用请求体", required = false)
+        request: PipelineLockRequest? = null
     ): Result<Boolean>
 
     @Operation(summary = "获取流水线编排")

@@ -100,7 +100,8 @@ class PipelineSettingDao {
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
                 ENV_HASH_ID,
-                ENV_NAME
+                ENV_NAME,
+                YAML_LOCKED
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -140,7 +141,8 @@ class PipelineSettingDao {
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
                 setting.envHashId,
-                setting.envName
+                setting.envName,
+                setting.yamlLocked ?: false
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -186,6 +188,10 @@ class PipelineSettingDao {
             }
             setting.envName?.let { self ->
                 insert.set(ENV_NAME, self)
+            }
+            // yamlLocked 传空不更新，避免非 YAML 链路的保存覆盖 YAML 禁用状态
+            setting.yamlLocked?.let { self ->
+                insert.set(YAML_LOCKED, self)
             }
             return insert.execute()
         }
@@ -496,7 +502,8 @@ class PipelineSettingDao {
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     version = t.version ?: 1,
                     envHashId = t.envHashId,
-                    envName = t.envName
+                    envName = t.envName,
+                    yamlLocked = t.yamlLocked
                 )
             }
         }

@@ -283,6 +283,11 @@ data class BuildEndInfo(
         const val MODEL_VAR_KEY = "buildEndInfo"
 
         /**
+         * 没有真人取消时写入的占位。读取和级联都不能把它当成操作人。
+         */
+        const val SYSTEM_CANCEL_USER = "System"
+
+        /**
          * 用户主动取消
          */
         fun ofCancelUser(
@@ -335,6 +340,36 @@ data class BuildEndInfo(
                 endTime = System.currentTimeMillis(),
                 parentPipelineInfo = parentPipelineInfo
             )
+        }
+
+        /**
+         * 级联取消要继续往下传的操作人。层数不限：每一层只传上一层已经确认的操作人。
+         *
+         * 用户主动取消传 [BuildEndInfo.operator]。父级联传 [ParentPipelineInfo.operator]。
+         * 系统取消、以及没有操作人的父级联，返回 null。调用方不能用子流水线启动人（权限代持人）顶上，
+         * 否则下一层会把代持人当成取消人再传下去。
+         *
+         * [endInfo] 尚未落库时才回退 [storedCancelUser]：取消人是同步写入的，终态详情在取消事件里稍后保存。
+         * 已经能确定不是用户取消时，取消人列里即使有值也不往下传。
+         */
+        fun inheritedCancelOperator(endInfo: BuildEndInfo?, storedCancelUser: String?): String? {
+            val raw = if (endInfo != null) {
+                when (endInfo.endType) {
+                    BuildEndType.CANCEL_USER -> endInfo.operator
+                    BuildEndType.CANCEL_PARENT_PIPELINE -> endInfo.parentPipelineInfo?.operator
+                    else -> null
+                }
+            } else {
+                storedCancelUser
+            }
+            return confirmedOperator(raw)
+        }
+
+        /**
+         * 取消人列里只有真人操作时才有意义：空值表示还没人取消，[SYSTEM_CANCEL_USER] 是系统取消的占位。
+         */
+        fun confirmedOperator(cancelUser: String?): String? {
+            return cancelUser?.takeUnless { it.isBlank() || it == SYSTEM_CANCEL_USER }
         }
 
         /**

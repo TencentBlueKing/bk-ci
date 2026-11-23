@@ -111,6 +111,15 @@ interface PermissionResourceGroupPermissionService {
     ): Boolean
 
     /**
+     * 用户组在项目下拥有「任意」范围的敏感资源使用权限。
+     * 返回 repertory、credential、cert、env_node，顺序为代码库、凭据、证书、第三方构建机。
+     */
+    fun listSensitiveResourceTypes(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Map<Int, List<String>>
+
+    /**
      * 获取用户组有权限的资源--按照资源类型区分
      * */
     fun listGroupResourcesWithPermission(

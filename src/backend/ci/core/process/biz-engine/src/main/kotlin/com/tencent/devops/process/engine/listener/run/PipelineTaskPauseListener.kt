@@ -188,10 +188,17 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = task.containerId,
             taskId = task.taskId,
             executeCount = task.executeCount ?: 1,
-            cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
+            cancelUser = userId
         )
         // 执行前暂停点终止走 ActionType.END，构建以取消收尾，但不会经过用户取消入口。
         // 这里先落下用户取消详情，读取侧再按模型补齐位置；IfAbsent 避免覆盖 Job 超时等更早成因。
+        // 取消人单独记下：终态详情若被更早的系统成因保住，旧的取消人提示也不能落成 System。
+        pipelineBuildRecordService.updateBuildCancelUser(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            executeCount = task.executeCount ?: 1,
+            cancelUserId = userId
+        )
         pipelineBuildRecordService.saveBuildEndInfoIfAbsent(
             projectId = task.projectId,
             pipelineId = task.pipelineId,

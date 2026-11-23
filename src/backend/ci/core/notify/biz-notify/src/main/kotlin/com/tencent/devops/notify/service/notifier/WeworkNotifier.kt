@@ -31,11 +31,28 @@ class WeworkNotifier @Autowired constructor(
         val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
             dslContext = dslContext,
             commonTemplateId = commonNotifyMessageTemplateRecord.id
-        )!!
+        ) ?: run {
+            logger.warn("no wework template found for ${commonNotifyMessageTemplateRecord.id}")
+            return
+        }
+        // markdown 正文优先取 RTX 模板表的 BODY_MD，为空时回退 wework 模板表的 BODY
+        val markdownBody = if (request.markdownContent == true) {
+            notifyMessageTemplateDao.getRtxNotifyMessageTemplateBodyMd(
+                dslContext = dslContext,
+                commonTemplateId = commonNotifyMessageTemplateRecord.id
+            )?.takeIf { it.isNotBlank() }
+        } else {
+            null
+        }
+        val effectiveRequest = if (request.markdownContent == true && markdownBody == null) {
+            request.copy(markdownContent = false)
+        } else {
+            request
+        }
         // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
         val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
-        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.body, language)
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(markdownBody ?: weworkTplRecord.body, language)
         val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 
@@ -61,7 +78,7 @@ class WeworkNotifier @Autowired constructor(
         )
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-            sendNotifyMessageTemplateRequest = request,
+            sendNotifyMessageTemplateRequest = effectiveRequest,
             body = body,
             sender = weworkTplRecord.sender,
             weworkService = weworkService,

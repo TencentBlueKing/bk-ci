@@ -35,8 +35,8 @@
                 <span class="exec-status-label">
                     {{ $t("details.times", [statusLabel]) }}
                     <span
-                        v-if="execDetail.status === 'CANCELED'"
-                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                        v-if="execDetail.status === 'CANCELED' && !execDetail.buildEndInfo"
+                        v-bk-tooltips="`${$t('details.canceller')}：${cancelUserId}`"
                         class="devops-icon icon-info-circle"
                     >
                     </span>
@@ -296,6 +296,9 @@
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
 
+    // 与后端 BuildEndInfo.SYSTEM_CANCEL_USER 一致：系统取消时写入的占位，不是真实操作人
+    const SYSTEM_CANCEL_USER = 'System'
+
     const getSubPipelineAccessUrl = (atom) => {
         const {
             projectId,
@@ -441,7 +444,9 @@
                 : ''
             },
             cancelUserId () {
-                return this.execDetail?.cancelUserId ?? '--'
+                // 后端在系统取消且没有真实操作人时会落 System 占位，不展示成取消人
+                const cancelUserId = this.execDetail?.cancelUserId
+                return !cancelUserId || cancelUserId === SYSTEM_CANCEL_USER ? '--' : cancelUserId
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1

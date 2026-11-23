@@ -114,10 +114,10 @@ class ModelTransfer @Autowired constructor(
             // YAML 是完整声明。不写 sub-group 用空白表示清空，避免沿用库里的旧标识。
             concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
             runLockType = when {
-                yaml.disablePipeline == true -> PipelineRunLockType.LOCK
                 yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                 else -> PipelineRunLockType.MULTIPLE
             },
+            yamlLocked = yaml.disablePipeline == true,
             waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes
                 ?: VariableDefault.DEFAULT_WAIT_QUEUE_TIME_MINUTE,
             maxQueueSize = yaml.concurrency?.queueLength ?: VariableDefault.DEFAULT_PIPELINE_SETTING_MAX_QUEUE_SIZE,
@@ -360,8 +360,7 @@ class ModelTransfer @Autowired constructor(
         yaml.concurrency = makeConcurrency(modelInput)
         yaml.customBuildNum = makeBuildNum(modelInput)
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
-        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
-            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.disablePipeline = modelInput.setting.yamlDisabled().nullIfDefault(false)
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()

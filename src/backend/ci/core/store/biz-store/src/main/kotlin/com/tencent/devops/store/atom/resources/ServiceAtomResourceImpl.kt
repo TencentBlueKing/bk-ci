@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.atom.service.AtomPropService
+import com.tencent.devops.store.atom.service.AtomSelectService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomClassifyService
 import com.tencent.devops.store.atom.service.MarketAtomService
@@ -40,6 +41,7 @@ import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.atom.AtomSelectResp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.MarketAtomListQuery
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
@@ -54,7 +56,8 @@ class ServiceAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomService: MarketAtomService,
     private val atomPropService: AtomPropService,
-    private val atomClassifyService: MarketAtomClassifyService
+    private val atomClassifyService: MarketAtomClassifyService,
+    private val atomSelectService: AtomSelectService
 ) : ServiceAtomResource {
 
     override fun list(
@@ -163,6 +166,28 @@ class ServiceAtomResourceImpl @Autowired constructor(
             ),
             page = page,
             pageSize = pageSize
+        )
+    }
+
+    override fun selectAtoms(
+        userId: String,
+        projectCode: String,
+        keywords: String,
+        jobType: String?,
+        os: String?,
+        category: String?,
+        limit: Int?
+    ): Result<AtomSelectResp> {
+        return Result(
+            atomSelectService.selectAtoms(
+                userId = userId,
+                projectCode = projectCode,
+                keywords = keywords,
+                jobType = jobType,
+                os = os,
+                category = category,
+                limit = limit
+            )
         )
     }
 }

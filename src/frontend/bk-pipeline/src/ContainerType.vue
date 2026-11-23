@@ -1,8 +1,16 @@
 <template>
     <span class="container-type">
-        <span v-if="!containerType.showIcon" v-bk-tooltips="containerType.tooltip">
-            {{ containerType.content }}
-        </span>
+        <bk-popover
+            v-if="!containerType.showIcon"
+            :delay="[300, 0]"
+            :disabled="!containerType.showTips"
+            placement="top"
+        >
+            <span>{{ containerType.content }}</span>
+            <template #content>
+                <div class="container-time-range-tips" v-html="containerType.tipsContent"></div>
+            </template>
+        </bk-popover>
         <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{ containerType.content }}
         </Logo>
     </span>
@@ -13,6 +21,7 @@ import Logo from './Logo';
 import { localeMixins } from './locale';
 import {
     convertMStoString,
+    formatRangeTime,
     isNormalContainer,
     isTriggerContainer,
     isVmContainer,
@@ -24,6 +33,7 @@ export default {
         Logo,
     },
     mixins: [localeMixins],
+    inject: ["reactiveData"],
     props: {
         container: Object,
     },
@@ -37,15 +47,23 @@ export default {
                 disabled: true,
             }
             let showIcon = true
+            let showTips = false
+            let tipsContent = ""
             switch (true) {
                 case container.timeCost !== undefined: {
                     const { totalCost, executeCost, systemCost } = container.timeCost
-                    tooltip = {
-                        delay: [300, 0],
-                        content: `${this.t("userTime")}：${convertMStoString(
-                            executeCost
-                        )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`,
-                    }
+                    // 触发器容器不展示起止时间
+                    const timeRange = isTriggerContainer(container)
+                        ? ""
+                        : formatRangeTime(container.startTime, container.endTime)
+                    const runningLabel = container.endTime ? "" : ` ${this.t("started")}`
+                    const costStr = `${this.t("userTime")}：${convertMStoString(
+                        executeCost
+                    )} + ${this.t("systemTime")}： ${convertMStoString(systemCost)}`
+                    showTips = true
+                    tipsContent = timeRange
+                        ? `${this.t("startEndTime")}：${timeRange}${runningLabel}<br>${costStr}`
+                        : costStr
                     content = convertMStoString(totalCost)
                     showIcon = false
                     break
@@ -77,6 +95,8 @@ export default {
                 tooltip,
                 content,
                 showIcon,
+                showTips,
+                tipsContent,
             }
         },
     },
@@ -86,5 +106,9 @@ export default {
 <style lang="scss">
 .is-danger {
     color: #ff5656 !important;
+}
+
+.container-time-range-tips {
+    line-height: 20px;
 }
 </style>

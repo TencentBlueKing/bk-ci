@@ -2668,15 +2668,32 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         locked: Boolean,
-        transactionContext: DSLContext? = null
+        transactionContext: DSLContext? = null,
+        lockReason: String?
     ): Boolean {
-        return pipelineInfoDao.update(
+        return pipelineInfoDao.updateLock(
             dslContext = transactionContext ?: dslContext,
-            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = locked
+            locked = locked,
+            lockUser = userId,
+            lockReason = lockReason.takeIf { locked }
         )
+    }
+
+    /**
+     * 运行时是否被 YAML 禁用，disable-pipeline 只对开启 PAC 的流水线生效，
+     * 存量数据通过 RUN_LOCK_TYPE = LOCK 表示 YAML 禁用
+     */
+    fun isYamlLockedOnRun(projectId: String, pipelineId: String, setting: PipelineSetting?): Boolean {
+        if (setting == null) {
+            return false
+        }
+        if (setting.runLockType == PipelineRunLockType.LOCK) {
+            return true
+        }
+        return setting.yamlLocked == true &&
+            pipelineYamlInfoDao.get(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId) != null
     }
 
     fun getPipelineOauthUser(projectId: String, pipelineId: String): String? {
