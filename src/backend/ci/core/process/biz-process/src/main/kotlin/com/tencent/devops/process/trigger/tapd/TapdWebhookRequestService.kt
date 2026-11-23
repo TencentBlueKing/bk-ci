@@ -63,6 +63,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getPayloadField
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -438,7 +439,7 @@ class TapdWebhookRequestService(
             body.getHookField(TAPD_KEY_STORY_ID)
         }
 
-        else -> body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
+        else -> body.getPayloadField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
     }
 
     private fun listSubscribers(
