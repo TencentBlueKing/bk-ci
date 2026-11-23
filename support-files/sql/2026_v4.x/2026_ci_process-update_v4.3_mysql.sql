@@ -108,6 +108,16 @@ BEGIN
             COMMENT '事件作用域,svn路径/制品路径,无则NULL';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_CALLBACK'
+                    AND COLUMN_NAME = 'SOURCE') THEN
+        ALTER TABLE `T_PIPELINE_CALLBACK`
+            ADD COLUMN `SOURCE` varchar(16) NOT NULL DEFAULT 'MODEL'
+            COMMENT '回调来源,MODEL-编排,API-接口';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

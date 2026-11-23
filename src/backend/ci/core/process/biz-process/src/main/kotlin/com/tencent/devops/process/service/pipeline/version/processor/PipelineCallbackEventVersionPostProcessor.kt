@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
+import com.tencent.devops.process.dao.PipelineCallbackSource
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import org.jooq.DSLContext
@@ -79,37 +80,43 @@ class PipelineCallbackEventVersionPostProcessor @Autowired constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        val existEventNames = pipelineCallbackDao.list(
+        val existRecords = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        ).map { it.name }.toSet()
-        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
-        val newEventKeys = events?.keys ?: emptySet()
-        val needDelNames = existEventNames.subtract(newEventKeys)
+        )
+        // 接口注册的回调不随编排删除或覆盖
+        val apiNames = existRecords.filter { it.source == PipelineCallbackSource.API.name }
+            .map { it.name }.toSet()
+        val modelEvents = events?.filterKeys { it !in apiNames } ?: emptyMap()
+        val needDelNames = existRecords.filter { it.source == PipelineCallbackSource.MODEL.name }
+            .map { it.name }.toSet()
+            .subtract(modelEvents.keys)
         if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                names = needDelNames
+                names = needDelNames,
+                source = PipelineCallbackSource.MODEL
             )
         }
         // 保存回调事件
-        if (!events.isNullOrEmpty()) {
+        if (modelEvents.isNotEmpty()) {
             pipelineCallbackDao.save(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = events.map { (_, value) ->
+                list = modelEvents.map { (_, value) ->
                     value.copy(
                         secretToken = value.secretToken?.let {
                             pipelineCallbackCryptoHelper.encryptSm4ButAes(it)
                         }
                     )
                 },
-                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha(),
+                source = PipelineCallbackSource.MODEL
             )
         }
     }
