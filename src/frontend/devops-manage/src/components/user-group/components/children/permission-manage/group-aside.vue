@@ -206,6 +206,8 @@ import { Message } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import ajax from '../../../ajax/index';
 import ScrollLoadList from '../../widget-components/scroll-load-list';
+import createDocs from '../../../../../../../common-lib/docs';
+import { buildAddMemberTips } from '../../../../../utils/add-member-tips';
 export default {
   components: {
     ScrollLoadList,
@@ -474,8 +476,27 @@ export default {
             this.syncGroupIAM(groupId)
             break;
           }
+          case 'user_group_detail_add_member':
+            this.replyAddMemberTips(event)
+            break;
         }
       }
+    },
+    replyAddMemberTips(event) {
+      const iamOrigin = new URL(window.BK_IAM_URL_PREFIX).origin
+      if (event.origin !== iamOrigin) return
+      const { MANAGER_DUTY_DOC } = createDocs().BkciDocs
+      const locale = this.$i18n?.locale?.value || this.$i18n?.locale
+      event.source?.postMessage({
+        type: 'BK_CI',
+        code: 'add_member_tips',
+        data: buildAddMemberTips({
+          group: this.groupList[this.curGroupIndex],
+          t: (key, ...args) => this.t(key, ...args),
+          docUrl: MANAGER_DUTY_DOC,
+          locale,
+        }),
+      }, iamOrigin)
     },
 
     async syncDeleteGroupPermissions (groupId) {

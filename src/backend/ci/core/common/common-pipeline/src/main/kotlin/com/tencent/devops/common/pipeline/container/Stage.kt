@@ -72,7 +72,11 @@ data class Stage(
     @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
     @get:Schema(title = "模版信息", required = false)
-    var template: TemplateDescriptor? = null
+    var template: TemplateDescriptor? = null,
+    @get:Schema(title = "阶段开始时间（毫秒时间戳）", required = false, readOnly = true)
+    var startTime: Long? = null,
+    @get:Schema(title = "阶段结束时间（毫秒时间戳）", required = false, readOnly = true)
+    var endTime: Long? = null
 ) {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
@@ -82,6 +86,8 @@ data class Stage(
             status = null
             startEpoch = null
             elapsed = null
+            startTime = null
+            endTime = null
         }
         checkIn?.fixReviewGroups(init == true)
         checkOut?.fixReviewGroups(init == true)

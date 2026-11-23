@@ -78,11 +78,17 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
     ) {
         val projectId = pipelineResourceVersion.projectId
         val pipelineId = pipelineResourceVersion.pipelineId
-        val count = pipelineEventSubscriptionDao.deleteExcludeTaskIds(
+        val removedTaskIds = pipelineEventSubscriptionDao.listTaskIds(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).subtract(taskIds.toSet())
+        if (removedTaskIds.isEmpty()) return
+        val count = pipelineEventSubscriptionDao.deleteByTaskIds(
             dslContext = transactionContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            taskIds = taskIds
+            taskIds = removedTaskIds
         )
         if (count > 0) {
             logger.info("clean removed trigger subscriptions|$projectId|$pipelineId|count=$count")
