@@ -166,12 +166,13 @@
   import http from '@/http/api';
   import { h, ref, computed, watch, onMounted, resolveDirective, withDirectives } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { Message } from 'bkui-vue'
+  import { Message, InfoBox } from 'bkui-vue'
   import { Spinner, Copy  } from 'bkui-vue/lib/icon';
   import { useRoute } from 'vue-router';
   import abnormalIcon from '@/css/svg/abnormal.svg'
   import unknownIcon from '@/css/svg/unknown.svg'
   import normalIcon from '@/css/svg/normal.svg'
+  import warningIcon from '@/css/svg/warning.svg'
   import HandoverDetail from './handover-detail.vue'
   const bkTooltips = resolveDirective('bk-tooltips');
   const { t } = useI18n();
@@ -242,6 +243,13 @@
         label: t('移交详情'),
         field: 'title',
         showOverflowTooltip: true,
+        render ({ cell, row }) {
+          // 管理员申请单：与单头同一句（无句号），确认人视角显示「你」
+          if (row.applicationType === 'MANAGER_APPLY') {
+            return h('span', t('项目管理员X申请将授权人改为X共X项', [row.applicant, getGranteeText(row), row.authorizationCount]));
+          }
+          return h('span', cell)
+        }
       },
       ...(
         !isGiven.value ? [
@@ -290,28 +298,37 @@
           )
         }
       },
-      ...(
-        !isGiven.value ? [
-          {
-            label: t('操作'),
-            field: 'operation',
-            showOverflowTooltip: true,
-            render ({ cell, row }) {
-              return h('div', {
-                style: {
-                  'color': row.handoverStatus !== 'PENDING' ? '#C4C6CC' : '#3A84FF',
-                  'cursor': row.handoverStatus !== 'PENDING' ? 'not-allowed' : 'pointer'
-                },
-                onClick () {
-                  if (row.handoverStatus !== 'PENDING') return
-                  curHandoverInfo.value = row
-                  showHandoverDetail.value = true;
-                }
-              }, t('去处理'))
+      {
+        label: t('操作'),
+        field: 'operation',
+        showOverflowTooltip: true,
+        render ({ cell, row }) {
+          // 移交给我的：去处理；我移交的：撤回（仅待处理状态显示）
+          if (!isGiven.value) {
+            return h('div', {
+              style: {
+                'color': row.handoverStatus !== 'PENDING' ? '#C4C6CC' : '#3A84FF',
+                'cursor': row.handoverStatus !== 'PENDING' ? 'not-allowed' : 'pointer'
+              },
+              onClick () {
+                if (row.handoverStatus !== 'PENDING') return
+                curHandoverInfo.value = row
+                showHandoverDetail.value = true;
+              }
+            }, t('去处理'))
+          }
+          if (row.handoverStatus !== 'PENDING') return h('div', '')
+          return h('div', {
+            style: {
+              'color': '#3A84FF',
+              'cursor': 'pointer'
+            },
+            onClick () {
+              handleRevoke(row)
             }
-          },
-        ] : []
-      )
+          }, t('撤回'))
+        }
+      }
     ]
   })
   const isEmpty = computed(() => !searchValue.value.length);
@@ -353,6 +370,8 @@
         children: [
           { name: t('已通过'), id: 'SUCCEED' },
           { name: t('已拒绝'), id: 'REJECT' },
+          { name: t('部分通过'), id: 'PARTIAL_SUCCEED' },
+          { name: t('未通过'), id: 'FAILED' },
           { name: t('待处理'), id: 'PENDING' },
           { name: t('已撤销'), id: 'REVOKE' },
         ]
@@ -381,6 +400,13 @@
   const disabledRowSelect = ({ row, index, isCheckAll }) => {
     return row.handoverStatus === 'PENDING'
   }
+  /**
+   * 单头受让人文案：确认人视角显示「你」，申请人视角显示目标用户姓名；英文名前后留空格
+   */
+  const getGranteeText = (row) => {
+    const name = isGiven.value ? row.approver : t('你');
+    return /^[a-zA-Z0-9]/.test(name || '') ? ` ${name} ` : name;
+  }
   const getStatusMap = (status) => {
     const statusMap = {
       'REJECT': {
@@ -394,6 +420,14 @@
       'REVOKE': {
         icon: unknownIcon,
         text: t('已撤销')
+      },
+      'PARTIAL_SUCCEED': {
+        icon: warningIcon,
+        text: t('部分通过')
+      },
+      'FAILED': {
+        icon: abnormalIcon,
+        text: t('未通过')
       }
     }
     return statusMap[status]
@@ -471,13 +505,51 @@
     batchApprovalData.value.remark = '';
     batchApprovalData.value.handoverAction = 'AGREE';
   }
+  /**
+   * 撤回我移交的申请（仅待处理状态）
+   */
+  const handleRevoke = (row) => {
+    InfoBox({
+      type: 'warning',
+      title: t('确定撤回此申请吗？'),
+      content: t('撤回后授权人不变，对方无需再处理。'),
+      confirmText: t('撤回'),
+      cancelText: t('取消'),
+      onConfirm: async () => {
+        try {
+          await http.handleHanoverApplication({
+            projectCode: row.projectCode,
+            flowNo: row.flowNo,
+            operator: userId.value,
+            handoverAction: 'REVOKE',
+          })
+          Message({
+            theme: 'success',
+            message: t('已撤回申请')
+          })
+          fetchHandoverList();
+        } catch (e) {
+          // 单据已被处理/已结束/已被撤回等竞态场景，静默刷新展示最新状态
+          if ([2121101, 2121102, 2121092].includes(e?.code)) {
+            fetchHandoverList();
+          } else {
+            Message({
+              theme: 'error',
+              message: e.message || e
+            })
+          }
+        }
+      },
+    })
+  }
   const handleSelectAll = () => {
+    // 点击表头全选框，退出全量选择模式
+    isSelectAll.value = false;
     selectList.value = refTable.value.getSelection();
   }
   const handleSelectAllData = () => {
-    if (!isSelectAll.value && selectList.value.length !== handoverList.value.filter(i => i.handoverStatus === 'PENDING').length) {
-      refTable.value.toggleAllSelection();
-    }
+    // 显式传 true 强制全选，避免无参 toggle 依赖 isCheckedAll（禁选行会被视为已勾选）导致反向清空
+    refTable.value.toggleAllSelection(true);
     isSelectAll.value = true;
   }
   const handleClear = () => {
@@ -522,9 +594,13 @@
       }
       document.body.removeChild(textarea)
   }
-  const handleApprovalSuccess = () => {
-    showHandoverDetail.value = false
-    fetchHandoverList();
+  const handleApprovalSuccess = async (keepOpen = false) => {
+    if (!keepOpen) showHandoverDetail.value = false
+    await fetchHandoverList();
+    // 按条提交后单据保持打开，用最新行数据替换当前单据
+    if (keepOpen && curHandoverInfo.value?.flowNo) {
+      curHandoverInfo.value = handoverList.value.find(i => i.flowNo === curHandoverInfo.value.flowNo) || curHandoverInfo.value;
+    }
   }
   const init = () => {
     pagination.value.current = 1;

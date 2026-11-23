@@ -26,7 +26,7 @@
       <template #main>
         <div class="content">
         <div class="content-btn">
-          <bk-button @click="handleReset">{{ t('申请使用授权') }}</bk-button>
+          <bk-button @click="handleReset">{{ t('申请更换授权人') }}</bk-button>
           <div class="filter-bar">
             <bk-date-picker
               v-model="dateTimeRange"
@@ -85,12 +85,12 @@
             </template>
             <template #prepend>
               <div v-if="isSelectAll" class="prepend">
-                {{ t('已选择全量数据X条', [pagination.count]) }}
+                {{ t('已选择全量数据X条', [selectableCount]) }}
                 <span @click="handleClear">{{ t('清除选择') }}</span>
               </div>
               <div v-else-if="selectList.length" class="prepend">
                 {{ t('已选择X条数据，', [selectList.length]) }}
-                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [pagination.count]) }}</span> 
+                <span @click="handleSelectAllData"> {{ t('选择全量数据X条', [selectableCount]) }}</span> 
                 <span class="prepend-line">|</span>
                 <span @click="handleClear">{{ t('清除选择') }}</span> 
               </div>
@@ -106,13 +106,18 @@
       :key="resourceType"
       theme="primary"
       :width="740"
-      :title="t('申请使用授权')"
+      :title="t('申请更换授权人')"
       @closed="dialogClose"
     >
       <div class="dialog">
-        <bk-tag radius="20px" class="tag">
-          {{ t('已选择X个XX', [isSelectAll ? pagination.count : selectList.length, searchName]) }}
-        </bk-tag>
+        <p>
+          <bk-tag radius="20px" class="tag">
+            {{ t('已选择X个XX', [isSelectAll ? selectableCount : selectList.length, searchName]) }}
+          </bk-tag>
+          <span class="apply-tip">
+            {{ isSelfSelected ? t('授权人将立即改为你') : t('对方同意前授权人不变') }}
+          </span>
+        </p>
         <bk-form
           ref="formRef"
           :model="resetFormData"
@@ -120,7 +125,7 @@
         >
           <bk-form-item
             required
-            :label="t('目标用户')"
+            :label="t('新授权人')"
             property="name"
             labelWidth=""
           >
@@ -132,6 +137,7 @@
             </project-user-selector>
           </bk-form-item>
         </bk-form>
+        
 
         <div v-if="isChecking">
           <Spinner class="check-checking-icon" />
@@ -141,15 +147,14 @@
           <div class="failed-tips">
             <div class="manage-icon manage-icon-warning-circle-fill warning-icon"></div>
             <div v-if="isAllAlreadyAuthorizer">
-              {{ t('所选X的授权人已是该用户，无需申请', [searchName]) }}
+              {{ t('所选X的授权人已是该用户，无需更换', [searchName]) }}
             </div>
             <div v-else-if="isPartAlreadyAuthorizer">
-              {{ t('以下X个X的授权人已是所选用户，无需申请，将提交其余X', [alreadyAuthorizerCount, searchName, searchName]) }}
+              {{ t('以下X个X的授权人已是所选用户，无需更换，将提交其余X', [alreadyAuthorizerCount, searchName, searchName]) }}
             </div>
-            <i18n-t v-else keypath="检测到以下X项授权将无法提交，请按失败原因处理或继续提交其余代码库授权" tag="div">
+            <i18n-t v-else keypath="检测到以下X项无法更换授权人，请按失败原因处理或继续提交其余代码库授权" tag="div">
               <span class="tips-count">
-                {{ failedCount }}</span><span class="tips-text">{{ t('按失败原因处理') }}</span><span class="tips-text">{{ t('继续提交其余') }}</span><span class="tips-text">{{ searchName }}</span><span class="tips-text">{{ t('授权') }}
-              </span>
+                {{ failedCount }}</span><span class="tips-text">{{ t('按失败原因处理') }}</span><span class="tips-text">{{ t('继续提交其余') }}</span><span class="tips-text">{{ searchName }}</span>
             </i18n-t>
           </div>
           <bk-table
@@ -250,6 +255,9 @@ const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
+const currentUserName = window.top?.userInfo?.username || '';
+// 新授权人是否是申请人本人（本人提交立即生效并生成已结束的申请）
+const isSelfSelected = computed(() => !!resetFormData.value.name && resetFormData.value.name === currentUserName);
 const checkResult = ref({});
 const alreadyAuthorizerCount = ref(0);
 const isAllAlreadyAuthorizer = ref(false);
@@ -268,6 +276,10 @@ const pagination = ref({
   limit: 20,
   current: 1,
 });
+// 待同意资源总数（轻量查询，随列表刷新）
+const beingHandoverCount = ref(0);
+// 全量选择的可选条数 = 当前筛选总数 - 待同意数
+const selectableCount = computed(() => Math.max(pagination.value.count - beingHandoverCount.value, 0));
 const searchName = computed(() => {
   const nameMap = {
     'pipeline': t('流水线'),
@@ -386,7 +398,7 @@ const columns = ref([
     field: "beingHandover",
     render ({ row }) {
       return row.beingHandover
-        ? t('待X确认', [row.approver])
+        ? h('span', { style: { color: '#3a84ff' } }, t('待X同意', [row.approver]))
         : t('正常');
     },
   },
@@ -399,7 +411,7 @@ const filterQuery = computed(() => {
       if (item.id === 'handoverFroms') {
         query[item.id] = item.values?.map(value => value.id);
       } else if (item.id === 'queryHandover') {
-        // 待确认/正常筛选，映射为 queryHandover 布尔值
+        // 待同意/正常筛选，映射为 queryHandover 布尔值
         query[item.id] = item.values?.[0]?.id === 'true';
       } else {
         query[item.id] = item.values?.map(value => value.id).join(',');
@@ -483,9 +495,34 @@ async function getTableList () {
     tableData.value = res.records;
     pagination.value.count = res.count;
 
+    // 刷新待同意资源总数（全量选择可选条数 = 总数 - 待同意数）
+    getBeingHandoverCount();
+
     isLoading.value = false;
   } catch (e) {
     isLoading.value = false;
+    console.error(e);
+  }
+}
+/**
+ * 获取待同意资源总数（轻量请求 pageSize=1 只取 count）
+ */
+async function getBeingHandoverCount() {
+  try {
+    const res = await http.getResourceAuthList(projectId.value, {
+      projectCode: projectId.value,
+      resourceType: resourceType.value,
+      operateChannel: 'MANAGER',
+      ...filterQuery.value,
+      greaterThanHandoverTime: dateTimeRange.value[0],
+      lessThanHandoverTime: dateTimeRange.value[1],
+      // 覆盖筛选条件中的 queryHandover，只统计待同意资源
+      queryHandover: true,
+      page: 1,
+      pageSize: 1,
+    });
+    beingHandoverCount.value = res.count ?? 0;
+  } catch (e) {
     console.error(e);
   }
 }
@@ -498,13 +535,13 @@ function handleAsideClick(item, index) {
   init();
 };
 /**
- * 批量重置
+ * 申请更换授权人
  */
 function handleReset() {
   if(!selectList.value.length) {
     Message({
       theme: 'error',
-      message: t('请先选择数据'),
+      message: t('请先选择X', [searchName.value]),
     });
     return;
   }
@@ -515,7 +552,7 @@ function handleReset() {
   });
 }
 /**
- * 待确认的资源不允许勾选
+ * 待同意的资源不允许勾选
  */
 function isRowSelectEnable ({ row }) {
   return !row.beingHandover;
@@ -635,10 +672,26 @@ function confirmReset() {
       showResetDialog.value = false;
       canLoading.value = true;
       if (res?.immediateEffect) {
-        // 目标用户是申请人本人，授权直接生效
-        Message({
-          theme: 'success',
-          message: t('授权已生效'),
+        // 新授权人是申请人本人：授权立即生效，同时生成一张已结束的申请
+        InfoBox({
+          type: 'success',
+          title: t('授权人已改为你'),
+          content: () => h('div', {
+            style: {
+              padding: '12px',
+              background: 'rgb(245, 246, 250)',
+              color: 'rgb(77, 79, 86)',
+              textAlign: 'left',
+              fontSize: '12px',
+              lineHeight: '16px',
+            },
+          }, [
+            h('p', { style: { margin: 0 } }, t('共X项已生效', [res?.effectedCount ?? 0])),
+            h('p', { style: { margin: 0 } }, t('可在我的交接中查看')),
+          ]),
+          confirmText: t('查看结果'),
+          cancelText: t('关闭'),
+          onConfirm: () => handleViewProgress(res?.flowNo || ''),
         });
       } else {
         InfoBox({
@@ -650,11 +703,12 @@ function confirmReset() {
               background: 'rgb(245, 246, 250)',
               color: 'rgb(77, 79, 86)',
               textAlign: 'left',
-              fontSize: '14px',
+              fontSize: '12px',
               lineHeight: '16px',
             },
           }, [
-            h('p', { style: { margin: 0 } }, t('已提交申请，等待X确认', [resetFormData.value.name])),
+            h('p', { style: { margin: 0 } }, t('已提交申请，等待X同意', [resetFormData.value.name])),
+            h('p', { style: { margin: 0 } }, t('同意前授权人不变')),
             h('p', { style: { margin: 0 } }, t('可在我的交接中查看进度')),
           ]),
           confirmText: t('查看进度'),
@@ -729,7 +783,7 @@ function handlePageLimitChange (limit) {
 async function getMenuList (item, keyword) {
   if (item.id === 'queryHandover') {
     return [
-      { id: 'true', name: t('待确认') },
+      { id: 'true', name: t('待同意') },
       { id: 'false', name: t('正常') },
     ]
   }
@@ -846,6 +900,12 @@ function handleChangeName ({ list }) {
   }
 }
 .dialog{
+  .apply-tip {
+    margin: -2px 0 16px 0;
+    font-size: 12px;
+    color: #979BA5;
+  }
+
   .tag{
     padding: 16px;
     font-size: 12px;
