@@ -587,8 +587,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val (releaseType, lastVersionContent) = if (isAtomInitStatus) {
             Pair(null, null)
         } else {
-            val log = marketAtomVersionLogDao.getAtomVersion(dslContext, record.id)
-            Pair(log.releaseType, log.content)
+            val log = marketAtomCommonService.getOrCreateAtomVersionLog(
+                dslContext = dslContext,
+                userId = userId,
+                atomId = record.id,
+                atomCode = atomCode
+            )
+            Pair(log?.releaseType, log?.content)
         }
         val showReleaseType = if (releaseType != null) {
             ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
