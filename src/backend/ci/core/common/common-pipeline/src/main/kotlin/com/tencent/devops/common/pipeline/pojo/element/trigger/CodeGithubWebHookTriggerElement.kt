@@ -130,6 +130,7 @@ data class CodeGithubWebHookTriggerElement(
         val props = when (eventType) {
             CodeEventType.PUSH, CodeEventType.CREATE -> {
                 listOf(
+                    TriggerElementPropUtils.vuexInput(name = "includeUsers", value = includeUsers?.joinToString(",")),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
