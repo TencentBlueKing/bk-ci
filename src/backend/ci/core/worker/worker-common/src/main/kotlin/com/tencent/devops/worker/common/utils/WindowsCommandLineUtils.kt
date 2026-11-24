@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -60,7 +59,7 @@ object WindowsCommandLineUtils {
         }
 
         // 与 CommandLineUtils 相同：进程级合流动后只读 stdout，分级交给 ## 前缀
-        val outputStream = object : LogOutputStream() {
+        val outputStream = object : BoundedLogOutputStream() {
             override fun processLine(line: String?, level: Int) {
                 if (line == null)
                     return

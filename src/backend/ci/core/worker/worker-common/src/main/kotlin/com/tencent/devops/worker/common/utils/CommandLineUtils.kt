@@ -40,13 +40,11 @@ import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 
@@ -95,15 +93,7 @@ object CommandLineUtils {
 
         // CommandLineExecutor 已 redirectErrorStream，只读合并后的 stdout。
         // 一律 addNormalLine：##[error] 等前缀仍由 LoggerService 分级；勿再按 fd 调 addErrorLine。
-        val outputStream = object : LogOutputStream() {
-
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
+        val outputStream = object : BoundedLogOutputStream(charsetName = charset) {
 
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
