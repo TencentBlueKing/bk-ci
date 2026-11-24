@@ -30,12 +30,12 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Repository
 import java.io.IOException
 
 @Repository
-@ConditionalOnBean(LogClient::class)
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class LogPanelEsDao(
     private val logClient: LogClient,
     private val indexService: IndexService,
