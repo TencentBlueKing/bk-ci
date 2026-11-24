@@ -185,6 +185,70 @@ class ThirdPartyAgentBuildDaoTest {
         assertTrue(PipelineTaskStatus.QUEUE.status in bindings, sql)
     }
 
+    @Test
+    fun listAgentBuildsForcesTheStatusIndexOnlyWhenAsked() {
+        val sqlList = mutableListOf<String>()
+        val dslContext = DSL.using(
+            MockConnection { context ->
+                sqlList.add(context.sql())
+                arrayOf(emptyQueryResult(context.sql()))
+            },
+            SQLDialect.MYSQL
+        )
+        val hint = Regex("force index\\s*\\(`IDX_AGENTID_STATUS_UPDATE`\\)", RegexOption.IGNORE_CASE)
+
+        dao.listAgentBuilds(dslContext, "agent", "RUNNING", null, null, 0, 1001, forceStatusIndex = true)
+        assertTrue(hint.containsMatchIn(sqlList.single()), sqlList.single())
+
+        sqlList.clear()
+        dao.listAgentBuilds(dslContext, "agent", "DONE", null, null, 0, 21)
+        assertFalse(Regex("force index", RegexOption.IGNORE_CASE).containsMatchIn(sqlList.single()), sqlList.single())
+    }
+
+    @Test
+    fun clearQueriesOnlyReadTheAgentIndexAndDeleteByPrimaryKey() {
+        val sqlList = mutableListOf<String>()
+        val bindingsList = mutableListOf<List<Any?>>()
+        val dslContext = DSL.using(
+            MockConnection { context ->
+                sqlList.add(context.sql())
+                bindingsList.add(context.bindings().toList())
+                arrayOf(emptyQueryResult(context.sql()))
+            },
+            SQLDialect.MYSQL
+        )
+        val agentIndex = Regex("force index\\s*\\(`idx_agent_id`\\)", RegexOption.IGNORE_CASE)
+
+        dao.getNextAgentId(dslContext, "a")
+        dao.getClearBoundaryId(dslContext, "agent", 100000)
+        dao.listClearCandidates(dslContext, "agent", 10L, 5000L, 1000)
+        val (agents, boundary, candidates) = sqlList
+        listOf(agents, boundary, candidates).forEach { assertTrue(agentIndex.containsMatchIn(it), it) }
+        // 每次只定位下一台构建机
+        val next = Regex("order by .*`AGENT_ID` asc limit \\?$", RegexOption.IGNORE_CASE)
+        assertTrue(next.containsMatchIn(agents), agents)
+        assertFalse(agents.contains("distinct", ignoreCase = true), agents)
+        // 倒序跳过要保留的记录，取下一条的 ID
+        val desc = Regex("order by .*`ID` desc limit", RegexOption.IGNORE_CASE)
+        assertTrue(desc.containsMatchIn(boundary), boundary)
+        assertTrue(bindingsList[1].any { (it as? Number)?.toLong() == 100000L }, boundary)
+        // 只取判断需要的三列，按 ID 正序；状态和创建时间由调用方判断，SQL 里不过滤
+        val columns = Regex("^select .*`ID`, .*`STATUS`, .*`CREATED_TIME` from", RegexOption.IGNORE_CASE)
+        assertTrue(columns.containsMatchIn(candidates), candidates)
+        assertFalse(candidates.contains("`STATUS` in"), candidates)
+        assertTrue(Regex("order by .*`ID` asc", RegexOption.IGNORE_CASE).containsMatchIn(candidates), candidates)
+        val numbers = bindingsList[2].mapNotNull { (it as? Number)?.toLong() }
+        assertTrue(numbers.containsAll(listOf(10L, 5000L)), "$candidates $numbers")
+
+        sqlList.clear()
+        dao.deleteByIds(dslContext, listOf(1L, 2L))
+        val delete = sqlList.single()
+        val byIds = Regex("^delete from .* where .*`ID` in \\(\\?, \\?\\)$", RegexOption.IGNORE_CASE)
+        assertTrue(byIds.containsMatchIn(delete), delete)
+        assertEquals(0, dao.deleteByIds(dslContext, emptyList()))
+        assertEquals(1, sqlList.size)
+    }
+
     private fun emptyQueryResult(sql: String): MockResult {
         val dslContext = DSL.using(SQLDialect.MYSQL)
         if (sql.contains("PIPELINE_COUNT")) {

@@ -17,6 +17,7 @@ interface TPAPipelineQuery {
     val jobId: String?
     val creator: String?
     val taskStatusList: List<PipelineTaskStatus>?
+    val withCount: Boolean?
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,7 +43,9 @@ data class TPAPipelineReq(
     @get:Schema(title = "状态", required = false)
     override val taskStatusList: List<PipelineTaskStatus>?,
     @get:Schema(title = "视图", required = false)
-    val view: TPAPipelineBuildView
+    val view: TPAPipelineBuildView,
+    @get:Schema(title = "是否计算总数，默认计算；为 false 时总数返回 -1，滚动加载第二页起可沿用第一页的总数", required = false)
+    override val withCount: Boolean? = null
 ) : TPAPipelineQuery
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -66,7 +69,9 @@ data class TPAPipelineSearchReq(
     @get:Schema(title = "执行人", required = false)
     override val creator: String?,
     @get:Schema(title = "状态", required = false)
-    override val taskStatusList: List<PipelineTaskStatus>?
+    override val taskStatusList: List<PipelineTaskStatus>?,
+    @get:Schema(title = "是否计算总数，默认计算；为 false 时总数返回 -1，翻页时可沿用第一页的总数", required = false)
+    override val withCount: Boolean? = null
 ) : TPAPipelineQuery
 
 @Schema(title = "第三方构建任务详情")
