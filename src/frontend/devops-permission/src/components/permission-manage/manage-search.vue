@@ -5,14 +5,26 @@
       :clearable="false"
       v-model="projectValue"
       :prefix="t('所属项目')"
+      filterable
+      :input-search="false"
+      :remote-method="handleProjectSearch"
       @change="handleProjectChange"
+      @toggle="handleProjectSelectToggle"
     >
       <bk-option
-        v-for="item in projectList"
+        v-for="item in filteredProjectList"
         :key="item.englishName"
         :id="item.englishName"
         :name="item.projectName"
-      />
+      >
+        <span class="project-option-name" :title="item.projectName">
+          <span
+            v-for="(segment, index) in splitHighlightSegments(item.projectName, projectSearchKeyword)"
+            :key="index"
+            :class="{ 'project-option-highlight': segment.matched }"
+          >{{ segment.text }}</span>
+        </span>
+      </bk-option>
     </bk-select>
 
     <bk-select
@@ -94,6 +106,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { cacheProjectCode } from '@/store/useCacheProjectCode'
 import { resolveDefaultProjectCode } from '@/utils/resolveDefaultProjectCode'
+import { filterProjectsByKeyword, splitHighlightSegments } from '@/utils/projectSearch';
 
 const route = useRoute();
 const { t } = useI18n();
@@ -102,6 +115,8 @@ const serviceValue = ref('');
 const resourceValue = ref('');
 const actionValue = ref('');
 const projectList = ref([]);
+const projectSearchKeyword = ref('');
+const filteredProjectList = computed(() => filterProjectsByKeyword(projectList.value, projectSearchKeyword.value));
 const serviceList = ref([]);
 const resourceList = ref([]);
 const actionList = ref([]);
@@ -245,7 +260,18 @@ async function fetchResourceTypes() {
   }
 }
 
+function handleProjectSearch(val) {
+  projectSearchKeyword.value = typeof val === 'string' ? val : '';
+}
+
+function handleProjectSelectToggle(isOpen) {
+  if (!isOpen) {
+    projectSearchKeyword.value = '';
+  }
+}
+
 function handleProjectChange(value) {
+  projectSearchKeyword.value = '';
   cacheProjectCode.set(value);
   projectValue.value = value;
   serviceValue.value = '';
@@ -358,5 +384,18 @@ align-items: center;
 .multi-search {
   width: 40%;
   margin-left: 10px;
+}
+
+.project-option-name {
+  display: inline-block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-option-highlight {
+  color: #3A84FF;
+  font-weight: 600;
 }
 </style>
