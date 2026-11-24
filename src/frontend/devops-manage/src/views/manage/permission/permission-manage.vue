@@ -255,9 +255,9 @@ const isResetFailure = ref(false);
 const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
-const currentUserName = window.top?.userInfo?.username || '';
+const currentUserName = computed(() => window.top?.userInfo?.username || '');
 // 新授权人是否是申请人本人（本人提交立即生效并生成已结束的申请）
-const isSelfSelected = computed(() => !!resetFormData.value.name && resetFormData.value.name === currentUserName);
+const isSelfSelected = computed(() => !!resetFormData.value.name && resetFormData.value.name === currentUserName.value);
 const checkResult = ref({});
 const alreadyAuthorizerCount = ref(0);
 const isAllAlreadyAuthorizer = ref(false);

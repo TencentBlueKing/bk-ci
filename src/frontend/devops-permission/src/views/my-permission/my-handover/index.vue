@@ -642,26 +642,64 @@
     isSelectAll.value = false;
     fetchHandoverList();
   }
+  /**
+   * 判断当前用户在该交接单中的真实身份。
+   */
+  const resolveHandoverIdentity = async (flowNo) => {
+    // 接口失败重试一次
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await http.fetchHandoverOverviewList({
+          memberId: userId.value,
+          flowNo,
+          page: 1,
+          pageSize: 1
+        });
+        const record = (res.records || []).find(i => i.flowNo === flowNo);
+        // 查不到：当前用户不是该单据的申请人或确认人，无需重试
+        if (!record) return null;
+        // applicant 与 approver 相同（本人交接）时两个页签等价，按「我移交的」处理
+        return { record, isApplicant: record.applicant === userId.value };
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return null;
+  }
   onMounted(async () => {
     const { type, flowNo } = route.query;
 
+    // 1. type 只作为兜底默认值，不据此决定页签
     if (type) {
       isGiven.value = typeMapping[type] ?? isGiven.value;
     }
-    // isGiven参数获取之后调用接口
+    // 2. 带单号时，以当前用户在该单据中的真实身份覆盖，兼容已发出去的旧链接
+    let linkRecord = null;
+    if (flowNo) {
+      const identity = await resolveHandoverIdentity(flowNo);
+      if (identity) {
+        isGiven.value = identity.isApplicant;
+        linkRecord = identity.record;
+      }
+    }
+    // 3. 身份确定后再拉列表（fetchHandoverList 按页签拼 applicant/approver 过滤条件）
     await fetchHandoverList();
 
-    if (type && flowNo) {
-      searchValue.value = [
-        {
-          name: t('单号'),
-          id: 'flowNo',
-          values: [{ id: flowNo, name: flowNo }]
-        }
-      ];
-      queryFlowNo.value = flowNo;
-      curHandoverInfo.value = handoverList.value.find(i => i.flowNo === queryFlowNo.value);
-      showHandoverDetail.value = true;
+    // 4. 定位到该单据并展开详情（不要求 query 带 type；查不到则停在默认页签）
+    if (flowNo) {
+      const record = handoverList.value.find(i => i.flowNo === flowNo) || linkRecord;
+      if (record) {
+        searchValue.value = [
+          {
+            name: t('单号'),
+            id: 'flowNo',
+            values: [{ id: flowNo, name: flowNo }]
+          }
+        ];
+        queryFlowNo.value = flowNo;
+        curHandoverInfo.value = record;
+        showHandoverDetail.value = true;
+      }
     }
   })
 </script>
