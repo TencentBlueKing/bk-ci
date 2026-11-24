@@ -168,7 +168,7 @@
   import { useI18n } from 'vue-i18n';
   import { Message, InfoBox } from 'bkui-vue'
   import { Spinner, Copy  } from 'bkui-vue/lib/icon';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import abnormalIcon from '@/css/svg/abnormal.svg'
   import unknownIcon from '@/css/svg/unknown.svg'
   import normalIcon from '@/css/svg/normal.svg'
@@ -177,6 +177,7 @@
   const bkTooltips = resolveDirective('bk-tooltips');
   const { t } = useI18n();
   const route = useRoute();
+  const router = useRouter();
   const refTable = ref(null);
   const isLoading = ref(false);
   const isFetchLoading = ref(false);
@@ -487,6 +488,10 @@
   }
   const handleChangeHandoverType = (value) => {
     isGiven.value = value;
+    if (route.query.type || route.query.flowNo) {
+      const { type, flowNo, ...restQuery } = route.query;
+      router.replace({ query: restQuery });
+    }
   }
   const handleBatchProcess = () => {
     if (!selectList.value.length) {
@@ -656,14 +661,15 @@
           pageSize: 1
         });
         const record = (res.records || []).find(i => i.flowNo === flowNo);
-        // 查不到：当前用户不是该单据的申请人或确认人，无需重试
-        if (!record) return null;
+        // 查不到：当前用户不是该单据的申请人或确认人（或单据不存在），无需重试
+        if (!record) return { notFound: true };
         // applicant 与 approver 相同（本人交接）时两个页签等价，按「我移交的」处理
         return { record, isApplicant: record.applicant === userId.value };
       } catch (e) {
         console.error(e);
       }
     }
+    // 查询失败：无法判断身份，走 type 兜底
     return null;
   }
   onMounted(async () => {
@@ -675,18 +681,26 @@
     }
     // 2. 带单号时，以当前用户在该单据中的真实身份覆盖，兼容已发出去的旧链接
     let linkRecord = null;
+    let notFound = false;
     if (flowNo) {
       const identity = await resolveHandoverIdentity(flowNo);
-      if (identity) {
+      if (identity?.record) {
         isGiven.value = identity.isApplicant;
         linkRecord = identity.record;
+      } else if (identity?.notFound) {
+        // 当前用户不是该单据的申请人或确认人，提示后停在默认页签
+        notFound = true;
+        Message({
+          theme: 'warning',
+          message: t('无权查看该交接单或单据不存在')
+        });
       }
     }
     // 3. 身份确定后再拉列表（fetchHandoverList 按页签拼 applicant/approver 过滤条件）
     await fetchHandoverList();
 
-    // 4. 定位到该单据并展开详情（不要求 query 带 type；查不到则停在默认页签）
-    if (flowNo) {
+    // 4. 定位到该单据并展开详情（不要求 query 带 type；无权或查不到则不展开）
+    if (flowNo && !notFound) {
       const record = handoverList.value.find(i => i.flowNo === flowNo) || linkRecord;
       if (record) {
         searchValue.value = [

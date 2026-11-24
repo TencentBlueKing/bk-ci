@@ -145,9 +145,9 @@
       </bk-loading>
     </div>
     <div
-        class="slider-footer approval-wrapper"
-        v-if="showApproval"
-      >
+      class="slider-footer approval-wrapper"
+      v-if="showApproval"
+    >
       <template v-if="hasRejectDecision">
         <p class="field">
           {{ t('审批意见') }}
@@ -176,7 +176,7 @@
       >
         {{ t('提交') }}
       </bk-button>
-      </div>
+    </div>
     <div
       class="slider-footer revoke-wrapper"
       v-if="showRevoke"
@@ -735,7 +735,7 @@
       position: fixed;
       bottom: 0;
       width: 960px;
-      min-height: 200px;
+      min-height: 32px;
       background: #FFFFFF;
       padding: 20px 48px;
       .field {
@@ -747,8 +747,10 @@
           color: #EA3636;
         }
       }
+      .remark-input {
+        margin-bottom: 20px;
+      }
       .agree-btn {
-        margin-top: 20px;
         margin-right: 10px;
       }
       .error-text {
