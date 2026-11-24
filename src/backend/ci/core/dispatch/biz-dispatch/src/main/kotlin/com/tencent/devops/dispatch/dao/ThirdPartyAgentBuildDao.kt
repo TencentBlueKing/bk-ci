@@ -280,6 +280,25 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    /**
+     * 领取排队任务：只有仍排在该 agent 名下的 QUEUE 记录才改为 RUNNING，返回是否领取成功。
+     * 失败说明任务已被其他请求领走、已结束，或已被改派到其他 agent（add 复用记录时会改写 AGENT_ID）。
+     * 同一 agent 重新入队的是同一个任务（buildId/vmSeqId/executeCount 相同，内容一致），不需要再校验版本。
+     */
+    fun claimQueueBuild(dslContext: DSLContext, id: Long, agentId: String): Boolean {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val now = LocalDateTime.now()
+            return dslContext.update(this)
+                .set(STATUS, PipelineTaskStatus.RUNNING.status)
+                .set(UPDATED_TIME, now)
+                .set(TIME_INTERVAL, field("TIMESTAMPDIFF(SECOND, {0}, {1})", Long::class.java, CREATED_TIME, now))
+                .where(ID.eq(id))
+                .and(AGENT_ID.eq(agentId))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .execute() == 1
+        }
+    }
+
     fun fetchOneQueueBuild(
         dslContext: DSLContext,
         agentId: String,
