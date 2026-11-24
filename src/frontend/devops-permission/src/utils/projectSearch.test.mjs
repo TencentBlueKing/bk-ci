@@ -98,3 +98,23 @@ test('splitHighlightSegments handles regex special chars, HTML chars, and missin
   assert.deepEqual(splitHighlightSegments(null, 'abc'), []);
   assert.deepEqual(splitHighlightSegments(undefined, ''), []);
 });
+
+test('splitHighlightSegments maps matches back to the original text when lowercasing changes length', () => {
+  assert.deepEqual(splitHighlightSegments('İAlpha', 'alpha'), [
+    { text: 'İ', matched: false },
+    { text: 'Alpha', matched: true },
+  ]);
+
+  assert.deepEqual(splitHighlightSegments('İA', 'İ'), [
+    { text: 'İ', matched: true },
+    { text: 'A', matched: false },
+  ]);
+
+  assert.deepEqual(splitHighlightSegments('xİyİz', 'İ'), [
+    { text: 'x', matched: false },
+    { text: 'İ', matched: true },
+    { text: 'y', matched: false },
+    { text: 'İ', matched: true },
+    { text: 'z', matched: false },
+  ]);
+});

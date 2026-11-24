@@ -37,29 +37,61 @@ export function splitHighlightSegments(text, keyword = '') {
     return [{ text: sourceText, matched: false }];
   }
 
-  const lowerText = sourceText.toLowerCase();
+  const { text: lowerText, offsets } = lowerCaseWithOffsets(sourceText);
   const lowerKeyword = normalizedKeyword.toLowerCase();
-  const keywordLength = lowerKeyword.length;
   const segments = [];
-  let cursor = 0;
+  let searchCursor = 0;
+  let sourceCursor = 0;
 
-  while (cursor < sourceText.length) {
-    const matchIndex = lowerText.indexOf(lowerKeyword, cursor);
+  while (searchCursor < lowerText.length) {
+    const matchIndex = lowerText.indexOf(lowerKeyword, searchCursor);
     if (matchIndex === -1) {
-      segments.push({ text: sourceText.slice(cursor), matched: false });
       break;
     }
 
-    if (matchIndex > cursor) {
-      segments.push({ text: sourceText.slice(cursor, matchIndex), matched: false });
+    const matchEnd = matchIndex + lowerKeyword.length;
+    const sourceStart = Math.max(offsets[matchIndex], sourceCursor);
+    const sourceEnd = offsets[matchEnd];
+
+    if (sourceStart > sourceCursor) {
+      segments.push({ text: sourceText.slice(sourceCursor, sourceStart), matched: false });
     }
 
-    segments.push({
-      text: sourceText.slice(matchIndex, matchIndex + keywordLength),
-      matched: true,
-    });
-    cursor = matchIndex + keywordLength;
+    if (sourceEnd > sourceStart) {
+      segments.push({ text: sourceText.slice(sourceStart, sourceEnd), matched: true });
+    }
+    sourceCursor = Math.max(sourceCursor, sourceEnd);
+    searchCursor = matchEnd;
+  }
+
+  if (sourceCursor < sourceText.length) {
+    segments.push({ text: sourceText.slice(sourceCursor), matched: false });
   }
 
   return segments;
+}
+
+/**
+ * 逐字符转小写，并记录小写文本每个位置对应的原始文本位置
+ * 小写转换可能改变长度（如 'İ' 转为两个字符），匹配位置需映射回原文
+ * @param {string} sourceText - 原始文本
+ * @returns {{ text: string, offsets: number[] }} 小写文本及位置映射（长度为小写文本长度 + 1）
+ */
+function lowerCaseWithOffsets(sourceText) {
+  let text = '';
+  const offsets = [];
+  let sourceIndex = 0;
+
+  for (const char of sourceText) {
+    const lowerChar = char.toLowerCase();
+    const nextSourceIndex = sourceIndex + char.length;
+    for (let i = 0; i < lowerChar.length; i += 1) {
+      offsets.push(i === 0 ? sourceIndex : nextSourceIndex);
+    }
+    text += lowerChar;
+    sourceIndex = nextSourceIndex;
+  }
+  offsets.push(sourceIndex);
+
+  return { text, offsets };
 }
