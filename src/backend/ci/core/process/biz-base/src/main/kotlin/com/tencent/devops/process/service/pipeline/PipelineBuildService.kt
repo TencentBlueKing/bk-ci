@@ -82,6 +82,7 @@ import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -102,6 +103,7 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.project.pojo.ProjectVO
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
 
@@ -124,6 +126,7 @@ class PipelineBuildService(
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
+        private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
     }
 
     /**
@@ -144,7 +147,9 @@ class PipelineBuildService(
         val pipelineDialectType: String,
         val failIfVariableInvalid: Boolean? = false,
         val envHashId: String? = null,
-        val runtimeResource: RuntimeResource? = null
+        val runtimeResource: RuntimeResource? = null,
+        // 重新执行时原构建的触发人。局部重试不会带回原构建的启动参数，没有它触发人会回落成操作人
+        val originTriggerUser: String? = null
     )
 
     @ActionAuditRecord(
@@ -173,7 +178,8 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        originTriggerUser: String? = null
     ): BuildId {
 
         var acquire = false
@@ -268,7 +274,8 @@ class PipelineBuildService(
                 pipelineDialectType = pipelineDialectType.name,
                 failIfVariableInvalid = setting.failIfVariableInvalid,
                 envHashId = setting.envHashId,
-                runtimeResource = setting.runtimeResource()
+                runtimeResource = setting.runtimeResource(),
+                originTriggerUser = originTriggerUser
             )
             initPipelineParamMap(initContext)
 
@@ -369,7 +376,10 @@ class PipelineBuildService(
             StartType.TIME_TRIGGER -> ctx.pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> ctx.startValues?.get(PIPELINE_START_REMOTE_USER_ID)
             StartType.TRIGGER_EVENT -> ctx.startValues?.get(PIPELINE_START_TRIGGER_EVENT_USER_ID)
-        } ?: ctx.userId
+            // 重新执行时优先沿用原构建的触发人：触发人代表构建因何而来，不应被重试的操作人改写。
+            // 局部重试（Stage/Job/插件重试）不会带回原构建的启动参数，上面按触发类型取不到值，
+            // 没有这个兜底就会落到操作人，webhook 的提交人、定时的授权人等触发来源都会丢失
+        } ?: ctx.originTriggerUser ?: ctx.userId
 
         val paramMap = ctx.pipelineParamMap
         // 维持原样，保证可修改
@@ -513,17 +523,21 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
                 params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
             )
-            // 绑定单台机器：执行对象固定，不接受启动方改派，所以这里不取 startedAgentId。
-            // 资源被释放等原因换不出机器时直接拒绝启动：继续走下去只会在派发阶段以一个与原因无关的报错失败，
-            // 而且启动方传入的节点还会把「不能改派」的约束绕过去
-            else -> runtimeResourceResolver.resolveAgentHashId(
-                projectId = ctx.pipeline.projectId,
-                userId = ctx.pipelineAuthorizer ?: ctx.userId,
-                resource = resource
-            )?.takeIf(String::isNotBlank) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
-                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
-            )
+            // 绑定单台机器：执行对象固定，新发起的构建一律按当前设置换算，不接受启动方用启动参数改派。
+            // 唯一的例外是重跑历史构建（重新执行、重放）：那一次跑在哪台机器上是既成事实，
+            // 只要那台机器还在就继续用它，不能因为流水线后来改绑了另一台就把历史构建挪过去。
+            // 原机器已不存在时回落到当前设置，两者都拿不到才拒绝启动：继续走下去只会在派发阶段
+            // 以一个与原因无关的报错失败
+            else -> ctx.reusableOriginAgentId(startedAgentId)
+                ?: runtimeResourceResolver.resolveAgentHashId(
+                    projectId = ctx.pipeline.projectId,
+                    userId = ctx.pipelineAuthorizer ?: ctx.userId,
+                    resource = resource
+                )?.takeIf(String::isNotBlank)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+                    params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+                )
         }
         // 节点可能在上次构建之后被移出环境，重新执行、重放事件都会带着它启动。
         // 这里不看 runtimeResource 是否解析得出来：重新执行读的是快照版本的设置，
@@ -562,6 +576,30 @@ class PipelineBuildService(
     }
 
     /**
+     * 重跑历史构建时可以沿用的原机器，没有则返回 null。
+     *
+     * 只在重新执行、重放这两种「把某一次重跑一遍」的操作上生效，两者都带着被重跑构建的标记；
+     * 普通启动即使在参数里塞了节点也不认，否则绑定单台机器的「执行对象不可改派」就被绕过去了。
+     * 机器已被删除或释放时返回 null，由调用方回落到当前设置。
+     */
+    private fun InitParamContext.reusableOriginAgentId(startedAgentId: String?): String? {
+        val agentId = startedAgentId?.takeIf(String::isNotBlank) ?: return null
+        val replaying = startValues?.get(PIPELINE_REPLAY_ORIGIN_BUILD_ID)?.isNotBlank() == true
+        val retrying = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString()?.isNotBlank() == true
+        if (!replaying && !retrying) return null
+        return try {
+            agentId.takeIf {
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentById(pipeline.projectId, it).data != null
+            }
+        } catch (ignored: Exception) {
+            // 查不动就当原机器不可用，回落到当前设置，不能因为一次查询异常把重跑整个挡住
+            logger.warn("check origin agent failed|${pipeline.projectId}|$agentId", ignored)
+            null
+        }
+    }
+
+    /**
      * 校验运行节点确实属于本次构建要用的那个环境。
      *
      * 节点由触发方选定，环境来自流水线设置或原事件，两者会随时间脱节：节点被移出环境后，
@@ -592,9 +630,15 @@ class PipelineBuildService(
             userId = authUserId,
             envHashId = targetEnvHashId
         )
+        // 同一个环境里可能有多台机器，只报环境名看不出是哪台出了问题，必须带上节点名
+        val nodeName = runtimeResourceResolver.getNodeName(
+            projectId = ctx.pipeline.projectId,
+            userId = authUserId,
+            agentHashId = agentId
+        )
         throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
-            params = arrayOf(envName ?: targetEnvHashId)
+            params = arrayOf(nodeName ?: agentId, envName ?: targetEnvHashId)
         )
     }
 

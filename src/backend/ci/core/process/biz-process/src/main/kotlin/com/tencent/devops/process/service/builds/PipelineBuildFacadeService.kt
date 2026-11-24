@@ -176,6 +176,7 @@ import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
@@ -3067,8 +3068,9 @@ class PipelineBuildFacadeService(
         )
         val model = resource.model
         val triggerContainer = model.getTriggerContainer()
-        // 检查触发器是否存在。定时触发的构建重放后自身变成手动触发，但要校验的仍是它最初那个定时触发器，
-        // 所以重放链上一路带着原触发器 id，否则第一次重放之后这个约束就被手动触发器顶掉了
+        // 检查触发器是否存在。重放保留原触发类型，定时触发的构建重放后仍是定时触发，
+        // 要校验的仍是它最初那个定时触发器，所以重放链上一路带着原触发器 id，
+        // 否则编排变更后按类型找不到原来那一个
         val originTaskId = startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID]
         val matchedTrigger = if (originTaskId != null) {
             triggerContainer.elements.find { it.id == originTaskId }
@@ -3130,13 +3132,21 @@ class PipelineBuildFacadeService(
         // 触发器 id 在编排变更后会变，带上反而会把正常的重放判成触发条件不满足
         (originTaskId ?: startParameters[PIPELINE_START_TASK_ID]?.takeIf { startType == StartType.TIME_TRIGGER })
             ?.let { startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID] = it }
+        // 重放是把原来那次重跑一遍，触发类型要跟着原构建走，和重新执行保持一致：
+        // 定时触发的构建重放后仍记为定时触发，否则执行记录里同一件事会出现两种触发类型。
+        // 触发人由启动流程按触发类型从原启动参数里算回来（webhook 为提交人，定时等算不出的落到操作人），
+        // 与重新执行同口径，触发来源不因重放而改变。
+        // 子流水线触发例外：父构建的上下文无法复现，按手动执行处理
+        val replayStartType = if (startType == StartType.PIPELINE) StartType.MANUAL else startType
+        // 标记这是在重跑哪个构建：单体运行资源据此沿用原构建那台机器，而不是改按当前设置换算
+        startParameters[PIPELINE_REPLAY_ORIGIN_BUILD_ID] = buildId
         val replayBuildId = buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = buildInfo.channelCode,
             values = startParameters,
-            startType = StartType.MANUAL
+            startType = replayStartType
         )
         return BuildReplayResult(
             status = BuildReplayStatus.REPLAY_SUCCESS,
@@ -3145,15 +3155,8 @@ class PipelineBuildFacadeService(
     }
 
     /**
-     * 判断流水线绑定的运行资源是否仍是原构建跑的那个。
-     *
-     * 运行资源被改到别的环境、或单体资源换了一台机器之后，原构建那台机器就不再是这条流水线该跑的机器，
-     * 按「已不满足最新版本的触发条件」处理，和触发器被删掉走同一条拦截。
-     *
-     * 只认「运行资源本身被改了」这一种情况。机器还在原运行资源里、只是被移出环境或被删除，
-     * 由启动流程给出各自更准确的原因（不在环境内、找不到可用机器），这里必须放行，
-     * 否则那些场景的报错会被笼统的「触发条件不满足」盖掉。
-     * 取不到运行资源或解析失败时同样放行：没有证据不做判定。
+     * 判断流水线绑定的运行资源是否仍是原构建跑的那个，判定口径见
+     * [RuntimeResourceResolver.stillMatchRuntimeResource]。只有创作流由设置指定运行资源，其它渠道不参与。
      */
     private fun runtimeResourceStillMatch(
         userId: String,
@@ -3163,21 +3166,12 @@ class PipelineBuildFacadeService(
         startParameters: Map<String, String>
     ): Boolean {
         if (channelCode != ChannelCode.CREATIVE_STREAM) return true
-        val resource = pipelineRepositoryService.getSetting(projectId, pipelineId)
-            ?.runtimeResource() ?: return true
-        return if (resource.group) {
-            // 环境类资源只比环境：原构建记下的环境和当前绑定的环境是不是同一个
-            val originEnvHashId = startParameters[NODE_ENV_HASH_ID]?.takeIf { it.isNotBlank() } ?: return true
-            originEnvHashId == resource.envHashId
-        } else {
-            // 单体资源比机器：解析不出来说明机器已释放，交给启动流程报「找不到可用的执行机器」
-            val originAgentId = startParameters[NODE_AGENT_ID]?.takeIf { it.isNotBlank() } ?: return true
-            runtimeResourceResolver.resolveAgentHashId(
-                projectId = projectId,
-                userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
-                resource = resource
-            )?.let { it == originAgentId } ?: true
-        }
+        return runtimeResourceResolver.stillMatchRuntimeResource(
+            projectId = projectId,
+            userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
+            setting = pipelineRepositoryService.getSetting(projectId, pipelineId),
+            startParameters = startParameters
+        )
     }
 
     fun getByTaskId(

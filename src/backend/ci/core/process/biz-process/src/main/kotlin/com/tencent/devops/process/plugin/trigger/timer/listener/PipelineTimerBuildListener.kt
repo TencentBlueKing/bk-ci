@@ -34,11 +34,13 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -47,7 +49,11 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TIMER_TRIGGER_FAILED_NOTIFY_BODY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TIMER_TRIGGER_FAILED_NOTIFY_TITLE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -94,7 +100,9 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
     private val creativeStreamService: CreateStreamTriggerSupportService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
@@ -147,6 +155,9 @@ class PipelineTimerBuildListener @Autowired constructor(
         taskId: String,
         version: Int? = null
     ): String? {
+        // 代码库定时触发会按分支逐个启动，各分支成败相互独立，去重标记必须按分支分开，
+        // 否则 A 分支的失败标记会让 B 分支的同类失败漏记，B 分支成功又会把 A 的标记清掉
+        val scope = params[PIPELINE_WEBHOOK_BRANCH]
         return with(event) {
             try {
                 when (timerChannelCode) {
@@ -166,7 +177,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                         channelCode = timerChannelCode,
                         taskId = taskId,
                         version = version
-                    )
+                    )?.also { clearTriggerFailedMark(taskId = taskId, scope = scope) }
                 }
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
@@ -174,20 +185,18 @@ class PipelineTimerBuildListener @Autowired constructor(
             } catch (e: PermissionForbiddenException) {
                 logger.warn("[$pipelineId]|TimerTrigger no permission|event=$this|msg=${e.message}")
                 // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
-                saveTriggerEvent(
-                    projectId = projectId,
-                    userId = userId,
-                    pipelineId = pipelineId,
+                recordTriggerFailed(
+                    taskId = taskId,
+                    scope = scope,
                     reasonDetail = PipelineTriggerFailedMsg(e.defaultMessage ?: e.message ?: "")
                 )
                 null
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
                 // 保存触发失败事件
-                saveTriggerEvent(
-                    projectId = projectId,
-                    userId = userId,
-                    pipelineId = pipelineId,
+                recordTriggerFailed(
+                    taskId = taskId,
+                    scope = scope,
                     reasonDetail = when {
                         ignored is ErrorCodeException -> {
                             PipelineTriggerFailedErrorCode(
@@ -224,6 +233,101 @@ class PipelineTimerBuildListener @Autowired constructor(
     }
 
     /**
+     * 定时触发失败后的统一处理：记触发记录 + 给相关人推送消息。
+     *
+     * 定时触发按分钟级频率重复执行，同一个故障（构建节点不可用、没有节点操作权限等）会一直复现。
+     * 若每次都落一条触发记录，列表会被同一条原因刷满，真正有用的其它失败反而被淹没，
+     * 所以连续出现同一个失败原因时只记第一条，直到重新触发成功才重置。创作流和普通流水线同样适用。
+     * 推送是另一条口径：故障没修好就该持续提醒，但不能变成打扰，按天限一次。
+     *
+     * [scope] 是去重的细分维度：一次定时触发会启动多次构建时（创作流按运行节点、代码库定时按分支），
+     * 各自的成败相互独立，必须分开计标记，否则会互相覆盖。只启动一次的场景传 null。
+     */
+    private fun PipelineTimerBuildEvent.recordTriggerFailed(
+        taskId: String,
+        scope: String?,
+        reasonDetail: PipelineTriggerReasonDetail
+    ) {
+        // 失败原因作为去重标记的值：原因变了说明是新的故障，要重新记一条
+        val signature = JsonUtil.toJson(reasonDetail)
+        val failedKey = triggerFailedKey(taskId, scope)
+        if (redisOperation.get(failedKey) != signature) {
+            redisOperation.set(key = failedKey, value = signature, expiredInSecond = FAILED_MARK_EXPIRED_SECOND)
+            saveTriggerEvent(
+                projectId = projectId,
+                userId = userId,
+                pipelineId = pipelineId,
+                reasonDetail = reasonDetail
+            )
+        }
+        notifyTriggerFailed(taskId = taskId, scope = scope, reasonDetail = reasonDetail)
+    }
+
+    /**
+     * 触发成功后清掉失败标记，下次再失败重新记一条，避免故障修好又复发时漏记。
+     */
+    private fun PipelineTimerBuildEvent.clearTriggerFailedMark(taskId: String, scope: String?) {
+        redisOperation.delete(triggerFailedKey(taskId, scope))
+    }
+
+    /**
+     * 把失败原因推送给流水线授权人和触发人。按「流水线 + 触发器 + 去重维度」限频，同一个故障每天最多推一次。
+     * 通知失败不能影响触发流程本身，异常只记日志。
+     */
+    private fun PipelineTimerBuildEvent.notifyTriggerFailed(
+        taskId: String,
+        scope: String?,
+        reasonDetail: PipelineTriggerReasonDetail
+    ) {
+        try {
+            val notifyKey = triggerNotifyKey(taskId, scope)
+            if (!redisOperation.setIfAbsent(
+                    key = notifyKey,
+                    value = LocalDateTime.now().toString(),
+                    expiredInSecond = NOTIFY_INTERVAL_SECOND
+                )
+            ) {
+                return
+            }
+            val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+            val receivers = setOfNotNull(
+                creativeStreamService.getPipelineOAuthUser(projectId, pipelineId)?.takeIf(String::isNotBlank),
+                userId.takeIf(String::isNotBlank)
+            )
+            if (receivers.isEmpty()) return
+            val reason = reasonDetail.getReasonDetailList()?.joinToString("；").orEmpty()
+            // 文案只按流水线写，创作流渠道由 MessageUtil 统一替换称谓。
+            // MQ 消费没有 ChannelContext，渠道必须显式传，否则创作流收到的是「流水线」
+            val channel = timerChannelCode.name
+            val message = RtxNotifyMessage().apply {
+                addAllReceivers(receivers)
+                title = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_TIMER_TRIGGER_FAILED_NOTIFY_TITLE,
+                    params = arrayOf(pipeline.pipelineName),
+                    defaultMessage = "定时触发失败：${pipeline.pipelineName}",
+                    channel = channel
+                )
+                body = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_TIMER_TRIGGER_FAILED_NOTIFY_BODY,
+                    params = arrayOf(pipeline.pipelineName, reason),
+                    defaultMessage = "流水线[${pipeline.pipelineName}]的定时触发未能执行，原因：$reason。" +
+                            "处理完成后将自动恢复触发。",
+                    channel = channel
+                )
+            }
+            client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+        } catch (ignored: Throwable) {
+            logger.warn("[$pipelineId]|notify timer trigger failed error|taskId=$taskId", ignored)
+        }
+    }
+
+    private fun PipelineTimerBuildEvent.triggerFailedKey(taskId: String, scope: String?) =
+        "$TIMER_TRIGGER_FAILED_KEY_PREFIX$projectId:$pipelineId:$taskId:${scope.orEmpty()}"
+
+    private fun PipelineTimerBuildEvent.triggerNotifyKey(taskId: String, scope: String?) =
+        "$TIMER_TRIGGER_NOTIFY_KEY_PREFIX$projectId:$pipelineId:$taskId:${scope.orEmpty()}"
+
+    /**
      * 创作流定时触发。
      *
      * 运行资源决定到点启动几次构建：绑定单台机器时启动一次，由启动流程解析出那台机器；
@@ -252,16 +356,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                 channelCode = timerChannelCode,
                 taskId = taskId
             )
+            clearTriggerFailedMark(taskId = taskId, scope = null)
             return
         }
         val configuredNodes = triggerElement.nodes?.takeIf {
             triggerElement.nodeType == TimerNodeType.NODE_LIST
         }
         if (triggerElement.nodeType == TimerNodeType.NODE_LIST && configuredNodes.isNullOrEmpty()) {
-            saveTriggerEvent(
-                projectId = projectId,
-                userId = userId,
-                pipelineId = pipelineId,
+            recordTriggerFailed(
+                taskId = taskId,
+                scope = null,
                 reasonDetail = PipelineTriggerFailedErrorCode(
                     BK_CREATIVE_STREAM_TIMER_TRIGGER_NODE_IS_EMPTY
                 )
@@ -298,15 +402,11 @@ class PipelineTimerBuildListener @Autowired constructor(
                     channelCode = timerChannelCode,
                     taskId = taskId
                 )
+                clearTriggerFailedMark(taskId = taskId, scope = agentHashId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger node failed|agentHashId=$agentHashId", ignored)
                 ignored.toTriggerFailedReason()?.let {
-                    saveTriggerEvent(
-                        projectId = projectId,
-                        userId = userId,
-                        pipelineId = pipelineId,
-                        reasonDetail = it
-                    )
+                    recordTriggerFailed(taskId = taskId, scope = agentHashId, reasonDetail = it)
                 }
             }
         }
@@ -725,5 +825,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                 false
             }
         } ?: false
+    }
+
+    companion object {
+        private const val TIMER_TRIGGER_FAILED_KEY_PREFIX = "process:timer:trigger:failed:"
+        private const val TIMER_TRIGGER_NOTIFY_KEY_PREFIX = "process:timer:trigger:notify:"
+
+        /** 失败标记只用于去重，留够排查周期即可，过期后至多多记一条 */
+        private const val FAILED_MARK_EXPIRED_SECOND = 7 * 24 * 60 * 60L
+
+        /** 同一个故障的推送间隔：故障不修就每天提醒一次 */
+        private const val NOTIFY_INTERVAL_SECOND = 24 * 60 * 60L
     }
 }

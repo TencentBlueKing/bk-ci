@@ -61,6 +61,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -95,7 +96,8 @@ class PipelineBuildRetryService @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
-    private val pipelineBuildRecordService: PipelineBuildRecordService
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:28}")
@@ -158,6 +160,13 @@ class PipelineBuildRetryService @Autowired constructor(
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
+
+            checkRuntimeResourceStillMatch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildInfo = buildInfo
+            )
 
             resource.model = pipelineBuildRecordService.getRecordModel(
                 projectId = projectId,
@@ -262,6 +271,7 @@ class PipelineBuildRetryService @Autowired constructor(
             } else {
                 pipelineBuildService.startPipeline(
                     userId = userId,
+                    originTriggerUser = buildInfo.triggerUser,
                     pipeline = readyToBuildPipelineInfo,
                     startType = startType,
                     pipelineParamMap = paramMap,
@@ -275,6 +285,32 @@ class PipelineBuildRetryService @Autowired constructor(
                     webHookStartParam = webHookStartParam
                 )
             }
+        }
+    }
+
+    /**
+     * 环境被换成另一个时，原来那台机器已不属于该跑的范围，重新执行直接拒绝。
+     * 单体资源换绑不在这里拦，启动时仍用原构建那台机器。
+     * 节点只是被移出环境或机器被删除也放行，由启动流程报更具体的原因。
+     * 判定见 [RuntimeResourceResolver.stillMatchRuntimeResource]。
+     */
+    private fun checkRuntimeResourceStillMatch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildInfo: BuildInfo
+    ) {
+        if (buildInfo.channelCode != ChannelCode.CREATIVE_STREAM) return
+        val startParameters = buildInfo.buildParameters
+            ?.associate { it.key to it.value.toString() } ?: return
+        val stillMatch = runtimeResourceResolver.stillMatchRuntimeResource(
+            projectId = projectId,
+            userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
+            setting = pipelineRepositoryService.getSetting(projectId, pipelineId),
+            startParameters = startParameters
+        )
+        if (!stillMatch) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_ENV_CHANGED)
         }
     }
 
@@ -333,6 +369,7 @@ class PipelineBuildRetryService @Autowired constructor(
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
+                originTriggerUser = buildInfo.triggerUser,
                 pipeline = pipeline,
                 startType = startType,
                 pipelineParamMap = paramMap,

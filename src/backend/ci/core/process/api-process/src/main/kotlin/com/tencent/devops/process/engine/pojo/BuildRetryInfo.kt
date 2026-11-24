@@ -38,5 +38,8 @@ data class BuildRetryInfo(
     var buildParameters: List<BuildParameters>?,
     var concurrencyGroup: String?,
     val executeCount: Int,
-    var concurrencySubGroup: String? = null
+    var concurrencySubGroup: String? = null,
+    // 重新执行后执行人对齐到本次操作人，与权限校验对象、插件实际运行身份保持一致。
+    // 触发人代表构建因何而来，重试不改写，故不在此列
+    var startUser: String
 )

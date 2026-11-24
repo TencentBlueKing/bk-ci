@@ -240,6 +240,8 @@ class PipelineBuildDao {
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
                 .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
+                // 触发类型(TRIGGER)与触发人(TRIGGER_USER)保留首次的，只把执行人对齐到本次操作人
+                .set(START_USER, retryInfo.startUser)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }
@@ -257,6 +259,7 @@ class PipelineBuildDao {
                 .set(CONCURRENCY_GROUP, retryInfo.concurrencyGroup)
                 .set(CONCURRENCY_SUB_GROUP, retryInfo.concurrencySubGroup)
                 .set(EXECUTE_COUNT, retryInfo.executeCount)
+                .set(START_USER, retryInfo.startUser)
             retryInfo.buildParameters?.let {
                 update.set(BUILD_PARAMETERS, JsonUtil.toJson(it, formatted = false))
             }

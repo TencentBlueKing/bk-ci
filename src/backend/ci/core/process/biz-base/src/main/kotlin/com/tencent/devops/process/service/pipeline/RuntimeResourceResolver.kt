@@ -30,10 +30,13 @@ package com.tencent.devops.process.service.pipeline
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -136,6 +139,58 @@ class RuntimeResourceResolver(
         ).data?.name?.takeIf(String::isNotBlank)
     } catch (ignored: Exception) {
         logger.warn("get env name failed|$projectId|$envHashId", ignored)
+        null
+    }
+
+    /**
+     * 判断一次历史构建记录的运行资源，是否仍是流水线当前绑定的那个。
+     *
+     * 只拦环境被换掉这一种：环境资源的节点是从环境里选出来的，换了环境之后原来那台机器
+     * 就不再属于这条流水线该跑的范围，重跑没有意义，调用方按「已不满足最新版本的触发条件」拦下。
+     *
+     * 单体资源不拦。绑的是哪台机器是那一次构建的既成事实，流水线后来改绑了别的机器，
+     * 不影响把原来那次在原机器上重跑一遍（见 PipelineBuildService.initNodeAgentParams）；
+     * 原机器确实没了的情况由启动流程报「找不到可用的执行机器」，比笼统的「触发条件不满足」准确。
+     *
+     * 同理，机器还在原环境里、只是被移出环境或被删除，这里也放行，交给启动流程报「不在环境内」。
+     * 没绑运行资源、启动参数里没有环境时同样放行：没有证据不做判定。
+     */
+    fun stillMatchRuntimeResource(
+        projectId: String,
+        userId: String,
+        setting: PipelineSetting?,
+        startParameters: Map<String, String>
+    ): Boolean {
+        val resource = setting?.runtimeResource() ?: return true
+        if (!resource.group) return true
+        // 环境类资源只比环境：原构建记下的环境和当前绑定的环境是不是同一个
+        val originEnvHashId = startParameters[NODE_ENV_HASH_ID]?.takeIf { it.isNotBlank() } ?: return true
+        return originEnvHashId == resource.envHashId
+    }
+
+    /**
+     * 取节点名用于报错展示。节点由 agentHashId 认定，先换出它所属的节点再取别名，别名为空时退回节点名。
+     * 节点已被删除等查不到的情况返回 null，由调用方退回展示 agentHashId。
+     */
+    fun getNodeName(
+        projectId: String,
+        userId: String,
+        agentHashId: String
+    ): String? = try {
+        client.get(ServiceThirdPartyAgentResource::class)
+            .getAgentById(projectId, agentHashId).data
+            ?.nodeId?.takeIf(String::isNotBlank)
+            ?.let { nodeHashId ->
+                client.get(ServiceNodeResource::class).listByHashIds(
+                    userId = userId,
+                    projectId = projectId,
+                    nodeHashIds = listOf(nodeHashId),
+                    checkPermission = false
+                ).data?.firstOrNull()
+            }
+            ?.let { it.displayName?.takeIf(String::isNotBlank) ?: it.name.takeIf(String::isNotBlank) }
+    } catch (ignored: Exception) {
+        logger.warn("get node name failed|$projectId|$agentHashId", ignored)
         null
     }
 

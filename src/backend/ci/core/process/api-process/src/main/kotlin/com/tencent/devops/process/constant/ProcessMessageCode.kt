@@ -572,8 +572,14 @@ object ProcessMessageCode {
     const val ERROR_ARTIFACT_TRIGGER_NOT_CONFIGURED = "2101506"
     const val ERROR_RUNTIME_RESOURCE_NODE_REQUIRED = "2101508" // 运行资源为环境[{0}]，启动时必须指定运行节点
     const val ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED = "2101509" // 运行资源[{0}]未找到可用的执行机器，请检查该资源是否已释放
-    // 运行节点已不在运行资源环境[{0}]内，无法执行，请确认该节点是否已被移除
+    // 运行节点[{0}]已不在运行资源环境[{1}]内，无法执行，请确认该节点是否已被移除
     const val ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV = "2101510"
+    // 绑定的运行环境已更换，无法重新执行
+    const val ERROR_RUNTIME_RESOURCE_ENV_CHANGED = "2101511"
+    // 运行资源环境[{0}]下没有可用的运行节点，请确认环境配置后再发布
+    const val ERROR_RUNTIME_RESOURCE_ENV_NO_NODE = "2101512"
+    // 定时触发选择的运行节点[{0}]已不在运行资源环境[{1}]内，请重新选择运行节点后再发布
+    const val ERROR_TIMER_TRIGGER_NODE_NOT_IN_ENV = "2101513"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在
@@ -971,6 +977,11 @@ object ProcessMessageCode {
     // [{0}]创作环境下的创作节点为空
     const val BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY = "bkCreativeStreamEnvNodeIsEmpty"
 
+    // 定时触发失败通知标题：定时触发失败：{0}
+    const val BK_TIMER_TRIGGER_FAILED_NOTIFY_TITLE = "bkTimerTriggerFailedNotifyTitle"
+
+    // 定时触发失败通知内容：流水线[{0}]的定时触发未能执行，原因：{1}
+    const val BK_TIMER_TRIGGER_FAILED_NOTIFY_BODY = "bkTimerTriggerFailedNotifyBody"
     // 构建机容器发生重启，构建进程已中断
     const val BK_BUILD_CONTAINER_RESTARTED = "bkBuildContainerRestarted"
 
