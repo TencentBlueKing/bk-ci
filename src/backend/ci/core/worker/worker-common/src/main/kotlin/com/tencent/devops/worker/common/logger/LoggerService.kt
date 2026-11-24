@@ -69,8 +69,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -82,7 +80,8 @@ import org.slf4j.LoggerFactory
 object LoggerService {
 
     private const val BATCH_RECOVER_COOLDOWN_MS = 30_000L
-    private const val FINISH_FLUSH_ROUNDS = 3
+    private const val BACKPRESSURE_WARN_INTERVAL_MS = 5_000L
+    private const val MIN_IDLE_WAIT_MS = 50L
     private const val ARCHIVE_FAIL_NOTICE =
         "日志归档到制品库失败，完整日志未能保存。下载只能获取已上报到日志服务的部分内容。"
 
@@ -91,7 +90,7 @@ object LoggerService {
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
-    private var currentTaskLineNo = 0
+    private val currentTaskLineNo = AtomicInteger(0)
     private val localLogTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss:SSS")
         .withZone(ZoneId.systemDefault())
     private val circuitBreakerRegistry = CircuitBreakerRegistry.of(
@@ -123,9 +122,9 @@ object LoggerService {
     private val flushExecutor = Executors.newSingleThreadExecutor()
 
     /**
-     * 日志上报缓冲队列
+     * 条数 + 字节双重有界的日志上报缓冲队列
      */
-    private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
+    private val uploadQueue = BoundedLogQueue()
 
     /**
      * 单次上报条数上限，默认 [LoggerUploadBatch.MAX_COUNT]。超时后降到
@@ -133,12 +132,14 @@ object LoggerService {
      */
     private val uploadBatchSize = AtomicInteger(LoggerUploadBatch.MAX_COUNT)
     private val lastUploadTimeoutAt = AtomicLong(0)
+    private val consecutiveFailures = AtomicInteger(0)
+    private val nextRetryAt = AtomicLong(0)
     private val localLogWriters = ConcurrentHashMap<String, BufferedWriter>()
 
     /**
      * 每个插件的日志存储属性映射
      */
-    private val elementId2LogProperty = mutableMapOf<String, TaskBuildLogProperty>()
+    private val elementId2LogProperty = ConcurrentHashMap<String, TaskBuildLogProperty>()
 
     /**
      * 当前执行插件的各类构建信息
@@ -206,55 +207,69 @@ object LoggerService {
     private val lock = ReentrantLock()
 
     private val logMessages = ArrayList<LogMessage>()
+    private var pendingLogBytes: Long = 0L
 
     private val loggerThread = Callable {
         try {
-            var lastSaveTime: Long = 0
+            var lastSaveTime: Long = System.currentTimeMillis()
             while (running.get()) {
-                val logMessage = try {
-                    uploadQueue.poll(1, TimeUnit.SECONDS)
-                } catch (e: InterruptedException) {
-                    logger.warn("Logger service poll thread interrupted", e)
-                    null
+                drainFromQueue()
+                val (size, pendingBytes) = lock.withLock {
+                    logMessages.size to pendingLogBytes
                 }
-                lock.lock()
-                try {
-                    if (logMessage != null) {
-                        logMessages.add(logMessage)
-                    }
-                } finally {
-                    lock.unlock()
+                if (size == 0) {
+                    awaitQueueOrSleep(LoggerUploadBatch.FLUSH_INTERVAL_MS)
+                    continue
                 }
 
-                val size = logMessages.size
-                if (!isUploadDisabled() && size >= LoggerUploadBatch.MAX_PENDING_IN_MEMORY) {
-                    logger.warn(
-                        "Pending logs $size exceed memory cap ${LoggerUploadBatch.MAX_PENDING_IN_MEMORY}, " +
-                            "switch to LOCAL"
-                    )
-                    disableLogUpload()
-                }
                 val now = System.currentTimeMillis()
-                // 达到当前上报条数或距上次保存超过刷新间隔
-                if (shouldFlushPendingLogs(size = size, now = now, lastSaveTime = lastSaveTime)) {
-                    val sent = flush()
-                    lastSaveTime = now
-                    currentTaskLineNo += sent
+                val retryAt = nextRetryAt.get()
+                if (!isUploadDisabled() && retryAt > now) {
+                    val waitMs = minOf(retryAt - now, LoggerUploadBatch.FLUSH_INTERVAL_MS)
+                    sleepQuietly(waitMs)
+                    continue
                 }
-            }
-            if (logMessages.isNotEmpty()) {
-                flush()
+
+                // 达到当前上报条数、单批字节上限或距上次保存超过刷新间隔
+                if (shouldFlushPendingLogs(
+                        size = size,
+                        pendingBytes = pendingBytes,
+                        now = now,
+                        lastSaveTime = lastSaveTime
+                    )
+                ) {
+                    val sent = flush()
+                    val afterFlush = System.currentTimeMillis()
+                    if (sent > 0) {
+                        consecutiveFailures.set(0)
+                        nextRetryAt.set(0L)
+                        lastSaveTime = afterFlush
+                    } else if (!isUploadDisabled()) {
+                        val failures = consecutiveFailures.incrementAndGet()
+                        val backoff = LoggerUploadBatch.retryBackoffMs(failures)
+                        nextRetryAt.set(afterFlush + backoff)
+                        logger.warn(
+                            "Log flush sent 0 (pending=$size), retry after ${backoff}ms " +
+                                "(consecutiveFailures=$failures)"
+                        )
+                    }
+                } else {
+                    val remainingInterval = (LoggerUploadBatch.FLUSH_INTERVAL_MS - (now - lastSaveTime))
+                        .coerceIn(MIN_IDLE_WAIT_MS, LoggerUploadBatch.FLUSH_INTERVAL_MS)
+                    awaitQueueOrSleep(remainingInterval)
+                }
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to send the logger", ignored)
         }
-        logger.info("Finish the sending thread - (${uploadQueue.size})")
+        logger.info("Finish the sending thread - (${uploadQueue.size()})")
         true
     }
 
     private class FlushThread : Callable<Int> {
         override fun call(): Int {
             logger.info("Start to flush the logger")
+            drainFromQueue()
             val snapshot = lock.withLock {
                 if (logMessages.isEmpty()) {
                     emptyList()
@@ -269,11 +284,11 @@ object LoggerService {
             val sent = sendMultiLog(snapshot)
             if (sent > 0) {
                 lock.withLock {
-                    logMessages.subList(0, sent.coerceAtMost(logMessages.size)).clear()
+                    removeSentHeadLocked(sent)
                 }
             }
             if (sent < snapshot.size) {
-                logger.warn("Keep ${logMessages.size} unsent logs after flush (sent=$sent/${snapshot.size})")
+                logger.warn("Keep ${lock.withLock { logMessages.size }} unsent logs after flush (sent=$sent/${snapshot.size})")
             }
             flushAllLocalLogWriters()
             logger.info("Finish flush the log - size=${snapshot.size} sent=$sent")
@@ -311,15 +326,17 @@ object LoggerService {
     @Suppress("NestedBlockDepth")
     fun stop() {
         try {
-            logger.info("Start to stop the log service")
-            if (this.running.get()) {
-                this.running.set(false)
-                if (future != null) {
-                    future!!.get()
-                }
-                flushUntilIdleOrLocal(tag = null, disableAllOnGiveUp = true)
+            if (this.running.compareAndSet(true, false)) {
+                logger.info("Start to stop the log service")
+                uploadQueue.signalAll()
+                future?.get()
+                flushUntilIdleOrLocal(
+                    tag = null,
+                    disableAllOnGiveUp = true,
+                    maxDurationMs = LoggerUploadBatch.STOP_FLUSH_MAX_DURATION_MS
+                )
+                logger.info("Finish stopping the log service")
             }
-            logger.info("Finish stopping the log service")
         } catch (ignored: Exception) {
             logger.error("Fail to stop log service for build", ignored)
         } finally {
@@ -380,30 +397,42 @@ object LoggerService {
             saveLocalLog(ctx.elementId, ctx.executeCount, logMessage)
         }
 
-        if (currentTaskLineNo <= loggingLineLimit) {
+        if (currentTaskLineNo.get() < loggingLineLimit) {
             var offset = 0
             // 上报前做长度等内容限制
             while (offset < logMessage.message.length) {
                 val chunk = logMessage.message.substring(
                     offset, minOf(offset + LOG_MESSAGE_LENGTH_LIMIT, logMessage.message.length)
                 )
-                enqueueLog(logMessage.copy(message = chunk))
+                if (currentTaskLineNo.incrementAndGet() <= loggingLineLimit) {
+                    enqueueLog(logMessage.copy(message = chunk))
+                } else {
+                    markTaskExceededLineLimit(ctx.elementId, logMessage)
+                    break
+                }
                 offset += LOG_MESSAGE_LENGTH_LIMIT
             }
         } else if (elementId2LogProperty[ctx.elementId]?.logStorageMode != LogStorageMode.LOCAL) {
-            logger.warn(
-                "The number of Task[${ctx.elementId}] log lines exceeds the limit, " +
-                    "the log file will be archived."
-            )
-            enqueueLog(
-                logMessage.copy(
-                    message = "Printed logs cannot exceed $loggingLineLimit lines. " +
-                        "Please download logs to view.",
-                    logType = LogType.WARN
-                )
-            )
-            elementId2LogProperty[ctx.elementId]?.logStorageMode = LogStorageMode.LOCAL
+            markTaskExceededLineLimit(ctx.elementId, logMessage)
         }
+    }
+
+    private fun markTaskExceededLineLimit(taskId: String, logMessage: LogMessage) {
+        if (elementId2LogProperty[taskId]?.logStorageMode == LogStorageMode.LOCAL) {
+            return
+        }
+        logger.warn(
+            "The number of Task[$taskId] log lines exceeds the limit, " +
+                "the log file will be archived."
+        )
+        enqueueLog(
+            logMessage.copy(
+                message = "Printed logs cannot exceed $loggingLineLimit lines. " +
+                    "Please download logs to view.",
+                logType = LogType.WARN
+            )
+        )
+        elementId2LogProperty[taskId]?.logStorageMode = LogStorageMode.LOCAL
     }
 
     fun addWarnLine(message: String) {
@@ -456,7 +485,8 @@ object LoggerService {
 
     fun archiveLogFiles() {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
-        closeAllLocalLogWriters()
+        // 先排空在线日志，没发完的标为 LOCAL 后再关闭本地 writer 并统一归档
+        stop()
         try {
             val expireSeconds = buildVariables!!.timeoutMills / 1000
             val token = archiveApi.getRepoToken(
@@ -531,7 +561,7 @@ object LoggerService {
             }
         } finally {
             logger.info("Remove temp log files in [$pipelineLogDir].")
-            FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
+            pipelineLogDir?.let { FileUtils.deleteRecursivelyOnExit(it) }
         }
     }
 
@@ -539,14 +569,22 @@ object LoggerService {
 
     private fun isUploadDisabled(): Boolean = LogStorageMode.LOCAL == AgentEnv.getLogMode()
 
-    private fun shouldFlushPendingLogs(size: Int, now: Long, lastSaveTime: Long): Boolean {
+    private fun shouldFlushPendingLogs(
+        size: Int,
+        pendingBytes: Long,
+        now: Long,
+        lastSaveTime: Long
+    ): Boolean {
         if (size <= 0) {
             return false
         }
         if (size >= uploadBatchSize.get()) {
             return true
         }
-        if (now - lastSaveTime > LoggerUploadBatch.FLUSH_INTERVAL_MS) {
+        if (pendingBytes >= LoggerUploadBatch.MAX_BYTES) {
+            return true
+        }
+        if (now - lastSaveTime >= LoggerUploadBatch.FLUSH_INTERVAL_MS) {
             return true
         }
         return isUploadDisabled()
@@ -560,30 +598,89 @@ object LoggerService {
         return tag.isNotBlank() && (mode == LogStorageMode.LOCAL || mode == LogStorageMode.ARCHIVE_FAILED)
     }
 
+    /**
+     * 未熔断时采用背压等待，绝不因短暂突发丢弃日志或过早切换 LOCAL；
+     * 一旦触发熔断、服务拒绝（503/509）或停止信号，100ms 内快速退出避免卡住构建进程。
+     */
     private fun enqueueLog(message: LogMessage) {
-        if (shouldSkipUpload(message.tag)) {
+        var waitedMs = 0L
+        while (true) {
+            if (shouldSkipUpload(message.tag) || !running.get()) {
+                return
+            }
+            try {
+                if (uploadQueue.offer(message, LoggerUploadBatch.QUEUE_OFFER_TIMEOUT_MS)) {
+                    return
+                }
+            } catch (ignored: InterruptedException) {
+                logger.error("Writing to upload queue interrupted", ignored)
+                Thread.currentThread().interrupt()
+                return
+            }
+            waitedMs += LoggerUploadBatch.QUEUE_OFFER_TIMEOUT_MS
+            if (waitedMs % BACKPRESSURE_WARN_INTERVAL_MS == 0L) {
+                logger.warn(
+                    "Log upload queue is full (size=${uploadQueue.size()}, " +
+                        "bytes=${uploadQueue.pendingBytes()}), waiting for consumer " +
+                        "(waited=${waitedMs}ms, tag=${message.tag})"
+                )
+            }
+        }
+    }
+
+    private fun drainFromQueue(): Int {
+        return lock.withLock {
+            val remainingCount = LoggerUploadBatch.PENDING_MAX_COUNT - logMessages.size
+            val remainingBytes = LoggerUploadBatch.PENDING_MAX_BYTES - pendingLogBytes
+            if (remainingCount <= 0 || remainingBytes <= 0L) {
+                return@withLock 0
+            }
+            val before = logMessages.size
+            val moved = uploadQueue.drainTo(logMessages, remainingCount, remainingBytes)
+            if (moved > 0) {
+                for (i in before until logMessages.size) {
+                    pendingLogBytes += LoggerUploadBatch.estimateBytes(logMessages[i].message)
+                }
+            }
+            moved
+        }
+    }
+
+    private fun removeSentHeadLocked(sent: Int) {
+        val count = sent.coerceAtMost(logMessages.size)
+        if (count <= 0) {
+            return
+        }
+        for (i in 0 until count) {
+            pendingLogBytes -= LoggerUploadBatch.estimateBytes(logMessages[i].message)
+        }
+        logMessages.subList(0, count).clear()
+        if (logMessages.isEmpty() || pendingLogBytes < 0L) {
+            pendingLogBytes = 0L
+        }
+    }
+
+    private fun awaitQueueOrSleep(timeoutMs: Long) {
+        if (timeoutMs <= 0L) {
             return
         }
         try {
-            if (uploadQueue.offer(
-                    message,
-                    LoggerUploadBatch.QUEUE_OFFER_TIMEOUT_MS,
-                    TimeUnit.MILLISECONDS
-                )
-            ) {
-                return
-            }
-        } catch (ignored: InterruptedException) {
-            logger.error("Writing to upload queue interrupted", ignored)
+            uploadQueue.awaitNotEmpty(timeoutMs)
+        } catch (e: InterruptedException) {
+            logger.warn("Logger service wait interrupted", e)
             Thread.currentThread().interrupt()
+        }
+    }
+
+    private fun sleepQuietly(millis: Long) {
+        if (millis <= 0L) {
             return
         }
-        logger.warn(
-            "Log upload queue is full (size=${uploadQueue.size}), " +
-                "keep local file only and switch Task[${message.tag}] to LOCAL"
-        )
-        if (message.tag.isNotBlank()) {
-            elementId2LogProperty[message.tag]?.logStorageMode = LogStorageMode.LOCAL
+        try {
+            Thread.sleep(millis)
+        } catch (e: InterruptedException) {
+            logger.warn("Logger service sleep interrupted", e)
+            Thread.currentThread().interrupt()
         }
     }
 
@@ -768,43 +865,73 @@ object LoggerService {
         lock.withLock {
             uploadQueue.clear()
             logMessages.clear()
+            pendingLogBytes = 0L
         }
     }
 
-    private fun flushUntilIdleOrLocal(tag: String?, disableAllOnGiveUp: Boolean) {
+    private fun isAllPendingEmpty(): Boolean {
+        return lock.withLock {
+            logMessages.isEmpty() && uploadQueue.isEmpty()
+        }
+    }
+
+    private fun flushUntilIdleOrLocal(
+        tag: String?,
+        disableAllOnGiveUp: Boolean,
+        maxDurationMs: Long = LoggerUploadBatch.FINISH_FLUSH_MAX_DURATION_MS
+    ) {
         if (isUploadDisabled()) {
             discardPendingLogs()
             return
         }
-        repeat(FINISH_FLUSH_ROUNDS) { round ->
-            lock.withLock {
-                uploadQueue.drainTo(logMessages)
-            }
-            if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+        val deadline = System.currentTimeMillis() + maxDurationMs
+        var stalledRounds = 0
+        while (!isUploadDisabled()) {
+            drainFromQueue()
+            val pending = lock.withLock { logMessages.size }
+            if (pending == 0 && uploadQueue.isEmpty()) {
                 return
             }
+            if (System.currentTimeMillis() >= deadline) {
+                logger.warn(
+                    "Finish flush reached time budget ${maxDurationMs}ms " +
+                        "(queue=${uploadQueue.size()}, buffer=$pending)"
+                )
+                break
+            }
+            val sent = if (pending > 0) flush() else 0
             if (isUploadDisabled()) {
                 discardPendingLogs()
                 return
             }
-            val pending = logMessages.size
-            val sent = if (pending > 0) flush() else 0
-            if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+            if (isAllPendingEmpty()) {
                 return
             }
-            if (sent <= 0 && logMessages.isNotEmpty()) {
-                logger.warn("Finish flush round ${round + 1} sent 0, still ${logMessages.size} pending")
-                Thread.sleep(500)
-            } else if (sent < pending) {
-                logger.warn("Finish flush round ${round + 1} sent=$sent/$pending")
+            if (sent > 0) {
+                stalledRounds = 0
+                consecutiveFailures.set(0)
+                nextRetryAt.set(0L)
+                continue
             }
+            stalledRounds++
+            if (stalledRounds >= LoggerUploadBatch.FINISH_FLUSH_STALL_ROUNDS) {
+                logger.warn(
+                    "Finish flush stalled for $stalledRounds rounds " +
+                        "(queue=${uploadQueue.size()}, buffer=${lock.withLock { logMessages.size }})"
+                )
+                break
+            }
+            val remainingMs = (deadline - System.currentTimeMillis()).coerceAtLeast(0L)
+            val sleepMs = minOf(LoggerUploadBatch.retryBackoffMs(stalledRounds), remainingMs)
+            logger.warn("Finish flush stalled round $stalledRounds, retry after ${sleepMs}ms")
+            sleepQuietly(sleepMs)
         }
-        if (uploadQueue.isEmpty() && logMessages.isEmpty()) {
+        if (isAllPendingEmpty()) {
             return
         }
         logger.warn(
-            "Unsent logs remain after finish flush (queue=${uploadQueue.size}, " +
-                "buffer=${logMessages.size}), switch to LOCAL"
+            "Unsent logs remain after finish flush (queue=${uploadQueue.size()}, " +
+                "buffer=${lock.withLock { logMessages.size }}), switch to LOCAL"
         )
         if (!tag.isNullOrBlank()) {
             elementId2LogProperty[tag]?.logStorageMode = LogStorageMode.LOCAL
@@ -891,7 +1018,9 @@ object LoggerService {
         subTag: String? = null
     ) {
         try {
-            currentTaskLineNo = 0
+            if (subTag == null) {
+                currentTaskLineNo.set(0)
+            }
             flushUntilIdleOrLocal(tag, disableAllOnGiveUp = false)
             flushLocalLogWriter(tag)
             logger.info("Start to finish the log, property: ${elementId2LogProperty[tag]}")
@@ -919,6 +1048,8 @@ object LoggerService {
         // 将全局日志模式设为本地保存
         logger.warn("Set AgentEnv logMode to ${LogStorageMode.LOCAL.name}")
         AgentEnv.setLogMode(LogStorageMode.LOCAL)
+        // 立刻释放阻塞在背压等待上的生产者
+        uploadQueue.clear()
     }
 
     private fun <T> doWithCircuitBreaker(

@@ -51,6 +51,17 @@ class LoggerUploadBatchTest {
         assertEquals(0, LoggerUploadBatch.nextChunkEnd(emptyList(), 0))
     }
 
+    @Test
+    fun retryBackoffGrowsExponentiallyAndCaps() {
+        assertEquals(0L, LoggerUploadBatch.retryBackoffMs(0))
+        assertEquals(500L, LoggerUploadBatch.retryBackoffMs(1))
+        assertEquals(1_000L, LoggerUploadBatch.retryBackoffMs(2))
+        assertEquals(2_000L, LoggerUploadBatch.retryBackoffMs(3))
+        assertEquals(4_000L, LoggerUploadBatch.retryBackoffMs(4))
+        assertEquals(5_000L, LoggerUploadBatch.retryBackoffMs(5))
+        assertEquals(5_000L, LoggerUploadBatch.retryBackoffMs(20))
+    }
+
     private fun messages(count: Int, message: String): List<LogMessage> {
         return List(count) { log(message) }
     }

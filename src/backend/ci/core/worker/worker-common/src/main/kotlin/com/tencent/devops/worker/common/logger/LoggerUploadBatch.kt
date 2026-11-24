@@ -40,10 +40,27 @@ object LoggerUploadBatch {
     const val MAX_BYTES = 256 * 1024
     const val FLUSH_INTERVAL_MS = 1_000L
     const val QUEUE_OFFER_TIMEOUT_MS = 100L
+    const val QUEUE_MAX_COUNT = 8192
+    const val QUEUE_MAX_BYTES = 16L * 1024 * 1024
+    const val PENDING_MAX_COUNT = 2000
+    const val PENDING_MAX_BYTES = 4L * 1024 * 1024
     const val LOCAL_LOG_BUFFER_BYTES = 16 * 1024
     const val JSON_FIELD_OVERHEAD = 256
     const val READ_TIMEOUT_SECONDS = 30L
     const val MAX_PENDING_IN_MEMORY = 5000
+    const val RETRY_BACKOFF_INITIAL_MS = 500L
+    const val RETRY_BACKOFF_MAX_MS = 5_000L
+    const val FINISH_FLUSH_MAX_DURATION_MS = 120_000L
+    const val STOP_FLUSH_MAX_DURATION_MS = 60_000L
+    const val FINISH_FLUSH_STALL_ROUNDS = 5
+
+    fun retryBackoffMs(consecutiveFailures: Int): Long {
+        if (consecutiveFailures <= 0) {
+            return 0L
+        }
+        val shift = (consecutiveFailures - 1).coerceAtMost(4)
+        return (RETRY_BACKOFF_INITIAL_MS shl shift).coerceAtMost(RETRY_BACKOFF_MAX_MS)
+    }
 
     fun utf8Length(value: String): Int {
         var bytes = 0
