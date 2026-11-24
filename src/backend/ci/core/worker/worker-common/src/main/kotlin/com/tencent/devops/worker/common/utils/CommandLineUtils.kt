@@ -76,8 +76,8 @@ object CommandLineUtils {
     ): String {
 
         val result = StringBuilder()
-        // 合流动后不再有独立 stderr；失败摘要改为截合并流末尾，兼容原 errorResult 用途
-        val mergedResult = StringBuilder()
+        // 合流动后每行都进入失败摘要，但调用方只取末尾一段。定长尾部避免大构建把共享 worker 撑到 OOM。
+        val failureTail = MergedOutputTail(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -121,7 +121,8 @@ object CommandLineUtils {
                     buildId = buildId,
                     print2Logger = print2Logger
                 )
-                mergedResult.append(tmpLine).append("\n")
+                failureTail.append(tmpLine)
+                failureTail.append("\n")
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
@@ -141,7 +142,7 @@ object CommandLineUtils {
                     errorType = ErrorType.USER,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
                         "Error message tracking:\n" +
-                        mergedResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+                        failureTail.content()
                 )
             }
         } catch (ignored: Throwable) {
@@ -444,4 +445,29 @@ object CommandLineUtils {
             } else null
         }
     }
+}
+
+/**
+ * 只保留最近 [maxChars] 个字符。单行超过上限时只留下该行末尾。
+ */
+internal class MergedOutputTail(private val maxChars: Int) {
+    private val buffer = StringBuilder(maxChars.coerceAtLeast(0))
+
+    fun append(text: String) {
+        if (maxChars <= 0 || text.isEmpty()) {
+            return
+        }
+        if (text.length >= maxChars) {
+            buffer.setLength(0)
+            buffer.append(text, text.length - maxChars, text.length)
+            return
+        }
+        val overflow = buffer.length + text.length - maxChars
+        if (overflow > 0) {
+            buffer.delete(0, overflow)
+        }
+        buffer.append(text)
+    }
+
+    fun content(): String = buffer.toString()
 }

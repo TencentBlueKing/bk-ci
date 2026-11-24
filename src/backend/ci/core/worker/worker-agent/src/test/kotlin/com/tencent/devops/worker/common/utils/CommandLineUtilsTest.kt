@@ -1,6 +1,7 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import java.io.File
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -218,6 +219,33 @@ class CommandLineUtilsTest {
         Assertions.assertTrue(exception.errorMsg.contains("out1"))
         Assertions.assertTrue(exception.errorMsg.contains("err1"))
         Assertions.assertTrue(exception.errorMsg.contains("exit code(1)"))
+    }
+
+    @Test
+    fun executeFailureMessageDropsOutputBeyondTail() {
+        assumePosixShell()
+        val workspace = File(System.getProperty("java.io.tmpdir"))
+        val script = File.createTempFile("log_fail_tail_", ".sh", workspace)
+        script.deleteOnExit()
+        script.writeText(
+            "#!/bin/sh\n" +
+                "echo HEAD\n" +
+                "i=0\n" +
+                "while [ \"\$i\" -lt 200 ]; do\n" +
+                "  echo 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'\n" +
+                "  i=\$((i + 1))\n" +
+                "done\n" +
+                "echo TAILMARK\n" +
+                "exit 1\n"
+        )
+
+        val exception = Assertions.assertThrows(TaskExecuteException::class.java) {
+            CommandLineUtils.execute(script, workspace, false)
+        }
+        val tracking = exception.errorMsg.substringAfter("Error message tracking:\n")
+        Assertions.assertTrue(tracking.length <= PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+        Assertions.assertTrue(tracking.contains("TAILMARK"))
+        Assertions.assertFalse(tracking.contains("HEAD"))
     }
 
     private fun assumePosixShell() {
