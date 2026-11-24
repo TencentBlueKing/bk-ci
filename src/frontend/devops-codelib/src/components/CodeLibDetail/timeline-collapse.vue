@@ -267,8 +267,8 @@
                     title: this.$t('codelib.是否全部重放？'),
                     subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
-                    confirmFn: async () => {
-                        this.replayAllEvent({
+                    confirmFn: () => {
+                        return this.replayAllEvent({
                             projectId: this.projectId,
                             eventId
                         }).then(() => {
@@ -282,6 +282,7 @@
                                 theme: 'error',
                                 message: err?.message || err
                             })
+                            return false
                         })
                     }
                 })
@@ -298,8 +299,8 @@
                     title: this.$t('codelib.是否重新触发？'),
                     subTitle: this.$t('codelib.确认以此事件重新触发流水线X吗？', [pipelineName]),
                     confirmLoading: true,
-                    confirmFn: async () => {
-                        this.replayEvent({
+                    confirmFn: () => {
+                        return this.replayEvent({
                             projectId: this.projectId,
                             detailId
                         }).then(() => {
@@ -313,6 +314,7 @@
                                 theme: 'error',
                                 message: err?.message || err
                             })
+                            return false
                         })
                     }
                 })
