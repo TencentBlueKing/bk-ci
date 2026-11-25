@@ -580,6 +580,8 @@ object ProcessMessageCode {
     const val ERROR_RUNTIME_RESOURCE_ENV_NO_NODE = "2101512"
     // 定时触发选择的运行节点[{0}]已不在运行资源环境[{1}]内，请重新选择运行节点后再发布
     const val ERROR_TIMER_TRIGGER_NODE_NOT_IN_ENV = "2101513"
+    // 暂时无法确认运行节点是否仍在运行资源环境内，请稍后重试
+    const val ERROR_RUNTIME_RESOURCE_NODE_ENV_UNKNOWN = "2101514"
 
     // 批量任务
     const val ERROR_PIPELINE_BATCH_TASK_NOT_EXISTS = "2101650" // 流水线批量任务{0}不存在

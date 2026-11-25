@@ -186,7 +186,8 @@ class RuntimeResourceResolver(
      * 用全量列表反推的代价会随环境规模线性放大，这里固定只查这一台。
      *
      * 返回 false 代表这台机器确实不属于该环境（含环境已被删除），必须拒绝执行；
-     * 返回 null 代表查询本身失败，拿不到结论，由调用方放行。
+     * 返回 null 代表这次拿不到结论：调用失败，或调用成功但没有明确回答。
+     * 启动校验据此报「暂时无法确认」并拒绝，发布校验据此放行，两边口径见各自注释。
      */
     fun agentStillInEnvOrNull(
         projectId: String,
@@ -194,6 +195,8 @@ class RuntimeResourceResolver(
         envHashId: String,
         agentHashId: String
     ): Boolean? = try {
+        // data 为空按「没问到」处理，不能当成「还在环境里」：环境服务没带上这个接口时
+        // 返回的就是空响应，当成在环境里会把已移出的节点照常跑起来
         client.get(ServiceNodeResource::class).checkEnvAgentExists(
             userId = userId,
             projectId = projectId,

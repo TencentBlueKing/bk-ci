@@ -628,7 +628,11 @@ class PipelineBuildService(
      *
      * 查得到归属结论就按结果判定：不属于该环境一律拒绝，包括环境已被清空或删除的情况，
      * 这正是「快照里的环境已经不存在了」要拦住的场景。
-     * 只有查询本身失败（环境服务异常等）才放行，那时拿不到任何证据，不能反过来判定节点不合法。
+     *
+     * 查询本身失败（环境服务未发布、调用异常）时同样不放行，但报的是「暂时无法确认」而不是「不在环境内」：
+     * 放行等于在最该拦的时候失效——定时触发按保存的节点快照启动，节点早被移出环境，构建却仍然成功。
+     * 节点归属问不到时没有别的兜底：派发只认传进来的 agent，不会再判它属不属于这个环境。
+     * 这类失败可重试，定时触发下一分钟会自己恢复。
      */
     private fun checkAgentInEnv(
         ctx: InitParamContext,
@@ -643,7 +647,10 @@ class PipelineBuildService(
             userId = authUserId,
             envHashId = targetEnvHashId,
             agentHashId = agentId
-        ) ?: return
+        ) ?: throw ErrorCodeException(
+            // 不带节点名和环境名：查这两个名字同样要问环境服务，这会儿正问不到
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_ENV_UNKNOWN
+        )
         if (stillInEnv) return
         // 报错给人看，要的是环境名称。设置里的名字只在校验的就是设置里那个环境时才可信，
         // 用历史构建带来的环境校验时按 hashId 现查；环境已被删除等查不到名字的情况才退回展示 hashId
