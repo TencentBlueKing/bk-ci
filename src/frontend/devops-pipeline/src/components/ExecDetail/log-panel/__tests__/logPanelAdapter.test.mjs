@@ -4706,7 +4706,7 @@ test('plugin title includes the three-level position code and panel geometry con
     const container = readFileSync(new URL('../../detailContainer.vue', import.meta.url), 'utf8')
     assert.equal(adapter.positionCode({ stageIndex: 0, containerIndex: 0, elementIndex: 0 }), '1-1-1')
     assert.match(plugin, /:position-code="positionCode"/)
-    assert.match(container, /--log-panel-width:\s*max\(1200px, 90vw\)/)
+    assert.match(container, /--log-panel-width:\s*1400px;\s*@media \(max-width:\s*1365px\)\s*\{\s*--log-panel-width:\s*1200px;/)
     assert.match(container, /width:\s*var\(--log-panel-width\)/)
     assert.match(container, /\.log-home-close-bar\s*\{[\s\S]*right:\s*calc\(var\(--log-panel-width\) \+ 8px\);[\s\S]*top:\s*8px/)
     assert.match(container, /margin:\s*8px/)
