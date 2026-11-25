@@ -32,10 +32,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.RepoAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.OauthParams
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -59,7 +65,10 @@ class TGitOAuthService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val tGitTokenService: TGitTokenService,
     private val tGitService: ITGitService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val repoAuthServiceCode: RepoAuthServiceCode
 ) {
 
     private fun getOauthUrl(id: String): String {
@@ -85,6 +94,16 @@ class TGitOAuthService @Autowired constructor(
             )
         )
         return AuthorizeResult(403, getOauthUrl(id))
+    }
+
+    fun getOauthUrl(userId: String, redirectUrl: String): String {
+        return getOauthUrl(
+            gitProjectId = null,
+            userId = userId,
+            redirectUrlType = RedirectUrlTypeEnum.SPEC,
+            redirectUrl = redirectUrl,
+            resetType = null
+        ).url
     }
 
     fun getProject(
@@ -260,6 +279,44 @@ class TGitOAuthService @Autowired constructor(
 
     fun getAccessToken(userId: String): GitToken? {
         return tGitTokenService.getAccessToken(userId)
+    }
+
+    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken? {
+        logger.info("buildId: $buildId, userId: $userId")
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        }
+        val accessToken = getAccessToken(userId) ?: return null
+        // 授权代持人
+        val operator = if (accessToken.operator.isNullOrBlank()) {
+            userId
+        } else {
+            accessToken.operator!!
+        }
+        val buildBasicInfo = buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        val projectUserCheck = authProjectApi.checkProjectUser(
+            user = operator,
+            serviceCode = repoAuthServiceCode,
+            projectCode = buildBasicInfo.projectId
+        )
+        if (!projectUserCheck) {
+            // operator和目标账户不相同时仅记录日志
+            if (operator != userId) {
+                logger.warn(
+                    "TGit OAuth account [$userId]'s operator [$operator] " +
+                            "is not a member of project [${buildBasicInfo.projectId}]"
+                )
+            } else {
+                // operator和目标账户相同, 且不为项目成员则拦截
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                    params = arrayOf(operator, buildBasicInfo.projectId)
+                )
+            }
+        }
+        return accessToken
     }
 
     private fun getRedirectUrl(authParam: OauthParams): String {
