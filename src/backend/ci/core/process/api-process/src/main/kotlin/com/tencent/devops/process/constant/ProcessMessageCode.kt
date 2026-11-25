@@ -37,9 +37,19 @@ package com.tencent.devops.process.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev 35：misc-杂项）
+ *    32: remotedev 35：misc-杂项 50：process-流水线子领域）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
+ * 6、process 的 2101xxx 号段已冻结，新增错误码使用模块位 50，每 100 个一块分配给子领域，写到同包下对应的子对象：
+ *    2150000~2150099 流水线基础 PipelineBaseMessageCode      2150100~2150199 构建执行与引擎 BuildMessageCode
+ *    2150200~2150299 模板与实例化 TemplateMessageCode        2150300~2150399 触发器 TriggerMessageCode
+ *    2150400~2150499 PAC/YAML/代码库 PacMessageCode          2150500~2150599 公共变量组 VarGroupMessageCode
+ *    2150600~2150699 视图/标签/回调/批量任务/复制 PipelineManageMessageCode
+ *    2150700~2150799 创作流 CreativeFlowMessageCode          2150800~2150999 预留
+ *    领域的块用完后从预留区再申请 100 个一块并登记到上表，同一领域可以有多个不连续的块，50 用完后再申请 51
+ * 7、新增文案按领域放在 support-files/i18n/process/<领域>/message_xx.properties，历史文案仍在上级目录的同名文件中，
+ *    编译时合并，key 重复会导致编译失败
+ * 8、本文件只保留历史错误码，新增错误码不要再写到这里
  *
  * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
