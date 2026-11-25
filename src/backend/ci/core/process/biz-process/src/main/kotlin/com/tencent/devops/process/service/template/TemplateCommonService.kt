@@ -63,7 +63,8 @@ class TemplateCommonService @Autowired constructor(
         )?.value1() ?: 0
         if (count > 0) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS,
+                params = arrayOf(name)
             )
         }
         // 判断提交的模板数量是否超过系统规定的阈值

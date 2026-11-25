@@ -90,7 +90,8 @@ class PipelineVersionValidator @Autowired constructor(
             logger.warn("The pipeline(${pipelineBasicInfo.pipelineName}) is exist")
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                params = arrayOf(pipelineBasicInfo.pipelineName)
             )
         }
         if (pipelineInfo == null) {

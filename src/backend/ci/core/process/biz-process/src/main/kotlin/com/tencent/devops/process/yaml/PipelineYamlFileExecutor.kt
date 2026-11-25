@@ -1,9 +1,6 @@
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailMessageCode
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
@@ -91,16 +88,7 @@ class PipelineYamlFileExecutor @Autowired constructor(
 
     private fun PipelineYamlFileEvent.sync() {
         try {
-            if (!pipelineYamlFileManager.createOrUpdateYamlFile(this)) {
-                // 失败原因已由createOrUpdateYamlFile记录到触发详情,这里只能拿到通用原因
-                syncFailed(
-                    reason = PipelineTriggerReason.TRIGGER_FAILED.name,
-                    reasonDetail = PipelineTriggerDetailMessageCode(
-                        messageCode = ProcessMessageCode.BK_YAML_PIPELINE_CREATE_FAILED
-                    )
-                )
-                return
-            }
+            pipelineYamlFileManager.createOrUpdateYamlFile(this)
             pipelineYamlSyncService.syncSuccess(
                 projectId = projectId,
                 repoHashId = repoHashId,
