@@ -183,7 +183,7 @@
                 return
             }
             const button = root.querySelector('.agree-wrap button') as HTMLElement | null
-            button?.focus?.()
+            button?.focus()
         }
 
         patchLinks () {
