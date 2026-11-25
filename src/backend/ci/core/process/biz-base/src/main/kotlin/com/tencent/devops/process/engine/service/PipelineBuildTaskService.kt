@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.control.CancelTaskSignalService
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
@@ -55,7 +56,8 @@ class PipelineBuildTaskService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineBuildRecordService: PipelineBuildRecordService
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val cancelTaskSignalService: CancelTaskSignalService
 ) {
 
     /**
@@ -85,6 +87,8 @@ class PipelineBuildTaskService @Autowired constructor(
             redisOperation.leftPush(cancelTaskKey, taskId)
             // 为取消任务设置最大超时时间，防止构建异常产生的脏数据
             redisOperation.expire(cancelTaskKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
+            // 入队之后再登记索引，保证索引命中时队列里一定已有数据，心跳才能免掉常态空查
+            cancelTaskSignalService.markCancelSignal(buildId = buildId, containerId = containerId)
         }
         // 如果是取消的构建/超时的构建，则会统一取消子流水线的构建
         if (buildStatus.isPassiveStop() || buildStatus.isCancel() || buildStatus.isTimeout()) {
