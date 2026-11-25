@@ -2104,7 +2104,8 @@ class EnvService @Autowired constructor(
     fun fetchEnvNodes(
         projectId: String,
         envIds: List<Long>,
-        userId: String?
+        userId: String?,
+        checkNodePermission: Boolean = true
     ): List<EnvNode> {
         val realEnvIds = envIds.distinct().toMutableList()
         if (realEnvIds.isEmpty()) {
@@ -2112,7 +2113,13 @@ class EnvService @Autowired constructor(
         }
 
         val result = mutableListOf<EnvNode>()
-        result.addAll(fetchAllCreateEnvNodes(userId = userId, projectId = projectId, envIds = realEnvIds))
+        result.addAll(
+            fetchAllCreateEnvNodes(
+                userId = userId.takeIf { checkNodePermission },
+                projectId = projectId,
+                envIds = realEnvIds
+            )
+        )
         if (realEnvIds.isEmpty()) {
             return result
         }
@@ -2123,8 +2130,111 @@ class EnvService @Autowired constructor(
             repairCreateEnvOs(projectId, noOsEnv.map { it.envId })
             envs = envDao.list(dslContext, projectId, envIds = realEnvIds)
         }
-        result.addAll(fetchNormalEnvNodes(userId = userId, projectId = projectId, envs = envs))
+        result.addAll(
+            fetchNormalEnvNodes(
+                userId = userId,
+                projectId = projectId,
+                envs = envs,
+                checkNodePermission = checkNodePermission
+            )
+        )
         return result
+    }
+
+    /**
+     * 列出环境下全部构建机的 agentHashId，不按节点使用权限过滤。
+     *
+     * 用于判断某台机器是不是还属于这个环境：归属是客观事实，与查询人有没有这台机器的使用权无关。
+     * 带权限过滤的 [listAllEnvNodesNew] 会把无权限的节点一并滤掉，用它反推归属会把「没权限」误判成「已被移出环境」。
+     * 环境不存在时抛 [ERROR_ENV_NOT_EXISTS]，由调用方区分「环境没了」和「这次没问到」。
+     */
+    fun listRawEnvAgentHashIds(projectId: String, envHashId: String): List<String> {
+        // 内置「全部创作节点」环境的 hashId 以 "-" 开头，不能直接 decodeIdToLong，否则会解成 0，
+        // 被当成环境不存在，把绑了这个环境的创作流全部拦成「节点已不在环境内」
+        val envId = AllCreateNodeEnv.hashIdToId(envHashId)
+            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+        val envExists = AllCreateNodeEnv.hasId(envId) ||
+            envDao.list(dslContext, projectId, envIds = listOf(envId)).isNotEmpty()
+        if (!envExists) {
+            throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+        }
+        val nodeIds = fetchEnvNodes(
+            projectId = projectId,
+            envIds = listOf(envId),
+            userId = null,
+            checkNodePermission = false
+        ).map { it.nodeId }.toSet()
+        if (nodeIds.isEmpty()) {
+            return emptyList()
+        }
+        return thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId)
+            .map { HashUtil.encodeLongId(it.id) }
+    }
+
+    /**
+     * 判断某台构建机是否仍属于这个环境，口径与 [listRawEnvAgentHashIds] 一致：不按节点使用权限过滤。
+     *
+     * 只判断一台机器的归属，不拉取环境下的全部节点。定时触发会按勾选的节点逐台启动，
+     * 每台都拉一遍全量列表的话，环境规模一大就会给环境服务带来明显压力；
+     * 这里由 agent 反查它所属的环境，代价与环境规模无关。
+     * 环境不存在时抛 [ERROR_ENV_NOT_EXISTS]，由调用方区分「环境没了」和「这次没问到」。
+     */
+    fun checkEnvAgentExists(projectId: String, envHashId: String, agentHashId: String): Boolean {
+        val envId = AllCreateNodeEnv.hashIdToId(envHashId)
+            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+        val builtinEnvOs = OS.entries.find { AllCreateNodeEnv.hashId(it) == envHashId }
+        // 创作环境的历史数据可能没有系统，全量查询会先补上再比，这里必须走同一条补数，
+        // 否则系统还是空的环境会被判成「节点已不在环境内」
+        val env = if (builtinEnvOs != null) {
+            null
+        } else {
+            loadEnvForAgentCheck(projectId, envId, envHashId)
+        }
+        val agent = thirdPartyAgentDao.getAgentByProject(
+            dslContext = dslContext,
+            id = HashUtil.decodeIdToLong(agentHashId),
+            projectId = projectId
+        ) ?: return false
+        // 内置「全部创作节点」环境不维护节点关联，判定条件与 fetchCreateAgent 的筛选保持一致
+        if (builtinEnvOs != null) {
+            return agent.agentType == AgentType.CREATE.name &&
+                agent.os == builtinEnvOs.name &&
+                agent.status in CREATE_ENV_AGENT_STATUS
+        }
+        val nodeId = agent.nodeId ?: return false
+        // 分支与 fetchNormalEnvNodes 的两类候选一一对应。目前 EnvNodeType 只有这两种取值，
+        // 走不到 else；写全是为了将来新增类型时这里跟着一起改，而不是默默按静态环境判
+        val belongs = when (env!!.envNodeType) {
+            EnvNodeType.TAG.name ->
+                // 动态环境按标签匹配，正反两个方向用的是同一套规则（见 EnvTagDao.fetchTagEnvByTagValueIds）
+                envTagDao.fetchTagEnvByNodeId(dslContext, projectId, nodeId).contains(envId)
+            EnvNodeType.NODE.name ->
+                envNodeDao.listNodeIds(dslContext, projectId, listOf(nodeId)).any { it.envId == envId }
+            else -> false
+        }
+        if (!belongs) {
+            return false
+        }
+        // 与 filterExistingEnvNodes 同口径：节点类型要与环境类型相符，创作流环境还要求机器系统与环境一致
+        val node = nodeDao.listByIds(dslContext, projectId, setOf(nodeId)).firstOrNull() ?: return false
+        if (node.nodeType != EnvType.toNodeType(env.envType)?.name) {
+            return false
+        }
+        return env.envType != EnvType.CREATE.name || agent.os == env.os
+    }
+
+    /**
+     * 取出用于归属判断的环境。创作环境没写系统时先按 [fetchEnvNodes] 的口径补上再重读，
+     * 补数失败或补完仍为空时原样返回，由调用方按「系统不一致」判成不属于该环境，和全量列表一致。
+     */
+    private fun loadEnvForAgentCheck(projectId: String, envId: Long, envHashId: String): TEnvRecord {
+        val env = envDao.list(dslContext, projectId, envIds = listOf(envId)).firstOrNull()
+            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+        if (env.envType != EnvType.CREATE.name || env.os != null) {
+            return env
+        }
+        repairCreateEnvOs(projectId, listOf(envId))
+        return envDao.list(dslContext, projectId, envIds = listOf(envId)).firstOrNull() ?: env
     }
 
     private fun fetchAllCreateEnvNodes(userId: String?, projectId: String, envIds: MutableList<Long>): List<EnvNode> {
@@ -2159,7 +2269,12 @@ class EnvService @Autowired constructor(
         }
     }
 
-    private fun fetchNormalEnvNodes(userId: String?, projectId: String, envs: List<TEnvRecord>): List<EnvNode> {
+    private fun fetchNormalEnvNodes(
+        userId: String?,
+        projectId: String,
+        envs: List<TEnvRecord>,
+        checkNodePermission: Boolean = true
+    ): List<EnvNode> {
         if (envs.isEmpty()) {
             return emptyList()
         }
@@ -2207,13 +2322,19 @@ class EnvService @Autowired constructor(
             )
         }
 
-        return filterExistingEnvNodes(userId = userId, projectId = projectId, candidates = candidates)
+        return filterExistingEnvNodes(
+            userId = userId,
+            projectId = projectId,
+            candidates = candidates,
+            checkNodePermission = checkNodePermission
+        )
     }
 
     private fun filterExistingEnvNodes(
         userId: String?,
         projectId: String,
-        candidates: List<EnvNodeCandidate>
+        candidates: List<EnvNodeCandidate>,
+        checkNodePermission: Boolean = true
     ): List<EnvNode> {
         val uniqueCandidates = candidates.distinctBy { it.envId to it.nodeId }
         if (uniqueCandidates.isEmpty()) {
@@ -2227,15 +2348,17 @@ class EnvService @Autowired constructor(
         val createNodeMap = if (createCandidates.isEmpty()) {
             emptyMap()
         } else {
-            val permissionNodes = userId?.let {
-                environmentPermissionService.listNodeByPermission(
-                    userId = userId,
-                    projectId = projectId,
-                    permission = AuthPermission.USE,
-                    resourceType = AuthResourceType.CREATIVE_STREAM_NODE
-                )
-            } ?: emptySet()
-            createCandidates = createCandidates.filter { it.nodeId in permissionNodes }
+            if (checkNodePermission) {
+                val permissionNodes = userId?.let {
+                    environmentPermissionService.listNodeByPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = AuthPermission.USE,
+                        resourceType = AuthResourceType.CREATIVE_STREAM_NODE
+                    )
+                } ?: emptySet()
+                createCandidates = createCandidates.filter { it.nodeId in permissionNodes }
+            }
             thirdPartyAgentDao.getAgentsByNodeIds(
                 dslContext = dslContext,
                 nodeIds = createCandidates.map { it.nodeId },
@@ -2419,5 +2542,9 @@ class EnvService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(EnvService::class.java)
+
+        /** 创作节点可被环境选用的 Agent 状态，与 ThirdPartyAgentDao.fetchCreateAgent 的筛选保持一致 */
+        private val CREATE_ENV_AGENT_STATUS =
+            setOf(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status)
     }
 }

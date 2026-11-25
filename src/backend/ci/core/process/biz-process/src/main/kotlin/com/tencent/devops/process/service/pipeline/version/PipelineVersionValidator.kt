@@ -84,18 +84,21 @@ class PipelineVersionValidator @Autowired constructor(
         if (versionAction != PipelineVersionAction.RELEASE_DRAFT) return
         if (pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM) return
         val resource = pipelineSettingWithoutVersion.runtimeResource() ?: return
-        // 节点列表按使用权限过滤，口径要和定时触发一致：用流水线授权人，没有授权人时才退回操作人
+        // 查询身份与定时触发一致：用流水线授权人，没有授权人时才退回操作人。
+        // 节点归属按不过滤权限的接口判定，避免把「授权人没有该节点使用权」误判成「节点已被移出环境」
         val authUserId = pipelineInfo?.let {
             pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
         } ?: userId
         if (!resource.group) {
-            // 单体资源：机器被释放后换不出 agent，发布出去也只会在派发阶段失败
-            val agentHashId = runtimeResourceResolver.resolveAgentHashId(
+            // 单体资源：机器被释放后换不出 agent，发布出去也只会在派发阶段失败。
+            // 查询失败时拿不到结论，按放行处理，不能因为环境服务抖动把发布挡下来
+            val resolved = runtimeResourceResolver.resolveSingleAgent(
                 projectId = projectId,
                 userId = authUserId,
                 resource = resource
             )
-            if (agentHashId.isNullOrBlank()) {
+            if (!resolved.queried) return
+            if (resolved.agentHashId.isNullOrBlank()) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
                     params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
@@ -104,7 +107,7 @@ class PipelineVersionValidator @Autowired constructor(
             return
         }
         val envHashId = resource.envHashId?.takeIf { it.isNotBlank() } ?: return
-        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsOrNull(
+        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsForCheckOrNull(
             projectId = projectId,
             userId = authUserId,
             envHashId = envHashId

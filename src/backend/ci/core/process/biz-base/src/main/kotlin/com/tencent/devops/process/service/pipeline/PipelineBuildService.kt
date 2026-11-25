@@ -49,6 +49,7 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -274,7 +275,11 @@ class PipelineBuildService(
                 pipelineDialectType = pipelineDialectType.name,
                 failIfVariableInvalid = setting.failIfVariableInvalid,
                 envHashId = setting.envHashId,
-                runtimeResource = setting.runtimeResource(),
+                // 运行资源只对「运行环境由设置指定」的渠道生效。没有类型、只存了环境的历史设置会被
+                // 还原成环境资源，不按渠道收口的话，普通流水线那些存量 envHashId 会让启动多出
+                // 「必须指定运行节点」的拦截，把原本能跑的构建挡住
+                runtimeResource = setting.runtimeResource()
+                    ?.takeIf { AtomUtils.isRunEnvSpecifiedBySetting(channelCode) },
                 originTriggerUser = originTriggerUser
             )
             initPipelineParamMap(initContext)
@@ -526,8 +531,8 @@ class PipelineBuildService(
             // 绑定单台机器：执行对象固定，新发起的构建一律按当前设置换算，不接受启动方用启动参数改派。
             // 唯一的例外是重跑历史构建（重新执行、重放）：那一次跑在哪台机器上是既成事实，
             // 只要那台机器还在就继续用它，不能因为流水线后来改绑了另一台就把历史构建挪过去。
-            // 原机器已不存在时回落到当前设置，两者都拿不到才拒绝启动：继续走下去只会在派发阶段
-            // 以一个与原因无关的报错失败
+            // 原机器已经不在时直接拒绝，不改跑当前设置里的那台：记录上仍是重跑原来那次，
+            // 执行对象却悄悄换了，用户看不出来。查原机器失败同样不回落，避免一次查询抖动把还在的机器换掉
             else -> ctx.reusableOriginAgentId(startedAgentId)
                 ?: runtimeResourceResolver.resolveAgentHashId(
                     projectId = ctx.pipeline.projectId,
@@ -545,10 +550,11 @@ class PipelineBuildService(
         // 但启动参数里仍带着原构建认定的环境，那才是该校验的对象。
         // 用原构建的环境校验时，设置里的环境名对不上这个 hashId，不能拿来报错。
         // 绑定单台机器时执行对象由平台解析，不存在「节点属不属于环境」的问题，不参与校验
-        val checkEnvHashId = if (resource?.group == false) {
-            null
-        } else {
-            startedEnvHashId ?: resource?.envHashId
+        val checkEnvHashId = when {
+            // 运行环境不由设置指定的渠道，节点和环境都由编排里的 Job 自己声明，不存在「运行资源的环境」
+            !AtomUtils.isRunEnvSpecifiedBySetting(ctx.channelCode) -> null
+            resource?.group == false -> null
+            else -> startedEnvHashId ?: resource?.envHashId
         }
         agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
             checkAgentInEnv(
@@ -576,27 +582,37 @@ class PipelineBuildService(
     }
 
     /**
-     * 重跑历史构建时可以沿用的原机器，没有则返回 null。
+     * 重跑历史构建时沿用的原机器。
      *
-     * 只在重新执行、重放这两种「把某一次重跑一遍」的操作上生效，两者都带着被重跑构建的标记；
+     * 只在重新执行、重放这两种「把某一次重跑一遍」的操作上生效。
+     * 重新执行的标记由重试服务写入参数表；重放的标记只由 buildManualStartup 的 replayOriginBuildId 写入，
+     * 启动请求里自带的同名变量不算。
      * 普通启动即使在参数里塞了节点也不认，否则绑定单台机器的「执行对象不可改派」就被绕过去了。
-     * 机器已被删除或释放时返回 null，由调用方回落到当前设置。
+     * 不是重跑、或者这次构建没有记下原机器时返回 null，由调用方按当前设置换算。
+     * 原机器已被删除或释放时直接拒绝，不改跑当前设置里的那台。
+     * 查询异常原样抛出，不当成机器已释放，也不回落到当前设置。
      */
     private fun InitParamContext.reusableOriginAgentId(startedAgentId: String?): String? {
-        val agentId = startedAgentId?.takeIf(String::isNotBlank) ?: return null
-        val replaying = startValues?.get(PIPELINE_REPLAY_ORIGIN_BUILD_ID)?.isNotBlank() == true
+        val replaying = pipelineParamMap[PIPELINE_REPLAY_ORIGIN_BUILD_ID]?.value?.toString()
+            ?.isNotBlank() == true
         val retrying = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString()?.isNotBlank() == true
         if (!replaying && !retrying) return null
-        return try {
-            agentId.takeIf {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentById(pipeline.projectId, it).data != null
-            }
+        val agentId = startedAgentId?.takeIf(String::isNotBlank) ?: return null
+        val stillThere = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .getAgentById(pipeline.projectId, agentId).data != null
         } catch (ignored: Exception) {
-            // 查不动就当原机器不可用，回落到当前设置，不能因为一次查询异常把重跑整个挡住
             logger.warn("check origin agent failed|${pipeline.projectId}|$agentId", ignored)
-            null
+            throw ignored
         }
+        if (stillThere) return agentId
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+            params = arrayOf(
+                runtimeResourceResolver.getNodeName(pipeline.projectId, pipelineAuthorizer ?: userId, agentId)
+                    ?: agentId
+            )
+        )
     }
 
     /**
@@ -605,7 +621,7 @@ class PipelineBuildService(
      * 节点由触发方选定，环境来自流水线设置或原事件，两者会随时间脱节：节点被移出环境后，
      * 重新执行、重放事件仍会带着这个节点启动，构建就跑在了一台已经不属于该运行资源的机器上。
      *
-     * 查得到环境节点就按结果判定：节点不在列表里一律拒绝，包括环境已被清空或删除导致列表为空的情况，
+     * 查得到归属结论就按结果判定：不属于该环境一律拒绝，包括环境已被清空或删除的情况，
      * 这正是「快照里的环境已经不存在了」要拦住的场景。
      * 只有查询本身失败（环境服务异常等）才放行，那时拿不到任何证据，不能反过来判定节点不合法。
      */
@@ -617,12 +633,13 @@ class PipelineBuildService(
     ) {
         val targetEnvHashId = envHashId?.takeIf(String::isNotBlank) ?: return
         val authUserId = ctx.pipelineAuthorizer ?: ctx.userId
-        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsOrNull(
+        val stillInEnv = runtimeResourceResolver.agentStillInEnvOrNull(
             projectId = ctx.pipeline.projectId,
             userId = authUserId,
-            envHashId = targetEnvHashId
+            envHashId = targetEnvHashId,
+            agentHashId = agentId
         ) ?: return
-        if (envAgentIds.contains(agentId)) return
+        if (stillInEnv) return
         // 报错给人看，要的是环境名称。设置里的名字只在校验的就是设置里那个环境时才可信，
         // 用历史构建带来的环境校验时按 hashId 现查；环境已被删除等查不到名字的情况才退回展示 hashId
         val envName = resourceName ?: runtimeResourceResolver.getEnvName(

@@ -61,54 +61,91 @@ class RuntimeResourceResolver(
         projectId: String,
         userId: String,
         resource: RuntimeResource
-    ): String? = if (resource.group) {
-        null
-    } else {
-        resource.workspaceName?.let { resolveAgentHashIdByWorkspaceName(projectId, userId, it) }
-    }
+    ): String? = resolveSingleAgent(projectId, userId, resource).agentHashId
 
-    /** 数字分身 / 云桌面：工作空间名（avatar-id、desktop-id）唯一对应一台构建机 */
-    fun resolveAgentHashIdByWorkspaceName(
+    /**
+     * 同 [resolveAgentHashId]，但把「这台机器确实没了」和「这次没问到」区分开，
+     * 判定资源是否已释放必须用它：查询失败时 [SingleAgentResolveResult.queried] 为 false，
+     * 不能据此断定机器不存在，否则环境服务抖动会把正常的发布挡下来。
+     */
+    fun resolveSingleAgent(
         projectId: String,
         userId: String,
-        workspaceName: String
-    ): String? = try {
-        client.get(ServiceNodeResource::class).getNodeAgentDetailByWorkspaceName(
-            userId = userId,
-            projectId = projectId,
-            workspaceName = workspaceName
-        ).data?.agentHashId
-    } catch (ignored: Exception) {
-        logger.warn("resolve agent by workspace name failed|$projectId|$workspaceName", ignored)
-        null
+        resource: RuntimeResource
+    ): SingleAgentResolveResult {
+        if (resource.group) return SingleAgentResolveResult(queried = true, agentHashId = null)
+        val workspaceName = resource.workspaceName
+            ?: return SingleAgentResolveResult(queried = true, agentHashId = null)
+        return try {
+            SingleAgentResolveResult(
+                queried = true,
+                agentHashId = client.get(ServiceNodeResource::class).getNodeAgentDetailByWorkspaceName(
+                    userId = userId,
+                    projectId = projectId,
+                    workspaceName = workspaceName
+                ).data?.agentHashId?.takeIf(String::isNotBlank)
+            )
+        } catch (ignored: Exception) {
+            logger.warn("resolve agent by workspace name failed|$projectId|$workspaceName", ignored)
+            SingleAgentResolveResult(queried = false, agentHashId = null)
+        }
     }
 
-    /** 数字分身环境 / 云桌面环境：列出环境下所有可用节点，供触发方挑选要执行的那一台 */
+    /** 单体运行资源的解析结果，[queried] 为 false 表示这次没问到结论 */
+    data class SingleAgentResolveResult(
+        val queried: Boolean,
+        val agentHashId: String?
+    )
+
+    /**
+     * 数字分身环境 / 云桌面环境：列出环境下该用户可用的节点，供触发方挑选要执行的那一台。
+     *
+     * 结果按节点使用权限过滤：选出来的节点是要拿去启动构建的，挑一台用不了的机器只会在启动时失败。
+     * 判断某台机器是不是还属于这个环境请用 [agentStillInEnvOrNull]，两者口径不同。
+     *
+     * 默认取全量，只在定时触发要逐台启动时才需要。只要一台时请传页码，不要为挑一台拉回整个环境。
+     */
     fun listEnvAgentHashIds(
         projectId: String,
         userId: String,
-        envHashId: String
-    ): List<String> = listEnvAgentHashIdsOrNull(projectId, userId, envHashId) ?: emptyList()
-
-    /**
-     * 同 [listEnvAgentHashIds]，但把「这个环境里没有可用节点」和「这次问不到」区分开：
-     * 返回空列表代表环境确实没有该节点（环境被清空，或环境本身已被删除），
-     * 返回 null 代表查询本身失败，拿不到任何结论。
-     *
-     * 校验节点归属要靠这个区分：空列表是「这台机器不属于该环境」的证据，必须拒绝执行；
-     * 查询失败不能反过来判定节点不合法，否则环境服务抖动会把正常构建拦死。
-     */
-    fun listEnvAgentHashIdsOrNull(
-        projectId: String,
-        userId: String,
-        envHashId: String
-    ): List<String>? = try {
+        envHashId: String,
+        page: Int = ALL_PAGE,
+        pageSize: Int? = null
+    ): List<String> = try {
         client.get(ServiceEnvironmentResource::class).listNodesByEnvIdsNew(
             projectId = projectId,
             envHashIds = listOf(envHashId),
             userId = userId,
-            page = -1
-        ).data?.records?.mapNotNull { it.agentHashId?.takeIf(String::isNotBlank) }
+            page = page,
+            pageSize = pageSize
+        ).data?.records?.mapNotNull { it.agentHashId?.takeIf(String::isNotBlank) }.orEmpty()
+    } catch (ignored: Exception) {
+        logger.warn("list env node failed|$projectId|$envHashId", ignored)
+        emptyList()
+    }
+
+    /**
+     * 列出环境下的全部节点，不按节点使用权限过滤，把「环境是空的」和「这次问不到」区分开：
+     * 返回空列表代表环境确实没有节点（环境被清空，或环境本身已被删除），
+     * 返回 null 代表查询本身失败，拿不到任何结论。
+     *
+     * 发布校验用它：一次要同时判断环境有没有节点、以及定时触发勾选的那几台还在不在，
+     * 拿一份列表比逐台去问更划算。发布是低频操作，不在启动热路径上。
+     * 启动链路只判断一台机器的归属，用 [agentStillInEnvOrNull]。
+     *
+     * 这里不能用 [listEnvAgentHashIds]：归属是客观事实，与查询人有没有这台机器的使用权无关，
+     * 用带权限过滤的列表反推，会把「授权人没有该节点使用权」误判成「节点已被移出环境」。
+     */
+    fun listEnvAgentHashIdsForCheckOrNull(
+        projectId: String,
+        userId: String,
+        envHashId: String
+    ): List<String>? = try {
+        client.get(ServiceNodeResource::class).listRawEnvAgentHashIds(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId
+        ).data?.filter { it.isNotBlank() }
     } catch (ignored: RemoteServiceException) {
         // 跨服务调用：环境服务的错误码被网关转成了数值
         envNotExistsOrNull(ignored.errorCode == ENV_NOT_EXISTS_CODE, projectId, envHashId, ignored)
@@ -119,6 +156,41 @@ class RuntimeResourceResolver(
         )
     } catch (ignored: Exception) {
         logger.warn("list env node failed|$projectId|$envHashId", ignored)
+        null
+    }
+
+    /**
+     * 判断某台构建机是否仍属于这个环境，与 [listEnvAgentHashIdsForCheckOrNull] 同口径，
+     * 但只问这一台的归属，不把环境下的全部节点拉回来再在内存里找。
+     *
+     * 启动链路每次构建都要判一次，定时触发还会按勾选的节点逐台启动，
+     * 用全量列表反推的代价会随环境规模线性放大，这里固定只查这一台。
+     *
+     * 返回 false 代表这台机器确实不属于该环境（含环境已被删除），必须拒绝执行；
+     * 返回 null 代表查询本身失败，拿不到结论，由调用方放行。
+     */
+    fun agentStillInEnvOrNull(
+        projectId: String,
+        userId: String,
+        envHashId: String,
+        agentHashId: String
+    ): Boolean? = try {
+        client.get(ServiceNodeResource::class).checkEnvAgentExists(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId,
+            agentHashId = agentHashId
+        ).data
+    } catch (ignored: RemoteServiceException) {
+        // 跨服务调用：环境服务的错误码被网关转成了数值
+        agentNotInEnvOrNull(ignored.errorCode == ENV_NOT_EXISTS_CODE, projectId, envHashId, ignored)
+    } catch (ignored: ErrorCodeException) {
+        // 同进程直接调用到环境服务的实现时，拿到的是原始异常
+        agentNotInEnvOrNull(
+            ignored.errorCode == EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS, projectId, envHashId, ignored
+        )
+    } catch (ignored: Exception) {
+        logger.warn("check env agent failed|$projectId|$envHashId|$agentHashId", ignored)
         null
     }
 
@@ -211,8 +283,27 @@ class RuntimeResourceResolver(
         null
     }
 
+    /**
+     * 环境已被删除时按「这台机器不属于该环境」处理，口径同 [envNotExistsOrNull]；其余错误按查询失败处理（null）。
+     */
+    private fun agentNotInEnvOrNull(
+        envNotExists: Boolean,
+        projectId: String,
+        envHashId: String,
+        cause: Exception
+    ): Boolean? = if (envNotExists) {
+        logger.warn("env not exists|$projectId|$envHashId")
+        false
+    } else {
+        logger.warn("check env agent failed|$projectId|$envHashId", cause)
+        null
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RuntimeResourceResolver::class.java)
+
+        /** [listEnvAgentHashIds] 取全量节点时的页码约定，见 EnvService.listAllEnvNodesNew */
+        const val ALL_PAGE = -1
 
         /** 环境服务返回的「环境不存在」错误码，经网关后以数值形式出现在 [RemoteServiceException] 上 */
         private val ENV_NOT_EXISTS_CODE = EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS.toInt()

@@ -189,6 +189,38 @@ class CreateStreamTriggerSupportService constructor(
         }
     }
 
+    /**
+     * 取创作流可执行的一台构建机，用于「只需要一台」的场景。
+     *
+     * 不走 [getRuntimeResourceNodeList]：那是为定时触发逐台启动准备的全量列表，
+     * 只为挑一台就把环境下的节点全部拉回来，环境一大每次 webhook 触发都要付这份代价。
+     * 这里只取第一页，页内没有可用机器时才退回全量查询，保证结论和原来完全一致。
+     */
+    private fun resolveOneRuntimeResourceNode(
+        pipelineInfo: PipelineInfo,
+        pipelineSetting: PipelineSetting,
+        userId: String
+    ): String? {
+        if (pipelineInfo.channelCode != ChannelCode.CREATIVE_STREAM) return null
+        val projectId = pipelineInfo.projectId
+        val resource = pipelineSetting.runtimeResource() ?: run {
+            logger.warn("pipeline[${pipelineInfo.pipelineId}] runtime resource not configured")
+            return null
+        }
+        if (!resource.group) {
+            return runtimeResourceResolver.resolveAgentHashId(projectId, userId, resource)
+        }
+        val envHashId = resource.envHashId ?: return null
+        return runtimeResourceResolver.listEnvAgentHashIds(
+            projectId = projectId,
+            userId = userId,
+            envHashId = envHashId,
+            page = 1,
+            pageSize = FIRST_NODE_PAGE_SIZE
+        ).firstOrNull()
+            ?: runtimeResourceResolver.listEnvAgentHashIds(projectId, userId, envHashId).firstOrNull()
+    }
+
     fun externalWebhookStartParams(
         pipelineInfo: PipelineInfo,
         userId: String
@@ -205,15 +237,16 @@ class CreateStreamTriggerSupportService constructor(
             pipelineId = pipelineId
         )?.let {
             val resource = it.runtimeResource()
-            val list = getRuntimeResourceNodeList(
+            // 环境资源现阶段取环境下的第一个节点，后续根据实际需求进行调整
+            val agentHashId = resolveOneRuntimeResourceNode(
                 pipelineInfo = pipelineInfo,
                 pipelineSetting = it,
                 userId = userId
-            ) ?: listOf()
-            logger.info(
-                "creative stream pipeline[$pipelineId] resolved nodes from resource[$resource]: $list"
             )
-            if (list.isEmpty()) {
+            logger.info(
+                "creative stream pipeline[$pipelineId] resolved node from resource[$resource]: $agentHashId"
+            )
+            if (agentHashId.isNullOrBlank()) {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.BK_CREATIVE_STREAM_ENV_NODE_IS_EMPTY,
@@ -221,11 +254,10 @@ class CreateStreamTriggerSupportService constructor(
                     )
                 )
             }
-            // 环境资源现阶段取环境下的第一个节点，后续根据实际需求进行调整
             externalStartParams.putAll(
                 creativeStreamParams(
                     projectId = projectId,
-                    agentHashId = list.first(),
+                    agentHashId = agentHashId,
                     userId = userId
                 )
             )
@@ -235,5 +267,8 @@ class CreateStreamTriggerSupportService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CreateStreamTriggerSupportService::class.java)
+
+        /** 只需要一台构建机时的首页大小，页内全无可用机器才回退到全量查询 */
+        private const val FIRST_NODE_PAGE_SIZE = 20
     }
 }

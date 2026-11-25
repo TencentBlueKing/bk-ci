@@ -293,6 +293,9 @@ class PipelineBuildRetryService @Autowired constructor(
      * 单体资源换绑不在这里拦，启动时仍用原构建那台机器。
      * 节点只是被移出环境或机器被删除也放行，由启动流程报更具体的原因。
      * 判定见 [RuntimeResourceResolver.stillMatchRuntimeResource]。
+     *
+     * 只拦已结束构建的重跑。构建还在跑时的局部重试是在补完这一次执行，机器已经占住了，
+     * 不能因为流水线期间改绑了别的环境就把它拦死，那会让正在跑的构建再也无法继续。
      */
     private fun checkRuntimeResourceStillMatch(
         userId: String,
@@ -301,6 +304,7 @@ class PipelineBuildRetryService @Autowired constructor(
         buildInfo: BuildInfo
     ) {
         if (buildInfo.channelCode != ChannelCode.CREATIVE_STREAM) return
+        if (!buildInfo.isFinish()) return
         val startParameters = buildInfo.buildParameters
             ?.associate { it.key to it.value.toString() } ?: return
         val stillMatch = runtimeResourceResolver.stillMatchRuntimeResource(

@@ -68,6 +68,25 @@ class ServiceNodeResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
+    override fun listRawEnvAgentHashIds(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): Result<List<String>> {
+        return Result(envService.listRawEnvAgentHashIds(projectId, envHashId))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun checkEnvAgentExists(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        agentHashId: String
+    ): Result<Boolean> {
+        return Result(envService.checkEnvAgentExists(projectId, envHashId, agentHashId))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeByNodeType(projectId: String, nodeType: NodeType): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByNodeType("", projectId, nodeType))
     }

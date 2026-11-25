@@ -475,11 +475,15 @@ class PipelineBuildFacadeService(
         triggerReviewers: List<String>? = null,
         version: Int? = null,
         imateSessionId: String? = null,
-        branch: String? = null
+        branch: String? = null,
+        replayOriginBuildId: String? = null
     ): BuildId {
+        // 重放标记只认本方法的 replayOriginBuildId。用户在启动参数里自带同名变量不能算重放，
+        // 否则单体运行资源「普通启动不可改派」会被这个标记绕过去
+        val startupValues = values - PIPELINE_REPLAY_ORIGIN_BUILD_ID
         val mergedValues = imateSessionId?.takeIf { it.isNotBlank() }?.let {
-            values + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
-        } ?: values
+            startupValues + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
+        } ?: startupValues
         logger.info(
             "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $mergedValues " +
                     "and version[${version ?: branch}]"
@@ -625,6 +629,11 @@ class PipelineBuildFacadeService(
             mergedValues[PIPELINE_REPLAY_ORIGIN_TASK_ID]?.takeIf { it.isNotBlank() }?.let {
                 paramMap[PIPELINE_REPLAY_ORIGIN_TASK_ID] = BuildParameters(
                     key = PIPELINE_REPLAY_ORIGIN_TASK_ID, value = it, readOnly = true
+                )
+            }
+            replayOriginBuildId?.takeIf { it.isNotBlank() }?.let {
+                paramMap[PIPELINE_REPLAY_ORIGIN_BUILD_ID] = BuildParameters(
+                    key = PIPELINE_REPLAY_ORIGIN_BUILD_ID, value = it, readOnly = true
                 )
             }
 
@@ -3138,15 +3147,16 @@ class PipelineBuildFacadeService(
         // 与重新执行同口径，触发来源不因重放而改变。
         // 子流水线触发例外：父构建的上下文无法复现，按手动执行处理
         val replayStartType = if (startType == StartType.PIPELINE) StartType.MANUAL else startType
-        // 标记这是在重跑哪个构建：单体运行资源据此沿用原构建那台机器，而不是改按当前设置换算
-        startParameters[PIPELINE_REPLAY_ORIGIN_BUILD_ID] = buildId
+        // 原构建若是重放产生的，启动参数里会带上一次的重放标记。先去掉，避免和这次要写的标记混在一起
+        startParameters.remove(PIPELINE_REPLAY_ORIGIN_BUILD_ID)
         val replayBuildId = buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = buildInfo.channelCode,
             values = startParameters,
-            startType = replayStartType
+            startType = replayStartType,
+            replayOriginBuildId = buildId
         )
         return BuildReplayResult(
             status = BuildReplayStatus.REPLAY_SUCCESS,

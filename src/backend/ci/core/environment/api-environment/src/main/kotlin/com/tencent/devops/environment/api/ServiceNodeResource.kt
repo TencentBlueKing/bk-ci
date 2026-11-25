@@ -38,6 +38,7 @@ import com.tencent.devops.environment.pojo.enums.NodeOperatorStatus
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.NodeAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -72,6 +73,42 @@ interface ServiceNodeResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<NodeAgentDetail?>
+
+    @Operation(summary = "获取环境下全部构建机的agentHashId（内部接口，不校验用户节点权限）")
+    @GET
+    @Path("/projects/{projectId}/listRawEnvAgentHashIds")
+    fun listRawEnvAgentHashIds(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = true)
+        @QueryParam("envHashId")
+        @BkField(required = true)
+        envHashId: String
+    ): Result<List<String>>
+
+    @Operation(summary = "判断构建机是否属于该环境（内部接口，不校验用户节点权限）")
+    @GET
+    @Path("/projects/{projectId}/checkEnvAgentExists")
+    fun checkEnvAgentExists(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境hashId", required = true)
+        @QueryParam("envHashId")
+        @BkField(required = true)
+        envHashId: String,
+        @Parameter(description = "构建机agentHashId", required = true)
+        @QueryParam("agentHashId")
+        @BkField(required = true)
+        agentHashId: String
+    ): Result<Boolean>
 
     @Operation(summary = "获取用户有权限使用的服务器列表")
     @GET

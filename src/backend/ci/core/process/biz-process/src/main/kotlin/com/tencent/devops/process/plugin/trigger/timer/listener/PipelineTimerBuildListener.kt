@@ -279,8 +279,8 @@ class PipelineTimerBuildListener @Autowired constructor(
         scope: String?,
         reasonDetail: PipelineTriggerReasonDetail
     ) {
+        val notifyKey = triggerNotifyKey(taskId, scope)
         try {
-            val notifyKey = triggerNotifyKey(taskId, scope)
             if (!redisOperation.setIfAbsent(
                     key = notifyKey,
                     value = LocalDateTime.now().toString(),
@@ -317,6 +317,8 @@ class PipelineTimerBuildListener @Autowired constructor(
             }
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         } catch (ignored: Throwable) {
+            // 限频标记是在发送前占的，这次没发出去就要放掉，否则这一天都不会再提醒
+            redisOperation.delete(notifyKey)
             logger.warn("[$pipelineId]|notify timer trigger failed error|taskId=$taskId", ignored)
         }
     }

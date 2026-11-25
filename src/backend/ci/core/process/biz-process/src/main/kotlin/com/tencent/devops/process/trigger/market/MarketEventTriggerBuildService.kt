@@ -333,7 +333,8 @@ class MarketEventTriggerBuildService @Autowired constructor(
         ).apply {
             // 重放要以原构建的运行资源执行：节点本就取自原事件，环境也必须一并带上，
             // 否则会按流水线当前的运行资源落到另一个环境，变成「原节点 + 新环境」。
-            // 仅重放时携带，新事件照常按流水线当前的运行资源校验，运行资源的约束不会被绕过
+            // 仅重放时携带，新事件照常按流水线当前的运行资源校验，运行资源的约束不会被绕过。
+            // 单体资源不在此列：它的执行对象由平台按设置解析，事件带来的节点无论新事件还是重放都不采纳
             if (replay && envHashId.isNotBlank()) {
                 put(NODE_ENV_HASH_ID, envHashId)
             }
