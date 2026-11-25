@@ -288,7 +288,8 @@ object LoggerService {
                 }
             }
             if (sent < snapshot.size) {
-                logger.warn("Keep ${lock.withLock { logMessages.size }} unsent logs after flush (sent=$sent/${snapshot.size})")
+                val remaining = lock.withLock { logMessages.size }
+                logger.warn("Keep $remaining unsent logs after flush (sent=$sent/${snapshot.size})")
             }
             flushAllLocalLogWriters()
             logger.info("Finish flush the log - size=${snapshot.size} sent=$sent")

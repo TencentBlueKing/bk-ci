@@ -49,8 +49,7 @@ internal abstract class BoundedLogOutputStream(
 
     @Throws(IOException::class)
     override fun write(cc: Int) {
-        val c = cc.toByte()
-        val isLineBreak = c == LF || c == CR
+        val isLineBreak = isLineBreak(cc.toByte())
         if (!isLineBreak && maxLineBytes > 0 && shouldFlushBefore(cc and 0xFF)) {
             processBuffer()
         }
@@ -69,48 +68,57 @@ internal abstract class BoundedLogOutputStream(
         val end = off + len
         var pos = off
         while (pos < end) {
-            val c = b[pos]
-            if (c == LF || c == CR) {
-                super.write(b, pos, 1)
-                pos++
-                continue
-            }
-            if (shouldFlushBefore(b[pos].toInt() and 0xFF)) {
-                processBuffer()
-            }
-            val start = pos
-            var remaining = maxLineBytes - bufferedBytes
-            if (remaining <= 0) {
-                // 正处于 UTF-8 延续字节宽限区间内，继续吸收延续字节直至边界或宽限用尽
-                val maxSlackEnd = (pos + (maxLineBytes + UTF8_CHAR_SLACK - bufferedBytes)).coerceAtMost(end)
-                while (pos < maxSlackEnd) {
-                    val cur = b[pos]
-                    if (cur == LF || cur == CR || !isUtf8Continuation(cur.toInt() and 0xFF)) {
-                        break
-                    }
-                    pos++
-                }
-                if (pos > start) {
-                    val chunk = pos - start
-                    super.write(b, start, chunk)
-                    bufferedBytes += chunk
-                }
-                if (pos < end && b[pos] != LF && b[pos] != CR) {
-                    processBuffer()
-                }
-                continue
-            }
-            val limit = (start + remaining).coerceAtMost(end)
-            while (pos < limit && b[pos] != LF && b[pos] != CR) {
-                pos++
-            }
-            val chunk = pos - start
-            if (chunk > 0) {
-                super.write(b, start, chunk)
-                bufferedBytes += chunk
-            }
+            pos = writeStep(b, pos, end)
         }
     }
+
+    private fun writeStep(b: ByteArray, start: Int, end: Int): Int {
+        if (isLineBreak(b[start])) {
+            super.write(b, start, 1)
+            return start + 1
+        }
+        if (shouldFlushBefore(b[start].toInt() and 0xFF)) {
+            processBuffer()
+        }
+        val remaining = maxLineBytes - bufferedBytes
+        if (remaining <= 0) {
+            return writeUtf8Slack(b, start, end)
+        }
+        val limit = (start + remaining).coerceAtMost(end)
+        var pos = start
+        while (pos < limit && !isLineBreak(b[pos])) {
+            pos++
+        }
+        writeChunk(b, start, pos - start)
+        return pos
+    }
+
+    /**
+     * 正处于 UTF-8 延续字节宽限区间内，继续吸收延续字节直至字符边界或宽限用尽，随后刷出。
+     */
+    private fun writeUtf8Slack(b: ByteArray, start: Int, end: Int): Int {
+        val maxSlackEnd = (start + (maxLineBytes + UTF8_CHAR_SLACK - bufferedBytes)).coerceAtMost(end)
+        var pos = start
+        while (pos < maxSlackEnd && isContinuableUtf8Byte(b[pos])) {
+            pos++
+        }
+        writeChunk(b, start, pos - start)
+        if (pos < end && !isLineBreak(b[pos])) {
+            processBuffer()
+        }
+        return pos
+    }
+
+    private fun writeChunk(b: ByteArray, start: Int, chunk: Int) {
+        if (chunk > 0) {
+            super.write(b, start, chunk)
+            bufferedBytes += chunk
+        }
+    }
+
+    private fun isLineBreak(c: Byte): Boolean = c == LF || c == CR
+
+    private fun isContinuableUtf8Byte(c: Byte): Boolean = !isLineBreak(c) && isUtf8Continuation(c.toInt() and 0xFF)
 
     override fun processBuffer() {
         val buffer = BUFFER_FIELD.get(this) as ByteArrayOutputStream
