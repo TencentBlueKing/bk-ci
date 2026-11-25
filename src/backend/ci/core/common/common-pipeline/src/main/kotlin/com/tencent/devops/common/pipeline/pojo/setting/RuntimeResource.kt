@@ -93,8 +93,13 @@ data class RuntimeResource(
             workspace: String?
         ): RuntimeResource? {
             val single = runtimeResourceType?.group == false
-            val resourceId = (if (single) runtimeResourceId else envHashId)?.takeIf { it.isNotBlank() }
-                ?: return null
+            // 单体标识应写在 runtimeResourceId。只把标识留在 envHashId 时仍按工作空间名还原：
+            // 否则定时触发认不出这是一台机器，会去列环境节点，列空后直接跳过，构建不会起来
+            val resourceId = when {
+                single -> runtimeResourceId?.takeIf { it.isNotBlank() }
+                    ?: envHashId?.takeIf { it.isNotBlank() }
+                else -> envHashId?.takeIf { it.isNotBlank() }
+            } ?: return null
             return RuntimeResource(
                 type = runtimeResourceType ?: RuntimeResourceType.AVATAR_GROUP,
                 resourceId = resourceId,

@@ -347,18 +347,29 @@ class PipelineTimerBuildListener @Autowired constructor(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
         val resource = setting.runtimeResource()
-        // 绑定单台机器：不存在「选节点」的概念，到点按当前运行资源启动一次，
+        // 绑定单台机器：不存在「选节点」的概念，到点按当前运行资源启动一次。
+        // 类型本身已经是单体时就要走这条，不能只看 runtimeResource()：标识没还原出来时它是 null，
+        // 掉进下面的环境分支会因为没有环境节点而直接返回，定时触发看起来像没生效。
         // 机器已释放等解析不出来的情况由启动流程报错，这里不提前拦
-        if (resource?.group == false) {
-            timerTriggerPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                params = params,
-                channelCode = timerChannelCode,
-                taskId = taskId
-            )
-            clearTriggerFailedMark(taskId = taskId, scope = null)
+        if (resource?.group == false || setting.runtimeResourceType?.group == false) {
+            try {
+                val buildId = timerTriggerPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    params = params,
+                    channelCode = timerChannelCode,
+                    taskId = taskId
+                )
+                if (!buildId.isNullOrBlank()) {
+                    clearTriggerFailedMark(taskId = taskId, scope = null)
+                }
+            } catch (ignored: Throwable) {
+                logger.warn("[$pipelineId]|TimerTrigger single resource failed", ignored)
+                ignored.toTriggerFailedReason()?.let {
+                    recordTriggerFailed(taskId = taskId, scope = null, reasonDetail = it)
+                }
+            }
             return
         }
         val configuredNodes = triggerElement.nodes?.takeIf {
