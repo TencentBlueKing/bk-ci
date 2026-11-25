@@ -103,25 +103,44 @@ class RuntimeResourceResolver(
      * 结果按节点使用权限过滤：选出来的节点是要拿去启动构建的，挑一台用不了的机器只会在启动时失败。
      * 判断某台机器是不是还属于这个环境请用 [agentStillInEnvOrNull]，两者口径不同。
      *
-     * 默认取全量，只在定时触发要逐台启动时才需要。只要一台时请传页码，不要为挑一台拉回整个环境。
+     * 只在定时触发要逐台启动时才需要整个环境的节点。只要一台请用 [resolveFirstEnvAgentHashId]。
      */
     fun listEnvAgentHashIds(
         projectId: String,
         userId: String,
-        envHashId: String,
-        page: Int = ALL_PAGE,
-        pageSize: Int? = null
+        envHashId: String
     ): List<String> = try {
         client.get(ServiceEnvironmentResource::class).listNodesByEnvIdsNew(
             projectId = projectId,
             envHashIds = listOf(envHashId),
             userId = userId,
-            page = page,
-            pageSize = pageSize
+            page = ALL_PAGE,
+            pageSize = null
         ).data?.records?.mapNotNull { it.agentHashId?.takeIf(String::isNotBlank) }.orEmpty()
     } catch (ignored: Exception) {
         logger.warn("list env node failed|$projectId|$envHashId", ignored)
         emptyList()
+    }
+
+    /**
+     * 取环境下该用户可用的一台构建机，供「只需要一台」的触发场景使用。
+     *
+     * 结论与 [listEnvAgentHashIds] 取第一台一致：同一套权限过滤、同样按节点表 NODE_ID 倒序，
+     * 由环境服务直接挑出这一台，不再组装整个环境的节点详情。
+     */
+    fun resolveFirstEnvAgentHashId(
+        projectId: String,
+        userId: String,
+        envHashId: String
+    ): String? = try {
+        client.get(ServiceEnvironmentResource::class).fetchEnvFirstAgentHashId(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId
+        ).data?.takeIf { it.isNotBlank() }
+    } catch (ignored: Exception) {
+        logger.warn("resolve env first agent failed|$projectId|$envHashId", ignored)
+        null
     }
 
     /**

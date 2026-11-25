@@ -194,7 +194,7 @@ class CreateStreamTriggerSupportService constructor(
      *
      * 不走 [getRuntimeResourceNodeList]：那是为定时触发逐台启动准备的全量列表，
      * 只为挑一台就把环境下的节点全部拉回来，环境一大每次 webhook 触发都要付这份代价。
-     * 这里只取第一页，页内没有可用机器时才退回全量查询，保证结论和原来完全一致。
+     * 这里让环境服务直接挑出一台，结论与取全量的第一台一致。
      */
     private fun resolveOneRuntimeResourceNode(
         pipelineInfo: PipelineInfo,
@@ -211,14 +211,11 @@ class CreateStreamTriggerSupportService constructor(
             return runtimeResourceResolver.resolveAgentHashId(projectId, userId, resource)
         }
         val envHashId = resource.envHashId ?: return null
-        return runtimeResourceResolver.listEnvAgentHashIds(
+        return runtimeResourceResolver.resolveFirstEnvAgentHashId(
             projectId = projectId,
             userId = userId,
-            envHashId = envHashId,
-            page = 1,
-            pageSize = FIRST_NODE_PAGE_SIZE
-        ).firstOrNull()
-            ?: runtimeResourceResolver.listEnvAgentHashIds(projectId, userId, envHashId).firstOrNull()
+            envHashId = envHashId
+        )
     }
 
     fun externalWebhookStartParams(
@@ -267,8 +264,5 @@ class CreateStreamTriggerSupportService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CreateStreamTriggerSupportService::class.java)
-
-        /** 只需要一台构建机时的首页大小，页内全无可用机器才回退到全量查询 */
-        private const val FIRST_NODE_PAGE_SIZE = 20
     }
 }

@@ -245,6 +245,18 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
+    override fun fetchEnvFirstAgentHashId(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): Result<String?> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(envService.fetchEnvFirstAgentHashId(userId, projectId, envHashId))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodesNew(
         userId: String,
         projectId: String,

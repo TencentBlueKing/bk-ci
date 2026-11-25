@@ -1035,45 +1035,7 @@ class EnvService @Autowired constructor(
         } else {
             emptyList()
         }
-        // 先校验环境是否存在
-        val existEnvIds = envDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            envName = null,
-            envTypeList = null,
-            noEnvTypeList = null,
-            envIds = envIds.filter { !AllCreateNodeEnv.hasId(it) }
-        ).map { it.envId }
-        val notExistEnvs = envIds.filterNot { existEnvIds.contains(it) }.toMutableList()
-        notExistEnvs.removeAll(AllCreateNodeEnv.idList())
-        if (notExistEnvs.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ERROR_ENV_NOT_EXISTS,
-                params = arrayOf(notExistEnvs.joinToString(","))
-            )
-        }
-        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
-        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }.toMutableList()
-        // 去掉内置环境
-        invalidEnvIds.removeAll(AllCreateNodeEnv.idList())
-        if (invalidEnvIds.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
-                params = arrayOf(invalidEnvIds.joinToString(","))
-            )
-        }
-        // 校验全部创作节点环境
-        if (AllCreateNodeEnv.idList().any { it in envIds.toSet() } && !authProjectApi.checkProjectManager(
-                userId,
-                pipelineAuthServiceCode,
-                projectId
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
-                params = arrayOf(invalidEnvIds.joinToString(","))
-            )
-        }
+        checkEnvNodesViewPermission(userId, projectId, envIds)
         val nodeIdMaps = fetchEnvNodes(projectId, envIds, userId).associate { it.nodeId to it.enableNode }
         val nodeList = if (-1 != page) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
@@ -1147,6 +1109,95 @@ class EnvService @Autowired constructor(
             count = count,
             records = nodeRecList
         )
+    }
+
+    /**
+     * 取环境下可执行构建的一台构建机，供「只需要一台」的场景使用。
+     *
+     * 判定口径与 [listAllEnvNodesNew] 的全量结果一致：同一套查看权限校验、同一份 [fetchEnvNodes] 节点，
+     * 只认节点表里还在的记录，按 NODE_ID 倒序取第一台装了构建机的节点。
+     * 按这个顺序逐页找，找到即返回。创作流环境的节点本身就有构建机，第一页就能命中，
+     * 不会把环境下的全部构建机再查出来。
+     */
+    override fun fetchEnvFirstAgentHashId(userId: String, projectId: String, envHashId: String): String? {
+        val envId = AllCreateNodeEnv.hashIdToId(envHashId.trim())
+            ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
+        val envIds = listOf(envId)
+        checkEnvNodesViewPermission(userId, projectId, envIds)
+        val nodeIds = fetchEnvNodes(projectId, envIds, userId).map { it.nodeId }.distinct()
+        if (nodeIds.isEmpty()) {
+            return null
+        }
+        var offset = 0
+        while (true) {
+            val nodes = nodeDao.listNodesByIdListWithPageLimit(
+                dslContext = dslContext,
+                projectId = projectId,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null,
+                limit = FIRST_AGENT_SCAN_PAGE_SIZE,
+                offset = offset,
+                nodeIds = nodeIds
+            )
+            if (nodes.isEmpty()) {
+                return null
+            }
+            val agentByNode = thirdPartyAgentDao.getAgentsByNodeIds(
+                dslContext, nodes.map { it.nodeId }, projectId
+            ).associateBy { it.nodeId }
+            nodes.firstNotNullOfOrNull { agentByNode[it.nodeId] }?.let {
+                return HashUtil.encodeLongId(it.id)
+            }
+            if (nodes.size < FIRST_AGENT_SCAN_PAGE_SIZE) {
+                return null
+            }
+            offset += nodes.size
+        }
+    }
+
+    /** 环境节点查询的统一准入：环境要存在、要有查看权限，预置「全部创作节点」环境还要求项目管理员。 */
+    private fun checkEnvNodesViewPermission(userId: String, projectId: String, envIds: List<Long>) {
+        // 先校验环境是否存在
+        val existEnvIds = envDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envName = null,
+            envTypeList = null,
+            noEnvTypeList = null,
+            envIds = envIds.filter { !AllCreateNodeEnv.hasId(it) }
+        ).map { it.envId }
+        val notExistEnvs = envIds.filterNot { existEnvIds.contains(it) }.toMutableList()
+        notExistEnvs.removeAll(AllCreateNodeEnv.idList())
+        if (notExistEnvs.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_ENV_NOT_EXISTS,
+                params = arrayOf(notExistEnvs.joinToString(","))
+            )
+        }
+        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
+        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }.toMutableList()
+        // 去掉内置环境
+        invalidEnvIds.removeAll(AllCreateNodeEnv.idList())
+        if (invalidEnvIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
+                params = arrayOf(invalidEnvIds.joinToString(","))
+            )
+        }
+        // 校验全部创作节点环境
+        if (AllCreateNodeEnv.idList().any { it in envIds.toSet() } && !authProjectApi.checkProjectManager(
+                userId,
+                pipelineAuthServiceCode,
+                projectId
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
+                params = arrayOf(invalidEnvIds.joinToString(","))
+            )
+        }
     }
 
     @ActionAuditRecord(
@@ -2546,5 +2597,8 @@ class EnvService @Autowired constructor(
         /** 创作节点可被环境选用的 Agent 状态，与 ThirdPartyAgentDao.fetchCreateAgent 的筛选保持一致 */
         private val CREATE_ENV_AGENT_STATUS =
             setOf(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status)
+
+        /** [fetchEnvFirstAgentHashId] 顺着节点表往下找第一台构建机时，每页扫描的节点数 */
+        private const val FIRST_AGENT_SCAN_PAGE_SIZE = 20
     }
 }
