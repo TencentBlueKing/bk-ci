@@ -174,10 +174,7 @@ class GithubReviewTriggerHandler @Autowired constructor(
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         // PR 相关启动参数
-        val prStartParam = WebhookUtils.prStartParam(
-            pullRequest = event.pullRequest,
-            homepage = event.repository.homepage
-        )
+        val prStartParam = WebhookUtils.prStartParam(pullRequest = event.pullRequest)
         startParams.putAll(prStartParam)
         with(event.review) {
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = id
