@@ -28,12 +28,14 @@
 package com.tencent.devops.common.pipeline.utils
 
 /**
- * 将插件运行时产出写回 record.taskVar.data.output。
- * 只覆盖编排已声明的 output key，不改 input，也不写入 jobs.*.steps.*.outputs.* 上下文变量。
+ * 将插件运行时产出写回 record.taskVar.data.outputValues。
+ * 只采集编排已声明的 output key，保留 data.output 原始类型声明与 input 不变，
+ * 也不写入 jobs.*.steps.*.outputs.* 上下文变量。
  */
 object RecordTaskOutputUtils {
     const val DATA = "data"
     const val OUTPUT = "output"
+    const val OUTPUT_VALUES = "outputValues"
     const val NAMESPACE = "namespace"
     const val SENSITIVE_MASK = "******"
 
@@ -76,7 +78,7 @@ object RecordTaskOutputUtils {
     ) {
         if (outputValues.isEmpty()) return
         val data = copyDataMap(existingTaskVar[DATA] ?: target[DATA])
-        data[OUTPUT] = outputValues
+        data[OUTPUT_VALUES] = outputValues
         target[DATA] = data
     }
 

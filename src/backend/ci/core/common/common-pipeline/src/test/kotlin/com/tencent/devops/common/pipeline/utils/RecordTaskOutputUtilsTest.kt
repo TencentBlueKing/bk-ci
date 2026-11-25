@@ -104,17 +104,21 @@ class RecordTaskOutputUtilsTest {
     }
 
     @Test
-    fun mergeKeepsInputOrchestrationValue() {
+    fun mergeKeepsInputAndOutputSchemaIntact() {
         val taskVar = mutableMapOf<String, Any>()
         RecordTaskOutputUtils.mergeOutputValues(
             target = taskVar,
             existingTaskVar = emptyMap(),
             outputValues = mapOf("BK_CI_GIT_REPO_URL" to "https://example.com/group/demo.git")
         )
+        val outputSchema = mutableMapOf<String, Any>(
+            "BK_CI_GIT_REPO_URL" to mutableMapOf("type" to "string", "description" to "repo url"),
+            "BK_CI_GIT_REPO_NAME" to mutableMapOf("type" to "string", "description" to "repo name")
+        )
         val base = mutableMapOf<String, Any>(
             "data" to mutableMapOf(
                 "input" to mutableMapOf("repositoryUrl" to "\${{variables.repo}}"),
-                "output" to mutableMapOf("BK_CI_GIT_REPO_URL" to "string"),
+                "output" to outputSchema,
                 "namespace" to ""
             )
         )
@@ -125,9 +129,13 @@ class RecordTaskOutputUtilsTest {
         val input = data["input"] as Map<String, Any>
         @Suppress("UNCHECKED_CAST")
         val output = data["output"] as Map<String, Any>
+        @Suppress("UNCHECKED_CAST")
+        val outputValues = data[RecordTaskOutputUtils.OUTPUT_VALUES] as Map<String, Any>
         assertEquals("\${{variables.repo}}", input["repositoryUrl"])
         assertEquals("", data["namespace"])
-        assertEquals("https://example.com/group/demo.git", output["BK_CI_GIT_REPO_URL"])
+        assertEquals(mapOf("type" to "string", "description" to "repo url"), output["BK_CI_GIT_REPO_URL"])
+        assertEquals(mapOf("type" to "string", "description" to "repo name"), output["BK_CI_GIT_REPO_NAME"])
+        assertEquals("https://example.com/group/demo.git", outputValues["BK_CI_GIT_REPO_URL"])
     }
 
     private fun marketTaskParams(

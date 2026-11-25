@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -47,6 +48,7 @@ import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.log.LogSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_LOG_ARCHIVE_FAILED_NOTICE
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -82,8 +84,6 @@ object LoggerService {
     private const val BATCH_RECOVER_COOLDOWN_MS = 30_000L
     private const val BACKPRESSURE_WARN_INTERVAL_MS = 5_000L
     private const val MIN_IDLE_WAIT_MS = 50L
-    private const val ARCHIVE_FAIL_NOTICE =
-        "日志归档到制品库失败，完整日志未能保存。下载只能获取已上报到日志服务的部分内容。"
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
@@ -945,29 +945,37 @@ object LoggerService {
 
     private fun markArchiveFailed(property: TaskBuildLogProperty, reason: String) {
         property.logStorageMode = LogStorageMode.ARCHIVE_FAILED
-        appendArchiveFailureNotice(property, reason)
-        reportArchiveFailureLine(property.elementId, reason)
+        val safeReason = LoggerUploadBatch.sanitizeArchiveFailureReason(reason)
+        val notice = buildArchiveFailNotice(safeReason)
+        appendArchiveFailureNotice(property, notice)
+        reportArchiveFailureLine(property.elementId, notice)
     }
 
-    private fun appendArchiveFailureNotice(property: TaskBuildLogProperty, reason: String) {
+    private fun buildArchiveFailNotice(safeReason: String): String {
+        val base = MessageUtil.getMessageByLocale(
+            messageCode = BK_LOG_ARCHIVE_FAILED_NOTICE,
+            language = AgentEnv.getLocaleLanguage()
+        ).ifBlank { BK_LOG_ARCHIVE_FAILED_NOTICE }
+        return if (safeReason.isBlank()) base else "$base ($safeReason)"
+    }
+
+    private fun appendArchiveFailureNotice(property: TaskBuildLogProperty, notice: String) {
         try {
             val dateTime = localLogTimeFormatter.format(Instant.now())
-            property.logFile.appendText(
-                "$dateTime : $LOG_WARN_FLAG$ARCHIVE_FAIL_NOTICE ($reason)\n"
-            )
+            property.logFile.appendText("$dateTime : $LOG_WARN_FLAG$notice\n")
         } catch (ignored: Exception) {
             logger.warn("Fail to append archive-failed notice to ${property.logFile}", ignored)
         }
     }
 
-    private fun reportArchiveFailureLine(elementId: String, reason: String) {
+    private fun reportArchiveFailureLine(elementId: String, notice: String) {
         try {
             val ctx = effectiveContext()
             logResourceApi.addLogMultiLine(
                 buildVariables?.buildId ?: "",
                 listOf(
                     LogMessage(
-                        message = "$LOG_WARN_FLAG$ARCHIVE_FAIL_NOTICE ($reason)",
+                        message = "$LOG_WARN_FLAG$notice",
                         timestamp = System.currentTimeMillis(),
                         tag = elementId,
                         containerHashId = ctx.containerHashId,

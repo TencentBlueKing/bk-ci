@@ -35,7 +35,7 @@ class LogPanelQueryBuilderTest {
         assertEquals(1000, LogPanelQueryBuilder.normalizePageSize(null))
         assertEquals(1, LogPanelQueryBuilder.normalizePageSize(0))
         assertEquals(1000, LogPanelQueryBuilder.normalizePageSize(9999))
-        assertEquals(3000, LogPanelQueryBuilder.BACKFILL_MAX)
+        assertEquals(1000, LogPanelQueryBuilder.BACKFILL_MAX)
         assertEquals(15_000L, LogPanelQueryBuilder.normalizeLookbackMs(null))
         assertEquals(0L, LogPanelQueryBuilder.normalizeLookbackMs(-1))
         assertEquals(60_000L, LogPanelQueryBuilder.normalizeLookbackMs(999_000))
@@ -61,7 +61,7 @@ class LogPanelQueryBuilderTest {
         val window = (1..4000).map { line(it.toLong(), 10_000L + it, "line-$it") }
         val selected = LogPanelQueryBuilder.selectBackfillNearCursor(window)
         assertEquals(LogPanelQueryBuilder.BACKFILL_MAX, selected.size)
-        assertEquals(1001L, selected.first().lineNo)
+        assertEquals(3001L, selected.first().lineNo)
         assertEquals(4000L, selected.last().lineNo)
         assertTrue(selected.any { it.lineNo == 3990L })
         assertFalse(selected.any { it.lineNo == 1L })
@@ -70,29 +70,20 @@ class LogPanelQueryBuilderTest {
     }
 
     @Test
-    fun backfillPrefersTimestampNearCursorOverSmallerLineNo() {
-        val older = (1..1000).map { line(it.toLong(), it.toLong(), "old-$it") }
-        val late = line(50, 50_000L, "late-near-cursor")
-        val selected = LogPanelQueryBuilder.selectBackfillNearCursor(older + late, limit = 100)
-        assertTrue(selected.any { it.message == "late-near-cursor" })
-        assertEquals("late-near-cursor", selected.last().message)
-    }
-
-    @Test
-    fun backfillSameTimestampPrefersHigherLineNo() {
+    fun backfillOrdersByLineNoMatchingCursorEvenWhenTimestampsInterleave() {
         val lines = listOf(
-            line(1, 100, "a"),
-            line(2, 100, "b"),
-            line(3, 100, "c")
+            line(10, 50_000L, "early-line-late-ts"),
+            line(95, 10_000L, "near-cursor-95"),
+            line(100, 10_001L, "near-cursor-100")
         )
         val selected = LogPanelQueryBuilder.selectBackfillNearCursor(lines, limit = 2)
-        assertEquals(listOf(2L, 3L), selected.map { it.lineNo })
+        assertEquals(listOf(95L, 100L), selected.map { it.lineNo })
     }
 
     @Test
     fun mergeByLineNoInsertsLateVisibleRowsInOrder() {
         val shown = line(11834, 2000, "fetch-764")
-        val late = line(11831, 1500, "finish-dist")
+        val late = line(11831, 2500, "finish-dist")
         val newer = line(11835, 2100, "fetch-765")
         val merged = LogPanelQueryBuilder.mergeByLineNo(listOf(shown, newer, late, shown))
         assertEquals(listOf(11831L, 11834L, 11835L), merged.map { it.lineNo })
@@ -113,9 +104,12 @@ class LogPanelQueryBuilderTest {
     }
 
     @Test
-    fun cleanedMessageForExpiredIndex() {
-        assertEquals("构建日志已超过保留期，已被清理，无法查看。", LogPanelQueryBuilder.cleanedMessage(2))
-        assertEquals("构建日志已超过保留期，已被清理，无法查看。", LogPanelQueryBuilder.cleanedMessage(3))
-        assertEquals(null, LogPanelQueryBuilder.cleanedMessage(0))
+    fun cleanedMessageDelegatesToI18nForExpiredIndex() {
+        assertTrue(LogPanelQueryBuilder.isCleanedStatus(2))
+        assertTrue(LogPanelQueryBuilder.isCleanedStatus(3))
+        assertFalse(LogPanelQueryBuilder.isCleanedStatus(0))
+        assertEquals("i18n-cleaned", LogPanelQueryBuilder.cleanedMessage(2) { "i18n-cleaned" })
+        assertEquals("i18n-cleaned", LogPanelQueryBuilder.cleanedMessage(3) { "i18n-cleaned" })
+        assertEquals(null, LogPanelQueryBuilder.cleanedMessage(0) { "i18n-cleaned" })
     }
 }

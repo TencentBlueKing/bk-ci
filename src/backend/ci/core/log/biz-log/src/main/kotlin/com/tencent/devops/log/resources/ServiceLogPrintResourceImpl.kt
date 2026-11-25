@@ -57,6 +57,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         return buildLogPrintService.asyncDispatchEvent(
             LogOriginEvent(buildId, listOf(logMessage), projectId = projectId, pipelineId = pipelineId)
         )
@@ -72,6 +73,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         buildLogPrintService.asyncDispatchEvent(
             LogOriginEvent(buildId, logMessages, projectId = projectId, pipelineId = pipelineId)
         )
@@ -97,9 +99,11 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         }
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
-        if (!ownerProjectId.isNullOrBlank() && !ownerPipelineId.isNullOrBlank()) {
-            logProjectIdResolver.assignIfAbsent(buildId, ownerProjectId, ownerPipelineId)
-        }
+        recordBuildOwnerIfPresent(
+            buildId = buildId,
+            projectId = ownerProjectId?.takeIf { it.isNotBlank() } ?: projectId,
+            pipelineId = ownerPipelineId?.takeIf { it.isNotBlank() } ?: pipelineId
+        )
         buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
@@ -135,6 +139,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
@@ -151,6 +156,12 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    private fun recordBuildOwnerIfPresent(buildId: String, projectId: String?, pipelineId: String?) {
+        if (!projectId.isNullOrBlank() && !pipelineId.isNullOrBlank()) {
+            logProjectIdResolver.assignIfAbsent(buildId, projectId, pipelineId)
+        }
     }
 
     companion object {

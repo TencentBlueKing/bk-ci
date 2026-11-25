@@ -3,6 +3,8 @@ package com.tencent.devops.worker.common.logger
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class LoggerUploadBatchTest {
@@ -60,6 +62,17 @@ class LoggerUploadBatchTest {
         assertEquals(4_000L, LoggerUploadBatch.retryBackoffMs(4))
         assertEquals(5_000L, LoggerUploadBatch.retryBackoffMs(5))
         assertEquals(5_000L, LoggerUploadBatch.retryBackoffMs(20))
+    }
+
+    @Test
+    fun sanitizeArchiveFailureReasonRedactsHeadersAndTokens() {
+        val raw = "upload failed: Request{method=PUT, url=https://example.com/generic/temporary/upload" +
+            "?token=abc123secret, headers=[X-DEVOPS-AGENT-SECRET-KEY:super-secret, X-DEVOPS-BUILD-ID:b-1]}"
+        val sanitized = LoggerUploadBatch.sanitizeArchiveFailureReason(raw)
+        assertFalse(sanitized.contains("abc123secret"))
+        assertFalse(sanitized.contains("super-secret"))
+        assertTrue(sanitized.contains("https://example.com/generic/temporary/upload?<redacted>"))
+        assertTrue(sanitized.contains("headers=[<redacted>]"))
     }
 
     private fun messages(count: Int, message: String): List<LogMessage> {

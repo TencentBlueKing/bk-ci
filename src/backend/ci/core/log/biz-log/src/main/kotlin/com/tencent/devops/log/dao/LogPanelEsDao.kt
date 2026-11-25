@@ -44,6 +44,8 @@ class LogPanelEsDao(
 ) {
     enum class Direction { LATEST, BEFORE, AFTER }
 
+    internal enum class TotalHitsMode { EXACT, UP_TO_PLUS_ONE, NONE }
+
     fun query(
         buildId: String,
         tag: String?,
@@ -137,7 +139,12 @@ class LogPanelEsDao(
             Direction.LATEST -> Unit
         }
         val desc = direction != Direction.AFTER
-        val (lines, total) = executeSearch(buildId, indexName, filter, pageSize, desc)
+        val primaryTotalHitsMode = if (direction == Direction.LATEST) {
+            TotalHitsMode.EXACT
+        } else {
+            TotalHitsMode.UP_TO_PLUS_ONE
+        }
+        val (lines, total) = executeSearch(buildId, indexName, filter, pageSize, desc, primaryTotalHitsMode)
         var merged = lines
         if (direction == Direction.AFTER) {
             val lookback = LogPanelQueryBuilder.resolveAfterLookback(
@@ -149,20 +156,21 @@ class LogPanelEsDao(
                 val backfillQuery = baseFilter(buildId, tag, subTag, containerHashId, executeCount, levels)
                 backfillQuery.must(QueryBuilders.rangeQuery("lineNo").lte(lookback.cursorLineNo))
                 backfillQuery.must(QueryBuilders.rangeQuery("timestamp").gte(lookback.backfillFromTimestamp))
-                // 降序截断等价于 selectBackfillNearCursor：留下时间窗里靠近游标的一页。
+                // 降序截断等价于 selectBackfillNearCursor：留下时间窗里靠近游标的一页；无需精确总条数。
                 val (backfill, _) = executeSearch(
-                    buildId,
-                    indexName,
-                    backfillQuery,
-                    LogPanelQueryBuilder.BACKFILL_MAX,
-                    desc = true
+                    buildId = buildId,
+                    indexName = indexName,
+                    query = backfillQuery,
+                    pageSize = LogPanelQueryBuilder.BACKFILL_MAX,
+                    desc = true,
+                    totalHitsMode = TotalHitsMode.NONE
                 )
                 merged = LogPanelQueryBuilder.mergeByLineNo(backfill + lines)
             }
         }
         val moreInDir = total > lines.size
         val startLineNo = merged.firstOrNull()?.lineNo
-        val endLineNo = merged.maxOfOrNull { it.lineNo }
+        val endLineNo = merged.lastOrNull()?.lineNo
         val hasBefore = when (direction) {
             Direction.AFTER -> true
             Direction.BEFORE, Direction.LATEST -> moreInDir
@@ -221,18 +229,10 @@ class LogPanelEsDao(
         indexName: String,
         query: BoolQueryBuilder,
         pageSize: Int,
-        desc: Boolean
+        desc: Boolean,
+        totalHitsMode: TotalHitsMode
     ): Pair<List<LogPanelLine>, Long> {
-        val order = if (desc) SortOrder.DESC else SortOrder.ASC
-        val source = SearchSourceBuilder()
-            .query(query)
-            .docValueField("lineNo")
-            .docValueField("timestamp")
-            .size(pageSize)
-            .trackTotalHits(true)
-            .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
-            .sort("timestamp", order)
-            .sort("lineNo", order)
+        val source = buildSearchSource(query, pageSize, desc, totalHitsMode)
         val request = SearchRequest(indexName).preference(routingPreference(buildId)).source(source)
         val client = logClient.hashClient(buildId)
         val response = try {
@@ -294,5 +294,27 @@ class LogPanelEsDao(
     companion object {
         private val logger = LoggerFactory.getLogger(LogPanelEsDao::class.java)
         private const val SEARCH_TIMEOUT_SECONDS = 60L
+
+        internal fun buildSearchSource(
+            query: BoolQueryBuilder,
+            pageSize: Int,
+            desc: Boolean,
+            totalHitsMode: TotalHitsMode
+        ): SearchSourceBuilder {
+            val order = if (desc) SortOrder.DESC else SortOrder.ASC
+            val source = SearchSourceBuilder()
+                .query(query)
+                .docValueField("lineNo")
+                .docValueField("timestamp")
+                .size(pageSize)
+                .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
+                .sort("lineNo", order)
+            when (totalHitsMode) {
+                TotalHitsMode.EXACT -> source.trackTotalHits(true)
+                TotalHitsMode.UP_TO_PLUS_ONE -> source.trackTotalHitsUpTo(pageSize + 1)
+                TotalHitsMode.NONE -> source.trackTotalHits(false)
+            }
+            return source
+        }
     }
 }

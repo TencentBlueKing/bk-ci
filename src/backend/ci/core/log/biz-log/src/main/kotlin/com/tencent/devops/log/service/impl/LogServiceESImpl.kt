@@ -850,7 +850,7 @@ class LogServiceESImpl(
                             .docValueField("lineNo")
                             .docValueField("timestamp")
                             .size(size)
-                            .trackTotalHits(true)
+                            .trackTotalHitsUpTo(size + 1)
                             .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
                         SortOrder.DESC
                     )
@@ -927,7 +927,7 @@ class LogServiceESImpl(
                             .docValueField("lineNo")
                             .docValueField("timestamp")
                             .size(Constants.NORMAL_MAX_LINES)
-                            .trackTotalHits(true)
+                            .trackTotalHitsUpTo(Constants.NORMAL_MAX_LINES + 1)
                             .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
                         sortOrder
                     )
@@ -1005,7 +1005,7 @@ class LogServiceESImpl(
                             .docValueField("lineNo")
                             .docValueField("timestamp")
                             .size(Constants.NORMAL_MAX_LINES)
-                            .trackTotalHits(true)
+                            .trackTotalHitsUpTo(Constants.NORMAL_MAX_LINES + 1)
                             .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS))
                     )
                 )
@@ -1086,7 +1086,7 @@ class LogServiceESImpl(
                             .docValueField("lineNo")
                             .docValueField("timestamp")
                             .size(size)
-                            .trackTotalHits(true)
+                            .trackTotalHitsUpTo(size + 1)
                             .timeout(TimeValue.timeValueSeconds(SEARCH_TIMEOUT_SECONDS)),
                         SortOrder.DESC
                     )

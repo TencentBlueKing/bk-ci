@@ -106,4 +106,29 @@ object LoggerUploadBatch {
         }
         return end.coerceAtMost(messages.size)
     }
+
+    private const val MAX_ARCHIVE_REASON_LEN = 240
+    private val HEADERS_BLOCK_REGEX = Regex("""headers=\[[^]]*]""", RegexOption.IGNORE_CASE)
+    private val URL_QUERY_REGEX = Regex("""(https?://[^\s,})?]+)\?[^\s,})]+""", RegexOption.IGNORE_CASE)
+    private val SECRET_KV_REGEX = Regex(
+        """(token|secret|password|apikey|api_key)\s*[:=]\s*[^\s,;&)}]+""",
+        RegexOption.IGNORE_CASE
+    )
+
+    /**
+     * 对写入用户构建日志的归档失败原因脱敏，剥离请求头中的密钥与 URL 中的临时上传 token。
+     */
+    fun sanitizeArchiveFailureReason(reason: String): String {
+        val masked = reason
+            .replace(HEADERS_BLOCK_REGEX, "headers=[<redacted>]")
+            .replace(URL_QUERY_REGEX, "$1?<redacted>")
+            .replace(SECRET_KV_REGEX, "$1=<redacted>")
+            .replace(Regex("""\s+"""), " ")
+            .trim()
+        return if (masked.length <= MAX_ARCHIVE_REASON_LEN) {
+            masked
+        } else {
+            masked.substring(0, MAX_ARCHIVE_REASON_LEN) + "..."
+        }
+    }
 }
