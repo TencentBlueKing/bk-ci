@@ -336,7 +336,8 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 branchs = element.branches?.toSet(),
                 noScm = element.noScm,
                 taskId = element.id ?: "",
-                startParam = element.convertStartParams()
+                startParam = element.convertStartParams(),
+                timeZone = element.timeZone
             )
         }
     }

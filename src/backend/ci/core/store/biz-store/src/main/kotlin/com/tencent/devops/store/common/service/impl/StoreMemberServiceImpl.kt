@@ -31,26 +31,26 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_ADD_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_DELETE_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.member.StoreMemberItem
-import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreMemberService
-import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -195,7 +195,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 添加store组件成员
      */
-    override fun add(
+    open fun add(
         userId: String,
         storeMemberReq: StoreMemberReq,
         storeType: StoreTypeEnum,
@@ -203,6 +203,26 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         sendNotify: Boolean,
         checkPermissionFlag: Boolean,
         testProjectCode: String?
+    ): Result<Boolean> = add(
+        userId = userId,
+        storeMemberReq = storeMemberReq,
+        storeType = storeType,
+        collaborationFlag = collaborationFlag,
+        sendNotify = sendNotify,
+        checkPermissionFlag = checkPermissionFlag,
+        testProjectCode = testProjectCode,
+        tenantId = null
+    )
+
+    override fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean?,
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?,
+        tenantId: String?
     ): Result<Boolean> {
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
@@ -261,7 +281,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         }
         if (sendNotify) {
             executorService.submit<Result<Boolean>> {
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
+                val bodyParams =
+                    mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType, tenantId))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -293,12 +314,28 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 删除store组件成员
      */
-    override fun delete(
+    open fun delete(
         userId: String,
         id: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean
+    ): Result<Boolean> = delete(
+        userId = userId,
+        id = id,
+        storeCode = storeCode,
+        storeType = storeType,
+        checkPermissionFlag = checkPermissionFlag,
+        tenantId = null
+    )
+
+    override fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("deleteMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag")
         checkUserPermission(
@@ -329,7 +366,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
             executorService.submit<Result<Boolean>> {
                 val receivers = mutableSetOf(record.username)
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
+                val bodyParams =
+                    mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType, tenantId))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_DELETE_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -345,6 +383,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      * 获取组件名称
      */
     abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String
+
+    open fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
+        return getStoreName(storeCode, storeType)
+    }
 
     /**
      * 更改store组件成员的调试项目
@@ -449,8 +491,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             type = StoreMemberTypeEnum.getAtomMemberType((memberRecord.type as Byte).toInt()),
             creator = memberRecord.creator as String,
             modifier = memberRecord.modifier as String,
-            createTime = DateTimeUtil.toDateTime(memberRecord.createTime),
-            updateTime = DateTimeUtil.toDateTime(memberRecord.updateTime)
+            createTime = memberRecord.createTime.timestampmilli(),
+            updateTime = memberRecord.updateTime.timestampmilli()
         )
     }
 }

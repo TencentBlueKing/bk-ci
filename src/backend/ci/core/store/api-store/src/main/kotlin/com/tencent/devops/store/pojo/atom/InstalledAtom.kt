@@ -58,8 +58,8 @@ data class InstalledAtom(
     val publisher: String?,
     @get:Schema(title = "安装者")
     val installer: String,
-    @get:Schema(title = "安装时间")
-    val installTime: String,
+    @get:Schema(title = "安装时间（毫秒时间戳）")
+    val installTime: Long,
     @get:Schema(title = "安装类型")
     val installType: String,
     @get:Schema(title = "流水线个数")

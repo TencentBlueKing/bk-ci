@@ -75,14 +75,15 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun getUserProjects(token: String, userId: String): Result<List<String>> {
-        return Result(permissionProjectService.getUserProjects(userId))
+    override fun getUserProjects(token: String, userId: String, tenantId: String?): Result<List<String>> {
+        return Result(permissionProjectService.getUserProjects(userId, tenantId))
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getUserProjectsByPermission(
         token: String,
         userId: String,
+        tenantId: String?,
         action: String,
         resourceType: String?
     ): Result<List<String>> {
@@ -90,7 +91,8 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
             permissionProjectService.getUserProjectsByPermission(
                 userId = userId,
                 action = action,
-                resourceType = resourceType
+                resourceType = resourceType,
+                tenantId = tenantId
             )
         )
     }
@@ -141,7 +143,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun checkManager(token: String, userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
-            permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
+                permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
         return Result(result)
     }
 

@@ -20,13 +20,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.TimeUnit
 
 class RbacPermissionAuthMonitorSpaceService constructor(
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
@@ -236,26 +236,29 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         }
     }
 
-    override fun getMonitorGroupConfig(groupCode: String): String? {
+    override fun getMonitorGroupConfig(groupCode: String, tenantId: String?): String? {
         val configName = when (groupCode) {
             BkAuthGroup.GRADE_ADMIN.value -> MANAGER_GROUP_CONFIG_NAME
             BkAuthGroup.MANAGER.value, BkAuthGroup.MAINTAINER.value -> OP_GROUP_CONFIG_NAME
             else -> READ_ONLY_GROUP_CONFIG_NAME
         }
-        return monitorGroupConfigCache.getIfPresent(configName) ?: putAndGetMonitorGroupConfigCache(configName)
+        return monitorGroupConfigCache.getIfPresent(configName) ?: putAndGetMonitorGroupConfigCache(
+            configName,
+            tenantId
+        )
     }
 
-    private fun putAndGetMonitorGroupConfigCache(configName: String): String? {
+    private fun putAndGetMonitorGroupConfigCache(configName: String, tenantId: String?): String? {
         // 0、构造 三个授权范围组，分别为管理员配置、业务运维配置、业务只读配置
         val managerGroupConfig = mutableListOf<AuthorizationScopes>()
         val opGroupConfig = mutableListOf<AuthorizationScopes>()
         val readOnlyGroupConfig = mutableListOf<AuthorizationScopes>()
 
         // 1、通过system接口获取监控平台action组。
-        val actionList = systemService.getSystemFieldsInfo(monitorSystemId).actions
+        val actionList = systemService.getSystemFieldsInfo(monitorSystemId, tenantId).actions
         logger.info("putAndGetMonitorGroupConfigCache|actionList:$actionList")
         // 2、获取监控平台常用配置组动作组
-        val commonActions = systemService.getSystemFieldsInfo(monitorSystemId).commonActions
+        val commonActions = systemService.getSystemFieldsInfo(monitorSystemId, tenantId).commonActions
         // 3、分别获取业务只读动作组和业务运维动作组
         val readOnlyActions = commonActions.find { it.englishName == READ_ONLY_ACTIONS }?.actions?.map { it.id }
             ?: throw ErrorCodeException(
@@ -287,15 +290,15 @@ class RbacPermissionAuthMonitorSpaceService constructor(
         monitorGroupConfigCache.put(READ_ONLY_GROUP_CONFIG_NAME, objectMapper.writeValueAsString(readOnlyGroupConfig))
         logger.info(
             "putAndGetMonitorGroupConfigCache|MANAGER_GROUP_CONFIG:" +
-                "${monitorGroupConfigCache.getIfPresent(MANAGER_GROUP_CONFIG_NAME)}"
+                    "${monitorGroupConfigCache.getIfPresent(MANAGER_GROUP_CONFIG_NAME)}"
         )
         logger.info(
             "putAndGetMonitorGroupConfigCache|OP_GROUP_CONFIG:" +
-                "${monitorGroupConfigCache.getIfPresent(OP_GROUP_CONFIG_NAME)}"
+                    "${monitorGroupConfigCache.getIfPresent(OP_GROUP_CONFIG_NAME)}"
         )
         logger.info(
             "putAndGetMonitorGroupConfigCache|READ_ONLY:" +
-                "${monitorGroupConfigCache.getIfPresent(READ_ONLY_GROUP_CONFIG_NAME)}"
+                    "${monitorGroupConfigCache.getIfPresent(READ_ONLY_GROUP_CONFIG_NAME)}"
         )
         return monitorGroupConfigCache.getIfPresent(configName)
     }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
   ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
   ~
@@ -19,16 +19,44 @@
   -->
 
 <html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <link
+            rel="icon"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
+            type="image/x-icon"
+        />
+        <link
+            rel="shortcut icon"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
+            type="image/x-icon"
+        />
+        <meta charset="utf-8" />
+        <title>流水线</title>
+        <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/url-prefix-interceptor.js"></script>
+    </head>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico" type="image/x-icon" />
-    <meta charset="utf-8" />
-    <title>流水线</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <link
+            rel="icon"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
+            type="image/x-icon"
+        />
+        <link
+            rel="shortcut icon"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
+            type="image/x-icon"
+        />
+        <meta charset="utf-8" />
+        <title>流水线</title>
+    </head>
 
 </head>
 
@@ -45,14 +73,20 @@
     <script>
         var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
         var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>";
-        var API_URL_PREFIX = "/ms";
-        var WEB_URL_PREFIX = "/console";
+        var API_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>/ms";
+        var WEB_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>/console";
         var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
         var BADGE_URL_PREFIX = "__BK_CI_BADGE_URL__";
         var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
         var LOCALE_DOMAIN = '__BK_DOMAIN__'
         var BK_PAAS_PRIVATE_URL = '__BK_PAAS_PRIVATE_URL__'
         var BKCI_YAML_SCHEMA_URI = ''
+        var BK_APIGW_USER_WEB_URL = '<%= BK_APIGW_USER_WEB_URL %>'
+
+
+        window.getRoutePrefix = function () {
+          return window.PUBLIC_URL_PREFIX + "/console";
+        };
     </script>
 </body>
 

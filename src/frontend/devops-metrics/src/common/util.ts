@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import { formatByUserTz } from '../../../common-lib/time';
 // 获取 cookie object
 export function getCookie (key) {
   const cookieStr = document.cookie || ''
@@ -52,7 +52,8 @@ export function deepMerge(...objectArray) {
  * @returns 格式化后的时间
  */
 export function timeFormatter(val, format = 'YYYY-MM-DD HH:mm:ss') {
-  return val ? dayjs(val).format(format) : '--';
+  if (val === null || val === undefined || val === '') return '--';
+  return formatByUserTz(val, undefined, format);
 }
 
 

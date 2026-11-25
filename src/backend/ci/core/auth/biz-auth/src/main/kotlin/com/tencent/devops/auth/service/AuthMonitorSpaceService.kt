@@ -40,7 +40,7 @@ interface AuthMonitorSpaceService {
     /**
      * 获取监控空间组权限配置
      */
-    fun getMonitorGroupConfig(groupCode: String): String?
+    fun getMonitorGroupConfig(groupCode: String, tenantId: String?): String?
 
     /**
      * 获取监控空间组权限动作名称

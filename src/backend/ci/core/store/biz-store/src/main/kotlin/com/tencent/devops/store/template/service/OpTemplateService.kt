@@ -54,5 +54,5 @@ interface OpTemplateService {
     /**
      * 审核模版
      */
-    fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean>
+    fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq, tenantId: String?): Result<Boolean>
 }

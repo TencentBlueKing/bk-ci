@@ -44,7 +44,7 @@
                     width="250"
                 >
                     <template slot-scope="{ row }">
-                        {{ formatTime(row.createTime) }}
+                        <time-display :value="row.createTime" />
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -82,9 +82,13 @@
     import useEnvDetail from '@/hooks/useEnvDetail'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
+    import TimeDisplay from '../../../../../../common-lib/time-display'
 
     export default {
         name: 'OperateLog',
+        components: {
+            TimeDisplay
+        },
         setup () {
             const { proxy } = useInstance()
             const {
@@ -154,15 +158,6 @@
             }
 
             /**
-             * 格式化时间显示
-             * @param {String} time - ISO 8601 格式的时间字符串
-             */
-            const formatTime = (time) => {
-                if (!time) return '--'
-                return time.replace('T', ' ').replace(/\.\d+Z$/, '').replace(/Z$/, '')
-            }
-
-            /**
              * 处理操作人筛选变化
              */
             const handleOperatorChange = (value) => {
@@ -210,7 +205,6 @@
                 memberLoading,
                 selectedOperator,
                 nodeStatusField,
-                formatTime,
                 handleOperatorChange,
                 handleOperatorClear,
                 handleMemberScrollEnd,

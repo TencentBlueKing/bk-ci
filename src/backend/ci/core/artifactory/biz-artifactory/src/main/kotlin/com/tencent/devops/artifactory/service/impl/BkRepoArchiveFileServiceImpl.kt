@@ -29,9 +29,10 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
-import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
+import com.tencent.devops.artifactory.constant.bkRepoDevopsProjectId
+import com.tencent.devops.artifactory.constant.bkRepoStaticProjectId
+import com.tencent.devops.artifactory.constant.bkRepoStoreProjectId
 import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
 import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
@@ -67,13 +68,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
@@ -81,8 +77,13 @@ import java.net.URLEncoder
 import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import jakarta.servlet.http.HttpServletResponse
-import jakarta.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 @Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
@@ -128,7 +129,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata[it.key] = it.value!!
         }
         val repoProjectId = if (filePath == null) {
-            BKREPO_DEVOPS_PROJECT_ID
+            bkRepoDevopsProjectId()
         } else {
             projectId!!
         }
@@ -136,7 +137,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return if (fileType == FileTypeEnum.BK_STATIC) {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = BKREPO_STATIC_PROJECT_ID,
+                projectId = bkRepoStaticProjectId(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
@@ -147,7 +148,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 properties = metadata
             )
             val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
-            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID, REPO_NAME_STATIC)
+            val staticRepoPrefixUrl = MessageFormat.format(configUrl, bkRepoStaticProjectId(), REPO_NAME_STATIC)
             val defaultUrl = "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
             if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
                 "$defaultUrl&preview=true"
@@ -157,13 +158,16 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
+                projectId = bkRepoStoreProjectId(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
                 properties = metadata
             )
-            generateFileDownloadUrl(fileChannelType, destPath = "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/$destPath")
+            generateFileDownloadUrl(
+                fileChannelType,
+                destPath = "${bkRepoStoreProjectId()}/$REPO_NAME_STATIC/$destPath"
+            )
         } else {
             bkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, properties = metadata)
             generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
@@ -206,14 +210,30 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         response: HttpServletResponse,
         logo: Boolean?
     ) {
-        response.contentType = MimeUtil.mediaType(filePath)
-        val path = if (logo == true) {
-            "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/" +
-                URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
-        } else {
-            filePath
+        if (logo == true) {
+            val relative = URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
+            if (!isSafeLogoPath(relative)) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("filePath")
+                )
+            }
+            // 相对 Location，避免 sendRedirect 按 Pod Host 拼成浏览器访问不到的绝对地址。
+            // 该接口是 void，Jersey 会在方法返回后改成 204，浏览器不跟随 Location。先提交 302。
+            response.status = HttpServletResponse.SC_FOUND
+            response.setHeader("Location", HomeHostUtil.withPublicPath("/$BK_CI_PLUGIN_FE_DIR/$relative"))
+            response.flushBuffer()
+            return
         }
-        downloadFile(userId, path, response.outputStream)
+        response.contentType = MimeUtil.mediaType(filePath)
+        downloadFile(userId, filePath, response.outputStream)
+    }
+
+    private fun isSafeLogoPath(relative: String): Boolean {
+        if (relative.isBlank()) {
+            return false
+        }
+        return listOf("..", "\\", "://", "\r", "\n").none { relative.contains(it) }
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
@@ -589,6 +609,14 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         destPath: String,
         fullUrl: Boolean
     ): String {
+        val publicStaticPath = browserPublicStaticPath(fileChannelType, destPath)
+        if (publicStaticPath != null) {
+            return if (fullUrl) {
+                HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) + publicStaticPath
+            } else {
+                publicStaticPath
+            }
+        }
         val urlPrefix = StringBuilder()
         when (fileChannelType) {
             FileChannelTypeEnum.WEB_SHOW -> {
@@ -618,6 +646,33 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         }
         val filePath = URLEncoder.encode("/$destPath", "UTF-8")
         return "$urlPrefix/$filePath"
+    }
+
+    /**
+     * 浏览器展示或下载平台公开 static 仓库时，返回 /bk-plugin-fe/ 路径。
+     * 构建机和服务调用仍走 generic，避免改掉需要凭证的下载。
+     */
+    private fun browserPublicStaticPath(fileChannelType: FileChannelTypeEnum, destPath: String): String? {
+        val browserChannel = fileChannelType == FileChannelTypeEnum.WEB_SHOW ||
+            fileChannelType == FileChannelTypeEnum.WEB_DOWNLOAD
+        if (!browserChannel) {
+            return null
+        }
+        val relative = storeStaticRelativePath(destPath) ?: return null
+        return HomeHostUtil.withPublicPath("/$BK_CI_PLUGIN_FE_DIR/$relative")
+    }
+
+    private fun storeStaticRelativePath(destPath: String): String? {
+        val prefix = "${bkRepoStoreProjectId()}/$REPO_NAME_STATIC/"
+        val normalized = destPath.removePrefix("/")
+        if (!normalized.startsWith(prefix)) {
+            return null
+        }
+        val relative = normalized.removePrefix(prefix)
+        if (!isSafeLogoPath(relative)) {
+            return null
+        }
+        return relative
     }
 
     override fun deleteFile(userId: String, filePath: String) {

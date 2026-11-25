@@ -69,13 +69,13 @@
                                 class="add-btn"
                                 v-if="props.row.type === 'PIPELINE' && (props.row.lackElements.length)"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/${props.row.id}/edit`"
+                                :href="goToPipelineHref(props.row)"
                             >{{ $t('quality.去修改') }}</a>
                             <a
                                 class="add-btn"
                                 v-else-if="props.row.type === 'TEMPLATE' && (props.row.lackElements.length)"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/template/${props.row.id}/edit`"
+                                :href="goToTemplateHref(props.row)"
                             >{{ $t('quality.去修改') }}</a>
                             <span v-else>-</span>
                         </template>
@@ -102,6 +102,12 @@
         methods: {
             close () {
                 this.$emit('close')
+            },
+            goToPipelineHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/${row.id}/edit`
+            },
+            goToTemplateHref (row) {
+                return `${window.getRoutePrefix()}/pipeline/${this.projectId}/template/${row.id}/edit`
             }
         }
     }

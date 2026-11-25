@@ -162,4 +162,38 @@ class CommonConfig {
      */
     @Value("\${devopsGateway.codeccHostGateway:#{null}}")
     val codeccHostGateway: String? = null
+
+    /**
+     * 子路径部署时的对外路径前缀，如 /bkci；根路径部署时为空字符串
+     */
+    @Value("\${bkci.publicPath:}")
+    val devopsPublicPath: String = ""
+
+    /**
+     * 平台制品库项目前缀，对应 BK_CI_BKREPO_PROJECT_PREFIX。空则项目名不加前缀。
+     */
+    @Value("\${bkrepo.projectPrefix:}")
+    val bkrepoProjectPrefix: String = ""
+
+    fun bkrepoProjectPrefixValue(): String = bkrepoProjectPrefix.trim().trim('.')
+
+    fun putBkrepoProjectPrefix(env: MutableMap<String, String>) {
+        val prefix = bkrepoProjectPrefixValue()
+        if (prefix.isNotEmpty()) {
+            env[BKREPO_PROJECT_PREFIX_ENV] = prefix
+        }
+    }
+
+    fun withBkrepoProjectPrefix(env: Map<String, String>): Map<String, String> {
+        val prefix = bkrepoProjectPrefixValue()
+        return if (prefix.isEmpty()) {
+            env
+        } else {
+            env + (BKREPO_PROJECT_PREFIX_ENV to prefix)
+        }
+    }
+
+    companion object {
+        const val BKREPO_PROJECT_PREFIX_ENV = "BK_CI_BKREPO_PROJECT_PREFIX"
+    }
 }

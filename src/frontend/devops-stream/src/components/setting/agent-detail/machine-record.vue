@@ -12,7 +12,7 @@
         >
             <bk-table-column :label="$t('time')" prop="actionTime" min-width="160">
                 <template slot-scope="props">
-                    {{ localConvertTime(props.row.actionTime) }}
+                    <time-display :value="props.row.actionTime" />
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('status')" prop="action" min-width="160">
@@ -25,12 +25,15 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
     import { setting } from '@/http'
     import { mapState } from 'vuex'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
+        components: {
+            TimeDisplay
+        },
         data () {
             return {
                 recordList: [],
@@ -86,12 +89,6 @@
             handlePageChange (newPage) {
                 this.pagination.current = newPage
                 this.requestActionList(newPage, this.pagination.limit)
-            },
-            /**
-             * 处理时间格式
-             */
-            localConvertTime (timestamp) {
-                return convertTime(timestamp * 1000)
             }
         }
     }

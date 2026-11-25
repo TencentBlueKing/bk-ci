@@ -85,7 +85,7 @@
                             <icon :name="buildTypeIcon" size="14" v-else></icon>
                             {{ buildDetail.buildSource || '--' }}
                         </span>
-                        <span class="info-item text-ellipsis"><icon name="date" size="14"></icon>{{ buildDetail.startTime | timeFilter }}</span>
+                        <span class="info-item text-ellipsis"><icon name="date" size="14"></icon><time-display :value="buildDetail.startTime" /></span>
                     </span>
                 </p>
 
@@ -111,24 +111,21 @@
     import { pipelines } from '@/http'
     import {
         preciseDiff,
-        timeFormatter,
         getbuildTypeIcon
     } from '@/utils'
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
     import register from '@/utils/websocket-register'
     import Pipeline from '@/components/Pipeline'
+    import TimeDisplay from '../../../../../common-lib/time-display'
 
     export default {
         components: {
-            Pipeline
+            Pipeline,
+            TimeDisplay
         },
         filters: {
             spendTimeFilter (val) {
                 return preciseDiff(val)
-            },
-
-            timeFilter (val) {
-                return timeFormatter(val)
             }
         },
 

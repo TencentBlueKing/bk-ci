@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.api.open
 
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -92,7 +93,10 @@ interface OpenProjectAuthResource {
         token: String,
         @PathParam("userId")
         @Parameter(description = "用户userId", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null
     ): Result<List<String>>
 
     @GET

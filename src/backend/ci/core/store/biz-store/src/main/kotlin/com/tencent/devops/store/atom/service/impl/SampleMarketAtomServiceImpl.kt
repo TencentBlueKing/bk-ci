@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.atom.service.SampleMarketAtomService
@@ -59,19 +60,22 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
         projectCode: String,
         atomCode: String,
         content: String,
-        fileName: String
+        filePath: String
     ): Result<Boolean> {
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode)
-            )
+        val atomRecord = atomDao.getMaxVersionAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = TenantUtils.getTenantId()
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomCode)
+        )
         return client.get(ServiceArchiveAtomResource::class)
             .updateArchiveFile(
                 projectCode = projectCode,
                 atomCode = atomCode,
                 version = atomRecord.version,
-                fileName = fileName,
+                fileName = filePath,
                 content = content
             )
     }

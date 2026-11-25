@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -68,6 +69,9 @@ interface ServiceMarketAtomResource {
     @PUT
     @Path("/atomCodes/{atomCode}/versions/{version}")
     fun setAtomBuildStatusByAtomCode(
+        @Parameter(description = "租户Id", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
@@ -110,6 +114,9 @@ interface ServiceMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
@@ -143,6 +150,9 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "渠道类型", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
@@ -159,7 +169,10 @@ interface ServiceMarketAtomResource {
         atomCode: String,
         @Parameter(description = "是否展示系统自带的yml信息", required = false)
         @QueryParam("defaultShowFlag")
-        defaultShowFlag: Boolean?
+        defaultShowFlag: Boolean?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<String?>
 
     @Operation(summary = "获取带post属性的插件")
@@ -207,7 +220,10 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        pageSize: Int = 10
+        pageSize: Int = 10,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<MyAtomResp?>
 
     @Operation(summary = "批量查看插件参数定义（task.json 的 input 部分）")

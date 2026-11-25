@@ -33,6 +33,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.enums.AuthItsmApprovalType
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.slf4j.LoggerFactory
 
 class RbacPermissionItsmCallbackService constructor(
@@ -47,7 +48,11 @@ class RbacPermissionItsmCallbackService constructor(
     override fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create project callback info:$itsmCallBackInfo")
         // 校验itsm回调token
-        itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        if (TenantUtils.disableEsb()) {
+            itsmService.verifyItsmTicket(itsmCallBackInfo.sn)
+        } else {
+            itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        }
         traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.CREATE.name,
@@ -59,7 +64,11 @@ class RbacPermissionItsmCallbackService constructor(
     override fun updateProjectCallback(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
         // 校验itsm回调token
-        itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        if (TenantUtils.disableEsb()) {
+            itsmService.verifyItsmTicket(itsmCallBackInfo.sn)
+        } else {
+            itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        }
         traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.UPDATE.name,

@@ -2,7 +2,7 @@
     <div
         class="resource-selector"
         @click="toggleDropdown"
-        :class="{ 'is-open': isDropdownOpen }"
+        :class="{ 'is-open': isDropdownOpen, 'is-single': isSingle }"
     >
         <div class="resource-type">
             <div class="resource-icon">
@@ -14,6 +14,7 @@
             <span class="resource-name">{{ displayName }}</span>
         </div>
         <div
+            v-if="!isSingle"
             class="dropdown-arrow"
             :class="{ 'is-open': isDropdownOpen }"
         >
@@ -53,7 +54,8 @@
     import {
         SERVICE_RESOURCE_TYPE,
         RES_TYPE_STORAGE_KEY,
-        ENV_TYPE_MAP
+        ENV_TYPE_MAP,
+        isCreativeStreamServiceEnabled
     } from '@/store/constants'
     import UseInstance from '@/hooks/useInstance'
     import Logo from '@/components/Logo'
@@ -66,21 +68,32 @@
             const { proxy } = UseInstance()
             // 从路由参数中读取 resType，默认为 PIPELINE
             const routeResType = proxy.$route.params.resType
-            const activeValue = ref(routeResType || SERVICE_RESOURCE_TYPE.PIPELINE)
+            const creativeEnabled = isCreativeStreamServiceEnabled()
+            const activeValue = ref(
+                routeResType === SERVICE_RESOURCE_TYPE.CREATE && !creativeEnabled
+                    ? SERVICE_RESOURCE_TYPE.PIPELINE
+                    : (routeResType || SERVICE_RESOURCE_TYPE.PIPELINE)
+            )
             const isDropdownOpen = ref(false)
             
-            const resourceOptions = computed(() => [
-                {
-                    value: SERVICE_RESOURCE_TYPE.PIPELINE,
-                    label: proxy.$t('environment.pipelineResource'),
-                    icon: 'color-logo-pipeline'
-                },
-                {
-                    value: SERVICE_RESOURCE_TYPE.CREATE,
-                    label: proxy.$t('environment.creativeResource'),
-                    icon: 'color-logo-creative'
+            const resourceOptions = computed(() => {
+                const options = [
+                    {
+                        value: SERVICE_RESOURCE_TYPE.PIPELINE,
+                        label: proxy.$t('environment.pipelineResource'),
+                        icon: 'color-logo-pipeline'
+                    }
+                ]
+                if (creativeEnabled) {
+                    options.push({
+                        value: SERVICE_RESOURCE_TYPE.CREATE,
+                        label: proxy.$t('environment.creativeResource'),
+                        icon: 'color-logo-creative'
+                    })
                 }
-            ])
+                return options
+            })
+            const isSingle = computed(() => resourceOptions.value.length < 2)
             
             const displayName = computed(() => {
                 const option = resourceOptions.value.find(item => item.value === activeValue.value)
@@ -93,6 +106,7 @@
             })
             
             const toggleDropdown = () => {
+                if (isSingle.value) return
                 isDropdownOpen.value = !isDropdownOpen.value
             }
             
@@ -146,6 +160,7 @@
                 activeValue,
                 isDropdownOpen,
                 resourceOptions,
+                isSingle,
                 displayName,
                 currentIcon,
                 toggleDropdown,
@@ -170,6 +185,15 @@
         margin: 16px;
         cursor: pointer;
         transition: all 0.2s ease;
+
+        &.is-single {
+            cursor: default;
+
+            &:hover {
+                border-color: #DCDEE5;
+                box-shadow: 0 0 8px 0 rgba(220, 222, 229, 0.3);
+            }
+        }
         
         &:hover {
             border-color: #3A84FF;

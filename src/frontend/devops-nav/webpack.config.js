@@ -51,6 +51,7 @@ module.exports = (env = {}, argv) => {
     const config = webpackBaseConfig({
         env,
         argv,
+        isConsole: true,
         entry: './src/entry',
         publicPath: '/console/',
         dist: '/console',
@@ -91,7 +92,8 @@ module.exports = (env = {}, argv) => {
             inject: false,
             publicPath: `${isDev ? '' : '__BK_CI_PUBLIC_PATH__'}/console/`,
             templateParameters: {
-                PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__'
+                PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__',
+                BK_APIGW_USER_WEB_URL: isDev ? '' : '__BK_CI_USER_WEB_APIGW_URL__'
             },
             minify: {
                 removeComments: false

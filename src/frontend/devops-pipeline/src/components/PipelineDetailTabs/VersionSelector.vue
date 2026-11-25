@@ -39,7 +39,10 @@
             <p class="pipeline-version-name">
                 <span v-bk-overflow-tips>
                     <template v-if="isActiveDraft">
-                        <span v-if="shouldLoadDraftList">{{ convertTime(activeVersion.updateTime) + ` ${activeVersion.updater} ` }}</span>
+                        <span v-if="shouldLoadDraftList">
+                            <time-display :value="activeVersion.updateTime" />
+                            <bk-user-display-name :user-id="activeVersion.updater" />
+                        </span>
                         {{ $t('editPage.draftVersion', [draftBaseVersionName]) }}
                     </template>
                     <template v-else>
@@ -151,12 +154,14 @@
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
+    import TimeDisplay from '../../../../common-lib/time-display'
     import { mapActions, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],
         components: {
-            Logo
+            Logo,
+            TimeDisplay
         },
         props: {
             extCls: {

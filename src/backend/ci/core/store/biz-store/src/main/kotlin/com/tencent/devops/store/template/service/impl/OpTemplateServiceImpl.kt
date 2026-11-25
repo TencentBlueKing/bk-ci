@@ -29,14 +29,14 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
-import com.tencent.devops.store.template.dao.MarketTemplateDao
-import com.tencent.devops.store.template.dao.StoreTemplateDao
-import com.tencent.devops.store.pojo.common.classify.Classify
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.template.ApproveReq
@@ -45,8 +45,8 @@ import com.tencent.devops.store.pojo.template.OpTemplateResp
 import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.template.dao.MarketTemplateDao
+import com.tencent.devops.store.template.dao.StoreTemplateDao
 import com.tencent.devops.store.template.service.OpTemplateService
 import com.tencent.devops.store.template.service.TemplateCategoryService
 import com.tencent.devops.store.template.service.TemplateLabelService
@@ -89,8 +89,10 @@ class OpTemplateServiceImpl @Autowired constructor(
     ): Result<OpTemplateResp> {
         val categoryList = if (category.isNullOrEmpty()) listOf() else category.split(",")
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
-        val count = storeTemplateDao.count(dslContext, templateName, templateStatus?.status?.toByte(),
-            templateType?.type?.toByte(), classifyCode, categoryList, labelCodeList, latestFlag)
+        val count = storeTemplateDao.count(
+            dslContext, templateName, templateStatus?.status?.toByte(),
+            templateType?.type?.toByte(), classifyCode, categoryList, labelCodeList, latestFlag
+        )
         val templates = storeTemplateDao.list(
             dslContext = dslContext,
             templateName = templateName,
@@ -122,47 +124,56 @@ class OpTemplateServiceImpl @Autowired constructor(
             val updateTime = it[tTemplate.UPDATE_TIME]
             val logoUrl = it[tTemplate.LOGO_URL]
             val description = it[tTemplate.DESCRIPTION]
-            ret.add(OpTemplateItem(
-                templateId = templateId,
-                templateName = it[tTemplate.TEMPLATE_NAME] as String,
-                templateCode = it[tTemplate.TEMPLATE_CODE] as String,
-                logoUrl = logoUrl?.let {
-                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-                },
-                classifyId = classifyId,
-                classifyCode = classifyMap[classifyId]?.classifyCode,
-                classifyName = classifyMap[classifyId]?.classifyName,
-                summary = it[tTemplate.SUMMARY],
-                templateStatus = TemplateStatusEnum.getTemplateStatus(status.toInt()),
-                description = description?.let {
-                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
-                },
-                version = it[tTemplate.VERSION],
-                templateType = TemplateTypeEnum.getTemplateType(type.toInt()),
-                categoryList = templateCategoryService.getCategorysByTemplateId(templateId).data,
-                labelList = templateLabelService.getLabelsByTemplateId(templateId).data,
-                latestFlag = it[tTemplate.LATEST_FLAG] as Boolean,
-                publisher = it[tTemplate.PUBLISHER],
-                pubDescription = it[tTemplate.PUB_DESCRIPTION],
-                creator = it[tTemplate.CREATOR],
-                modifier = it[tTemplate.MODIFIER],
-                createTime = if (createTime != null) DateTimeUtil.toDateTime(createTime) else "",
-                updateTime = if (updateTime != null) DateTimeUtil.toDateTime(updateTime) else ""
-            ))
+            ret.add(
+                OpTemplateItem(
+                    templateId = templateId,
+                    templateName = it[tTemplate.TEMPLATE_NAME] as String,
+                    templateCode = it[tTemplate.TEMPLATE_CODE] as String,
+                    logoUrl = logoUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
+                    },
+                    classifyId = classifyId,
+                    classifyCode = classifyMap[classifyId]?.classifyCode,
+                    classifyName = classifyMap[classifyId]?.classifyName,
+                    summary = it[tTemplate.SUMMARY],
+                    templateStatus = TemplateStatusEnum.getTemplateStatus(status.toInt()),
+                    description = description?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
+                    },
+                    version = it[tTemplate.VERSION],
+                    templateType = TemplateTypeEnum.getTemplateType(type.toInt()),
+                    categoryList = templateCategoryService.getCategorysByTemplateId(templateId).data,
+                    labelList = templateLabelService.getLabelsByTemplateId(templateId).data,
+                    latestFlag = it[tTemplate.LATEST_FLAG] as Boolean,
+                    publisher = it[tTemplate.PUBLISHER],
+                    pubDescription = it[tTemplate.PUB_DESCRIPTION],
+                    creator = it[tTemplate.CREATOR],
+                    modifier = it[tTemplate.MODIFIER],
+                    createTime = createTime?.timestampmilli() ?: 0L,
+                    updateTime = updateTime?.timestampmilli() ?: 0L
+                )
+            )
         }
 
-        return Result(OpTemplateResp(
-            count = count,
-            page = page,
-            pageSize = pageSize,
-            records = ret
-        ))
+        return Result(
+            OpTemplateResp(
+                count = count,
+                page = page,
+                pageSize = pageSize,
+                records = ret
+            )
+        )
     }
 
     /**
      * 审核模版
      */
-    override fun approveTemplate(userId: String, templateId: String, approveReq: ApproveReq): Result<Boolean> {
+    override fun approveTemplate(
+        userId: String,
+        templateId: String,
+        approveReq: ApproveReq,
+        tenantId: String?
+    ): Result<Boolean> {
         logger.info("approveTemplate userId is :$userId,templateId is :$templateId,approveReq is :$approveReq")
         // 判断模版是否存在
         val template = marketTemplateDao.getTemplate(dslContext, templateId)

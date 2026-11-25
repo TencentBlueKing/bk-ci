@@ -48,15 +48,17 @@ class RbacResourceApi(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        tenantId: String?
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-            token = tokenService.getSystemToken()!!,
             userId = user,
+            tenantId = tenantId,
+            token = tokenService.getSystemToken()!!,
+            projectCode = projectCode,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
-            resourceName = resourceName,
-            projectCode = projectCode
+            resourceName = resourceName
         )
     }
 
@@ -65,7 +67,8 @@ class RbacResourceApi(
         resourceType: AuthResourceType,
         projectCode: String,
         user: String,
-        resourceList: List<ResourceRegisterInfo>
+        resourceList: List<ResourceRegisterInfo>,
+        tenantId: String?
     ) {
         resourceList.forEach { resourceRegisterInfo ->
             client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
@@ -74,7 +77,8 @@ class RbacResourceApi(
                 resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
                 resourceCode = resourceRegisterInfo.resourceCode,
                 resourceName = resourceRegisterInfo.resourceName,
-                projectCode = projectCode
+                projectCode = projectCode,
+                tenantId = tenantId
             )
         }
     }
@@ -86,15 +90,17 @@ class RbacResourceApi(
         projectCode: String,
         resourceCode: String,
         resourceName: String,
-        authGroupList: List<BkAuthGroup>?
+        authGroupList: List<BkAuthGroup>?,
+        tenantId: String?
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
-            token = tokenService.getSystemToken()!!,
             userId = user,
+            tenantId = tenantId,
+            token = tokenService.getSystemToken()!!,
+            projectCode = projectCode,
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
-            resourceName = resourceName,
-            projectCode = projectCode
+            resourceName = resourceName
         )
     }
 

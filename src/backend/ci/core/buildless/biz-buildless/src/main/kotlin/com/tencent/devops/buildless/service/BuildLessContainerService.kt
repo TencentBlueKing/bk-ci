@@ -285,6 +285,10 @@ class BuildLessContainerService(
         buildLessConfig.fileIdcGateway?.let {
             envList.add("$ENV_DEVOPS_FILE_GATEWAY=$it")
         }
+        val bkrepoProjectPrefix = commonConfig.bkrepoProjectPrefixValue()
+        if (bkrepoProjectPrefix.isNotEmpty()) {
+            envList.add("${CommonConfig.BKREPO_PROJECT_PREFIX_ENV}=$bkrepoProjectPrefix")
+        }
 
         return envList
     }

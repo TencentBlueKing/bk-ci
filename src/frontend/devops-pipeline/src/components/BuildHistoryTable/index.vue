@@ -386,6 +386,12 @@
                         </div>
                     </template>
                     <template
+                        v-else-if="['startTime', 'endTime', 'queueTime'].includes(col.id)"
+                        v-slot="props"
+                    >
+                        <time-display :value="props.row[col.id]" />
+                    </template>
+                    <template
                         v-else-if="col.id === 'errorCode'"
                         v-slot="props"
                     >
@@ -686,7 +692,6 @@
     import {
         convertFileSize,
         convertMStoString,
-        convertTime,
         flatSearchKey,
         copyToClipboard,
         encodeArtifactDownloadUrl
@@ -698,6 +703,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
+    import TimeDisplay from '../../../../common-lib/time-display'
 
     const LS_COLUMN_KEY = 'shownColumnsKeys'
     const LS_COLUMN_VERSION_KEY = 'shownColumnsKeysVersion'
@@ -725,7 +731,8 @@
             TableColumnSetting,
             ArtifactQuality,
             EmptyException,
-            VersionDiffDialog
+            VersionDiffDialog,
+            TimeDisplay
         },
         props: {
             showLog: {
@@ -910,9 +917,9 @@
                             !active && Array.isArray(appVersions) && appVersions.length > 1
                                 ? appVersions.slice(0, 1)
                                 : appVersions,
-                        startTime: item.startTime ? convertTime(item.startTime) : '--',
-                        endTime: item.endTime ? convertTime(item.endTime) : '--',
-                        queueTime: item.queueTime ? convertTime(item.queueTime) : '--',
+                        startTime: item.startTime,
+                        endTime: item.endTime,
+                        queueTime: item.queueTime,
                         totalTime: item.totalTime ? convertMStoString(item.totalTime) : '--',
                         executeTime: item.executeTime ? convertMStoString(item.executeTime) : '--',
                         visibleMaterial:

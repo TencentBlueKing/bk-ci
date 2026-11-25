@@ -36,18 +36,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreApproveRecord
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.common.dao.StoreApproveDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.service.AbstractStoreApproveSpecifyBusInfoService
+import com.tencent.devops.store.common.service.StoreApproveService
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.pojo.common.approval.StoreApproveDetail
 import com.tencent.devops.store.pojo.common.approval.StoreApproveInfo
 import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.AbstractStoreApproveSpecifyBusInfoService
-import com.tencent.devops.store.common.service.StoreApproveService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,7 +81,8 @@ class StoreApproveServiceImpl : StoreApproveService {
     override fun approveStoreInfo(
         userId: String,
         approveId: String,
-        storeApproveRequest: StoreApproveRequest
+        storeApproveRequest: StoreApproveRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("approveStoreInfo params:[$userId|$approveId|$storeApproveRequest]")
         val storeApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
@@ -115,7 +116,8 @@ class StoreApproveServiceImpl : StoreApproveService {
             storeType = StoreTypeEnum.getStoreTypeObj(storeType.toInt())!!,
             storeCode = storeCode,
             approveId = approveId,
-            storeApproveRequest = storeApproveRequest
+            storeApproveRequest = storeApproveRequest,
+            tenantId = tenantId
         )
         logger.info("approveStoreInfo approveResult is :$approveResult")
         if (approveResult.isNotOk()) {
@@ -151,7 +153,8 @@ class StoreApproveServiceImpl : StoreApproveService {
             approveType = approveType,
             approveStatus = approveStatus,
             page = page,
-            pageSize = pageSize)
+            pageSize = pageSize
+        )
             ?.map {
                 generateStoreApproveInfo(it)
             }
@@ -164,13 +167,15 @@ class StoreApproveServiceImpl : StoreApproveService {
             approveStatus = approveStatus
         )
         val totalPages = PageUtil.calTotalPage(pageSize, storeApproveInfoCount)
-        return Result(Page(
-            count = storeApproveInfoCount,
-            page = page,
-            pageSize = pageSize,
-            totalPages = totalPages,
-            records = storeApproveInfoList ?: listOf()
-        ))
+        return Result(
+            Page(
+                count = storeApproveInfoCount,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                records = storeApproveInfoList ?: listOf()
+            )
+        )
     }
 
     override fun getUserStoreApproveInfo(

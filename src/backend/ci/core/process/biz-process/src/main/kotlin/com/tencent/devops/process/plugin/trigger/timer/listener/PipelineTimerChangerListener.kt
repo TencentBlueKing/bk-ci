@@ -83,9 +83,12 @@ class PipelineTimerChangerListener @Autowired constructor(
                         projectId = event.projectId,
                         pipelineId = pipelineId,
                         taskId = event.taskId ?: "",
-                        md5 = md5
+                        md5 = md5,
+                        timeZone = event.timeZone
                     )
-                    logger.info("[$pipelineId]|TimerChange|crontab=$crontab|success=$success")
+                    logger.info(
+                        "[$pipelineId]|TimerChange|crontab=$crontab|timeZone=${event.timeZone}|success=$success"
+                    )
                 }
             }
         } catch (ignored: Throwable) {

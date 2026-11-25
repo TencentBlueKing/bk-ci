@@ -63,6 +63,8 @@ data class SchedulesRule(
     val yamlBranch: String? = null,
 
     val always: Boolean? = false,
+    @get:Schema(title = "timezone")
+    val timezone: String? = null,
     @JsonIgnore
     var newExpression: List<String>? = null,
     @JsonIgnore

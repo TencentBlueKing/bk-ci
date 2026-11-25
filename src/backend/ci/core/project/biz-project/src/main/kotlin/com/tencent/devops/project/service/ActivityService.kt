@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ActivityDao
@@ -52,7 +52,7 @@ class ActivityService @Autowired constructor(
             ActivityInfo(
                 name = it.name,
                 link = it.link,
-                createTime = DateTimeUtil.toDateTime(it.createTime)
+                createTime = it.createTime?.timestampmilli()
             )
         }
     }
@@ -77,7 +77,7 @@ class ActivityService @Autowired constructor(
                     link = it.link,
                     type = it.type,
                     status = it.status,
-                    creator = it.creator, createTime = DateTimeUtil.toDateTime(it.createTime)
+                    creator = it.creator, createTime = it.createTime?.timestampmilli()
                 )
             })
         }

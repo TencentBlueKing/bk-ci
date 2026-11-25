@@ -36,14 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
+import jakarta.ws.rs.HttpMethod
+import java.util.Optional
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.HttpMethod
-import java.util.Optional
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
 import kotlin.jvm.optionals.getOrNull
 
 object MarketBuildUtils {
@@ -67,7 +67,11 @@ object MarketBuildUtils {
                 val arr = atomCodeAndVersion.split("|")
                 val atomCode = arr[0]
                 val atomVersion = arr[1]
-                val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
+                val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(
+                    tenantId = null,
+                    atomCode = atomCode,
+                    version = atomVersion
+                ).data
                 logger.info("get atom version info for : $atomCode, $atomVersion, $atom")
                 return Optional.ofNullable(atom)
             }

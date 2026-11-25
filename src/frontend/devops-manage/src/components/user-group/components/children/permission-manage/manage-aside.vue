@@ -74,7 +74,7 @@
     <template #header>
       <p v-if="!isBatchOperate">
         {{ t("移出项目") }}
-        <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser?.id }} ({{ removeUser?.name }}) </span>
+        <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser?.name }}</span>
       </p>
       <p v-else>{{ t('批量移出项目') }}</p>
     </template>
@@ -263,16 +263,16 @@
 </template>
 
 <script setup name="ManageAside">
+import ProjectUserSelector from '@/components/project-user-selector';
 import http from '@/http/api';
+import useManageAside from "@/store/manageAside";
 import { Message } from 'bkui-vue';
-import { useI18n } from 'vue-i18n';
+import { Spinner, Success } from 'bkui-vue/lib/icon';
 import { storeToRefs } from 'pinia';
+import { computed, defineEmits, defineExpose, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import MemberItem from './MemberItem.vue';
-import useManageAside from "@/store/manageAside";
-import { Success, Spinner } from 'bkui-vue/lib/icon';
-import ProjectUserSelector from '@/components/project-user-selector'
-import { ref, defineProps, defineEmits, computed, defineExpose, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   memberList: {
@@ -487,6 +487,7 @@ async function refresh () {
 
 async function getSyncStatus () {
   try {
+    if (!projectId.value) return
     syncStatus.value = await http.getSyncStatusOfAllMember(projectId.value);
     if (syncStatus.value === 'PENDING') {
       timer.value = setTimeout(() => {
@@ -517,7 +518,7 @@ function refreshHandOverfail () {
 }
 function goAuthorization(item) {
   const { resourceType, memberIds} = item
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
+  window.open(`${location.origin}${window.getRoutePrefix()}/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
 }
 /**
  * 获取人员列表数据

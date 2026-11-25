@@ -71,6 +71,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.GroupType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -110,6 +111,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 resourceCode = resourceCode
             )
 
+            val tenantId = TenantUtils.getTenantIdByEnglishName(listGroupConditionDTO.projectId)
             val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
                 val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
                 val pageInfoDTO = V2PageInfoDTO()
@@ -118,7 +120,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 iamV2ManagerService.getGradeManagerRoleGroupV2(
                     resourceInfo.relationId,
                     searchGroupDTO,
-                    pageInfoDTO
+                    pageInfoDTO,
+                    tenantId
                 ).results
             } else {
                 val pageInfoDTO = V2PageInfoDTO()
@@ -128,7 +131,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 pageInfoDTO.pageSize = validPageSize
                 iamV2ManagerService.getSubsetManagerRoleGroup(
                     resourceInfo.relationId.toInt(),
-                    pageInfoDTO
+                    pageInfoDTO,
+                    tenantId
                 ).results
             }
             val resourceGroupMap = authResourceGroupDao.getByResourceCode(
@@ -203,7 +207,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private fun getI18nGroupName(resourceGroup: AuthResourceGroup): String {
         return I18nUtil.getCodeLanMessage(
             messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
-                AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
+                    AuthI18nConstants.AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
             defaultMessage = resourceGroup.groupName
         )
     }
@@ -215,8 +219,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     ): List<IamGroupInfoVo> {
         val shouldPlusAllProjectMemberGroup =
             condition.page == FIRST_PAGE &&
-                condition.resourceType == AuthResourceType.PROJECT.value &&
-                condition.getAllProjectMembersGroup
+                    condition.resourceType == AuthResourceType.PROJECT.value &&
+                    condition.getAllProjectMembersGroup
 
         if (shouldPlusAllProjectMemberGroup) {
             val projectMemberCount = authResourceGroupMemberDao.countProjectMember(
@@ -260,11 +264,18 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
-        val iamGroupInfos =
-            iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        val iamGroupInfos = iamV2ManagerService.getSubsetManagerRoleGroup(
+            resourceInfo.relationId.toInt(),
+            pageInfoDTO,
+            tenantId
+        )
         val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
-        val verifyResult =
-            iamV2ManagerService.verifyGroupValidMember(userId, iamGroupInfoMap.keys.joinToString(","))
+        val verifyResult = iamV2ManagerService.verifyGroupValidMember(
+            userId,
+            iamGroupInfoMap.keys.joinToString(","),
+            tenantId
+        )
         return verifyResult.map { (iamGroupId, result) ->
             if (result.belong) {
                 val createTime = DateTimeUtil.toDateTime(
@@ -339,7 +350,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 defaultMessage = "default group cannot be deleted"
             )
         }
-        iamV2ManagerService.deleteRoleGroupV2(groupId)
+        iamV2ManagerService.deleteRoleGroupV2(groupId, TenantUtils.getTenantIdByEnglishName(projectId))
         // 迁移的用户组,非默认的也会保存,删除时也应该删除
         if (authResourceGroup != null) {
             dslContext.transaction { configuration ->
@@ -385,7 +396,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             managerId = projectInfo.relationId.toInt(),
             resourceType = AuthResourceType.PROJECT.value,
             groupName = groupAddDTO.groupName,
-            description = groupAddDTO.groupDesc
+            description = groupAddDTO.groupDesc,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
         authResourceGroupDao.create(
             dslContext = dslContext,
@@ -426,7 +438,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             managerId = projectInfo.relationId.toInt(),
             resourceType = AuthResourceType.PROJECT.value,
             groupName = groupAddDTO.groupName,
-            description = groupAddDTO.groupDesc
+            description = groupAddDTO.groupDesc,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
         authResourceGroupDao.create(
             dslContext = dslContext,
@@ -447,7 +460,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         resourceType: String,
         managerId: Int,
         groupName: String,
-        description: String
+        description: String,
+        tenantId: String?
     ): Int {
         val iamGroupId = if (resourceType == AuthResourceType.PROJECT.value) {
             val managerRoleGroup = ManagerRoleGroup(groupName, description, false)
@@ -456,11 +470,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 .createAttributes(false)
                 .syncSubjectTemplate(true)
                 .build()
-            iamV2ManagerService.batchCreateRoleGroupV2(managerId, managerRoleGroupDTO)
+            iamV2ManagerService.batchCreateRoleGroupV2(managerId, managerRoleGroupDTO, tenantId)
         } else {
             val managerRoleGroup = ManagerRoleGroup(groupName, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
-            iamV2ManagerService.batchCreateSubsetRoleGroup(managerId, managerRoleGroupDTO)
+            iamV2ManagerService.batchCreateSubsetRoleGroup(managerId, managerRoleGroupDTO, tenantId)
         }
         return iamGroupId
     }
@@ -499,7 +513,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         checkDuplicateGroupName(projectId, renameGroupDTO.groupName)
         val managerRoleGroup = ManagerRoleGroup()
         managerRoleGroup.name = renameGroupDTO.groupName
-        iamV2ManagerService.updateRoleGroupV2(groupId, managerRoleGroup)
+        iamV2ManagerService.updateRoleGroupV2(
+            groupId,
+            managerRoleGroup,
+            TenantUtils.getTenantIdByEnglishName(projectId)
+        )
         return true
     }
 
@@ -521,7 +539,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         v2PageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE
         v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
         val gradeManagerRoleGroupList =
-            iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+            iamV2ManagerService.getGradeManagerRoleGroupV2(
+                projectInfo.relationId,
+                searchGroupDTO,
+                v2PageInfoDTO,
+                TenantUtils.getTenantIdByEnglishName(projectId)
+            )
         if (gradeManagerRoleGroupList.results.isNotEmpty() &&
             gradeManagerRoleGroupList.results.map { it.name }.contains(groupName)
         ) {
@@ -586,7 +609,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 resourceType = resourceType,
                 managerId = resourceInfo.relationId.toInt(),
                 groupName = finalGroupName,
-                description = description
+                description = description,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
             )
             authResourceGroupDao.create(
                 dslContext = dslContext,
@@ -641,7 +665,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             managerId = projectInfo.relationId.toInt(),
             groupName = customGroupCreateReq.groupName,
-            description = customGroupCreateReq.groupDesc
+            description = customGroupCreateReq.groupDesc,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
         authResourceGroupDao.create(
             dslContext = dslContext,
@@ -687,10 +712,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         projectCode: String,
         memberId: String
     ): List<String> {
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         // 获取用户的所属组织
-        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+        val memberDeptInfos = deptService.getUserInfo(memberId, tenantId)?.deptInfo?.let {
             if (it.isNotEmpty()) {
-                deptService.getUserDeptInfo(memberId).toList()
+                deptService.getUserDeptInfo(memberId, tenantId).toList()
             } else {
                 emptyList()
             }
@@ -732,17 +758,20 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
             iamV2ManagerService.getGradeManagerRoleGroupV2(
                 managerId.toString(),
                 searchGroupDTO,
-                pageInfoDTO
+                pageInfoDTO,
+                tenantId
             )
         } else {
             iamV2ManagerService.getSubsetManagerRoleGroup(
                 managerId,
-                pageInfoDTO
+                pageInfoDTO,
+                tenantId
             )
         }
         iamGroupInfoList.results.forEach { iamGroupInfo ->
@@ -787,7 +816,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         )
         records.forEach {
             logger.info("delete subset manage default group|$managerId|${it.relationId}")
-            iamV2ManagerService.deleteRoleGroupV2(it.relationId)
+            iamV2ManagerService.deleteRoleGroupV2(it.relationId, TenantUtils.getTenantIdByEnglishName(projectCode))
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)

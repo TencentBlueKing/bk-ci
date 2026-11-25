@@ -29,6 +29,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -64,6 +65,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
@@ -285,6 +289,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @Parameter(description = "待校验用户ID", required = true)
         userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String? = null,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @Parameter(description = "认证token", required = true)
         token: String,
