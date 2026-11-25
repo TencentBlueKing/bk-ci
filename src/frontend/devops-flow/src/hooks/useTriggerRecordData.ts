@@ -6,13 +6,11 @@ import { formatDate } from '@/utils/util'
 import { Button } from 'bkui-vue'
 import { overflowTitle } from 'bkui-vue/lib/directives'
 import { storeToRefs } from 'pinia'
-import { computed, h, withDirectives } from 'vue'
+import { computed, h, withDirectives, type VNode } from 'vue'
 import { useTriggerRecordStore } from '../stores/triggerRecord'
 import EventDesc from '@/views/Flow/Detail/TriggerRecord/EventDesc'
 import {
-  BUILD_NUM_LINK_REG,
-  safeUrl,
-  toText,
+  parseAnchors,
 } from '@/views/Flow/Detail/TriggerRecord/eventDescConfig'
 
 export interface Styles {
@@ -41,29 +39,25 @@ export function useTriggerRecordData(styles: Styles) {
   }
 
   /**
-   * 渲染 buildNum：后端历史会下发 `<a href="..." target="_blank">xxx</a>` 这样的 HTML 串，
-   * 这里通过 BUILD_NUM_LINK_REG 解析出 href/text，再用 safeUrl 校验后用 vnode 渲染，
-   * 避免 v-html / innerHTML 导致的 XSS 风险。校验失败则降级为纯文本。
+   * 渲染 buildNum / reasonDetailList：后端可能下发内嵌 `<a href="..." target="_blank">xxx</a>`
+   * 的 HTML 串，这里通过 parseAnchors 解析成文本/链接片段，再用 safeUrl 校验后用 vnode 渲染，
+   * 避免 v-html / innerHTML 导致的 XSS 风险。非法/校验失败的链接自动降级为纯文本。
    */
-  function renderBuildNum(buildNum: string) {
-    const match = toText(buildNum).match(BUILD_NUM_LINK_REG)
-    if (match) {
-      const href = safeUrl(match[1])
-      if (href) {
-        return h(
-          'a',
-          {
-            class: 'text-link',
-            href,
-            target: '_blank',
-            rel: 'noopener noreferrer',
-          },
-          match[2],
-        )
-      }
-      return match[2]
-    }
-    return buildNum
+  function renderAnchorSegments(value: string): (string | VNode)[] {
+    return parseAnchors(value).map((seg) =>
+      seg.type === 'link'
+        ? h(
+            'a',
+            {
+              class: 'text-link',
+              href: seg.href,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            },
+            seg.text,
+          )
+        : seg.text,
+    )
   }
 
   /**
@@ -131,13 +125,13 @@ export function useTriggerRecordData(styles: Styles) {
                 [
                   event.reason && h('span', event.reason),
                   event.reason && ' | ',
-                  event.buildNum && h('em', renderBuildNum(event.buildNum)),
+                  event.buildNum && h('em', renderAnchorSegments(event.buildNum)),
                   !event.buildNum &&
                     Array.isArray(event.reasonDetailList) &&
                     h(
                       'em',
                       withDirectives(
-                        h('span', { class: 'text-ellipsis' }, event.reasonDetailList.join(' | ')),
+                        h('span', { class: 'text-ellipsis' }, renderAnchorSegments(event.reasonDetailList.join(' | '))),
                         [[overflowTitle, { type: 'tips' }]],
                       ),
                     ),

@@ -1,6 +1,7 @@
 package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
@@ -17,7 +18,8 @@ class RtxNotifier @Autowired constructor(
     private val weworkService: WeworkService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
     private val dslContext: DSLContext,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val redisOperation: RedisOperation
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
@@ -31,29 +33,57 @@ class RtxNotifier @Autowired constructor(
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
-            )!!
+            ) ?: run {
+                logger.warn("no rtx template found for ${commonNotifyMessageTemplateRecord.id}")
+                return
+            }
+        val markdownBody = if (request.markdownContent == true) {
+            weworkTplRecord.bodyMd?.takeIf { it.isNotBlank() }
+        } else {
+            null
+        }
+        val effectiveRequest = if (request.markdownContent == true && markdownBody == null) {
+            request.copy(markdownContent = false)
+        } else {
+            request
+        }
         // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
         val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
-        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(
-            if (request.markdownContent == true) {
-                weworkTplRecord.bodyMd ?: weworkTplRecord.body
-            } else {
-                weworkTplRecord.body
-            },
-            language
-        )
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(markdownBody ?: weworkTplRecord.body, language)
         // 替换占位符里的动态参数
         val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
         logger.info("send wework msg: $finalBody ${weworkTplRecord.sender}")
+
+        // 人工审核 / Stage 审核：优先发送模板卡片（同意/拒绝 + 双端详情）
+        val reviewCard = if (WeworkReviewCardBuilder.isReviewCardTemplate(request.templateCode)) {
+            WeworkReviewCardBuilder.build(
+                request = request,
+                title = finalTitle,
+                redisOperation = redisOperation
+            )
+        } else {
+            null
+        }
+        val body = if (reviewCard != null) {
+            reviewCard.fallbackText
+        } else {
+            "$finalTitle\n\n$finalBody"
+        }
+        logger.info(
+            "reviewNotifyTrace|hop=notify.rtx|" +
+                "template=${request.templateCode}|hasCard=${reviewCard != null}|" +
+                "receiverCards=${reviewCard?.receiverCards?.size ?: 0}|title=$finalTitle|sendBody=$body"
+        )
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-            sendNotifyMessageTemplateRequest = request,
-            body = "$finalTitle\n\n$finalBody",
+            sendNotifyMessageTemplateRequest = effectiveRequest,
+            body = body,
             sender = weworkTplRecord.sender,
             weworkService = weworkService,
-            userUseDomain = userUseDomain
+            userUseDomain = userUseDomain,
+            receiverTemplateCards = reviewCard?.receiverCards
         )
     }
 

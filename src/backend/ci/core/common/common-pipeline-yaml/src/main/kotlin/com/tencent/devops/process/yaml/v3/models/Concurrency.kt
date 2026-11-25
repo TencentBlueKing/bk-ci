@@ -42,5 +42,7 @@ data class Concurrency(
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int?,
     @JsonProperty("max-parallel")
-    val maxParallel: Int?
+    val maxParallel: Int?,
+    @JsonProperty("sub-group")
+    val subGroup: String? = null
 )

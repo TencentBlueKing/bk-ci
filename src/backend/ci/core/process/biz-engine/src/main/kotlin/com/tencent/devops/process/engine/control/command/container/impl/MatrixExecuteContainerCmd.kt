@@ -40,10 +40,8 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
+import com.tencent.devops.process.utils.MatrixConcurrencyUtils
 import kotlin.math.max
-import kotlin.math.min
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -182,10 +180,16 @@ class MatrixExecuteContainerCmd(
         // 使局部重试不受历史失败子Job影响，只在“本轮某个失败Job刚完成”时才生效。
         val fastKill = currentRoundFailureNum > 0 && matrixOption.fastKill == true
         if (fastKill) newActionType = ActionType.TERMINATE
-        val maxConcurrency = min(
-            matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
-        )
+        // 分裂/续跑时已把变量解析后的数值严格校验并落库，此处读到的应当是合法值；
+        // 若仍读到非法值只可能是升级前遗留的在途数据，收敛到合法区间并打日志，不做静默改写
+        val originConcurrency = matrixOption.maxConcurrency
+        if (originConcurrency != null && !MatrixConcurrencyUtils.isValid(originConcurrency)) {
+            LOG.warn(
+                "ENGINE|$buildId|MATRIX_MAX_CONCURRENCY_ABNORMAL|" +
+                    "matrix(${parentContainer.containerId})|maxConcurrency=$originConcurrency"
+            )
+        }
+        val maxConcurrency = MatrixConcurrencyUtils.normalize(originConcurrency)
         if (newActionType.isEnd()) {
             buildLogPrinter.addLine(
                 buildId = buildId, message = "", tag = startVMTaskId,

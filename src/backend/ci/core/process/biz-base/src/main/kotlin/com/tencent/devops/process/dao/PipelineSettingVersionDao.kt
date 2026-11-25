@@ -72,6 +72,7 @@ class PipelineSettingVersionDao {
                 BUILD_NUM_RULE,
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
+                CONCURRENCY_SUB_GROUP,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
@@ -80,7 +81,8 @@ class PipelineSettingVersionDao {
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
                 ENV_HASH_ID,
-                ENV_NAME
+                ENV_NAME,
+                YAML_LOCKED
             ).values(
                 id,
                 setting.projectId,
@@ -97,6 +99,7 @@ class PipelineSettingVersionDao {
                 setting.buildNumRule,
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
+                setting.concurrencySubGroup,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.pipelineAsCodeSettings?.let { self ->
@@ -107,7 +110,8 @@ class PipelineSettingVersionDao {
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
                 setting.envHashId,
-                setting.envName
+                setting.envName,
+                setting.yamlLocked ?: false
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -118,6 +122,7 @@ class PipelineSettingVersionDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
@@ -132,6 +137,9 @@ class PipelineSettingVersionDao {
             }
             setting.envName?.let { envName ->
                 insert.set(ENV_NAME, envName)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                insert.set(YAML_LOCKED, yamlLocked)
             }
             return insert.execute()
         }
@@ -154,6 +162,7 @@ class PipelineSettingVersionDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
@@ -166,6 +175,9 @@ class PipelineSettingVersionDao {
             }
             setting.envName?.let { envName ->
                 updateStep.set(ENV_NAME, envName)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                updateStep.set(YAML_LOCKED, yamlLocked)
             }
             updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
@@ -286,6 +298,7 @@ class PipelineSettingVersionDao {
                     maxQueueSize = t.maxQueueSize,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                    concurrencySubGroup = t.concurrencySubGroup,
                     concurrencyGroup = t.concurrencyGroup,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
@@ -294,7 +307,8 @@ class PipelineSettingVersionDao {
                     failIfVariableInvalid = t.failIfVariableInvalid,
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     envHashId = t.envHashId,
-                    envName = t.envName
+                    envName = t.envName,
+                    yamlLocked = t.yamlLocked
                 )
             }
         }

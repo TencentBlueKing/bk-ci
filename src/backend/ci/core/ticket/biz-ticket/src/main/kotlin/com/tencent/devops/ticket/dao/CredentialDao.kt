@@ -75,7 +75,8 @@ class CredentialDao {
         credentialV2: String?,
         credentialV3: String?,
         credentialV4: String?,
-        credentialRemark: String?
+        credentialRemark: String?,
+        aesKeySha: String
     ) {
         val now = LocalDateTime.now()
         with(TCredential.T_CREDENTIAL) {
@@ -94,7 +95,8 @@ class CredentialDao {
                     CREDENTIAL_REMARK,
                     CREATED_TIME,
                     UPDATED_TIME,
-                    UPDATE_USER
+                    UPDATE_USER,
+                    AES_KEY_SHA
                 )
                 .values(
                     projectId,
@@ -109,7 +111,8 @@ class CredentialDao {
                     credentialRemark,
                     now,
                     now,
-                    credentialUserId
+                    credentialUserId,
+                    aesKeySha
                 )
                 .execute()
         }
@@ -251,7 +254,13 @@ class CredentialDao {
         }
     }
 
-    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, credentialId: String): List<TCredentialRecord> {
+    fun searchByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        credentialId: String
+    ): List<TCredentialRecord> {
         return with(TCredential.T_CREDENTIAL) {
             dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId).and(CREDENTIAL_ID.like("%$credentialId%")))

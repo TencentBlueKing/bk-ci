@@ -55,7 +55,8 @@ class PipelineModelBeforeVersionPostProcessor @Autowired constructor(
         pipelineSetting: PipelineSetting
     ) {
         with(context) {
-            if (pipelineResourceVersion.status != VersionStatus.RELEASED) {
+            // 新建流水线没有已存在的模型
+            if (pipelineResourceVersion.status != VersionStatus.RELEASED || pipelineInfo == null) {
                 return
             }
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(

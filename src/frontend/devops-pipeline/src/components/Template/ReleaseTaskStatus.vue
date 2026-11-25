@@ -226,6 +226,8 @@
             })
             releaseRes.value = res.data
             releaseStatus.value = res.data.status
+            // 向父组件同步发布任务状态，便于父组件感知任务是否已进入运行结束态
+            proxy.$emit('status-change', releaseStatus.value)
             if ([RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value)) {
                 timer.value = setTimeout(() => {
                     fetchReleaseTaskStatus()

@@ -533,10 +533,10 @@
             name: 'instanceEntry',
             params: {
                 ...proxy.$route.params,
-                version: pipelineInfo.value?.releaseVersion,
+                version: proxy.$route.params.version,
                 type: 'upgrade'
             }
-        })
+        }).catch(() => {})
     }
 
     function getErrorType (row) {

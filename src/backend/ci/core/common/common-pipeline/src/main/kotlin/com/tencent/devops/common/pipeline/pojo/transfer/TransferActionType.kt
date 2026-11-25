@@ -59,12 +59,9 @@ enum class TransferActionType {
     @Schema(title = "流水线模板转换：model -> yaml")
     TEMPLATE_MODEL2YAML_PIPELINE {
         override fun check(data: TransferBody) {
-            if (data.templateModelAndSetting?.templateModel == null) {
+            val templateModelAndSetting = data.templateModelAndSetting
+            if (templateModelAndSetting?.templateModel == null) {
                 throw ParamBlankException("templateModel 不能为空")
-            }
-
-            if (data.templateModelAndSetting.setting == null) {
-                throw ParamBlankException("setting 不能为空")
             }
         }
     },

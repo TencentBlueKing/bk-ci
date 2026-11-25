@@ -159,9 +159,6 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "事件ID", required = false)
         @QueryParam("eventId")
         eventId: Long?,
-        @Parameter(description = "流水线名称", required = false)
-        @QueryParam("pipelineName")
-        pipelineName: String?,
         @Parameter(description = "触发状态", required = false)
         @QueryParam("reason")
         reason: PipelineTriggerReason?,
@@ -195,9 +192,6 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "流水线名", required = false)
-        @QueryParam("pipelineName")
-        pipelineName: String?,
         @QueryParam("reason")
         reason: PipelineTriggerReason?,
         @Parameter(description = "第几页", required = false, example = "1")

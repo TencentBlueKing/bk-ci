@@ -370,7 +370,13 @@ class GitScmService @Autowired constructor(
         repoUrl: String = ""
     ): String {
         return if (authType == TokenTypeEnum.OAUTH) {
-            client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
+            val oauthResource = client.get(ServiceOauthResource::class)
+            val gitToken = if (scmType == ScmType.CODE_TGIT) {
+                oauthResource.tGitGet(userName).data
+            } else {
+                oauthResource.gitGet(userName).data
+            }
+            gitToken?.accessToken ?: ""
         } else {
             getCredential(projectId, credentialId, scmType = scmType, repoUrl = repoUrl)
         }

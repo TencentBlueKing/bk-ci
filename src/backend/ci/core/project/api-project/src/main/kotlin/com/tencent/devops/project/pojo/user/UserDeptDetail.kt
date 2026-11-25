@@ -62,5 +62,7 @@ data class UserDeptDetail(
     @get:Schema(title = "用户名称")
     var name: String? = null,
     @get:Schema(title = "部门及以上层级")
-    val deptInfos: List<BkDeptInfo>? = emptyList()
+    val deptInfos: List<BkDeptInfo>? = emptyList(),
+    @get:Schema(title = "完整部门链路，含多级小组")
+    val fullDepartments: List<UserFullDepartment>? = null
 )

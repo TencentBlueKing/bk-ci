@@ -30,6 +30,9 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import kotlin.math.min
 import org.slf4j.LoggerFactory
@@ -128,9 +131,13 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
                 return@forEach
             }
             trimmed++
+            // 对账淘汰的是最早排队，没有单一触发构建，文案不带 {0}。
+            // 拦截器满员挤出用 BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD，两处不要合并。
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[$pipelineId] queue size exceeded limit($maxQueueSize), cancel the earliest queued build",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_CONCURRENCY_QUEUE_SIZE_CANCEL
+                ),
                 tag = TAG,
                 containerHashId = "",
                 executeCount = buildInfo.executeCount,
@@ -145,7 +152,12 @@ class PipelineConcurrencyQueueTrimService @Autowired constructor(
                     userId = userId,
                     buildId = buildInfo.buildId,
                     status = BuildStatus.CANCELED,
-                    executeCount = buildInfo.executeCount
+                    executeCount = buildInfo.executeCount,
+                    // 与启动拦截器的并发组挤出使用同一张系统取消卡片。对账没有单一触发构建，不写操作人。
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_GROUP,
+                        reasonParams = listOf(concurrencyGroup)
+                    )
                 )
             )
         }

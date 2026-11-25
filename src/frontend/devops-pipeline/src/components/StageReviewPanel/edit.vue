@@ -234,7 +234,7 @@
                 return this.notifyGroup.join(',')
             },
             markdownContent () {
-                return this.stageControl?.markdownContent
+                return this.stageControl?.markdownContent === true
             },
             notifyTypeList () {
                 return [
@@ -305,7 +305,7 @@
                     manualTrigger: false,
                     reviewGroups: [],
                     notifyType: ['RTX'],
-                    markdownContent: true,
+                    markdownContent: false,
                     timeout: 24,
                     isReviewError: !this.validateStageControl(),
                     ...(this.stageControl ?? {})

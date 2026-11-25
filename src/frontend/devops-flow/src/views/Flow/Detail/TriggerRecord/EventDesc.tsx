@@ -1,5 +1,5 @@
 import { computed, defineComponent, h, type PropType } from 'vue'
-import { I18nT } from 'vue-i18n'
+import { I18nT, useI18n } from 'vue-i18n'
 import {
   EVENT_DESC_PARAM_MAPPERS,
   EVENT_DESC_SLOT_NAMES,
@@ -59,6 +59,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { t } = useI18n()
     const normalized = computed(() => normalizeEventDesc(props.eventDesc))
 
     const mapper = computed(() => EVENT_DESC_PARAM_MAPPERS[normalized.value.code])
@@ -73,7 +74,9 @@ export default defineComponent({
       if (!mapper.value) return {}
       const raw = mapper.value(normalized.value.params || [])
       return Object.entries(raw).reduce<Record<string, SlotData>>((acc, [name, param]) => {
-        if (param.type === 'link') {
+        if (param.type === 'i18n') {
+          acc[name] = { type: 'text', text: t(`${I18N_PREFIX}${param.text}`) }
+        } else if (param.type === 'link') {
           const href = safeUrl(param.href)
           acc[name] = href ? { ...param, href } : { type: 'text', text: param.text }
         } else {

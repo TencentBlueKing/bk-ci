@@ -29,6 +29,7 @@ package com.tencent.devops.notify.model
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_WEWORK
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.wework.WeworkTemplateCard
 
 @Suppress("ALL")
 @Event(NOTIFY_WEWORK)
@@ -36,9 +37,15 @@ class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0
     var lastError: String? = null
+    /** 兼容单卡发送；审核新链路请用 receiverTemplateCards */
+    var templateCard: WeworkTemplateCard? = null
+    /** 按接收人拆分的审核卡片。非空时每人独立发送，失败只给该人降级文本 */
+    var receiverTemplateCards: Map<String, WeworkTemplateCard>? = null
 
     override fun toString(): String {
-        return String.format("id(%s), retryCount(%s), message(%s) ",
-            id, retryCount, super.toString())
+        return String.format(
+            "id(%s), retryCount(%s), hasCard(%s), receiverCards(%s), message(%s) ",
+            id, retryCount, templateCard != null, receiverTemplateCards?.size ?: 0, super.toString()
+        )
     }
 }

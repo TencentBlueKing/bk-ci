@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ArtifactTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -95,6 +96,7 @@ import org.json.JSONObject
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = TapdWebHookTriggerElement::class, name = TapdWebHookTriggerElement.classType),
+    JsonSubTypes.Type(value = ArtifactTriggerElement::class, name = ArtifactTriggerElement.classType),
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmGitWebHookTriggerElement::class, name = CodeScmGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmSvnWebHookTriggerElement::class, name = CodeScmSvnWebHookTriggerElement.classType),
@@ -171,7 +173,17 @@ abstract class Element(
         title = "插件上报的外部链接（仅运行构建时有用的中间参数，不要在编排保存阶段设置值）",
         required = false
     )
-    open var externalLink: String? = null
+    open var externalLink: String? = null,
+    @get:Schema(
+        title = "步骤开始时间（毫秒时间戳，仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var startTime: Long? = null,
+    @get:Schema(
+        title = "步骤结束时间（毫秒时间戳，仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）",
+        required = false
+    )
+    open var endTime: Long? = null
 ) {
 
     open fun getAtomCode() = getClassType()

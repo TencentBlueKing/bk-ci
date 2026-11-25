@@ -126,7 +126,8 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode?,
-        pipelineName: String?
+        pipelineName: String?,
+        selectedPipelineId: String?
     ): Result<Page<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val result = ChannelContext.withChannel(channelCode?.name ?: ChannelContext.getChannel()) {
@@ -137,7 +138,8 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
                 excludePipelineId = excludePipelineId,
                 page = page,
                 pageSize = pageSize,
-                pipelineName = pipelineName
+                pipelineName = pipelineName,
+                selectedPipelineId = selectedPipelineId
             )
         }
         return Result(

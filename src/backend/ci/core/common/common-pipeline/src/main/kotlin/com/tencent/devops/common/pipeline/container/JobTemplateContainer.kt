@@ -77,7 +77,11 @@ data class JobTemplateContainer(
     @get:Schema(title = "开机任务序号", required = false, readOnly = true)
     override var startVMTaskSeq: Int? = null,
     @get:Schema(title = "模版信息", required = false)
-    val template: TemplateDescriptor? = null
+    val template: TemplateDescriptor? = null,
+    @get:Schema(title = "作业开始时间（毫秒时间戳）", required = false, readOnly = true)
+    override var startTime: Long? = null,
+    @get:Schema(title = "作业结束时间（毫秒时间戳）", required = false, readOnly = true)
+    override var endTime: Long? = null
 ) : Container {
     companion object {
         const val classType = "jobTemplate"

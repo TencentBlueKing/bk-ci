@@ -7,6 +7,7 @@ import type { EditGroupParams, FlowGroupItem } from '../../api/flowGroup'
 import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
 import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
 import { useFlowGroupData } from '../../hooks/useFlowGroupData'
+import { getConsoleOrigin } from '../../utils/util'
 import { SvgIcon } from '../SvgIcon'
 import { CreateGroupDialog } from './CreateGroupDialog'
 import styles from './FlowGroupAside.module.css'
@@ -204,7 +205,7 @@ export const FlowGroupAside = defineComponent({
       // 这里需要根据实际的路由配置来实现
       // 暂时使用 window.open 或路由跳转
       const projectCode = (router.currentRoute.value.params.projectCode as string) || ''
-      const permissionUrl = `/manage/${projectCode}/permission?groupId=${item.id}`
+      const permissionUrl = `${getConsoleOrigin()}/console/manage/${projectCode}/permission?groupId=${item.id}`
       window.open(permissionUrl, '_blank')
     }
 

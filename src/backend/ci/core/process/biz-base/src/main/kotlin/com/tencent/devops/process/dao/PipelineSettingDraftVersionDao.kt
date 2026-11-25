@@ -45,12 +45,14 @@ class PipelineSettingDraftVersionDao {
                 BUILD_NUM_RULE,
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
+                CONCURRENCY_SUB_GROUP,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
-                BUILD_CANCEL_POLICY
+                BUILD_CANCEL_POLICY,
+                YAML_LOCKED
             ).values(
                 setting.projectId,
                 setting.pipelineId,
@@ -66,12 +68,14 @@ class PipelineSettingDraftVersionDao {
                 setting.buildNumRule,
                 setting.concurrencyGroup,
                 setting.concurrencyCancelInProgress,
+                setting.concurrencySubGroup,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
                 setting.maxConRunningQueueSize,
                 setting.failIfVariableInvalid,
-                setting.buildCancelPolicy.value
+                setting.buildCancelPolicy.value,
+                setting.yamlLocked ?: false
             ).execute()
         }
     }
@@ -102,7 +106,7 @@ class PipelineSettingDraftVersionDao {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
         with(T_PIPELINE_SETTING_DRAFT_VERSION) {
-            dslContext.update(this)
+            val updateStep = dslContext.update(this)
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
                 .set(LABELS, setting.labels.let { JsonUtil.toJson(it, false) })
@@ -112,13 +116,17 @@ class PipelineSettingDraftVersionDao {
                 .set(BUILD_NUM_RULE, setting.buildNumRule)
                 .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) })
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
-                .where(PROJECT_ID.eq(setting.projectId))
+            setting.yamlLocked?.let { yamlLocked ->
+                updateStep.set(YAML_LOCKED, yamlLocked)
+            }
+            updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
                 .and(VERSION.eq(version))
                 .and(DRAFT_VERSION.eq(draftVersion))
@@ -155,12 +163,14 @@ class PipelineSettingDraftVersionDao {
                     maxQueueSize = r.maxQueueSize,
                     concurrencyGroup = r.concurrencyGroup,
                     concurrencyCancelInProgress = r.concurrencyCancelInProgress,
+                    concurrencySubGroup = r.concurrencySubGroup,
                     pipelineAsCodeSettings = r.pipelineAsCodeSettings?.let {
                         JsonUtil.to(it, PipelineAsCodeSettings::class.java)
                     },
                     maxConRunningQueueSize = r.maxConRunningQueueSize,
                     failIfVariableInvalid = r.failIfVariableInvalid,
-                    buildCancelPolicy = BuildCancelPolicy.parse(r.buildCancelPolicy)
+                    buildCancelPolicy = BuildCancelPolicy.parse(r.buildCancelPolicy),
+                    yamlLocked = r.yamlLocked
                 )
             }
         }

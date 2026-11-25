@@ -83,6 +83,9 @@
                     case 'atom':
                         res = this.atom.recentExecuteNum
                         break
+                    case 'creative':
+                        res = this.atom.recentExecuteNum
+                        break
                     default:
                         res = this.atom.downloads
                         break

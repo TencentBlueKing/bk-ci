@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
@@ -51,6 +52,8 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MATRIX_MAX_CONCURRENCY_INVALID
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -70,16 +73,16 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.utils.MatrixConcurrencyUtils
 import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import kotlin.math.min
 
 /**
  * Stage计算构建矩阵事件命令处理
@@ -100,6 +103,7 @@ class InitializeMatrixGroupStageCmd(
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
+    private val pipelineContextService: PipelineContextService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
@@ -109,6 +113,8 @@ class InitializeMatrixGroupStageCmd(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(InitializeMatrixGroupStageCmd::class.java)
+        // 容器记录的变量表中存放Job名的key
+        private const val CONTAINER_NAME_KEY = "name"
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -135,6 +141,22 @@ class InitializeMatrixGroupStageCmd(
                 "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_REUSE|" +
                     "matrix(${parentContainer.containerId})|reuseChildCount=${existingChildren.size}"
             )
+            // 局部重试不重新分裂，但最大并发数可能由变量配置，仍需解析校验后交给下游调度，
+            // 否则会沿用解析前的旧值，变相绕过有效性要求
+            try {
+                refreshMaxConcurrency(commandContext = commandContext, parentContainer = parentContainer)
+            } catch (ignore: Throwable) {
+                // 与分裂失败保持完全一致的失败处理：异常若冒泡到MQ监听会被吞掉并重试数次才结束，
+                // 既拿不到「最大并发数非法」的文案，也让Job迟迟不失败
+                logMatrixFailure(
+                    commandContext = commandContext,
+                    parentContainer = parentContainer,
+                    ignore = ignore,
+                    scene = "reuse"
+                )
+                markMatrixFailed(commandContext = commandContext, parentContainer = parentContainer)
+                return
+            }
             commandContext.buildStatus = BuildStatus.RUNNING
             commandContext.latestSummary = "Matrix(${parentContainer.containerId}) reuse(${existingChildren.size})"
             return
@@ -157,20 +179,11 @@ class InitializeMatrixGroupStageCmd(
                 generateMatrixGroup(commandContext, parentContainer)
             }
         } catch (ignore: Throwable) {
-            LOG.error(
-                "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
-                    "matrix(${parentContainer.containerId})|" +
-                    "parentContainer=$parentContainer",
-                ignore
-            )
-            buildLogPrinter.addRedLine(
-                buildId = parentContainer.buildId,
-                message = "Abnormal matrix calculation: ${ignore.message}",
-                tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
-                containerHashId = parentContainer.containerHashId,
-                executeCount = commandContext.executeCount,
-                jobId = null,
-                stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
+            logMatrixFailure(
+                commandContext = commandContext,
+                parentContainer = parentContainer,
+                ignore = ignore,
+                scene = "init"
             )
             0
         }
@@ -183,10 +196,42 @@ class InitializeMatrixGroupStageCmd(
         if (count > 0) {
             commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
         } else {
-            commandContext.buildStatus = BuildStatus.FAILED
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
-            commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
+            markMatrixFailed(commandContext = commandContext, parentContainer = parentContainer)
         }
+    }
+
+    /**
+     * 记录矩阵失败的日志与构建日志红行，并让矩阵Job失败退出
+     */
+    private fun logMatrixFailure(
+        commandContext: ContainerContext,
+        parentContainer: PipelineBuildContainer,
+        ignore: Throwable,
+        scene: String
+    ) {
+        LOG.error(
+            "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_${scene.uppercase()}_FAILED|" +
+                "matrix(${parentContainer.containerId})|parentContainer=$parentContainer",
+            ignore
+        )
+        buildLogPrinter.addRedLine(
+            buildId = parentContainer.buildId,
+            message = "Abnormal matrix calculation: ${ignore.message}",
+            tag = VMUtils.genStartVMTaskId(parentContainer.containerId),
+            containerHashId = parentContainer.containerHashId,
+            executeCount = commandContext.executeCount,
+            jobId = null,
+            stepId = VMUtils.genStartVMTaskId(parentContainer.containerId)
+        )
+    }
+
+    /**
+     * 矩阵Job失败退出：进入FINALLY结束本Job，失败原因已在[logMatrixFailure]写入构建日志
+     */
+    private fun markMatrixFailed(commandContext: ContainerContext, parentContainer: PipelineBuildContainer) {
+        commandContext.buildStatus = BuildStatus.FAILED
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
+        commandContext.latestSummary = "j(${parentContainer.containerId}) matrix failed"
     }
 
     private fun generateMatrixGroup(
@@ -259,7 +304,12 @@ class InitializeMatrixGroupStageCmd(
                     dependOnName = null,
                     dependOnContainerId2JobIds = null
                 )
-                matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
+                matrixOption = fetchMatrixOption(
+                    option = modelContainer.matrixControlOption,
+                    jobName = modelContainer.name,
+                    commandContext = commandContext,
+                    dialect = dialect
+                )
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
                 variables[NODE_OS]
@@ -453,7 +503,12 @@ class InitializeMatrixGroupStageCmd(
                     dependOnName = null,
                     dependOnContainerId2JobIds = null
                 )
-                matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
+                matrixOption = fetchMatrixOption(
+                    option = modelContainer.matrixControlOption,
+                    jobName = modelContainer.name,
+                    commandContext = commandContext,
+                    dialect = dialect
+                )
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
 
@@ -603,10 +658,9 @@ class InitializeMatrixGroupStageCmd(
         // 新增容器全部添加到Container表中
         buildContainerList.addAll(groupContainers)
         matrixOption.totalCount = groupContainers.size
-        matrixOption.maxConcurrency = min(
-            matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
-        )
+        // 同步回当前容器快照：同一条命令链内的MatrixExecuteContainerCmd复用commandContext.container，
+        // 只落库不回写会让首轮调度读到解析前的旧值，使变量被忽略或突破并发上限
+        parentContainer.controlOption.matrixControlOption?.maxConcurrency = matrixOption.maxConcurrency
 
         LOG.info(
             "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
@@ -907,14 +961,169 @@ class InitializeMatrixGroupStageCmd(
         }
     }
 
-    private fun checkAndFetchOption(option: MatrixControlOption?): MatrixControlOption {
-        if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
-            throw InvalidParamException(
-                "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+    /**
+     * 取出矩阵配置并解析出最大并发数，返回解析后的配置副本（不修改编排快照本身）：
+     * 最大并发数支持变量（[MatrixControlOption.maxConcurrencyVar]），启动时先用上下文变量解析，
+     * 解析结果必须是1到上限之间的整数，否则矩阵Job直接失败退出，
+     * 不做静默截断或回退，避免用变量绕过最大并发数的有效性要求。
+     */
+    private fun fetchMatrixOption(
+        option: MatrixControlOption?,
+        jobName: String,
+        commandContext: ContainerContext,
+        dialect: IPipelineDialect
+    ): MatrixControlOption {
+        val matrixOption = option ?: throw DependNotFoundException("matrix option not found")
+        return matrixOption.copy(
+            maxConcurrency = resolveMaxConcurrency(
+                option = matrixOption,
+                jobName = jobName,
+                commandContext = commandContext,
+                dialect = dialect
+            )
+        )
+    }
+
+    /**
+     * 局部重试（子容器已存在）不会重新分裂，最大并发数若由变量配置同样需要解析并校验，
+     * 解析结果写入当前容器快照并落库，保证下游MatrixExecuteContainerCmd读到的是解析后的值。
+     */
+    private fun refreshMaxConcurrency(
+        commandContext: ContainerContext,
+        parentContainer: PipelineBuildContainer
+    ) {
+        val option = parentContainer.controlOption.matrixControlOption ?: return
+        val dialect = PipelineDialectUtil.getPipelineDialect(commandContext.variables[PIPELINE_DIALECT])
+        val maxConcurrency = resolveMaxConcurrency(
+            option = option,
+            jobName = fetchJobName(parentContainer),
+            commandContext = commandContext,
+            dialect = dialect
+        )
+        val originConcurrency = option.maxConcurrency
+        option.maxConcurrency = maxConcurrency
+        // 解析结果必须落库：后续轮询事件都会从DB重新加载容器，
+        // 只改内存会让下一轮读回解析前的旧值，变量配置等同于不生效。
+        // 值未变化时跳过写库，避免每次轮询事件都产生一次无效更新
+        if (originConcurrency != maxConcurrency) {
+            pipelineContainerService.updateMatrixGroupStatus(
+                projectId = parentContainer.projectId,
+                pipelineId = parentContainer.pipelineId,
+                buildId = parentContainer.buildId,
+                stageId = parentContainer.stageId,
+                matrixGroupId = parentContainer.containerId,
+                executeCount = parentContainer.executeCount,
+                buildStatus = commandContext.buildStatus,
+                modelContainer = null,
+                controlOption = parentContainer.controlOption
             )
         }
-        return option
     }
+
+    /**
+     * 取矩阵Job名用于失败文案：构建容器记录里没有直接的名称字段，
+     * 从容器记录的变量表中读取，取不到时退回容器ID
+     */
+    private fun fetchJobName(parentContainer: PipelineBuildContainer): String {
+        val record = containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
+            buildId = parentContainer.buildId,
+            containerId = parentContainer.containerId,
+            executeCount = parentContainer.executeCount
+        )
+        return record?.containerVar?.get(CONTAINER_NAME_KEY)?.toString() ?: parentContainer.containerId
+    }
+
+    /**
+     * 构造解析最大并发数使用的变量上下文：构建变量 + [PipelineContextService.buildContext]聚合的运行上下文
+     * （job 输出变量、job 状态、矩阵聚合输出、ci.* 等）。
+     *
+     * 只聚合不替换：buildContext 只输出上下文键，原始构建变量始终保留，
+     * 与 CheckConditionalSkipContainerCmd 等运行时判断的用法保持一致。
+     */
+    // 非 private：供单测直接覆盖变量解析（含聚合上下文）的各类场景
+    internal fun buildConcurrencyVariables(commandContext: ContainerContext): Map<String, String> {
+        val container = commandContext.container
+        return commandContext.variables.plus(
+            pipelineContextService.buildContext(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerId = container.containerId,
+                taskId = null,
+                variables = commandContext.variables,
+                executeCount = commandContext.executeCount
+            )
+        )
+    }
+
+    /**
+     * 解析并校验最大并发数，返回生效值（未配置时取默认值）：
+     * 变量表达式先用上下文变量解析，解析结果必须是1到上限之间的整数，
+     * 否则矩阵Job直接失败退出，不做静默截断或回退，避免用变量绕过最大并发数的有效性要求。
+     *
+     * 解析上下文除构建变量外，还合并[PipelineContextService.buildContext]聚合的运行上下文
+     * （jobs.<jobId>.steps.<stepId>.outputs.<name>、job状态、矩阵聚合输出、ci.*等），
+     * 与Job运行条件等其它运行时表达式判断保持一致，避免同一表达式在条件里能解析、在并发数里解析不了。
+     *
+     * 注意：输出变量没有裸名短键（短键 steps.<stepId>.outputs.<name> 只对当前Job生效），
+     * 跨Job引用必须使用完整表达式如 ${{ jobs.<jobId>.steps.<stepId>.outputs.<name> }}，
+     * 裸名（如 ${{my_name}}）在任何上下文中都不存在，只能命中流水线入参/普通构建变量。
+     */
+    // 非 private：供单测直接覆盖变量解析（含聚合上下文）的各类场景
+    internal fun resolveMaxConcurrency(
+        option: MatrixControlOption,
+        jobName: String,
+        commandContext: ContainerContext,
+        dialect: IPipelineDialect
+    ): Int {
+        val concurrencyVar = option.maxConcurrencyVar?.trim()
+        if (!concurrencyVar.isNullOrBlank()) {
+            // 仅在配置了变量时才构建聚合上下文，避免给纯数字配置增加额外的构建记录读取开销
+            val variables = buildConcurrencyVariables(commandContext = commandContext)
+            val parsed = EnvReplacementParser.parse(
+                value = concurrencyVar,
+                contextMap = variables,
+                onlyExpression = dialect.supportUseExpression()
+            ).trim()
+            val concurrency = parsed.toIntOrNull()
+            if (concurrency == null || !MatrixConcurrencyUtils.isValid(concurrency)) {
+                LOG.warn(
+                    "ENGINE|MATRIX_MAX_CONCURRENCY_VAR_INVALID|job=$jobName|var=$concurrencyVar|parsed=$parsed"
+                )
+                // 解析结果为空时展示原始变量表达式，避免出现「最大并发数为 ，须为...」这种无值文案
+                throw InvalidParamException(
+                    invalidMessage(
+                        jobName = jobName,
+                        value = parsed.takeIf { it.isNotBlank() } ?: concurrencyVar,
+                        userId = commandContext.event.userId
+                    )
+                )
+            }
+            return concurrency
+        }
+        val maxConcurrency = MatrixConcurrencyUtils.default(option.maxConcurrency)
+        if (!MatrixConcurrencyUtils.isValid(maxConcurrency)) {
+            LOG.warn("ENGINE|MATRIX_MAX_CONCURRENCY_INVALID|job=$jobName|maxConcurrency=$maxConcurrency")
+            throw InvalidParamException(
+                invalidMessage(
+                    jobName = jobName,
+                    value = maxConcurrency.toString(),
+                    userId = commandContext.event.userId
+                )
+            )
+        }
+        return maxConcurrency
+    }
+
+    /** 「运行时」场景的文案：Matrix job「{Job 名}」的最大并发数为 {值}，须为 1-MAX 的整数 */
+    private fun invalidMessage(jobName: String, value: String, userId: String): String =
+        I18nUtil.getCodeLanMessage(
+            messageCode = ERROR_MATRIX_MAX_CONCURRENCY_INVALID,
+            params = arrayOf(jobName, value, PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX.toString()),
+            language = I18nUtil.getLanguage(userId)
+        )
 }

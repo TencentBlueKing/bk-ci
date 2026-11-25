@@ -40,6 +40,12 @@ import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionCreateResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionNodeInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionPreview
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentInstallSessionRequest
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentReinstallContext
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.ReInstallResp
@@ -50,6 +56,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentInstallSessionService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
@@ -65,6 +72,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val importService: ImportService,
     private val agentMetricService: AgentMetricService,
     private val batchInstallAgentService: BatchInstallAgentService,
+    private val agentInstallSessionService: AgentInstallSessionService,
     private val tpaService: ThirdPartAgentService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
@@ -117,6 +125,81 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 agentType = agentType
             )
         )
+    }
+
+    override fun previewInstallSession(
+        userId: String,
+        projectId: String,
+        request: AgentInstallSessionRequest
+    ): Result<AgentInstallSessionPreview> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(agentInstallSessionService.preview(userId, projectId, request))
+    }
+
+    override fun createInstallSession(
+        userId: String,
+        projectId: String,
+        request: AgentInstallSessionRequest
+    ): Result<AgentInstallSessionCreateResponse> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(agentInstallSessionService.create(userId, projectId, request))
+    }
+
+    override fun listInstallSessions(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentInstallSessionDetail>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(agentInstallSessionService.list(userId, projectId, page, pageSize))
+    }
+
+    override fun getInstallSession(
+        userId: String,
+        projectId: String,
+        sessionId: String
+    ): Result<AgentInstallSessionDetail> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkSessionId(sessionId)
+        return Result(agentInstallSessionService.get(userId, projectId, sessionId))
+    }
+
+    override fun listInstallSessionNodes(
+        userId: String,
+        projectId: String,
+        sessionId: String
+    ): Result<List<AgentInstallSessionNodeInfo>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkSessionId(sessionId)
+        return Result(agentInstallSessionService.listNodes(userId, projectId, sessionId))
+    }
+
+    override fun regenerateInstallSession(
+        userId: String,
+        projectId: String,
+        sessionId: String
+    ): Result<AgentInstallSessionCreateResponse> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkSessionId(sessionId)
+        return Result(agentInstallSessionService.regenerate(userId, projectId, sessionId))
+    }
+
+    override fun getAgentReinstallContext(
+        userId: String,
+        projectId: String,
+        agentId: String
+    ): Result<AgentReinstallContext> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkAgentId(agentId)
+        return Result(agentInstallSessionService.getReinstallContext(userId, projectId, agentId))
     }
 
     override fun generateReInstallLink(
@@ -429,6 +512,12 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private fun checkAgentId(agentHashId: String) {
         if (agentHashId.isBlank()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("agentId"))
+        }
+    }
+
+    private fun checkSessionId(sessionId: String) {
+        if (sessionId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("sessionId"))
         }
     }
 

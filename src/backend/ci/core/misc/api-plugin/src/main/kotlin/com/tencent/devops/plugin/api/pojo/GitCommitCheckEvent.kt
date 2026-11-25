@@ -50,6 +50,7 @@ data class GitCommitCheckEvent(
     val triggerType: String = "",
     val startTime: Long = 0L,
     val mergeRequestId: Long? = null,
+    val enableQualityReport: Boolean? = true,
     val targetBranch: String?,
     val approvals: List<CommitCheckApproval>? = null,
     override var actionType: ActionType = ActionType.REFRESH,

@@ -214,4 +214,8 @@ BK-CI基于Spring框架构建，其Web后台服务是典型的3层结构：web�
 - biz-process-sample:  提供了开源版的示例实现： 1、与权限的对接业务逻辑实现， 2、具体业务场景中的实现。 可以交由社区根据示例自行实现。
 - boot-process:  用于管理并构建springboot微服务包，包含了启动类XXXApplication.kt 文件， 与一般的java项目一样，可以根据自己的实现修改build.gradle文件进行定制打包范围，比如开发新增了一个biz-process-xxxx的扩展，可以加入一起打包。
 - boot-engine: 预留给大规模场景下，构建出单独的引擎微服务包。 目前默认在build.gradle关闭了该配置，避免微服务规模过大。
-- 
+
+相关专题：
+
+- [AES 密钥轮换设计与开发指南](crypto_key_rotation.md)
+ 

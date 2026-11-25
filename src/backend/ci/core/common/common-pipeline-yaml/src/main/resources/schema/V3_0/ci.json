@@ -25,7 +25,22 @@
         "items" : {
           "type" : "object",
           "minProperties" : 1,
-          "additionalProperties" : false,
+          "additionalProperties" : {
+            "type" : "object",
+            "minProperties" : 1,
+            "properties" : {
+              "id" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "enable" : {
+                "type" : "boolean"
+              }
+            },
+            "additionalProperties" : true
+          },
           "properties" : {
             "push" : {
               "oneOf" : [ {
@@ -261,6 +276,9 @@
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
+                  "report-quality-results" : {
+                    "type" : "boolean"
+                  },
                   "block-mr" : {
                     "type" : "boolean"
                   },
@@ -373,6 +391,9 @@
                   "report-commit-check" : {
                     "type" : "boolean"
                   },
+                  "report-quality-results" : {
+                    "type" : "boolean"
+                  },
                   "webhook-queue" : {
                     "type" : "boolean"
                   },
@@ -466,6 +487,9 @@
                         "type" : "string"
                       }
                     },
+                    "yaml-branch" : {
+                      "type" : "string"
+                    },
                     "nodes" : {
                       "oneOf" : [ {
                         "enum" : [ "all" ]
@@ -540,6 +564,9 @@
                     "items" : {
                       "type" : "string"
                     }
+                  },
+                  "yaml-branch" : {
+                    "type" : "string"
                   },
                   "nodes" : {
                     "oneOf" : [ {
@@ -751,12 +778,7 @@
               "type" : "string"
             },
             "type" : {
-              "type" : "string",
-              "uniqueItems" : true,
-              "items" : {
-                "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
-              },
-              "additionalItems" : false
+              "type" : "string"
             },
             "change-commit" : {
               "oneOf" : [ {
@@ -1071,7 +1093,22 @@
       }, {
         "type" : "object",
         "minProperties" : 1,
-        "additionalProperties" : false,
+        "additionalProperties" : {
+          "type" : "object",
+          "minProperties" : 1,
+          "properties" : {
+            "id" : {
+              "type" : "string"
+            },
+            "name" : {
+              "type" : "string"
+            },
+            "enable" : {
+              "type" : "boolean"
+            }
+          },
+          "additionalProperties" : true
+        },
         "properties" : {
           "push" : {
             "oneOf" : [ {
@@ -1307,6 +1344,9 @@
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
+                "report-quality-results" : {
+                  "type" : "boolean"
+                },
                 "block-mr" : {
                   "type" : "boolean"
                 },
@@ -1419,6 +1459,9 @@
                 "report-commit-check" : {
                   "type" : "boolean"
                 },
+                "report-quality-results" : {
+                  "type" : "boolean"
+                },
                 "webhook-queue" : {
                   "type" : "boolean"
                 },
@@ -1512,6 +1555,9 @@
                       "type" : "string"
                     }
                   },
+                  "yaml-branch" : {
+                    "type" : "string"
+                  },
                   "nodes" : {
                     "oneOf" : [ {
                       "enum" : [ "all" ]
@@ -1586,6 +1632,9 @@
                   "items" : {
                     "type" : "string"
                   }
+                },
+                "yaml-branch" : {
+                  "type" : "string"
                 },
                 "nodes" : {
                   "oneOf" : [ {
@@ -1797,12 +1846,7 @@
             "type" : "string"
           },
           "type" : {
-            "type" : "string",
-            "uniqueItems" : true,
-            "items" : {
-              "enum" : [ "git", "tgit", "github", "svn", "p4", "gitlab", "scm_git", "scm_svn" ]
-            },
-            "additionalItems" : false
+            "type" : "string"
           },
           "change-commit" : {
             "oneOf" : [ {
@@ -3084,6 +3128,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -3201,6 +3257,9 @@
         "group" : {
           "type" : "string"
         },
+        "sub-group" : {
+          "type" : "string"
+        },
         "cancel-in-progress" : {
           "type" : "boolean"
         },
@@ -3217,7 +3276,7 @@
         "max-parallel" : {
           "type" : "integer",
           "minimum" : 1,
-          "maximum" : 200
+          "maximum" : 500
         }
       }
     },
@@ -3571,6 +3630,18 @@
                   },
                   "xcode" : {
                     "type" : "string"
+                  },
+                  "docker-build" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "enabled" : {
+                        "type" : "boolean"
+                      },
+                      "version" : {
+                        "type" : "string"
+                      }
+                    }
                   }
                 }
               } ]
@@ -3684,10 +3755,22 @@
                 "fast-kill" : {
                   "type" : "boolean"
                 },
-                "max-parallel" : {
-                  "type" : "integer",
-                  "minimum" : 0,
-                  "maximum" : 50
+                "max-parallel": {
+                  "description": "允许的最大并发数，不超过 50，支持变量表达式（变量须含 ${} 或 ${{}} 占位符）；留空表示使用默认值 5",
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 50
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^\\s*$|\\$(?:\\{\\{.*?\\}\\}|\\{[^{}]+\\})"
+                    }
+                  ]
                 }
               }
             },

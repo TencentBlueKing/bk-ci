@@ -124,6 +124,8 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            // 此处应为 CodeType.TGIT，但为了兼容历史行为保留为 CodeType.GIT：
+            // codeType 决定了 BK_CI_HOOK_TYPE 变量的取值，已有流水线可能基于该变量做条件判断，修改会导致其行为变化
             params.codeType = CodeType.GIT
             params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
@@ -136,6 +138,7 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             }
             params.fromBranches = EnvUtils.parseEnv(fromBranches ?: "", variables)
             params.webhookQueue = webhookQueue ?: false
+            params.skipWip = skipWip ?: false
             params.includeIssueAction = joinToString(includeIssueAction)
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)

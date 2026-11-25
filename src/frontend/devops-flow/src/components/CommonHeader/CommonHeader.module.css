@@ -81,6 +81,26 @@
   color: var(--color-text-secondary);
 }
 
+.switchToLatestBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 18px;
+  padding-left: var(--spacing-md);
+}
+
+.switchToLatestBtn:hover {
+  opacity: 0.85;
+}
+
+.switchToLatestBtn svg {
+  flex-shrink: 0;
+}
+
 .headerCenter {
   display: flex;
   align-items: center;

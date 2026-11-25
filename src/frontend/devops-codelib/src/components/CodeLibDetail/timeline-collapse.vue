@@ -336,6 +336,11 @@
                 }).then(res => {
                     this.eventDetailList = res.records
                     this.pagination.count = res.count
+                }).catch(e => {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
                 }).finally(() => {
                     this.isLoading = false
                 })

@@ -34,12 +34,22 @@ import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+
+data class YamlBranchTimerRow(
+    val taskId: String,
+    val startParam: String?,
+    val yamlBranch: String?
+)
 
 @Suppress("ALL")
 @Repository
 open class PipelineTimerDao {
+
+    private val yamlBranchField = DSL.field(DSL.name("YAML_BRANCH"), SQLDataType.VARCHAR)
 
     open fun save(
         dslContext: DSLContext,
@@ -52,7 +62,8 @@ open class PipelineTimerDao {
         branchs: String?,
         noScm: Boolean?,
         startParam: String?,
-        taskId: String
+        taskId: String,
+        yamlBranch: String? = null
     ): Int {
         return with(T_PIPELINE_TIMER) {
             dslContext.insertInto(
@@ -67,7 +78,8 @@ open class PipelineTimerDao {
                 BRANCHS,
                 NO_SCM,
                 START_PARAM,
-                TASK_ID
+                TASK_ID,
+                yamlBranchField
             ).values(
                 projectId,
                 pipelineId,
@@ -79,7 +91,8 @@ open class PipelineTimerDao {
                 branchs,
                 noScm,
                 startParam,
-                taskId
+                taskId,
+                yamlBranch
             )
                 .onDuplicateKeyUpdate()
                 .set(TASK_ID, taskId)
@@ -91,6 +104,7 @@ open class PipelineTimerDao {
                 .set(BRANCHS, branchs)
                 .set(NO_SCM, noScm)
                 .set(START_PARAM, startParam)
+                .set(yamlBranchField, yamlBranch)
                 .execute()
         }
     }
@@ -122,6 +136,59 @@ open class PipelineTimerDao {
             dslContext.delete(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    /**
+     * 只删除发布版本定时。YAML_BRANCH 非空的分支定时保留。
+     */
+    open fun deleteReleaseTimers(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+        return with(T_PIPELINE_TIMER) {
+            dslContext.delete(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(yamlBranchField.isNull.or(yamlBranchField.eq("")))
+                .execute()
+        }
+    }
+
+    fun getYamlBranch(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ): String? {
+        return with(T_PIPELINE_TIMER) {
+            dslContext.select(yamlBranchField)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(TASK_ID.eq(taskId)))
+                .fetchOne(yamlBranchField)
+        }
+    }
+
+    fun listYamlBranchTimers(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        yamlBranch: String? = null
+    ): List<YamlBranchTimerRow> {
+        return with(T_PIPELINE_TIMER) {
+            var condition = PROJECT_ID.eq(projectId)
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(yamlBranchField.isNotNull)
+                .and(yamlBranchField.ne(""))
+            if (!yamlBranch.isNullOrBlank()) {
+                condition = condition.and(yamlBranchField.eq(yamlBranch))
+            }
+            dslContext.select(TASK_ID, START_PARAM, yamlBranchField)
+                .from(this)
+                .where(condition)
+                .fetch { record ->
+                    YamlBranchTimerRow(
+                        taskId = record.get(TASK_ID),
+                        startParam = record.get(START_PARAM),
+                        yamlBranch = record.get(yamlBranchField)
+                    )
+                }
         }
     }
 

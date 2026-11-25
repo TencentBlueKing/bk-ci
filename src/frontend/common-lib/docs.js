@@ -24,6 +24,8 @@ const createDocs = (lang, version) => {
         FEED_BACK_URL: `${DOCS_URL_PREFIX}/s-mart/community/question`, // 问题反馈
         PAC_GUIDE_DOC: `${commonPrefix}/Services/Pipeline-as-Code/01-quick-start/01-quict-start.md`, // PAC快速上手文档
         BUILD_NODE_GUIDE_DOC: `${commonPrefix}/UserGuide/Services/Pools/host-to-bkci.md`, // 环境管理-安装节点失败文档
+        ENV_FAQ_DOC: `${commonPrefix}/Reference/faqs/environment/use.md`, // 环境管理-使用指引文档
+        MANAGER_DUTY_DOC: `${DOCS_URL_PREFIX}/Services/Permission/sensitive-permission-group.md`, // 敏感权限用户组管理须知
     }
     const pipelineDocs = {
         ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档

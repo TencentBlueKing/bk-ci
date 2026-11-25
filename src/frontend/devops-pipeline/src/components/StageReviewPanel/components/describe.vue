@@ -52,6 +52,10 @@
     .markdown-desc {
         min-height: 50px;
         max-height: 250px;
+        ::v-deep .v-show-content {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
     }
     .opt-button {
         font-size: 12px;

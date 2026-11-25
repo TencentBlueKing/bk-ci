@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.openapi.BkApigwApi
+import com.tencent.devops.repository.pojo.oauth.ScmOauthStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -53,6 +54,8 @@ import jakarta.ws.rs.core.MediaType
 interface ApigwRepositoryOauthResourceV4 {
     @Operation(
         summary = "校验用户是否已经OAUTH授权",
+        description = "仅返回是否已授权。如需在未授权时获取授权链接，请使用v4_user_oauth_status接口。" +
+            "返回值：true-已授权，false-未授权",
         tags = ["v4_app_oauth_isOauth", "v4_user_oauth_isOauth"]
     )
     @GET
@@ -67,8 +70,44 @@ interface ApigwRepositoryOauthResourceV4 {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "代码库类型", required = true)
+        @Parameter(
+            description = "代码库类型标识，可选值：CODE_GIT(工蜂)、GITHUB(GitHub)、CODE_TGIT(社区版工蜂)，" +
+                "自定义代码源传入对应的代码源标识",
+            required = true,
+            example = "CODE_GIT"
+        )
         @QueryParam("scmCode")
         scmCode: String
     ): Result<Boolean>
+
+    @Operation(
+        summary = "获取用户OAUTH授权状态",
+        description = "校验用户是否已完成指定代码库类型的OAUTH授权。" +
+            "返回值：authorized-是否已授权；url-授权链接，仅未授权时返回，用户打开该链接完成授权后跳转回redirectUrl",
+        tags = ["v4_app_oauth_status", "v4_user_oauth_status"]
+    )
+    @GET
+    @Path("/oauthStatus")
+    fun oauthStatus(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(
+            description = "代码库类型标识，可选值：CODE_GIT(工蜂)、GITHUB(GitHub)、CODE_TGIT(社区版工蜂)，" +
+                "自定义代码源传入对应的代码源标识",
+            required = true,
+            example = "CODE_GIT"
+        )
+        @QueryParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "授权成功后的跳转地址，不传则跳转到蓝盾代码库页面", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?
+    ): Result<ScmOauthStatus>
 }

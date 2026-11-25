@@ -237,6 +237,35 @@ class RbacQualityPermissionServiceImpl(
         }
     }
 
+    override fun validateProjectRuleOperatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        val cacheKey = AuthCacheKeyUtil.getCacheKey(
+            userId = userId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            action = buildQualityRuleAction(authPermission),
+            projectCode = projectId,
+            resourceCode = ANY_RULE_RESOURCE_CODE
+        )
+        val checkPermission = AuthCacheUtil.cachePermission(cacheKey) {
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken()!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = ANY_RULE_RESOURCE_CODE,
+                action = buildQualityRuleAction(authPermission),
+                resourceType = AuthResourceType.QUALITY_RULE.value,
+                relationResourceType = null
+            ).data ?: false
+        }
+        if (!checkPermission) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
     override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
@@ -306,5 +335,9 @@ class RbacQualityPermissionServiceImpl(
 
     private fun buildQualityRuleAction(authPermission: AuthPermission): String {
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE)
+    }
+
+    companion object {
+        const val ANY_RULE_RESOURCE_CODE = "*"
     }
 }

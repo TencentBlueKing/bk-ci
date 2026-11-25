@@ -818,6 +818,9 @@ object ScriptYmlUtils {
             res.repoName = preTriggerOn.repoName
             res.scmCode = preTriggerOn.scmCode
             res.workspaceId = preTriggerOn.workspaceId
+            // 统一框架触发器的通用事件载荷原样透传，由对应 TriggerConverter 解析
+            res.events = preTriggerOn.events.ifEmpty { null }
+            res.type = preTriggerOn.type
         }
 
         return res
@@ -1007,7 +1010,15 @@ object ScriptYmlUtils {
                     is List<*> -> JsonUtil.anyTo(schedules, object : TypeReference<List<SchedulesRule>>() {})
                     else -> null
                 }
-            }.getOrNull()?.onEach { schedule ->
+            }.getOrNull()?.also { schedules ->
+                schedules.forEach { schedule ->
+                    if (!schedule.yamlBranch.isNullOrBlank() && !schedule.branches.isNullOrEmpty()) {
+                        throw YamlFormatException(
+                            "同一条 schedules 不能同时配置 branches 和 yaml-branch"
+                        )
+                    }
+                }
+            }?.onEach { schedule ->
                 initScheduleCron(schedule)
             }
         }

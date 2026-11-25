@@ -287,7 +287,13 @@ interface ApigwBuildResourceV3 {
         pipelineId: String,
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int? = null,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<ModelRecord>
 
     @Operation(summary = "手动审核启动阶段", tags = ["v3_app_build_stage_start", "v3_user_build_stage_start"])

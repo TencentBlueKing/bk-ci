@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { Dialog, Input, Tree, Link, Message, Loading } from 'bkui-vue'
 import { SvgIcon } from '../SvgIcon'
 import { useOutputs } from '@/hooks/useOutputs'
+import { getConsoleOrigin } from '@/utils/util'
 import { type Output, type CustomDirTreeNode } from '@/api/outputs'
 import styles from './CopyToCustomRepoDialog.module.css'
 
@@ -152,7 +153,7 @@ export default defineComponent({
         })
 
         if (success) {
-          const repoUrl = `${(window as any).WEB_URL_PREFIX}/repo/${route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${activeFolder.value}/default`)}`
+          const repoUrl = `${getConsoleOrigin()}/console/repo/${route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${activeFolder.value}/default`)}`
 
           message = (
             <p>

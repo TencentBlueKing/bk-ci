@@ -34,6 +34,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.pojo.oauth.ScmOauthStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -133,17 +134,35 @@ interface ServiceOauthResource {
         userId: String
     ): Result<AuthorizeResult>
 
-    @Operation(summary = "根据用户ID判断用户是否已经github oauth认证")
+    @Operation(summary = "根据用户ID判断用户是否已经OAUTH授权[SCM_REPO]")
     @GET
     @Path("/{scmCode}/isScmOauth")
     fun isScmOauth(
-        @Parameter(description = "用户ID", required = true)
-        @PathParam("userId")
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "scmCode", required = true)
+        @Parameter(description = "代码库类型标识", required = true)
         @PathParam("scmCode")
         scmCode: String
     ): Result<Boolean>
+
+    @Operation(
+        summary = "获取用户OAUTH授权状态[SCM_REPO]",
+        description = "已授权返回authorized=true；未授权返回authorized=false及授权链接url"
+    )
+    @GET
+    @Path("/{scmCode}/oauthStatus")
+    fun scmOauthStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库类型标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "授权成功后的跳转地址，不传则使用默认地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?
+    ): Result<ScmOauthStatus>
 
     @Operation(summary = "获取accessToken信息[SCM_REPO]")
     @GET

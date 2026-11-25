@@ -31,16 +31,15 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.crypto.GitTokenCryptoHelper
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import com.tencent.devops.repository.service.scm.ScmTokenService
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
@@ -51,12 +50,10 @@ import org.springframework.stereotype.Service
 class DefaultOauth2TokenStoreService(
     private val dslContext: DSLContext,
     private val repositoryScmTokenDao: RepositoryScmTokenDao,
+    private val gitTokenCryptoHelper: GitTokenCryptoHelper,
     @Lazy
     private val scmTokenService: ScmTokenService
 ) : IOauth2TokenStoreService {
-
-    @Value("\${aes.git:#{null}}")
-    private val aesKey: String = ""
 
     override fun support(scmCode: String): Boolean {
         return scmCode != ScmType.GITHUB.name &&
@@ -87,14 +84,15 @@ class DefaultOauth2TokenStoreService(
                 userId = userId,
                 scmCode = scmCode,
                 appType = TokenAppTypeEnum.OAUTH2.name,
-                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
-                refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
+                accessToken = gitTokenCryptoHelper.encryptSm4ButAes(accessToken),
+                refreshToken = refreshToken?.let { gitTokenCryptoHelper.encryptSm4ButAes(it) } ?: "",
                 expiresIn = expiresIn ?: 0L,
                 operator = operator ?: userId
             )
             repositoryScmTokenDao.saveAccessToken(
                 dslContext = dslContext,
-                scmToken = scmToken
+                scmToken = scmToken,
+                aesKeySha = gitTokenCryptoHelper.currentKeySha()
             )
         }
     }
@@ -133,10 +131,10 @@ class DefaultOauth2TokenStoreService(
         userId: String
     ): OauthTokenInfo {
         val oauthTokenInfo = OauthTokenInfo(
-            accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+            accessToken = gitTokenCryptoHelper.decryptSm4OrAes(it.accessToken),
             tokenType = "",
             expiresIn = it.expiresIn,
-            refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+            refreshToken = gitTokenCryptoHelper.decryptSm4OrAes(it.refreshToken),
             createTime = it.createTime.timestampmilli(),
             userId = it.userId,
             operator = it.operator ?: userId,

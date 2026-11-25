@@ -387,8 +387,8 @@ class UserPipelineTemplateV2ResourceImpl(
             permission = AuthPermission.VIEW,
             templateId = templateId
         )
-        val pageNotNull = request.page ?: 0
-        val pageSizeNotNull = request.pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
+        val pageNotNull = PageUtil.getValidPage(request.page)
+        val pageSizeNotNull = PageUtil.getValidPageSize(request.pageSize)
         return Result(
             templateFacadeService.getTemplateVersions(
                 projectId = projectId,

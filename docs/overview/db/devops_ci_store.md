@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.28
 
 **文档描述：** devops_ci_store的数据库文档
 | 表名                  | 说明       |
@@ -52,6 +52,7 @@
 | T_STORE_COMMENT | store组件评论信息表 |
 | T_STORE_COMMENT_PRAISE | store组件评论点赞信息表 |
 | T_STORE_COMMENT_REPLY | store组件评论回复信息表 |
+| T_STORE_COMPONENT_CONTRACT | 研发商店组件运行时契约表 |
 | T_STORE_DEPT_REL | 商店组件与与机构关联关系表 |
 | T_STORE_DOCKING_PLATFORM | 组件对接平台信息表 |
 | T_STORE_DOCKING_PLATFORM_ERROR_CODE | 平台所属错误码信息 |
@@ -150,7 +151,7 @@
 |  13   | SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 简介  |
 |  14   | DESCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 描述  |
 |  15   | CATEGROY |   tinyint   | 4 |   0    |    N     |  N   |   1    | 类别  |
-|  16   | VERSION |   varchar   | 30 |   0    |    N     |  N   |       | 版本号  |
+|  16   | VERSION |   varchar   | 256 |   0    |    N     |  N   |       | 版本号  |
 |  17   | LOGO_URL |   varchar   | 256 |   0    |    Y     |  N   |       | LOGOURL地址  |
 |  18   | ICON |   text   | 65535 |   0    |    Y     |  N   |       | 插件图标  |
 |  19   | DEFAULT_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否为默认原子  |
@@ -966,6 +967,40 @@
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
+**表名：** <a>T_STORE_COMPONENT_CONTRACT</a>
+
+**说明：** 研发商店组件运行时契约表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   varchar   | 32 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | STORE_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 组件唯一标识，插件即atomCode  |
+|  3   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store组件类型0：插件1：模板2：镜像  |
+|  4   | SCHEMA_VERSION |   varchar   | 16 |   0    |    N     |  N   |       | 契约格式版本，对应contract.schema.json  |
+|  5   | BASED_ON_VERSION |   varchar   | 256 |   0    |    N     |  N   |       | 契约基于的组件版本，取最新正式发布版本  |
+|  6   | SOURCE_COMMIT |   varchar   | 64 |   0    |    Y     |  N   |       | 抽取时扫描的代码提交ID  |
+|  7   | PROPS_HASH |   varchar   | 80 |   0    |    N     |  N   |       | 基于版本PROPS的哈希，用于发现字段漂移  |
+|  8   | COVERAGE |   varchar   | 32 |   0    |    N     |  N   |       | 覆盖程度VERIFIED：人工核验PARTIALLY_VERIFIED：部分核验AUTO_EXTRACTED：自动抽取  |
+|  9   | STALE_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否过期TRUE：新版本发布或待人工对比  |
+|  10   | STALE_REASON |   varchar   | 512 |   0    |    Y     |  N   |       | 过期原因，如NEW_VERSION、VERIFIED_PENDING_COMPARE:{buildId}  |
+|  11   | LAST_SEEN_VERSION |   varchar   | 256 |   0    |    Y     |  N   |       | 发布链路最近看到的最新版本  |
+|  12   | LAST_SEEN_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 发布链路最近看到最新版本的时间  |
+|  13   | EXTRACT_FAIL_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 连续抽取失败次数，用于退避和告警  |
+|  14   | SELECTION_SUMMARY |   varchar   | 256 |   0    |    Y     |  N   |       | 选型用一句话说明，描述插件实际行为  |
+|  15   | SELECTION_KEYWORDS |   varchar   | 1024 |   0    |    Y     |  N   |       | 选型用意图词与同义词，英文逗号分隔  |
+|  16   | CONTRACT |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 契约正文JSON  |
+|  17   | GENERATED_DESCRIPTION |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 基于契约生成的详细描述（Markdown）  |
+|  18   | REPORT_PATH |   varchar   | 512 |   0    |    Y     |  N   |       | 原始扫描报告在制品库的路径  |
+|  19   | EXTRACT_BUILD_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 产出本契约的抽取流水线构建ID  |
+|  20   | REVIEWER |   varchar   | 50 |   0    |    Y     |  N   |       | 最近核验人  |
+|  21   | REVIEW_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 最近核验时间  |
+|  22   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
+|  23   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
+|  24   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
+|  25   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+
 **表名：** <a>T_STORE_DEPT_REL</a>
 
 **说明：** 商店组件与与机构关联关系表
@@ -1066,6 +1101,7 @@
 |  11   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
 |  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  13   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  14   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_STORE_ERROR_CODE_INFO</a>
 
@@ -1479,6 +1515,7 @@
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  11   | FIELD_TYPE |   varchar   | 16 |   0    |    Y     |  N   |   BACKEND    | 字段类型  |
+|  12   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_STORE_STATISTICS</a>
 

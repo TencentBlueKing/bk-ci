@@ -1,4 +1,5 @@
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { isValidFlowDetailTab } from '@/constants/routes'
 import { Loading } from 'bkui-vue'
 import { computed, defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -9,6 +10,8 @@ import styles from './CommonHeader.module.css'
 export interface CommonHeaderProps {
   workflowName: string
   onWorkflowNameClick?: () => void
+  showSwitchToLatest?: boolean
+  onSwitchToLatest?: () => void
 }
 
 export const CommonHeader = defineComponent({
@@ -23,6 +26,13 @@ export const CommonHeader = defineComponent({
       required: true,
     },
     onWorkflowNameClick: {
+      type: Function as PropType<() => void>,
+    },
+    showSwitchToLatest: {
+      type: Boolean,
+      default: false,
+    },
+    onSwitchToLatest: {
       type: Function as PropType<() => void>,
     },
   },
@@ -41,6 +51,15 @@ export const CommonHeader = defineComponent({
     const handleWorkflowNameClick = () => {
       props.onWorkflowNameClick?.()
     }
+
+    const handleSwitchToLatest = () => {
+      props.onSwitchToLatest?.()
+    }
+
+    // 仅在详情页路由下展示“切换至最新版本”按钮
+    const showSwitchToLatest = computed(() => {
+      return props.showSwitchToLatest && isValidFlowDetailTab(route.name as string)
+    })
 
     return () => (
       <header class={styles.header}>
@@ -86,13 +105,23 @@ export const CommonHeader = defineComponent({
 
               {/* 版本选择器插槽 */}
               {slots['version-selector']?.()}
+
+              {/* 切换至最新版本按钮：详情页且当前选中版本非最新版本时展示 */}
+              {showSwitchToLatest.value && (
+                <span class={styles.switchToLatestBtn} onClick={handleSwitchToLatest}>
+                  <SvgIcon name="exchange-line" size={12} />
+                  {t('flow.content.switchToLatest')}
+                </span>
+              )}
             </div>
 
             {/* 中间区域插槽 (如 ModeSwitch) */}
             {slots.center && <div class={styles.headerCenter}>{slots.center?.()}</div>}
 
             {/* 右侧操作按钮插槽 */}
-            <div class={styles.headerRight}>{slots.actions?.()}</div>
+            {!showSwitchToLatest.value && (
+              <div class={styles.headerRight}>{slots.actions?.()}</div>
+            )}
           </>
         )}
       </header>

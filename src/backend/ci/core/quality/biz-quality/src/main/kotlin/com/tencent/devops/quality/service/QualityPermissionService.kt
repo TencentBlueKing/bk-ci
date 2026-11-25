@@ -82,6 +82,17 @@ interface QualityPermissionService {
         message: String
     )
 
+    /**
+     * 校验用户在项目中对质量红线规则的操作权限。
+     * 供指标编辑、删除复用，不绑定某条规则实例。
+     */
+    fun validateProjectRuleOperatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    )
+
     fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String)
 
     fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String)

@@ -211,7 +211,6 @@ object CommonUtils {
             if (registryUser.isNullOrBlank()) {
                 AuthConfig().withRegistryAddress(registryHost)
             } else {
-                logger.info("registryUser: $registryUser, registryPwd: $registryPwd")
                 AuthConfig()
                     .withUsername(registryUser)
                     .withPassword(registryPwd)

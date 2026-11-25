@@ -550,11 +550,28 @@ onBeforeUnmount(() => {
   registeCustomEvent(true);
 });
 
+const refreshLocateCloth = () => {
+  nextTick(() => {
+    Object.values(stageRefs.value).forEach((stageList) => {
+      (stageList || []).forEach((stageInstance) => {
+        const refs = stageInstance?.$refs || {}
+        Object.values(refs).forEach((ref) => {
+          const instances = Array.isArray(ref) ? ref : [ref]
+          instances.forEach((containerInstance) => {
+            containerInstance?.updateLocateClothPosition?.()
+          })
+        })
+      })
+    })
+  })
+}
+
 // 暴露方法供外部调用
 defineExpose({
   expandPostAction,
   expandMatrix,
   expandJob,
+  refreshLocateCloth,
 });
 </script>
 

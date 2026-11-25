@@ -1,0 +1,8 @@
+{{- $names := list "auth" "ai" "artifactory" "dispatch" "environment" "log" "metrics" "misc" "notify" "openapi" "process" "project" "quality" "repository" "store" "ticket" "websocket" "frontend" "gateway" -}}
+{{- range $name := $names }}
+{{- $svc := index $.Values $name }}
+{{- if $svc.enabled }}
+---
+{{ include "bkci.ms.service" (dict "name" $name "root" $) }}
+{{- end }}
+{{- end }}

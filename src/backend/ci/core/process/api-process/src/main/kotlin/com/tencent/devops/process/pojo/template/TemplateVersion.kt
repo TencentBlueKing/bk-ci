@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -48,5 +49,7 @@ data class TemplateVersion(
     @get:Schema(title = "描述", required = false)
     val desc: String? = null,
     @get:Schema(title = "版本名称是否重复", required = false)
-    val nameDuplicated: Boolean = false
+    val nameDuplicated: Boolean = false,
+    @get:Schema(title = "版本状态，正式版本为RELEASED，分支版本为BRANCH", required = false)
+    val status: VersionStatus? = null
 )

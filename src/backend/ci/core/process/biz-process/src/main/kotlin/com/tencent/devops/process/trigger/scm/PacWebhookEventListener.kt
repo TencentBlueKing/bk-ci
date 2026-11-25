@@ -39,7 +39,7 @@ import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlViewService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
@@ -151,7 +151,7 @@ class PacWebhookEventListener(
         val directories = yamlDiffs.filter {
             // 流水线创建、更新、重命名事件
             it.fileType == YamlFileType.PIPELINE && setOf(CREATE, UPDATE, RENAME).contains(it.actionType)
-        }.map { GitActionCommon.getCiDirectory(it.filePath) }.toSet()
+        }.map { YamlFileUtils.getCiDirectory(it.filePath) }.toSet()
         if (directories.isNotEmpty()) {
             // 创建yaml流水线组
             pipelineYamlViewService.createYamlViewIfAbsent(

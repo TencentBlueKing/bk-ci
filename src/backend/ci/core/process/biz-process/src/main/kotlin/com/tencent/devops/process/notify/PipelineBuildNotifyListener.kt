@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.notify
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
@@ -40,9 +42,13 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.ReviewNotifyPlaceholder
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -51,8 +57,13 @@ class PipelineBuildNotifyListener @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean,
     private val projectCacheService: ProjectCacheService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineEventListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
+
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
 
     override fun run(event: PipelineBuildNotifyEvent) {
         try {
@@ -65,13 +76,25 @@ class PipelineBuildNotifyListener @Autowired constructor(
         } catch (ignore: Exception) {
             logger.warn("NOTIFY|CHECK_PIPE|SKIP_ERROR_CHECK", ignore)
         }
+        logger.info(
+            "reviewNotifyTrace|hop=process.listener|" +
+                "buildId=${event.buildId}|projectId=${event.projectId}|pipelineId=${event.pipelineId}|" +
+                "template=${event.notifyTemplateEnum}|notifyType=${event.notifyType}|" +
+                "receivers=${event.receivers}|stageId=${event.stageId}|taskId=${event.taskId}|" +
+                "hasCallback=${event.callbackData != null}|" +
+                "callbackKeys=${event.callbackData?.keys}|" +
+                "bodyKeys=${event.bodyParams.keys}"
+        )
         val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)
         when {
             notifyTemplateEnumType.isReviewNotifyTemplate() ->
                 handleReviewNotify(event, notifyTemplateEnumType)
 
-            notifyTemplateEnumType == PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE ->
-                sendNotifyRequest(event.buildNotifyRequest())
+            notifyTemplateEnumType ==
+                PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
+                val variables = event.replacePlaceholders()
+                sendNotifyRequest(event.buildNotifyRequest(variables))
+            }
 
             else -> {
                 // need to add
@@ -142,31 +165,167 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams["reviewUrl"] = reviewUrl
             bodyParams["reviewAppUrl"] = reviewAppUrl
             bodyParams["projectName"] = projectName
-            sendNotifyRequest(buildNotifyRequest())
+            fillCardDisplayParams()
+            val variables = replacePlaceholders()
+            logger.info(
+                "reviewNotifyTrace|hop=process.fillUrl|" +
+                    "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
+                    "template=$notifyTemplateEnum|reviewUrl=$reviewUrl|reviewAppUrl=$reviewAppUrl"
+            )
+            sendNotifyRequest(buildNotifyRequest(variables))
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
         }
     }
 
     /**
-     * 从事件对象构建通知请求
+     * 从事件对象构建通知请求。事件上的 callbackData 可能在 MQ 反序列化后丢失，
+     * 用事件本体字段回填，保证 notify 侧能组装审核卡片。
      */
-    private fun PipelineBuildNotifyEvent.buildNotifyRequest() = SendNotifyMessageTemplateRequest(
-        templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
-        receivers = receivers.toMutableSet(),
-        cc = receivers.toMutableSet(),
-        titleParams = titleParams,
-        bodyParams = bodyParams,
-        notifyType = notifyType,
-        markdownContent = markdownContent,
-        mentionReceivers = mentionReceivers,
-        callbackData = callbackData
-    )
+    private fun PipelineBuildNotifyEvent.buildNotifyRequest(
+        variables: Map<String, String> = emptyMap()
+    ): SendNotifyMessageTemplateRequest {
+        val resolvedReceivers = resolveReceivers(variables)
+        val filledCallback = fillCallbackData().toMutableMap()
+        if (variables.isNotEmpty() && !filledCallback["reviewUsers"].isNullOrBlank()) {
+            filledCallback["reviewUsers"] = resolvedReceivers.joinToString(",")
+        }
+        return SendNotifyMessageTemplateRequest(
+            templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
+            receivers = resolvedReceivers,
+            cc = resolvedReceivers.toMutableSet(),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = notifyType,
+            markdownContent = markdownContent,
+            mentionReceivers = mentionReceivers,
+            callbackData = filledCallback
+        )
+    }
+
+    /**
+     * 给审核卡片补充展示字段。只写空缺，不覆盖 engine 已填的 buildNum / triggerUser / reviewStage。
+     */
+    private fun PipelineBuildNotifyEvent.fillCardDisplayParams() {
+        if (bodyParams["buildNum"].isNullOrBlank()) {
+            titleParams["buildNum"]?.takeIf { it.isNotBlank() }?.let { bodyParams["buildNum"] = it }
+        }
+        if (bodyParams["triggerUser"].isNullOrBlank() && userId.isNotBlank()) {
+            bodyParams["triggerUser"] = userId
+        }
+        if (bodyParams["reviewStage"].isNullOrBlank()) {
+            bodyParams["reviewStage"] = if (notifyTemplateEnum.contains("STAGE")) {
+                val stageName = bodyParams["stageName"].orEmpty()
+                if (stageSeq != null) {
+                    "[$stageSeq]${stageName.ifBlank { "Stage审核" }}"
+                } else {
+                    stageName.ifBlank { "Stage审核" }
+                }
+            } else {
+                "人工审核"
+            }
+        }
+    }
+
+    private fun PipelineBuildNotifyEvent.fillCallbackData(): Map<String, String> {
+        val cb = callbackData?.toMutableMap() ?: mutableMapOf()
+        val incomingEmpty = cb["projectId"].isNullOrBlank() || cb["buildId"].isNullOrBlank()
+        if (cb["projectId"].isNullOrBlank()) cb["projectId"] = projectId
+        if (cb["pipelineId"].isNullOrBlank()) cb["pipelineId"] = pipelineId
+        if (cb["buildId"].isNullOrBlank()) cb["buildId"] = buildId
+        if (cb["stageId"].isNullOrBlank() && !stageId.isNullOrBlank()) cb["stageId"] = stageId.orEmpty()
+        if (cb["elementId"].isNullOrBlank() && !taskId.isNullOrBlank()) cb["elementId"] = taskId.orEmpty()
+        if (cb["reviewUsers"].isNullOrBlank()) {
+            cb["reviewUsers"] = receivers.filter { it.isNotBlank() }.joinToString(",")
+        }
+        if (cb["hasRequiredParams"].isNullOrBlank()) {
+            cb["hasRequiredParams"] = bodyParams["hasRequiredParams"] ?: "false"
+        }
+        if (cb["suggestRequired"].isNullOrBlank()) {
+            cb["suggestRequired"] = bodyParams["suggestRequired"] ?: "false"
+        }
+        if (cb["reviewParams"].isNullOrBlank() && !bodyParams["reviewParams"].isNullOrBlank()) {
+            cb["reviewParams"] = bodyParams["reviewParams"].orEmpty()
+        }
+        if (cb["reviewType"].isNullOrBlank()) {
+            cb["reviewType"] = if (notifyTemplateEnum.contains("STAGE")) "STAGE" else "ATOM"
+        }
+        if (cb["signature"].isNullOrBlank()) {
+            cb["signature"] = if (cb["reviewType"] == "STAGE") {
+                ShaUtils.sha256(projectId + buildId + (cb["stageId"] ?: "") + (cb["groupId"] ?: "") + (appSecret ?: ""))
+            } else {
+                ShaUtils.sha256(projectId + buildId + (cb["elementId"] ?: "") + (appSecret ?: ""))
+            }
+        }
+        logger.info(
+            "reviewNotifyTrace|hop=process.fillCallback|" +
+                "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
+                "template=$notifyTemplateEnum|incomingEmpty=$incomingEmpty|" +
+                "callback=${JsonUtil.toJson(cb, false)}"
+        )
+        return cb
+    }
+
+    /**
+     * 用当前构建的流水线变量替换通知正文。解析失败或变量不存在时保留原文本。
+     */
+    private fun PipelineBuildNotifyEvent.resolveReceivers(variables: Map<String, String>): MutableSet<String> {
+        return receivers.flatMap { receiver ->
+            ReviewNotifyPlaceholder.parseText(receiver, variables)
+                .split(",", ";", "、", "\n")
+        }.map { it.trim() }.filter { it.isNotEmpty() }.toMutableSet()
+    }
+
+    private fun PipelineBuildNotifyEvent.replacePlaceholders(): Map<String, String> {
+        val variables = try {
+            val buildVars = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+            val stepContext = try {
+                pipelineContextService.buildContext(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = null,
+                    taskId = taskId,
+                    variables = buildVars
+                )
+            } catch (ignored: Throwable) {
+                logger.warn(
+                    "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|stepContext=fail",
+                    ignored
+                )
+                emptyMap()
+            }
+            buildVars + stepContext
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|variables=fail",
+                ignored
+            )
+            return emptyMap()
+        }
+        if (variables.isEmpty()) return emptyMap()
+        ReviewNotifyPlaceholder.replace(titleParams, variables)
+        ReviewNotifyPlaceholder.replace(bodyParams, variables)
+        logger.info(
+            "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|projectId=$projectId|" +
+                "varSize=${variables.size}"
+        )
+        return variables
+    }
 
     /**
      * 发送通知请求
      */
     private fun sendNotifyRequest(request: SendNotifyMessageTemplateRequest) {
+        logger.info(
+            "reviewNotifyTrace|hop=process.feign|" +
+                "template=${request.templateCode}|notifyType=${request.notifyType}|" +
+                "receivers=${request.receivers}|markdown=${request.markdownContent}|" +
+                "hasCallback=${request.callbackData != null}|" +
+                "callback=${JsonUtil.toJson(request.callbackData ?: emptyMap<String, String>(), false)}|" +
+                "bodyParams=${JsonUtil.toJson(request.bodyParams ?: emptyMap<String, String>(), false)}"
+        )
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
     }
 

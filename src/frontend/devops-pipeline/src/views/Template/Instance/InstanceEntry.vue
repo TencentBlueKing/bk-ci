@@ -97,7 +97,8 @@
         UPDATE_TEMPLATE_REF_TYPE,
         INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
-    import { deepClone } from '@/utils/util'
+    import { resolveReleasePipelineId } from '@/utils/templateInstancePac'
+    import { deepClone, isParamValueEqual } from '@/utils/util'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
@@ -211,6 +212,7 @@
     }
     async function handleReleaseInstance (value) {
         const type = proxy.$route.params?.type
+        const isCopy = type === INSTANCE_OPERATE_TYPE.COPY
         const fnMap = {
             create: 'releaseInstance',
             copy: 'releaseInstance',
@@ -237,7 +239,7 @@
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
-                    pipelineId: item.pipelineId,
+                    pipelineId: resolveReleasePipelineId(item.pipelineId, isCopy),
                     pipelineName: item.pipelineName,
                     ...(item.buildNo && !item.buildNo.isDelete ? {
                         buildNo: {
@@ -315,8 +317,8 @@
                     return {
                         ...p,
                         defaultValue: newValue,
-                        isChange: newValue !== p.defaultValue,
-                        hasChange: newValue !== templateDefaultValue,
+                        isChange: !isParamValueEqual(newValue, p.defaultValue),
+                        hasChange: !isParamValueEqual(newValue, templateDefaultValue),
                         propertyUpdates
                     }
                 }

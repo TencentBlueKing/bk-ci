@@ -717,6 +717,44 @@ export default defineComponent({
     }
 
     // ==================== Watchers ====================
+    const reviewQueryApplied = ref(false)
+    const applyReviewQuery = () => {
+      if (reviewQueryApplied.value) return
+      const { reviewStageSeq, reviewTaskId } = route.query
+      if (reviewStageSeq) {
+        reviewQueryApplied.value = true
+        handleStageCheck({
+          type: 'checkIn',
+          stageIndex: Number(reviewStageSeq) - 1,
+        })
+        return
+      }
+      if (!reviewTaskId || !executeDetail.value?.model?.stages) return
+      const taskId = String(reviewTaskId)
+      executeDetail.value.model.stages.forEach((stage) => {
+        stage.containers?.forEach((container) => {
+          const target = container.elements?.find((element) => element.id === taskId)
+          if (target && target.status === STATUS.REVIEWING) {
+            reviewQueryApplied.value = true
+            selectedElement.value = target
+            selectedContainer.value = container
+            selectedContainerStage.value = stage
+            showPluginDetail.value = true
+          }
+        })
+      })
+    }
+
+    watch(
+      () => executeDetail.value?.model,
+      (model) => {
+        if (model && (route.query.reviewStageSeq || route.query.reviewTaskId)) {
+          applyReviewQuery()
+        }
+      },
+      { immediate: true }
+    )
+
     watch(executeCount, () => {
       nextTick(() => {
         if (errorList.value.length > 0) {

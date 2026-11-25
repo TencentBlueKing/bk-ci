@@ -41,8 +41,10 @@ import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.composer.Composer
 import org.yaml.snakeyaml.constructor.SafeConstructor
 import org.yaml.snakeyaml.error.Mark
+import org.yaml.snakeyaml.events.CollectionStartEvent
 import org.yaml.snakeyaml.events.Event
 import org.yaml.snakeyaml.events.NodeEvent
+import org.yaml.snakeyaml.events.ScalarEvent
 import org.yaml.snakeyaml.nodes.AnchorNode
 import org.yaml.snakeyaml.nodes.MappingNode
 import org.yaml.snakeyaml.nodes.Node
@@ -619,7 +621,7 @@ object TransferMapper {
         if (ReflectUtil.isNativeType(bean) || bean is String) {
             return bean.toString()
         }
-        return getObjectMapper().writeValueAsString(bean)!!
+        return rewriteQuotedMultilineScalars(getObjectMapper().writeValueAsString(bean)!!)
     }
 
     fun <T> to(str: String): T = getObjectMapper().readValue(str, object : TypeReference<T>() {})
@@ -645,7 +647,7 @@ object TransferMapper {
    * 2.保留锚点信息
    * */
     fun mergeYaml(old: String, new: String): String {
-        if (old.isBlank()) return new
+        if (old.isBlank()) return rewriteQuotedMultilineScalars(new)
 
         val oldE = getYamlFactory().parse(old.reader()).toList()
         val newL = getYamlFactory().parse(new.reader()).toList()
@@ -702,9 +704,9 @@ object TransferMapper {
 //        }
         if (!exactlyTheSameNode(getYamlFactory().compose(new.reader()), getYamlFactory().compose(out.reader()))) {
             logger.warn("merge yaml fail|new=\n$new\n|||out=\n$out\n")
-            return new
+            return rewriteQuotedMultilineScalars(new)
         }
-        return out
+        return rewriteQuotedMultilineScalars(out)
     }
 
     fun formatYaml(yaml: String): String {
@@ -1006,4 +1008,179 @@ object TransferMapper {
     ): NodeIndex? {
         return action(steps)
     }
+
+    /**
+     * SnakeYAML 遇到制表符会拒绝字面量块，多行脚本因此被写成一行里的 `\n`。
+     * 这里只把双引号多行标量改成 `|` 块；改写前后解析出的字符串必须一致。
+     * 含 `\r` 或其他控制字符的值无法在字面量块里原样保留，继续用双引号。
+     */
+    private fun rewriteQuotedMultilineScalars(yaml: String): String {
+        if (yaml.isEmpty()) return yaml
+        return try {
+            doRewriteQuotedMultilineScalars(yaml)
+        } catch (ex: RuntimeException) {
+            logger.warn("keep original yaml because multiline rewrite failed: ${ex.message}")
+            yaml
+        }
+    }
+
+    private fun doRewriteQuotedMultilineScalars(yaml: String): String {
+        val events = getYamlFactory().parse(yaml.reader()).toList()
+        val flowStack = ArrayDeque<Boolean>()
+        val replacements = mutableListOf<MultilineReplacement>()
+        events.forEach { event ->
+            when {
+                event is CollectionStartEvent -> flowStack.addFirst(event.isFlow)
+                event.eventId == Event.ID.MappingEnd || event.eventId == Event.ID.SequenceEnd -> {
+                    if (flowStack.isNotEmpty()) flowStack.removeFirst()
+                }
+            }
+            if (event !is ScalarEvent || flowStack.contains(true)) return@forEach
+            if (event.scalarStyle != DumperOptions.ScalarStyle.DOUBLE_QUOTED) return@forEach
+            val value = event.value
+            if (!canUseLiteralBlock(value)) return@forEach
+            val start = codePointIndexToCharIndex(yaml, event.startMark.index)
+            val end = codePointIndexToCharIndex(yaml, event.endMark.index)
+            if (start > end || end > yaml.length) return@forEach
+            val span = yaml.substring(start, end)
+            val quote = span.indexOf('"')
+            if (quote < 0) return@forEach
+            val parentIndent = parentIndentOfScalar(yaml, start + quote)
+            if (parentIndent < 0) return@forEach
+            val lineBreak = indexOfLineBreak(yaml, end)
+            val trailing = yaml.substring(end, lineBreak)
+            val trimmed = trailing.trimStart()
+            val trailOk = trimmed.isEmpty() || trimmed[0] == '#'
+            val replaceEnd = if (trailOk) lineBreak else end
+            val headerSuffix = if (trailOk) trailing else ""
+            val followedByBreak = replaceEnd >= yaml.length ||
+                yaml[replaceEnd] == '\n' || yaml[replaceEnd] == '\r'
+            val block = withHeaderSuffix(
+                text = keepAnchorPrefix(span, quote) + renderLiteralBlock(value, parentIndent, followedByBreak),
+                headerSuffix = headerSuffix
+            )
+            if (!literalKeepsValue(block, parentIndent, value)) return@forEach
+            replacements.add(MultilineReplacement(start, replaceEnd, block))
+        }
+        if (replacements.isEmpty()) return yaml
+        val out = StringBuilder(yaml)
+        for (index in replacements.lastIndex downTo 0) {
+            val replacement = replacements[index]
+            out.replace(replacement.start, replacement.end, replacement.text)
+        }
+        return out.toString()
+    }
+
+    private fun canUseLiteralBlock(text: String): Boolean {
+        if (!text.contains('\n')) return false
+        var index = 0
+        while (index < text.length) {
+            val codePoint = text.codePointAt(index)
+            if (codePoint != '\n'.code && codePoint != '\t'.code && codePoint < 0x20) return false
+            index += Character.charCount(codePoint)
+        }
+        return true
+    }
+
+    private fun renderLiteralBlock(value: String, parentIndent: Int, followedByBreak: Boolean): String {
+        val step = 2
+        val pad = " ".repeat(parentIndent + step)
+        val parts = splitLinesKeepTrailingEmpty(value)
+        val limit = if (value.endsWith("\n")) parts.size - 1 else parts.size
+        val body = StringBuilder().append('|').append(literalBlockHints(value, step))
+        for (index in 0 until limit) {
+            body.append('\n')
+            if (parts[index].isNotEmpty()) body.append(pad).append(parts[index])
+        }
+        if (!followedByBreak) body.append('\n')
+        return body.toString()
+    }
+
+    private fun splitLinesKeepTrailingEmpty(value: String): List<String> {
+        val parts = mutableListOf<String>()
+        var start = 0
+        var index = 0
+        while (index < value.length) {
+            if (value[index] == '\n') {
+                parts.add(value.substring(start, index))
+                start = index + 1
+            }
+            index++
+        }
+        parts.add(value.substring(start))
+        return parts
+    }
+
+    private fun literalBlockHints(text: String, step: Int): String {
+        val hints = StringBuilder()
+        val first = text.codePointAt(0)
+        if (first == '\n'.code || first == ' '.code) hints.append(step)
+        val last = text.codePointBefore(text.length)
+        if (last != '\n'.code) {
+            hints.append('-')
+        } else if (text.length == 1 || text.codePointBefore(text.length - 1) == '\n'.code) {
+            hints.append('+')
+        }
+        return hints.toString()
+    }
+
+    private fun parentIndentOfScalar(yaml: String, scalarStart: Int): Int {
+        val lineStart = yaml.lastIndexOf('\n', (scalarStart - 1).coerceAtLeast(0)).let { found ->
+            if (found < 0) 0 else found + 1
+        }
+        val prefix = yaml.substring(lineStart, scalarStart)
+        if (prefix.contains('\t')) return -1
+        var index = 0
+        while (index < prefix.length && prefix[index] == ' ') index++
+        if (index < prefix.length && prefix[index] == '-' &&
+            (index + 1 >= prefix.length || prefix[index + 1] == ' ')
+        ) {
+            index++
+            while (index < prefix.length && prefix[index] == ' ') index++
+        }
+        return if (index >= prefix.length) scalarStart - lineStart else index
+    }
+
+    private fun literalKeepsValue(block: String, parentIndent: Int, value: String): Boolean {
+        val probe = " ".repeat(parentIndent) + "k: " + block + if (block.endsWith("\n")) "" else "\n"
+        return try {
+            val loaded = getYamlFactory().load(probe) as? Map<*, *> ?: return false
+            loaded["k"] == value
+        } catch (ex: RuntimeException) {
+            false
+        }
+    }
+
+    private fun keepAnchorPrefix(span: String, quote: Int): String {
+        return if (quote > 0) span.substring(0, quote) else ""
+    }
+
+    private fun withHeaderSuffix(text: String, headerSuffix: String): String {
+        if (headerSuffix.isEmpty()) return text
+        val lineBreak = text.indexOf('\n')
+        if (lineBreak < 0) return text + headerSuffix
+        return text.substring(0, lineBreak) + headerSuffix + text.substring(lineBreak)
+    }
+
+    private fun indexOfLineBreak(yaml: String, from: Int): Int {
+        var index = from
+        while (index < yaml.length && yaml[index] != '\n' && yaml[index] != '\r') index++
+        return index
+    }
+
+    private fun codePointIndexToCharIndex(text: String, codePointIndex: Int): Int {
+        var charIndex = 0
+        var codePoints = 0
+        while (charIndex < text.length && codePoints < codePointIndex) {
+            charIndex += Character.charCount(text.codePointAt(charIndex))
+            codePoints++
+        }
+        return charIndex
+    }
+
+    private data class MultilineReplacement(
+        val start: Int,
+        val end: Int,
+        val text: String
+    )
 }

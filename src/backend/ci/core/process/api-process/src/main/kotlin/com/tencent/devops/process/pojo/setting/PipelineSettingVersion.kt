@@ -74,6 +74,8 @@ data class PipelineSettingVersion(
     var concurrencyGroup: String?,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean?,
+    @get:Schema(title = "同一批标识", required = false)
+    var concurrencySubGroup: String? = null,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
@@ -85,7 +87,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "环境hashId", required = false)
     var envHashId: String? = null,
     @get:Schema(title = "环境名称", required = false)
-    var envName: String? = null
+    var envName: String? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     companion object {
 
@@ -104,13 +108,15 @@ data class PipelineSettingVersion(
             maxQueueSize = setting.maxQueueSize,
             buildNumRule = setting.buildNumRule,
             concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+            concurrencySubGroup = setting.concurrencySubGroup,
             concurrencyGroup = setting.concurrencyGroup,
             maxConRunningQueueSize = setting.maxConRunningQueueSize,
             pipelineAsCodeSettings = setting.pipelineAsCodeSettings,
             failIfVariableInvalid = setting.failIfVariableInvalid,
             buildCancelPolicy = setting.buildCancelPolicy,
             envHashId = setting.envHashId,
-            envName = setting.envName
+            envName = setting.envName,
+            yamlLocked = setting.yamlLocked
         )
     }
 }

@@ -147,4 +147,24 @@ object PipelineBuildParamKey {
     const val CI_TAPD_TITLE = "ci.tapd_title"
     // IMATE会话ID
     const val CI_IMATE_SESSION_ID = "ci.imate_session_id"
+
+    // 制品到达触发变量（对齐 REQ-PL-009 接入规范 §4.2）
+    // 公共字段
+    const val CI_ARTIFACT_REPO_TYPE = "ci.artifact_repo_type"
+    const val CI_ARTIFACT_KIND = "ci.artifact_kind"
+    // 本次触发的制品数量，单文件 / 镜像为 1
+    const val CI_ARTIFACT_COUNT = "ci.artifact_count"
+    const val CI_ARTIFACT_SOURCE_PIPELINE = "ci.artifact_source_pipeline"
+    const val CI_ARTIFACT_SOURCE_BUILD_ID = "ci.artifact_source_build_id"
+    // 单文件字段
+    const val CI_ARTIFACT_NAME = "ci.artifact_name"
+    const val CI_ARTIFACT_PATH = "ci.artifact_path"
+    const val CI_ARTIFACT_SHA256 = "ci.artifact_sha256"
+    const val CI_ARTIFACT_SIZE = "ci.artifact_size"
+    // 目录字段
+    const val CI_ARTIFACT_DIR = "ci.artifact_dir"
+    // 镜像字段
+    const val CI_ARTIFACT_IMAGE_NAME = "ci.artifact_image_name"
+    const val CI_ARTIFACT_IMAGE_TAG = "ci.artifact_image_tag"
+    const val CI_ARTIFACT_IMAGE_DIGEST = "ci.artifact_image_digest"
 }

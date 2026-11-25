@@ -208,7 +208,10 @@
             shouldCheckScmAuth () {
                 return {
                     scmCode: this.codelib.scmCode,
-                    userName: this.codelib.userName
+                    userName: this.codelib.userName,
+                    authType: this.codelib.authType,
+                    credentialType: this.codelib.credentialType,
+                    '@type': this.codelib['@type']
                 }
             }
         },

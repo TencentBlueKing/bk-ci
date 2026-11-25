@@ -75,6 +75,7 @@ import com.tencent.devops.process.yaml.transfer.ElementTransfer
 import com.tencent.devops.process.yaml.transfer.ModelTransfer
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.process.yaml.transfer.TemplateModelTransfer
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.YamlIndexService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
@@ -111,7 +112,8 @@ class PipelineTransferYamlService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: CodeSchemaCheck,
     private val pipelineInfoService: PipelineInfoService,
-    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val transferCacheService: TransferCacheService
 ) {
 
     companion object {
@@ -262,6 +264,10 @@ class PipelineTransferYamlService @Autowired constructor(
                 invalidElement, invalidNameSpaceElement
             )
         )
+
+        // 清理因插件参数联动而被隐藏的无效参数，使返回的 YAML 为简化后的结果。
+        PipelineTransferAspectLoader.filterInvalidRelyParam(transferCacheService, aspects)
+
         val response = modelTransfer.model2yaml(
             ModelTransferInput(
                 userId = userId,

@@ -822,11 +822,16 @@ class NodeDao {
         }
     }
 
-    fun fetchProjectNodeCount(dslContext: DSLContext, projectId: String): Map<NodeType, Int> {
+    fun fetchProjectNodeCount(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>? = null
+    ): Map<NodeType, Int> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_TYPE, DSL.count().`as`("COUNT"))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .let { if (nodeIds != null) it.and(NODE_ID.`in`(nodeIds)) else it }
                 .groupBy(NODE_TYPE)
                 .fetch().map { NodeType.get(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
         }

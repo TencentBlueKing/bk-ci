@@ -152,6 +152,13 @@
             if (this.element && this.element.notifyType.includes('WEWORK_GROUP')) {
                 this.atomPropsModel.notifyGroup.hidden = false
             }
+            const markdownProp = this.atomPropsModel && this.atomPropsModel.markdownContent
+            if (markdownProp) {
+                markdownProp.defaultValue = false
+            }
+            if (this.element && (this.element.markdownContent === undefined || this.element.markdownContent === null)) {
+                this.handleUpdateElement('markdownContent', false)
+            }
         },
         methods: {
             handleChange (name, value) {

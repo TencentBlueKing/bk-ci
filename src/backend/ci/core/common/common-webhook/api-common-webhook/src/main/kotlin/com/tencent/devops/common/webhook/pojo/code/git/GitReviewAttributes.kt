@@ -64,5 +64,5 @@ data class GitReviewAttributes(
     val source: GitProject,
     val target: GitProject,
     @JsonProperty("last_commit")
-    val lastCommit: GitCommit
+    val lastCommit: GitCommit? = null
 )

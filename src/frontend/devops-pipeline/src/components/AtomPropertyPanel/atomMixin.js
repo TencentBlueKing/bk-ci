@@ -20,6 +20,7 @@
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
+import MetadataTigger from '@/components/AtomFormComponent/MetadataTigger'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import SubParameter from '@/components/AtomFormComponent/SubParameter'
 import Tips from '@/components/AtomFormComponent/Tips'
@@ -115,7 +116,8 @@ const atomMixin = {
         TipsSimple,
         Tips,
         SubParameter,
-        MetadataNormal
+        MetadataNormal,
+        MetadataTigger
     },
     computed: {
         ...mapGetters('atom', [
@@ -241,6 +243,12 @@ const atomMixin = {
         },
         rely (obj, element) {
             return rely(obj, element)
+        },
+        isRequired (obj, element) {
+            if (obj.requiredRely) {
+                return rely({ rely: obj.requiredRely }, element)
+            }
+            return !!obj.required
         },
         /**
          * 获取每种类型最大长度限制

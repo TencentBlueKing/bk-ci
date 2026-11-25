@@ -17,7 +17,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
@@ -198,7 +198,7 @@ class PipelineYamlReleaseService(
             )
         }
         if (filePath.startsWith(Constansts.ciFileDirectoryName) &&
-            !GitActionCommon.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
+            !YamlFileUtils.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
         ) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT

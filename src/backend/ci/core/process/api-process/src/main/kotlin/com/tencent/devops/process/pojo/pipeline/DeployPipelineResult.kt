@@ -48,5 +48,7 @@ data class DeployPipelineResult(
     @get:Schema(title = "yaml信息", required = false)
     val yamlInfo: PipelineYamlVo? = null,
     @get:Schema(title = "是否更新了推荐版本号基准值", required = false)
-    val updateBuildNo: Boolean? = null
+    val updateBuildNo: Boolean? = null,
+    @get:Schema(title = "当前版本YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 )

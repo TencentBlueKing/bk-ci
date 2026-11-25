@@ -65,7 +65,7 @@ export default function useRelatedNodes () {
             console.error('Failed to fetch tag list:', error)
         }
     }
-    const requestNodeList = async (params, tags = []) => {
+    const requestNodeList = async (params, tags = [], ipListSearch = '') => {
         try {
             isLoading.value = true
             const res = await proxy.$store.dispatch('environment/requestNodeList', {
@@ -80,7 +80,8 @@ export default function useRelatedNodes () {
                         osName: currentEnv.value.os.toLowerCase()
                     } : {})
                 },
-                tags
+                tags,
+                ipListSearch
             })
             
             if (params.page === 1) {
@@ -96,6 +97,16 @@ export default function useRelatedNodes () {
         } finally {
             isLoading.value = false
         }
+    }
+    
+    // 预览动态环境按标签匹配到的节点列表
+    const previewTagEnvNodes = (params, tags = []) => {
+        return proxy.$store.dispatch('environment/previewTagEnvNodes', {
+            ...params,
+            projectId: projectId.value,
+            createMode: isCreateResType.value,
+            tags
+        })
     }
     
     const handleCloseDialog = () => {
@@ -127,6 +138,7 @@ export default function useRelatedNodes () {
         // function
         relateNodes,
         requestNodeList,
+        previewTagEnvNodes,
         handleCloseDialog,
         handleShowRelatedNodes,
         fetchTagList,

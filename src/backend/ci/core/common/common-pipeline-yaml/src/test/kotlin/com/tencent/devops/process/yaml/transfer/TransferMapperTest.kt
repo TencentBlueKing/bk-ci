@@ -265,4 +265,102 @@ class TransferMapperTest {
             Assertions.assertEquals("2026_8_6", rawVariable(yaml, "v_date")["value"])
         }
     }
+
+    /**
+     * UI 模型转 YAML 时，多行脚本要能按行阅读，并且解析回来的字符串与原脚本一致。
+     * 执行用的是解析后的脚本，不是 YAML 文本本身。
+     */
+    @Nested
+    @DisplayName("多行脚本转成字面量块且内容不变")
+    inner class MultilineScriptScalar {
+
+        private fun assertSameScript(yaml: String, script: String) {
+            val bySnake = TransferMapper.getYamlFactory().load(yaml) as Map<*, *>
+            val byJackson = TransferMapper.getObjectMapper().readValue(
+                yaml, object : TypeReference<Map<String, Any>>() {}
+            )
+            Assertions.assertEquals(script, bySnake["script"])
+            Assertions.assertEquals(script, byJackson["script"])
+        }
+
+        private fun assertToYamlRoundTrip(script: String) {
+            val yaml = TransferMapper.toYaml(mapOf("script" to script))
+            assertSameScript(yaml, script)
+            Assertions.assertEquals(yaml, TransferMapper.mergeYaml("", yaml))
+        }
+
+        @Test
+        @DisplayName("带制表符的脚本按行展开，内容含制表符")
+        fun `tab script is a literal block`() {
+            val script = "echo hello\n\techo tab\n"
+            val yaml = TransferMapper.toYaml(mapOf("script" to script))
+            Assertions.assertTrue(yaml.contains("|"))
+            Assertions.assertFalse(yaml.contains("\\n"))
+            Assertions.assertTrue(yaml.contains("\t"))
+            assertSameScript(yaml, script)
+        }
+
+        @Test
+        @DisplayName("普通多行、引号、反斜杠、空行和中文原样往返")
+        fun `common scripts round trip`() {
+            assertToYamlRoundTrip("#!/bin/bash\necho \"hello: world\"\necho \${FOO}\n")
+            assertToYamlRoundTrip("printf '%s\\n'\necho done\n")
+            assertToYamlRoundTrip("echo hello\n\necho world\n")
+            assertToYamlRoundTrip("echo hello\necho world")
+            assertToYamlRoundTrip("echo 你好\n\n\n")
+            assertToYamlRoundTrip("  echo hello\necho\n")
+            assertToYamlRoundTrip("\necho hello\n")
+            assertToYamlRoundTrip("echo 😀\nend\n")
+        }
+
+        @Test
+        @DisplayName("回车换行不能写进字面量块，双引号结果仍是原字符串")
+        fun `crlf script keeps carriage return`() {
+            val script = "echo hello\r\necho world\r\n"
+            assertToYamlRoundTrip(script)
+        }
+
+        @Test
+        @DisplayName("其他控制字符保持原字符串")
+        fun `control char script keeps original value`() {
+            assertToYamlRoundTrip("echo\u0001x\nnext\n")
+        }
+
+        @Test
+        @DisplayName("行尾空格仍按原有序列化去掉，制表符不去掉")
+        fun `existing trailing space trim stays limited to spaces`() {
+            val yaml = TransferMapper.toYaml(mapOf("script" to "echo hello \n\techo tab \n"))
+            assertSameScript(yaml, "echo hello\n\techo tab\n")
+        }
+
+        @Test
+        @DisplayName("已有双引号脚本展开后保留注释、锚点和行尾空格")
+        fun `quoted yaml keeps comment anchor and trailing space`() {
+            val commented = "script: \"echo hello\\necho world\\n\" # keep\n"
+            val commentOut = TransferMapper.mergeYaml("", commented)
+            Assertions.assertTrue(commentOut.contains("# keep"))
+            assertSameScript(commentOut, "echo hello\necho world\n")
+
+            val anchored = "script: &s \"echo hello\\necho world\\n\"\nalias: *s\n"
+            val anchorOut = TransferMapper.mergeYaml("", anchored)
+            Assertions.assertTrue(anchorOut.contains("&s"))
+            val loaded = TransferMapper.getYamlFactory().load(anchorOut) as Map<*, *>
+            Assertions.assertEquals("echo hello\necho world\n", loaded["script"])
+            Assertions.assertEquals(loaded["script"], loaded["alias"])
+
+            val spaced = "script: \"echo hello \\necho world\\n\"\n"
+            assertSameScript(TransferMapper.mergeYaml("", spaced), "echo hello \necho world\n")
+        }
+
+        @Test
+        @DisplayName("流式标量不改成字面量块，解析结果不变")
+        fun `flow scalar stays quoted`() {
+            val raw = "script: {text: \"echo hello\\necho world\\n\"}\n"
+            val out = TransferMapper.mergeYaml("", raw)
+            Assertions.assertTrue(out.contains("\\n"))
+            val loaded = TransferMapper.getYamlFactory().load(out) as Map<*, *>
+            val script = loaded["script"] as Map<*, *>
+            Assertions.assertEquals("echo hello\necho world\n", script["text"])
+        }
+    }
 }

@@ -239,6 +239,25 @@ class StageBuildRecordService(
         )
     }
 
+    /**
+     * 历史表状态提交后再推一次详情。
+     * 记录表推送往往早于历史表改回 RUNNING，只推第一次时运行态会按旧的阶段挂起状态算空。
+     */
+    fun pushDetailRefresh(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ) {
+        pipelineRecordChangeEvent(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startUser = null,
+            executeCount = executeCount
+        )
+    }
+
     fun stageCancel(
         projectId: String,
         pipelineId: String,
@@ -421,7 +440,12 @@ class StageBuildRecordService(
         buildStatus: BuildStatus?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        /**
+         * 一步到位完成、没有运行态刷新的阶段（如触发阶段）由调用方补一个真实的开始时间，
+         * 否则记录表只有结束时间，详情页无法展示起止区间。仅在记录本身还没有开始时间时生效。
+         */
+        fallbackStartTime: LocalDateTime? = null
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -442,8 +466,8 @@ class StageBuildRecordService(
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()
-            if (buildStatus?.isRunning() == true && recordStage.startTime == null) {
-                startTime = now
+            if (recordStage.startTime == null) {
+                startTime = if (buildStatus?.isRunning() == true) now else fallbackStartTime
             }
             val dbStageVar = recordStage.stageVar
             if (buildStatus?.isFinish() == true) {

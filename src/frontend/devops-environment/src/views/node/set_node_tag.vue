@@ -414,6 +414,11 @@
             }
         },
         mounted () {
+            // 选中节点数据为空（如从设置标签页刷新页面导致 store 重置）时，跳回节点列表页
+            if (!this.selectionTagList || !this.selectionTagList.length) {
+                this.$router.replace({ name: 'nodeList', params: this.$route.params })
+                return
+            }
             this.getInitData()
             this.initCellStates()  // 初始化单元格状态
             this.saveOriginalData() // 保存原始数据

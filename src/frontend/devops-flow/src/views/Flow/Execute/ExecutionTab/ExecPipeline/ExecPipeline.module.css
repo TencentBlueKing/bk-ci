@@ -186,6 +186,7 @@
   padding: 0 var(--spacing-xl);
   width: 100%;
   max-width: 100%;
+  height: 100%;
   box-sizing: border-box;
   overflow-x: auto;
 }

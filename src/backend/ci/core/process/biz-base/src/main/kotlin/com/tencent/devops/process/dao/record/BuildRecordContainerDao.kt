@@ -206,7 +206,8 @@ class BuildRecordContainerDao {
         executeCount: Int,
         stageId: String? = null,
         matrixGroupId: String? = null,
-        buildStatusSet: Set<BuildStatus>? = null
+        buildStatusSet: Set<BuildStatus>? = null,
+        containerIds: Collection<String>? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -217,6 +218,9 @@ class BuildRecordContainerDao {
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
             matrixGroupId?.let { conditions.add(MATRIX_GROUP_ID.eq(matrixGroupId)) }
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
+            if (!containerIds.isNullOrEmpty()) {
+                conditions.add(CONTAINER_ID.`in`(containerIds))
+            }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
@@ -234,14 +238,19 @@ class BuildRecordContainerDao {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-                .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
-                        .and(PIPELINE_ID.eq(pipelineId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                )
-            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
-            update.execute()
+            // 阶段跳过会把底下的 Job 整批改成跳过，原来只改状态，已经跑过的 Job 会停在"有开始无结束"。
+            // 这里按终态补一次结束时间，口径与 updateContainerRecord 一致：空才补，已有的不覆盖。
+            if (buildStatus.isFinish()) {
+                update.set(END_TIME, DSL.coalesce(END_TIME, LocalDateTime.now()))
+            }
+            val conditioned = update.where(
+                BUILD_ID.eq(buildId)
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(EXECUTE_COUNT.eq(executeCount))
+            )
+            stageId?.let { conditioned.and(STAGE_ID.eq(stageId)) }
+            conditioned.execute()
         }
     }
 

@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -47,9 +48,14 @@ object BuildTimeCostUtils {
 
     fun BuildRecordModel.generateBuildTimeCost(stageRecords: List<BuildRecordStage>): BuildRecordTimeCost {
         val startTime = startTime ?: return BuildRecordTimeCost()
-        // 构建级别的总耗时从触发入队列算起
+        // 构建级别的总耗时从触发入队列算起。Stage 之间串行，各自的墙钟分段可以直接相加。
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(queueTime, endTime).toMillis()
+        // 局部重试时记录上的触发、起始时间继承自上一轮（页面要展示构建最初的起点），
+        // 耗时只算本轮：本轮入队时刻记在并发排队时间戳上，拿它当起点，
+        // 否则上一轮结束到这次重试之间等人处理的空档会被算成本轮的系统耗时
+        val roundStart = timestamps[BuildTimestampType.BUILD_CONCURRENCY_QUEUE]?.startTime
+            ?.coerceAtLeast(queueTime.timestampmilli()) ?: queueTime.timestampmilli()
+        val totalCost = (endTime.timestampmilli() - roundStart).notNegative()
         var executeCost = 0L
         var waitCost = 0L
         stageRecords.forEach { record ->
@@ -58,10 +64,12 @@ object BuildTimeCostUtils {
                 object : TypeReference<BuildRecordTimeCost>() {}
             )
             executeCost += stageCost.executeCost
+            // stage 的等待已包含该 Stage 内 Job 排队（互斥、第三方构建机、构建机复用）
             waitCost += stageCost.waitCost
         }
-        // 给前端展示的构建排队时间为触发-开始
-        val queueCost = Duration.between(queueTime, startTime).toMillis()
+        // 给前端展示的构建排队时间仅为触发到开始，不含构建开始后的 Job 资源等待。
+        // 续上的那轮起始时间是上一轮的，落在本轮窗口之前，这时本轮没有排队
+        val queueCost = (startTime.timestampmilli() - roundStart).notNegative()
         val systemCost = totalCost - executeCost - queueCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
@@ -77,56 +85,25 @@ object BuildTimeCostUtils {
     ): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
-        var containerExecuteCost = emptyList<BuildRecordTimeLine.Moment>()
-        var containerWaitCost = listOf(
-            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, containerRecords.map { it.startTime to it.endTime }
         )
-        var containerQueueCost = listOf(
-            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
-        )
-        containerRecords.forEach { record ->
-            val containerTimeLine = JsonUtil.anyTo(
-                record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
-                object : TypeReference<BuildRecordTimeLine>() {}
-            )
-            // 计算等到耗时需要将率先执行完毕的container追加无状态区间
-            record.endTime?.let {
-                val containerEnd = it.timestampmilli()
-                val stageEnd = endTime.timestampmilli()
-                if (containerEnd < stageEnd) {
-                    val fixedMoment = BuildRecordTimeLine.Moment(containerEnd, stageEnd)
-                    containerTimeLine.waitCostMoments.add(fixedMoment)
-                    containerTimeLine.queueCostMoments.add(fixedMoment)
-                }
-            }
-            // 执行时间取并集
-            containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
-            val mergedWaitCost = mergeTimeLine(containerTimeLine.waitCostMoments, containerTimeLine.queueCostMoments)
-            // 等待时间取交集
-            containerWaitCost = intersectionTimeLine(containerWaitCost, mergedWaitCost)
-            // 排队时间取交集
-            containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
-        }
-        val executeCost = containerExecuteCost.sumOf { it.endTime - it.startTime }
-        val queueCost = containerQueueCost.sumOf { it.endTime - it.startTime }
+        val totalCost = windowEnd - windowStart
+        val (executeMoments, waitMoments, queueMoments) = mergeContainerTimeLines(containerRecords)
         val stageCheckWaitMoments = mutableListOf<BuildRecordTimeLine.Moment>()
         timestamps.toList().forEach { (type, time) ->
             if (!type.stageCheckWait()) return@forEach
             logWhenNull(time, "$buildId|STAGE|$stageId|${type.name}")
-            time.insert2TimeLine(stageCheckWaitMoments)
+            // 准入、准出审核期间构建被终止时审核时间戳没有收尾，按阶段的结束时刻补齐
+            time.fixEndTime(windowEnd).insert2TimeLine(stageCheckWaitMoments)
         }
-        // 合并 stage check wait 与 container wait（取并集去重叠），再减去 execute（执行期间不算等待）
-        val allWaitMoments = mergeTimeLine(stageCheckWaitMoments, containerWaitCost)
-        val netWaitMoments = differenceTimeLine(allWaitMoments, containerExecuteCost)
-        val waitCost = netWaitMoments.sumOf { it.endTime - it.startTime }
-        val systemCost = totalCost - executeCost - waitCost
-        return BuildRecordTimeCost(
+        return partitionTimeCost(
             totalCost = totalCost,
-            executeCost = executeCost,
-            waitCost = waitCost,
-            queueCost = queueCost,
-            systemCost = systemCost.notNegative()
+            executeMoments = executeMoments.clampTo(windowStart, windowEnd),
+            waitMoments = mergeTimeLine(waitMoments, stageCheckWaitMoments).clampTo(windowStart, windowEnd),
+            queueMoments = queueMoments.clampTo(windowStart, windowEnd),
+            // Job 排队发生在 Stage 墙钟内，归入等待，避免并行时被交集算法丢进系统耗时
+            queueInWait = true
         )
     }
 
@@ -135,39 +112,95 @@ object BuildTimeCostUtils {
     ): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
-        var containerExecuteCost = emptyList<BuildRecordTimeLine.Moment>()
-        var containerWaitCost = listOf(
-            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, containerRecords.map { it.startTime to it.endTime }
         )
-        var containerQueueCost = listOf(
-            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
+        val totalCost = windowEnd - windowStart
+        val (executeMoments, waitMoments, queueMoments) = mergeContainerTimeLines(containerRecords)
+        // 矩阵子 Job 并行。卡片上的四项互斥，相加等于总耗时。
+        return partitionTimeCost(
+            totalCost = totalCost,
+            executeMoments = executeMoments.clampTo(windowStart, windowEnd),
+            waitMoments = waitMoments.clampTo(windowStart, windowEnd),
+            queueMoments = queueMoments.clampTo(windowStart, windowEnd),
+            queueInWait = false
         )
-        containerRecords.forEach { record ->
-            val containerTimeLine = JsonUtil.anyTo(
-                record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
-                object : TypeReference<BuildRecordTimeLine>() {}
+    }
+
+    /**
+     * 计算Container级别的所有时间消耗。
+     * 同一 Job 内步骤默认串行；若存在重叠区间（重试残留、异步收尾），按墙钟并集计，避免把重叠时间加总后超过 Job 总时长。
+     * @return Pair(该Container耗时概览, 该Container耗时细则)
+     */
+    fun BuildRecordContainer.generateContainerTimeCost(
+        taskRecords: List<BuildRecordTask>
+    ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
+        val containerTimeLine = BuildRecordTimeLine()
+        val startTime = startTime ?: taskRecords.firstOrNull()?.startTime ?: return Pair(null, containerTimeLine)
+        val endTime = endTime ?: LocalDateTime.now()
+        val (windowStart, windowEnd) = coverChildren(
+            startTime, endTime, taskRecords.map { it.startTime to it.endTime }
+        )
+        val totalCost = windowEnd - windowStart
+        timestamps.toList().forEach { (type, time) ->
+            if (!type.containerCheckQueue()) return@forEach
+            logWhenNull(
+                time, "$buildId|CONTAINER|$containerId|${type.name}"
             )
-            record.endTime?.let {
-                val containerEnd = it.timestampmilli()
-                val matrixEnd = endTime.timestampmilli()
-                if (containerEnd < matrixEnd) {
-                    val fixedMoment = BuildRecordTimeLine.Moment(containerEnd, matrixEnd)
-                    containerTimeLine.waitCostMoments.add(fixedMoment)
-                    containerTimeLine.queueCostMoments.add(fixedMoment)
-                }
-            }
-            // 执行时间取并集
-            containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
-            // 等待时间取交集
-            containerWaitCost = intersectionTimeLine(containerWaitCost, containerTimeLine.waitCostMoments)
-            // 排队时间取交集
-            containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
+            // 互斥、构建机资源排队期间 Job 被取消或超时时排队时间戳没有收尾，按 Job 的结束时刻补齐
+            time.fixEndTime(windowEnd).insert2TimeLine(containerTimeLine.queueCostMoments)
         }
-        val executeCost = containerExecuteCost.sumOf { it.endTime - it.startTime }
-        val queueCost = containerQueueCost.sumOf { it.endTime - it.startTime }
-        val waitCost = containerWaitCost.sumOf { it.endTime - it.startTime }
-        val systemCost = totalCost - executeCost - queueCost - waitCost
+        taskRecords.forEach { record ->
+            val taskTimeLine = BuildRecordTimeLine()
+            record.generateTaskTimeCost(taskTimeLine)
+            containerTimeLine.queueCostMoments.addAll(taskTimeLine.queueCostMoments)
+            containerTimeLine.waitCostMoments.addAll(taskTimeLine.waitCostMoments)
+            containerTimeLine.executeCostMoments.addAll(taskTimeLine.executeCostMoments)
+        }
+        // 时间线会被上层 Stage 聚合，裁剪后存，保证各层的子区间都落在自己的墙钟窗口内
+        containerTimeLine.clampTo(windowStart, windowEnd)
+        return Pair(
+            partitionTimeCost(
+                totalCost = totalCost,
+                executeMoments = containerTimeLine.executeCostMoments,
+                waitMoments = containerTimeLine.waitCostMoments,
+                queueMoments = containerTimeLine.queueCostMoments,
+                queueInWait = false
+            ),
+            containerTimeLine
+        )
+    }
+
+    /**
+     * 把子区间切成墙钟分段。优先级：执行 > 等待 > 排队 > 系统。
+     * [queueInWait] 为 false 时四项互斥，相加等于总耗时（系统耗时兜底，不为负）。
+     * [queueInWait] 为 true 时排队并入等待（Stage 口径：Job 资源等待展示为等待耗时），
+     * queueCost 仍给出排队墙钟供指标使用，不再从系统耗时里重复扣减。
+     */
+    fun partitionTimeCost(
+        totalCost: Long,
+        executeMoments: List<BuildRecordTimeLine.Moment>,
+        waitMoments: List<BuildRecordTimeLine.Moment>,
+        queueMoments: List<BuildRecordTimeLine.Moment>,
+        queueInWait: Boolean
+    ): BuildRecordTimeCost {
+        val executeLine = mergeTimeLine(executeMoments, emptyList())
+        val executeCost = executeLine.duration()
+        val waitSource = if (queueInWait) {
+            mergeTimeLine(waitMoments, queueMoments)
+        } else {
+            mergeTimeLine(waitMoments, emptyList())
+        }
+        val waitLine = differenceTimeLine(waitSource, executeLine)
+        val waitCost = waitLine.duration()
+        val queueLine = differenceTimeLine(mergeTimeLine(queueMoments, emptyList()), executeLine)
+        val queueOnly = differenceTimeLine(queueLine, waitLine)
+        val queueCost = if (queueInWait) queueLine.duration() else queueOnly.duration()
+        val systemCost = if (queueInWait) {
+            totalCost - executeCost - waitCost
+        } else {
+            totalCost - executeCost - waitCost - queueCost
+        }
         return BuildRecordTimeCost(
             totalCost = totalCost,
             executeCost = executeCost,
@@ -178,87 +211,133 @@ object BuildTimeCostUtils {
     }
 
     /**
-     * 计算Container级别的所有时间消耗
-     * queueCost、 systemCost 保持为 0
-     * @return Pair(该Container耗时概览, 该Container耗时细则)
+     * 同一 Stage 内 Job 的执行耗时。无依赖时等于最慢 Job（并行）；
+     * 有 dependOn 时走关键路径，串行链路相加，不再把串行 Job 当成并行取最大值。
+     * 矩阵子 Job 继承矩阵组上的 dependOn。
      */
-    fun BuildRecordContainer.generateContainerTimeCost(
-        taskRecords: List<BuildRecordTask>
-    ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
-        val containerTimeLine = BuildRecordTimeLine()
-        val startTime = startTime ?: taskRecords.first().startTime ?: return Pair(null, containerTimeLine)
-        val endTime = endTime ?: LocalDateTime.now()
-        val totalCost = Duration.between(startTime, endTime).toMillis()
-        var executeCost = 0L
-        var waitCost = 0L
-        val queueCost = timestamps.toList().sumOf { (type, time) ->
-            if (!type.containerCheckQueue()) return@sumOf 0L
-            logWhenNull(
-                time, "$buildId|CONTAINER|$containerId|${type.name}"
-            )
-            time.insert2TimeLine(containerTimeLine.queueCostMoments)
-            return@sumOf time.between()
+    fun criticalPathCost(
+        jobCosts: Map<String, Long>,
+        dependencies: Map<String, Set<String>>
+    ): Long {
+        if (jobCosts.isEmpty()) return 0L
+        val memo = HashMap<String, Long>()
+        val visiting = HashSet<String>()
+        fun longest(id: String): Long {
+            memo[id]?.let { return it }
+            // 循环依赖只断开回边，避免关键路径把同一段时间累加多遍
+            if (!visiting.add(id)) {
+                return 0L
+            }
+            val predCost = dependencies[id].orEmpty().maxOfOrNull { longest(it) } ?: 0L
+            visiting.remove(id)
+            val cost = (jobCosts[id] ?: 0L) + predCost
+            memo[id] = cost
+            return cost
         }
-        taskRecords.forEach { record ->
-            val taskTimeLine = BuildRecordTimeLine()
-            val cost = record.generateTaskTimeCost(taskTimeLine)
-            containerTimeLine.queueCostMoments.addAll(taskTimeLine.queueCostMoments)
-            containerTimeLine.waitCostMoments.addAll(taskTimeLine.waitCostMoments)
-            containerTimeLine.executeCostMoments.addAll(taskTimeLine.executeCostMoments)
-            cost?.executeCost?.let { executeCost += it }
-            cost?.waitCost?.let { waitCost += it }
-        }
-        val systemCost = totalCost - executeCost - waitCost - queueCost
-        return Pair(
-            BuildRecordTimeCost(
-                totalCost = totalCost,
-                executeCost = executeCost,
-                waitCost = waitCost,
-                queueCost = queueCost,
-                systemCost = systemCost.notNegative()
-            ),
-            containerTimeLine
-        )
+        return (jobCosts.keys + dependencies.keys).maxOfOrNull { longest(it) } ?: 0L
     }
 
     /**
+     * 父层的墙钟窗口必须盖住子层，否则用户耗时会超过总耗时，系统耗时被挤成负数后夹到 0，四项相加也对不上。
+     *
+     * 各层的起止时刻由不同的消费者各自写入，子层探出父层记录窗口几十到几百毫秒是常态：
+     * 典型如无编译环境里只有一个人工审核插件的 Job，插件先被置为运行中，Job 记录随后才刷新开始时间。
+     * 这里按记录窗口与子层窗口的并集取，只认有开始时刻的子层（跳过未执行的）。
+     *
+     * 整个区间都落在本层开始之前的子层不算数：矩阵子 Job 局部重试时，没有重跑的插件会连同上一轮的
+     * 起止一起被复制进本轮记录，拿它去拉伸窗口，两轮之间等人重试的空档又会被算成本轮的系统耗时。
+     * 真正该补的那种探出只有几十到几百毫秒，区间一定延续到本层开始之后。
+     */
+    private fun coverChildren(
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        children: List<Pair<LocalDateTime?, LocalDateTime?>>
+    ): Pair<Long, Long> {
+        var windowStart = startTime.timestampmilli()
+        var windowEnd = endTime.timestampmilli()
+        children.forEach { (childStart, childEnd) ->
+            if (childStart == null) return@forEach
+            val childEndMilli = childEnd?.timestampmilli()
+            if (childEndMilli != null && childEndMilli < startTime.timestampmilli()) return@forEach
+            windowStart = minOf(windowStart, childStart.timestampmilli())
+            childEndMilli?.let { windowEnd = maxOf(windowEnd, it) }
+        }
+        return Pair(windowStart, maxOf(windowStart, windowEnd))
+    }
+
+    /**
+     * 把子区间裁剪到 [[start], [end]] 窗口内，落在窗口外的部分丢弃，裁空的区间不保留
+     */
+    private fun List<BuildRecordTimeLine.Moment>.clampTo(
+        start: Long,
+        end: Long
+    ): List<BuildRecordTimeLine.Moment> = mapNotNull { moment ->
+        val momentStart = moment.startTime.coerceIn(start, end)
+        val momentEnd = moment.endTime.coerceIn(start, end)
+        if (momentEnd > momentStart) BuildRecordTimeLine.Moment(momentStart, momentEnd) else null
+    }
+
+    private fun BuildRecordTimeLine.clampTo(start: Long, end: Long) {
+        listOf(executeCostMoments, waitCostMoments, queueCostMoments).forEach { moments ->
+            val clamped = moments.clampTo(start, end)
+            moments.clear()
+            moments.addAll(clamped)
+        }
+    }
+
+    private fun mergeContainerTimeLines(
+        containerRecords: List<BuildRecordContainer>
+    ): Triple<
+        List<BuildRecordTimeLine.Moment>,
+        List<BuildRecordTimeLine.Moment>,
+        List<BuildRecordTimeLine.Moment>
+        > {
+        var executeMoments = emptyList<BuildRecordTimeLine.Moment>()
+        var waitMoments = emptyList<BuildRecordTimeLine.Moment>()
+        var queueMoments = emptyList<BuildRecordTimeLine.Moment>()
+        containerRecords.forEach { record ->
+            val timeline = record.readTimeLine() ?: return@forEach
+            executeMoments = mergeTimeLine(executeMoments, timeline.executeCostMoments)
+            waitMoments = mergeTimeLine(waitMoments, timeline.waitCostMoments)
+            queueMoments = mergeTimeLine(queueMoments, timeline.queueCostMoments)
+        }
+        return Triple(executeMoments, waitMoments, queueMoments)
+    }
+
+    private fun BuildRecordContainer.readTimeLine(): BuildRecordTimeLine? {
+        val raw = containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return null
+        return JsonUtil.anyTo(raw, object : TypeReference<BuildRecordTimeLine>() {})
+    }
+
+    private fun List<BuildRecordTimeLine.Moment>.duration(): Long =
+        sumOf { (it.endTime - it.startTime).coerceAtLeast(0L) }
+
+    /**
      * 计算Task级别的所有时间消耗
-     * queueCost、 systemCost 保持为 0
+     * queueCost、 systemCost、waitCost 保持为 0
+     *
+     * 插件暂停、人工审核、质量红线审核期间，Job 一直被这个插件占着，构建资源没有释放，
+     * 按产品口径整段算用户耗时，不单列等待耗时。不这么算的话，同一个审核插件
+     * 通过、驳回（等待时间戳收了尾）用户耗时是 0，超时（没收尾）却是整段审核时长，两者对不齐。
+     *
+     * 没占用构建资源的等待仍单列：Job 的互斥、构建机资源排队算排队耗时，
+     * Stage 准入准出审核算阶段的等待耗时，都不在这里。
+     *
      * @param timeLine 计算task时为null, 计算container时会传入以记录具体时刻
      */
     fun BuildRecordTask.generateTaskTimeCost(timeLine: BuildRecordTimeLine? = null): BuildRecordTimeCost? {
         val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
-        val waitCost = timestamps.toList().sumOf { (type, time) ->
-            if (!type.taskCheckWait()) return@sumOf 0L
-            logWhenNull(
-                time, "$buildId|TASK|$taskId|${type.name}"
+        timeLine?.executeCostMoments?.add(
+            BuildRecordTimeLine.Moment(
+                startTime.timestampmilli(),
+                endTime.timestampmilli()
             )
-            timeLine?.let {
-                time.insert2TimeLine(timeLine.waitCostMoments)
-            }
-            return@sumOf time.between()
-        }
-        val executeCost = totalCost - waitCost
-        timeLine?.let {
-            timeLine.executeCostMoments.addAll(
-                differenceTimeLine(
-                    listOf(
-                        BuildRecordTimeLine.Moment(
-                            startTime.timestampmilli(),
-                            endTime.timestampmilli()
-                        )
-                    ),
-                    timeLine.waitCostMoments
-                )
-            )
-        }
-
+        )
         return BuildRecordTimeCost(
             totalCost = totalCost,
-            waitCost = waitCost,
-            executeCost = executeCost.notNegative()
+            executeCost = totalCost
         )
     }
 

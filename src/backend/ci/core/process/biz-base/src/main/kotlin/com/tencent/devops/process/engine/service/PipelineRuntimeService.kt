@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -82,8 +83,11 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.criticalPathCost
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -195,6 +199,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val recordModelDao: BuildRecordModelDao,
+    private val recordStageDao: BuildRecordStageDao,
+    private val recordContainerDao: BuildRecordContainerDao,
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -255,7 +261,10 @@ class PipelineRuntimeService @Autowired constructor(
                         userId = userId,
                         buildId = build.buildId,
                         status = BuildStatus.TERMINATE,
-                        executeCount = build.executeCount
+                        executeCount = build.executeCount,
+                        buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_PIPELINE_DELETED
+                        )
                     )
                 )
             }
@@ -672,7 +681,8 @@ class PipelineRuntimeService @Autowired constructor(
                 artifactList = artifactList,
                 artifactQuality = artifactQuality,
                 remark = remark,
-                totalTime = if (startTime != null && endTime != null) {
+                // 调试历史把未开始的 startTime 兜成 0。排队中被取消时不能用结束时间去减 0，否则耗时变成时间戳。
+                totalTime = if ((startTime ?: 0L) > 0L && (endTime ?: 0L) > 0L) {
                     (endTime!! - startTime!!).takeIf { it > 0 }
                 } else null,
                 executeTime = executeTime,
@@ -777,7 +787,8 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        terminateFlag: Boolean = false
+        terminateFlag: Boolean = false,
+        buildEndInfo: BuildEndInfo? = null
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
         // 心跳监控沿用历史范围，查询结果同时用于 #13581 打取消标记
@@ -806,13 +817,16 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             }
         }
-        // 记录该构建取消人信息
-        pipelineBuildRecordService.updateBuildCancelUser(
-            projectId = projectId,
-            buildId = buildId,
-            executeCount = executeCount,
-            cancelUserId = userId
-        )
+        // 只把真人操作人记成取消人。系统取消的 userId 往往是构建启动人或新构建的触发人，
+        // 父级联再拿这个值往下传，就会把子流水线的权限代持人显示成取消人。
+        BuildEndInfo.inheritedCancelOperator(buildEndInfo, userId)?.let { cancelUserId ->
+            pipelineBuildRecordService.updateBuildCancelUser(
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = executeCount,
+                cancelUserId = cancelUserId
+            )
+        }
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
@@ -825,7 +839,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 status = buildStatus,
                 actionType = actionType,
-                executeCount = executeCount
+                executeCount = executeCount,
+                buildEndInfo = buildEndInfo
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
@@ -852,6 +867,34 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         return true
+    }
+
+    /**
+     * 初始化Stage内Job的dependOn映射：
+     * 插件/Stage重试与运行中重试沿用上次持久化的映射，运行中重试据此判断需要刷新的Job；
+     * 构建/重新构建按启动参数预算并校验循环依赖，最终以Stage启动时DependOnStageCmd重算的结果为准
+     */
+    private fun initStageDependOn(
+        stage: Stage,
+        context: StartBuildContext,
+        lastTimeBuildContainers: List<PipelineBuildContainer>
+    ) {
+        if (!context.retryStartTaskId.isNullOrBlank()) {
+            val dbDependOn = lastTimeBuildContainers.filter { it.stageId == stage.id }
+                .associate { it.containerId to it.controlOption.jobControlOption.dependOnContainerId2JobIds }
+            stage.containers.forEach { c ->
+                val jobControlOption = when (c) {
+                    is VMBuildContainer -> c.jobControlOption
+                    is NormalContainer -> c.jobControlOption
+                    else -> null
+                } ?: return@forEach
+                jobControlOption.dependOnContainerId2JobIds = dbDependOn[c.id]
+            }
+            return
+        }
+        if (stage.containers.any { DependOnUtils.enableDependOn(it) }) {
+            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+        }
     }
 
     fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
@@ -936,11 +979,11 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
-            DependOnUtils.initDependOn(stage = stage, params = context.variables)
+            initStageDependOn(stage = stage, context = context, lastTimeBuildContainers = lastTimeBuildContainers)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
-                if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                if (context.shouldSkipRefreshWhenRetryRunning(stage, container)) {
                     logger.info(
                         "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
                     )
@@ -1107,11 +1150,15 @@ class PipelineRuntimeService @Autowired constructor(
                 if (context.needUpdateStage) {
                     afterRetryStage = true
                     stage.resetBuildOption(true)
+                    // 整体重跑才改起始时间；中途续上保留原起始时间，只清结束时间，结束时再写
+                    val refreshStageStart = context.refreshStageRuntime(stage)
                     run findHistoryStage@{
                         lastTimeBuildStages.forEach {
                             if (it.stageId == stage.id!!) {
                                 it.status = stageStatus
-                                it.startTime = stageStartTime
+                                if (refreshStageStart) {
+                                    it.startTime = stageStartTime
+                                }
                                 it.endTime = null
                                 it.executeCount = context.executeCount
                                 it.checkIn = stage.checkIn
@@ -1173,7 +1220,8 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     newList
                 },
-                concurrencyGroup = context.concurrencyGroup
+                concurrencyGroup = context.concurrencyGroup,
+                concurrencySubGroup = context.concurrencySubGroup
             )
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能
@@ -1377,8 +1425,32 @@ class PipelineRuntimeService @Autowired constructor(
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
         val modelRecord = if (context.retryOnRunningBuild) {
+            // 运行中重试复用同一执行次数的记录行，需清掉本次执行中已落库的终态详情
+            // （Agent失联、Job超时这类入口在构建运行中就会写入），否则构建结束时的
+            // IfAbsent 写入会被残留值挡住，页面展示的详情与最终状态不符
+            pipelineBuildRecordService.clearBuildEndInfo(
+                transactionContext = transactionContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                executeCount = context.executeCount
+            )
             null
         } else {
+            // 未指定重试起点即整条流水线重跑，起始时间留空，等触发阶段按当前时间写入。
+            // 指定了起点（Stage/Job/插件续上）则继承上一轮的触发时间与起始时间，只让结束时间在本轮结束时重写。
+            // 耗时不按这对起止算：本轮真正的起点记在 BUILD_CONCURRENCY_QUEUE 时间戳上，见 BuildTimeCostUtils
+            val previous = if (context.retryStartTaskId.isNullOrBlank()) {
+                null
+            } else {
+                recordModelDao.getRecord(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    executeCount = context.executeCount - 1
+                )
+            }
             BuildRecordModel(
                 resourceVersion = context.resourceVersion, startUser = context.triggerUser,
                 startType = context.startType.name, buildNum = context.buildNum,
@@ -1388,7 +1460,9 @@ class PipelineRuntimeService @Autowired constructor(
                 timestamps = mapOf(
                     BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                         BuildRecordTimeStamp(context.now.timestampmilli(), null)
-                ), queueTime = context.now
+                ),
+                queueTime = previous?.queueTime ?: context.now,
+                startTime = previous?.startTime
             )
         }
         // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录
@@ -1406,22 +1480,22 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineContainerService.batchUpdate(
                 transactionContext, updateExistsContainer.map { it.first }
             )
-            saveContainerRecords(updateExistsContainer, containerBuildRecords, context.resourceVersion)
+            saveContainerRecords(transactionContext, updateExistsContainer, containerBuildRecords, context)
         }
         if (buildContainers.isNotEmpty()) {
             pipelineContainerService.batchSave(
                 transactionContext, buildContainers.map { it.first }
             )
-            saveContainerRecords(buildContainers, containerBuildRecords, context.resourceVersion)
+            saveContainerRecords(transactionContext, buildContainers, containerBuildRecords, context)
         }
 
         if (updateExistsStage.isNotEmpty()) {
             pipelineStageService.batchUpdate(transactionContext, updateExistsStage)
-            saveStageRecords(updateExistsStage, stageBuildRecords, context.resourceVersion)
+            saveStageRecords(transactionContext, updateExistsStage, stageBuildRecords, context)
         }
         if (buildStages.isNotEmpty()) {
             pipelineStageService.batchSave(transactionContext, buildStages)
-            saveStageRecords(buildStages, stageBuildRecords, context.resourceVersion)
+            saveStageRecords(transactionContext, buildStages, stageBuildRecords, context)
         }
         pipelineBuildRecordService.batchSave(
             transactionContext, modelRecord, stageBuildRecords,
@@ -1429,11 +1503,39 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    /**
+     * 取上一轮记录里展示用的起始时间。
+     *
+     * 不能拿运行时表的起始时间当展示值：那一列每轮开跑都会被重写（Job 超时监控、运行时耗时都依赖本轮的值），
+     * 续上第二次就会把展示的起点也带成上一轮的。记录表里的这个变量是一路继承下来的，取它才是最初那次的起点。
+     */
+    private fun inheritedStartTime(recordVar: Map<String, Any>, recordStartTime: LocalDateTime?): Long? {
+        return (recordVar[Container::startTime.name] as? Number)?.toLong() ?: recordStartTime?.timestampmilli()
+    }
+
+    /**
+     * 本轮续上了上一轮的 Job 时返回上一轮的记录，整体重跑、首次执行、运行中重试都返回 null。
+     * 运行时表的起始时间在整体重跑时已被清空，留着值就说明是中途续上。
+     */
+    private fun previousContainerRecord(
+        transactionContext: DSLContext,
+        build: PipelineBuildContainer,
+        context: StartBuildContext
+    ): BuildRecordContainer? {
+        if (context.retryOnRunningBuild || context.executeCount <= 1 || build.startTime == null) return null
+        return recordContainerDao.getLatestRecord(
+            dslContext = transactionContext, projectId = build.projectId, pipelineId = build.pipelineId,
+            buildId = build.buildId, containerId = build.containerId, executeCount = context.executeCount - 1
+        )
+    }
+
     private fun saveContainerRecords(
+        transactionContext: DSLContext,
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
-        resourceVersion: Int
+        context: StartBuildContext
     ) {
+        val resourceVersion = context.resourceVersion
         buildContainers.forEach { (build, detail) ->
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
@@ -1461,6 +1563,14 @@ class PipelineRuntimeService @Autowired constructor(
                     JsonUtil.toMutableMap(it)
                 }
             }
+            // 局部重试续上的 Job：记录表只留本轮的起止，否则两轮之间等人重试的空档会被算进本轮耗时；
+            // 最初那次的起始时间转存到变量里，只给详情页展示
+            val previous = previousContainerRecord(transactionContext, build, context)
+            if (previous != null) {
+                containerVar[Container::startTime.name] = inheritedStartTime(
+                    recordVar = previous.containerVar, recordStartTime = previous.startTime
+                ) ?: build.startTime!!.timestampmilli()
+            }
             containerBuildRecords.add(
                 BuildRecordContainer(
                     projectId = build.projectId, pipelineId = build.pipelineId,
@@ -1468,7 +1578,8 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     containPostTaskFlag = build.containPostTaskFlag, matrixGroupFlag = build.matrixGroupFlag,
-                    matrixGroupId = build.matrixGroupId, status = null, startTime = build.startTime,
+                    matrixGroupId = build.matrixGroupId, status = null,
+                    startTime = if (previous != null) null else build.startTime,
                     endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
@@ -1476,18 +1587,37 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun saveStageRecords(
+        transactionContext: DSLContext,
         updateStageExistsRecord: MutableList<PipelineBuildStage>,
         stageBuildRecords: MutableList<BuildRecordStage>,
-        resourceVersion: Int
+        context: StartBuildContext
     ) {
+        // 与 Job 同一口径：续上的 Stage 记录表只留本轮起止，最初那次的起始时间转存到变量里给展示用
+        val previousStages by lazy {
+            recordStageDao.getLatestRecords(
+                dslContext = transactionContext, projectId = context.projectId,
+                pipelineId = context.pipelineId, buildId = context.buildId,
+                executeCount = context.executeCount - 1
+            ).associateBy { it.stageId }
+        }
         updateStageExistsRecord.forEach { build ->
+            val stageVar = mutableMapOf<String, Any>(Stage::name.name to (build.name ?: ""))
+            val resumeAble = !context.retryOnRunningBuild && context.executeCount > 1 && build.startTime != null
+            val previous = if (resumeAble) previousStages[build.stageId] else null
+            if (previous != null) {
+                stageVar[Stage::startTime.name] = inheritedStartTime(
+                    recordVar = previous.stageVar, recordStartTime = previous.startTime
+                ) ?: build.startTime!!.timestampmilli()
+            }
             stageBuildRecords.add(
                 BuildRecordStage(
                     projectId = build.projectId, pipelineId = build.pipelineId,
-                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    resourceVersion = context.resourceVersion, buildId = build.buildId,
                     stageId = build.stageId, stageSeq = build.seq,
-                    executeCount = build.executeCount, stageVar = mutableMapOf(Stage::name.name to (build.name ?: "")),
-                    timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
+                    executeCount = build.executeCount, stageVar = stageVar,
+                    timestamps = mapOf(),
+                    startTime = if (previous != null) null else build.startTime,
+                    endTime = build.endTime
                 )
             )
         }
@@ -2064,22 +2194,39 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val executeTask = pipelineTaskService.listByBuildId(projectId, buildId)
             .filter { !filter.contains(it.taskType) }
-        var executeTime = 0L
-        val stageTotalTime = mutableMapOf<String, MutableMap<String, Long>>()
+        val stageJobTime = mutableMapOf<String, MutableMap<String, Long>>()
         executeTask.forEach { task ->
-            val jobTime = stageTotalTime.computeIfAbsent(task.stageId) { mutableMapOf(task.containerId to 0L) }
+            val jobTime = stageJobTime.computeIfAbsent(task.stageId) { mutableMapOf() }
             jobTime[task.containerId] = (jobTime[task.containerId] ?: 0L) + (task.totalTime ?: 0L)
         }
-        stageTotalTime.forEach { job ->
-            var maxJobTime = 0L
-            job.value.forEach {
-                if (maxJobTime < it.value) {
-                    maxJobTime = it.value
-                }
-            }
-            executeTime += maxJobTime
+        val containersByStage = pipelineContainerService.listByBuildId(projectId, buildId).groupBy { it.stageId }
+        var executeTime = 0L
+        stageJobTime.forEach { (stageId, jobTime) ->
+            // Stage 之间串行，Stage 内按 dependOn 走关键路径：并行取最慢，串行链路相加
+            executeTime += criticalPathCost(
+                jobCosts = jobTime,
+                dependencies = dependOnMap(containersByStage[stageId].orEmpty())
+            )
         }
         return executeTime
+    }
+
+    /**
+     * containerId -> 它直接依赖的 containerId。
+     * 矩阵分裂后子 Job 自身通常没有 dependOn，继承矩阵组上的依赖，否则组依赖会被当成并行。
+     */
+    private fun dependOnMap(containers: List<PipelineBuildContainer>): Map<String, Set<String>> {
+        val byId = containers.associateBy { it.containerId }
+        return containers.associate { container ->
+            val own = container.controlOption.jobControlOption.dependOnContainerId2JobIds?.keys ?: emptySet()
+            val groupId = container.matrixGroupId
+            val inherited = if (groupId.isNullOrBlank()) {
+                emptySet()
+            } else {
+                byId[groupId]?.controlOption?.jobControlOption?.dependOnContainerId2JobIds?.keys ?: emptySet()
+            }
+            container.containerId to (own + inherited)
+        }
     }
 
     fun getLastTimeBuild(projectId: String, pipelineId: String, debug: Boolean): BuildInfo? {
@@ -2299,7 +2446,8 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         userId: String,
         groupName: String,
-        detailUrl: String
+        detailUrl: String,
+        reasonMessage: String? = null
     ) {
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
@@ -2320,8 +2468,10 @@ class PipelineRuntimeService @Autowired constructor(
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = taskId,
                     containerHashId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1,
@@ -2331,11 +2481,14 @@ class PipelineRuntimeService @Autowired constructor(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
+                    message = reasonMessage ?: (
+                        "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
+                            "a higher priority waiting request</a> for group($groupName) exists"
+                        ),
                     tag = "QueueInterceptor",
                     containerHashId = "",
-                    executeCount = 1,
+                    // 重试后的构建被并发挤出时，日志要落在当前执行次数上，否则只能在第 1 次里看到
+                    executeCount = buildInfo?.executeCount ?: 1,
                     jobId = null, stepId = "QueueInterceptor"
                 )
             }
@@ -2346,7 +2499,11 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     userId = userId,
                     executeCount = buildInfo?.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelSystem(
+                            reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_CONCURRENCY_PRIORITY,
+                            reasonParams = listOf(groupName)
+                        )
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {

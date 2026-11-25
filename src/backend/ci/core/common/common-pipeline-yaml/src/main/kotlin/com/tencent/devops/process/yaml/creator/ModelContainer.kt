@@ -51,6 +51,7 @@ import com.tencent.devops.process.yaml.creator.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.utils.YamlMaxParallelParser
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -169,19 +170,23 @@ class ModelContainer @Autowired(required = false) constructor(
                 json.remove("include")
                 json.remove("exclude")
 
+                val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
                 return MatrixControlOption(
                     strategyStr = YamlUtil.toYaml(json),
                     includeCaseStr = include,
                     excludeCaseStr = exclude,
                     fastKill = fastKill,
-                    maxConcurrency = maxParallel,
+                    maxConcurrency = maxConcurrency,
+                    maxConcurrencyVar = maxConcurrencyVar,
                     customDispatchInfo = dispatchInfo
                 )
             } else {
+                val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
                 return MatrixControlOption(
                     strategyStr = matrix.toString(),
                     fastKill = fastKill,
-                    maxConcurrency = maxParallel,
+                    maxConcurrency = maxConcurrency,
+                    maxConcurrencyVar = maxConcurrencyVar,
                     customDispatchInfo = dispatchInfo
                 )
             }
@@ -210,12 +215,14 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 exclude.toString()
             }
+            val (maxConcurrency, maxConcurrencyVar) = YamlMaxParallelParser.parse(maxParallel)
             return MatrixControlOption(
                 strategyStr = strategyStr,
                 includeCaseStr = includeCaseStr,
                 excludeCaseStr = excludeCaseStr,
                 fastKill = fastKill,
-                maxConcurrency = maxParallel
+                maxConcurrency = maxConcurrency,
+                maxConcurrencyVar = maxConcurrencyVar
             )
         }
     }

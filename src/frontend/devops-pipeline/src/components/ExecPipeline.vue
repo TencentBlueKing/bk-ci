@@ -35,8 +35,8 @@
                 <span class="exec-status-label">
                     {{ $t("details.times", [statusLabel]) }}
                     <span
-                        v-if="execDetail.status === 'CANCELED'"
-                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                        v-if="execDetail.status === 'CANCELED' && !execDetail.buildEndInfo"
+                        v-bk-tooltips="`${$t('details.canceller')}：${cancelUserId}`"
                         class="devops-icon icon-info-circle"
                     >
                     </span>
@@ -296,6 +296,9 @@
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
 
+    // 与后端 BuildEndInfo.SYSTEM_CANCEL_USER 一致：系统取消时写入的占位，不是真实操作人
+    const SYSTEM_CANCEL_USER = 'System'
+
     const getSubPipelineAccessUrl = (atom) => {
         const {
             projectId,
@@ -336,6 +339,8 @@
                 currentAtom: {},
                 showErrors: false,
                 activeErrorAtom: null,
+                activeHighlightTarget: null,
+                buildEndHighlightTimer: null,
                 afterAsideVisibleDone: null,
                 errorRow: null,
                 isErrorOverflow: [],
@@ -439,7 +444,9 @@
                 : ''
             },
             cancelUserId () {
-                return this.execDetail?.cancelUserId ?? '--'
+                // 后端在系统取消且没有真实操作人时会落 System 占位，不展示成取消人
+                const cancelUserId = this.execDetail?.cancelUserId
+                return !cancelUserId || cancelUserId === SYSTEM_CANCEL_USER ? '--' : cancelUserId
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
@@ -575,6 +582,7 @@
             if (this.activeErrorAtom?.taskId) {
                 this.locateError(this.activeErrorAtom, false)
             }
+            this.clearBuildEndHighlight()
             const rootCssVar = document.querySelector(':root')
             rootCssVar.style.setProperty('--track-bottom', 0)
             this.removeMiniMapScroll()
@@ -940,6 +948,101 @@
                             }
                         })
                     }
+                } catch (error) {
+                    console.error(error)
+                }
+            },
+            clearBuildEndHighlight () {
+                if (this.buildEndHighlightTimer) {
+                    clearTimeout(this.buildEndHighlightTimer)
+                    this.buildEndHighlightTimer = null
+                }
+                if (this.activeHighlightTarget) {
+                    this.$set(this.activeHighlightTarget, 'locateHighlightActive', false)
+                    this.activeHighlightTarget = null
+                }
+            },
+            resolveBuildEndHighlightTarget ({ editingElementPos, position = {} }) {
+                const { stageIndex, containerIndex, containerGroupIndex, elementIndex } = editingElementPos || {}
+                if (stageIndex === undefined || containerIndex === undefined) {
+                    return null
+                }
+                const stage = this.curPipeline?.stages?.[stageIndex]
+                if (!stage) return null
+
+                const matrixContainer = stage.containers[containerIndex]
+                if (!matrixContainer) return null
+
+                const isMatrixGroup = typeof containerGroupIndex !== 'undefined'
+                const container = isMatrixGroup
+                    ? matrixContainer.groupContainers?.[containerGroupIndex]
+                    : matrixContainer
+                if (!container) return null
+
+                const element = elementIndex !== undefined && elementIndex > -1
+                    ? container.elements?.[elementIndex]
+                    : undefined
+
+                return {
+                    stage,
+                    matrixContainer,
+                    container,
+                    element,
+                    isMatrixGroup,
+                    stageId: position.stageId || stage.id,
+                    containerId: position.containerId || container.id
+                }
+            },
+            async ensureBuildEndHighlightExpanded ({ stageId, matrixContainer, container, element, isMatrixGroup }) {
+                const bkPipeline = this.$refs.bkPipeline
+                if (!bkPipeline) return
+
+                const containerId = container.id
+                const matrixId = isMatrixGroup ? matrixContainer.id : undefined
+
+                if (isMatrixGroup) {
+                    await bkPipeline.expandMatrix?.(stageId, matrixId, containerId)
+                } else if (element) {
+                    await bkPipeline.expandJob?.(stageId, containerId, true)
+                }
+
+                if (element?.additionalOptions?.elementPostInfo) {
+                    await bkPipeline.expandPostAction?.(stageId, matrixId, containerId)
+                }
+            },
+            async setBuildEndHighlight ({ editingElementPos, position = {} } = {}) {
+                try {
+                    this.clearBuildEndHighlight()
+                    const target = this.resolveBuildEndHighlightTarget({ editingElementPos, position })
+                    if (!target) return
+
+                    const {
+                        matrixContainer,
+                        container,
+                        element,
+                        isMatrixGroup,
+                        stageId
+                    } = target
+
+                    await this.ensureBuildEndHighlightExpanded({
+                        stageId,
+                        matrixContainer,
+                        container,
+                        element,
+                        isMatrixGroup
+                    })
+
+                    const highlightTarget = element || container
+                    this.$set(highlightTarget, 'locateHighlightActive', true)
+                    this.activeHighlightTarget = highlightTarget
+
+                    this.$nextTick(() => {
+                        this.$refs.bkPipeline?.refreshLocateCloth?.()
+                    })
+
+                    this.buildEndHighlightTimer = setTimeout(() => {
+                        this.clearBuildEndHighlight()
+                    }, 2250)
                 } catch (error) {
                     console.error(error)
                 }

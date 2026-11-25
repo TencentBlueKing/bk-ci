@@ -177,10 +177,9 @@ class ProcessDao {
             if (!clearAllStatus) {
                 conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
             }
-            return dslContext.select(DSL.max(BUILD_NUM))
-                .from(this)
-                .where(conditions)
-                .fetchOne(0, Long::class.java) ?: 0L
+            // MAX + STATUS IN 会把该流水线全部构建扫完再聚合。
+            // 改成按 BUILD_NUM 倒序取 1 条，可沿 (PROJECT_ID, PIPELINE_ID, BUILD_NUM) 从最大构建号反向遇到即停。
+            return fetchBoundaryBuildNum(dslContext, conditions, descending = true)
         }
     }
 
@@ -197,10 +196,7 @@ class ProcessDao {
             if (!clearAllStatus) {
                 conditions.add(STATUS.`in`(DELETABLE_BUILD_STATUS))
             }
-            return dslContext.select(DSL.min(BUILD_NUM))
-                .from(this)
-                .where(conditions)
-                .fetchOne(0, Long::class.java) ?: 0L
+            return fetchBoundaryBuildNum(dslContext, conditions, descending = false)
         }
     }
 
@@ -222,11 +218,28 @@ class ProcessDao {
                 geTimeFlag = geTimeFlag,
                 clearAllStatus = clearAllStatus
             )
-            return dslContext.select(DSL.max(BUILD_NUM))
-                .from(this)
-                .where(conditions)
-                .fetchOne(0, Long::class.java) ?: 0L
+            return fetchBoundaryBuildNum(dslContext, conditions, descending = true)
         }
+    }
+
+    /**
+     * 取满足条件的最大/最小 BUILD_NUM。
+     * 过滤掉 NULL，与 MAX/MIN 忽略空值的语义一致；没有命中行时返回 0。
+     * MySQL 的 ASC 会把 NULL 排在最前，若不排除，最小值会从真实构建号变成 0。
+     */
+    private fun TPipelineBuildHistory.fetchBoundaryBuildNum(
+        dslContext: DSLContext,
+        conditions: List<Condition>,
+        descending: Boolean
+    ): Long {
+        val orderField = if (descending) BUILD_NUM.desc() else BUILD_NUM.asc()
+        return dslContext.select(BUILD_NUM)
+            .from(this)
+            .where(conditions)
+            .and(BUILD_NUM.isNotNull)
+            .orderBy(orderField)
+            .limit(1)
+            .fetchOne(0, Long::class.java) ?: 0L
     }
 
     private fun TPipelineBuildHistory.getQueryBuildHistoryCondition(

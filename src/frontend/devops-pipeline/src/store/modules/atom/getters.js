@@ -34,6 +34,9 @@ export default {
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
+    isCurPipelineYamlLocked: state => {
+        return state.pipelineInfo?.yamlLocked ?? false
+    },
     // 这个仅在编辑页中判断是否可以进行草稿差异对比以及版本列表操作栏编辑和回滚按钮展示的判断
     hasDraftPipeline: state => {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
@@ -221,6 +224,16 @@ export default {
 
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
+            }
+
+            const savedArrival = state.concurrencyArrivalPolicy
+            const arrivalPolicy = savedArrival && savedArrival.pipelineId === pipelineSetting?.pipelineId
+                ? savedArrival.policy
+                : null
+            const isGroupLock = ['GROUP_LOCK', 'SINGLE'].includes(pipelineSetting?.runLockType)
+            const subGroup = (pipelineSetting?.concurrencySubGroup || '').trim()
+            if (isGroupLock && (arrivalPolicy === 'CANCEL_BATCH' || arrivalPolicy === 'KEEP_BATCH') && !subGroup) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.subGroupRequired'))
             }
 
             if (stages.length > state.pipelineLimit.stageLimit) {

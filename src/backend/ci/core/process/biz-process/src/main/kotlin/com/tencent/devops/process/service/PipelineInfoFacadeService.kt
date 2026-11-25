@@ -70,7 +70,6 @@ import com.tencent.devops.common.pipeline.pojo.PipelineRunEnvOsChange
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
@@ -99,6 +98,7 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelineAuthorizationService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineLockRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
@@ -107,6 +107,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.pipeline.MatrixConcurrencyCheckService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineRunEnvOsChangeResolver
@@ -119,6 +120,7 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.FileExportUtil
+import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -170,7 +172,9 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val publicVarGroupService: PublicVarGroupService,
-    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver
+    private val pipelineRunEnvOsChangeResolver: PipelineRunEnvOsChangeResolver,
+    private val pipelineYamlBranchTimerService: PipelineYamlBranchTimerService,
+    private val matrixConcurrencyCheckService: MatrixConcurrencyCheckService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -630,7 +634,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                         instanceFromTemplate = false,
                         labels = model.labels,
                         defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
-                    )
+                    ).also {
+                        // 最大并发数支持变量，从模板创建流水线时用实例参数解析后严格校验，不通过则创建失败
+                        matrixConcurrencyCheckService.checkInstanceMatrixMaxConcurrency(
+                            projectId = projectId,
+                            pipelineName = it.name,
+                            model = it
+                        )
+                    }
                 } else {
                     model
                 }
@@ -821,8 +832,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlFileInfo = yamlFileInfo,
-            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
+            yamlFileInfo = yamlFileInfo
         )
     }
 
@@ -884,8 +894,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlFileInfo = yamlFileInfo,
-            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
+            yamlFileInfo = yamlFileInfo
         )
     }
 
@@ -1354,6 +1363,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     setting = savedSetting
                 )
             )
+            if (versionStatus == VersionStatus.BRANCH && !branchName.isNullOrBlank()) {
+                yamlFacadeService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )?.let { yamlInfo ->
+                    pipelineYamlBranchTimerService.reconcile(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = deployResult.version,
+                        branch = branchName,
+                        defaultBranch = yamlInfo.defaultBranch ?: branchName,
+                        repoHashId = yamlInfo.repoHashId,
+                        filePath = yamlInfo.filePath,
+                        channelCode = channelCode
+                    )
+                }
+            }
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(pipelineId, model.name, existModel, model)
@@ -1782,6 +1809,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                     channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
+                pipelineYamlBranchTimerService.deletePipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
                 watcher.start("s_c_yaml_del")
                 val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
                 if (setting.pipelineAsCodeSettings?.enable == true) {
@@ -1885,13 +1917,15 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        enable: Boolean
+        enable: Boolean,
+        request: PipelineLockRequest? = null
     ) {
         val pipelineInfo = locked(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = !enable
+            locked = !enable,
+            request = request
         )
         auditService.createAudit(
             Audit(
@@ -1906,7 +1940,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
     }
 
-    fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
+    fun locked(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        locked: Boolean,
+        request: PipelineLockRequest? = null
+    ): PipelineInfo {
+        val lockReason = request?.lockReason
         val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(
@@ -1926,8 +1967,21 @@ class PipelineInfoFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        if (locked && (lockReason?.length ?: 0) > PipelineLockRequest.LOCK_REASON_MAX_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
+                params = arrayOf(PipelineLockRequest.LOCK_REASON_MAX_LENGTH.toString())
+            )
+        }
 
-        if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
+        val changed = pipelineRepositoryService.updateLocked(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            locked = locked,
+            lockReason = lockReason?.takeIf { locked && it.isNotBlank() }
+        )
+        if (!changed) { // 可能重复操作，不打扰用户
             logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
         }
         operationLogService.addOperationLog(

@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.25
+**文档版本：** 1.0.28
 
 **文档描述：** devops_ci_process的数据库文档
 | 表名                  | 说明       |
@@ -34,6 +34,7 @@
 | T_PIPELINE_COPY_TASK_RESOURCE | 流水线复制任务资源表 |
 | T_PIPELINE_COPY_TASK_RESOURCE_REL | 流水线复制任务资源关系表 |
 | T_PIPELINE_DATA_CLEAR | 流水线数据清理统计表 |
+| T_PIPELINE_EVENT_REGISTER | 外部事件注册记录表 |
 | T_PIPELINE_EVENT_SUBSCRIPTION | 流水线事件订阅表 |
 | T_PIPELINE_FAVOR | 流水线收藏表 |
 | T_PIPELINE_GROUP | 流水线分组表 |
@@ -347,12 +348,13 @@
 |  34   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
 |  35   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
 |  36   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  37   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  38   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
-|  39   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML的版本标记  |
-|  40   | VERSION_CHANGE |   bit   | 1 |   0    |    Y     |  N   |       | 是否发生版本变更  |
-|  41   | TRIGGER_EVENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 触发事件标识  |
-|  42   | NODE_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 运行节点HashId  |
+|  37   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  38   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  39   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
+|  40   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML的版本标记  |
+|  41   | VERSION_CHANGE |   bit   | 1 |   0    |    Y     |  N   |       | 是否发生版本变更  |
+|  42   | TRIGGER_EVENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 触发事件标识  |
+|  43   | NODE_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 运行节点HashId  |
 
 **表名：** <a>T_PIPELINE_BUILD_HISTORY_DEBUG</a>
 
@@ -396,17 +398,18 @@
 |  32   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
 |  33   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
 |  34   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  35   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  36   | REPO_TRIGGER_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 触发库信息  |
-|  37   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 最大执行次数  |
-|  38   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |       | 是否进行过重试  |
-|  39   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML的版本标记  |
-|  40   | RESOURCE_MODEL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 本次调试的编排备份  |
-|  41   | DELETE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 记录删除时间  |
-|  42   | VERSION_CHANGE |   bit   | 1 |   0    |    Y     |  N   |       | 是否发生版本变更  |
-|  43   | TRIGGER_EVENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 触发事件标识  |
-|  44   | NODE_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 运行节点HashId  |
-|  45   | DRAFT_VERSION |   int   | 10 |   0    |    Y     |  N   |       | 来源的草稿版本  |
+|  35   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  36   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  37   | REPO_TRIGGER_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 触发库信息  |
+|  38   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 最大执行次数  |
+|  39   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |       | 是否进行过重试  |
+|  40   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML的版本标记  |
+|  41   | RESOURCE_MODEL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 本次调试的编排备份  |
+|  42   | DELETE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 记录删除时间  |
+|  43   | VERSION_CHANGE |   bit   | 1 |   0    |    Y     |  N   |       | 是否发生版本变更  |
+|  44   | TRIGGER_EVENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 触发事件标识  |
+|  45   | NODE_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 运行节点HashId  |
+|  46   | DRAFT_VERSION |   int   | 10 |   0    |    Y     |  N   |       | 来源的草稿版本  |
 
 **表名：** <a>T_PIPELINE_BUILD_HIS_DATA_CLEAR</a>
 
@@ -700,6 +703,7 @@
 |  8   | USER_ID |   varchar   | 100 |   0    |    Y     |  N   |       | 创建人  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
+|  11   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_PIPELINE_COPY_TASK_RESOURCE</a>
 
@@ -762,6 +766,27 @@
 |  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | DEL_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    |   |
 
+**表名：** <a>T_PIPELINE_EVENT_REGISTER</a>
+
+**说明：** 外部事件注册记录表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | EVENT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 事件编码  |
+|  4   | EVENT_SOURCE |   varchar   | 255 |   0    |    N     |  N   |       | 事件源  |
+|  5   | EVENT_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 事件类型  |
+|  6   | EVENT_SCOPE |   varchar   | 255 |   0    |    N     |  N   |       | 事件作用域,svn路径/制品路径,无则空串  |
+|  7   | CALLBACK_URL |   varchar   | 1024 |   0    |    Y     |  N   |       | 回调地址  |
+|  8   | EXTERNAL_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 外部系统webhookID  |
+|  9   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
+|  10   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
+|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
 **表名：** <a>T_PIPELINE_EVENT_SUBSCRIPTION</a>
 
 **说明：** 流水线事件订阅表
@@ -778,10 +803,11 @@
 |  6   | EVENT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 事件编码  |
 |  7   | TRIGGER_TARGET |   varchar   | 32 |   0    |    Y     |  N   |       | 触发目标  |
 |  8   | CHANNEL |   varchar   | 32 |   0    |    N     |  N   |       | 流水线的来源渠道，如BS/AM/CODECC/GIT等  |
-|  9   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
-|  10   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
-|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  9   | EVENT_SCOPE |   varchar   | 255 |   0    |    Y     |  N   |       | 事件作用域,svn路径/制品路径  |
+|  10   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
+|  11   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
+|  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  13   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_FAVOR</a>
 
@@ -840,7 +866,13 @@
 |  17   | LATEST_START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 最近启动时间  |
 |  18   | LATEST_VERSION_STATUS |   varchar   | 64 |   0    |    Y     |  N   |       | 最新分布版本状态  |
 |  19   | LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否锁定，PACv3.0新增锁定，取代原来setting表中的LOCK  |
-|  20   | AUTO_SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI自动生成的流水线摘要  |
+|  20   | LOCK_USER |   varchar   | 64 |   0    |    Y     |  N   |       | UI禁用操作人  |
+|  21   | LOCK_REASON |   varchar   | 255 |   0    |    Y     |  N   |       | UI禁用原因  |
+|  22   | LOCK_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | UI禁用操作时间  |
+|  23   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  24   | YAML_LOCK_USER |   varchar   | 64 |   0    |    Y     |  N   |       | YAML禁用操作人  |
+|  25   | YAML_LOCK_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | YAML禁用操作时间  |
+|  26   | AUTO_SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI自动生成的流水线摘要  |
 
 **表名：** <a>T_PIPELINE_JOB_MUTEX_GROUP</a>
 
@@ -1104,16 +1136,18 @@
 |  27   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,为null时表示取系统默认值  |
 |  28   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  29   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  30   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
-|  31   | CLEAN_VARIABLES_WHEN_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 重试时清理变量表  |
-|  32   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
-|  33   | VERSION |   int   | 10 |   0    |    Y     |  N   |   1    | 设置版本  |
-|  34   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
-|  35   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
-|  36   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
-|  37   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  38   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
-|  39   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  30   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  31   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  32   | CLEAN_VARIABLES_WHEN_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 重试时清理变量表  |
+|  33   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
+|  34   | VERSION |   int   | 10 |   0    |    Y     |  N   |   1    | 设置版本  |
+|  35   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
+|  36   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  37   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
+|  38   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  39   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
+|  40   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  41   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SETTING_DRAFT_VERSION</a>
 
@@ -1135,30 +1169,32 @@
 |  10   | MAX_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   10    | 最大排队数量  |
 |  11   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  12   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  13   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
-|  14   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
-|  15   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
-|  16   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
-|  17   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
-|  18   | SUCCESS_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  19   | FAIL_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  20   | SUCCESS_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  21   | FAIL_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  22   | SUCCESS_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
-|  23   | FAIL_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
-|  24   | SUCCESS_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  25   | SUCCESS_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
-|  26   | FAIL_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  27   | FAIL_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
-|  28   | SUCCESS_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  29   | FAIL_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  30   | SUCCESS_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
-|  31   | FAIL_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
-|  32   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  33   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  34   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
-|  35   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
-|  36   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  13   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  14   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  15   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
+|  16   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
+|  17   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  18   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
+|  19   | SUCCESS_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  20   | FAIL_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  21   | SUCCESS_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  22   | FAIL_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  23   | SUCCESS_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  24   | FAIL_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  25   | SUCCESS_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  26   | SUCCESS_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
+|  27   | FAIL_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  28   | FAIL_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
+|  29   | SUCCESS_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  30   | FAIL_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  31   | SUCCESS_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
+|  32   | FAIL_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
+|  33   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  34   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  35   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
+|  36   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
+|  37   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  38   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SETTING_VERSION</a>
 
@@ -1180,32 +1216,34 @@
 |  10   | MAX_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   10    | 最大排队数量  |
 |  11   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  12   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  13   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
-|  14   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
-|  15   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
-|  16   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
-|  17   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
-|  18   | SUCCESS_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  19   | FAIL_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  20   | SUCCESS_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  21   | FAIL_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
-|  22   | SUCCESS_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
-|  23   | FAIL_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
-|  24   | SUCCESS_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  25   | SUCCESS_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
-|  26   | FAIL_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  27   | FAIL_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
-|  28   | SUCCESS_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  29   | FAIL_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  30   | SUCCESS_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
-|  31   | FAIL_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
-|  32   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
-|  33   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
-|  34   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
-|  35   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
-|  36   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  37   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
-|  38   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  13   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  14   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  15   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
+|  16   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
+|  17   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  18   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
+|  19   | SUCCESS_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  20   | FAIL_RECEIVER |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  21   | SUCCESS_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  22   | FAIL_GROUP |   mediumtext   | 16777215 |   0    |    Y     |  N   |       |   |
+|  23   | SUCCESS_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  24   | FAIL_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  25   | SUCCESS_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  26   | SUCCESS_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
+|  27   | FAIL_WECHAT_GROUP_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  28   | FAIL_WECHAT_GROUP |   varchar   | 1024 |   0    |    N     |  N   |       |   |
+|  29   | SUCCESS_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  30   | FAIL_DETAIL_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  31   | SUCCESS_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
+|  32   | FAIL_CONTENT |   longtext   | 2147483647 |   0    |    Y     |  N   |       |   |
+|  33   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
+|  34   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
+|  35   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
+|  36   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
+|  37   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  38   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
+|  39   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  40   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SHARE_COPY_TRACE</a>
 
@@ -1444,18 +1482,20 @@
 |  10   | MAX_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   10    | 最大排队数量  |
 |  11   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  12   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  13   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
-|  14   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
-|  15   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
-|  16   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
-|  17   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
-|  18   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
-|  19   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
-|  20   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  21   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  22   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
-|  23   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  24   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  13   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  14   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  15   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
+|  16   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
+|  17   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  18   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
+|  19   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
+|  20   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
+|  21   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  22   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  23   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  24   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  25   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  26   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_TEMPLATE_SETTING_VERSION</a>
 
@@ -1475,18 +1515,20 @@
 |  8   | MAX_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   10    | 最大排队数量  |
 |  9   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
 |  10   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
-|  11   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
-|  12   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
-|  13   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
-|  14   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
-|  15   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
-|  16   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
-|  17   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
-|  18   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  19   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  20   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
-|  21   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  22   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  11   | CONCURRENCY_SUB_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 同一批标识。设置表存表达式，构建记录存启动时解析后的值  |
+|  12   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  13   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
+|  14   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
+|  15   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  16   | RUN_LOCK_TYPE |   int   | 10 |   0    |    Y     |  N   |   1    | 运行并发配置  |
+|  17   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
+|  18   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
+|  19   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  20   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  21   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  22   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  23   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  24   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_TIMER</a>
 
@@ -1507,6 +1549,7 @@
 |  9   | BRANCHS |   text   | 65535 |   0    |    Y     |  N   |       | 分支列表  |
 |  10   | NO_SCM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 源代码未更新则不触发构建  |
 |  11   | START_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 启动参数  |
+|  12   | YAML_BRANCH |   varchar   | 255 |   0    |    Y     |  N   |       | PAC非默认分支定时：到点按该分支YAML执行  |
 
 **表名：** <a>T_PIPELINE_TIMER_BRANCH</a>
 
@@ -1817,6 +1860,7 @@
 |  12   | RESOURCE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 资源ID,流水线ID/模版ID  |
 |  13   | RESOURCE_TYPE |   varchar   | 32 |   0    |    N     |  N   |   PIPELINE    | 资源类型,流水线/模版  |
 |  14   | OLD_FILE_PATH |   varchar   | 512 |   0    |    Y     |  N   |       | 重命名前的文件路径，用于保留原流水线时追溯  |
+|  15   | DEFAULT_BRANCH_YAML_EXIST |   bit   | 1 |   0    |    N     |  N   |   b'1'    | yaml文件是否在默认分支存在  |
 
 **表名：** <a>T_PIPELINE_YAML_SYNC</a>
 
@@ -1893,6 +1937,7 @@
 |  10   | ENABLE |   bit   | 1 |   0    |    N     |  N   |   b'1'    | 启用  |
 |  11   | FAILURE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 失败时间  |
 |  12   | SECRET_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 鉴权参数  |
+|  13   | AES_KEY_SHA |   varchar   | 64 |   0    |    Y     |  N   |       | 加密密钥SHA指纹  |
 
 **表名：** <a>T_PROJECT_PIPELINE_CALLBACK_HISTORY</a>
 

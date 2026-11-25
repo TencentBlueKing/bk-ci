@@ -106,6 +106,16 @@ export default defineComponent({
       })
     }
 
+    const handleSwitchToLatest = () => {
+      const latestVersion = flowInfo.value?.releaseVersion
+      if (latestVersion == null) return
+
+      router.push({
+        name: FLOW_DETAIL_TABS.EXECUTION_RECORD,
+        params: { flowId: flowId.value, version: latestVersion },
+      })
+    }
+
     const handleEdit = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
@@ -192,6 +202,7 @@ export default defineComponent({
             flowInfo={flowInfo.value as FlowInfo}
             versionList={(flowVersionList.value ?? []) as FlowVersion[]}
             onVersionChange={handleVersionChange}
+            onSwitchToLatest={handleSwitchToLatest}
             onEdit={handleEdit}
             onRename={handleRename}
             onExecute={handleExecute}

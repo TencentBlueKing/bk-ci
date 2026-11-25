@@ -9,6 +9,7 @@ import { useAuthoringEnvironmentStore } from '@/stores/authoringEnvironmentStore
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { getConsoleOrigin } from '@/utils/util'
 
 /**
  * ====================================
@@ -189,7 +190,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   })
 
   function getEnvironmentUrl(envHashId?: string) {
-    let url = `${location.origin}/console/environment/${route.params.projectId}`
+    let url = `${getConsoleOrigin()}/console/environment/${route.params.projectId}`
     if (envHashId) {
       url += `/creative-stream/env/ALL/${envHashId}/node`
     }

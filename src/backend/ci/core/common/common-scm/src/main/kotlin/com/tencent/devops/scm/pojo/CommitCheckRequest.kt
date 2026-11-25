@@ -70,5 +70,7 @@ data class CommitCheckRequest(
     @Parameter(description = "检查结果关联的MR", required = true)
     val targetBranch: List<String>? = null,
     @Parameter(description = "待审批步骤列表，state=need_approve 时有意义", required = false)
-    val approvals: List<CommitCheckApproval>? = null
+    val approvals: List<CommitCheckApproval>? = null,
+    @Parameter(description = "是否回写质量红线报告到MR评论", required = false)
+    val enableQualityReport: Boolean? = true
 )

@@ -97,6 +97,9 @@
             isSubFlow () {
                 return this.material?.channelType === 'CREATIVE_STREAM'
             },
+            isTAPD () {
+                return this.material?.webhookType === 'TAPD'
+            },
             scmType () {
                 return this.isWebhook ? `CODE_${this.material?.codeType}` : this.material?.scmType
             },
@@ -105,11 +108,12 @@
             },
             iconArray () {
                 const scmIcon = getMaterialIconByType(this.scmType)
+                const webhookIcon = this.isTAPD ? 'codeTapdWebHookTrigger' : scmIcon
                 return {
                     aliasName: scmIcon,
                     branchName: 'branch',
                     newCommitId: 'commit',
-                    webhookAliasName: scmIcon,
+                    webhookAliasName: webhookIcon,
                     webhookBranch: 'branch',
                     webhookCommitId: 'commit',
                     webhookSourceBranch: 'branch',
@@ -121,11 +125,14 @@
                     webhookSourceTarget: 'branch',
                     parentPipelineName: this.isSubFlow ? 'sub-flow' : 'pipeline',
                     parentBuildNum: 'sharp',
-                    materialName: scmIcon,
+                    materialName: webhookIcon,
                     materialId: 'link'
                 }
             },
             materialInfoKeys () {
+                if (this.isTAPD) {
+                    return ['webhookAliasName', 'materialName']
+                }
                 if (!this.isWebhook) {
                     return [
                         'aliasName',
@@ -216,6 +223,9 @@
                 this.$emit('click')
             },
             includeLink (field) {
+                if (this.isTAPD && field === 'materialName') {
+                    return !!this.getLink(field)
+                }
                 return [
                     'newCommitId',
                     'reviewId',

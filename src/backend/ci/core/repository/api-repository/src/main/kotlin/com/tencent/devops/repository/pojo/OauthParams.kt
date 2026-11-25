@@ -6,5 +6,6 @@ data class OauthParams(
     val gitProjectId: Long?,
     val userId: String,
     val redirectUrlType: RedirectUrlTypeEnum?,
-    val redirectUrl: String?
+    val redirectUrl: String?,
+    val resetType: String? = ""
 )

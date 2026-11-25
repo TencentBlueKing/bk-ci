@@ -496,6 +496,31 @@ class WechatWorkService @Autowired constructor(
         return sendPostToWechatWorkApi(url, message)
     }
 
+    /**
+     * 只替换按钮交互卡片的整排按钮。客户端会展示「你已选择：{replaceName}」，按钮不可再点。
+     * 请求里只带 button，不带 template_card。
+     */
+    fun updateTemplateCardButton(responseCode: String, replaceName: String, userId: String = ""): Boolean {
+        if (responseCode.isBlank() || replaceName.isBlank()) return false
+        val payload = mutableMapOf<String, Any>(
+            "response_code" to responseCode,
+            "button" to mapOf("replace_name" to replaceName)
+        )
+        if (userId.isNotBlank()) {
+            payload["userids"] = listOf(userId)
+        }
+        wechatWorkConfiguration.serviceId?.toIntOrNull()?.let { payload["agentid"] = it }
+        return try {
+            sendPostToWechatWorkApi(
+                "$wechatWorkApiURL/cgi-bin/message/update_template_card",
+                JsonUtil.toJson(payload, false)
+            )
+        } catch (ignored: Exception) {
+            logger.warn("update wework template card button failed", ignored)
+            false
+        }
+    }
+
     // 上传临时素材
     fun uploadMedia(
         mediaType: UploadMediaType,

@@ -1,0 +1,8 @@
+{{- $names := list "auth" "ai" "artifactory" "dispatch" "environment" "log" "metrics" "misc" "notify" "openapi" "process" "project" "quality" "repository" "store" "ticket" "websocket" "gateway" -}}
+{{- range $name := $names }}
+{{- $svc := index $.Values $name }}
+{{- if and $svc.enabled $svc.autoscaling.enabled }}
+---
+{{ include "bkci.ms.hpa" (dict "name" $name "root" $) }}
+{{- end }}
+{{- end }}

@@ -1,16 +1,36 @@
-FROM bkci/os:0.0.2
+FROM bkci/os:0.0.3
 
 LABEL maintainer="Tencent BlueKing Devops"
 
-## 安装JDK
-RUN mkdir -p /data && \
-    cd /data/ &&\
-    curl -L https://github.com/Tencent/TencentKona-17/releases/download/TencentKona-17.0.8/TencentKona-17.0.8.b1-jdk_linux-x86_64.tar.gz -o kona.tar.gz &&\
-    tar -xzf kona.tar.gz &&\
-    rm -f kona.tar.gz
+## 安装JDK。Fedora 44 的 tar 会调用 posix_fallocate，在 Docker overlay 上解压大文件会失败。
+RUN dnf install -y bsdtar && \
+    mkdir -p /data && \
+    cd /data/ && \
+    curl -L https://github.com/Tencent/TencentKona-17/releases/download/TencentKona-17.0.8/TencentKona-17.0.8.b1-jdk_linux-x86_64.tar.gz -o kona.tar.gz && \
+    bsdtar -xzf kona.tar.gz && \
+    rm -f kona.tar.gz && \
+    dnf remove -y bsdtar && \
+    dnf clean all
 ENV JAVA_HOME=/data/TencentKona-17.0.8.b1
 ENV PATH=${JAVA_HOME}/bin:$PATH
 ENV CLASSPATH=.:${JAVA_HOME}/lib
+
+# 移除 eMudhra 失陷中间证书所链到的根证书。17.0.8 的 cacerts 没有 emSign 根，只有 comodoaaaca。
+# 别名不存在时跳过，删完后名单里还能搜到就让构建失败。
+RUN set -e; \
+    for alias in \
+        "emsignrootcag1 [jdk]" \
+        "emsignrootcag2 [jdk]" \
+        "emsigneccrootcag3 [jdk]" \
+        "comodoaaaca [jdk]"; do \
+        if "${JAVA_HOME}/bin/keytool" -list -cacerts -storepass changeit -alias "${alias}" >/dev/null 2>&1; then \
+            "${JAVA_HOME}/bin/keytool" -delete -cacerts -storepass changeit -alias "${alias}"; \
+        fi; \
+    done; \
+    if "${JAVA_HOME}/bin/keytool" -list -cacerts -storepass changeit | grep -iE 'emsign|emudhra|comodoaaaca'; then \
+        echo "compromised CA roots still present" >&2; \
+        exit 1; \
+    fi
 
 # 安装软件
 RUN dnf makecache &&\

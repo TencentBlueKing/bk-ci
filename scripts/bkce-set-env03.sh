@@ -79,6 +79,7 @@ set_env03 BK_HTTP_SCHEMA=http \
   BK_CI_PAAS_LOGIN_URL=\$BK_PAAS_PUBLIC_URL/login/\?c_url= \
   BK_CI_APP_CODE=bk_ci \
   BK_CI_APP_TOKEN=$(uuid_v4) \
+  BK_CI_DEVOPS_TOKEN=$(uuid_v4) \
   BK_CI_INFLUXDB_ADDR=$BK_CI_IP0:8086 \
   BK_CI_INFLUXDB_DB=agentMetrix \
   BK_CI_INFLUXDB_HOST=$BK_CI_IP0 \

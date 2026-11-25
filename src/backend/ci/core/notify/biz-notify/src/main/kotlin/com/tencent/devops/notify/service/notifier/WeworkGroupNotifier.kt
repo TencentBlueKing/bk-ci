@@ -76,7 +76,19 @@ class WeworkGroupNotifier @Autowired constructor(
         val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
         val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
 
-        val content = finalTitle + "\n\n" + finalBody
+        val reviewMarkdown = if (
+            request.markdownContent == true &&
+            WeworkReviewCardBuilder.isReviewCardTemplate(request.templateCode)
+        ) {
+            WeworkReviewCardBuilder.build(
+                request = request,
+                title = finalTitle,
+                redisOperation = null
+            )?.fallbackText
+        } else {
+            null
+        }
+        val content = reviewMarkdown ?: (finalTitle + "\n\n" + finalBody)
         // mentionReceivers=true 时，将 receivers（如人工审核插件的审核人）写入企微 webhook 的 mentioned_list @成员。
         // 后续可扩展（暂未实现）：
         // 1) @all：往 mentioned_list / mentioned_mobile_list 追加 "@all"

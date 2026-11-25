@@ -42,6 +42,7 @@ data class GitCommitCheckInfo(
     val webhookType: String,
     val webhookEventType: String,
     val enableCheck: Boolean,
+    val enableQualityReport: Boolean = true,
     val targetBranch: String?,
     val buildUrl: String
 )

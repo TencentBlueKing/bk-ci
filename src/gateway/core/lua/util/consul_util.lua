@@ -20,11 +20,15 @@ local _M = {}
 --[[插入consul ip列表]]
 function _M:getAllWhitelistIp()
     local ip_whitelist = {}
-    if type(config.service_ip_whitelist) == "string" then
-        ip_whitelist = { config.service_ip_whitelist }
-    else
-        for k, v in ipairs(config.service_ip_whitelist) do
-            if v ~= "" then
+    local configured = config.service_ip_whitelist
+    if type(configured) == "string" then
+        -- 空字符串不是有效条目，避免后续把缺失的客户端 IP 误判为命中
+        if configured ~= "" then
+            ip_whitelist = { configured }
+        end
+    elseif type(configured) == "table" then
+        for _, v in ipairs(configured) do
+            if v ~= nil and v ~= "" then
                 table.insert(ip_whitelist, v)
             end
         end
@@ -107,8 +111,11 @@ function _M:getAllWhitelistIp()
     end
 
     -- kubernetes 白名单
-    local kubernetes_api_token = config.kubernetes.api.token
-    if ngx.var.devops_region ~= "DEVNET" and kubernetes_api_token ~= "" and kubernetes_api_token ~= nil then
+    local kubernetes_api_token = nil
+    if config.kubernetes ~= nil and config.kubernetes.api ~= nil then
+        kubernetes_api_token = config.kubernetes.api.token
+    end
+    if ngx.var.devops_region ~= "DEVNET" and kubernetes_api_token ~= nil and kubernetes_api_token ~= "" then
         local white_ip_hot_cache = ngx.shared.white_ip_hot_store
         local white_ip_cold_cache = ngx.shared.white_ip_cold_store
         local ip_cache_key = "X-DEVOPS-WHITE-IP-K8S"

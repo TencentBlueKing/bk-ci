@@ -30,9 +30,9 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacDisableReq
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlPacEnableReq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -42,7 +42,6 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PAC", description = "服务-pac资源")
@@ -51,54 +50,32 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineYamlResource {
 
-    @Operation(summary = "开启PAC")
+    @Operation(summary = "开启PAC并同步yaml文件")
     @POST
-    @Path("/{projectId}/{repoHashId}/enable")
-    fun enable(
+    @Path("/{projectId}/enablePac")
+    fun enablePac(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @Parameter(description = "代码库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
+        @Parameter(description = "开启PAC请求", required = true)
+        yamlPacEnableReq: PipelineYamlPacEnableReq
     ): Result<Boolean>
 
-    @Operation(summary = "同步yaml文件")
+    @Operation(summary = "关闭PAC并删除关联流水线")
     @POST
-    @Path("/{projectId}/syncYamlFile")
-    fun syncYamlFile(
+    @Path("/{projectId}/disablePac")
+    fun disablePac(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库", required = true)
-        yamlFileSyncReq: PipelineYamlFileSyncReq
-    ): Result<Boolean>
-
-    @Operation(summary = "关闭PAC")
-    @POST
-    @Path("/{projectId}/{repoHashId}/disable")
-    fun disable(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "代码库hashId", required = true)
-        @PathParam("repoHashId")
-        repoHashId: String,
-        @Parameter(description = "代码库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType
+        @Parameter(description = "关闭PAC请求", required = true)
+        yamlPacDisableReq: PipelineYamlPacDisableReq
     ): Result<Boolean>
 
     @Operation(summary = "判断如果处于PAC模式下的yaml文件是否在默认分支存在")

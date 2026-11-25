@@ -70,12 +70,14 @@ class UserFileResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String?> {
         checkParam(userId, projectId, path)
+        // path 来自 multipart 表单，作为自定义仓库 destPath；先规范化防止 ../ 写出项目目录外
+        val safePath = PathUtil.normalizeAndValidateRepoPath(path)
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = projectId,
-            filePath = path,
+            filePath = safePath,
             fileType = FileTypeEnum.BK_CUSTOM,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )

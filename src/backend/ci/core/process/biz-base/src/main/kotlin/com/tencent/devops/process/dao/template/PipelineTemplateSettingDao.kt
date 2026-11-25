@@ -45,6 +45,7 @@ class PipelineTemplateSettingDao {
                 BUILD_NUM_RULE,
                 CONCURRENCY_GROUP,
                 CONCURRENCY_CANCEL_IN_PROGRESS,
+                CONCURRENCY_SUB_GROUP,
                 PIPELINE_AS_CODE_SETTINGS,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
@@ -52,6 +53,7 @@ class PipelineTemplateSettingDao {
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
                 BUILD_CANCEL_POLICY,
+                YAML_LOCKED,
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
@@ -68,6 +70,7 @@ class PipelineTemplateSettingDao {
                 record.buildNumRule,
                 record.concurrencyGroup,
                 record.concurrencyCancelInProgress,
+                record.concurrencySubGroup,
                 pipelineAsCodeSettings,
                 JsonUtil.toJson(successSubscriptionList),
                 JsonUtil.toJson(failSubscriptionList),
@@ -75,6 +78,7 @@ class PipelineTemplateSettingDao {
                 record.maxConRunningQueueSize ?: 50,
                 record.failIfVariableInvalid,
                 record.buildCancelPolicy.value,
+                record.yamlLocked ?: false,
                 record.creator,
                 record.updater,
                 record.createdTime.toLocalDateTimeOrDefault(),
@@ -88,6 +92,7 @@ class PipelineTemplateSettingDao {
                 .set(BUILD_NUM_RULE, record.buildNumRule)
                 .set(CONCURRENCY_GROUP, record.concurrencyGroup)
                 .set(CONCURRENCY_CANCEL_IN_PROGRESS, record.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, record.concurrencySubGroup)
                 .set(PIPELINE_AS_CODE_SETTINGS, pipelineAsCodeSettings)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
@@ -97,6 +102,7 @@ class PipelineTemplateSettingDao {
                 .set(BUILD_CANCEL_POLICY, record.buildCancelPolicy.value)
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
+                .apply { record.yamlLocked?.let { set(YAML_LOCKED, it) } }
                 .execute()
         }
     }
@@ -116,6 +122,9 @@ class PipelineTemplateSettingDao {
                     record.buildNumRule?.let { set(BUILD_NUM_RULE, it) }
                     record.concurrencyGroup?.let { set(CONCURRENCY_GROUP, it) }
                     record.concurrencyCancelInProgress?.let { set(CONCURRENCY_CANCEL_IN_PROGRESS, it) }
+                    if (record.concurrencySubGroup != null) {
+                        set(CONCURRENCY_SUB_GROUP, record.concurrencySubGroup!!.ifBlank { null })
+                    }
                     record.pipelineAsCodeSettings?.let { set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(it)) }
                     record.runLockType?.let { set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(record.runLockType)) }
                     record.maxConRunningQueueSize?.let { set(MAX_CON_RUNNING_QUEUE_SIZE, it) }
@@ -271,6 +280,7 @@ class PipelineTemplateSettingDao {
             maxQueueSize = this.maxQueueSize,
             buildNumRule = this.buildNumRule,
             concurrencyCancelInProgress = this.concurrencyCancelInProgress,
+            concurrencySubGroup = this.concurrencySubGroup,
             concurrencyGroup = this.concurrencyGroup,
             maxConRunningQueueSize = this.maxConRunningQueueSize,
             failIfVariableInvalid = this.failIfVariableInvalid,
@@ -280,7 +290,8 @@ class PipelineTemplateSettingDao {
             buildCancelPolicy = BuildCancelPolicy.parse(this.buildCancelPolicy),
             maxPipelineResNum = PIPELINE_RES_NUM_MIN,
             creator = creator,
-            updater = updater
+            updater = updater,
+            yamlLocked = this.yamlLocked
         )
     }
 }

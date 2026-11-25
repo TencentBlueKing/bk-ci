@@ -89,10 +89,12 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreComponentContractService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.utils.AtomPropsCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
@@ -211,6 +213,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var config: CommonConfig
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
+    @Autowired
+    lateinit var storeComponentContractService: StoreComponentContractService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -1253,6 +1257,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(atomCode, atomStatus)
             checkUpdateAtomLatestTestFlag(userId, atomCode, atomId)
+            var becomeLatest = false
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 // 记录发布信息
@@ -1279,6 +1284,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     marketAtomDao.cleanLatestFlag(context, atomCode)
                     true
                 }
+                becomeLatest = latestFlag == true
                 marketAtomDao.updateAtomInfoById(
                     dslContext = context,
                     userId = userId,
@@ -1305,6 +1311,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)
+            }
+            if (becomeLatest) {
+                storeComponentContractService.markStaleOnRelease(
+                    storeType = StoreTypeEnum.ATOM,
+                    storeCode = atomCode,
+                    version = atomReleaseRequest.version
+                )
             }
             // 发送版本发布邮件
             atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
@@ -1721,6 +1734,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = prepared.qualityFlag)
             )
         }
+
+        // 上面事务更新了插件的 PROPS，所以插件参数定义变更后，失效参数联动配置缓存。
+        AtomPropsCacheManager.invalidate(redisOperation, atomCode)
     }
 
     /**

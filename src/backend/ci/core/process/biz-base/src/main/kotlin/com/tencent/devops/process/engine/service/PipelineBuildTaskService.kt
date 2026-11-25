@@ -31,13 +31,16 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
+import com.tencent.devops.common.pipeline.pojo.ParentPipelineInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.utils.BuildUtils
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +53,9 @@ class PipelineBuildTaskService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     /**
@@ -71,9 +76,9 @@ class PipelineBuildTaskService @Autowired constructor(
         val containerId = buildTask.containerId
         val stageId = buildTask.stageId
         if (buildStatus == BuildStatus.CANCELED) {
-            // 删除redis中取消构建操作标识，供二次取消走强制终止
-            redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
-            // #13581 不能在单个插件取消时清掉 Job 取消集合。插件很快完成时 Agent 会立刻认领下一个插件，
+            // 不能在单个插件取消时清掉 CANCEL_ACTION_TIME。二次取消是否升级为 TERMINATE 依赖这个标记，
+            // 插件一被取消就删掉的话，再次点击仍走 END，无法收掉已经停在 QUEUE_CACHE 这种异常状态的插件。
+            // #13581 同样不能在单个插件取消时清掉 Job 取消集合。插件很快完成时 Agent 会立刻认领下一个插件，
             // 集合被删后后续插件无法感知取消。集合在 Job 结束后由 UpdateStateContainerCmdFinally 清理。
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取，用于杀掉当前正在跑的插件进程
             val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
@@ -151,6 +156,14 @@ class PipelineBuildTaskService @Autowired constructor(
         val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subProjectId!!, buildTask.subBuildId!!)
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
+                // 只传父构建上已经确认的操作人。jobEnd 把任务收成取消时也会走到这里，
+                // 这时没有真人取消，不能用任务启动人或子流水线代持人冒充。
+                val parentOperator = pipelineBuildRecordService.getInheritedCancelOperator(
+                    projectId = buildTask.projectId,
+                    buildId = buildId,
+                    executeCount = buildTask.executeCount ?: 1
+                )
+                val operatorTip = parentOperator?.let { "，Operator:$it" }.orEmpty()
                 val tasks = pipelineTaskService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
@@ -159,7 +172,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     val executeCount = task["executeCount"] ?: 1
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        message = "Cancelled by pipeline[${buildTask.pipelineId}]$operatorTip",
                         tag = taskId.toString(),
                         containerHashId = containerId.toString(),
                         executeCount = executeCount as Int,
@@ -170,21 +183,40 @@ class PipelineBuildTaskService @Autowired constructor(
                 if (tasks.isEmpty()) {
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        message = "cancelled by pipeline[${buildTask.pipelineId}]$operatorTip",
                         tag = "",
                         containerHashId = "",
-                        executeCount = 1,
+                        // 这条日志打在父构建上，执行次数要跟父构建对齐
+                        executeCount = buildTask.executeCount ?: 1,
                         jobId = null,
                         stepId = null
                     )
                 }
+                val parentPipelineName = pipelineRepositoryService.getPipelineInfo(
+                    buildTask.projectId, buildTask.pipelineId
+                )?.pipelineName
+                val parentBuildNum = pipelineRuntimeService.getBuildInfo(
+                    buildTask.projectId, buildId
+                )?.buildNum
                 pipelineRuntimeService.cancelBuild(
                     projectId = subBuildInfo.projectId,
                     pipelineId = subBuildInfo.pipelineId,
                     buildId = subBuildInfo.buildId,
+                    // 事件沿用子构建启动人推进关机，取消人由下面的 buildEndInfo 决定，不受这里影响
                     userId = subBuildInfo.startUser,
                     executeCount = subBuildInfo.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    buildEndInfo = BuildEndInfo.ofCancelParentPipeline(
+                        reasonCode = ProcessMessageCode.BK_BUILD_CANCEL_PARENT_PIPELINE,
+                        parentPipelineInfo = ParentPipelineInfo(
+                            projectId = buildTask.projectId,
+                            pipelineId = buildTask.pipelineId,
+                            pipelineName = parentPipelineName,
+                            buildId = buildId,
+                            buildNum = parentBuildNum,
+                            operator = parentOperator
+                        )
+                    )
                 )
             } catch (ignored: Exception) {
                 logger.warn("ENGINE|$buildId|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")

@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeTy
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
@@ -50,7 +51,10 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_TIMER_YAML_FILE_MISSING
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_YAML_BRANCH_TIME
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_UNKNOWN
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION
 import com.tencent.devops.process.engine.pojo.PipelineTimer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -63,7 +67,10 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.plugin.trigger.service.PipelineYamlBranchTimerService
 import com.tencent.devops.process.service.CreateStreamTriggerSupportService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
@@ -86,7 +93,8 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
-    private val creativeStreamService: CreateStreamTriggerSupportService
+    private val creativeStreamService: CreateStreamTriggerSupportService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
@@ -98,6 +106,10 @@ class PipelineTimerBuildListener @Autowired constructor(
                     pipelineId = event.pipelineId,
                     taskId = event.taskId
                 ) ?: return
+            if (!pipelineTimer.yamlBranch.isNullOrBlank()) {
+                yamlBranchTimerTrigger(event = event, pipelineTimer = pipelineTimer)
+                return
+            }
             // 若存在无效的定时任务，则将其清理，并跳过后续执行
             if (event.cleanInvalidTimerTask()) {
                 return
@@ -132,9 +144,10 @@ class PipelineTimerBuildListener @Autowired constructor(
     private fun timerTrigger(
         event: PipelineTimerBuildEvent,
         params: Map<String, String> = emptyMap(),
-        taskId: String
-    ) {
-        with(event) {
+        taskId: String,
+        version: Int? = null
+    ): String? {
+        return with(event) {
             try {
                 when (timerChannelCode) {
                     ChannelCode.CREATIVE_STREAM -> {
@@ -142,21 +155,22 @@ class PipelineTimerBuildListener @Autowired constructor(
                             params = params,
                             taskId = taskId
                         )
+                        null
                     }
 
-                    else -> {
-                        timerTriggerPipeline(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            params = params,
-                            channelCode = timerChannelCode,
-                            taskId = taskId
-                        )
-                    }
+                    else -> timerTriggerPipeline(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = params,
+                        channelCode = timerChannelCode,
+                        taskId = taskId,
+                        version = version
+                    )
                 }
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
+                null
             } catch (e: PermissionForbiddenException) {
                 logger.warn("[$pipelineId]|TimerTrigger no permission|event=$this|msg=${e.message}")
                 // 无权限异常的完整信息在 defaultMessage 中，直接存储，避免错误码模板{0}无值渲染
@@ -166,6 +180,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     pipelineId = pipelineId,
                     reasonDetail = PipelineTriggerFailedMsg(e.defaultMessage ?: e.message ?: "")
                 )
+                null
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
                 // 保存触发失败事件
@@ -187,6 +202,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                         }
                     }
                 )
+                null
             }
         }
     }
@@ -275,22 +291,163 @@ class PipelineTimerBuildListener @Autowired constructor(
         pipelineId: String,
         params: Map<String, String>,
         channelCode: ChannelCode,
-        taskId: String
-    ) {
+        taskId: String,
+        version: Int? = null
+    ): String? {
         val buildResult = serviceTimerBuildResource.timerTrigger(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             params = params,
             channelCode = channelCode,
-            channelCodeHeader = channelCode
+            channelCodeHeader = channelCode,
+            version = version
         )
         // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
         if (buildResult.data.isNullOrBlank()) {
             pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
             logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
+            return null
+        }
+        logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
+        return buildResult.data
+    }
+
+    /**
+     * 按非默认分支 YAML 执行。分支或文件不存在时记失败，不改跑发布版本。
+     */
+    private fun yamlBranchTimerTrigger(event: PipelineTimerBuildEvent, pipelineTimer: PipelineTimer) {
+        val yamlBranch = pipelineTimer.yamlBranch ?: return
+        val elementId = pipelineTimer.startParam?.get(PipelineYamlBranchTimerService.ELEMENT_ID_PARAM)
+        val branchResource = pipelineRepositoryService.getBranchVersionResource(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            branchName = yamlBranch
+        )
+        val elementExists = branchResource?.model?.getTriggerContainer()?.elements?.any {
+            it is TimerTriggerElement && it.id == elementId && it.yamlBranch == yamlBranch
+        } == true
+        if (!elementExists || elementId.isNullOrBlank()) {
+            saveTriggerEvent(
+                projectId = event.projectId,
+                userId = event.userId,
+                pipelineId = event.pipelineId,
+                reasonDetail = PipelineTriggerFailedMsg(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PIPELINE_TIMER_YAML_FILE_MISSING,
+                        params = arrayOf(yamlBranch),
+                        defaultMessage = "分支 $yamlBranch 或该分支上的流水线文件不存在，本次不执行"
+                    )
+                )
+            )
+            pipelineTimerService.deleteTimer(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                userId = event.userId,
+                taskId = pipelineTimer.taskId
+            )
+            pipelineTimerService.deleteTimerBranch(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                repoHashId = null,
+                branch = null,
+                taskId = pipelineTimer.taskId
+            )
+            return
+        }
+        val version = try {
+            pipelineYamlFacadeService.getPipelineYamlVersion(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                branch = yamlBranch
+            )
+        } catch (ignored: Exception) {
+            logger.warn(
+                "yaml-branch timer file missing|${event.projectId}|${event.pipelineId}|$yamlBranch",
+                ignored
+            )
+            saveTriggerEvent(
+                projectId = event.projectId,
+                userId = event.userId,
+                pipelineId = event.pipelineId,
+                reasonDetail = when (ignored) {
+                    is ErrorCodeException -> PipelineTriggerFailedErrorCode(
+                        errorCode = ignored.errorCode,
+                        params = ignored.params?.toList() ?: listOf(yamlBranch)
+                    )
+                    else -> PipelineTriggerFailedMsg(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_PIPELINE_TIMER_YAML_FILE_MISSING,
+                            params = arrayOf(yamlBranch),
+                            defaultMessage = "分支 $yamlBranch 或该分支上的流水线文件不存在，本次不执行"
+                        )
+                    )
+                }
+            )
+            return
+        }
+        if (version == null) {
+            saveTriggerEvent(
+                projectId = event.projectId,
+                userId = event.userId,
+                pipelineId = event.pipelineId,
+                reasonDetail = PipelineTriggerFailedMsg(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_PIPELINE_TIMER_YAML_BRANCH_VERSION,
+                        params = arrayOf(yamlBranch),
+                        defaultMessage = "分支 $yamlBranch 的定时触发未找到可执行的分支版本，本次不执行"
+                    )
+                )
+            )
+            return
+        }
+        val startParams = mutableMapOf<String, String>()
+        pipelineTimer.startParam?.filterKeys {
+            it != PipelineYamlBranchTimerService.ELEMENT_ID_PARAM
+        }?.let { startParams.putAll(it) }
+        startParams[PIPELINE_BUILD_MSG] = I18nUtil.getCodeLanMessage(
+            messageCode = BUILD_MSG_YAML_BRANCH_TIME,
+            params = arrayOf(yamlBranch),
+            defaultMessage = "$yamlBranch 分支上的定时触发"
+        )
+        startParams[PIPELINE_WEBHOOK_BRANCH] = yamlBranch
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = yamlBranch
+        pipelineTimer.repoHashId?.let { startParams[BK_REPO_WEBHOOK_HASH_ID] = it }
+        if (pipelineTimer.noScm == true) {
+            val branchMessages = mutableMapOf<String, MutableSet<String>>()
+            branchTimerTrigger(
+                event = event,
+                repoHashId = pipelineTimer.repoHashId ?: return,
+                branch = yamlBranch,
+                branchMessages = branchMessages,
+                startParams = startParams,
+                taskId = pipelineTimer.taskId,
+                version = version
+            )
+            if (branchMessages.isNotEmpty()) {
+                saveTriggerEvent(
+                    projectId = event.projectId,
+                    userId = event.userId,
+                    pipelineId = event.pipelineId,
+                    reasonDetail = PipelineTriggerFailedMsg(
+                        JsonUtil.toJson(
+                            branchMessages.map { (messageCode, branches) ->
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = messageCode,
+                                    params = arrayOf(branches.joinToString(","))
+                                )
+                            }
+                        )
+                    )
+                )
+            }
         } else {
-            logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
+            timerTrigger(
+                event = event,
+                params = startParams,
+                taskId = pipelineTimer.taskId,
+                version = version
+            )
         }
     }
 
@@ -378,7 +535,8 @@ class PipelineTimerBuildListener @Autowired constructor(
         branch: String,
         branchMessages: MutableMap<String, MutableSet<String>>,
         startParams: MutableMap<String, String>,
-        taskId: String
+        taskId: String,
+        version: Int? = null
     ) {
         val repositoryConfig = RepositoryConfig(
             repositoryHashId = repoHashId,
@@ -417,7 +575,8 @@ class PipelineTimerBuildListener @Autowired constructor(
                     val buildId = timerTrigger(
                         event = event,
                         params = startParams,
-                        taskId = taskId
+                        taskId = taskId,
+                        version = version
                     ) ?: return
                     logger.info("success to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch|$buildId")
                     pipelineTimerService.saveTimerBranch(

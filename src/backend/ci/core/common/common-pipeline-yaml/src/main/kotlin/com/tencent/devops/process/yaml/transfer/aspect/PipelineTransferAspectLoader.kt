@@ -8,6 +8,7 @@ import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.yaml.transfer.TransferCacheService
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
@@ -163,15 +164,12 @@ object PipelineTransferAspectLoader {
 
                 override fun after(jp: PipelineTransferJoinPoint) {
                     val job = jp.yamlPreJob()
-                    if (job is PreJob && job.runsOn != null &&
-                        job.runsOn is RunsOn &&
-                        job.runsOn.envProjectId != null
-                    ) {
-                        val pool = job.runsOn
+                    val runsOn = (job as? PreJob)?.runsOn
+                    if (runsOn is RunsOn && runsOn.envProjectId != null) {
                         pools.add(
                             ResourcesPools(
-                                from = "${pool.envProjectId}@${pool.poolName}",
-                                name = pool.poolName
+                                from = "${runsOn.envProjectId}@${runsOn.poolName}",
+                                name = runsOn.poolName
                             )
                         )
                     }
@@ -220,6 +218,18 @@ object PipelineTransferAspectLoader {
                 }
             }
         )
+        return aspects
+    }
+
+    // MODEL2YAML 时使用，按插件参数联动配置（rely）清理当前被隐藏的无效参数。
+    fun filterInvalidRelyParam(
+        transferCacheService: TransferCacheService,
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ): LinkedList<IPipelineTransferAspect> {
+        val aspect = RelyParamFilterAspect(transferCacheService)
+        // Model 阶段批量预取插件联动配置，Element 阶段清理参数。
+        aspects.add(aspect.modelAspect())
+        aspects.add(aspect.elementAspect())
         return aspects
     }
 }

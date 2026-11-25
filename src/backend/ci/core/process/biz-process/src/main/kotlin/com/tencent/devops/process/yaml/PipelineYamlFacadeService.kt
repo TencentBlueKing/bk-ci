@@ -28,265 +28,22 @@
 
 package com.tencent.devops.process.yaml
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.HTTP_401
-import com.tencent.devops.common.api.constant.HTTP_403
-import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
-import com.tencent.devops.process.trigger.PipelineTriggerEventService
-import com.tencent.devops.process.webhook.WebhookEventFactory
-import com.tencent.devops.process.yaml.actions.EventActionFactory
-import com.tencent.devops.process.yaml.actions.GitActionCommon
-import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
-import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
-import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
-import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
-import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
-import com.tencent.devops.repository.api.ServiceRepositoryPacResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.credential.AuthRepository
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
-@Suppress("ComplexMethod")
 class PipelineYamlFacadeService @Autowired constructor(
-    private val client: Client,
-    private val eventActionFactory: EventActionFactory,
-    private val dslContext: DSLContext,
-    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val objectMapper: ObjectMapper,
-    private val pipelineYamlSyncService: PipelineYamlSyncService,
-    private val webhookEventFactory: WebhookEventFactory,
-    private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlService: PipelineYamlService,
-    @Lazy
-    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
-    private val pipelineYamlViewService: PipelineYamlViewService,
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineYamlFacadeService::class.java)
-    }
-
-    fun enablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        logger.info("enable pac|$userId|$projectId|$repoHashId|$scmType")
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryId = repoHashId,
-            repositoryType = RepositoryType.ID
-        ).data ?: return
-        val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlManualEvent(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType,
-            authUserId = repository.userName
-        )
-        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-
-        val yamlPathList = action.getYamlPathList()
-        pipelineYamlSyncService.initPacSyncDetail(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            yamlPathList = yamlPathList
-        )
-        // 如果没有Yaml文件则不初始化
-        if (yamlPathList.isEmpty()) {
-            logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
-            return
-        }
-        try {
-            // 创建yaml流水线组
-            pipelineYamlViewService.createYamlViewIfAbsent(
-                userId = action.data.getUserId(),
-                projectId = projectId,
-                repoHashId = repoHashId,
-                aliasName = action.data.setting.aliasName,
-                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
-            )
-            val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
-                dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
-            ).associate {
-                it.filePath to YamlTriggerPipeline(
-                    projectId = it.projectId,
-                    repoHashId = it.repoHashId,
-                    filePath = it.filePath,
-                    pipelineId = it.pipelineId,
-                    userId = userId
-                )
-            }
-            yamlPathList.forEach {
-                action.data.context.pipeline = path2PipelineExists[it.yamlPath]
-                action.data.context.yamlFile = it
-                pipelineEventDispatcher.dispatch(
-                    PipelineYamlEnableEvent(
-                        projectId = projectId,
-                        yamlPath = it.yamlPath,
-                        userId = userId,
-                        eventStr = objectMapper.writeValueAsString(event),
-                        metaData = action.metaData,
-                        actionCommonData = action.data.eventCommon,
-                        actionContext = action.data.context,
-                        actionSetting = action.data.setting
-                    )
-                )
-            }
-        } catch (exception: Exception) {
-            logger.error("Failed to enable pac|projectId:$projectId|repoHashId:$repoHashId", exception)
-            pipelineYamlSyncService.enablePacFailed(
-                projectId = projectId,
-                repoHashId = repoHashId
-            )
-            throw exception
-        }
-    }
-
-    fun trigger(
-        eventObject: CodeWebhookEvent,
-        scmType: ScmType,
-        requestId: String,
-        eventTime: LocalDateTime
-    ) {
-        try {
-            logger.info("pipeline yaml trigger|$requestId|$scmType")
-            val action = eventActionFactory.load(eventObject)
-            if (action == null) {
-                logger.warn("pipeline yaml trigger|request event not support|$eventObject")
-                return
-            }
-            // 初始化setting
-            if (!action.data.isSettingInitialized) {
-                val externalId = action.data.eventCommon.gitProjectId
-                val repository = client.get(ServiceRepositoryPacResource::class).getPacRepository(
-                    externalId = externalId, scmType = scmType
-                ).data ?: run {
-                    return
-                }
-                val setting = PacRepoSetting(repository = repository)
-                action.data.setting = setting
-            }
-
-            action.initCacheData()
-
-            val projectId = action.data.setting.projectId
-            val repoHashId = action.data.setting.repoHashId
-            val yamlPathList = action.getYamlPathList()
-            // 如果没有Yaml文件则不初始化
-            if (yamlPathList.isEmpty()) {
-                logger.warn("pipeline yaml trigger not found ci yaml from git|$projectId|$repoHashId")
-                return
-            }
-
-            val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
-            val eventId = pipelineTriggerEventService.getEventId(
-                projectId = projectId,
-                requestId = requestId,
-                eventSource = repoHashId
-            )
-            // 普通流水线开启灰度策略，PAC流水线没有开启灰度策略，会导致PAC流水线触发事件出现重复，此处统一触发时间
-            val event = pipelineTriggerEventService.getTriggerEvent(projectId, eventId)
-            val triggerEvent = PipelineTriggerEvent(
-                projectId = projectId,
-                eventId = eventId,
-                triggerType = scmType.name,
-                eventSource = repoHashId,
-                eventType = matcher.getEventType().name,
-                triggerUser = matcher.getUsername(),
-                eventDesc = matcher.getEventDesc(),
-                requestId = requestId,
-                createTime = event?.createTime ?: eventTime
-            )
-            pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
-            action.data.context.eventId = eventId
-            // 创建yaml流水线组
-            pipelineYamlViewService.createYamlViewIfAbsent(
-                userId = action.data.getUserId(),
-                projectId = projectId,
-                repoHashId = repoHashId,
-                aliasName = action.data.setting.aliasName,
-                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
-            )
-            val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
-                dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
-            ).associate {
-                it.filePath to YamlTriggerPipeline(
-                    projectId = it.projectId,
-                    repoHashId = it.repoHashId,
-                    filePath = it.filePath,
-                    pipelineId = it.pipelineId,
-                    userId = it.creator
-                )
-            }
-            val eventStr = if (action.metaData.streamObjectKind == StreamObjectKind.REVIEW) {
-                objectMapper.writeValueAsString(
-                    (action.data.event as GitReviewEvent).copy(
-                        objectKind = GitReviewEvent.classType
-                    )
-                )
-            } else {
-                objectMapper.writeValueAsString(action.data.event as GitEvent)
-            }
-            yamlPathList.forEach {
-                action.data.context.pipeline = path2PipelineExists[it.yamlPath]
-                action.data.context.yamlFile = it
-                action.data.context.eventId = eventId
-                pipelineEventDispatcher.dispatch(
-                    PipelineYamlTriggerEvent(
-                        projectId = projectId,
-                        yamlPath = it.yamlPath,
-                        userId = action.data.getUserId(),
-                        eventStr = eventStr,
-                        metaData = action.metaData,
-                        actionCommonData = action.data.eventCommon,
-                        actionContext = action.data.context,
-                        actionSetting = action.data.setting,
-                        scmType = scmType
-                    )
-                )
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("pipeline yaml trigger", ignored)
-        }
-    }
-
-    fun disablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        logger.info("disable pac|$userId|$projectId|$repoHashId|$scmType")
-        pipelineYamlRepositoryService.disablePac(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId
-        )
-    }
-
-    fun getPipelineYamlInfo(
+    fun getPipelineYamlVo(
         projectId: String,
         pipelineId: String,
         version: Int
@@ -312,8 +69,8 @@ class PipelineYamlFacadeService @Autowired constructor(
      * 构建yaml流水线触发变量
      */
     fun buildYamlManualParamMap(projectId: String, pipelineId: String): Map<String, BuildParameters>? {
-        val pipelineYamlInfo = pipelineYamlInfoDao.get(
-            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+        val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId, pipelineId = pipelineId
         ) ?: return null
         return mutableMapOf(
             BK_REPO_WEBHOOK_HASH_ID to BuildParameters(BK_REPO_WEBHOOK_HASH_ID, pipelineYamlInfo.repoHashId),
@@ -348,66 +105,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             yamlParams[BK_REPO_GIT_WEBHOOK_BRANCH] = BuildParameters(key = BK_REPO_GIT_WEBHOOK_BRANCH, value = branch)
             it
         }
-    }
-
-    /**
-     * 获取代码库关联信息
-     */
-    fun getRepository(projectId: String, repoHashId: String): Repository {
-        return client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryType = RepositoryType.ID,
-            repositoryId = repoHashId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-            params = arrayOf(repoHashId)
-        )
-    }
-
-    fun getServiceRepository(
-        projectId: String,
-        repository: Repository
-    ) = try {
-        client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-            projectId = projectId,
-            authRepository = AuthRepository(repository)
-        ).data
-    } catch (ignored: RemoteServiceException) {
-        throw when (ignored.httpStatus) {
-            // 目标仓库被删除
-            HTTP_404 -> ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
-                params = arrayOf(repository.projectName)
-            )
-
-            HTTP_401, HTTP_403 -> ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
-                params = arrayOf(repository.userName, repository.projectName)
-            )
-
-            else -> ignored
-        }
-    } catch (ignored: Exception) {
-        throw ignored
-    }
-
-    fun getServiceBranch(
-        projectId: String,
-        repository: Repository,
-        page: Int,
-        pageSize: Int,
-        search: String?
-    ) = try {
-        client.get(ServiceScmRepositoryApiResource::class).listBranches(
-            projectId = projectId,
-            authRepository = AuthRepository(repository),
-            page = page,
-            pageSize = pageSize,
-            search = search
-        ).data
-    } catch (ignored: Exception) {
-        logger.warn("failed to get service branch", ignored)
-        null
     }
 
     fun getPipelineYamlInfo(

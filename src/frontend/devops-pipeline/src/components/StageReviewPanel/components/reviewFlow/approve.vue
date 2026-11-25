@@ -71,7 +71,7 @@
         data () {
             return {
                 curStep: this.reviewGroups.findIndex(x => x === this.showReviewGroup) + 1,
-                isCancel: false,
+                isCancel: this.$route.query.action === 'reject',
                 suggest: '',
                 errMessage: ''
             }
@@ -123,7 +123,13 @@
             showReviewGroup: {
                 handler () {
                     this.suggest = this.showReviewGroup.suggest || ''
-                    this.isCancel = this.showReviewGroup.status === 'ABORT'
+                    if (this.showReviewGroup.status === 'ABORT') {
+                        this.isCancel = true
+                    } else if (this.$route.query.action === 'reject') {
+                        this.isCancel = true
+                    } else if (this.$route.query.action === 'approve' || this.$route.query.action === 'modify') {
+                        this.isCancel = false
+                    }
                 },
                 immediate: true
             }

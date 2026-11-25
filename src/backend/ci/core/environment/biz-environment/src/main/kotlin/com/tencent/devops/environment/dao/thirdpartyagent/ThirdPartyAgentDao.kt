@@ -62,7 +62,9 @@ class ThirdPartyAgentDao {
         status: AgentStatus = AgentStatus.UN_IMPORT,
         agentType: AgentType?,
         createWorkspaceName: String?,
-        agentProps: AgentProps?
+        agentProps: AgentProps?,
+        parallelTaskCount: Int? = null,
+        dockerParallelTaskCount: Int? = null
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -79,6 +81,8 @@ class ThirdPartyAgentDao {
                 AGENT_TYPE,
                 CREATE_WORKSPACE_NAME,
                 AGENT_PROPS,
+                PARALLEL_TASK_COUNT,
+                DOCKER_PARALLEL_TASK_COUNT
             ).values(
                 projectId,
                 os.name,
@@ -91,7 +95,9 @@ class ThirdPartyAgentDao {
                 ip ?: "",
                 agentType?.name ?: AgentType.BUILD.name,
                 createWorkspaceName,
-                agentProps?.let { JsonUtil.toJson(agentProps, false) }
+                agentProps?.let { JsonUtil.toJson(agentProps, false) },
+                parallelTaskCount,
+                dockerParallelTaskCount
             )
                 .returning(ID)
                 .fetchOne()!!.id

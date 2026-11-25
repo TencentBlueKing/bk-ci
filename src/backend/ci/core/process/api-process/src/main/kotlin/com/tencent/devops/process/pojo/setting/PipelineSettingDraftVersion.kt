@@ -40,6 +40,8 @@ data class PipelineSettingDraftVersion(
     val concurrencyGroup: String?,
     @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     val concurrencyCancelInProgress: Boolean?,
+    @get:Schema(title = "同一批标识", required = false)
+    val concurrencySubGroup: String? = null,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings?,
     @get:Schema(title = "并发构建数量限制", required = false)
@@ -47,7 +49,9 @@ data class PipelineSettingDraftVersion(
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     val failIfVariableInvalid: Boolean?,
     @get:Schema(title = "构建取消权限策略", required = false)
-    val buildCancelPolicy: BuildCancelPolicy?
+    val buildCancelPolicy: BuildCancelPolicy?,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     companion object {
         fun convertFromDraftVersion(draft: PipelineSettingDraftVersion): PipelineSettingVersion {
@@ -66,10 +70,12 @@ data class PipelineSettingDraftVersion(
                 maxQueueSize = draft.maxQueueSize,
                 concurrencyGroup = draft.concurrencyGroup,
                 concurrencyCancelInProgress = draft.concurrencyCancelInProgress,
+                concurrencySubGroup = draft.concurrencySubGroup,
                 maxConRunningQueueSize = draft.maxConRunningQueueSize,
                 pipelineAsCodeSettings = draft.pipelineAsCodeSettings,
                 failIfVariableInvalid = draft.failIfVariableInvalid,
-                buildCancelPolicy = draft.buildCancelPolicy
+                buildCancelPolicy = draft.buildCancelPolicy,
+                yamlLocked = draft.yamlLocked
             )
         }
     }

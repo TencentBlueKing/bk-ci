@@ -162,6 +162,7 @@ class ModelCreate @Autowired constructor(
                 concurrencyCancelInProgress = yaml.concurrency?.cancelInProgress
                     ?: yaml.concurrency?.group?.let { true }
                     ?: true,
+                concurrencySubGroup = yaml.concurrency?.subGroup?.trim()?.takeIf { it.isNotEmpty() } ?: "",
                 runLockType = when {
                     yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                     else -> PipelineRunLockType.MULTIPLE

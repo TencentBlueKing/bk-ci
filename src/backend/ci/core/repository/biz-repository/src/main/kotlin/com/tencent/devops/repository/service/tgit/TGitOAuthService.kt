@@ -72,23 +72,32 @@ class TGitOAuthService @Autowired constructor(
         gitProjectId: Long?,
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?
+        redirectUrl: String?,
+        resetType: String?
     ): AuthorizeResult {
         val id = initRedisUser(
             OauthParams(
                 gitProjectId = gitProjectId,
                 userId = userId,
                 redirectUrlType = redirectUrlType,
-                redirectUrl = redirectUrl
+                redirectUrl = redirectUrl,
+                resetType = resetType
             )
         )
         return AuthorizeResult(403, getOauthUrl(id))
     }
 
-    fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
-        logger.info("start to get project: userId:$userId")
+    fun getProject(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        search: String?,
+        oauthUserId: String? = null
+    ): AuthorizeResult {
+        logger.info("start to get project: userId:$userId|oauthUserId:$oauthUserId")
+        val tokenUserId = if (oauthUserId.isNullOrBlank()) userId else oauthUserId
         val accessToken =
-            getAccessToken(userId) ?: return isOAuth(
+            getAccessToken(tokenUserId) ?: return isOAuth(
                 userId = userId,
                 redirectUrlType = RedirectUrlTypeEnum.SPEC,
                 redirectUrl = gitConfig.redirectUrl + "/$projectId/#popupTGit",
@@ -187,7 +196,8 @@ class TGitOAuthService @Autowired constructor(
         redirectUrl: String? = null,
         gitProjectId: Long? = null,
         refreshToken: Boolean? = null,
-        validationCheck: Boolean? = false
+        validationCheck: Boolean? = false,
+        resetType: String? = ""
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
@@ -203,16 +213,27 @@ class TGitOAuthService @Autowired constructor(
         } else {
             tGitTokenService.getAccessToken(userId)
         } ?: kotlin.run {
-            return getOauthUrl(gitProjectId, userId, redirectUrlType, redirectUrl)
+            return getOauthUrl(
+                gitProjectId = gitProjectId,
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                resetType = resetType
+            )
         }
 
         if (validationCheck == true) {
             kotlin.runCatching { tGitService.getUserInfoByToken(accessToken.accessToken) }.onFailure {
                 logger.info("Oauth token expired, need reauthorize.|$userId")
-                return getOauthUrl(gitProjectId, userId, redirectUrlType, redirectUrl)
+                return getOauthUrl(
+                    gitProjectId = gitProjectId,
+                    userId = userId,
+                    redirectUrlType = redirectUrlType,
+                    redirectUrl = redirectUrl,
+                    resetType = resetType
+                )
             }
         }
-        logger.info("isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
     }
 

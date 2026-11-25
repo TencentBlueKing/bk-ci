@@ -31,7 +31,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileActionType
 import com.tencent.devops.process.pojo.pipeline.enums.YamlFileType
 import com.tencent.devops.process.yaml.PipelineYamlFileService
-import com.tencent.devops.process.yaml.actions.GitActionCommon
+import com.tencent.devops.process.yaml.common.YamlFileUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.enums.EventAction
@@ -89,7 +89,7 @@ class GitPushHookYamlDiffConverter @Autowired constructor(
         val yamlDiffs = mutableListOf<PipelineYamlDiff>()
         val defaultBranch = serverRepo.defaultBranch!!
         fileTrees.forEach { tree ->
-            val filePath = GitActionCommon.getCiFilePath(tree.path)
+            val filePath = YamlFileUtils.getCiFilePath(tree.path)
             val actionType = WebhookConverterUtils.getYamlActionType(filePath = filePath, changeFiles = changeFiles)
             // 如果文件类型不能执行,那么没有变更时,直接跳过,比如模版文件,只需要变更,不需要执行
             if (actionType == YamlFileActionType.TRIGGER && !YamlFileType.getFileType(filePath).canExecute()) {
@@ -117,7 +117,7 @@ class GitPushHookYamlDiffConverter @Autowired constructor(
             yamlDiffs.add(yamlDiff)
         }
         // yaml文件删除
-        changeFiles.deletedFiles.filter { GitActionCommon.isCiFile(it) }.forEach { filePath ->
+        changeFiles.deletedFiles.filter { YamlFileUtils.isCiFile(it) }.forEach { filePath ->
             val yamlDiff = PipelineYamlDiff(
                 projectId = projectId,
                 eventId = eventId,

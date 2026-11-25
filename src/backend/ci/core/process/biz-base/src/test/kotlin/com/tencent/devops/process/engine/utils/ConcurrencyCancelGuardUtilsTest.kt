@@ -112,6 +112,45 @@ class ConcurrencyCancelGuardUtilsTest {
         candidates: List<ConcurrencyGroupBuild>
     ) = ConcurrencyCancelGuardUtils.filterTargets(candidates, current)
 
-    private fun build(pipelineId: String, buildId: String, buildNum: Int) =
-        ConcurrencyGroupBuild(pipelineId, buildId, buildNum)
+    @Test
+    fun olderSameBatchOnlyCancelsSmallerBuildNum() {
+        val candidates = listOf(
+            build("p-1", "b-older", 3, "mr-8"),
+            build("p-1", "b-newer", 8, "mr-8"),
+            build("p-1", "b-other-batch", 1, "mr-9"),
+            build("p-2", "b-other-pipeline", 1, "mr-8"),
+            build("p-1", "b-self", 6, "mr-8")
+        )
+        Assertions.assertEquals(
+            listOf(build("p-1", "b-older", 3, "mr-8")),
+            ConcurrencyCancelGuardUtils.olderSameBatch(
+                candidateBuilds = candidates,
+                pipelineId = "p-1",
+                currentBuildId = "b-self",
+                currentBuildNum = 6,
+                batchId = "mr-8"
+            )
+        )
+    }
+
+    @Test
+    fun olderSameBatchWithoutBuildNumCancelsNothing() {
+        val candidates = listOf(build("p-1", "b-visible", 9, "mr-8"))
+        Assertions.assertTrue(
+            ConcurrencyCancelGuardUtils.olderSameBatch(
+                candidateBuilds = candidates,
+                pipelineId = "p-1",
+                currentBuildId = "b-not-inserted",
+                currentBuildNum = null,
+                batchId = "mr-8"
+            ).isEmpty()
+        )
+    }
+
+    private fun build(
+        pipelineId: String,
+        buildId: String,
+        buildNum: Int,
+        concurrencySubGroup: String? = null
+    ) = ConcurrencyGroupBuild(pipelineId, buildId, buildNum, concurrencySubGroup)
 }

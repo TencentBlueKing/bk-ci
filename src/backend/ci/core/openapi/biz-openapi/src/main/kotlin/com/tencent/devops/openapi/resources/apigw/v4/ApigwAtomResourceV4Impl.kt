@@ -35,16 +35,20 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwAtomResourceV4
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentContractResource
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomSelectResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractInfo
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractViewEnum
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
@@ -132,6 +136,49 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version, serviceScope)
     }
 
+    override fun getAtomContract(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        atomCode: String,
+        view: String?
+    ): Result<StoreComponentContractInfo?> {
+        logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomContract: $atomCode, $view")
+        val contractView = StoreComponentContractViewEnum.entries.firstOrNull {
+            it.name.equals(view, true)
+        } ?: StoreComponentContractViewEnum.CARD
+        return client.get(ServiceStoreComponentContractResource::class).getContract(
+            storeType = StoreTypeEnum.ATOM,
+            storeCode = atomCode,
+            view = contractView
+        )
+    }
+
+    override fun selectAtoms(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectCode: String,
+        keywords: String,
+        jobType: String?,
+        os: String?,
+        category: String?,
+        limit: Int?
+    ): Result<AtomSelectResp> {
+        logger.info(
+            "OPENAPI_ATOM_V4|$appCode|$userId|selectAtoms: $projectCode, $keywords, $jobType, $os, $category, $limit"
+        )
+        return client.get(ServiceAtomResource::class).selectAtoms(
+            userId = userId.trim(),
+            projectCode = projectCode,
+            keywords = keywords,
+            jobType = jobType,
+            os = os,
+            category = category,
+            limit = limit
+        )
+    }
+
     override fun list(
         appCode: String?,
         apigwType: String?,
@@ -151,8 +198,8 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
     ): Result<MarketAtomResp> {
         logger.info(
             "OPENAPI_ATOM_V4|$appCode|$userId|atom list: $serviceScope, $keyword, $classifyCode," +
-                " $labelCode, $score, $rdType, $yamlFlag, $recommendFlag, $qualityFlag, " +
-                "$sortType, $page, $pageSize"
+                    " $labelCode, $score, $rdType, $yamlFlag, $recommendFlag, $qualityFlag, " +
+                    "$sortType, $page, $pageSize"
         )
         return client.get(ServiceAtomResource::class).list(
             userId = userId.trim(),
@@ -191,8 +238,8 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
     ): Result<AtomResp<AtomRespItem>?> {
         logger.info(
             "OPENAPI_ATOM_V4|$appCode|$userId|listAllPipelineAtoms: $projectCode, $serviceScope," +
-                " $jobType, $os, $category, $classifyId, $recommendFlag, $keyword," +
-                " $queryProjectAtomFlag, $fitOsFlag, $queryFitAgentBuildLessAtomFlag, $page, $pageSize"
+                    " $jobType, $os, $category, $classifyId, $recommendFlag, $keyword," +
+                    " $queryProjectAtomFlag, $fitOsFlag, $queryFitAgentBuildLessAtomFlag, $page, $pageSize"
         )
         return client.get(ServiceAtomResource::class).listAllPipelineAtoms(
             userId = userId.trim(),
