@@ -49,7 +49,8 @@ class PipelineCallbackDao {
         pipelineId: String,
         userId: String,
         list: List<PipelineCallbackEvent>,
-        aesKeySha: String
+        aesKeySha: String,
+        source: PipelineCallbackSource
     ) {
         if (list.isEmpty()) return
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
@@ -67,7 +68,8 @@ class PipelineCallbackDao {
                     REGION,
                     CREATE_TIME,
                     UPDATE_TIME,
-                    AES_KEY_SHA
+                    AES_KEY_SHA,
+                    SOURCE
                 ).values(
                     projectId,
                     pipelineId,
@@ -79,12 +81,14 @@ class PipelineCallbackDao {
                     (it.region ?: CallBackNetWorkRegionType.IDC).name,
                     now,
                     now,
-                    aesKeySha
+                    aesKeySha,
+                    source.name
                 ).onDuplicateKeyUpdate()
                     .set(UPDATE_TIME, now)
                     .set(URL, it.callbackUrl)
                     .set(SECRET_TOKEN, it.secretToken)
                     .set(AES_KEY_SHA, aesKeySha)
+                    .set(SOURCE, source.name)
                     .execute()
             }
         }
@@ -94,7 +98,8 @@ class PipelineCallbackDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        event: String? = null
+        event: String? = null,
+        source: PipelineCallbackSource? = null
     ): Result<TPipelineCallbackRecord> {
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
@@ -102,6 +107,11 @@ class PipelineCallbackDao {
                 .let {
                     if (!event.isNullOrBlank()) {
                         it.and(EVENT_TYPE.eq(event))
+                    } else it
+                }
+                .let {
+                    if (source != null) {
+                        it.and(SOURCE.eq(source.name))
                     } else it
                 }
                 .fetch()
@@ -112,13 +122,20 @@ class PipelineCallbackDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        names: Set<String>
+        names: Set<String>,
+        source: PipelineCallbackSource? = null
     ) {
+        if (names.isEmpty()) return
         with(TPipelineCallback.T_PIPELINE_CALLBACK) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(NAME.`in`(names))
+                .let {
+                    if (source != null) {
+                        it.and(SOURCE.eq(source.name))
+                    } else it
+                }
                 .execute()
         }
     }
