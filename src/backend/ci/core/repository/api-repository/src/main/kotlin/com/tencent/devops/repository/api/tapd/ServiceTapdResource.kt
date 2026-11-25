@@ -88,6 +88,18 @@ interface ServiceTapdResource {
         workspaceId: String
     ): Result<TapdBugFieldConfig?>
 
+    @Operation(summary = "实时查询 TAPD 状态英文 key 到中文状态名映射")
+    @GET
+    @Path("/statusMap")
+    fun statusMap(
+        @Parameter(description = "TAPD 项目 ID", required = true)
+        @QueryParam("workspaceId")
+        workspaceId: String,
+        @Parameter(description = "TAPD 事件类型", required = true)
+        @QueryParam("eventType")
+        eventType: String
+    ): Result<Map<String, String>>
+
     @Operation(summary = "查询 TAPD 项目信息")
     @GET
     @Path("/workspaces")

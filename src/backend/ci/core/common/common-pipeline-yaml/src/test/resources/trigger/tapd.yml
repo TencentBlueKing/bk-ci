@@ -18,18 +18,18 @@ on:
       priorities:
         - high
       statuses:
-        - developing
-        - resolved
+        - 实现中
+        - 已实现
       statuses-ignore:
-        - rejected
+        - 已拒绝
     bug:
       id: trigger_bug
       action:
         - create
       statuses:
-        - new
+        - 新
       statuses-ignore:
-        - closed
+        - 已关闭
 stages:
   - name: stage-1
     jobs:

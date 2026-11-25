@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_EVENT_SEPARATOR
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CHANGE_FIELDS
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_USER
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_ENTITY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT
@@ -50,6 +51,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_I
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS_MAPPING_FAILED
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STORY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_NAME
@@ -233,7 +235,8 @@ class TapdWebhookRequestService(
     }
 
     /**
-     * 为原始 body 补充派生字段（workspaceName / objectUrl / objectId / currentStatus），并追加对象基础信息。
+     * 为原始 body 补充派生字段（workspaceName / objectUrl / objectId / currentStatus / currentStatusName），
+     * 并追加对象基础信息。
      */
     private fun enrichBody(
         body: Map<String, Any?>,
@@ -255,13 +258,27 @@ class TapdWebhookRequestService(
             workspaceId = workspaceId,
             objectId = objectId
         ).orEmpty()
+        val currentStatusKey = body.getCurrentStatus()
         return buildMap<String, Any?> {
             putAll(body)
             putAll(objectBaseInfo)
             put(TAPD_KEY_WORKSPACE_NAME, workspaceName)
             put(TAPD_KEY_OBJECT_URL, objectUrl)
             put(TAPD_KEY_OBJECT_ID, objectId)
-            put(TAPD_KEY_CURRENT_STATUS, body.getCurrentStatus())
+            put(TAPD_KEY_CURRENT_STATUS, currentStatusKey)
+            if (currentStatusKey.isNotBlank()) {
+                val statusMap = tapdSupportService.getStatusMap(workspaceId, eventType.name)
+                val currentStatusName = statusMap?.get(currentStatusKey)
+                if (currentStatusName.isNullOrBlank()) {
+                    logger.error(
+                        "tapd status mapping failed|workspaceId=$workspaceId|eventType=${eventType.name}|" +
+                            "statusKey=$currentStatusKey"
+                    )
+                    put(TAPD_KEY_STATUS_MAPPING_FAILED, true)
+                } else {
+                    put(TAPD_KEY_CURRENT_STATUS_NAME, currentStatusName)
+                }
+            }
         }
     }
 

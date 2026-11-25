@@ -89,7 +89,7 @@ data class TapdWorkspaceOption(
     val disabled: Boolean = false
 )
 
-@Schema(description = "TAPD 状态下拉选项")
+@Schema(description = "TAPD 状态下拉选项；id 与 name 均为中文状态名")
 data class TapdStatusOption(
     val id: String,
     val name: String

@@ -68,7 +68,7 @@ interface UserTapdResource {
         userId: String
     ): Result<List<TapdWorkspaceOption>>
 
-    @Operation(summary = "获取 TAPD 状态下拉选项")
+    @Operation(summary = "实时获取 TAPD 中文状态名下拉选项")
     @GET
     @Path("/statuses")
     fun listStatuses(

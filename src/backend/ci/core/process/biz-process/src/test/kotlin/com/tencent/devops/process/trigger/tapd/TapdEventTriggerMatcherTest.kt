@@ -6,6 +6,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTrigge
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerInput
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STATUS_IGNORED
+import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.BK_TAPD_STATUS_MAPPING_FAILED
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -42,13 +43,13 @@ class TapdEventTriggerMatcherTest {
     )
 
     private fun body(
-        currentStatus: String? = null,
-        newStatus: String? = null,
-        status: String? = null
+        currentStatusName: String? = null,
+        rawStatus: String? = null,
+        mappingFailed: Boolean = false
     ): Map<String, String> = buildMap {
-        currentStatus?.let { put("current_status", it) }
-        newStatus?.let { put("new_status", it) }
-        status?.let { put("status", it) }
+        currentStatusName?.let { put("current_status_name", it) }
+        rawStatus?.let { put("current_status", it) }
+        if (mappingFailed) put("tapd_status_mapping_failed", "true")
     }
 
     private fun match(
@@ -60,7 +61,11 @@ class TapdEventTriggerMatcherTest {
 
     @Test
     fun `empty included statuses listens to all`() {
-        val response = match(element(), body(currentStatus = "planning"), action = TapdEventAction.CREATE)
+        val response = match(
+            element(),
+            body(currentStatusName = "规划中", rawStatus = "planning"),
+            action = TapdEventAction.CREATE
+        )
         assertEquals(MatchStatus.SUCCESS, response.matchStatus)
     }
 
@@ -73,8 +78,8 @@ class TapdEventTriggerMatcherTest {
             TapdEventAction.ADD_COMMENT
         ).forEach { action ->
             val response = match(
-                element(includeStatuses = listOf("developing")),
-                body(currentStatus = "developing"),
+                element(includeStatuses = listOf("实现中")),
+                body(currentStatusName = "实现中", rawStatus = "developing"),
                 action = action
             )
             assertEquals(MatchStatus.SUCCESS, response.matchStatus)
@@ -84,8 +89,8 @@ class TapdEventTriggerMatcherTest {
     @Test
     fun `included status mismatch is rejected`() {
         val response = match(
-            element(includeStatuses = listOf("developing")),
-            body(currentStatus = "planning")
+            element(includeStatuses = listOf("实现中")),
+            body(currentStatusName = "规划中", rawStatus = "planning")
         )
         assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
         assertNotNull(response.failedReason)
@@ -95,20 +100,19 @@ class TapdEventTriggerMatcherTest {
     fun `excluded status wins over included`() {
         val response = match(
             element(
-                includeStatuses = listOf("developing"),
-                excludeStatuses = listOf("developing")
+                includeStatuses = listOf("实现中"),
+                excludeStatuses = listOf("实现中")
             ),
-            body(currentStatus = "developing")
+            body(currentStatusName = "实现中", rawStatus = "developing")
         )
         assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
-        assertNotNull(response.failedReason)
         assertTrue(response.failedReason?.contains(BK_TAPD_STATUS_IGNORED) == true)
     }
 
     @Test
     fun `blank status without included keeps old behavior`() {
         val response = match(
-            element(excludeStatuses = listOf("rejected")),
+            element(excludeStatuses = listOf("已拒绝")),
             body()
         )
         assertEquals(MatchStatus.SUCCESS, response.matchStatus)
@@ -117,7 +121,7 @@ class TapdEventTriggerMatcherTest {
     @Test
     fun `blank status with included is rejected`() {
         val response = match(
-            element(includeStatuses = listOf("developing")),
+            element(includeStatuses = listOf("实现中")),
             body()
         )
         assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
@@ -125,30 +129,21 @@ class TapdEventTriggerMatcherTest {
     }
 
     @Test
-    fun `new status is used when current status is absent`() {
+    fun `status mapping failure is recorded as condition not match`() {
         val response = match(
-            element(includeStatuses = listOf("developing")),
-            body(newStatus = "developing")
+            element(includeStatuses = listOf("实现中")),
+            body(rawStatus = "developing", mappingFailed = true)
         )
-        assertEquals(MatchStatus.SUCCESS, response.matchStatus)
-    }
-
-    @Test
-    fun `status field is fallback for create events`() {
-        val response = match(
-            element(includeStatuses = listOf("planning")),
-            body(status = "planning"),
-            action = TapdEventAction.CREATE
-        )
-        assertEquals(MatchStatus.SUCCESS, response.matchStatus)
+        assertEquals(MatchStatus.CONDITION_NOT_MATCH, response.matchStatus)
+        assertTrue(response.failedReason?.contains(BK_TAPD_STATUS_MAPPING_FAILED) == true)
     }
 
     @Test
     fun `pipeline variables are resolved before matching`() {
         val response = match(
             element(includeStatuses = listOf("$" + "{targetStatus}")),
-            body(currentStatus = "developing"),
-            variables = mapOf("targetStatus" to "developing")
+            body(currentStatusName = "实现中", rawStatus = "developing"),
+            variables = mapOf("targetStatus" to "实现中")
         )
         assertEquals(MatchStatus.SUCCESS, response.matchStatus)
     }

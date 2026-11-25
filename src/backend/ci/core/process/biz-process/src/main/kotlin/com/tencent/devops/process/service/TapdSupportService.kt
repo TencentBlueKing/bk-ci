@@ -96,6 +96,36 @@ class TapdSupportService(private val client: Client) {
     }
 
     /**
+     * 实时查询 TAPD 状态英文 key 到中文状态名映射
+     *
+     * 不使用缓存；失败时返回 null，由调用方记录触发失败事件。
+     */
+    fun getStatusMap(workspaceId: String, eventType: String): Map<String, String>? {
+        if (workspaceId.isBlank() || eventType.isBlank()) {
+            logger.error("invalid tapd status map query|workspaceId=$workspaceId|eventType=$eventType")
+            return null
+        }
+        return try {
+            val result = client.get(ServiceTapdResource::class).statusMap(
+                workspaceId = workspaceId,
+                eventType = eventType
+            ).data
+            if (result.isNullOrEmpty()) {
+                logger.error("empty tapd status map|workspaceId=$workspaceId|eventType=$eventType")
+                null
+            } else {
+                result
+            }
+        } catch (ignored: Exception) {
+            logger.error(
+                "fail to query tapd status map|workspaceId=$workspaceId|eventType=$eventType",
+                ignored
+            )
+            null
+        }
+    }
+
+    /**
      * 查询 TAPD 项目信息（带本地缓存）
      */
     fun getWorkspaceInfo(workspaceId: String): TapdWorkspace? {

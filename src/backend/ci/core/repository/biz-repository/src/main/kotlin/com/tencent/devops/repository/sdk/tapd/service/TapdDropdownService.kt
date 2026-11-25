@@ -1,7 +1,5 @@
 package com.tencent.devops.repository.sdk.tapd.service
 
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.scm.pojo.tapd.TapdAuthorizedWorkspaces
 import com.tencent.devops.scm.pojo.tapd.TapdStatusOption
@@ -9,32 +7,21 @@ import com.tencent.devops.scm.pojo.tapd.TapdWorkspaceOption
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
- * TAPD 触发器下拉选项聚合服务
+ * TAPD 触发器下拉选项与状态映射服务
  *
- * 编辑态的数据源聚合全部在这里完成，Webhook 匹配链路不会调用 TAPD OpenAPI。
+ * 下拉选项与 Webhook 匹配所需的中文状态映射均实时请求 TAPD OpenAPI，不使用缓存。
  */
 @Service
 class TapdDropdownService @Autowired constructor(
     private val tapdItemService: ITapdItemService
 ) {
 
-    private val authorizedCache: Cache<String, TapdAuthorizedWorkspaces> = Caffeine.newBuilder()
-        .maximumSize(CACHE_MAX_SIZE)
-        .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build()
-
-    private val statusCache: Cache<String, List<TapdStatusOption>> = Caffeine.newBuilder()
-        .maximumSize(CACHE_MAX_SIZE)
-        .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
-        .build()
-
     /**
      * 当前用户可见且应用已授权的 TAPD 项目下拉选项
      *
-     * 未安装/未授权项目不再展示；授权集合未知时返回空列表，避免误展示未授权项目。
+     * 未授权项目不展示；授权集合未知时返回空列表。授权集合每次实时拉取。
      */
     fun workspaceOptions(userId: String): List<TapdWorkspaceOption> {
         if (userId.isBlank()) {
@@ -64,28 +51,19 @@ class TapdDropdownService @Autowired constructor(
                     )
                 }
         } catch (ignored: Exception) {
-            logger.warn("fail to build tapd workspace options", ignored)
+            logger.error("fail to build tapd workspace options", ignored)
             emptyList()
         }
     }
 
     /**
-     * 按项目 ID 与事件类型返回状态英文 key 下拉选项
+     * 按项目 ID 与事件类型返回中文状态名下拉选项
+     *
+     * id 与 name 均为中文状态名，前端和 PAC/模型保存值均为中文。
+     * 每次请求都会实时拉取 TAPD 状态数据，不使用缓存。
      */
     fun statusOptions(workspaceId: String, eventType: String): List<TapdStatusOption> {
-        if (workspaceId.isBlank()) {
-            throw InvalidParamException(message = "workspaceId is blank", params = arrayOf("workspaceId"))
-        }
-        val normalizedEventType = when {
-            eventType.equals(EVENT_TYPE_STORY, ignoreCase = true) -> EVENT_TYPE_STORY
-            eventType.equals(EVENT_TYPE_BUG, ignoreCase = true) -> EVENT_TYPE_BUG
-            else -> throw InvalidParamException(
-                message = "unsupported tapd eventType",
-                params = arrayOf("eventType")
-            )
-        }
-        val cacheKey = workspaceId + STATUS_CACHE_KEY_SEPARATOR + normalizedEventType
-        statusCache.getIfPresent(cacheKey)?.let { return it }
+        val normalizedEventType = normalizeEventType(workspaceId, eventType)
         return try {
             val authorized = authorizedWorkspaces()
             if (!authorized.known || !authorized.workspaceIds.contains(workspaceId)) {
@@ -95,22 +73,11 @@ class TapdDropdownService @Autowired constructor(
                 )
                 return emptyList()
             }
-            val options = when (normalizedEventType) {
-                EVENT_TYPE_STORY -> tapdItemService.getStoryFieldConfig(workspaceId)?.status?.options
-                else -> tapdItemService.getBugFieldConfig(workspaceId, true)?.status?.options
-            }
-            if (options == null) {
-                logger.warn(
-                    "tapd status options unavailable|workspaceId=$workspaceId|eventType=$normalizedEventType"
-                )
-                return emptyList()
-            }
-            val result = options.map { (id, name) -> TapdStatusOption(id = id, name = name) }
+            loadStatusMap(workspaceId, normalizedEventType)
+                .map { (_, chineseName) -> TapdStatusOption(id = chineseName, name = chineseName) }
                 .sortedBy { it.id }
-            statusCache.put(cacheKey, result)
-            result
         } catch (ignored: Exception) {
-            logger.warn(
+            logger.error(
                 "fail to build tapd status options|workspaceId=$workspaceId|eventType=$normalizedEventType",
                 ignored
             )
@@ -119,38 +86,82 @@ class TapdDropdownService @Autowired constructor(
     }
 
     /**
-     * 聚合已授权与已安装项目；任一数据源失败时返回 unknown，下拉数据按返回空列表处理。
+     * 实时查询 TAPD 状态映射
+     *
+     * 返回 Map<英文状态 key, 中文状态名>。每次调用都会请求 TAPD OpenAPI，不使用缓存。
+     */
+    fun statusMap(workspaceId: String, eventType: String): Map<String, String> {
+        val normalizedEventType = normalizeEventType(workspaceId, eventType)
+        val authorized = authorizedWorkspaces()
+        if (!authorized.known || !authorized.workspaceIds.contains(workspaceId)) {
+            throw IllegalStateException(
+                "tapd status map unavailable: unknown or unauthorized workspace|" +
+                    "workspaceId=$workspaceId|eventType=$normalizedEventType|authorizedKnown=${authorized.known}"
+            )
+        }
+        return loadStatusMap(workspaceId, normalizedEventType)
+    }
+
+    /**
+     * 实时聚合已授权与已安装项目；任一数据源失败时返回 unknown。
      */
     fun authorizedWorkspaces(): TapdAuthorizedWorkspaces {
-        authorizedCache.getIfPresent(AUTHORIZED_CACHE_KEY)?.let { return it }
         return try {
             val granted = tapdItemService.listGrantedWorkspaceIds()
             val installed = tapdItemService.listInstalledWorkspaceIds()
             if (granted == null || installed == null) {
-                logger.warn(
+                logger.error(
                     "tapd authorized workspaces unknown|grantedKnown=${granted != null}|" +
                         "installedKnown=${installed != null}"
                 )
                 return TapdAuthorizedWorkspaces(known = false)
             }
-            val result = TapdAuthorizedWorkspaces(
+            TapdAuthorizedWorkspaces(
                 known = true,
                 workspaceIds = (granted + installed).toSet()
             )
-            authorizedCache.put(AUTHORIZED_CACHE_KEY, result)
-            result
         } catch (ignored: Exception) {
-            logger.warn("fail to load tapd authorized workspaces", ignored)
+            logger.error("fail to load tapd authorized workspaces", ignored)
             TapdAuthorizedWorkspaces(known = false)
         }
     }
 
+    private fun normalizeEventType(workspaceId: String, eventType: String): String {
+        if (workspaceId.isBlank()) {
+            throw InvalidParamException(message = "workspaceId is blank", params = arrayOf("workspaceId"))
+        }
+        return when {
+            eventType.equals(EVENT_TYPE_STORY, ignoreCase = true) -> EVENT_TYPE_STORY
+            eventType.equals(EVENT_TYPE_BUG, ignoreCase = true) -> EVENT_TYPE_BUG
+            else -> throw InvalidParamException(
+                message = "unsupported tapd eventType",
+                params = arrayOf("eventType")
+            )
+        }
+    }
+
+    private fun loadStatusMap(workspaceId: String, normalizedEventType: String): Map<String, String> {
+        val options = when (normalizedEventType) {
+            EVENT_TYPE_STORY -> tapdItemService.getStoryFieldConfig(workspaceId)?.status?.options
+            else -> tapdItemService.getBugFieldConfig(workspaceId, true)?.status?.options
+        }
+        if (options == null) {
+            throw IllegalStateException(
+                "tapd status options unavailable|workspaceId=$workspaceId|eventType=$normalizedEventType"
+            )
+        }
+        val duplicateNames = options.entries.groupBy({ it.value }, { it.key }).filter { it.value.size > 1 }
+        if (duplicateNames.isNotEmpty()) {
+            logger.error(
+                "duplicate tapd status names|workspaceId=$workspaceId|eventType=$normalizedEventType|" +
+                    "duplicates=$duplicateNames"
+            )
+        }
+        return options
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TapdDropdownService::class.java)
-        private const val AUTHORIZED_CACHE_KEY = "tapd_authorized_workspaces"
-        private const val STATUS_CACHE_KEY_SEPARATOR = ":"
-        private const val CACHE_MAX_SIZE = 1000L
-        private const val CACHE_EXPIRE_MINUTES = 10L
         private const val EVENT_TYPE_STORY = "STORY"
         private const val EVENT_TYPE_BUG = "BUG"
     }

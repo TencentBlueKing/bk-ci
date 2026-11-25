@@ -29,14 +29,16 @@
 | 监听的事件来源 | `api` / `web` / `auto_task`（自动化任务）。默认全选；**PAC 不支持此项，等价于不限制** | — |
 | 监听的动作 | 见下方 [动作取值](#动作取值)。默认 `create,update,delete` | — |
 | 监听以下优先级 | 多个用英文逗号分隔，按工单优先级**精确匹配**。留空 = 不限制 | `High,Urgent` |
-| 监听的状态 | 多选下拉，按 TAPD 状态**英文 key** 精确匹配。留空 = 监听所有状态 | `planning,developing` |
-| 排除的状态 | 多选下拉，命中变更后的状态时不触发；**优先于监听的状态** | `rejected` |
+| 监听的状态 | 多选下拉，按 TAPD 状态**中文名**精确匹配。留空 = 监听所有状态 | `规划中,实现中` |
+| 排除的状态 | 多选下拉，命中变更后的状态时触发失败；**优先于监听的状态** | `已拒绝` |
 | 包含 / 排除以下操作人 | 按触发本次事件的 TAPD 用户过滤 | — |
 | 包含 / 排除以下标签 | 多个用英文逗号分隔，支持 `*` 通配。工单有任一标签命中包含即触发；有任一标签命中排除则不触发 | `前端,release-*` |
 | 包含 / 排除以下处理人 | 按工单**当前处理人**过滤（多个处理人时取第一个） | — |
 
 - 包含 / 排除类规则留空 = 不限制，**排除优先于包含**；状态过滤对所有 TAPD 事件生效，按变更后的状态匹配，创建等事件使用现有状态字段兜底。
-- 状态下拉只展示中文名，模型与 PAC YAML 保存英文状态 key。
+- UI 方式、Code 方式、HTTP 保存接口、流水线模型与 PAC YAML 均使用中文状态名。
+- TAPD webhook 仍传入英文状态 key，后端在 webhook 入口实时拉取 TAPD 状态接口完成英文 key 到中文状态名映射；状态数据链路不使用缓存。
+- 状态接口失败或英文 key 无法映射为中文名时，打印 error 日志、记录触发失败事件并判定不触发；中文状态名变化后需重新编辑触发器配置。
 - 人员、标签、优先级都支持 `${{ variables.xxx }}` 引用流水线变量；需要监听公共账号时，可把账号定义成流水线变量再引用。
 
 ### 动作取值
@@ -96,7 +98,7 @@ PAC v3.0 中，每个 TAPD 项目对应 `on` 列表里的一项，用 `type: tap
 | `statuses-ignore` | 排除的状态 |
 
 > - **省略 `action` = 监听全部动作**，与可视化新建时的默认值（`create,update,delete`）不同，建议显式写出。
-> - `statuses` / `statuses-ignore` 使用 TAPD 状态英文 key；`statuses` 省略表示监听所有状态，`statuses-ignore` 命中时排除优先。
+> - `statuses` / `statuses-ignore` 使用 TAPD 中文状态名；`statuses` 省略表示监听所有状态，`statuses-ignore` 命中时排除优先。
 > - PAC 不支持「监听的事件来源」，所有来源的事件都会参与匹配。
 > - 同一个 `workspace-id` 下 `story`、`bug` **各只能配置一个**。可视化里同一项目配了多个需求触发器时，转成 YAML 只会保留最后一个。
 > - 存量环境执行增量 DML 更新 `T_ATOM.PROPS` 后，需失效 `AtomPropsCacheManager` 中 `codeTapdWebHookTrigger` 的缓存（或等待最长 6 小时），并刷新页面清理前端 `atomModalMap`，否则新下拉和状态字段不会立即生效。
@@ -119,19 +121,19 @@ on:
       priorities:
         - High
       statuses:
-        - planning
-        - developing
+        - 规划中
+        - 实现中
       statuses-ignore:
-        - rejected
+        - 已拒绝
     bug:
       action:
         - create
       users-ignore:
         - robot
       statuses:
-        - new
+        - 新
       statuses-ignore:
-        - closed
+        - 已关闭
 ```
 
 ### 多个 TAPD 项目
@@ -182,7 +184,7 @@ on:
 优先级按 TAPD 推送的优先级取值精确匹配，请以 TAPD 项目中配置的优先级名称为准（区分大小写和中英文）。
 
 **Q：状态下拉显示中文，保存后 YAML 里是什么？**
-模型与 PAC YAML 保存 TAPD 状态英文 key，中文名仅用于下拉展示；`statuses` 留空表示监听全部状态，`statuses-ignore` 命中时排除优先。
+模型与 PAC YAML 保存 TAPD 中文状态名，UI 与 Code 方式填写值一致；`statuses` 留空表示监听全部状态，`statuses-ignore` 命中时排除优先。
 
 **Q：通过 OpenAPI 或自动化任务改的工单能触发吗？**
 可以。可视化中「监听的事件来源」默认包含 `api`、`web`、`auto_task`；只想响应页面操作时只勾选 `web`。PAC 不支持该项，所有来源都会触发。

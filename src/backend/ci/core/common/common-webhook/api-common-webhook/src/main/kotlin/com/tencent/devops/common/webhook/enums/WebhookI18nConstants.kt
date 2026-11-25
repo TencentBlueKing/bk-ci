@@ -311,4 +311,7 @@ object WebhookI18nConstants {
 
     // TAPD 触发: 状态被排除
     const val BK_TAPD_STATUS_IGNORED = "bkTapdStatusIgnored"
+
+    // TAPD 触发: 状态中英文映射失败
+    const val BK_TAPD_STATUS_MAPPING_FAILED = "bkTapdStatusMappingFailed"
 }

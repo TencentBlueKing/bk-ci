@@ -44,6 +44,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_WORKSPA
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_BUG_URL_PATTERN
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_BUG_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_CURRENT_STATUS_NAME
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_DESCRIPTION
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_FROM
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_EVENT_ID
@@ -55,6 +56,7 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_OBJECT_U
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PARENT_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_PRIORITY_LABEL
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS
+import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STATUS_MAPPING_FAILED
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TARGET_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_TITLE
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_NAME
@@ -77,6 +79,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
  *
  * 汇集 TAPD webhook 请求与触发过程中所需的纯计算工具：
  * - body 字段读取（[getHookField]）
+ * - 状态字段读取（[getCurrentStatus] / [getCurrentStatusName] / [isStatusMappingFailed]）
  * - 派生字段计算（[buildObjectUrl] / [getTitle]）
  * - 启动参数组装（[buildStartParams]）
  * - 事件描述组装（[buildEventDesc]）
@@ -118,6 +121,20 @@ object TapdWebhookUtils {
             ?: this[TAPD_KEY_NEW_STATUS]?.toString()?.takeIf { it.isNotBlank() }
             ?: this[TAPD_KEY_STATUS]?.toString()?.takeIf { it.isNotBlank() }
             ?: ""
+    }
+
+    /**
+     * 读取实时映射后的中文状态名
+     */
+    fun Map<String, Any?>.getCurrentStatusName(): String {
+        return this[TAPD_KEY_CURRENT_STATUS_NAME]?.toString()?.takeIf { it.isNotBlank() } ?: ""
+    }
+
+    /**
+     * 判断 TAPD 状态中英文映射是否失败
+     */
+    fun Map<String, Any?>.isStatusMappingFailed(): Boolean {
+        return this[TAPD_KEY_STATUS_MAPPING_FAILED]?.toString().equals("true", ignoreCase = true)
     }
 
     /**

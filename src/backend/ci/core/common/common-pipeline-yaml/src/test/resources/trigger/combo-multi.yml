@@ -15,9 +15,9 @@ on:
       action:
         - create
       statuses:
-        - developing
+        - 实现中
       statuses-ignore:
-        - rejected
+        - 已拒绝
   - type: artifact
     arrived:
       name: MSI 归档触发

@@ -66,8 +66,14 @@ object TapdWebhookConstant {
     // 更新事件中的变更后状态字段
     const val TAPD_KEY_NEW_STATUS = "new_status"
 
-    // 派生字段：单据当前状态（变更后状态优先，创建等事件用 status 兜底）
+    // 派生字段：单据当前英文状态 key（变更后状态优先，创建等事件用 status 兜底）
     const val TAPD_KEY_CURRENT_STATUS = "current_status"
+
+    // 派生字段：单据当前中文状态名（由 TapdWebhookRequestService 实时映射 TAPD 状态接口得到）
+    const val TAPD_KEY_CURRENT_STATUS_NAME = "current_status_name"
+
+    // 派生字段：TAPD 状态中英文映射失败标记
+    const val TAPD_KEY_STATUS_MAPPING_FAILED = "tapd_status_mapping_failed"
 
     const val TAPD_KEY_DESCRIPTION = "description"
 

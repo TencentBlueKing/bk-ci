@@ -83,7 +83,6 @@ class TapdDropdownServiceTest {
         assertEquals("70247651", options[0].id)
         assertEquals("ivfzhou-test", options[0].name)
         assertFalse(options[0].disabled)
-        assertTrue(options[0].name.contains("未安装或未授权").not())
     }
 
     @Test
@@ -106,7 +105,7 @@ class TapdDropdownServiceTest {
     }
 
     @Test
-    fun `authorized workspaces are cached only when known`() {
+    fun `authorized workspaces are fetched every time`() {
         val fake = FakeItemService(
             granted = setOf("70247651"),
             installed = setOf("70247651")
@@ -114,22 +113,12 @@ class TapdDropdownServiceTest {
         val service = TapdDropdownService(fake)
         assertTrue(service.authorizedWorkspaces().known)
         assertTrue(service.authorizedWorkspaces().known)
-        assertEquals(1, fake.grantedCalls)
-        assertEquals(1, fake.installedCalls)
-    }
-
-    @Test
-    fun `unknown authorized workspaces are not cached`() {
-        val fake = FakeItemService(granted = null, installed = setOf("70247651"))
-        val service = TapdDropdownService(fake)
-        assertFalse(service.authorizedWorkspaces().known)
-        assertFalse(service.authorizedWorkspaces().known)
         assertEquals(2, fake.grantedCalls)
         assertEquals(2, fake.installedCalls)
     }
 
     @Test
-    fun `story status options are converted from map`() {
+    fun `story status options use chinese values`() {
         val service = TapdDropdownService(
             FakeItemService(
                 granted = setOf("70247651"),
@@ -142,12 +131,12 @@ class TapdDropdownServiceTest {
             )
         )
         val options = service.statusOptions("70247651", "STORY")
-        assertEquals(listOf("developing", "planning"), options.map { it.id })
-        assertEquals("规划中", options.first { it.id == "planning" }.name)
+        assertEquals(listOf("实现中", "规划中"), options.map { it.id })
+        assertEquals(listOf("实现中", "规划中"), options.map { it.name })
     }
 
     @Test
-    fun `bug status options use bug field config`() {
+    fun `bug status options use chinese values`() {
         val service = TapdDropdownService(
             FakeItemService(
                 granted = setOf("70247651"),
@@ -158,11 +147,12 @@ class TapdDropdownServiceTest {
             )
         )
         val options = service.statusOptions("70247651", "bug")
-        assertEquals(listOf("closed", "new"), options.map { it.id })
+        assertEquals(listOf("已关闭", "新"), options.map { it.id })
+        assertEquals(2, service.statusMap("70247651", "BUG").size)
     }
 
     @Test
-    fun `status options are cached by workspace and event type`() {
+    fun `status options are fetched every time`() {
         val fake = FakeItemService(
             granted = setOf("70247651"),
             installed = setOf("70247651"),
@@ -173,7 +163,26 @@ class TapdDropdownServiceTest {
         val service = TapdDropdownService(fake)
         assertEquals(1, service.statusOptions("70247651", "story").size)
         assertEquals(1, service.statusOptions("70247651", "STORY").size)
-        assertEquals(1, fake.storyCalls)
+        assertEquals(2, fake.storyCalls)
+    }
+
+    @Test
+    fun `duplicate chinese status names are kept and logged`() {
+        val service = TapdDropdownService(
+            FakeItemService(
+                granted = setOf("70247651"),
+                installed = setOf("70247651"),
+                storyField = TapdStoryFieldConfig(
+                    status = TapdStatusField(
+                        options = mapOf("planning" to "实现中", "developing" to "实现中")
+                    )
+                )
+            )
+        )
+        val options = service.statusOptions("70247651", "STORY")
+        assertEquals(2, options.size)
+        assertEquals(listOf("实现中", "实现中"), options.map { it.id })
+        assertEquals(mapOf("planning" to "实现中", "developing" to "实现中"), service.statusMap("70247651", "STORY"))
     }
 
     @Test
@@ -205,7 +214,7 @@ class TapdDropdownServiceTest {
     }
 
     @Test
-    fun `status options missing field config is not cached`() {
+    fun `status options empty when field config unavailable`() {
         val fake = FakeItemService(
             granted = setOf("70247651"),
             installed = setOf("70247651")
@@ -214,6 +223,9 @@ class TapdDropdownServiceTest {
         assertTrue(service.statusOptions("70247651", "STORY").isEmpty())
         assertTrue(service.statusOptions("70247651", "STORY").isEmpty())
         assertEquals(2, fake.storyCalls)
+        assertThrows(IllegalStateException::class.java) {
+            service.statusMap("70247651", "STORY")
+        }
     }
 
     @Test
