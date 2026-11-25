@@ -289,7 +289,10 @@ interface UserPipelineVersionResource {
         pageSize: Int?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "搜索字段：版本号（精确匹配）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<Page<PipelineVersionSimple>>
 
     @Operation(summary = "获取指定版本号的流水线编排版本信息")

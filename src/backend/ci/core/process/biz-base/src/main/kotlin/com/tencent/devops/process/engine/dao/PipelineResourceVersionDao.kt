@@ -357,7 +357,8 @@ class PipelineResourceVersionDao {
         creator: String? = null,
         versionName: String? = null,
         description: String? = null,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        version: Int? = null
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.select(
@@ -388,6 +389,7 @@ class PipelineResourceVersionDao {
             excludeVersion?.let {
                 query.and(VERSION.notEqual(excludeVersion))
             }
+            version?.let { query.and(VERSION.eq(version)) }
             versionName?.let {
                 query.and(
                     VERSION.like("%$versionName%")
@@ -495,7 +497,8 @@ class PipelineResourceVersionDao {
         versionName: String?,
         creator: String?,
         description: String?,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        version: Int? = null
     ): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
@@ -515,6 +518,7 @@ class PipelineResourceVersionDao {
                         .or(STATUS.isNull)
                 )
             }
+            version?.let { query.and(VERSION.eq(version)) }
             versionName?.let {
                 query.and(
                     VERSION.like("%$versionName%")

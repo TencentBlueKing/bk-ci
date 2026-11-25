@@ -666,7 +666,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         includeDraft: Boolean? = true,
         versionName: String? = null,
         creator: String? = null,
-        description: String? = null
+        description: String? = null,
+        version: Int? = null
     ): Page<PipelineVersionWithInfo> {
         var slqLimit: SQLLimit? = null
         if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
@@ -695,7 +696,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             includeDraft = includeDraft,
             excludeVersion = fromVersion,
             offset = offset,
-            limit = limit
+            limit = limit,
+            version = version
         )
         fromResource?.let { pipelines.add(it) }
         return Page(
@@ -735,7 +737,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         creator: String? = null,
         description: String? = null,
         buildOnly: Boolean? = false,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        version: Int? = null
     ): Page<PipelineVersionSimple> {
         var slqLimit: SQLLimit? = null
         if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
@@ -750,7 +753,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 archiveFlag = archiveFlag
-            )?.toSimple()?.apply {
+            )?.takeIf { version == null || it.version == version }?.toSimple()?.apply {
                 baseVersionName = baseVersion?.let {
                     repositoryVersionService.getPipelineVersionSimple(
                         projectId = projectId, pipelineId = pipelineId, version = it, archiveFlag = archiveFlag
@@ -784,7 +787,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             offset = offset,
             limit = limit,
             buildOnly = buildOnly,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            version = version
         )
         draftResource?.let {
             size++
