@@ -36,8 +36,6 @@ import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
@@ -59,8 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class BuildAgentBuildResourceImpl @Autowired constructor(
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
-    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService,
-    private val redisOperation: RedisOperation
+    private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) : BuildAgentBuildResource {
 
     override fun startBuild(
@@ -156,6 +153,14 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentDockerService.fetchDebugStatus(debugId))
     }
 
+    /**
+     * 同一 agentId 的 ask 限流，主要用于发现重复安装（多个进程共用同一 agentId）并告警。
+     * 只在实例内限流，去掉了原来 1 秒过期的 Redis SETNX 跨实例限流，ask 不再访问锁 Redis：
+     * - 单个 agent 每次 ask 后固定 sleep 5s，正常请求永远不会被限流，SETNX 对正常 agent 每次都是空耗；
+     * - 重复安装的进程 ask 相位随机，1 秒的跨实例窗口本来也只能拦下少数请求；
+     *   两个进程某次落到同一实例且间隔不到 3 秒即可拦截并告警，告警 24 小时只发一次，只是发现得稍晚；
+     * - 重复进程并发领取同一任务由领取时的条件更新保证只有一个成功，不依赖这里的限流。
+     */
     private val agentAskRequestCache: Cache<String, String> = CacheBuilder.newBuilder().maximumSize(10000)
         .expireAfterWrite(3, TimeUnit.SECONDS).build()
 
@@ -167,20 +172,11 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
     ): AgentResult<ThirdPartyAskResp> {
         checkParam(projectId, agentId, secretKey)
 
-        val requestAgentId = agentAskRequestCache.getIfPresent(agentId)
-        if (requestAgentId != null) {
+        // putIfAbsent 原子判断，同一实例并发的两个请求只放行一个
+        if (agentAskRequestCache.asMap().putIfAbsent(agentId, agentId) != null) {
             logger.warn("agentHeartbeat|$projectId|$agentId| request too frequently")
             thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
             return AgentResult(1, "request too frequently")
-        } else {
-            val lockKey = "dispatch:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
-            val redisLock = RedisLock(redisOperation, lockKey, 1)
-            if (redisLock.tryLock()) {
-                agentAskRequestCache.put(agentId, agentId)
-            } else {
-                thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
-                return AgentResult(1, "request too frequently")
-            }
         }
         return thirdPartyAgentBuildService.ask(
             projectId = projectId,

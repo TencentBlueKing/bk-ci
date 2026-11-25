@@ -68,6 +68,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/atoms/atom_contract:
+    get:
+      operationId: "v4_app_atom_contract"
+      description: "获取插件运行时契约，没有契约时返回空"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/atoms/atom_contract"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/atoms/atom_info:
     get:
       operationId: "v4_app_atom_get"
@@ -127,6 +148,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-app/v4/atoms/atom_pipelines"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-app/atoms/atom_select:
+    get:
+      operationId: "v4_app_atom_select"
+      description: "插件选型检索：按检索词从全商店召回有运行时契约的插件，返回可用状态与不适用场景"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/atoms/atom_select"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -2937,6 +2979,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-app/projects/{projectId}/enable:
+    put:
+      operationId: "v4_app_project_enable"
+      description: "启用或停用项目"
+      tags:
+      - "V4应用态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+          userVerifiedRequired: false
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-app/v4/projects/project/{projectId}/enable"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-app/projects/{projectId}/environment/batch_update_agent_env:
     post:
       operationId: "v4_app_node_third_part_agent_update_envvar"
@@ -5284,6 +5347,27 @@ paths:
         enableWebsocket: false
         isPublic: true
         matchSubpath: false
+  /v4/apigw-user/atoms/atom_contract:
+    get:
+      operationId: "v4_user_atom_contract"
+      description: "获取插件运行时契约，没有契约时返回空"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/atoms/atom_contract"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
   /v4/apigw-user/atoms/atom_detail:
     get:
       operationId: "v4_user_atom_detail"
@@ -5385,6 +5469,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/atoms/atom_search"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/atoms/atom_select:
+    get:
+      operationId: "v4_user_atom_select"
+      description: "插件选型检索：按检索词从全商店召回有运行时契约的插件，返回可用状态与不适用场景"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "get"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/atoms/atom_select"
           timeout: 30
         enableWebsocket: false
         isPublic: true
@@ -7835,6 +7940,27 @@ paths:
           method: "get"
           name: "backend-1"
           path: "/openapi/api/apigw-user/v4/projects/{projectId}/credentials/credential_list"
+          timeout: 30
+        enableWebsocket: false
+        isPublic: true
+        matchSubpath: false
+  /v4/apigw-user/projects/{projectId}/enable:
+    put:
+      operationId: "v4_user_project_enable"
+      description: "启用或停用项目"
+      tags:
+      - "V4用户态"
+      x-bk-apigateway-resource:
+        allowApplyPermission: true
+        authConfig:
+          appVerifiedRequired: false
+          resourcePermissionRequired: false
+          userVerifiedRequired: true
+        backend:
+          matchSubpath: false
+          method: "put"
+          name: "backend-1"
+          path: "/openapi/api/apigw-user/v4/projects/project/{projectId}/enable"
           timeout: 30
         enableWebsocket: false
         isPublic: true
