@@ -923,7 +923,7 @@ class PipelineRepositoryService constructor(
                             }
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
-                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        pipelineSettingDao.insertSetting(transactionContext, newSetting)
                         pipelineSettingVersionDao.saveSetting(
                             dslContext = transactionContext,
                             setting = newSetting,
