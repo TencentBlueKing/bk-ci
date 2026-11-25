@@ -112,7 +112,7 @@ class GithubPushAndCreateTriggerHandlerTest {
                     repositoryHashId = "repo-hash-id",
                     repositoryType = TriggerRepositoryType.ID,
                     eventType = handler.getEventType(),
-                    includeUsers = included,
+                    includeUsers = included?.joinToString(","),
                     excludeUsers = excluded
                 ),
                 variables = mapOf("operator" to "alice")

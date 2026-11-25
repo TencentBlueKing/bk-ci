@@ -210,7 +210,7 @@ data class WebHookTriggerElementChanger(
         pathFilterType = data.pathFilterType,
         includePaths = data.includePaths,
         excludePaths = data.excludePaths,
-        includeUsers = data.includeUsers,
+        includeUsers = data.includeUsers?.let { WebhookUtils.convert(it).ifEmpty { null } },
         excludeUsers = data.excludeUsers?.split(","),
         eventType = data.eventType,
         repositoryType = data.repositoryType,

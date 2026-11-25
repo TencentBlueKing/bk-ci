@@ -251,7 +251,7 @@ class GithubPrTriggerHandlerTest {
             repositoryHashId = "repo-hash-id",
             repositoryType = TriggerRepositoryType.ID,
             eventType = CodeEventType.PULL_REQUEST,
-            includeUsers = included,
+            includeUsers = included?.joinToString(","),
             excludeUsers = excluded
         ),
         variables = variables

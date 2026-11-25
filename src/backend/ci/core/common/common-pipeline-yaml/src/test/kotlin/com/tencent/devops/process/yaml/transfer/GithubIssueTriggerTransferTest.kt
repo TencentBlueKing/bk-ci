@@ -120,6 +120,7 @@ class GithubIssueTriggerTransferTest {
                 repoName = "bk-ci",
                 mr = MrRule(
                     action = listOf("assign", "unassign"),
+                    users = listOf("octocat", "hubot"),
                     assignees = listOf("alice"),
                     assigneesIgnore = listOf("bot"),
                 )
@@ -128,15 +129,18 @@ class GithubIssueTriggerTransferTest {
         )
 
         val element = elements.single() as CodeGithubWebHookTriggerElement
+        assertEquals("octocat,hubot", element.includeUsers)
         assertEquals("alice", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
 
         val mr = transfer.git2YamlTriggerOn(
-            elements = listOf(WebHookTriggerElementChanger(element)),
+            elements = listOf(WebHookTriggerElementChanger(element.copy(includeUsers = "octocat; hubot"))),
             projectId = "project",
             aspectWrapper = mockk<PipelineTransferAspectWrapper>(relaxed = true),
             defaultName = "GitHub事件触发"
         ).single().mr!!
+
+        assertEquals(listOf("octocat", "hubot"), mr.users)
         assertEquals(listOf("alice"), mr.assignees)
         assertEquals(listOf("bot"), mr.assigneesIgnore)
     }

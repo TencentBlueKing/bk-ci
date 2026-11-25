@@ -29,13 +29,13 @@ class GithubWebhookElementParamsTest {
                 "repositoryHashId": "repo-hash-id",
                 "repositoryType": "ID",
                 "eventType": "PULL_REQUEST",
-                "includeUsers": ["alice", "bob"]
+                "includeUsers": "alice,bob"
             }""".trimIndent(),
             CodeGithubWebHookTriggerElement::class.java
         )
         val params = GithubWebhookElementParams().getWebhookElementParams(element, emptyMap())!!
 
-        assertEquals(listOf("alice", "bob"), element.includeUsers)
+        assertEquals("alice,bob", element.includeUsers)
         assertEquals("alice,bob", params.includeUsers)
         assertEquals("open,reopen,push-update", params.includeMrAction)
     }
@@ -44,7 +44,7 @@ class GithubWebhookElementParamsTest {
     fun shouldConvertIncludedUsersAndResolveVariablesForSupportedEvents() {
         for (eventType in supportedEvents) {
             val params = includedUserParams(
-                users = listOf("alice", "\${operator}"),
+                users = "alice,\${operator}",
                 variables = mapOf("operator" to "bob"),
                 eventType = eventType
             )
@@ -58,7 +58,7 @@ class GithubWebhookElementParamsTest {
     fun shouldKeepMissingAndEmptyIncludedUsersUnrestricted() {
         for (eventType in supportedEvents) {
             assertEquals("", includedUserParams(null, eventType = eventType).includeUsers)
-            assertEquals("", includedUserParams(emptyList(), eventType = eventType).includeUsers)
+            assertEquals("", includedUserParams("", eventType = eventType).includeUsers)
         }
     }
 
@@ -70,7 +70,7 @@ class GithubWebhookElementParamsTest {
                     repositoryHashId = "repo-hash-id",
                     repositoryType = TriggerRepositoryType.ID,
                     eventType = eventType,
-                    includeUsers = listOf("alice"),
+                    includeUsers = "alice",
                     excludeUsers = "bot"
                 ),
                 variables = emptyMap()
@@ -86,19 +86,19 @@ class GithubWebhookElementParamsTest {
         for (eventType in supportedEvents) {
             val element = CodeGithubWebHookTriggerElement(
                 eventType = eventType,
-                includeUsers = listOf("alice", "bob")
+                includeUsers = "alice,bob"
             )
 
             assertEquals(listOf("alice", "bob"), element.triggerCondition().single { it.name == "includeUsers" }.value)
             assertEquals(
                 false,
-                element.copy(includeUsers = emptyList()).triggerCondition().any { it.name == "includeUsers" }
+                element.copy(includeUsers = "").triggerCondition().any { it.name == "includeUsers" }
             )
         }
     }
 
     private fun includedUserParams(
-        users: List<String>?,
+        users: String?,
         variables: Map<String, String> = emptyMap(),
         eventType: CodeEventType = CodeEventType.PULL_REQUEST
     ) = GithubWebhookElementParams().getWebhookElementParams(
