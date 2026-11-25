@@ -722,6 +722,7 @@ object ProcessMessageCode {
     const val BK_ADMINISTRATOR = "bkAdministrator" // 管理员
     const val BK_QUICK_APPROVAL_MOA = "bkQuickApprovalMoa" // 【通过MOA快速审批】
     const val BK_QUICK_APPROVAL_PC = "bkQuickApprovalPc" // 【通过PC快速审批】
+    const val BK_PIPELINE_LOCK_BY_APP = "bkPipelineLockByApp" // 由{0}通过APP禁用
     const val BK_NOT_CONFIRMED_CAN_EXECUTED = "bkNotConfirmedCanExecuted" // 插件 {0} 尚未确认是否可以在工蜂CI执行
     const val BK_CONTACT_PLUG_DEVELOPER = "bkContactPlugDeveloper" // ，请联系插件开发者
     const val BK_CHECK_INTEGRITY_YAML = "bkCheckIntegrityYaml" // 请检查YAML的完整性，或切换为研发商店推荐的插件后再导出

@@ -25,19 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.event.enums.ActionType
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(StreamBinding.PIPELINE_BUILD_COMMIT_FINISH_FANOUT)
-data class PipelineBuildCommitFinishEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String = "",
-    val buildId: String,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@Schema(title = "运维：按用户列表迁移个人预置项目")
+data class OpPreProjectMigrateRequest(
+    @get:Schema(description = "用户 ID 列表", required = true)
+    val userIds: List<String>
+)
