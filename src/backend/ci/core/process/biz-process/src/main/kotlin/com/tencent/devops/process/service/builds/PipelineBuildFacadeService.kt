@@ -3104,16 +3104,20 @@ class PipelineBuildFacadeService(
                 EmptyElement()
             }
         }
-        val checkTriggerResult = forceTrigger || (
-            matchedTrigger?.takeIf { it.elementEnabled() } != null &&
-                runtimeResourceStillMatch(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    channelCode = buildInfo.channelCode,
-                    startParameters = startParameters
-                )
+        // 环境被换成另一个时直接拒绝，二次确认放不过去。
+        // forceTrigger 只表示用户接受「触发器已经不在或被关掉」，不能用来绕过运行资源。
+        // 和重新执行同一条规则、同一个错误码，前端不会把它当成可确认的触发条件不满足。
+        if (!runtimeResourceStillMatch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = buildInfo.channelCode,
+                startParameters = startParameters
             )
+        ) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_ENV_CHANGED)
+        }
+        val checkTriggerResult = forceTrigger || matchedTrigger?.takeIf { it.elementEnabled() } != null
         if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,

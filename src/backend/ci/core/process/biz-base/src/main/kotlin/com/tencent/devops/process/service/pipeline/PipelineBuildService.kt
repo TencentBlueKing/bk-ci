@@ -278,8 +278,10 @@ class PipelineBuildService(
                 // 运行资源只对「运行环境由设置指定」的渠道生效。没有类型、只存了环境的历史设置会被
                 // 还原成环境资源，不按渠道收口的话，普通流水线那些存量 envHashId 会让启动多出
                 // 「必须指定运行节点」的拦截，把原本能跑的构建挡住
+                // 以流水线自身的渠道为准，不用这次请求带的渠道。
+                // 重新执行经常不带创作流渠道，按请求渠道判断会把「节点已不在环境内」整段校验跳掉
                 runtimeResource = setting.runtimeResource()
-                    ?.takeIf { AtomUtils.isRunEnvSpecifiedBySetting(channelCode) },
+                    ?.takeIf { AtomUtils.isRunEnvSpecifiedBySetting(pipeline.channelCode) },
                 originTriggerUser = originTriggerUser
             )
             initPipelineParamMap(initContext)
@@ -312,8 +314,10 @@ class PipelineBuildService(
                     .map { it.id }
                     .toMutableList()
                     .let {
-                        // 运行资源由设置指定的渠道，启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID、NODE_WORKSPACE]为内置变量
-                        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                        // 运行资源由设置指定的渠道，启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID、NODE_WORKSPACE]为内置变量。
+                        // 看流水线自己的渠道：重新执行的请求渠道默认是 BS，按请求渠道判断会把这三个变量
+                        // 排出启动参数，下一次重跑就看不到原环境，环境被换掉的拦截会失效
+                        if (AtomUtils.isRunEnvSpecifiedBySetting(pipeline.channelCode)) {
                             it.add(NODE_AGENT_ID)
                             it.add(NODE_ENV_HASH_ID)
                             it.add(NODE_WORKSPACE)
@@ -404,7 +408,7 @@ class PipelineBuildService(
         // 流水线类型
         paramMap[CI_CATEGORY] = BuildParameters(
             key = CI_CATEGORY,
-            value = if (ctx.channelCode == ChannelCode.CREATIVE_STREAM) {
+            value = if (AtomUtils.isRunEnvSpecifiedBySetting(ctx.pipeline.channelCode)) {
                 PipelineCategory.CREATIVE_STREAM
             } else {
                 PipelineCategory.PIPELINE
@@ -551,8 +555,9 @@ class PipelineBuildService(
         // 用原构建的环境校验时，设置里的环境名对不上这个 hashId，不能拿来报错。
         // 绑定单台机器时执行对象由平台解析，不存在「节点属不属于环境」的问题，不参与校验
         val checkEnvHashId = when {
-            // 运行环境不由设置指定的渠道，节点和环境都由编排里的 Job 自己声明，不存在「运行资源的环境」
-            !AtomUtils.isRunEnvSpecifiedBySetting(ctx.channelCode) -> null
+            // 运行环境不由设置指定的渠道，节点和环境都由编排里的 Job 自己声明，不存在「运行资源的环境」。
+            // 看流水线自己的渠道：重新执行的请求渠道经常不是创作流，不能据此跳过
+            !AtomUtils.isRunEnvSpecifiedBySetting(ctx.pipeline.channelCode) -> null
             resource?.group == false -> null
             else -> startedEnvHashId ?: resource?.envHashId
         }
