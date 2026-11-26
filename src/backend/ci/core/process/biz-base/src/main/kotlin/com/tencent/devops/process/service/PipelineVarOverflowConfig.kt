@@ -72,6 +72,16 @@ class PipelineVarOverflowConfig {
     @Value("\${pipeline.variables.largeValueMaxBytes:$PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES}")
     val largeValueMaxBytes: Int = PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES
 
+    /**
+     * 服务端下载大变量的连接 / 读超时（秒）。下载可能发生在引擎事件线程里（条件、矩阵），
+     * 不能沿用通用 HTTP 客户端的 30 秒读超时；单值最大 256KB，10 秒足够。
+     */
+    @Value("\${pipeline.variables.download.connectTimeoutSeconds:2}")
+    val downloadConnectTimeoutSeconds: Long = 2
+
+    @Value("\${pipeline.variables.download.readTimeoutSeconds:10}")
+    val downloadReadTimeoutSeconds: Long = 10
+
     /** 非正数视为未配置，回落到默认上限。 */
     fun effectiveLargeValueMaxBytes(): Int =
         largeValueMaxBytes.takeIf { it > 0 } ?: PIPELINE_VARIABLES_LARGE_VALUE_MAX_BYTES

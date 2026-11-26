@@ -125,11 +125,8 @@ object BuildVarOverflowExprSupport {
     fun replaceClassicTaskParams(buildTask: BuildTask): BuildTask {
         val params = buildTask.params
         if (params.isNullOrEmpty()) return buildTask
-        if (buildTask.replaceVarOnWorker != true) {
-            // 引擎侧已替换，这里只做体检：参数看着像 JSON 却解析不了，说明替换在引擎侧就把它拼坏了
-            params.forEach { (key, value) -> warnIfJsonBroken(key, value, value) }
-            return buildTask
-        }
+        // 引擎已替换或表达式方言（参数在插件执行时替换）：原样返回，不给每次领任务增加解析开销
+        if (buildTask.replaceVarOnWorker != true) return buildTask
         val variables = buildTask.buildVariable ?: emptyMap()
         // 大变量上下文不可用时只记录告警，仍按普通变量完成替换，不能让整个取任务流程中断
         val (overflowKeys, loader) = try {

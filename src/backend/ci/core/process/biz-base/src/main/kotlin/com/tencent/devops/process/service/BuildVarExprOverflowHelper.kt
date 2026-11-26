@@ -137,11 +137,14 @@ object BuildVarExprOverflowHelper {
             logger.warn("$buildId|LARGE_VAR_LOADER_NO_PIPELINE_ID|keep reference")
             return { key -> BuildVarOverflowUtils.resolveStoredKey(key, variables)?.let { variables[it] } }
         }
-        val loader = buildVariableService.newOverflowLoader(
-            projectId = projectId,
-            pipelineId = realPipelineId,
-            buildId = buildId
-        )
+        // 多数条件判断不引用大变量，用到时才建加载器
+        val loader by lazy {
+            buildVariableService.newOverflowLoader(
+                projectId = projectId,
+                pipelineId = realPipelineId,
+                buildId = buildId
+            )
+        }
         return { key ->
             BuildVarOverflowUtils.resolveStoredKey(key, variables)?.let { variables[it] }?.let { stored ->
                 loader.load(stored) ?: stored

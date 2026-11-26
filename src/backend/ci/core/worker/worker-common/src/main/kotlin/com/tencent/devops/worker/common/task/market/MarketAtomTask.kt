@@ -70,11 +70,13 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.BuildVarOverflowUtils
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
 import com.tencent.devops.process.utils.PIPELINE_ATOM_TIMEOUT
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
@@ -104,6 +106,7 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_HAS_BEEN_REMOVED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_GET_OUTPUT_ARTIFACTVALUE_ERROR
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_VARIABLE_PARAM_MAX_LENGTH
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -121,6 +124,7 @@ import com.tencent.devops.worker.common.utils.BuildVarOverflowExprSupport
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
+import com.tencent.devops.worker.common.utils.LargeVariableStore
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
@@ -211,6 +215,14 @@ open class MarketAtomTask : ITask() {
                 acrossProjectId = acrossInfo?.targetProjectId
             )
         }.toMap()
+
+        // 支持大变量时不向插件透传该开关，改由平台按单值上限校验插件输出，见 [output]
+        val checkOutputLength = variables[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG]?.toBooleanStrictOrNull() == true &&
+            LargeVariableStore.isSupported()
+        if (checkOutputLength) {
+            LargeVariableStore.ensureLargeValueLimit()
+            variables = variables.plus(PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG to false.toString())
+        }
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -421,7 +433,16 @@ open class MarketAtomTask : ITask() {
         } catch (e: Throwable) {
             error = TaskExecuteExceptionDecorator.decorate(e)
         } finally {
-            output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
+            output(
+                buildTask = buildTask,
+                atomTmpSpace = atomTmpSpace,
+                bkWorkspace = File(bkWorkspacePath),
+                buildVariables = buildVariables,
+                outputTemplate = outputTemplate,
+                namespace = namespace,
+                atomCode = atomCode,
+                checkOutputLength = checkOutputLength
+            )
             atomData.finishKillFlag?.let { addFinishKillFlag(it) }
             if (error != null) {
                 throw if (error is TaskExecuteException) {
@@ -836,7 +857,8 @@ open class MarketAtomTask : ITask() {
         buildVariables: BuildVariables,
         outputTemplate: Map<String, Map<String, Any>>,
         namespace: String?,
-        atomCode: String
+        atomCode: String,
+        checkOutputLength: Boolean = false
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
@@ -889,6 +911,7 @@ open class MarketAtomTask : ITask() {
 
             val outputData = atomResult.data
             val env = mutableMapOf<String, String>()
+            val oversizeOutputs = mutableMapOf<String, String>()
             LoggerService.addNormalLine("")
             LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
@@ -943,6 +966,11 @@ open class MarketAtomTask : ITask() {
                 // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
                 // 即使没有jobId也以containerId前缀输出
                 val value = env[key] ?: ""
+                if (checkOutputLength && value.length > TaskDaemon.PARAM_MAX_LENGTH &&
+                    BuildVarOverflowUtils.exceedsLargeValueLimit(value)
+                ) {
+                    oversizeOutputs[key] = value
+                }
 
                 // 检查是否为敏感输出（来自 task.json 定义或运行时输出）
                 val sensitiveFlag = outputTemplate[varKey]?.let {
@@ -1055,7 +1083,32 @@ open class MarketAtomTask : ITask() {
                     errorCode = atomResult.errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR
                 )
             }
+            checkOversizeOutputs(oversizeOutputs)
         }
+    }
+
+    /** 与 ScriptTask 的变量长度校验口径一致：超过大变量单值上限即失败。 */
+    private fun checkOversizeOutputs(oversizeOutputs: Map<String, String>) {
+        if (oversizeOutputs.isEmpty()) return
+        oversizeOutputs.forEach { (key, value) ->
+            LoggerService.addErrorLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                    language = AgentEnv.getLocaleLanguage(),
+                    params = arrayOf(
+                        key,
+                        BuildVarOverflowUtils.largeValueMaxBytes().toString(),
+                        BuildVarOverflowUtils.utf8Length(value).toString()
+                    )
+                )
+            )
+        }
+        throw TaskExecuteException(
+            errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: variable length is illegal.",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_INPUT_INVAILD
+        )
     }
 
     /**

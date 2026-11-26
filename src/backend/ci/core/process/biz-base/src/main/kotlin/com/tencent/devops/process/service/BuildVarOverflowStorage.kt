@@ -35,6 +35,8 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicInteger
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -142,7 +144,10 @@ class BuildVarOverflowStorage @Autowired constructor(
     }
 
     /**
-     * 按引用串下载真实值；引用无法解析、文件不存在、内容校验失败或下载异常时返回 null。
+     * 按引用串下载真实值；引用无法解析、文件不存在、内容校验失败、下载异常或熔断中时返回 null。
+     *
+     * 使用独立的短超时；制品库连续出错达到 [BREAKER_FAILURE_THRESHOLD] 次后，
+     * [BREAKER_OPEN_MILLIS] 内直接返回 null，避免引擎事件线程排队等超时。文件不存在不计入失败。
      */
     fun download(
         userId: String?,
@@ -154,6 +159,10 @@ class BuildVarOverflowStorage @Autowired constructor(
         val ref = BuildVarOverflowUtils.parseReference(reference) ?: return null
         if (!isEnabled()) return null
         val path = BuildVarOverflowUtils.blobPath(pipelineId, buildId, ref)
+        if (System.currentTimeMillis() < breakerOpenUntil) {
+            logger.warn("$buildId|LARGE_VAR_DOWNLOAD_BREAKER_OPEN|path=$path")
+            return null
+        }
         return try {
             val output = BoundedByteArrayOutputStream(pipelineVarOverflowConfig.effectiveLargeValueMaxBytes())
             bkRepoClient.downloadFile(
@@ -161,14 +170,25 @@ class BuildVarOverflowStorage @Autowired constructor(
                 projectId = projectId,
                 repoName = BuildVarOverflowUtils.REPO_NAME,
                 fullPath = path,
-                outputStream = output
+                outputStream = output,
+                connectTimeoutSeconds = pipelineVarOverflowConfig.downloadConnectTimeoutSeconds,
+                readTimeoutSeconds = pipelineVarOverflowConfig.downloadReadTimeoutSeconds
             )
+            consecutiveFailures.set(0)
             BuildVarOverflowUtils.decodeVerified(ref, output.toByteArray()) ?: run {
                 logger.warn("$buildId|LARGE_VAR_DIGEST_MISMATCH|path=$path")
                 null
             }
+        } catch (ignored: NotFoundException) {
+            logger.warn("$buildId|LARGE_VAR_DOWNLOAD_FAIL|path=$path|not found")
+            null
         } catch (ignored: Exception) {
             logger.warn("$buildId|LARGE_VAR_DOWNLOAD_FAIL|path=$path|${ignored.message}")
+            if (consecutiveFailures.incrementAndGet() >= BREAKER_FAILURE_THRESHOLD) {
+                consecutiveFailures.set(0)
+                breakerOpenUntil = System.currentTimeMillis() + BREAKER_OPEN_MILLIS
+                logger.warn("LARGE_VAR_DOWNLOAD_BREAKER_TRIGGERED|openMillis=$BREAKER_OPEN_MILLIS")
+            }
             null
         }
     }
@@ -198,6 +218,13 @@ class BuildVarOverflowStorage @Autowired constructor(
         private const val UPLOAD_RETRY_TIMES = 1
         private const val METADATA_DISPLAY_NAME = "displayName"
         private const val VARIABLE_REPO_READY_MAX = 100_000L
+        private const val BREAKER_FAILURE_THRESHOLD = 5
+        private const val BREAKER_OPEN_MILLIS = 30_000L
+
+        private val consecutiveFailures = AtomicInteger(0)
+
+        @Volatile
+        private var breakerOpenUntil = 0L
 
         private val variableRepoReady = Caffeine.newBuilder()
             .maximumSize(VARIABLE_REPO_READY_MAX)

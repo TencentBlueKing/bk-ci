@@ -204,7 +204,7 @@ class BuildVariableService @Autowired constructor(
      *
      * 越权读不成立：文件只在**本次构建目录**下解析，而本接口已校验调用者对该流水线有查看权限
      * （见 `BuildVarOverflowStorage.download`、`BuildVarOverflowUtils.blobPath`）。
-     * 敏感变量也拿不到：敏感值从不上传（见 [toStoredValue]），且上面已先按变量名做过脱敏判定。
+     * 敏感变量也拿不到：调用方在下载之前已按变量名做过脱敏判定（见 [getVariableValue]）。
      */
     private fun resolveOverflowTarget(reference: String?, stored: String?): String? {
         if (reference != null && BuildVarOverflowUtils.parseReference(reference) != null) return reference

@@ -114,10 +114,12 @@ import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -668,14 +670,21 @@ class BkRepoClient constructor(
         projectId: String,
         repoName: String,
         fullPath: String,
-        outputStream: OutputStream
+        outputStream: OutputStream,
+        connectTimeoutSeconds: Long? = null,
+        readTimeoutSeconds: Long? = null
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
         val request = Request.Builder().url(url)
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        val call = if (connectTimeoutSeconds == null || readTimeoutSeconds == null) {
+            OkhttpUtils.doHttp(request)
+        } else {
+            timeoutClient(connectTimeoutSeconds, readTimeoutSeconds).newCall(request).execute()
+        }
+        call.use { response ->
             if (response.code == 404) {
                 logger.warn("file($url) not found")
                 throw NotFoundException("File is not exist!")
@@ -1507,5 +1516,17 @@ class BkRepoClient constructor(
         private const val BKREPO_REALM = "bkrepo"
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
         const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
+
+        /** 按 (连接超时, 读超时) 复用 client，避免每次请求新建连接池。 */
+        private val timeoutClients = ConcurrentHashMap<Pair<Long, Long>, OkHttpClient>()
+
+        private fun timeoutClient(connectTimeoutSeconds: Long, readTimeoutSeconds: Long): OkHttpClient =
+            timeoutClients.computeIfAbsent(connectTimeoutSeconds to readTimeoutSeconds) { (connect, read) ->
+                OkhttpUtils.getOkHttpClientWithCustomTimeout(
+                    connectTimeout = connect,
+                    readTimeout = read,
+                    writeTimeout = read
+                )
+            }
     }
 }
