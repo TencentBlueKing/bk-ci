@@ -16,6 +16,68 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.10
+## 2026-11-24
+### Changelog since v4.2.0-rc.9
+### Summary
+Key changes in this release:
+
+**Features**
+- Build detail pages show start and end times for each stage, making it easier to review stage durations
+- The Store supports storing, reading, and selection retrieval of plugin runtime contracts, making it easier for AI to obtain plugin capabilities
+- Triggers support artifact arrival events, so pipelines can be triggered when artifacts are stored
+- PAC pipelines can be disabled/enabled from the UI
+- Script plugins can report error codes and error messages
+- Creation Flow supports digital avatar nodes
+- Sensitive permission user groups add risk reminder confirmations, and permission grants add sensitive operation prompts
+
+**Bug Fixes**
+- Fixed the issue where a dependent Job id specified via a variable did not take effect
+- Fixed the occasional "Lock wait timeout" when clearing trigger subscriptions during PAC pipeline publishing
+- Fixed the issue where the build detail page did not auto-refresh to show artifact quality after a pipeline finished, requiring a manual refresh
+
+#### New Features
+
+##### Pipeline
+- [New] feat: Build detail pages show start and end times for each stage [Link](http://github.com/TencentBlueKing/bk-ci/issues/13760)
+- [New] feat: Stage and plugin reviews support WeCom card buttons [Link](http://github.com/TencentBlueKing/bk-ci/issues/13390)
+- [New] feat: Support disabling/enabling PAC pipelines from the UI [Link](http://github.com/TencentBlueKing/bk-ci/issues/13505)
+- [New] feat: Triggers support artifact arrival events [Link](http://github.com/TencentBlueKing/bk-ci/issues/13385)
+- [New] feat: Script plugins support reporting error codes and error messages [Link](http://github.com/TencentBlueKing/bk-ci/issues/13305)
+- [New] feat: Pipeline concurrency queue supports a handling strategy when new tasks arrive [Link](http://github.com/TencentBlueKing/bk-ci/issues/12840)
+
+##### Project Management
+- [New] feat: Add risk reminder confirmations to sensitive permission user groups [Link](http://github.com/TencentBlueKing/bk-ci/issues/13900)
+
+##### Others
+- [New] feat: Optimize dispatch performance [Link](http://github.com/TencentBlueKing/bk-ci/issues/13925)
+- [New] feat: Creation Flow supports digital avatars [Link](http://github.com/TencentBlueKing/bk-ci/issues/13770)
+- [New] feat: Add sensitive operation prompts during permission grants [Link](http://github.com/TencentBlueKing/bk-ci/issues/13863)
+- [New] Close the service/op interfaces [Link](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+
+#### Improvements
+
+##### Pipeline
+- [Improved] perf: Remove cds trigger-related code [Link](http://github.com/TencentBlueKing/bk-ci/issues/13696)
+- [Improved] perf: Improve the poor readability of scripts saved via the pipeline UI after conversion to YAML [Link](http://github.com/TencentBlueKing/bk-ci/issues/13070)
+
+##### Others
+- [Improved] feat: Support AI in obtaining plugin runtime contracts: storage, reading, and selection retrieval [Link](http://github.com/TencentBlueKing/bk-ci/issues/13884)
+- [Improved] pref: Optimize the display of cancellation logic on the build detail page [Link](http://github.com/TencentBlueKing/bk-ci/issues/13837)
+- [Improved] perf: Optimize Creation Flow message notifications [Link](http://github.com/TencentBlueKing/bk-ci/issues/13800)
+
+#### Bug Fixes
+
+##### Pipeline
+- [Fixed] perf: Optimize the issue where overly long review descriptions are obscured [Link](http://github.com/TencentBlueKing/bk-ci/issues/13828)
+- [Fixed] fix: Fix the issue where a dependent Job id specified via a variable does not take effect [Link](http://github.com/TencentBlueKing/bk-ci/issues/11022)
+- [Fixed] bug: After a pipeline finishes, the detail page does not auto-refresh to show artifact quality and requires a manual refresh [Link](http://github.com/TencentBlueKing/bk-ci/issues/13766)
+
+##### Others
+- [Fixed] bug: Occasional Lock wait timeout when clearing trigger subscriptions during PAC pipeline publishing [Link](http://github.com/TencentBlueKing/bk-ci/issues/13910)
+- [Fixed] bugfix: Optimize dispatch slow queries [Link](http://github.com/TencentBlueKing/bk-ci/issues/13894)
+- [Fixed] feat: The matrix job max concurrency supports variable placeholders [Link](http://github.com/TencentBlueKing/bk-ci/issues/13737)
+
 # v4.2.0-rc.9
 ## 2026-11-05
 ### Changelog since v4.2.0-rc.8
