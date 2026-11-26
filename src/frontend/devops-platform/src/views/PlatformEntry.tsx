@@ -2,7 +2,6 @@
 import { useI18n } from 'vue-i18n';
 import { defineComponent, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-// import { AngleDown, AngleRight } from 'bkui-vue/lib/icon';
 import AngleDown from '@/css/svg/down.svg';
 
 export default defineComponent({
@@ -18,24 +17,20 @@ export default defineComponent({
         icon: 'metrics-overview',
         meta: ['Config', 'ConfigForm']
       },
-      // {
-      //   name: t('系统管理员'),
-      //   router: 'SystemManage',
-      //   icon: 'metrics-fail-analysis',
-      //   meta: ['SystemManage']
-      // },
     ];
 
     function handleShowMenu() {
       showMenu.value = !showMenu.value;
     };
 
+    const conventionActive = () => ['Convention'].includes(String(route.name));
+
     return () => (
       <article class="w-full h-full flex overflow-hidden">
         <aside class="w-[240px] bg-white border-r-[1px]">
           <h3 class="h-[52px] leading-[52px] pl-[24px] pr-[14px] text-[16px] text-[#333C48]">{t('平台管理')}</h3>
           <ul class="flex flex-col">
-            <li onClick={handleShowMenu} class="flex justify-between h-[40px] leading-[40px] pl-[22px] pr-[14px]">
+            <li onClick={handleShowMenu} class="flex justify-between h-[40px] leading-[40px] pl-[22px] pr-[14px] cursor-pointer">
               <div>
                 <i class="permission-icon permission-icon-permission" />
                 <span class="text-[#4D4F56] text-[14px]">{t('代码库服务')}</span>
@@ -59,6 +54,16 @@ export default defineComponent({
                   </RouterLink>
                 )) : null
             }
+            <RouterLink
+              to={{ name: 'Convention' }}
+              class={`${
+                conventionActive()
+                  ? 'bg-[#e1ecff] !text-[#3a84ff]'
+                  : ''
+              } relative flex items-center pl-[22px] pr-[23px] h-[40px] leading-[40px] text-[#4D4F56] text-[14px]`}
+            >
+              {t('蓝盾公约')}
+            </RouterLink>
           </ul>
         </aside>
         <main class="h-full w-platformMainWidth">

@@ -75,7 +75,9 @@ class PipelineDraftVersionPostProcessor @Autowired constructor(
                         tag = "",
                         jobId = null,
                         stepId = null,
-                        message = ""
+                        message = "",
+                        projectId = projectId,
+                        pipelineId = pipelineId
                     )
                     pipelineBuildFacadeService.buildManualShutdown(
                         userId = userId, projectId = projectId, pipelineId = pipelineId,

@@ -46,6 +46,8 @@ export default new Store<RootState>({
             showNav: true
         },
         showNotice: false,
-        currentNotice: {}
+        currentNotice: {},
+        conventionStatus: 'checking',
+        conventionContent: ''
     }
 })

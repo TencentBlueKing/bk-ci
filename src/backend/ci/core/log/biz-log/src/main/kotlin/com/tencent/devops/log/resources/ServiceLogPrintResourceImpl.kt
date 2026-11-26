@@ -36,13 +36,15 @@ import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogProjectIdResolver
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
     private val indexService: IndexService,
-    private val buildLogPrintService: BuildLogPrintService
+    private val buildLogPrintService: BuildLogPrintService,
+    private val logProjectIdResolver: LogProjectIdResolver
 ) : ServiceLogPrintResource {
 
     override fun addLogLine(
@@ -55,6 +57,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         return buildLogPrintService.asyncDispatchEvent(
             LogOriginEvent(buildId, listOf(logMessage), projectId = projectId, pipelineId = pipelineId)
         )
@@ -70,6 +73,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         buildLogPrintService.asyncDispatchEvent(
             LogOriginEvent(buildId, logMessages, projectId = projectId, pipelineId = pipelineId)
         )
@@ -85,7 +89,9 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         jobId: String?,
         stepId: String?,
         projectId: String?,
-        pipelineId: String?
+        pipelineId: String?,
+        ownerProjectId: String?,
+        ownerPipelineId: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.warn("Invalid build ID[$buildId]")
@@ -93,6 +99,11 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         }
         val index = indexService.getIndexName(buildId)
         logger.info("Start to print log to index[$index]")
+        recordBuildOwnerIfPresent(
+            buildId = buildId,
+            projectId = ownerProjectId?.takeIf { it.isNotBlank() } ?: projectId,
+            pipelineId = ownerPipelineId?.takeIf { it.isNotBlank() } ?: pipelineId
+        )
         buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
@@ -128,6 +139,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        recordBuildOwnerIfPresent(buildId, projectId, pipelineId)
         buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
@@ -144,6 +156,12 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    private fun recordBuildOwnerIfPresent(buildId: String, projectId: String?, pipelineId: String?) {
+        if (!projectId.isNullOrBlank() && !pipelineId.isNullOrBlank()) {
+            logProjectIdResolver.assignIfAbsent(buildId, projectId, pipelineId)
+        }
     }
 
     companion object {

@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
     "dll": "webpack --config webpack.dll.config.js --mode production",
     "public": "npm run dll && webpack --mode production",
     "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -67,6 +67,7 @@
   "dependencies": {
     "@blueking/login-modal": "1.0.4",
     "@blueking/platform-config": "^1.0.4",
+    "@blueking/xss-filter": "0.0.10",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "1.15.2",
     "bk-magic-vue": "2.5.10-beta.12",

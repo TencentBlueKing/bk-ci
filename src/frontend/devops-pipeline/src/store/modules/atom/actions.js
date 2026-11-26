@@ -570,7 +570,10 @@ export default {
     },
 
     fetchAtomsOutput: async ({ commit, state, getters }) => {
-        const elements = getters.getAllElements(state.pipeline?.stages)
+        const stages = state.pipeline?.stages
+        if (!Array.isArray(stages) || !stages.length) return
+        const elements = getters.getAllElements(stages)
+        if (!Array.isArray(elements) || !elements.length) return
         const arr = elements.map(ele => `${ele.atomCode}@${ele.version}`)
         const data = Array.from(new Set(arr))
         try {
@@ -872,17 +875,31 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
-    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
+    fetchPipelineExecDetail: async (
+        _,
+        { projectId, buildNo, pipelineId, ...query }
+    ) => {
+        const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
+            params: query
+        })
+        return response.data
+    },
+    requestPipelineExecDetail: async (
+        { commit, dispatch },
+        { projectId, buildNo, pipelineId, skipSetPipelineDetail = false, ...query }
+    ) => {
         try {
             const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
                 params: query
             })
-            dispatch('setPipelineDetail', response.data)
+            if (!skipSetPipelineDetail) dispatch('setPipelineDetail', response.data)
+            return response.data
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
             }
-            rootCommit(commit, FETCH_ERROR, e)
+            if (!skipSetPipelineDetail) rootCommit(commit, FETCH_ERROR, e)
+            throw e
         }
     },
     requestPipelineExecDetailByBuildNum: async ({ commit }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
@@ -990,12 +1007,37 @@ export default {
         })
     },
 
+    getBuildVariableValue ({ commit }, { projectId, pipelineId, buildId, ...params }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/variables/value`, { params })
+    },
+
     fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
     getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
         return request.get(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+    },
+
+    getLogPanelLatest ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/latest`, {
+            params: query
+        })
+    },
+
+    getLogPanelBefore ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/before`, {
+            params: query
+        })
+    },
+
+    getLogPanelAfter ({ commit }, params) {
+        const { projectId, pipelineId, buildId, ...query } = params
+        return request.get(`${LOG_API_URL_PREFIX}/user/log/panels/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: query
+        })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
@@ -1006,7 +1048,7 @@ export default {
     },
 
     praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=${score}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
@@ -1014,7 +1056,7 @@ export default {
     },
 
     cancelPraiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=${score}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
@@ -1022,42 +1064,33 @@ export default {
     },
 
     getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=true`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
         return request.get(url)
     },
 
-    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack }) {
-        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
+    async getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack, signal }) {
+        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&refresh=${refresh}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
-        return window.fetch(url, {
-            method: 'post'
-        }).then((response) => {
-            const reader = response.body.getReader()
-            const decoder = new TextDecoder()
-
-            const readChunk = () => {
-                return reader.read().then(appendChunks)
+        const response = await window.fetch(url, { method: 'post', signal })
+        if (!response.ok || !response.body) throw new Error('AI analysis request failed')
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        try {
+            let done = false
+            while (!done) {
+                const result = await reader.read()
+                done = result.done
+                const chunk = decoder.decode(result.value, { stream: !done })
+                if (chunk) callBack(chunk)
             }
-
-            const appendChunks = (result) => {
-                const chunk = decoder.decode(result.value || new Uint8Array(), {
-                    stream: !result.done
-                })
-                if (chunk) {
-                    callBack(chunk)
-                }
-                if (!result.done) {
-                    readChunk()
-                }
-            }
-
-            readChunk()
-        })
+        } finally {
+            reader.releaseLock()
+        }
     },
 
     getAIStatus () {

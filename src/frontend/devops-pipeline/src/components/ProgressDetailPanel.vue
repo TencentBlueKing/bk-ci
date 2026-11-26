@@ -27,11 +27,25 @@
             class="progress-detail-body"
             mode="spin"
             theme="primary"
-            :is-loading="loading"
+            :is-loading="controlled ? externalLoading : loading"
         >
             <template>
                 <bk-exception
-                    v-if="showEmpty && !hasProgressDetail"
+                    v-if="controlled && externalError"
+                    type="500"
+                    scene="part"
+                    class="progress-detail-empty"
+                >
+                    {{ $t('progressDetail.loadFailed') }}
+                    <bk-button
+                        text
+                        @click="$emit('retry')"
+                    >
+                        {{ $t('retry') }}
+                    </bk-button>
+                </bk-exception>
+                <bk-exception
+                    v-else-if="showEmpty && !hasProgressDetail && !loading && !(controlled && externalLoading)"
                     type="empty"
                     scene="part"
                     class="progress-detail-empty"
@@ -177,9 +191,21 @@
             detailData: {
                 type: Object,
                 default: null
+            },
+            controlled: {
+                type: Boolean,
+                default: false
+            },
+            externalLoading: {
+                type: Boolean,
+                default: false
+            },
+            externalError: {
+                type: Boolean,
+                default: false
             }
         },
-        emits: ['toggle'],
+        emits: ['toggle', 'retry'],
         setup (props, { emit }) {
             const { proxy } = getCurrentInstance()
             const loading = ref(false)
@@ -278,7 +304,7 @@
             const timelineTitle = computed(() => buildSectionTitle(timelineInfo.value?.title, proxy.$t('progressDetail.timeline')))
 
             const shouldRefresh = computed(() => ['RUNNING', 'running'].includes(props.taskStatus))
-            const canRefresh = computed(() => shouldRefresh.value)
+            const canRefresh = computed(() => shouldRefresh.value && !props.controlled && !props.detailData)
 
             const formatTime = (time) => {
                 if (!time) return '--'
@@ -400,6 +426,12 @@
 
             const fetchProgressDetail = async ({ showLoading = false, showRefreshing = false } = {}) => {
                 const currentRequestId = ++requestId.value
+                if (props.controlled) {
+                    progressData.value = props.detailData
+                    loading.value = props.externalLoading
+                    refreshing.value = false
+                    return
+                }
                 if (props.detailData) {
                     progressData.value = props.detailData
                     loading.value = false
@@ -448,7 +480,7 @@
 
             const scheduleRefresh = () => {
                 clearRefreshTimer()
-                if (shouldRefresh.value) {
+                if (!props.controlled && shouldRefresh.value) {
                     refreshTimer.value = setTimeout(() => fetchProgressDetail(), 3000)
                 }
             }

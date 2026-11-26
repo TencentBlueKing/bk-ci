@@ -25,8 +25,11 @@ import {
     TOGGLE_PERMISSION_DIALOG,
     TOGGLE_NOTICE_DIALOG,
     SET_CURRENT_NOTICE,
-    AUTH_API_URL_PREFIX
+    AUTH_API_URL_PREFIX,
+    SET_CONVENTION_STATUS,
+    SET_CONVENTION_CONTENT
 } from './constants'
+import { toConventionLang } from '../utils/convention-xss'
 
 const actions: ActionTree<RootState, any> = {
     togglePermissionDialog ({ commit }: ActionContext<RootState, any>, visible: boolean) {
@@ -218,6 +221,43 @@ const actions: ActionTree<RootState, any> = {
      */
     memberExitsProject (_, { projectId, handoverParams }) {
         return Request.post(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/memberExitsProject`, handoverParams)
+    },
+    /**
+     * 查询是否需要签署蓝盾公约。
+     * 仅接口正常返回时才根据 needAgree 决定是否弹窗；接口失败则放行进入。
+     */
+    async checkConvention ({ commit }: ActionContext<RootState, any>, locale?: string) {
+        commit(SET_CONVENTION_STATUS, 'checking')
+        commit(SET_CONVENTION_CONTENT, '')
+        try {
+            const lang = toConventionLang(locale || (window as any).INIT_LOCALE || 'zh-CN')
+            const data: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/convention/current?lang=${lang}`)
+            const content = (data && data.content) || ''
+            const hasText = content.replace(/<[^>]+>/g, '').trim().length > 0
+            if (data && data.needAgree === true && hasText) {
+                commit(SET_CONVENTION_CONTENT, content)
+                commit(SET_CONVENTION_STATUS, 'required')
+                return
+            }
+            // 无需签署，或需签署但无正文：不弹窗，直接进入
+            commit(SET_CONVENTION_STATUS, 'passed')
+        } catch (e) {
+            console.error('checkConvention failed, skip dialog', e)
+            commit(SET_CONVENTION_CONTENT, '')
+            commit(SET_CONVENTION_STATUS, 'passed')
+        }
+    },
+    /**
+     * 同意蓝盾公约
+     */
+    async agreeConvention ({ commit, state }: ActionContext<RootState, any>) {
+        const content = state.conventionContent || ''
+        if (!content.replace(/<[^>]+>/g, '').trim()) {
+            throw new Error('EMPTY_CONVENTION')
+        }
+        await Request.post(`${PROJECT_API_URL_PREFIX}/user/convention/agree`)
+        commit(SET_CONVENTION_STATUS, 'passed')
+        commit(SET_CONVENTION_CONTENT, '')
     }
 }
 

@@ -120,7 +120,13 @@ interface ServiceLogPrintResource {
         projectId: String? = null,
         @Parameter(description = "流水线ID，旧客户端可不传", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String? = null
+        pipelineId: String? = null,
+        @Parameter(description = "构建开始时的项目ID，只在尚无归属时写入", required = false)
+        @QueryParam("ownerProjectId")
+        ownerProjectId: String? = null,
+        @Parameter(description = "构建开始时的流水线ID，只在尚无归属时写入", required = false)
+        @QueryParam("ownerPipelineId")
+        ownerPipelineId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "更新日志状态")

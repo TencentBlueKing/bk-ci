@@ -71,6 +71,7 @@
         PAC_BRANCH_CHANGE,
         UPDATE_PAC_ERROR_STATUS,
         PAC_BRANCH_LOADING,
+        UPDATE_EXPIRE_RELEASED_VERSION,
         bus
     } from '@/utils/bus'
     import {
@@ -91,7 +92,8 @@
                 previewPipelineName: '',
                 hasPacError: false,
                 branchLoading: false,
-                canManualStartup: true
+                canManualStartup: true,
+                expireReleasedVersion: false
             }
         },
         computed: {
@@ -138,8 +140,8 @@
             },
             versionNotMatch () {
                 try {
-                    // 只有 RELEASED 版本才需要判断是否为最新发布版本
-                    if (this.isDebugPipeline || this.isBranchVersion) return false
+                    // 调试 / BRANCH / 分支滞后正式版（仅警告可执行）：不做「必须最新正式版」校验
+                    if (this.isDebugPipeline || this.isBranchVersion || this.expireReleasedVersion) return false
                     return !this.isReleaseVersion
                 } catch (error) {
                     return false
@@ -147,9 +149,9 @@
             },
             execDisabled () {
                 try {
-                    // BRANCH 分支版本只需判断是否允许手动触发
-                    if (this.isBranchVersion) return !this.canManualStartup
-                    // RELEASED 版本：需为最新发布版本且允许手动触发
+                    // BRANCH 或分支滞后正式版：只校验是否允许手动触发
+                    if (this.isBranchVersion || this.expireReleasedVersion) return !this.canManualStartup
+                    // 最新正式版路径：需为最新发布版本且允许手动触发
                     return this.versionNotMatch || !this.canManualStartup
                 } catch (error) {
                     return false
@@ -187,12 +189,14 @@
             bus.$on(UPDATE_STARTUP_INFO, this.updateCanManualStartup)
             bus.$on(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
             bus.$on(PAC_BRANCH_LOADING, this.updateBranchLoading)
+            bus.$on(UPDATE_EXPIRE_RELEASED_VERSION, this.updateExpireReleasedVersion)
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
             bus.$off(UPDATE_STARTUP_INFO, this.updateCanManualStartup)
             bus.$off(UPDATE_PAC_ERROR_STATUS, this.updatePacErrorStatus)
             bus.$off(PAC_BRANCH_LOADING, this.updateBranchLoading)
+            bus.$off(UPDATE_EXPIRE_RELEASED_VERSION, this.updateExpireReleasedVersion)
             this.selectPipelineVersion(null)
         },
         methods: {
@@ -208,6 +212,9 @@
             },
             updateBranchLoading (isLoading) {
                 this.branchLoading = isLoading
+            },
+            updateExpireReleasedVersion (expired) {
+                this.expireReleasedVersion = !!expired
             },
             handleClick () {
                 bus.$emit('start-execute')

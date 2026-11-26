@@ -19,7 +19,9 @@ import {
     UPDATE_CURRENT_PAGE,
     TOGGLE_PERMISSION_DIALOG,
     TOGGLE_NOTICE_DIALOG,
-    SET_CURRENT_NOTICE
+    SET_CURRENT_NOTICE,
+    SET_CONVENTION_STATUS,
+    SET_CONVENTION_CONTENT
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
@@ -101,6 +103,12 @@ const mutations: MutationTree<RootState> = {
     },
     [SET_CURRENT_NOTICE]: (state: RootState, notice: object) => {
         Vue.set(state, 'currentNotice', notice)
+    },
+    [SET_CONVENTION_STATUS]: (state: RootState, status: string) => {
+        Vue.set(state, 'conventionStatus', status)
+    },
+    [SET_CONVENTION_CONTENT]: (state: RootState, content: string) => {
+        Vue.set(state, 'conventionContent', content)
     }
 }
 
