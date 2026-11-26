@@ -1,6 +1,7 @@
 <template>
     <section class="job-log">
         <bk-log-search
+            ref="logSearch"
             :execute-count="executeCount"
             @change-execute="changeExecute"
             class="log-tools"
@@ -20,6 +21,12 @@
                 </li>
             </template>
         </bk-log-search>
+        <div
+            v-if="emptyStatus"
+            class="log-empty"
+        >
+            {{ $t(`logStatus.${emptyStatus}`) }}
+        </div>
         <bk-multiple-log
             ref="multipleLog"
             class="bk-log"
@@ -72,6 +79,9 @@
             },
             executeCount: {
                 type: Number
+            },
+            activeExecuteCount: {
+                type: Number
             }
         },
 
@@ -79,10 +89,18 @@
             return {
                 logPostData: {},
                 closeIds: [],
-                curExe: this.executeCount,
+                curExe: this.activeExecuteCount ?? this.executeCount,
                 showDebug: false,
                 enableAI: false,
-                aiTips: ''
+                aiTips: '',
+                emptyStatus: ''
+            }
+        },
+
+        watch: {
+            executeCount (value, oldValue) {
+                if (oldValue === undefined || Number(this.curExe) !== Number(oldValue)) return
+                this.$refs.logSearch?.changeExecute?.(value)
             }
         },
 
@@ -202,7 +220,10 @@
             },
 
             changeExecute (execute) {
+                this.closeLog()
+                this.emptyStatus = ''
                 this.curExe = execute
+                this.$emit('execute-change', execute)
                 this.clearAllLog()
             },
 
@@ -216,6 +237,8 @@
             },
 
             tagChange (tag, id) {
+                this.closeLog()
+                this.emptyStatus = ''
                 const ref = this.$refs.multipleLog
                 const postData = this.logPostData[id]
                 clearTimeout(postData.timeId)
@@ -256,6 +279,7 @@
 
             getLog (id, postData) {
                 const hashId = postData.hashId = hashID()
+                if (postData.lineNo <= 0) this.emptyStatus = ''
                 let logMethod = this.getAfterLog
                 if (postData.lineNo <= 0) logMethod = this.getInitLog
                 const ref = this.$refs.multipleLog
@@ -264,6 +288,10 @@
                     if (this.closeIds.includes(hashId)) return
 
                     res = res.data || {}
+                    if ([2, 3, '2', '3'].includes(res.status)) {
+                        this.emptyStatus = [2, '2'].includes(res.status) ? 'clean' : 'closed'
+                        return
+                    }
                     if (res.status !== 0) {
                         const errMessage = res.message ?? this.$t('history.logErr')
                         ref.handleApiErr(errMessage, id)
@@ -294,6 +322,7 @@
                         postData.timeId = setTimeout(() => this.getLog(id, postData), 1000)
                     }
                 }).catch((err) => {
+                    if (this.closeIds.includes(hashId)) return
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                     if (ref) ref.handleApiErr(err.message, id)
                 })
@@ -312,6 +341,20 @@
         height: calc(100% - 59px);
         flex: 1 1 auto;
         min-width: 0;
+        .log-empty {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            bottom: 0;
+            left: 220px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2c2d34;
+            color: #979ba5;
+            font-size: 13px;
+        }
         .log-tools {
             position: absolute;
             right: 20px;

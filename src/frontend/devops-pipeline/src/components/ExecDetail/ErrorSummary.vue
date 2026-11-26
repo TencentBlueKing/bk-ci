@@ -1,31 +1,38 @@
 <template>
     <div class="error-log-summary">
-        <p
+        <button
+            type="button"
             @click="toggleCollapse"
             class="error-log-summary-header"
+            :aria-expanded="String(!isCollapse)"
         >
             <span>
-                <i
-                    :class="['devops-icon icon-angle-down', {
+                <logo
+                    name="angle-down"
+                    :size="12"
+                    aria-hidden="true"
+                    :class="{
                         collapsed: isCollapse
-                    }]"
-                ></i>
+                    }"
+                />
                 {{ errorTypeAlias }}
             </span>
             <span>{{ error.errorCode }}</span>
-        </p>
+        </button>
         <div
             v-if="!isCollapse"
             class="error-log-summary-content"
-            v-html="errorMsg"
+            v-bk-xss-html="errorMsg"
         ></div>
     </div>
 </template>
 
 <script>
-    import { errorTypeMap } from '@/utils/pipelineConst'
+    import Logo from '@/components/Logo'
+    import { resolveLogErrorTypeKey } from './log-panel/logPanelAdapter'
 
     export default {
+        components: { Logo },
         props: {
             error: {
                 type: Object,
@@ -39,7 +46,8 @@
         },
         computed: {
             errorTypeAlias () {
-                return this.$t(errorTypeMap[this.error?.errorType]?.title ?? '--')
+                const type = resolveLogErrorTypeKey(this.error?.errorType)
+                return type ? this.$t(`logPanel.errorType.${type}`) : '--'
             },
             errorMsg () {
                 return this.error?.errorMsg?.trim().replace(/\n/g, '<br/>') ?? ''
@@ -56,14 +64,27 @@
 <style lang="scss">
     .error-log-summary{
         position: relative;
-        padding: 12px;
+        padding: 8px 12px;
+        gap: 8px;
         display: flex;
         flex-direction: column;
-        font-size: 12px;
+        font: 12px/20px "Microsoft YaHei", sans-serif;
         background: #404145;
+        border-bottom: 1px solid #313238;
         &-header {
+            width: 100%;
+            border: 0;
+            text-align: left;
+            font: inherit;
+            padding: 0;
+            cursor: pointer;
+            background: transparent;
             flex-shrink: 0;
-            color: #f73131;
+            color: #d25050;
+            &:focus-visible {
+                outline: 2px solid #3c96ff;
+                outline-offset: 2px;
+            }
             display: flex;
             align-items: center;
             span:first-child {
@@ -73,12 +94,12 @@
                     content: '-';
                     margin: 0 4px;
                     font-size: 12px;
-                    color: #f73131;
+                    color: #d25050;
                 }
-                > .devops-icon {
-                    margin-right: 10px;
+                > svg {
+                    margin-right: 8px;
                     font-weight: bold;
-                    font-size: 10px;
+                    font-size: 12px;
                     transform: rotate(0);
                     &.collapsed {
                         transition: transform 0.3s ease;
@@ -88,17 +109,13 @@
             }
         }
         &-content {
-            padding: 8px 34px;
+            padding: 0 0 0 20px;
             margin: 0;
-            position: absolute;
             color: white;
-            top: 40px;
-            left: 0;
-            background: #404145;
-            width: 100%;
+            width: auto;
             overflow: auto;
-            z-index: 1;
             max-height: 360px;
+            overflow-wrap: anywhere;
             a {
                 color: #3c96ff;
                 &:visited {

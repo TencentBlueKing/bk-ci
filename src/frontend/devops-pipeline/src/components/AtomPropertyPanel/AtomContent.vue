@@ -301,6 +301,9 @@
             Logo,
             CustomEnvField
         },
+        inject: {
+            captureExecutionDetailContext: { default: null }
+        },
         props: {
             elementIndex: Number,
             containerIndex: Number,
@@ -596,7 +599,16 @@
                 'updateRefreshQualityLoading'
             ]),
 
-            handleExecutePluginPause (isContinue, loadingKey) {
+            capturePauseContext () {
+                if (this.captureExecutionDetailContext) return this.captureExecutionDetailContext()
+                const route = this.$route
+                return {
+                    isCurrent: () => this.$route === route,
+                    refresh: () => this.requestPipelineExecDetail(route.params)
+                }
+            },
+            handleExecutePluginPause (isContinue, loadingKey, context = this.capturePauseContext()) {
+                if (!context.isCurrent()) return
                 const postData = {
                     projectId: this.projectId,
                     pipelineId: this.pipelineId,
@@ -615,13 +627,15 @@
                     isShow: false,
                     showPanelType: ''
                 })
-                this.pausePlugin(postData).then(() => {
-                    return this.requestPipelineExecDetail(this.$route.params)
+                return this.pausePlugin(postData).then(() => {
+                    if (context.isCurrent()) return context.refresh()
                 }).catch((err) => {
+                    if (!context.isCurrent()) return
                     this.$showTips({
                         message: err.message || err,
                         theme: 'error'
                     })
+                    if (this.isPropertyPanelVisible) return
                     this.togglePropertyPanel({
                         isShow: true,
                         editingElementPos,
@@ -632,13 +646,14 @@
                 })
             },
             changePluginPause (isContinue, loadingKey) {
+                const context = this.capturePauseContext()
                 if (isContinue && loadingKey === 'isExeContinue') {
-                    this.handleExecutePluginPause(isContinue, loadingKey)
+                    this.handleExecutePluginPause(isContinue, loadingKey, context)
                 } else {
                     this.$bkInfo({
                         title: this.$t('isTaskTermination'),
                         confirmFn: async () => {
-                            this.handleExecutePluginPause(isContinue, loadingKey)
+                            this.handleExecutePluginPause(isContinue, loadingKey, context)
                         }
                     })
                 }
