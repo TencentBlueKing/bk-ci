@@ -131,13 +131,12 @@ class ServiceOauthResourceImpl @Autowired constructor(
         if (oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) != null) {
             return Result(ScmOauthStatus(authorized = true))
         }
-        val oauthUrl = repositoryOauthService.oauthUrl(
-            userId = userId,
+        val oauthUrl = repositoryOauthService.buildAuthorizeUrl(
             scmCode = scmCode,
             redirectUrl = redirectUrl?.takeIf { it.isNotBlank() } ?: gitConfig.redirectUrl,
             oauthUserId = userId
         )
-        return Result(ScmOauthStatus(authorized = false, url = oauthUrl.url))
+        return Result(ScmOauthStatus(authorized = false, url = oauthUrl))
     }
 
     override fun scmRepoOauthToken(scmCode: String, oauthUserId: String): Result<GitToken?> {

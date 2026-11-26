@@ -84,6 +84,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
+import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -263,10 +264,7 @@ object WebhookUtils {
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun prStartParam(
-        pullRequest: GithubPullRequest,
-        homepage: String? = null
-    ): Map<String, Any> {
+    fun prStartParam(pullRequest: GithubPullRequest): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = pullRequest.head.ref ?: ""
         startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = pullRequest.base.ref ?: ""
@@ -306,9 +304,10 @@ object WebhookUtils {
         startParams[PIPELINE_GIT_MR_TITLE] = pullRequest.title ?: ""
         startParams[PIPELINE_GIT_MR_DESC] = pullRequest.body ?: ""
         startParams[PIPELINE_GIT_MR_PROPOSER] = pullRequest.user.login ?: ""
-        if (!homepage.isNullOrBlank()) {
-            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${pullRequest.number}"
-        }
+        val repoUrl = pullRequest.base.repo.htmlUrl?.takeIf { it.isNotBlank() }
+            ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${pullRequest.base.repo.fullName}"
+        startParams[PIPELINE_GIT_MR_URL] = pullRequest.htmlUrl.takeIf { it.isNotBlank() }
+            ?: "${repoUrl.trimEnd('/')}/pull/${pullRequest.number}"
         return startParams
     }
 

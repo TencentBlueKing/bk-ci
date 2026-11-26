@@ -29,6 +29,7 @@ stages:
       agent-selector: null
       workspace: null
       xcode: null
+      hw-spec: "VMware"
       queue-timeout-minutes: null
       needs: null
     services: []

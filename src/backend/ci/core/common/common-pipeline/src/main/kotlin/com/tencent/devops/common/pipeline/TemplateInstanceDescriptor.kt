@@ -30,12 +30,20 @@ data class TemplateInstanceDescriptor(
     val triggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
 
     @get:Schema(title = "实例化-流水线自定义-推荐版本号", required = false)
-    val recommendedVersion: TemplateInstanceRecommendedVersion? = null
+    val recommendedVersion: TemplateInstanceRecommendedVersion? = null,
+
+    @get:Schema(title = "已解析的模板ID,不写入yaml", required = false)
+    override val parsedTemplateId: String? = null,
+
+    @get:Schema(title = "已解析的模板版本号,不写入yaml", required = false)
+    override val parsedTemplateVersion: Long? = null
 ) : TemplateDescriptor(
     templateRefType = templateRefType,
     templatePath = templatePath,
     templateRef = templateRef,
     templateId = templateId,
     templateVersionName = templateVersionName,
-    templateVariables = templateVariables
+    templateVariables = templateVariables,
+    parsedTemplateId = parsedTemplateId,
+    parsedTemplateVersion = parsedTemplateVersion
 )

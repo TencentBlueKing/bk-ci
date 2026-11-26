@@ -83,6 +83,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
+import com.tencent.devops.process.dao.PipelineCallbackSource
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -922,7 +923,7 @@ class PipelineRepositoryService constructor(
                             }
                         }
                         // 如果不需要覆盖模板内容，则直接保存传值或默认值
-                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        pipelineSettingDao.insertSetting(transactionContext, newSetting)
                         pipelineSettingVersionDao.saveSetting(
                             dslContext = transactionContext,
                             setting = newSetting,
@@ -1734,9 +1735,11 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 event = null
             ).let { records ->
+                // 表中无记录时保留 model 中的旧数据；有记录时只回填编排来源，接口注册的回调不进入 model
                 if (records.isNotEmpty) {
-                    // 填充流水线级别回调
-                    resource?.model?.events = records.associate {
+                    resource?.model?.events = records.filter {
+                        it.source == PipelineCallbackSource.MODEL.name
+                    }.associate {
                         it.name to PipelineCallbackEvent(
                             callbackEvent = CallBackEvent.valueOf(it.eventType),
                             callbackUrl = it.url,
@@ -2719,37 +2722,43 @@ class PipelineRepositoryService constructor(
         dslContext: DSLContext,
         userId: String
     ) {
-        val existEventNames = pipelineCallbackDao.list(
+        val existRecords = pipelineCallbackDao.list(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        ).map { it.name }.toSet()
-        // events 为空时新事件集合为空，差集即为全部已存在事件，实现全量清理
-        val newEventKeys = events?.keys ?: emptySet()
-        val needDelNames = existEventNames.subtract(newEventKeys)
+        )
+        // 接口注册的回调不随编排删除或覆盖
+        val apiNames = existRecords.filter { it.source == PipelineCallbackSource.API.name }
+            .map { it.name }.toSet()
+        val modelEvents = events?.filterKeys { it !in apiNames } ?: emptyMap()
+        val needDelNames = existRecords.filter { it.source == PipelineCallbackSource.MODEL.name }
+            .map { it.name }.toSet()
+            .subtract(modelEvents.keys)
         if (needDelNames.isNotEmpty()) {
             pipelineCallbackDao.delete(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                names = needDelNames
+                names = needDelNames,
+                source = PipelineCallbackSource.MODEL
             )
         }
         // 保存回调事件
-        if (!events.isNullOrEmpty()) {
+        if (modelEvents.isNotEmpty()) {
             pipelineCallbackDao.save(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = events.map { (_, value) ->
+                list = modelEvents.map { (_, value) ->
                     value.copy(
                         secretToken = value.secretToken?.let {
                             pipelineCallbackCryptoHelper.encryptSm4ButAes(it)
                         }
                     )
                 },
-                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha(),
+                source = PipelineCallbackSource.MODEL
             )
         }
     }
