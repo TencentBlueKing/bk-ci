@@ -30,6 +30,7 @@
     import emptyTips from '@/components/Template/empty-tips'
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { handleTemplateNoPermission, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { getTemplateCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
 
     export default {
@@ -50,7 +51,6 @@
             }
         },
         created () {
-            console.log(this.$route.params)
             this.init()
         },
         mounted () {
@@ -103,7 +103,18 @@
                         await this.handleApply()
                     }
                 } catch (error) {
-                    console.error(error)
+                    if (error?.code === 403) {
+                        this.hasViewPermission = false
+                        this.handleApply()
+                    } else {
+                        this.handleError(error)
+                        this.$router.replace({
+                            name: 'TemplateManageList',
+                            params: {
+                                templateViewId: getTemplateCacheViewId()
+                            }
+                        })
+                    }
                 } finally {
                     this.isLoading = false
                 }
