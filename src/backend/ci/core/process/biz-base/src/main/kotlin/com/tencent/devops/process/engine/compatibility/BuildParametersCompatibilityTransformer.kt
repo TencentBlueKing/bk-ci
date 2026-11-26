@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.compatibility
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.utils.PipelineVarUtil
 
 /**
  *
@@ -47,4 +48,39 @@ interface BuildParametersCompatibilityTransformer {
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
     ): MutableMap<String, BuildParameters>
+
+    /**
+     * 解析 webhook 等触发链路的启动参数
+     * 在 parseTriggerParam 的基础上补充编排中未声明的参数，并兼容旧变量名
+     */
+    fun parseStartParams(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        paramProperties: List<BuildFormProperty>,
+        startParams: Map<String, Any>
+    ): MutableMap<String, BuildParameters> {
+        val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+        val paramMap = parseTriggerParam(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            paramProperties = paramProperties,
+            paramValues = startParams.mapValues { it.value.toString() }
+        )
+        pipelineParamMap.putAll(paramMap)
+        startParams.forEach {
+            if (paramMap.containsKey(it.key)) {
+                return@forEach
+            }
+            // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
+            if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
+            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
+            }
+        }
+        return pipelineParamMap
+    }
 }
