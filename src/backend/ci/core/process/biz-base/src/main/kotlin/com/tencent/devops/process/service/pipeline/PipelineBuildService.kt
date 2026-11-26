@@ -43,10 +43,16 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_IMATE_SESSION_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -100,6 +106,7 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.project.pojo.ProjectVO
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
 
@@ -121,6 +128,8 @@ class PipelineBuildService(
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
+        private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
+        private val NODE_BUILTIN_PARAM_KEYS = listOf(CI_NODE_ID, CI_NODE_NAME, CI_NODE_IP)
     }
 
     /**
@@ -509,7 +518,76 @@ class PipelineBuildService(
                     key = NODE_ENV_HASH_ID, value = envHashId, readOnly = true
                 )
             }
+            // 补齐节点内置变量
+            fillNodeBuiltinParams(ctx, agentId, agentInfo)
         }
+    }
+
+    /**
+     * 用已查到的 Agent 补齐节点内置变量。查询节点失败时退回 Agent 上的信息，不阻断启动。
+     */
+    private fun fillNodeBuiltinParams(
+        ctx: InitParamContext,
+        agentId: String,
+        agentInfo: ThirdPartyAgent?
+    ) {
+        val paramMap = ctx.pipelineParamMap
+        if (NODE_BUILTIN_PARAM_KEYS.all { !paramMap[it]?.value?.toString().isNullOrBlank() }) {
+            return
+        }
+        val node = loadNode(ctx, agentId, agentInfo?.nodeId)
+        putNodeParamIfBlank(
+            paramMap,
+            CI_NODE_ID,
+            node?.createWorkspaceId?.takeIf { it.isNotBlank() } ?: agentInfo?.nodeId
+        )
+        putNodeParamIfBlank(
+            paramMap,
+            CI_NODE_NAME,
+            node?.displayName?.takeIf { it.isNotBlank() } ?: node?.name ?: agentInfo?.hostname
+        )
+        putNodeParamIfBlank(
+            paramMap,
+            CI_NODE_IP,
+            node?.ip?.takeIf { it.isNotBlank() } ?: agentInfo?.ip
+        )
+    }
+
+    private fun loadNode(
+        ctx: InitParamContext,
+        agentId: String,
+        nodeHashId: String?
+    ): NodeWithPermission? {
+        if (nodeHashId.isNullOrBlank()) {
+            return null
+        }
+        return try {
+            client.get(ServiceNodeResource::class).listByHashIds(
+                userId = ctx.pipelineAuthorizer ?: ctx.userId,
+                projectId = ctx.pipeline.projectId,
+                nodeHashIds = listOf(nodeHashId),
+                checkPermission = false
+            ).data?.firstOrNull()
+        } catch (ignored: Exception) {
+            logger.warn("fill node builtin params failed|${ctx.pipeline.projectId}|$agentId", ignored)
+            null
+        }
+    }
+
+    private fun putNodeParamIfBlank(
+        paramMap: MutableMap<String, BuildParameters>,
+        key: String,
+        value: String?
+    ) {
+        if (!paramMap[key]?.value?.toString().isNullOrBlank() || value.isNullOrBlank()) {
+            return
+        }
+        paramMap[key] = BuildParameters(
+            key = key,
+            value = value,
+            readOnly = true,
+            valueType = BuildFormPropertyType.STRING
+        )
     }
 
     /**

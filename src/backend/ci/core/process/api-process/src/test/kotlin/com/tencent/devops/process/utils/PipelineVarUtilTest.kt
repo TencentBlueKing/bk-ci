@@ -180,6 +180,19 @@ class PipelineVarUtilTest {
     }
 
     @Test
+    fun `creative stream node context variables resolve from their own build vars`() {
+        val buildVars = mapOf(
+            "ci.node_id" to "ins-1",
+            "ci.node_name" to "desktop",
+            "ci.node_ip" to "10.0.0.8"
+        )
+        assertEquals("ins-1", PipelineVarUtil.fetchContextInBuildVars("ci.node_id", buildVars))
+        assertEquals("desktop", PipelineVarUtil.fetchContextInBuildVars("ci.node_name", buildVars))
+        assertEquals("10.0.0.8", PipelineVarUtil.fetchContextInBuildVars("ci.node_ip", buildVars))
+        assertEquals("10.0.0.8", PipelineVarUtil.fillContextVarMap(buildVars)["ci.node_ip"])
+    }
+
+    @Test
     fun oldVarToNewVar() {
         assertEquals(MAJORVERSION, PipelineVarUtil.oldVarToNewVar("MajorVersion"))
         assertEquals(MINORVERSION, PipelineVarUtil.oldVarToNewVar("MinorVersion"))
