@@ -62,6 +62,7 @@ import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.NotContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
+import com.tencent.devops.common.webhook.service.code.filter.UsersFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
@@ -191,6 +192,7 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                 filters.add(excludeLabelFilter)
             }
             if (event.assignee != null) {
+                // assigned / unassigned 事件只过滤本次变更的受理人
                 val assigneeFilter = UserFilter(
                     pipelineId = pipelineId,
                     triggerOnUser = event.assignee!!.login,
@@ -207,6 +209,28 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
                     filterName = "issueAssignee"
                 )
                 filters.add(assigneeFilter)
+            } else {
+                // GitHub 仅在 assigned / unassigned 动作下发顶层 assignee，
+                // 其余动作（opened、edited、closed、reopened、labeled、unlabeled 等）
+                // 按当前 issue 受理人列表过滤：任一命中包含列表即匹配，任一命中排除列表即忽略，
+                // 配置了包含列表但受理人为空时视为不匹配
+                val assignees = event.issue.assignees.orEmpty().map { it.login }
+                val assigneesFilter = UsersFilter(
+                    pipelineId = pipelineId,
+                    triggerOnUsers = assignees,
+                    includedUsers = WebhookUtils.convert(includeAssignees),
+                    excludedUsers = WebhookUtils.convert(excludeAssignees),
+                    includedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_NOT_MATCH,
+                        params = listOf(assignees.joinToString(","))
+                    ).toJsonStr(),
+                    excludedFailedReason = I18Variable(
+                        code = WebhookI18nConstants.OWNER_IGNORED,
+                        params = listOf(assignees.joinToString(","))
+                    ).toJsonStr(),
+                    filterName = "issueAssignees"
+                )
+                filters.add(assigneesFilter)
             }
             return filters
         }

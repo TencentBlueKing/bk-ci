@@ -51,6 +51,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -151,6 +152,115 @@ class GithubIssueTriggerHandlerTest {
             isMatch(
                 event = event("assigned", changedAssignee = alice),
                 params = webHookParams("assigned", excludeAssignees = "alice")
+            )
+        )
+    }
+
+    @Test
+    fun `should filter unassigned events by the removed assignee only`() {
+        // 移除 bob 后 issue 剩余 alice，但过滤只看本次变更的受理人
+        assertTrue(
+            isMatch(
+                event = event("unassigned", changedAssignee = bob, currentAssignees = listOf(alice)),
+                params = webHookParams("unassigned", includeAssignees = "bob")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("unassigned", changedAssignee = bob, currentAssignees = listOf(alice)),
+                params = webHookParams("unassigned", includeAssignees = "alice")
+            )
+        )
+    }
+
+    @Test
+    fun `should filter non assignee actions by current assignees`() {
+        assertTrue(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice)),
+                params = webHookParams("update", includeAssignees = "alice")
+            )
+        )
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice)),
+                params = webHookParams("update", includeAssignees = "bob")
+            )
+        )
+    }
+
+    @Test
+    fun `should match non assignee actions when any current assignee included`() {
+        assertTrue(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice, bob)),
+                params = webHookParams("update", includeAssignees = "bob")
+            )
+        )
+    }
+
+    @Test
+    fun `should reject non assignee actions when any current assignee excluded`() {
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice, bob)),
+                params = webHookParams("update", excludeAssignees = "bob")
+            )
+        )
+    }
+
+    @Test
+    fun `should let excluded assignee override included assignee for non assignee actions`() {
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = listOf(alice, bob)),
+                params = webHookParams(
+                    includeIssueAction = "update",
+                    includeAssignees = "alice",
+                    excludeAssignees = "bob"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `should reject non assignee actions when issue has no assignees`() {
+        assertFalse(
+            isMatch(
+                event = event("edited", currentAssignees = emptyList()),
+                params = webHookParams("update", includeAssignees = "alice")
+            )
+        )
+    }
+
+    @Test
+    fun `should not reject non assignee actions without assignees when only exclude configured`() {
+        assertTrue(
+            isMatch(
+                event = event("edited", currentAssignees = emptyList()),
+                params = webHookParams("update", excludeAssignees = "alice")
+            )
+        )
+    }
+
+    @Test
+    fun `should filter edited events by current assignees from github payload`() {
+        val parsed = githubEvent("GithubIssueEditedEvent.json")
+
+        assertEquals("edited", parsed.action)
+        assertEquals(listOf("bob"), parsed.issue.assignees?.map { it.login })
+        assertNull(parsed.assignee)
+        // 受理人为 bob，配置 includeAssignees=alice 时不应触发（复现 issue 场景）
+        assertFalse(
+            isMatch(
+                event = parsed,
+                params = webHookParams("update", includeAssignees = "alice")
+            )
+        )
+        assertTrue(
+            isMatch(
+                event = parsed,
+                params = webHookParams("update", includeAssignees = "bob")
             )
         )
     }
