@@ -115,7 +115,7 @@
 
     <div
       v-else
-      class="workspace"
+      class="workspace records-workspace"
     >
       <bk-loading
         class="panel-loading"
@@ -148,6 +148,7 @@
         </div>
         <bk-table
           class="records-table"
+          height="100%"
           remote-pagination
           :data="records"
           :pagination="pagination"
@@ -360,7 +361,9 @@ watch(contentLang, () => {
 <style scoped>
 .admin-page {
   flex: 1;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: #f5f7fa;
@@ -411,16 +414,24 @@ watch(contentLang, () => {
   gap: 16px;
   min-height: 0;
   padding: 24px;
+  overflow: auto;
   background: #f5f7fa;
+}
+.records-workspace {
+  overflow: hidden;
 }
 .panel-loading {
   flex: 1;
-  min-height: 320px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
+.records-workspace .panel-loading {
+  overflow: hidden;
+}
 .tool-row {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -593,6 +604,9 @@ watch(contentLang, () => {
   height: 32px;
 }
 .records-table {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   border-radius: 2px;
   background: #fff;
   overflow: hidden;
