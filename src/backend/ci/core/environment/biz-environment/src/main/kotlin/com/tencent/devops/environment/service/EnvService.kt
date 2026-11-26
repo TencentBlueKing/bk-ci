@@ -2234,13 +2234,6 @@ class EnvService @Autowired constructor(
         val envId = AllCreateNodeEnv.hashIdToId(envHashId)
             ?: throw ErrorCodeException(errorCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
         val builtinEnvOs = OS.entries.find { AllCreateNodeEnv.hashId(it) == envHashId }
-        // 创作环境的历史数据可能没有系统，全量查询会先补上再比，这里必须走同一条补数，
-        // 否则系统还是空的环境会被判成「节点已不在环境内」
-        val env = if (builtinEnvOs != null) {
-            null
-        } else {
-            loadEnvForAgentCheck(projectId, envId, envHashId)
-        }
         val agent = thirdPartyAgentDao.getAgentByProject(
             dslContext = dslContext,
             id = HashUtil.decodeIdToLong(agentHashId),
@@ -2252,10 +2245,13 @@ class EnvService @Autowired constructor(
                 agent.os == builtinEnvOs.name &&
                 agent.status in CREATE_ENV_AGENT_STATUS
         }
+        // 创作环境的历史数据可能没有系统，全量查询会先补上再比，这里必须走同一条补数，
+        // 否则系统还是空的环境会被判成「节点已不在环境内」
+        val env = loadEnvForAgentCheck(projectId, envId, envHashId)
         val nodeId = agent.nodeId ?: return false
         // 分支与 fetchNormalEnvNodes 的两类候选一一对应。目前 EnvNodeType 只有这两种取值，
         // 走不到 else；写全是为了将来新增类型时这里跟着一起改，而不是默默按静态环境判
-        val belongs = when (env!!.envNodeType) {
+        val belongs = when (env.envNodeType) {
             EnvNodeType.TAG.name ->
                 // 动态环境按标签匹配，正反两个方向用的是同一套规则（见 EnvTagDao.fetchTagEnvByTagValueIds）
                 envTagDao.fetchTagEnvByNodeId(dslContext, projectId, nodeId).contains(envId)
