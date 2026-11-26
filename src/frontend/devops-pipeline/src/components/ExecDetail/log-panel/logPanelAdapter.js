@@ -1786,6 +1786,10 @@ export function encodeDownloadFileName (value) {
     return encodeURI(encodeURI(String(value ?? '')))
 }
 
+export function isLogArchivePendingBuildStatus (status) {
+    return ['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'WAITING'].includes(status)
+}
+
 export function shouldUseDirectJobDownload ({ tag, jobId, downloadTag, downloadJobId } = {}) {
     const effectiveTag = downloadTag ?? tag
     const effectiveJobId = downloadJobId ?? jobId

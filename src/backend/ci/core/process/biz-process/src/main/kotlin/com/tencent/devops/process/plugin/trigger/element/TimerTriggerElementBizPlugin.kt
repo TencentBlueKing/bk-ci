@@ -40,9 +40,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMER_TRIGGE
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
-import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
-import com.tencent.devops.process.plugin.trigger.service.PipelineTimerTriggerTaskService
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
+import com.tencent.devops.process.trigger.timer.PipelineTimerService
+import com.tencent.devops.process.trigger.timer.PipelineTimerTriggerTaskService
 import org.slf4j.LoggerFactory
 
 @ElementBiz

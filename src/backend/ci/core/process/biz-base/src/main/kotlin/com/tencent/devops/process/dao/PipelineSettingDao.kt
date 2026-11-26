@@ -41,6 +41,7 @@ import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.InsertValuesStepN
 import org.jooq.Record1
 import org.jooq.Record4
 import org.jooq.RecordMapper
@@ -60,7 +61,82 @@ class PipelineSettingDao {
             // #6090 先查询存在情况再做刷新或插入
             val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
             val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
-            val insert = dslContext.insertInto(
+            val insert = buildInsert(dslContext = dslContext, setting = setting, isTemplate = isTemplate)
+                .onDuplicateKeyUpdate()
+                .set(NAME, setting.pipelineName)
+                .set(DESC, setting.desc)
+                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                .set(SUCCESS_RECEIVER, setting.successSubscription?.users)
+                .set(FAIL_RECEIVER, setting.failSubscription?.users)
+                .set(SUCCESS_GROUP, setting.successSubscription?.groups?.joinToString(","))
+                .set(FAIL_GROUP, setting.failSubscription?.groups?.joinToString(","))
+                .set(SUCCESS_TYPE, setting.successSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_TYPE, setting.failSubscription?.types?.joinToString(",") { it.name })
+                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription?.wechatGroupFlag ?: false)
+                .set(FAIL_WECHAT_GROUP, setting.failSubscription?.wechatGroup ?: "")
+                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription?.wechatGroupFlag ?: false)
+                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription?.wechatGroup ?: "")
+                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription?.wechatGroupMarkdownFlag ?: false)
+                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription?.detailFlag ?: false)
+                .set(FAIL_DETAIL_FLAG, setting.failSubscription?.detailFlag ?: false)
+                .set(SUCCESS_CONTENT, setting.successSubscription?.content)
+                .set(FAIL_CONTENT, setting.failSubscription?.content)
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
+                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
+                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(VERSION, setting.version)
+                .set(IS_TEMPLATE, isTemplate)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
+            // pipelineAsCodeSettings 默认传空不更新
+            setting.pipelineAsCodeSettings?.let { self ->
+                insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
+            }
+            setting.envHashId?.let { self ->
+                insert.set(ENV_HASH_ID, self)
+            }
+            setting.envName?.let { self ->
+                insert.set(ENV_NAME, self)
+            }
+            // yamlLocked 传空不更新，避免非 YAML 链路的保存覆盖 YAML 禁用状态
+            setting.yamlLocked?.let { self ->
+                insert.set(YAML_LOCKED, self)
+            }
+            return insert.execute()
+        }
+    }
+
+    /**
+     * 新建流水线专用,记录已存在时抛出主键/唯一键冲突异常。
+     * 不要改为 on duplicate key update:同项目并发创建时会在唯一索引上加排他 next-key 锁,容易死锁
+     */
+    fun insertSetting(
+        dslContext: DSLContext,
+        setting: PipelineSetting,
+        isTemplate: Boolean = false
+    ): Int {
+        return buildInsert(dslContext = dslContext, setting = setting, isTemplate = isTemplate).execute()
+    }
+
+    private fun buildInsert(
+        dslContext: DSLContext,
+        setting: PipelineSetting,
+        isTemplate: Boolean
+    ): InsertValuesStepN<TPipelineSettingRecord> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+            val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+            return dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 NAME,
@@ -143,57 +219,7 @@ class PipelineSettingDao {
                 setting.envHashId,
                 setting.envName,
                 setting.yamlLocked ?: false
-            ).onDuplicateKeyUpdate()
-                .set(NAME, setting.pipelineName)
-                .set(DESC, setting.desc)
-                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
-                .set(SUCCESS_RECEIVER, setting.successSubscription?.users)
-                .set(FAIL_RECEIVER, setting.failSubscription?.users)
-                .set(SUCCESS_GROUP, setting.successSubscription?.groups?.joinToString(","))
-                .set(FAIL_GROUP, setting.failSubscription?.groups?.joinToString(","))
-                .set(SUCCESS_TYPE, setting.successSubscription?.types?.joinToString(",") { it.name })
-                .set(FAIL_TYPE, setting.failSubscription?.types?.joinToString(",") { it.name })
-                .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription?.wechatGroupFlag ?: false)
-                .set(FAIL_WECHAT_GROUP, setting.failSubscription?.wechatGroup ?: "")
-                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription?.wechatGroupMarkdownFlag ?: false)
-                .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription?.wechatGroupFlag ?: false)
-                .set(SUCCESS_WECHAT_GROUP, setting.successSubscription?.wechatGroup ?: "")
-                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription?.wechatGroupMarkdownFlag ?: false)
-                .set(SUCCESS_DETAIL_FLAG, setting.successSubscription?.detailFlag ?: false)
-                .set(FAIL_DETAIL_FLAG, setting.failSubscription?.detailFlag ?: false)
-                .set(SUCCESS_CONTENT, setting.successSubscription?.content)
-                .set(FAIL_CONTENT, setting.failSubscription?.content)
-                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
-                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
-                .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
-                .set(BUILD_NUM_RULE, setting.buildNumRule)
-                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
-                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
-                .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
-                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
-                .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
-                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
-                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
-                .set(VERSION, setting.version)
-                .set(IS_TEMPLATE, isTemplate)
-                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
-                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
-                .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
-            // pipelineAsCodeSettings 默认传空不更新
-            setting.pipelineAsCodeSettings?.let { self ->
-                insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
-            }
-            setting.envHashId?.let { self ->
-                insert.set(ENV_HASH_ID, self)
-            }
-            setting.envName?.let { self ->
-                insert.set(ENV_NAME, self)
-            }
-            // yamlLocked 传空不更新，避免非 YAML 链路的保存覆盖 YAML 禁用状态
-            setting.yamlLocked?.let { self ->
-                insert.set(YAML_LOCKED, self)
-            }
-            return insert.execute()
+            )
         }
     }
 

@@ -68,7 +68,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.C
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.setting_key
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService.Companion.trigger_key
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
+import com.tencent.devops.process.pac.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource

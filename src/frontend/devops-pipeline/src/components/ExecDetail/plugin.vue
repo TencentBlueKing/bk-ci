@@ -130,6 +130,7 @@
                     :pipeline-id="$route.params.pipelineId"
                     :build-id="execDetail.id"
                     :tag="currentElement.id"
+                    :build-status="execDetail.status"
                     :execute-count="activeExecuteCount"
                     :task-status="displayElement.status"
                     :download-link="realDownloadLink"

@@ -166,7 +166,9 @@ class PipelineRemoteAuthService @Autowired constructor(
                     tag = taskId,
                     executeCount = 1,
                     jobId = null,
-                    stepId = taskId
+                    stepId = taskId,
+                    projectId = pipeline.projectId,
+                    pipelineId = pipeline.pipelineId
                 )
             }
             BuildId(

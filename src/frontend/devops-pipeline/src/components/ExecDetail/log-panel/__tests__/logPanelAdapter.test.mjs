@@ -654,6 +654,45 @@ test('Job exposes only log and complete inline configuration', () => {
     assert.doesNotMatch(source, /<bk-sideslider/)
 })
 
+test('plugin download uses the build status and keeps the selected round', async () => {
+    const plugin = readFileSync(new URL('../../plugin.vue', import.meta.url), 'utf8')
+    assert.match(plugin, /<step-log-panel[^>]*:build-status="execDetail.status"/)
+    const onlineLink = '/api/build/log/download?tag=task&executeCount=4'
+    const archivedLink = '/artifacts/build.log'
+    const cases = [
+        { mode: 'LOCAL', buildStatus: 'RUNNING', message: 'history.uploadLog', theme: 'primary', link: '' },
+        { mode: 'LOCAL', buildStatus: 'SUCCEED', message: 'history.archiveLogFailed', theme: 'warning', link: onlineLink },
+        { mode: 'ARCHIVE_FAILED', buildStatus: 'FAILED', message: 'history.archiveLogFailed', theme: 'warning', link: onlineLink },
+        { mode: 'ARCHIVED', buildStatus: 'SUCCEED', link: archivedLink }
+    ]
+    for (const { mode, buildStatus, message, theme, link } of cases) {
+        const location = { href: '' }
+        const messages = []
+        const requests = []
+        const component = loadComponentOptions('../StepLogPanel.vue', { ...adapter, mapActions: () => ({}), LogGroupBar: {}, LogLinesView: {} }, { location })
+        const context = { projectId: 'project', pipelineId: 'pipeline', buildId: 'build', tag: 'task', jobId: undefined, executeCount: 4 }
+        await component.methods.download.call({
+            ...context,
+            buildStatus,
+            taskStatus: 'SUCCEED',
+            downloadLink: '/api/build/log/download?tag=task',
+            getLogStatus: async params => {
+                requests.push(['status', params])
+                return { data: { logMode: mode } }
+            },
+            getDownloadLogFromArtifactory: async params => {
+                requests.push(['artifact', params])
+                return archivedLink
+            },
+            $t: key => key,
+            $bkMessage: notice => messages.push(notice)
+        })
+        assert.equal(location.href, link, mode)
+        assert.deepEqual(messages, message ? [{ theme, message, limit: 1 }] : [], mode)
+        assert.deepEqual(requests, mode === 'ARCHIVED' ? [['status', context], ['artifact', context]] : [['status', context]], mode)
+    }
+})
+
 test('Job download uses the parent Job link and execute count without a selected StepLogPanel', () => {
     const location = { href: '' }
     const component = loadComponentOptions('../JobLogPanel.vue', { ...adapter, StepLogPanel: {}, LogStatus: {} }, { location })

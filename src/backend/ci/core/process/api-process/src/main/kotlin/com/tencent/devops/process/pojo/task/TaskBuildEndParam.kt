@@ -53,5 +53,7 @@ data class TaskBuildEndParam(
     @get:Schema(title = "错误代码", required = false)
     var errorCode: Int? = null,
     @get:Schema(title = "错误信息", required = false)
-    var errorMsg: String? = null
+    var errorMsg: String? = null,
+    @get:Schema(title = "插件运行后的实际output，仅回写编排已声明的key", required = false)
+    val outputValues: Map<String, String>? = null
 )

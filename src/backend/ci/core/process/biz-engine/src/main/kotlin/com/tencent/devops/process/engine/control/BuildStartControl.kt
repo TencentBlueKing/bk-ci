@@ -102,7 +102,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.math.max
 
 /**
@@ -165,7 +167,9 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
             jobId = null,
-            stepId = TAG
+            stepId = TAG,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
 
         watcher.start("pickUpReadyBuild")
@@ -182,10 +186,19 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId, message = "BuildStartControl End",
             tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
             jobId = null,
-            stepId = TAG
+            stepId = TAG,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
 
-        buildLogPrinter.stopLog(buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount)
+        buildLogPrinter.stopLog(
+            buildId = buildId,
+            tag = TAG,
+            containerHashId = JOB_ID,
+            executeCount = executeCount,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         startPipelineCount()
     }
 
@@ -202,7 +215,9 @@ class BuildStartControl @Autowired constructor(
                 buildLogPrinter.addLine(
                     message = "Stop #${buildInfo?.buildNum} ${buildInfo?.status}",
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                    jobId = null, stepId = TAG
+                    jobId = null, stepId = TAG,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
                 LOG.info("ENGINE|$buildId][$source|BUILD_START_DONE|status=${buildInfo?.status}")
                 null
@@ -223,7 +238,9 @@ class BuildStartControl @Autowired constructor(
             buildLogPrinter.addLine(
                 message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                jobId = null, stepId = TAG
+                jobId = null, stepId = TAG,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
             return false
         }
@@ -263,7 +280,9 @@ class BuildStartControl @Autowired constructor(
                     buildLogPrinter.addLine(
                         message = "Waiting build #${buildInfo.buildNum - 1}",
                         buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                        jobId = null, stepId = TAG
+                        jobId = null, stepId = TAG,
+                        projectId = projectId,
+                        pipelineId = pipelineId
                     )
                 }
             }
@@ -281,7 +300,9 @@ class BuildStartControl @Autowired constructor(
                     buildLogPrinter.addLine(
                         message = "Waiting build #${buildInfo.buildNum - 1}",
                         buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                        jobId = null, stepId = TAG
+                        jobId = null, stepId = TAG,
+                        projectId = projectId,
+                        pipelineId = pipelineId
                     )
                 }
             } else if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
@@ -292,7 +313,9 @@ class BuildStartControl @Autowired constructor(
                 buildLogPrinter.addLine(
                     message = "Build #${buildInfo.buildNum} preparing",
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                    jobId = null, stepId = TAG
+                    jobId = null, stepId = TAG,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
                 handleBuildNo(buildInfo)
                 pipelineRuntimeService.startLatestRunningBuild(
@@ -445,7 +468,9 @@ class BuildStartControl @Autowired constructor(
                         )
                     ),
                     buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                    jobId = null, stepId = TAG
+                    jobId = null, stepId = TAG,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
                 checkStart = false
             }
@@ -533,7 +558,9 @@ class BuildStartControl @Autowired constructor(
                     params = arrayOf(setting.runLockType.name, runningCount.toString())
                 ),
                 buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                jobId = null, stepId = TAG
+                jobId = null, stepId = TAG,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
             return false
         }
@@ -663,6 +690,13 @@ class BuildStartControl @Autowired constructor(
         val now = LocalDateTime.now()
         val stage = model.stages[0]
         val container = stage.containers[0]
+        // 触发阶段/作业没有运行态刷新，耗时按"入队到现在"统计（见下方 stageElapsed）。
+        // 起止时间取同一口径，并保留毫秒：Long?.toLocalDateTime() 会先整除 1000，最多丢掉 999 毫秒。
+        // 触发步骤本身瞬间完成，开始时间取当前时刻，不把排队时间算到步骤上。
+        val triggerStartTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(buildInfo.queueTime),
+            ZoneId.systemDefault()
+        )
         run lit@{
             container.name = ContainerUtils.getClearedQueueContainerName(container.name)
             container.elements.forEach {
@@ -683,10 +717,18 @@ class BuildStartControl @Autowired constructor(
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
-                        operation = "updateTriggerElement#$taskId"
+                        operation = "updateTriggerElement#$taskId",
+                        fallbackStartTime = now
                     )
                     it.status = BuildStatus.SUCCEED.name
-                    buildLogPrinter.stopLog(buildInfo.buildId, taskId, containerHashId = JOB_ID, executeCount)
+                    buildLogPrinter.stopLog(
+                        buildId = buildInfo.buildId,
+                        tag = taskId,
+                        containerHashId = JOB_ID,
+                        executeCount = executeCount,
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId
+                    )
                     return@lit
                 }
             }
@@ -718,7 +760,8 @@ class BuildStartControl @Autowired constructor(
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
                 Stage::elapsed.name to stageElapsed
-            )
+            ),
+            fallbackStartTime = triggerStartTime
         )
         container.status = BuildStatus.SUCCEED.name
         container.startEpoch = nowMills
@@ -736,7 +779,8 @@ class BuildStartControl @Autowired constructor(
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
                 Container::name.name to container.name, // 名字刷新成非队列中
                 Container::timeCost.name to BuildRecordTimeCost()
-            )
+            ),
+            fallbackStartTime = triggerStartTime
         )
 
         buildLogPrinter.addLine(
@@ -749,7 +793,9 @@ class BuildStartControl @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + ": ${buildInfo.startUser}",
             buildId = buildInfo.buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-            jobId = null, stepId = TAG
+            jobId = null, stepId = TAG,
+            projectId = buildInfo.projectId,
+            pipelineId = buildInfo.pipelineId
         )
     }
 
@@ -905,7 +951,9 @@ class BuildStartControl @Autowired constructor(
         buildLogPrinter.addLine(
             message = "Async fetch latest commit/revision, please wait...",
             buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-            jobId = null, stepId = TAG
+            jobId = null, stepId = TAG,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
         val startParams: Map<String, String> by lazy {
             buildVariableService.getAllVariable(projectId, pipelineId, buildId)
@@ -921,7 +969,9 @@ class BuildStartControl @Autowired constructor(
             buildLogPrinter.addLine(
                 message = "Updating model & start parameters & variables",
                 buildId = buildId, tag = TAG, containerHashId = JOB_ID, executeCount = executeCount,
-                jobId = null, stepId = TAG
+                jobId = null, stepId = TAG,
+                projectId = projectId,
+                pipelineId = pipelineId
             )
             updateModel(model = model, buildInfo = buildInfo, taskId = taskId, executeCount = executeCount)
             buildVariableService.setVariable(

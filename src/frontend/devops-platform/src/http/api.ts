@@ -3,10 +3,12 @@ import {
 } from '@/types';
 import { STORE_TYPE, BASE_PREFIX } from '@/common/constants';
 import fetch from './fetch';
+import conventionApi from './convention';
 
 const repositoryApiPerfix = '/repository/api/user';
 
 export default {
+  ...conventionApi,
   // 获取代码库配置
   fetchRepoConfigList ({ page, pageSize }) {
     return fetch.get(`${repositoryApiPerfix}/repositories/config/listConfig?page=${page}&pageSize=${pageSize}`);

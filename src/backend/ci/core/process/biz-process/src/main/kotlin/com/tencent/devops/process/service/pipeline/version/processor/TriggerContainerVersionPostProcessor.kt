@@ -2,11 +2,11 @@ package com.tencent.devops.process.service.pipeline.version.processor
 
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.pipeline.task.PipelineTaskVersionProcessor
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -78,11 +78,17 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
     ) {
         val projectId = pipelineResourceVersion.projectId
         val pipelineId = pipelineResourceVersion.pipelineId
-        val count = pipelineEventSubscriptionDao.deleteExcludeTaskIds(
+        val removedTaskIds = pipelineEventSubscriptionDao.listTaskIds(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        ).subtract(taskIds.toSet())
+        if (removedTaskIds.isEmpty()) return
+        val count = pipelineEventSubscriptionDao.deleteByTaskIds(
             dslContext = transactionContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            taskIds = taskIds
+            taskIds = removedTaskIds
         )
         if (count > 0) {
             logger.info("clean removed trigger subscriptions|$projectId|$pipelineId|count=$count")

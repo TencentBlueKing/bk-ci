@@ -135,6 +135,7 @@
         findLogMatchIds,
         formatLogTime,
         getLogIssueLevel,
+        isLogArchivePendingBuildStatus,
         isPermissionError,
         latestDisplayBase,
         normalizeLogPanelResponse,
@@ -173,6 +174,7 @@
             tag: { type: String, default: undefined },
             jobId: { type: String, default: undefined },
             contextKey: { type: String, default: '' },
+            buildStatus: { type: String, default: '' },
             executeCount: { type: Number, required: true },
             archiveFlag: { type: [String, Boolean], default: undefined },
             downloadLink: { type: String, default: '' },
@@ -992,11 +994,18 @@
                     if (url) location.href = url
                     return
                 }
-                this.getLogStatus(context).then(response => {
+                return this.getLogStatus(context).then(response => {
                     const mode = response?.data?.logMode || response?.data?.mode
-                    if (mode === 'LOCAL') {
+                    if (mode === 'LOCAL' && (!context.tag || isLogArchivePendingBuildStatus(this.buildStatus))) {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog'), limit: 1 })
                         return
+                    }
+                    if (context.tag && (mode === 'ARCHIVE_FAILED' || mode === 'LOCAL')) {
+                        this.$bkMessage({
+                            theme: 'warning',
+                            message: this.$t('history.archiveLogFailed'),
+                            limit: 1
+                        })
                     }
                     const artifact = mode === 'ARCHIVED' && context.tag
                         ? this.getDownloadLogFromArtifactory(context)
@@ -1012,7 +1021,7 @@
                             return
                         }
                         const separator = url.includes('?') ? '&' : '?'
-                        location.href = `${url}${separator}executeCount=${this.executeCount}`
+                        location.href = `${url}${separator}executeCount=${context.executeCount}`
                     })
                 }).catch(error => this.$bkMessage({ theme: 'error', message: error.message || error }))
             }

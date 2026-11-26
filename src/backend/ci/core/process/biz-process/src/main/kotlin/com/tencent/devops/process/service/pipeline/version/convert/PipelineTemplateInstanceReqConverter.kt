@@ -68,7 +68,7 @@ import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -274,6 +274,8 @@ class PipelineTemplateInstanceReqConverter(
                 refType = templateRefType,
                 templateId = templateId,
                 templateVersionName = templateResource.versionName,
+                parsedTemplateId = templateResource.templateId,
+                parsedTemplateVersion = templateResource.version,
                 templatePath = templatePath,
                 templateRef = templateRef,
                 templateVariables = templateVariables,

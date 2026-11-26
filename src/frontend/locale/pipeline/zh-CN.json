@@ -827,6 +827,7 @@
   },
   "history": {
     "uploadLog": "日志正在上传中，请稍后再试",
+    "archiveLogFailed": "日志归档失败，完整日志未能写入制品库。将下载已上报的在线日志（可能不完整）",
     "logEmpty": "日志为空",
     "logClear": "日志被清除",
     "logClose": "日志被关闭",
@@ -879,6 +880,8 @@
     "stopBuild": "终止构建",
     "reBuild": "重新构建",
     "fileUnit": "<b>{0}</b>个文件",
+    "fileFolderUnit": "<b>{0}</b>个文件， <b>{1}</b>个目录",
+    "folderUnit": "<b>{0}</b>个目录",
     "completedLog": "完整日志",
     "artifactList": "制品列表",
     "showAll": "显示全部",
@@ -899,8 +902,8 @@
     "rePlayInfo2": "2. 重放时，跳过触发器检测，有可能不满足最新版本的触发条件",
     "reBuildInfo1": "1. 重新构建，是在之前的构建基础上重新执行",
     "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致",
-    "rePlayFailed": "重放事件失败，请重试",
-    "canNotReplayTips": "触发事件缓存过期已清理。若需重放，请到代码库操作。"
+    "canNotReplayTips": "触发事件缓存过期已清理。若需重放，请到代码库操作。",
+    "replayCheckFailed": "重放前检查失败，请稍后重试"
   },
   "preview": {
     "build": "构建",
@@ -2329,6 +2332,8 @@
   "notGrouped": "未分组",
   "attributeValue": "属性值",
   "attributeName": "属性名",
+  "keyPlaceholder": "键，如quality-gate",
+  "valuePlaceholder": "值，如passed",
   "metadataAttributeName": "元数据属性名",
   "metadataAttributeValue": "元数据属性值",
   "artifactQuality": "制品质量",

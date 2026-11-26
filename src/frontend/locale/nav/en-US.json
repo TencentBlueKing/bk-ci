@@ -253,5 +253,13 @@
   "输入交接人，选中回车进行校验": "Enter the handover person, and press enter to validate",
   "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over",
   "个人": "Personal",
-  "personalProjectCannotExit": "Personal projects are not allowed to exit"
+  "personalProjectCannotExit": "Personal projects are not allowed to exit",
+  "convention": {
+    "title": "BK-CI Use Convention",
+    "agree": "I have read and agree to the rules above, and I agree to comply with the company's applicable management regulations and policies.",
+    "button": "Agree and continue",
+    "tip": "Please select the checkbox first",
+    "done": "Agreed",
+    "retry": "Agreement was not saved, please try again"
+  }
 }

@@ -49,7 +49,7 @@ class WeworkReviewCardBuilderTest {
         assertEquals("https://example.com/pc", rows.last().url)
         assertEquals("审核说明", first.quoteArea!!.title)
         assertEquals("重要审核XXX", first.quoteArea!!.quoteText)
-        assertNull(first.subTitleText)
+        assertEquals("重要审核XXX", first.subTitleText)
         assertEquals("通过", first.buttonList!![0].text)
         assertEquals(0, first.buttonList!![0].type)
         assertEquals("驳回", first.buttonList!![1].text)
@@ -224,8 +224,8 @@ class WeworkReviewCardBuilderTest {
         assertEquals("p", card.horizontalContentList!!.first { it.keyname == "流水线" }.value)
         assertTrue(card.horizontalContentList!!.none { it.keyname == "项目" })
         assertTrue(card.subTitleText!!.contains("发布备注"))
-        assertEquals("确认提交", card.buttonList!![0].text)
-        assertEquals("修改参数", card.buttonList!![1].text)
+        assertEquals("同意", card.buttonList!![0].text)
+        assertEquals("修改", card.buttonList!![1].text)
         assertTrue(card.buttonList!![1].url!!.contains("action=modify"))
         assertEquals("驳回", card.buttonList!!.last().text)
         assertEquals("查看构建", card.horizontalContentList!!.last().value)
@@ -258,7 +258,56 @@ class WeworkReviewCardBuilderTest {
     }
 
     @Test
-    fun `markdown flag sends rendered text and skips the card`() {
+    fun `configured notify title becomes the card headline`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+                reviewType = "ATOM",
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "1",
+                    "reviewUrl" to "https://example.com/pc",
+                    "notifyTitle" to "**测试人工审核通知标题**",
+                    "triggerUser" to "royalhuang"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val card = plan!!.receiverCards.getValue("royalhuang")
+        assertEquals("测试人工审核通知标题", card.mainTitle.title)
+        assertEquals("<Royal流水线测试>人工审核", card.mainTitle.desc)
+    }
+
+    @Test
+    fun `default template title does not replace the card headline`() {
+        val plan = WeworkReviewCardBuilder.build(
+            request = reviewRequest(
+                receivers = mutableSetOf("royalhuang"),
+                templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+                reviewType = "ATOM",
+                titleParams = mapOf(
+                    "content" to "项目【Royal流水线测试】下的流水线【stage-review-notice】#1 构建处于待审核状态"
+                ),
+                bodyParams = mapOf(
+                    "projectName" to "Royal流水线测试",
+                    "pipelineName" to "stage-review-notice",
+                    "buildNum" to "1",
+                    "reviewUrl" to "https://example.com/pc"
+                )
+            ),
+            title = "t",
+            redisOperation = null
+        )
+        val card = plan!!.receiverCards.getValue("royalhuang")
+        assertEquals("<Royal流水线测试>人工审核", card.mainTitle.title)
+        assertEquals("当前构建需要您审核后继续", card.mainTitle.desc)
+    }
+
+    @Test
+    fun `markdown flag keeps the original template and skips the card`() {
         val plan = WeworkReviewCardBuilder.build(
             request = reviewRequest(
                 receivers = mutableSetOf("royalhuang"),
@@ -277,19 +326,7 @@ class WeworkReviewCardBuilderTest {
             title = "t",
             redisOperation = null
         )
-        assertNotNull(plan)
-        assertTrue(plan!!.receiverCards.isEmpty())
-        val markdown = plan.fallbackText
-        assertTrue(markdown.contains("**<Royal流水线测试>人工审核**"))
-        assertTrue(markdown.contains("**触发人**"))
-        assertTrue(markdown.contains("stage-review-notice"))
-        assertTrue(markdown.indexOf("**触发人**") < markdown.indexOf("stage-review-notice"))
-        assertFalse(markdown.contains("审核说明"))
-        assertFalse(markdown.contains("需要您审核后继续"))
-        assertEquals(1, Regex("查看构建").findAll(markdown).count())
-        assertTrue(markdown.contains("https://example.com/pc"))
-        assertFalse(markdown.contains("https://example.com/app"))
-        assertFalse(markdown.contains("\\n"))
+        assertNull(plan)
     }
 
     @Test
@@ -334,15 +371,17 @@ class WeworkReviewCardBuilderTest {
         receivers: MutableSet<String>,
         titleParams: Map<String, String> = emptyMap(),
         bodyParams: Map<String, String>,
-        markdown: Boolean = false
+        markdown: Boolean = false,
+        templateCode: String = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
+        reviewType: String = "STAGE"
     ) = SendNotifyMessageTemplateRequest(
-        templateCode = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE",
+        templateCode = templateCode,
         receivers = receivers,
         titleParams = titleParams,
         bodyParams = bodyParams,
         markdownContent = markdown,
         callbackData = mapOf(
-            "reviewType" to "STAGE",
+            "reviewType" to reviewType,
             "projectId" to "royalpipeline",
             "pipelineId" to "p-1",
             "buildId" to "b-1",

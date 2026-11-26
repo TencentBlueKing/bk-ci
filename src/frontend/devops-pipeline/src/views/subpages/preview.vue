@@ -393,7 +393,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, UPDATE_STARTUP_INFO, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, bus } from '@/utils/bus'
+    import { UPDATE_PREVIEW_PIPELINE_NAME, UPDATE_STARTUP_INFO, PAC_BRANCH_CHANGE, UPDATE_PAC_ERROR_STATUS, PAC_BRANCH_LOADING, PAC_BRANCH_INIT_DONE, UPDATE_EXPIRE_RELEASED_VERSION, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual, isParamValueEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -843,6 +843,8 @@
                             this.branchVersion = branchPipelineRes?.version ?? null
                             this.isBranchVersion = true
                             this.setActiveVersionInfo(pipelineRes)
+                            // 先清空，避免 branchPipelineRes 为空时沿用上一次滞后标记
+                            this.expireReleasedVersion = false
                             if (branchPipelineRes) {
                                 const { version, latestVersion, versionStatus = '' } = branchPipelineRes
                                 this.expireReleasedVersion = versionStatus === 'RELEASED' && version !== latestVersion
@@ -858,6 +860,7 @@
                         // 非 PAC 分支模式下清空 branchVersion
                         this.branchVersion = null
                         this.isBranchVersion = false
+                        this.expireReleasedVersion = false
                         this.setActiveVersionInfo(pipelineRes)
                     }
 
@@ -869,11 +872,16 @@
                     bus.$emit(UPDATE_PREVIEW_PIPELINE_NAME, this.pipelineModel?.name)
                     // 通知预览头部当前所选版本是否允许手动触发
                     bus.$emit(UPDATE_STARTUP_INFO, this.startupInfo?.canManualStartup)
+                    // 通知 Header：滞后正式版仅警告、不按 versionNotMatch 禁用执行
+                    bus.$emit(UPDATE_EXPIRE_RELEASED_VERSION, this.expireReleasedVersion)
                     this.initParams(this.startupInfo)
                     this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
                     this.pacError = { show: false, type: '', message: '' }
                     bus.$emit(UPDATE_PAC_ERROR_STATUS, false)
                 } catch (err) {
+                    // 失败时清空滞后标记并同步 Header，避免脏状态误放开执行按钮
+                    this.expireReleasedVersion = false
+                    bus.$emit(UPDATE_EXPIRE_RELEASED_VERSION, false)
                     const errorCode = err?.code || err?.status
                     // PAC 模式下特定错误码不返回，而是展示错误页面
                     const hrefMatch = err?.message?.match(/href="([^"]+)"/)
@@ -941,6 +949,8 @@
                 // 分支列表为空或加载失败时，结束 loading 状态并显示错误
                 if (!payload.hasBranch) {
                     this.isLoading = false
+                    this.expireReleasedVersion = false
+                    bus.$emit(UPDATE_EXPIRE_RELEASED_VERSION, false)
                     this.pacError = {
                         show: true,
                         type: 'empty',

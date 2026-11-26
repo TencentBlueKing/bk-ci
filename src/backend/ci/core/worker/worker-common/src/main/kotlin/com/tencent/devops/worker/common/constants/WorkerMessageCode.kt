@@ -192,4 +192,6 @@ object WorkerMessageCode {
     const val BK_PROGRESS_RATE_INVALID_NUMBER_RANGE = "bkProgressRateInvalidNumberRange"
     const val BK_PROGRESS_RATE_INVALID_JSON_OR_SCHEMA = "bkProgressRateInvalidJsonOrSchema"
     const val BK_PROGRESS_RATE_INVALID_FORMAT = "bkProgressRateInvalidFormat"
+    // 日志归档到制品库失败，完整日志未能保存。下载只能获取已上报到日志服务的部分内容。
+    const val BK_LOG_ARCHIVE_FAILED_NOTICE = "bkLogArchiveFailedNotice"
 }

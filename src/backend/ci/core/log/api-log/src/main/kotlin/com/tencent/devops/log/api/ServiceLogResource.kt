@@ -369,7 +369,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户下载必须为 true", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Response
 
     @Operation(summary = "获取插件的的日志状态")
@@ -399,7 +403,11 @@ interface ServiceLogResource {
         stepId: String?,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否校验流水线权限。false 仅给网关已认证的内部调用；用户查询必须为 true", required = false)
+        @DefaultValue("true")
+        @QueryParam("checkPermissionFlag")
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogStatus>
 
     @Operation(summary = "获取当前构建的最大行号")

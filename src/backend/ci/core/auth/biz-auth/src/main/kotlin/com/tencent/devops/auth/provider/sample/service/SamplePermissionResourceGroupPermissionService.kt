@@ -95,6 +95,11 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String
     ): Boolean = true
 
+    override fun listSensitiveResourceTypes(
+        projectCode: String,
+        iamGroupIds: List<Int>
+    ): Map<Int, List<String>> = emptyMap()
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,

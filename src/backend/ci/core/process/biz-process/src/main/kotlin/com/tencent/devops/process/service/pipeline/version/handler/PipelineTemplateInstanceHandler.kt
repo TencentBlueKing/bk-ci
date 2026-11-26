@@ -43,7 +43,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
-import com.tencent.devops.process.yaml.PipelineYamlReleaseService
+import com.tencent.devops.process.pac.PipelineYamlReleaseService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 
 import org.slf4j.LoggerFactory

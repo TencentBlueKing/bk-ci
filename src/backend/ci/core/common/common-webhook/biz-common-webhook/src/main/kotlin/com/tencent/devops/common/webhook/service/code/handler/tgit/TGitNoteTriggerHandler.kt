@@ -188,7 +188,7 @@ class TGitNoteTriggerHandler(
             startParams[PIPELINE_WEBHOOK_NOTE_ID] = id
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_COMMENT] = note
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_ID] = id
-            startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = projectId.toString()
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = event.projectId.toString()
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_NOTEABLE_TYPE] = noteableType
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID] = authorId
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT] = createdAt

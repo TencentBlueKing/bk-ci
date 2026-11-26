@@ -49,7 +49,12 @@ function iframeUtil (router: any) {
     }
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
-        const pathname = `${location.pathname.replace(/^\/([\w\-]+)\/([\w\-]+)\/(\S+)$/, '/$1/$2')}${url}`
+        const prefix = window.PUBLIC_URL_PREFIX || ''
+        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        // 归一到 /{prefix?}/{console}/{service}，再拼接子应用 fullPath。
+        // 旧正则要求至少 4 段路径，/console/platform/convention 这种 3 段无法剥离，
+        // 会拼出 /console/platform/convention/convention。
+        const pathname = `${location.pathname.replace(new RegExp(`^${escapedPrefix}/([\\w\\-]+)/([\\w\\-]+)(?:/.*)?$`), `${prefix}/$1/$2`)}${url}`
         if (refresh) {
             location.pathname = pathname
         } else {

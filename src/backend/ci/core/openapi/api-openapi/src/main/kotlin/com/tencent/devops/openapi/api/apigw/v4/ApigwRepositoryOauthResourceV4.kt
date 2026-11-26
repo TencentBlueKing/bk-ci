@@ -106,7 +106,10 @@ interface ApigwRepositoryOauthResourceV4 {
         )
         @QueryParam("scmCode")
         scmCode: String,
-        @Parameter(description = "授权成功后的跳转地址，不传则跳转到蓝盾代码库页面", required = false)
+        @Parameter(
+            description = "授权成功后的跳转地址，不传则跳转到蓝盾代码库页面，仅支持蓝盾域名或已配置白名单的域名",
+            required = false
+        )
         @QueryParam("redirectUrl")
         redirectUrl: String?
     ): Result<ScmOauthStatus>

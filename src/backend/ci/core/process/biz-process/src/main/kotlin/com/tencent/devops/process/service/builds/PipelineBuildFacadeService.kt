@@ -58,10 +58,10 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -125,19 +125,19 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
-import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.ConcurrencyQueueBuild
+import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -154,18 +154,19 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineBuildLocateResult
 import com.tencent.devops.process.pojo.pipeline.toBuildDetailSimple
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.CreateStreamTriggerSupportService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
+import com.tencent.devops.process.trigger.CreateStreamTriggerSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerReplayService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -177,7 +178,6 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
@@ -218,7 +218,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineRecordModelService: PipelineRecordModelService,
+    private val pipelineTriggerReplayService: PipelineTriggerReplayService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
@@ -845,7 +845,9 @@ class PipelineBuildFacadeService(
                                 timestamp = System.currentTimeMillis(),
                                 tag = parameters[PIPELINE_START_TASK_ID]?.toString() ?: ""
                             )
-                        }
+                        },
+                        projectId = projectId,
+                        pipelineId = pipelineId
                     )
                 }
             }
@@ -1540,6 +1542,151 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId
         )
+    }
+
+    /**
+     * 当前构建因互斥组排队时，返回占用者和前方队列。只读已有构建记录，不改变入队出队。
+     */
+    fun getConcurrencyQueue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): ConcurrencyQueueView {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
+            )
+        )
+        val serverTime = System.currentTimeMillis()
+        val buildInfo = pipelineRuntimeService.getUserBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+        if (buildInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
+        }
+        val concurrencyGroup = buildInfo.concurrencyGroup
+        val queued = buildInfo.status == BuildStatus.QUEUE ||
+            buildInfo.status == BuildStatus.QUEUE_CACHE ||
+            buildInfo.status == BuildStatus.LOOP_WAITING
+        if (concurrencyGroup.isNullOrBlank() || !queued) {
+            return ConcurrencyQueueView(visible = false, serverTime = serverTime)
+        }
+        val running = listConcurrencyRunning(projectId, pipelineId, concurrencyGroup, buildId)
+        val ahead = pipelineRuntimeService.listConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
+            beforeQueueTime = buildInfo.queueTime,
+            beforePipelineId = pipelineId,
+            beforeBuildNum = buildInfo.buildNum,
+            excludeBuildId = buildId,
+            limit = ConcurrencyQueueView.AHEAD_LIMIT
+        )
+        val aheadCount = pipelineRuntimeService.countConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
+            beforeQueueTime = buildInfo.queueTime,
+            beforePipelineId = pipelineId,
+            beforeBuildNum = buildInfo.buildNum,
+            excludeBuildId = buildId
+        )
+        val visibleCards = maskConcurrencyQueueCards(
+            userId = userId,
+            projectId = projectId,
+            currentPipelineId = pipelineId,
+            cards = running + ahead
+        )
+        val visibleById = visibleCards.associateBy { it.buildId to it.pipelineId }
+        return ConcurrencyQueueView(
+            visible = true,
+            serverTime = serverTime,
+            concurrencyGroup = concurrencyGroup,
+            queueTime = buildInfo.queueTime,
+            running = running.mapNotNull { visibleById[it.buildId to it.pipelineId] },
+            ahead = ahead.mapNotNull { visibleById[it.buildId to it.pipelineId] },
+            aheadCount = aheadCount
+        )
+    }
+
+    private fun listConcurrencyRunning(
+        projectId: String,
+        pipelineId: String,
+        concurrencyGroup: String,
+        buildId: String
+    ): List<ConcurrencyQueueBuild> {
+        val running = pipelineRuntimeService.listConcurrencyQueueCards(
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            status = listOf(BuildStatus.RUNNING),
+            excludeBuildId = buildId,
+            limit = ConcurrencyQueueView.RUNNING_LIMIT,
+            orderByStartTime = true
+        ).toMutableList()
+        // 旧数据并发组为空、实际组名等于流水线 ID 时，仍可能挡住当前构建
+        if (concurrencyGroup == pipelineId) {
+            running += pipelineRuntimeService.listConcurrencyQueueCards(
+                projectId = projectId,
+                nullGroupPipelineId = pipelineId,
+                status = listOf(BuildStatus.RUNNING),
+                excludeBuildId = buildId,
+                limit = ConcurrencyQueueView.RUNNING_LIMIT,
+                orderByStartTime = true
+            )
+        }
+        return running.sortedBy { it.startTime ?: Long.MAX_VALUE }.take(ConcurrencyQueueView.RUNNING_LIMIT)
+    }
+
+    private fun maskConcurrencyQueueCards(
+        userId: String,
+        projectId: String,
+        currentPipelineId: String,
+        cards: List<ConcurrencyQueueBuild>
+    ): List<ConcurrencyQueueBuild> {
+        if (cards.isEmpty()) {
+            return cards
+        }
+        val pipelineIds = cards.map { it.pipelineId }.toSet()
+        val names = pipelineRepositoryService.listPipelineNameByIds(
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            filterDelete = false
+        )
+        val otherPipelineIds = pipelineIds.filter { it != currentPipelineId }
+        val permitted = if (otherPipelineIds.isEmpty()) {
+            emptySet()
+        } else {
+            pipelinePermissionService.filterPipelines(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(AuthPermission.VIEW),
+                pipelineIds = otherPipelineIds
+            )[AuthPermission.VIEW]?.toSet() ?: emptySet()
+        }
+        return cards.map { card ->
+            val canView = card.pipelineId == currentPipelineId || permitted.contains(card.pipelineId)
+            if (canView) {
+                card.copy(pipelineName = names[card.pipelineId], detailVisible = true)
+            } else {
+                card.copy(
+                    pipelineName = null,
+                    userId = "",
+                    trigger = "",
+                    buildMsg = null,
+                    detailVisible = false
+                )
+            }
+        }
     }
 
     fun getBuildDetailSimple(
@@ -2737,7 +2884,9 @@ class PipelineBuildFacadeService(
                     containerHashId = containerId,
                     executeCount = executeCount,
                     jobId = null,
-                    stepId = stepId
+                    stepId = stepId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
 
@@ -2750,7 +2899,9 @@ class PipelineBuildFacadeService(
                     containerHashId = jobId,
                     executeCount = 1,
                     jobId = null,
-                    stepId = VMUtils.genStartVMTaskId(jobId)
+                    stepId = VMUtils.genStartVMTaskId(jobId),
+                    projectId = projectId,
+                    pipelineId = pipelineId
                 )
             }
 
@@ -2879,7 +3030,9 @@ class PipelineBuildFacadeService(
                         tag = startUpVMTask!!.taskId,
                         containerHashId = startUpVMTask.containerHashId,
                         executeCount = startUpVMTask.executeCount ?: 1,
-                        jobId = null, stepId = startUpVMTask.stepId
+                        jobId = null, stepId = startUpVMTask.stepId,
+                        projectId = projectCode,
+                        pipelineId = pipelineId
                     )
                 }
                 return Pair(startUpVMTask?.starter, false)
@@ -3019,7 +3172,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         userId: String,
         forceTrigger: Boolean
-    ): BuildReplayResult {
+    ): BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -3096,33 +3249,25 @@ class PipelineBuildFacadeService(
             )
         }
         if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
-            val replayEventId = pipelineTriggerEventService.getBuildTriggerDetail(
+            return pipelineTriggerEventService.getBuildTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
             )?.let {
-                pipelineTriggerEventService.replay(
+                pipelineTriggerReplayService.replayByBuild(
                     userId = userId,
                     projectId = projectId,
-                    detailId = it.detailId!!
+                    triggerDetail = it
                 )
             } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
-            return BuildReplayResult(
-                status = BuildReplayStatus.REPLAYING,
-                eventId = replayEventId
-            )
         }
-        val replayBuildId = buildManualStartup(
+        return buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = buildInfo.channelCode,
             values = startParameters,
             startType = StartType.MANUAL
-        )
-        return BuildReplayResult(
-            status = BuildReplayStatus.REPLAY_SUCCESS,
-            id = replayBuildId.id
         )
     }
 
@@ -3398,12 +3543,12 @@ class PipelineBuildFacadeService(
         )
     }
 
-    fun replayStatus(
+    fun canReplay(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): BuildReplayResult {
+    ): Boolean {
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         return when (StartType.toStartType(buildInfo.trigger)) {
@@ -3412,19 +3557,10 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId
-                )?.let {
-                    BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-                } ?: BuildReplayResult(
-                    status = BuildReplayStatus.CANNOT_REPLAY,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
-                    )
-                )
+                ) != null
             }
 
-            else -> {
-                BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-            }
+            else -> true
         }
     }
 

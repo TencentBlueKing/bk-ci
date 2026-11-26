@@ -366,6 +366,10 @@ class ManagerUserService @Autowired constructor(
         }
     }
 
+    fun getAllManagerUsers(): List<String> {
+        return managerUserDao.getAllUsers(dslContext)
+    }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(ManagerUserService::class.java)
     }

@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":core:misc:biz-plugin"))
     implementation(project(":core:process:biz-engine"))
     implementation(project(":core:process:biz-process"))
+    implementation(project(":core:process:biz-trigger"))
     implementation(project(":core:project:biz-project-sample"))
     implementation(project(":core:quality:biz-quality"))
     implementation(project(":core:ticket:biz-ticket"))

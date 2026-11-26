@@ -20,6 +20,7 @@
         @Action getAnnouncement
         @Action setAnnouncement
         @Action getPlatformPreData
+        @Action checkConvention
 
         @Watch('fetchError')
         handleFetchError (e) {
@@ -34,6 +35,7 @@
 
         async created () {
             this.getPlatformPreData()
+            await this.checkConvention(this.$i18n.locale)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

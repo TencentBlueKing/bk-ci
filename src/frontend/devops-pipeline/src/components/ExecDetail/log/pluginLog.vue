@@ -60,6 +60,7 @@
     import { bkLog, bkLogSearch } from '@blueking/log'
     import { mapActions, mapState } from 'vuex'
     import ProgressDetailPanel from '@/components/ProgressDetailPanel'
+    import { isLogArchivePendingBuildStatus } from '../log-panel/logPanelAdapter'
 
     export default {
         components: {
@@ -186,14 +187,7 @@
             },
 
             buildStillRunning () {
-                return [
-                    'RUNNING',
-                    'PREPARE_ENV',
-                    'QUEUE',
-                    'LOOP_WAITING',
-                    'CALL_WAITING',
-                    'WAITING'
-                ].includes(this.execDetail?.status)
+                return isLogArchivePendingBuildStatus(this.execDetail?.status)
             },
 
             currentTaskStatus () {
