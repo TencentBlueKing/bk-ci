@@ -296,10 +296,7 @@ class GithubPrTriggerHandler @Autowired constructor(
         pullRequestStartParam(event = event, startParams = startParams)
 
         startParams.putAll(
-            WebhookUtils.prStartParam(
-                pullRequest = event.pullRequest,
-                homepage = event.repository.url
-            )
+            WebhookUtils.prStartParam(pullRequest = event.pullRequest)
         )
         if (repository != null && !projectId.isNullOrBlank()) {
             // 注意：PR[fork库 → main库]

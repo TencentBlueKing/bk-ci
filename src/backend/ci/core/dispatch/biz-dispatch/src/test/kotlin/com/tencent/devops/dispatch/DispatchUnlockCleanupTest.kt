@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -20,12 +21,16 @@ import com.tencent.devops.dispatch.utils.DispatchStrategyExecutor.TryAgentResult
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentJobEnvLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.DispatchStrategyConfig
 import com.tencent.devops.environment.pojo.EnabledStrategiesWithTags
 import com.tencent.devops.environment.pojo.enums.NodeRule
 import com.tencent.devops.environment.pojo.enums.StrategyScope
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import io.mockk.every
 import io.mockk.mockk
@@ -58,6 +63,9 @@ class DispatchUnlockCleanupTest {
     private val builds = mockk<ThirdPartyAgentBuildRedisUtils>(relaxed = true)
     private val client = mockk<Client>(relaxed = true)
     private val details = mockk<ServiceBuildResource>(relaxed = true)
+    private val environment = mockk<ServiceThirdPartyAgentResource>(relaxed = true)
+    private val agentDetail = mockk<ThirdPartyAgentDetail>(relaxed = true)
+    private val vars = mockk<ServiceVarResource>(relaxed = true)
     private val bridge = mockk<StreamBridge>(relaxed = true)
     private val single = spyk(TPASingleQueueService(redis, bridge, client, common, builds, agents))
     private val service = ThirdPartyDispatchService(client, redis, printer, common, agents, mockk(), single)
@@ -106,6 +114,12 @@ class DispatchUnlockCleanupTest {
             trace.add("redis")
         }
         every { client.get(ServiceBuildResource::class) } returns details
+        every { client.get(ServiceThirdPartyAgentResource::class) } returns environment
+        every { environment.getAgentDetail(any(), any(), any(), any()) } returns Result(agentDetail)
+        every { client.get(ServiceVarResource::class) } returns vars
+        every { vars.setContextVar(any()) } answers {
+            if (firstArg<SetContextVarData>().contextName.endsWith("node_alias")) trace.add("alias")
+        }
         every { bridge.send(any<String>(), any()) } returns true
         every { single.afterAgentInQueue(any(), any()) } answers {
             trace.add("post")
@@ -140,16 +154,21 @@ class DispatchUnlockCleanupTest {
         verify(exactly = 1) { common.logWithAgentUrl(any(), BK_SCHEDULING_SELECTED_AGENT, any(), any(), any()) }
         verify(exactly = 1) { bridge.send(any<String>(), any()) }
         val post = trace.indexOf("post")
-        assertTrue(trace.indexOf("sql") < trace.indexOf("redis"))
+        // 领取不加锁，入库即可被领走，worker 鉴权记录要先于入库写好
+        assertTrue(trace.indexOf("redis") < trace.indexOf("sql"))
         unlockedBeforePost.forEach { key ->
-            assertTrue(trace.indexOf("redis") < trace.indexOf("unlock:$key"))
+            assertTrue(trace.indexOf("sql") < trace.indexOf("unlock:$key"))
             assertTrue(trace.lastIndexOf("unlock:$key") < post)
         }
         failedKeys.forEach { key -> assertEquals(2, trace.count { it == "unlock:$key" }) }
         assertEquals(failedKeys, locks.keys)
+        // 节点别名在锁外收尾中写入
+        assertEquals(1, trace.count { it == "alias" })
+        assertTrue(trace.indexOf("unlock:$agentKey") < trace.indexOf("alias"))
     }
 
     private fun assertNotPosted() {
+        verify(exactly = 0) { vars.setContextVar(any()) }
         verify(exactly = 0) { single.afterAgentInQueue(any(), any()) }
         verify(exactly = 0) { details.saveBuildVmInfo(any(), any(), any(), any(), any()) }
         verify(exactly = 0) { bridge.send(any<String>(), any()) }
@@ -222,7 +241,7 @@ class DispatchUnlockCleanupTest {
         every { agents.queueBuild(any(), any(), any(), any()) } throws failure
         assertSame(failure, assertThrows(IllegalArgumentException::class.java) { screen() })
         assertEquals(3, failure.suppressed.size)
-        verify(exactly = 0) { builds.setThirdPartyBuild(any(), any()) }
+        verify(exactly = 1) { builds.setThirdPartyBuild(any(), any()) }
         assertNotPosted()
     }
 
@@ -233,6 +252,8 @@ class DispatchUnlockCleanupTest {
         every { builds.setThirdPartyBuild(any(), any()) } throws failure
         assertSame(failure, assertThrows(IllegalArgumentException::class.java) { screen() })
         assertEquals(1, failure.suppressed.size)
+        // 鉴权记录没写成功时任务不入库，agent 领不到 worker 无法鉴权的任务
+        verify(exactly = 0) { agents.queueBuild(any(), any(), any(), any()) }
         assertNotPosted()
     }
 

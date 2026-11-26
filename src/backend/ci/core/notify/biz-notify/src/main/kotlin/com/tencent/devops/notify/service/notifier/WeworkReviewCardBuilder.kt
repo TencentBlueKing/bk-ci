@@ -56,9 +56,6 @@ object WeworkReviewCardBuilder {
     private const val TITLE_LIMIT = 26
     private const val TITLE_DESC_LIMIT = 30
 
-    /** 消息推送 markdown / markdown_v2 正文上限 4096 字节。 */
-    private const val MARKDOWN_BYTES = 3800
-
     /** 环节状态只用于挑选当前审核，不展示在卡片上。 */
     private const val STATE_PASSED = "已通过"
     private const val STATE_ABORTED = "已驳回"
@@ -80,6 +77,15 @@ object WeworkReviewCardBuilder {
         title: String,
         redisOperation: RedisOperation?
     ): WeworkReviewCardSendPlan? {
+        // 勾选 Markdown 时沿用改卡片前的消息模板：标题、审核说明、电脑端/手机端去审核。
+        // 不在这里重拼正文，避免把卡片键值列表收成引用。
+        if (request.markdownContent == true) {
+            logger.info(
+                "reviewNotifyTrace|hop=notify.card.skip|reason=markdownUsesTemplate|" +
+                    "template=${request.templateCode}"
+            )
+            return null
+        }
         val body = request.bodyParams ?: emptyMap()
         val titles = request.titleParams ?: emptyMap()
         val callback = request.callbackData?.toMutableMap() ?: mutableMapOf()
@@ -196,39 +202,6 @@ object WeworkReviewCardBuilder {
             }
         }
 
-        // 勾选 Markdown 时不发模板卡片。卡片引用区是纯文本，官方没有 markdown 渲染字段。
-        if (request.markdownContent == true) {
-            val markdown = renderMarkdown(
-                copy = fallbackCopy,
-                title = reviewTitle(projectName, fallbackCopy),
-                desc = mainDesc(scene, isStage, fallbackCopy),
-                reviewDesc = reviewDesc,
-                cardLayout = layout(
-                    copy = fallbackCopy,
-                    isStage = isStage,
-                    pipelineName = pipelineName,
-                    buildNum = buildNum,
-                    reviewStage = reviewStage,
-                    stageName = stageName,
-                    reviewDesc = reviewDesc,
-                    scene = scene,
-                    reviewParams = reviewParams.map { it.localize(fallbackCopy) },
-                    reviewUsers = reviewUsers,
-                    reviewGroups = reviewGroups,
-                    triggerUser = triggerUser,
-                    detailUrl = reviewUrl.ifBlank { reviewAppUrl }
-                ),
-                reviewUrl = reviewUrl,
-                reviewAppUrl = reviewAppUrl
-            )
-            logger.info(
-                "reviewNotifyTrace|hop=notify.card.markdown|" +
-                    "template=${request.templateCode}|buildId=${callback["buildId"]}|" +
-                    "bytes=${markdown.toByteArray(Charsets.UTF_8).size}"
-            )
-            return WeworkReviewCardSendPlan(receiverCards = emptyMap(), fallbackText = markdown)
-        }
-
         val receiverCards = linkedMapOf<String, WeworkTemplateCard>()
         receivers.forEach { receiver ->
             val taskId = WeworkReviewCardConst.buildTaskId(
@@ -241,6 +214,10 @@ object WeworkReviewCardBuilder {
             val perCallback = callback.toMutableMap()
             perCallback["receiver"] = receiver
             val copy = CardCopy(receiverLanguage(receiver))
+            val productTitle = reviewTitle(projectName, copy)
+            // 未勾选 Markdown 时，用户配置的通知标题作为大标题；项目名退到灰色副标题。
+            // 未配置时保持「<项目名>人工审核」和原来的操作说明。
+            val customTitle = plainQuote(body["notifyTitle"].orEmpty())
             val card = buildCard(
                 taskId = taskId,
                 scene = scene,
@@ -254,8 +231,8 @@ object WeworkReviewCardBuilder {
                 reviewDesc = reviewDesc,
                 reviewUrl = reviewUrl,
                 reviewAppUrl = reviewAppUrl,
-                mainTitleText = reviewTitle(projectName, copy),
-                mainDesc = mainDesc(scene, isStage, copy),
+                mainTitleText = if (customTitle.isNotBlank()) clip(customTitle, TITLE_LIMIT) else productTitle,
+                mainDesc = if (customTitle.isNotBlank()) productTitle else mainDesc(scene, isStage, copy),
                 reviewParams = reviewParams.map { it.localize(copy) },
                 reviewUsers = reviewUsers.ifEmpty { receivers },
                 reviewGroups = reviewGroups,
@@ -369,7 +346,7 @@ object WeworkReviewCardBuilder {
                 cardAction = cardAction,
                 buttonList = listOf(
                     WeworkTemplateCardButton(
-                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_CONFIRM, "确认提交"),
+                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_CONFIRM, "同意"),
                         style = 1,
                         type = 0,
                         key = WeworkReviewCardConst.buttonKey(
@@ -378,7 +355,7 @@ object WeworkReviewCardBuilder {
                         )
                     ),
                     WeworkTemplateCardButton(
-                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_EDIT, "修改参数"),
+                        text = copy.t(NotifyMessageCode.BK_REVIEW_CARD_EDIT, "修改"),
                         style = 3,
                         type = 1,
                         url = modifyUrl
@@ -570,59 +547,20 @@ object WeworkReviewCardBuilder {
         if (detail != null && rows.size < LIST_LIMIT) {
             rows.add(detail)
         }
-        val quote = plainQuote(reviewDesc).takeIf { it.isNotBlank() }?.let {
+        val note = plainQuote(reviewDesc).takeIf { it.isNotBlank() }?.let { clip(it, QUOTE_LIMIT) }
+        val quote = note?.let {
             WeworkTemplateCardQuoteArea(
                 title = copy.t(NotifyMessageCode.BK_REVIEW_CARD_NOTE, "审核说明"),
-                quoteText = clip(it, QUOTE_LIMIT)
+                quoteText = it
             )
         }
+        // 没有自定义参数时，引用区在机器人卡片上经常不展示，审核说明要同时放进正文。
+        val paramText = paramSubTitle(scene, reviewParams)
         return CardLayout(
             rows = rows.takeIf { it.isNotEmpty() },
             quote = quote,
-            subTitle = paramSubTitle(scene, reviewParams)
+            subTitle = paramText ?: note?.let { clip(it, SUBTITLE_LIMIT) }
         )
-    }
-
-    /**
-     * 勾选 Markdown 时以用户填写的审核说明为主体，沿用改卡片前的文本通知：
-     * 说明原文在前，流水线字段用引用收在后面，查看构建只留一个链接。
-     * 模板卡片的 quote_text 不能渲染 markdown，所以这条路径不发卡片。
-     */
-    private fun renderMarkdown(
-        copy: CardCopy,
-        title: String,
-        desc: String,
-        reviewDesc: String,
-        cardLayout: CardLayout,
-        reviewUrl: String,
-        reviewAppUrl: String
-    ): String {
-        val text = StringBuilder()
-        text.append("**").append(title).append("**\n\n")
-        val source = markdownDesc(reviewDesc)
-        if (source.isNotBlank()) {
-            text.append(source).append("\n")
-        } else if (desc.isNotBlank()) {
-            text.append(desc).append("\n")
-        }
-        val rows = cardLayout.rows.orEmpty().filter { it.type != 1 }
-        if (rows.isNotEmpty()) {
-            text.append("\n")
-            rows.forEach { row ->
-                text.append(">").append(row.keyname).append("：").append(row.value).append("\n")
-            }
-        }
-        val openUrl = reviewUrl.ifBlank { reviewAppUrl }
-        if (openUrl.isNotBlank()) {
-            val openBuild = copy.t(NotifyMessageCode.BK_REVIEW_CARD_OPEN_BUILD, "查看构建")
-            text.append("\n[").append(openBuild).append("](").append(openUrl).append(")")
-        }
-        return clipUtf8(text.toString().trimEnd())
-    }
-
-    /** 字面量 \n 还原成换行，保留 markdown 语法给消息体渲染。 */
-    private fun markdownDesc(raw: String): String {
-        return raw.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\\t", "\t").trim()
     }
 
     /**
@@ -637,16 +575,6 @@ object WeworkReviewCardBuilder {
         return linked.replace(Regex("[*_`>#]+"), "")
             .replace(Regex("\\s+"), " ")
             .trim()
-    }
-
-    private fun clipUtf8(text: String, maxBytes: Int = MARKDOWN_BYTES): String {
-        val charset = Charsets.UTF_8
-        if (text.toByteArray(charset).size <= maxBytes) return text
-        var end = text.length
-        while (end > 0 && text.substring(0, end).toByteArray(charset).size > maxBytes - 3) {
-            end -= 40
-        }
-        return text.substring(0, end.coerceAtLeast(0)).trimEnd() + "…"
     }
 
     private fun mainDesc(scene: CardScene, isStage: Boolean, copy: CardCopy): String {

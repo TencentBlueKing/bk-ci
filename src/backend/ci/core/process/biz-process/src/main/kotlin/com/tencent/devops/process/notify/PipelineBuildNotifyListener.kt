@@ -42,7 +42,10 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.ReviewNotifyPlaceholder
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -54,6 +57,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean,
     private val projectCacheService: ProjectCacheService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineEventListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
 
@@ -85,8 +90,11 @@ class PipelineBuildNotifyListener @Autowired constructor(
             notifyTemplateEnumType.isReviewNotifyTemplate() ->
                 handleReviewNotify(event, notifyTemplateEnumType)
 
-            notifyTemplateEnumType == PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE ->
-                sendNotifyRequest(event.buildNotifyRequest())
+            notifyTemplateEnumType ==
+                PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {
+                val variables = event.replacePlaceholders()
+                sendNotifyRequest(event.buildNotifyRequest(variables))
+            }
 
             else -> {
                 // need to add
@@ -158,12 +166,13 @@ class PipelineBuildNotifyListener @Autowired constructor(
             bodyParams["reviewAppUrl"] = reviewAppUrl
             bodyParams["projectName"] = projectName
             fillCardDisplayParams()
+            val variables = replacePlaceholders()
             logger.info(
                 "reviewNotifyTrace|hop=process.fillUrl|" +
                     "buildId=$buildId|projectId=$projectId|pipelineId=$pipelineId|" +
                     "template=$notifyTemplateEnum|reviewUrl=$reviewUrl|reviewAppUrl=$reviewAppUrl"
             )
-            sendNotifyRequest(buildNotifyRequest())
+            sendNotifyRequest(buildNotifyRequest(variables))
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
         }
@@ -173,12 +182,18 @@ class PipelineBuildNotifyListener @Autowired constructor(
      * 从事件对象构建通知请求。事件上的 callbackData 可能在 MQ 反序列化后丢失，
      * 用事件本体字段回填，保证 notify 侧能组装审核卡片。
      */
-    private fun PipelineBuildNotifyEvent.buildNotifyRequest(): SendNotifyMessageTemplateRequest {
-        val filledCallback = fillCallbackData()
+    private fun PipelineBuildNotifyEvent.buildNotifyRequest(
+        variables: Map<String, String> = emptyMap()
+    ): SendNotifyMessageTemplateRequest {
+        val resolvedReceivers = resolveReceivers(variables)
+        val filledCallback = fillCallbackData().toMutableMap()
+        if (variables.isNotEmpty() && !filledCallback["reviewUsers"].isNullOrBlank()) {
+            filledCallback["reviewUsers"] = resolvedReceivers.joinToString(",")
+        }
         return SendNotifyMessageTemplateRequest(
             templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
-            receivers = receivers.toMutableSet(),
-            cc = receivers.toMutableSet(),
+            receivers = resolvedReceivers,
+            cc = resolvedReceivers.toMutableSet(),
             titleParams = titleParams,
             bodyParams = bodyParams,
             notifyType = notifyType,
@@ -249,6 +264,54 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 "callback=${JsonUtil.toJson(cb, false)}"
         )
         return cb
+    }
+
+    /**
+     * 用当前构建的流水线变量替换通知正文。解析失败或变量不存在时保留原文本。
+     */
+    private fun PipelineBuildNotifyEvent.resolveReceivers(variables: Map<String, String>): MutableSet<String> {
+        return receivers.flatMap { receiver ->
+            ReviewNotifyPlaceholder.parseText(receiver, variables)
+                .split(",", ";", "、", "\n")
+        }.map { it.trim() }.filter { it.isNotEmpty() }.toMutableSet()
+    }
+
+    private fun PipelineBuildNotifyEvent.replacePlaceholders(): Map<String, String> {
+        val variables = try {
+            val buildVars = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+            val stepContext = try {
+                pipelineContextService.buildContext(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = null,
+                    taskId = taskId,
+                    variables = buildVars
+                )
+            } catch (ignored: Throwable) {
+                logger.warn(
+                    "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|stepContext=fail",
+                    ignored
+                )
+                emptyMap()
+            }
+            buildVars + stepContext
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|variables=fail",
+                ignored
+            )
+            return emptyMap()
+        }
+        if (variables.isEmpty()) return emptyMap()
+        ReviewNotifyPlaceholder.replace(titleParams, variables)
+        ReviewNotifyPlaceholder.replace(bodyParams, variables)
+        logger.info(
+            "reviewNotifyTrace|hop=process.replaceVar|buildId=$buildId|projectId=$projectId|" +
+                "varSize=${variables.size}"
+        )
+        return variables
     }
 
     /**

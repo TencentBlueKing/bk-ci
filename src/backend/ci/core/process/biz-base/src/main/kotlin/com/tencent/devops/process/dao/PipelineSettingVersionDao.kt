@@ -85,7 +85,8 @@ class PipelineSettingVersionDao {
                 ENV_NAME,
                 RUNTIME_RESOURCE_TYPE,
                 RUNTIME_RESOURCE_ID,
-                RUNTIME_RESOURCE_WORKSPACE
+                RUNTIME_RESOURCE_WORKSPACE,
+                YAML_LOCKED
             ).values(
                 id,
                 setting.projectId,
@@ -116,7 +117,8 @@ class PipelineSettingVersionDao {
                 setting.envName,
                 setting.runtimeResourceType?.code,
                 setting.runtimeResourceId,
-                setting.runtimeResourceWorkspace
+                setting.runtimeResourceWorkspace,
+                setting.yamlLocked ?: false
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -144,6 +146,9 @@ class PipelineSettingVersionDao {
                     .set(ENV_HASH_ID, setting.envHashId)
                     .set(ENV_NAME, setting.envName)
                     .set(RUNTIME_RESOURCE_WORKSPACE, setting.runtimeResourceWorkspace)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                insert.set(YAML_LOCKED, yamlLocked)
             }
             return insert.execute()
         }
@@ -181,6 +186,9 @@ class PipelineSettingVersionDao {
                     .set(ENV_HASH_ID, setting.envHashId)
                     .set(ENV_NAME, setting.envName)
                     .set(RUNTIME_RESOURCE_WORKSPACE, setting.runtimeResourceWorkspace)
+            }
+            setting.yamlLocked?.let { yamlLocked ->
+                updateStep.set(YAML_LOCKED, yamlLocked)
             }
             updateStep.where(PROJECT_ID.eq(setting.projectId))
                 .and(PIPELINE_ID.eq(setting.pipelineId))
@@ -313,7 +321,8 @@ class PipelineSettingVersionDao {
                     envName = t.envName,
                     runtimeResourceType = RuntimeResourceType.parse(t.runtimeResourceType),
                     runtimeResourceId = t.runtimeResourceId,
-                    runtimeResourceWorkspace = t.runtimeResourceWorkspace
+                    runtimeResourceWorkspace = t.runtimeResourceWorkspace,
+                    yamlLocked = t.yamlLocked
                 )
             }
         }

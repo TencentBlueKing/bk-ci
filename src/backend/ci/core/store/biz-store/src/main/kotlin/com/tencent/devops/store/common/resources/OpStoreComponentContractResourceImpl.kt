@@ -32,6 +32,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreComponentContractResource
 import com.tencent.devops.store.common.service.StoreComponentContractExtractService
 import com.tencent.devops.store.common.service.StoreComponentContractService
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractBrief
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractDescriptionWriteReq
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractPendingResp
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractWriteReq
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractWriteResultEnum
@@ -103,12 +105,32 @@ class OpStoreComponentContractResourceImpl @Autowired constructor(
         version: String
     ): Result<Int> {
         return Result(
-            storeComponentContractExtractService.reportExtractFail(
+            data = storeComponentContractExtractService.reportExtractFail(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version
             )
         )
+    }
+
+    override fun writeDescription(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        writeReq: StoreComponentContractDescriptionWriteReq
+    ): Result<Boolean> {
+        return Result(
+            storeComponentContractService.writeDescription(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                writeReq = writeReq
+            )
+        )
+    }
+
+    override fun listContracts(storeType: StoreTypeEnum): Result<List<StoreComponentContractBrief>> {
+        return Result(storeComponentContractService.listContracts(storeType))
     }
 }

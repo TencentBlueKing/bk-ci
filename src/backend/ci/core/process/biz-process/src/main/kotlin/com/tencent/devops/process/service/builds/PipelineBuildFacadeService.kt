@@ -58,10 +58,10 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -125,7 +125,6 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
-import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -137,7 +136,6 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
@@ -159,7 +157,6 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
-import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -167,6 +164,7 @@ import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategy
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerReplayService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -222,7 +220,7 @@ class PipelineBuildFacadeService(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineRecordModelService: PipelineRecordModelService,
+    private val pipelineTriggerReplayService: PipelineTriggerReplayService,
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
@@ -292,6 +290,19 @@ class PipelineBuildFacadeService(
             projectId, pipelineId, targetVersion
         )
         if (pipeline.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        val versionSetting = pipelineRepositoryService.getSettingByPipelineVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineVersion = resource.version
+        )
+        if (pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = versionSetting
+            )
+        ) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
         val triggerContainer = resource.model.getTriggerContainer()
@@ -3028,7 +3039,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         userId: String,
         forceTrigger: Boolean
-    ): BuildReplayResult {
+    ): BuildId {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -3125,21 +3136,17 @@ class PipelineBuildFacadeService(
             )
         }
         if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
-            val replayEventId = pipelineTriggerEventService.getBuildTriggerDetail(
+            return pipelineTriggerEventService.getBuildTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
             )?.let {
-                pipelineTriggerEventService.replay(
+                pipelineTriggerReplayService.replayByBuild(
                     userId = userId,
                     projectId = projectId,
-                    detailId = it.detailId!!
+                    triggerDetail = it
                 )
             } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
-            return BuildReplayResult(
-                status = BuildReplayStatus.REPLAYING,
-                eventId = replayEventId
-            )
         }
         // 只有按 id 认定触发器的定时触发需要传递：手动、远程触发是按类型认定的，
         // 触发器 id 在编排变更后会变，带上反而会把正常的重放判成触发条件不满足
@@ -3153,7 +3160,7 @@ class PipelineBuildFacadeService(
         val replayStartType = if (startType == StartType.PIPELINE) StartType.MANUAL else startType
         // 原构建若是重放产生的，启动参数里会带上一次的重放标记。先去掉，避免和这次要写的标记混在一起
         startParameters.remove(PIPELINE_REPLAY_ORIGIN_BUILD_ID)
-        val replayBuildId = buildManualStartup(
+        return buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -3161,10 +3168,6 @@ class PipelineBuildFacadeService(
             values = startParameters,
             startType = replayStartType,
             replayOriginBuildId = buildId
-        )
-        return BuildReplayResult(
-            status = BuildReplayStatus.REPLAY_SUCCESS,
-            id = replayBuildId.id
         )
     }
 
@@ -3460,12 +3463,12 @@ class PipelineBuildFacadeService(
         )
     }
 
-    fun replayStatus(
+    fun canReplay(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): BuildReplayResult {
+    ): Boolean {
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         return when (StartType.toStartType(buildInfo.trigger)) {
@@ -3474,19 +3477,10 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId
-                )?.let {
-                    BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-                } ?: BuildReplayResult(
-                    status = BuildReplayStatus.CANNOT_REPLAY,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
-                    )
-                )
+                ) != null
             }
 
-            else -> {
-                BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
-            }
+            else -> true
         }
     }
 

@@ -273,6 +273,8 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.runtimeResourceType = settingVersion.runtimeResourceType
         settingInfo.runtimeResourceId = settingVersion.runtimeResourceId
         settingInfo.runtimeResourceWorkspace = settingVersion.runtimeResourceWorkspace
+        // YAML 禁用按版本生效，以版本自身的值为准
+        settingInfo.yamlLocked = settingVersion.yamlLocked ?: settingInfo.yamlLocked
         if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
             labelNames.clear()
             pipelineGroupService.getGroups(userId, projectId).forEach { group ->

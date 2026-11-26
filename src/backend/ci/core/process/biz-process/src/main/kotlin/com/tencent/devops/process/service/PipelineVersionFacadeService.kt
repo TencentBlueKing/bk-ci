@@ -253,6 +253,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
             locked = detailInfo.locked,
+            lockUser = detailInfo.lockUser,
+            lockReason = detailInfo.lockReason,
+            lockTime = detailInfo.lockTime,
+            yamlLocked = detailInfo.yamlLocked,
+            yamlLockUser = detailInfo.yamlLockUser,
+            yamlLockTime = detailInfo.yamlLockTime,
             buildCancelPolicy = pipelineSetting?.buildCancelPolicy,
             draftVersion = draftResource?.draftVersion
         )
@@ -608,7 +614,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             latestVersion = pipelineInfo.version,
             envHashId = setting.envHashId,
             runtimeResource = setting.runtimeResource(),
-            draftVersion = resource.draftVersion
+            draftVersion = resource.draftVersion,
+            yamlLocked = pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = setting
+            )
         )
     }
 

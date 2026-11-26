@@ -402,5 +402,18 @@
     "同步中": "Synching",
     "请选择组织/用户": "Please select organization/user",
     "允许共享制品": "Allow sharing of artifacts",
-    "开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。": "Once enabled, it allows 'sharing' of artifacts, generating non-authenticated artifact sharing links. Users who obtain the link can log in to the platform and download the corresponding artifacts through the link."
+    "开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。": "Once enabled, it allows 'sharing' of artifacts, generating non-authenticated artifact sharing links. Users who obtain the link can log in to the platform and download the corresponding artifacts through the link.",
+    "管理员默认拥有本项目全部资源的管理和操作权限": "Administrators have management and operation permissions on all resources in this project by default",
+    "对方加入后即可使用项目下关联的代码库和第三方构建机，使用项目下创建的凭据和证书，移出项目成员，并再添加管理员。": "Once added, the member can use the repositories and third-party build machines linked to the project, use credentials and certificates created in the project, remove project members, and add other administrators.",
+    "权限清单见「组权限」，管理要求见": "See the permission list under Group permissions. Management requirements: ",
+    "《敏感权限用户组管理须知》": "Sensitive Permission Group Guidelines",
+    "我已知晓管理员权限，并确认对方应当拥有": "I understand the administrator permissions and confirm that this member should have them",
+    "我已知晓该组权限，并确认对方应当拥有": "I understand this group's permissions and confirm that this member should have them",
+    "请先勾选确认": "Please check the confirmation first",
+    "用户组「」可使用": "Group \"{0}\" can use {1}",
+    "任意代码库": "any repository",
+    "任意凭据": "any credential",
+    "任意证书": "any certificate",
+    "任意第三方构建机": "any third-party build machine",
+    "资源范围未限定到具体资源。加入后即可使用这些类型的全部实例。": "The resource scope is not limited to specific resources. Once added, the member can use all instances of these types."
 }

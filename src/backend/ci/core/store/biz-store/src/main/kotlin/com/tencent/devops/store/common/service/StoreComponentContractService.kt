@@ -36,7 +36,10 @@ import com.tencent.devops.store.atom.service.AtomSelectionIndexCache
 import com.tencent.devops.store.common.dao.StoreComponentContractDao
 import com.tencent.devops.store.common.utils.StoreComponentContractUtils
 import com.tencent.devops.store.common.utils.StoreComponentContractUtils.WriteAction
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractBrief
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractCoverageEnum
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractDescription
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractDescriptionWriteReq
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractInfo
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractStaleReasonEnum
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractViewEnum
@@ -144,6 +147,60 @@ class StoreComponentContractService @Autowired constructor(
             extractBuildId = if (fullView) record.extractBuildId else null,
             reviewer = record.reviewer,
             reviewTime = record.reviewTime,
+            updateTime = record.updateTime
+        )
+    }
+
+    /**
+     * 只更新运行时说明；生成说明期间契约被覆盖时版本或提交对不上，返回 false，由调用方跳过
+     */
+    fun writeDescription(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        writeReq: StoreComponentContractDescriptionWriteReq
+    ): Boolean {
+        if (!StoreComponentContractUtils.isValidVersion(writeReq.basedOnVersion)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("basedOnVersion:${writeReq.basedOnVersion}")
+            )
+        }
+        val count = storeComponentContractDao.updateDescription(
+            dslContext = dslContext,
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            basedOnVersion = writeReq.basedOnVersion,
+            sourceCommit = writeReq.sourceCommit,
+            description = writeReq.description.ifBlank { null }
+        )
+        if (count == 0 && storeComponentContractDao.getContract(dslContext, storeType, storeCode) == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
+        }
+        logger.info(
+            "contract description write|$userId|$storeType|$storeCode|${writeReq.basedOnVersion}|" +
+                "${writeReq.sourceCommit}|${writeReq.extractBuildId}|${writeReq.description.length}|$count"
+        )
+        return count > 0
+    }
+
+    fun listContracts(storeType: StoreTypeEnum): List<StoreComponentContractBrief> {
+        return storeComponentContractDao.listBriefs(dslContext, storeType)
+    }
+
+    fun getDescription(storeType: StoreTypeEnum, storeCode: String): StoreComponentContractDescription? {
+        val record = storeComponentContractDao.getContract(dslContext, storeType, storeCode) ?: return null
+        val description = record.generatedDescription?.takeIf { it.isNotBlank() } ?: return null
+        return StoreComponentContractDescription(
+            storeCode = record.storeCode,
+            basedOnVersion = record.basedOnVersion,
+            coverage = record.coverage,
+            staleFlag = record.staleFlag == true,
+            description = description,
             updateTime = record.updateTime
         )
     }

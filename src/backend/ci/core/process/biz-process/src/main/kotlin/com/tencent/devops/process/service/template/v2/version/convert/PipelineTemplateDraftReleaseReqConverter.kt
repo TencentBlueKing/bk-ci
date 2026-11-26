@@ -114,7 +114,7 @@ class PipelineTemplateDraftReleaseReqConverter @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 settingVersion = draftResource.settingVersion
-            )
+            ).apply { fixYamlLocked(enablePac = enablePac) }
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(draftResource).copy(
                 description = description
             )

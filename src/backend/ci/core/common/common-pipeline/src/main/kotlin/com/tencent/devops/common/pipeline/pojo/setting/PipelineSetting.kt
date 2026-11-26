@@ -118,7 +118,9 @@ data class PipelineSetting(
     @get:Schema(title = "单体运行资源标识(avatar-id/desktop-id)", required = false)
     var runtimeResourceId: String? = null,
     @get:Schema(title = "运行资源级工作空间", required = false)
-    var runtimeResourceWorkspace: String? = null
+    var runtimeResourceWorkspace: String? = null,
+    @get:Schema(title = "YAML是否禁用。null 表示请求未携带，保存时沿用已有值", required = false)
+    var yamlLocked: Boolean? = null
 ) {
 
     /**
@@ -265,5 +267,21 @@ data class PipelineSetting(
      */
     fun applyConcurrencySubGroup(existing: String?) {
         concurrencySubGroup = ConcurrencySubGroupPolicy.normalize(concurrencySubGroup, existing)
+    }
+
+    /**
+     * disable-pipeline 只对开启 PAC 的流水线生效
+     */
+    fun fixYamlLocked(enablePac: Boolean) {
+        if (!enablePac) {
+            yamlLocked = false
+        }
+    }
+
+    /**
+     * YAML 是否禁用，存量数据通过 RUN_LOCK_TYPE = LOCK 表示 YAML 禁用
+     */
+    fun yamlDisabled(): Boolean {
+        return yamlLocked == true || runLockType == PipelineRunLockType.LOCK
     }
 }

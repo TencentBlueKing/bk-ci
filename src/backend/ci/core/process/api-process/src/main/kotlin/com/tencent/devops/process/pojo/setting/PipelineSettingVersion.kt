@@ -95,7 +95,9 @@ data class PipelineSettingVersion(
     @get:Schema(title = "单体运行资源标识(avatar-id/desktop-id)", required = false)
     var runtimeResourceId: String? = null,
     @get:Schema(title = "运行资源级工作空间", required = false)
-    var runtimeResourceWorkspace: String? = null
+    var runtimeResourceWorkspace: String? = null,
+    @get:Schema(title = "YAML是否禁用", required = false)
+    val yamlLocked: Boolean? = null
 ) {
     /** 语义同 [PipelineSetting.runtimeResource] */
     fun runtimeResource(): RuntimeResource? = RuntimeResource.of(
@@ -133,7 +135,8 @@ data class PipelineSettingVersion(
             envName = setting.envName,
             runtimeResourceType = setting.runtimeResourceType,
             runtimeResourceId = setting.runtimeResourceId,
-            runtimeResourceWorkspace = setting.runtimeResourceWorkspace
+            runtimeResourceWorkspace = setting.runtimeResourceWorkspace,
+            yamlLocked = setting.yamlLocked
         )
     }
 }

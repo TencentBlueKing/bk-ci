@@ -97,7 +97,7 @@ class ThirdPartyDispatchService @Autowired constructor(
     private val tpaQueueService: TPAQueueService,
     private val tpaSingleQueueService: TPASingleQueueService
 ) {
-    // 环境锁最长等待时间（毫秒）。节点别名上下文 RPC 仍在锁内，等待过久会长期占用 MQ 消费线程；
+    // 环境锁最长等待时间（毫秒）。等待过久会长期占用 MQ 消费线程；
     // 拿不到锁时交给 MQ 延迟重试更合适。热点环境抢不到锁（BK_ENV_BUSY）偏多时可调小，默认 2000（原为写死 5000）
     @Value("\${dispatch.thirdPartyEnv.lockWaitMills:2000}")
     private val envLockWaitMills: Long = 2000
@@ -570,11 +570,11 @@ class ThirdPartyDispatchService @Autowired constructor(
      * 从环境中挑选 agent 并调度。
      *
      * 环境锁的作用是保证 "读取并发计数 -> 判断 -> 写库占位" 的原子性，防止并发超调度，
-     * 节点别名仍需在释放 agent 锁前写入，其他收尾操作移到锁外：
+     * 其他收尾操作移到锁外：
      * 1. 锁外预检：job 全集群/单节点并发已满则直接重试，不必排队抢锁
      * 2. 锁外准备：调度策略/标签（RPC）、最近构建机（SQL）
-     * 3. 锁内：并发复检 + 批量查负载 + 按策略选机 + 写库占位及节点别名上下文
-     * 4. 锁外收尾：构建详情、监控事件、排队耗时统计
+     * 3. 锁内：并发复检 + 批量查负载 + 按策略选机 + 写库占位
+     * 4. 锁外收尾：节点别名上下文、构建详情、监控事件、排队耗时统计
      */
     private fun screenEnvNode(
         dispatchMessage: DispatchMessage,

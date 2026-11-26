@@ -67,5 +67,7 @@ data class PipelineVersionWithModel(
     @get:Schema(title = "运行资源，四选一", required = false)
     val runtimeResource: RuntimeResource? = null,
     @get:Schema(title = "该版本来源的草稿版本", required = false)
-    val draftVersion: Int? = null
+    val draftVersion: Int? = null,
+    @get:Schema(title = "当前版本YAML是否禁用", required = false)
+    val yamlLocked: Boolean = false
 )

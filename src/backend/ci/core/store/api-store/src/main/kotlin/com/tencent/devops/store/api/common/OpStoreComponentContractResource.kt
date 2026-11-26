@@ -29,6 +29,8 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractBrief
+import com.tencent.devops.store.pojo.common.contract.StoreComponentContractDescriptionWriteReq
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractPendingResp
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractWriteReq
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractWriteResultEnum
@@ -135,4 +137,30 @@ interface OpStoreComponentContractResource {
         @QueryParam("version")
         version: String
     ): Result<Int>
+
+    @Operation(summary = "只更新组件运行时说明，依据的版本与库中契约不一致时不写入并返回 false")
+    @PUT
+    @Path("/types/{storeType}/codes/{storeCode}/description")
+    fun writeDescription(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "说明写入请求", required = true)
+        writeReq: StoreComponentContractDescriptionWriteReq
+    ): Result<Boolean>
+
+    @Operation(summary = "列出已有契约的组件，不含契约正文")
+    @GET
+    @Path("/types/{storeType}/list")
+    fun listContracts(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<StoreComponentContractBrief>>
 }

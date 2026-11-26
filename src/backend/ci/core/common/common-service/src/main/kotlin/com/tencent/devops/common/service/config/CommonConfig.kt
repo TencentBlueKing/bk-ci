@@ -162,4 +162,10 @@ class CommonConfig {
      */
     @Value("\${devopsGateway.codeccHostGateway:#{null}}")
     val codeccHostGateway: String? = null
+
+    /**
+     * 当前集群是否为创作流集群
+     */
+    @Value("\${bkci.creativeStreamCluster:false}")
+    val creativeStreamCluster: Boolean = false
 }

@@ -295,6 +295,10 @@
     .markdown-desc {
         min-height: 50px !important;
         max-height: 300px !important;
+        ::v-deep .v-show-content {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
     }
     ::v-deep .bk-label-text {
         font-weight: bold;

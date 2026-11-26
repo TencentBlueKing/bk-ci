@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.atom.dao.AtomContractCandidateDao
 import com.tencent.devops.store.common.dao.StoreComponentContractDao
+import com.tencent.devops.store.common.service.StoreComponentSourceResolver.AtomRelease
 import com.tencent.devops.store.common.utils.StoreComponentContractPendingUtils
 import com.tencent.devops.store.common.utils.StoreComponentContractPendingUtils.Candidate
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractPendingReasonEnum
@@ -105,13 +106,7 @@ class StoreComponentContractExtractService @Autowired constructor(
             candidates = candidates,
             releases = releases,
             limit = size,
-            acquire = { release ->
-                leaseSeconds <= 0 || redisOperation.setIfAbsent(
-                    key = leaseKey(storeType, release.atomCode),
-                    value = release.version,
-                    expiredInSecond = leaseSeconds
-                )
-            }
+            acquire = { release -> acquireLease(storeType, release, leaseSeconds) }
         ) { release ->
             try {
                 storeComponentSourceResolver.resolveAtomSource(release)
@@ -153,6 +148,25 @@ class StoreComponentContractExtractService @Autowired constructor(
 
     fun releaseLease(storeType: StoreTypeEnum, storeCode: String) {
         redisOperation.delete(leaseKey(storeType, storeCode))
+    }
+
+    /**
+     * 候选清单是先查出来的，别的构建可能在这之后写完契约并释放了租约，抢到租约后要按最新的契约再确认一次
+     */
+    private fun acquireLease(storeType: StoreTypeEnum, release: AtomRelease, leaseSeconds: Long): Boolean {
+        if (leaseSeconds <= 0) {
+            return true
+        }
+        val key = leaseKey(storeType, release.atomCode)
+        if (!redisOperation.setIfAbsent(key = key, value = release.version, expiredInSecond = leaseSeconds)) {
+            return false
+        }
+        val contract = storeComponentContractDao.getContract(dslContext, storeType, release.atomCode)
+        if (contract != null && contract.staleFlag != true && contract.basedOnVersion == release.version) {
+            redisOperation.delete(key)
+            return false
+        }
+        return true
     }
 
     private fun getMissingFailCount(storeType: StoreTypeEnum, storeCode: String, version: String): Int {

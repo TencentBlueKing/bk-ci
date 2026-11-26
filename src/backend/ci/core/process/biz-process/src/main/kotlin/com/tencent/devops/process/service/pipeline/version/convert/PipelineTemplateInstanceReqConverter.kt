@@ -184,8 +184,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineId = newPipelineId,
                 channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineName = pipelineName,
-                pipelineDesc = null,
-                pipelineDisable = pipelineInfo?.locked
+                pipelineDesc = null
             )
 
             // 获取版本状态
@@ -275,6 +274,8 @@ class PipelineTemplateInstanceReqConverter(
                 refType = templateRefType,
                 templateId = templateId,
                 templateVersionName = templateResource.versionName,
+                parsedTemplateId = templateResource.templateId,
+                parsedTemplateVersion = templateResource.version,
                 templatePath = templatePath,
                 templateRef = templateRef,
                 templateVariables = templateVariables,
@@ -482,6 +483,7 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineSetting.pipelineAsCodeSettings?.copy(enable = true) ?: PipelineAsCodeSettings(enable = true)
             pipelineSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         } ?: pipelineSetting
+        pacSetting.fixYamlLocked(enablePac = enablePac)
         return pacSetting
     }
 

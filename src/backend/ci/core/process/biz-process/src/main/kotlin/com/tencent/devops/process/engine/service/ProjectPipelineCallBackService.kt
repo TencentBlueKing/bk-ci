@@ -57,6 +57,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.crypto.PipelineCallbackCryptoHelper
 import com.tencent.devops.process.dao.PipelineCallbackDao
+import com.tencent.devops.process.dao.PipelineCallbackSource
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -566,6 +567,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
         callbackInfoList: List<PipelineCallbackEvent>
     ) {
         if (callbackInfoList.isEmpty()) return
+        if (pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) == null) {
+            logger.warn(
+                "pipeline not exists, skip bind pipeline callback|$userId|$projectId|$pipelineId|" +
+                    callbackInfoList.joinToString(",") { it.callbackName }
+            )
+            return
+        }
         // 验证用户是否可以编辑流水线
         pipelinePermissionService.checkPipelinePermission(
             userId = userId,
@@ -581,15 +589,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 url = callbackInfo.callbackUrl
             )
         }
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model ?: return
-        val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
-        if (model.events?.isNotEmpty() == true) {
-            newEventMap.putAll(model.events!!)
-        }
-        // 若key存在会覆盖原来的value,否则就是追加新key
-        callbackInfoList.forEach { callbackInfo ->
-            newEventMap[callbackInfo.callbackName] = callbackInfo
-        }
         dslContext.transaction { transactionContext ->
             val transaction = DSL.using(transactionContext)
             pipelineCallbackDao.save(
@@ -597,11 +596,14 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                list = newEventMap.map { (_, value) ->
-                    val encodeToken = value.secretToken?.let { pipelineCallbackCryptoHelper.encryptSm4ButAes(it) }
-                    value.copy(secretToken = encodeToken)
+                list = callbackInfoList.map { callbackInfo ->
+                    val encodeToken = callbackInfo.secretToken?.let {
+                        pipelineCallbackCryptoHelper.encryptSm4ButAes(it)
+                    }
+                    callbackInfo.copy(secretToken = encodeToken)
                 },
-                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha()
+                aesKeySha = pipelineCallbackCryptoHelper.currentKeySha(),
+                source = PipelineCallbackSource.API
             )
         }
     }
