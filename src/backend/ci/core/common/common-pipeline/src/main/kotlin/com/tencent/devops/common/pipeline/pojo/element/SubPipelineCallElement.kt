@@ -47,7 +47,10 @@ data class SubPipelineCallElement(
     @get:Schema(title = "新版的子流水线名")
     val subPipelineName: String? = null,
     @get:Schema(title = "启动参数", required = false)
-    val parameters: Map<String, String>?
+    val parameters: Map<String, String>?,
+    // #8609 插件级开关：同步模式下子流水线失败后被重试时，是否联动重试父步骤并同步状态，默认关闭不影响存量
+    @get:Schema(title = "子流水线重试时是否同步回写状态", required = false)
+    val enableRetrySync: Boolean? = false
 ) : Element(name, id, status) {
     companion object {
         const val classType = "subPipelineCall"

@@ -66,6 +66,7 @@ import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.SubPipelineRetryAttachService
 import com.tencent.devops.process.util.TaskUtils
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -88,7 +89,8 @@ class BuildCancelControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val dependOnControl: DependOnControl
+    private val dependOnControl: DependOnControl,
+    private val subPipelineRetryAttachService: SubPipelineRetryAttachService
 ) {
 
     companion object {
@@ -137,6 +139,8 @@ class BuildCancelControl @Autowired constructor(
         )
         return if (model != null) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
+            // #8609 构建取消时清理残留的子流水线重试绑定凭证，避免后续手动重试误复用旧子构建
+            subPipelineRetryAttachService.clearBuildAttachInfos(event.projectId, buildId)
             if (event.actionType != ActionType.TERMINATE) {
                 // 往redis中设置取消构建标识以防止重复提交
                 setBuildCancelActionRedisFlag(buildId)

@@ -199,6 +199,9 @@ object StreamBinding {
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
 
+    // #8609 子流水线同步模式重试后异步联动父流水线单步重试事件（支持延迟重投避免阻塞锁等待）
+    const val PIPELINE_SUB_PIPELINE_RETRY_SYNC = "engine.pipeline.subpipeline.retry.sync"
+
     // webSocket消息
     const val WEBSOCKET_TMP_FANOUT = "websocket.fanout"
     const val WEBSOCKET_SESSION_CLEAR = "websocket.session.clear.fanout"

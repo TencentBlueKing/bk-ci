@@ -67,16 +67,31 @@ class SubPipelineStatusService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SubPipelineStatusService::class.java)
         // 异步启动子流水线
         private const val ASYNC_RUN_MODE = "asyn"
+
+        fun getSubPipelineStatusKey(buildId: String): String {
+            return "subpipeline:build:$buildId:status"
+        }
+
+        /**
+         * #8609 将子流水线状态缓存置为 RUNNING。
+         * 抽为静态工具供 PipelineRuntimeService.startBuild 在持有子构建 BuildIdLock 且发出 BuildStartEvent 之前直接调用：
+         * 1. 避免 PipelineRuntimeService 反向注入 SubPipelineStatusService 形成循环依赖；
+         * 2. 严格保证子构建重试时 onStart(RUNNING) happens-before BuildEndControl -> onFinish(终态)，
+         *    防止子构建秒级结束后父步骤才拉起复用，出现 RUNNING 覆盖终态导致父插件轮询死等。
+         */
+        fun markSubPipelineRunning(redisOperation: RedisOperation, buildId: String) {
+            redisOperation.set(
+                key = getSubPipelineStatusKey(buildId),
+                value = JsonUtil.toJson(
+                    SubPipelineStatus(status = BuildStatus.RUNNING.name)
+                ),
+                expiredInSecond = SUBPIPELINE_STATUS_START_EXPIRED
+            )
+        }
     }
 
     fun onStart(buildId: String) {
-        redisOperation.set(
-            key = getSubPipelineStatusKey(buildId),
-            value = JsonUtil.toJson(
-                SubPipelineStatus(status = BuildStatus.RUNNING.name)
-            ),
-            expiredInSecond = SUBPIPELINE_STATUS_START_EXPIRED
-        )
+        markSubPipelineRunning(redisOperation, buildId)
     }
 
     /**
@@ -260,9 +275,5 @@ class SubPipelineStatusService @Autowired constructor(
             }
             redisSubPipelineStatus
         }
-    }
-
-    private fun getSubPipelineStatusKey(buildId: String): String {
-        return "subpipeline:build:$buildId:status"
     }
 }

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -70,6 +71,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.utils.PIPELINE_START_SUB_RETRY_SYNC
 import com.tencent.devops.process.utils.PIPELINE_START_SUB_RUN_MODE
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -105,6 +107,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val subPipelineRefService: SubPipelineRefService,
     private val taskBuildRecordService: TaskBuildRecordService,
+    private val subPipelineRetryAttachService: SubPipelineRetryAttachService,
+    private val buildLogPrinter: BuildLogPrinter,
     private val client: Client
 ) {
 
@@ -135,9 +139,23 @@ class SubPipelineStartUpService @Autowired constructor(
         channelCode: ChannelCode? = null,
         values: Map<String, String>,
         executeCount: Int?,
-        branch: String?
+        branch: String?,
+        enableRetrySync: Boolean? = null
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
+        // #8609 同项目调用与内置插件 SubPipelineCallAtom 入口：若命中子流水线重试绑定凭证，
+        // 跳过新建子构建，直接返回正在重试的原 subBuildId 供插件继续轮询。
+        tryAttachExistingSubBuild(
+            parentProjectId = projectId,
+            parentPipelineId = parentPipelineId,
+            parentBuildId = buildId,
+            callProjectId = fixProjectId,
+            callPipelineId = callPipelineId,
+            taskId = taskId,
+            runMode = runMode,
+            executeCount = executeCount
+        )?.let { return it }
+
         // PAC子流水线相关的参数
         val yamlParams = mutableMapOf<String, BuildParameters>()
         // 获取分支版本Model
@@ -233,7 +251,8 @@ class SubPipelineStartUpService @Autowired constructor(
             runMode = runMode,
             parentExecuteCount = executeCount,
             pipelineResource = subPipelineResource,
-            branch = branch
+            branch = branch,
+            enableRetrySync = enableRetrySync
         )
         if (runMode == SYNC_RUN_MODE) {
             subPipelineStatusService.onStart(subBuildId.id)
@@ -244,6 +263,112 @@ class SubPipelineStartUpService @Autowired constructor(
                 id = subBuildId.id,
                 projectId = fixProjectId,
                 buildNum = subBuildId.num
+            )
+        )
+    }
+
+    /**
+     * #8609 在父构建所属集群解析当前父步骤是否开启了子流水线重试同步开关（同步模式 + enableRetrySync == true）。
+     */
+    fun isParentTaskRetrySyncEnabled(
+        parentProjectId: String,
+        parentBuildId: String,
+        parentTaskId: String,
+        runMode: String
+    ): Boolean {
+        if (runMode != SYNC_RUN_MODE) return false
+        val parentTask = runCatching {
+            pipelineTaskService.getByTaskId(
+                transactionContext = null,
+                projectId = parentProjectId,
+                buildId = parentBuildId,
+                taskId = parentTaskId
+            )
+        }.getOrNull() ?: return false
+        return SubPipelineRetryAttachService.isRetrySyncEnabled(parentTask)
+    }
+
+    /**
+     * #8609 尝试复用由「子流水线重试联动」绑定的原重试子构建：
+     * 仅在同步模式且通过四维强校验 + Lua 原子消费凭证后生效；命中后不启动新子构建，
+     * 仅刷新本次执行记录的 subPipelineBuildInfo 并打印可追溯日志，直接返回原 ProjectBuildId 供插件轮询。
+     */
+    fun tryAttachExistingSubBuild(
+        parentProjectId: String,
+        parentPipelineId: String,
+        parentBuildId: String,
+        callProjectId: String,
+        callPipelineId: String,
+        taskId: String,
+        runMode: String,
+        executeCount: Int?
+    ): Result<ProjectBuildId>? {
+        if (runMode != SYNC_RUN_MODE) return null
+        val fixCallProjectId = callProjectId.ifBlank { parentProjectId }
+        val actualExecuteCount = executeCount ?: 1
+        val parentTask = pipelineTaskService.getByTaskId(
+            transactionContext = null,
+            projectId = parentProjectId,
+            buildId = parentBuildId,
+            taskId = taskId
+        ) ?: return null
+        val attach = subPipelineRetryAttachService.consumeAttachInfo(
+            parentProjectId = parentProjectId,
+            parentBuildId = parentBuildId,
+            parentTaskId = taskId,
+            actualExecuteCount = actualExecuteCount,
+            callProjectId = fixCallProjectId,
+            callPipelineId = callPipelineId,
+            taskSubProjectId = parentTask.subProjectId,
+            taskSubBuildId = parentTask.subBuildId
+        ) ?: return null
+
+        taskBuildRecordService.updateTaskRecord(
+            projectId = parentProjectId,
+            pipelineId = parentPipelineId,
+            buildId = parentBuildId,
+            taskId = taskId,
+            executeCount = actualExecuteCount,
+            taskVar = mapOf(
+                Element::subPipelineBuildInfo.name to SubPipelineBuildInfo(
+                    projectId = attach.subProjectId,
+                    pipelineId = attach.subPipelineId,
+                    buildId = attach.subBuildId,
+                    pipelineName = attach.subPipelineName,
+                    buildNum = attach.subBuildNum
+                )
+            ),
+            buildStatus = null,
+            operation = "attachSubPipelineRetry#$taskId",
+            timestamps = null
+        )
+
+        val subBuildNumLabel = attach.subBuildNum?.let { "#$it" } ?: attach.subBuildId
+        val operatorLabel = attach.operator?.takeIf { it.isNotBlank() } ?: "-"
+        val detailUrl = "/console/pipeline/${attach.subProjectId}/${attach.subPipelineId}/detail/${attach.subBuildId}"
+        buildLogPrinter.addLine(
+            buildId = parentBuildId,
+            message = "[SubPipelineRetrySync] Triggered by sub-pipeline retry (operator=$operatorLabel, " +
+                "executeCount=${attach.subExecuteCount}), attaching to existing sub-build " +
+                "<a target='_blank' href='$detailUrl'>${attach.subPipelineName} $subBuildNumLabel</a>",
+            tag = taskId,
+            containerHashId = parentTask.containerHashId,
+            executeCount = actualExecuteCount,
+            jobId = null,
+            stepId = parentTask.stepId,
+            projectId = parentProjectId,
+            pipelineId = parentPipelineId
+        )
+
+        logger.info(
+            "SUB_PIPELINE_RETRY_ATTACH|attached|parent=$parentProjectId/$parentBuildId|taskId=$taskId|" +
+                "executeCount=$actualExecuteCount|sub=${attach.subProjectId}/${attach.subBuildId}"
+        )
+        return Result(
+            ProjectBuildId(
+                id = attach.subBuildId,
+                projectId = attach.subProjectId,
+                buildNum = attach.subBuildNum
             )
         )
     }
@@ -263,7 +388,8 @@ class SubPipelineStartUpService @Autowired constructor(
         runMode: String,
         parentExecuteCount: Int?,
         pipelineResource: PipelineResourceVersion?,
-        branch: String?
+        branch: String?,
+        enableRetrySync: Boolean? = null
     ): BuildId {
         val readyToBuildPipelineInfo = getPipelineInfo(
             projectId = projectId,
@@ -322,6 +448,17 @@ class SubPipelineStartUpService @Autowired constructor(
                 BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId)
             params[PIPELINE_START_SUB_RUN_MODE] =
                 BuildParameters(key = PIPELINE_START_SUB_RUN_MODE, value = runMode, readOnly = true)
+            // #8609 透传父步骤插件级开关 enableRetrySync 至子构建只读变量，
+            // 供子构建重试入队时 O(1) 前置过滤存量调用（未开启或存量旧插件写入 false，避免无效 MQ）。
+            // 跨项目/跨集群场景优先采用父集群入口透传值，同项目/老入口回落本地解析父步骤。
+            val retrySyncEnabled = enableRetrySync ?: isParentTaskRetrySyncEnabled(
+                parentProjectId = parentProjectId,
+                parentBuildId = parentBuildId,
+                parentTaskId = parentTaskId,
+                runMode = runMode
+            )
+            params[PIPELINE_START_SUB_RETRY_SYNC] =
+                BuildParameters(key = PIPELINE_START_SUB_RETRY_SYNC, value = retrySyncEnabled.toString(), readOnly = true)
             // 父流水线执行次数
             parentExecuteCount?.let {
                 params[PIPELINE_START_PARENT_EXECUTE_COUNT] =

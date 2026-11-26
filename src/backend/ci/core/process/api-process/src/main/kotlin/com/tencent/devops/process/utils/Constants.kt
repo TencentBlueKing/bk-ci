@@ -59,6 +59,15 @@ const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
 // 子流水线运行方式
 const val PIPELINE_START_SUB_RUN_MODE = "BK_CI_SUB_PIPELINE_RUN_MODE"
 
+// #8609 子流水线重试同步开关变量（由父步骤插件参数透传，供子构建重试时前置过滤存量调用）
+const val PIPELINE_START_SUB_RETRY_SYNC = "BK_CI_SUB_PIPELINE_RETRY_SYNC"
+
+// #8609 多级子流水线重试联动回溯链路（JSON 列表，用于环路/深度保护与日志追溯）
+const val PIPELINE_SUB_PIPELINE_RETRY_SYNC_CHAIN = "BK_CI_SUB_PIPELINE_RETRY_SYNC_CHAIN"
+
+// #8609 子流水线调用插件参数名：同步模式下是否开启重试状态回写
+const val SUB_PIPELINE_ENABLE_RETRY_SYNC_PARAM = "enableRetrySync"
+
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
 

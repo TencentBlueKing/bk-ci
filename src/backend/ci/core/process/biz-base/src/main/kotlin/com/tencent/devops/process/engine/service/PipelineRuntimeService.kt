@@ -150,6 +150,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companio
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.SubPipelineStatusService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.util.TaskUtils
@@ -1393,6 +1394,17 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = context.buildId
             )
             context.watcher.stop()
+        }
+
+        // #8609 子流水线触发的构建在重试重新入队时，需在发出 BuildStartEvent 前将状态缓存置为 RUNNING：
+        // 此时仍在子构建 BuildIdLock 保护下且尚未开始执行，严格保证 RUNNING 写入早于后续 BuildEndControl -> onFinish 终态写入，
+        // 防止子构建秒级跑完后父步骤复用轮询时读到过期终态或被晚到的 RUNNING 覆盖导致死等。
+        if (context.actionType == ActionType.RETRY &&
+            context.startType == StartType.PIPELINE &&
+            !context.retryOnRunningBuild &&
+            context.startBuildStatus.isReadyToRun()
+        ) {
+            SubPipelineStatusService.markSubPipelineRunning(redisOperation, context.buildId)
         }
 
         when {
