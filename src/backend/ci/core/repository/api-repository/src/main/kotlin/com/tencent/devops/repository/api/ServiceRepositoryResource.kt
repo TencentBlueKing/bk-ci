@@ -90,13 +90,13 @@ interface ServiceRepositoryResource {
 
     @Operation(summary = "获取代码库详情")
     @GET
-    @Path("/{projectId}/{repositoryId}/")
+    @Path("/{projectId}/getByType")
     fun get(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "代码库哈希ID货代代码库名称", required = true)
-        @PathParam("repositoryId")
+        @QueryParam("repositoryId")
         repositoryId: String,
         @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
