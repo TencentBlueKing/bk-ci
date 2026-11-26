@@ -37,6 +37,7 @@
                         class="pac-info-row-link"
                         target="_blank"
                         :href="info.fileUrl"
+                        v-if="info.fileUrl"
                     >
                         <span class="pac-info-row-link-text-span">
                             {{ info.filePath }}
@@ -47,6 +48,12 @@
                             name="tiaozhuan"
                         />
                     </bk-link>
+                    <span
+                        v-else
+                        class="pac-info-row-link-text-span"
+                    >
+                        {{ info.filePath }}
+                    </span>
                 </p>
             </div>
         </section>
