@@ -178,9 +178,17 @@ data class PipelineSetting(
         return res
     }
 
-    // 校验流水线的并发组设置是否为空，即用户为配置或使用默认配置
+    // 校验流水线的并发设置是否为空，即用户未配置或使用默认配置
     fun concurrencySettingIsNull(): Boolean {
-        return this.runLockType != PipelineRunLockType.GROUP_LOCK
+        return when (runLockType) {
+            PipelineRunLockType.GROUP_LOCK -> false
+            PipelineRunLockType.MULTIPLE -> {
+                (maxConRunningQueueSize == null ||
+                    maxConRunningQueueSize == PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT) &&
+                    waitQueueTimeMinute == PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+            }
+            else -> true
+        }
     }
 
     fun fixSubscriptions() {
@@ -203,6 +211,9 @@ data class PipelineSetting(
     }
 
     fun copyConcurrencyGroup(other: PipelineSetting) {
+        runLockType = other.runLockType
+        waitQueueTimeMinute = other.waitQueueTimeMinute
+        maxQueueSize = other.maxQueueSize
         concurrencyGroup = other.concurrencyGroup
         concurrencyCancelInProgress = other.concurrencyCancelInProgress
         concurrencySubGroup = other.concurrencySubGroup
