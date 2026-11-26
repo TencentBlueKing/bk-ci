@@ -375,10 +375,24 @@ class SubPipelineRetrySyncService @Autowired constructor(
                         stageId = parentTask.stageId,
                         containerId = parentTask.containerId
                     )
+                    val currentBuildExecuteCount = parentBuildInfo.executeCount ?: 1
+                    // #8609 并行双子流水线并发重试竞态保护：兄弟步骤刚将父构建从终态拉起进入 RUNNING 时，
+                    // 引擎可能正执行前序 Stage 或正在切换目标 Stage，此时目标 Stage 短暂处于 QUEUE/QUEUE_CACHE
+                    // 或仍停留上一轮 FAILED（stage.executeCount < currentBuildExecuteCount），并非不可重试；
+                    // 须释放锁并按退避重投，待目标 Stage 切入 RUNNING 后再执行运行中局部重试，避免丢事件。
+                    val stageTransitioning = stage != null && (
+                        stage.status.isReadyToRun() ||
+                            (stage.status.isFailure() && stage.executeCount < currentBuildExecuteCount)
+                        )
+                    if (stageTransitioning && container != null && container.status.isFinish()) {
+                        needRequeueReason = "parent_stage_transitioning_${stage.status}"
+                        return
+                    }
                     if (stage == null || !stage.status.isRunning() || container == null || !container.status.isFinish()) {
                         logger.info(
                             "SUB_PIPELINE_RETRY_SYNC|skip|running parent not eligible|" +
-                                "${event.parentBuildId}|stage=${stage?.status}|container=${container?.status}"
+                                "${event.parentBuildId}|stage=${stage?.status}(exec=${stage?.executeCount}," +
+                                "buildExec=$currentBuildExecuteCount)|container=${container?.status}"
                         )
                         return
                     }

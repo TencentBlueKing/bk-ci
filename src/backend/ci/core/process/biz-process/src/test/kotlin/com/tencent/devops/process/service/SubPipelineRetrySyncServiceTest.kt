@@ -342,6 +342,34 @@ class SubPipelineRetrySyncServiceTest {
     }
 
     @Test
+    @DisplayName("并发竞态保护：父构建已进入 RUNNING 但目标 Stage 尚处 QUEUE 过渡态时退避重投而非丢弃")
+    fun testRunningParentStageQueueingRequeues() {
+        mockAcquireAllLocks()
+        val parentBuild = mockParentBuild(status = BuildStatus.RUNNING, executeCount = 2)
+        every { pipelineRuntimeService.getBuildInfo("p1", "b-parent") } returns parentBuild
+        every {
+            pipelineTaskService.getByTaskId(null, "p1", "b-parent", "e-task1")
+        } returns mockParentTask(status = BuildStatus.FAILED, subProjectId = "p1", subBuildId = "b-sub-1", enabled = true)
+
+        val stage = mockk<PipelineBuildStage>(relaxed = true)
+        every { stage.status } returns BuildStatus.QUEUE
+        every { stage.executeCount } returns 2
+        val container = mockk<PipelineBuildContainer>(relaxed = true)
+        every { container.status } returns BuildStatus.FAILED
+        every { pipelineStageService.getStage("p1", "b-parent", "stage-2") } returns stage
+        every { pipelineContainerService.getContainer("p1", "b-parent", "stage-2", "1") } returns container
+
+        val requeued = slot<SubPipelineRetrySyncEvent>()
+        every { sampleEventDispatcher.dispatch(capture(requeued)) } returns Unit
+
+        service.syncParentOnSubRetry(sampleEvent(lockRetryCount = 0))
+
+        assertEquals(1, requeued.captured.lockRetryCount)
+        assertEquals(1000, requeued.captured.delayMills)
+        verify(exactly = 0) { pipelineBuildRetryService.retryWithinLock(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     @DisplayName("防环保护：visitedBuildIds 包含父构建 ID 时立即熔断")
     fun testCycleBlocked() {
         service.syncParentOnSubRetry(
