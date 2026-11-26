@@ -936,6 +936,7 @@
     "noBranchAvailable": "暂无可选分支"
   },
   "details": {
+    "loadDetailFailed": "构建详情加载失败",
     "executorInfo": "{0} {1}触发于 {2}",
     "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
     "executeDetail": "执行详情",
@@ -3043,6 +3044,18 @@
       "retry": "重试读取"
     },
     "loadError": "日志加载失败",
+    "loadOlderLogsError": "较早日志加载失败",
+    "loadNewerLogsError": "最新日志加载失败",
+    "ai": {
+      "title": "AI 错误分析",
+      "unavailable": "AI 错误分析服务不可用，请联系管理员开启。",
+      "docs": "了解更多",
+      "regenerate": "重新生成",
+      "loadFailed": "AI 分析加载失败",
+      "feedbackFailed": "AI 反馈保存或读取失败",
+      "like": "有帮助",
+      "dislike": "没有帮助"
+    },
     "loadUnavailable": "新版日志接口不可用",
     "reloadLogs": "重新加载日志",
     "largeVariable": {

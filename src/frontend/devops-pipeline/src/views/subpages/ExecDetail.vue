@@ -13,6 +13,12 @@
         >
         </empty-tips>
 
+        <empty-tips
+            v-else-if="detailLoadFailed"
+            :title="$t('details.loadDetailFailed')"
+            :btns="[{ theme: 'primary', text: $t('retry'), handler: loadPipelineExecDetail }]"
+        />
+
         <template v-else-if="execDetail">
             <div class="exec-detail-summary-header">
                 <span
@@ -256,6 +262,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
+    import { FETCH_ERROR } from '@/store/constants'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -288,12 +295,19 @@
             PendingManualItemsAlert
         },
         mixins: [pipelineOperateMixin],
+        provide () {
+            return { captureExecutionDetailContext: this.captureExecutionDetailContext }
+        },
 
         data () {
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                detailLoadFailed: false,
                 detailRequestId: 0,
+                pendingDetailKey: '',
+                pendingRealtimeDetail: null,
+                loadedDetailKey: '',
                 linkUrl: WEB_URL_PREFIX + location.pathname,
                 show: false,
                 summaryVisible: true,
@@ -358,6 +372,9 @@
                             isLatestBuild: this.effectiveIsLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
+                        },
+                        listeners: {
+                            'refresh-detail': this.loadPipelineExecDetail
                         }
                     },
                     {
@@ -539,8 +556,6 @@
 
         watch: {
             execDetail (val) {
-                this.isLoading = val === null
-
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
@@ -615,6 +630,32 @@
         },
 
         methods: {
+            captureExecutionDetailContext () {
+                const key = this.getDetailRequestKey(this.routerParams)
+                const round = this.execDetail?.executeCount
+                const tab = this.curItemTab
+                const isCurrent = () => !this._isBeingDestroyed && !this._isDestroyed
+                    && key === this.getDetailRequestKey(this.routerParams)
+                    && round === this.execDetail?.executeCount
+                    && tab === this.curItemTab
+                return {
+                    isCurrent,
+                    refresh: () => isCurrent() ? this.loadPipelineExecDetail() : null
+                }
+            },
+            isNewerDetailSnapshot (candidate, baseline) {
+                if (!candidate) return false
+                if (!baseline) return true
+                const candidateRound = Number(candidate.executeCount)
+                const baselineRound = Number(baseline.executeCount)
+                if (candidateRound > 0 && baselineRound > 0 && candidateRound !== baselineRound) {
+                    return candidateRound > baselineRound
+                }
+                const candidateTime = Number(candidate.currentTimestamp)
+                const baselineTime = Number(baseline.currentTimestamp)
+                if (candidateTime === baselineTime) return Boolean(candidate.endTime && !baseline.endTime)
+                return Number.isFinite(candidateTime) && (!Number.isFinite(baselineTime) || candidateTime > baselineTime)
+            },
             getDetailRequestKey (params) {
                 return [
                     params.projectId,
@@ -636,34 +677,72 @@
                     && requestKey === this.getDetailRequestKey(this.routerParams)
                 )
 
+                const preserveDetail = Boolean(this.execDetail && this.loadedDetailKey === requestKey)
+                if (this.pendingDetailKey !== requestKey) this.pendingRealtimeDetail = null
+                this.pendingDetailKey = requestKey
                 this.hasNoPermission = false
-                this.setPipelineDetail(null)
-                this.isLoading = true
+                this.detailLoadFailed = false
+                if (!preserveDetail) {
+                    this.loadedDetailKey = ''
+                    if (this.execDetail) this.setPipelineDetail(null)
+                    this.isLoading = true
+                }
 
                 return this.fetchPipelineExecDetail(params)
                     .then(data => {
-                        if (!isCurrentRequest()) return data
-                        this.setPipelineDetail(data)
+                        if (!isCurrentRequest()) return null
+                        if (!data) throw new Error('Missing execution detail')
+                        const realtimeDetail = this.pendingRealtimeDetail
+                        const currentDetail = this.loadedDetailKey === requestKey ? this.execDetail : null
+                        const incoming = this.isNewerDetailSnapshot(realtimeDetail, data) ? realtimeDetail : data
+                        const newest = this.isNewerDetailSnapshot(currentDetail, incoming) ? currentDetail : incoming
+                        this.loadedDetailKey = requestKey
+                        if (newest !== currentDetail) this.setPipelineDetail(newest)
                         this.isLoading = false
-                        return data
+                        return newest
                     })
                     .catch(error => {
                         if (!isCurrentRequest()) return null
                         this.isLoading = false
-                        const status = error?.code ?? error?.status ?? error?.response?.status
-                        if (status === 403) {
+                        const statuses = [error?.code, error?.status, error?.httpStatus, error?.response?.status].map(Number)
+                        if (statuses.includes(403)) {
                             this.hasNoPermission = true
+                            this.loadedDetailKey = ''
                             this.setPipelineDetail(null)
+                        } else if (statuses.includes(404)) {
+                            this.loadedDetailKey = ''
+                            if (this.execDetail) this.setPipelineDetail(null)
+                            this.$store.commit(FETCH_ERROR, { message: error?.message, code: 404 })
+                        } else if (!preserveDetail) {
+                            this.detailLoadFailed = true
                         }
                         return null
                     })
+                    .finally(() => {
+                        if (!isCurrentRequest()) return
+                        this.pendingDetailKey = ''
+                        this.pendingRealtimeDetail = null
+                    })
             },
             handleRealtimeDetail (data) {
-                if (this._isBeingDestroyed || this._isDestroyed) return
-                this.detailRequestId += 1
-                this.hasNoPermission = false
-                this.isLoading = false
-                this.setPipelineDetail(data)
+                const params = this.routerParams
+                const { pipelineId, buildNo, executeCount, archiveFlag } = params
+                const round = Number(data?.executeCount)
+                if (this._isBeingDestroyed || this._isDestroyed || this.hasNoPermission
+                    || String(archiveFlag) === 'true'
+                    || data?.id !== buildNo || data?.pipelineId !== pipelineId
+                    || !Number.isSafeInteger(round) || round < 1
+                    || (executeCount && round !== Number(executeCount))) return
+
+                const key = this.getDetailRequestKey(params)
+                if (this.loadedDetailKey !== key || !this.execDetail) {
+                    // HTTP must authorize this build and round before any push is displayed.
+                    if (this.pendingDetailKey === key && this.isNewerDetailSnapshot(data, this.pendingRealtimeDetail)) {
+                        this.pendingRealtimeDetail = data
+                    }
+                    return
+                }
+                if (this.isNewerDetailSnapshot(data, this.execDetail)) this.setPipelineDetail(data)
             },
             ...mapActions('atom', [
                 'reviewExcuteAtom',

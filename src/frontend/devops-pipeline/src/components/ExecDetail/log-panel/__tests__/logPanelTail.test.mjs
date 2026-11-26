@@ -23,3 +23,17 @@ test('after cursor uses maxima instead of the sorted last element', () => {
         sinceTimestamp: 3000
     })
 })
+
+test('empty polling and duplicate lookbacks share the same 100k-row array and rows', () => {
+    const lines = Array.from({ length: 100000 }, (_, index) => ({
+        lineNo: index + 1, timestamp: index + 1, message: 'unchanged'
+    }))
+    assert.equal(mergeLogPanelLines(lines, []), lines)
+    assert.equal(mergeLogPanelLines(lines, lines.slice(-1000).map(row => ({ ...row }))), lines)
+    const [changed, unchanged] = lines.slice(-2)
+    const merged = mergeLogPanelLines(lines, [{ ...changed, message: 'updated' }, { ...unchanged }])
+    assert.notEqual(merged, lines)
+    assert.equal(merged[0], lines[0])
+    assert.equal(merged.at(-1), unchanged)
+    assert.equal(merged.at(-2).message, 'updated')
+})

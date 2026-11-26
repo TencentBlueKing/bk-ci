@@ -106,6 +106,16 @@ test('ANSI foreground segments, resets, and search across color boundaries share
     for (const code of [91, 92, 93, 94, 95, 96, 97]) assert.equal(parseLogLine(`\u001b[${code}mcolor`).segments[0].color, '')
 })
 
+test('AI marker follows the legacy severity prefix without leaking into display or search', () => {
+    const aiRow = { message: '##[error]##[ai]script failed' }
+    assert.equal(parseLogLine(aiRow).aiAnalysis, true)
+    assert.equal(parseLogLine('##[ai]script failed').aiAnalysis, true)
+    assert.equal(parseLogLine('script failed ##[ai]').aiAnalysis, false)
+    assert.equal(getLogText(aiRow), 'script failed')
+    assert.equal(getLogIssueLevel(aiRow), 'error')
+    assert.deepEqual(findLogMatchIds([{ ...aiRow, lineNo: 1 }], '##[ai]'), [])
+})
+
 test('safe anchors discard supplied attributes, reject unsafe and malformed hrefs, and do not expose URLs to search', () => {
     const log = { text: '<a href="https://example.com/a?x=1&amp;y=2" target="_self" onclick="bad()">needle &amp; text</a>' }
     const parsed = parseLogLine(log)

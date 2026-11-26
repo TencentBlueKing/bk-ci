@@ -105,75 +105,66 @@ export function shouldMountLogPanel ({ isHistoricalExecuteCount = false, history
     return historyRecordState === 'unavailable'
 }
 
-export function normalizeLogPanelResponse (response, { strictLatest = false } = {}) {
-    if (strictLatest) {
-        const invalid = () => {
-            throw new Error('Invalid latest log response')
-        }
-        let data = response
-        let inheritedStatus
-        if (!data || typeof data !== 'object' || Array.isArray(data)) return invalid()
-        while (Object.prototype.hasOwnProperty.call(data, 'data')) {
-            if (!data.data || typeof data.data !== 'object' || Array.isArray(data.data)) return invalid()
-            if (Object.prototype.hasOwnProperty.call(data, 'status') || Object.prototype.hasOwnProperty.call(data, 'code')) {
-                const wrapperStatus = Object.prototype.hasOwnProperty.call(data, 'status') ? data.status : data.code
-                const transportStatus = (typeof wrapperStatus === 'number' || typeof wrapperStatus === 'string')
-                    && Number.isInteger(Number(wrapperStatus)) && Number(wrapperStatus) >= 200 && Number(wrapperStatus) < 300
-                if (!transportStatus) inheritedStatus = wrapperStatus
+export function normalizeLogPanelResponse (response, { direction = 'latest' } = {}) {
+    const invalid = () => {
+        throw new Error(`Invalid ${direction} log response`)
+    }
+    const isRecord = value => value && typeof value === 'object' && !Array.isArray(value)
+    const statusCode = value => typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value.trim()))
+        ? Number(value)
+        : NaN
+    let data = response
+    let inheritedStatus = 0
+    while (isRecord(data) && Object.prototype.hasOwnProperty.call(data, 'data')) {
+        const rawStatus = data.status ?? data.code
+        if (rawStatus !== undefined) {
+            const code = statusCode(rawStatus)
+            if (code !== 0 && !(Number.isInteger(code) && code >= 200 && code < 300)) {
+                if (![1, 2, 3, 999].includes(code) || inheritedStatus !== 0) return invalid()
+                inheritedStatus = code
             }
-            data = data.data
         }
-        if (!data || typeof data !== 'object' || Array.isArray(data)) return invalid()
-        const hasStatus = Object.prototype.hasOwnProperty.call(data, 'status') || Object.prototype.hasOwnProperty.call(data, 'code')
-        const rawStatus = hasStatus ? (Object.prototype.hasOwnProperty.call(data, 'status') ? data.status : data.code) : inheritedStatus
-        let status
-        if (rawStatus === undefined) {
-            if (Array.isArray(data.logs)) status = 0
-            else if (data.cleaned === true || data.emptyStatus === true) status = 2
-            else return invalid()
-        } else {
-            if (typeof rawStatus !== 'number' && typeof rawStatus !== 'string') return invalid()
-            if (typeof rawStatus === 'string' && !/^\d+$/.test(rawStatus.trim())) return invalid()
-            status = Number(rawStatus)
-            if (!Number.isInteger(status) || ![0, 1, 2, 3, 999].includes(status)) return invalid()
-        }
-        if (data.logs !== undefined && !Array.isArray(data.logs)) return invalid()
-        if (status === 0 && !Array.isArray(data.logs) && data.cleaned !== true && data.emptyStatus !== true) return invalid()
-        const cursor = data.cursor && typeof data.cursor === 'object' && !Array.isArray(data.cursor) ? data.cursor : {}
-        return {
-            status,
-            message: data.message || '',
-            logs: Array.isArray(data.logs) ? data.logs : [],
-            subTags: Array.isArray(data.subTags) ? data.subTags : [],
-            cursor,
-            hasBefore: typeof data.hasBefore === 'boolean' ? data.hasBefore : Boolean(cursor.hasBefore),
-            hasAfter: typeof data.hasAfter === 'boolean' ? data.hasAfter : Boolean(cursor.hasAfter),
-            finished: data.finished !== false,
-            clean: status === 2 || status === 3 || data.cleaned === true || data.emptyStatus,
-            startLineNo: data.startLineNo ?? cursor.startLineNo,
-            endLineNo: data.endLineNo ?? cursor.endLineNo,
-            matchedTotal: data.matchedTotal,
-            levels: data.levels
+        data = data.data
+    }
+    if (!isRecord(data)) return invalid()
+    const rawStatus = data.status ?? data.code
+    const status = rawStatus === undefined ? inheritedStatus : statusCode(rawStatus)
+    if (![0, 1, 2, 3, 999].includes(status) || (inheritedStatus !== 0 && inheritedStatus !== status)) return invalid()
+    if (data.cursor != null && !isRecord(data.cursor)) return invalid()
+    const cursor = data.cursor || {}
+    const hasBefore = data.hasBefore ?? cursor.hasBefore
+    const hasAfter = data.hasAfter ?? cursor.hasAfter
+    const startLineNo = data.startLineNo ?? cursor.startLineNo
+    const endLineNo = data.endLineNo ?? cursor.endLineNo
+    const clean = status === 2 || status === 3 || data.cleaned === true || data.emptyStatus === true
+    if (data.cleaned !== undefined && typeof data.cleaned !== 'boolean') return invalid()
+    const validLine = log => isRecord(log)
+        && isSafeNonNegativeInteger(log.lineNo)
+        && isSafeNonNegativeInteger(log.timestamp)
+        && typeof log.message === 'string' && LOG_LEVEL_ORDER.includes(log.level)
+    if (data.logs !== undefined && (!Array.isArray(data.logs) || !data.logs.every(validLine))) return invalid()
+    if ([startLineNo, endLineNo, data.matchedTotal].some(value => value != null && !isSafeNonNegativeInteger(value))) return invalid()
+    if (data.subTags != null && (!Array.isArray(data.subTags) || !data.subTags.every(tag => typeof tag === 'string'))) return invalid()
+    if (!clean && status !== 999) {
+        if (!Array.isArray(data.logs) || typeof data.finished !== 'boolean'
+            || typeof hasBefore !== 'boolean' || typeof hasAfter !== 'boolean') return invalid()
+        if (direction !== 'after') {
+            // The backend cursor is the first row of the storage page; display sorting happens later.
+            if (data.logs.length ? startLineNo !== data.logs[0].lineNo : hasBefore || startLineNo != null) return invalid()
         }
     }
-    const payload = response?.data ?? response ?? {}
-    const data = payload.data && !Array.isArray(payload.data) ? payload.data : payload
-    const status = Number(data.status ?? data.code ?? 0)
-    const cursor = data.cursor || {}
     return {
         status,
         message: data.message || '',
-        logs: Array.isArray(data.logs) ? data.logs : [],
+        logs: data.logs || [],
         subTags: Array.isArray(data.subTags) ? data.subTags : [],
-        cursor,
-        hasBefore: typeof data.hasBefore === 'boolean' ? data.hasBefore : Boolean(cursor.hasBefore),
-        hasAfter: typeof data.hasAfter === 'boolean' ? data.hasAfter : Boolean(cursor.hasAfter),
-        finished: data.finished !== false,
-        clean: status === 2 || status === 3 || data.cleaned === true || data.emptyStatus,
-        startLineNo: data.startLineNo ?? cursor.startLineNo,
-        endLineNo: data.endLineNo ?? cursor.endLineNo,
+        hasBefore,
+        hasAfter,
+        finished: data.finished,
+        clean,
+        startLineNo,
+        endLineNo,
         matchedTotal: data.matchedTotal,
-        levels: data.levels,
     }
 }
 

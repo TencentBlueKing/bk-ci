@@ -601,7 +601,6 @@
                 'reviewExcuteAtom',
                 'togglePropertyPanel',
                 'toggleStageReviewPanel',
-                'requestPipelineExecDetail',
                 'pausePlugin'
             ]),
             ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
@@ -806,7 +805,10 @@
 
                             try {
                                 await this.pausePlugin(postData)
-                                await this.requestPipelineExecDetail(this.routerParams)
+                                if (!this._isBeingDestroyed && !this._isDestroyed
+                                    && this.routerParams.projectId === postData.projectId
+                                    && this.routerParams.pipelineId === postData.pipelineId
+                                    && this.routerParams.buildNo === postData.buildId) this.$emit('refresh-detail')
                             } catch (err) {
                                 this.$showTips({
                                     message: err.message || err,
@@ -836,12 +838,13 @@
             async retryPipeline (isStageRetry) {
                 let message, theme
                 this.showRetryStageDialog = false
+                const { projectId, pipelineId, buildNo } = this.routerParams
                 try {
                     // 请求执行构建
                     const res = await this.requestRetryPipeline({
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
+                        projectId,
+                        pipelineId,
+                        buildId: buildNo,
                         taskId: this.retryTaskId,
                         skip: this.skipTask,
                         ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
@@ -849,10 +852,15 @@
                     if (res.id) {
                         message = this.$t(this.skipTask ? 'skipSuc' : 'subpage.retrySuc')
                         theme = 'success'
-                        if (res.executeCount) {
-                            this.handleExecuteCountChange(res.executeCount)
-                        } else {
-                            await this.requestPipelineExecDetail(this.routerParams)
+                        if (!this._isBeingDestroyed && !this._isDestroyed
+                            && this.routerParams.projectId === projectId
+                            && this.routerParams.pipelineId === pipelineId
+                            && this.routerParams.buildNo === buildNo) {
+                            if (res.executeCount && Number(res.executeCount) !== Number(this.$route.params.executeCount)) {
+                                await this.handleExecuteCountChange(res.executeCount)
+                            } else {
+                                this.$emit('refresh-detail')
+                            }
                         }
                     } else {
                         message
@@ -1065,19 +1073,14 @@
                 this.activeErrorAtom = row
             },
             handleExecuteCountChange (executeCount) {
-                this.$router.push({
+                if (Number(executeCount) === Number(this.$route.params.executeCount)) return
+                return this.$router.push({
                     ...this.$route,
                     params: {
                         ...this.$route.params,
                         type: this.$route.params.type ?? 'executeDetail',
                         executeCount
                     }
-                })
-                this.$nextTick(() => {
-                    this.requestPipelineExecDetail({
-                        ...this.routerParams,
-                        executeCount
-                    })
                 })
             },
             debugDocker ({ container }) {

@@ -25,18 +25,40 @@ function compareLines (left, right) {
     return (lineNumber(left) ?? 0) - (lineNumber(right) ?? 0)
 }
 
-/** Merge by storage line number; the newest occurrence wins. */
+const lineIndexes = new WeakMap()
+
+export function getLogPanelLineIndex (logs) {
+    if (!lineIndexes.has(logs)) {
+        lineIndexes.set(logs, new Map(logs.map(line => [lineNumber(line), line])))
+    }
+    return lineIndexes.get(logs)
+}
+
+function sameLine (left, right) {
+    return left === right || (left && Object.keys(left).length === Object.keys(right).length
+        && Object.keys(left).every(key => Object.prototype.hasOwnProperty.call(right, key) && left[key] === right[key]))
+}
+
+/** Merge by storage line number; keep unchanged rows and no-op arrays. */
 export function mergeLogPanelLines (current = [], incoming = []) {
-    const lines = new Map()
-    current.forEach(line => {
+    if (!incoming.length) return current
+    const existing = getLogPanelLineIndex(current)
+    const changes = new Map()
+    for (const line of incoming) {
         const number = lineNumber(line)
-        if (number !== null) lines.set(number, { ...line, lineNo: number })
-    })
-    incoming.forEach(line => {
+        if (number === null) continue
+        const normalized = line.lineNo === number ? line : { ...line, lineNo: number }
+        if (sameLine(existing.get(number), normalized)) changes.delete(number)
+        else changes.set(number, normalized)
+    }
+    if (!changes.size) return current
+    const merged = current.map(line => {
         const number = lineNumber(line)
-        if (number !== null) lines.set(number, { ...line, lineNo: number })
-    })
-    return Array.from(lines.values()).sort(compareLines)
+        const change = changes.get(number)
+        changes.delete(number)
+        return change || line
+    }).concat(Array.from(changes.values())).sort(compareLines)
+    return merged
 }
 
 export function countNewLogPanelLines (current = [], incoming = []) {

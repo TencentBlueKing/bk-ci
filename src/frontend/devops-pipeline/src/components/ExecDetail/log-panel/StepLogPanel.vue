@@ -34,51 +34,81 @@
             </button>
         </div>
         <div
-            v-else-if="showStatusEmptyLine"
-            class="log-panel-status-empty"
-        >
-            <span class="log-line-number">1</span>{{ emptyLineText }}
-        </div>
-        <div
-            v-else-if="cleanStatus"
-            class="log-panel-empty is-clean"
-        >
-            {{ cleanStatusText }}
-        </div>
-        <div
             v-else
             class="step-log-body"
         >
-            <log-group-bar
-                v-if="subTags.length"
-                :value="selectedSubTag"
-                :sub-tags="subTags"
-                @input="selectedSubTag = $event"
-            />
             <p
-                v-if="errorMessage"
+                v-if="paginationError"
                 class="log-panel-error"
+                role="alert"
             >
-                {{ errorMessageText }}
+                {{ $t(paginationError) }}
+                <template v-if="showPaginationUnavailableDetail">
+                    · {{ $t('logPanel.loadUnavailable') }}
+                </template>
+                <button
+                    type="button"
+                    :disabled="!canRetryPagination"
+                    @click="retryPagination"
+                >
+                    {{ $t('retry') }}
+                </button>
             </p>
-            <log-lines-view
-                ref="linesView"
-                :logs="visibleLogs"
-                :issue-logs="numberedLogs"
-                :display-base="displayBase + 1"
-                :keyword="controls.search"
-                :show-time="controls.showTime"
-                :wrap="controls.wrap"
-                :follow-bottom="bottomFollow"
-                :highlighted-line-no="highlightedLogId"
-                :loading-before="loadingBefore"
-                @reach-top="loadBefore"
-                @stick-bottom-change="onStickBottomChange"
-                @locate="locate"
-                @toggle-group="toggleLogGroup"
-                @view-large-variable="openLargeVariable"
-            />
+            <div
+                v-if="showStatusEmptyLine"
+                class="log-panel-status-empty"
+            >
+                <span class="log-line-number">1</span>{{ emptyLineText }}
+            </div>
+            <div
+                v-else-if="cleanStatus"
+                class="log-panel-empty is-clean"
+            >
+                {{ cleanStatusText }}
+            </div>
+            <template v-else>
+                <log-group-bar
+                    v-if="subTags.length"
+                    :value="selectedSubTag"
+                    :sub-tags="subTags"
+                    @input="selectedSubTag = $event"
+                />
+                <log-lines-view
+                    ref="linesView"
+                    :logs="visibleLogs"
+                    :issue-logs="numberedLogs"
+                    :display-base="displayBase + 1"
+                    :keyword="controls.search"
+                    :show-time="controls.showTime"
+                    :wrap="controls.wrap"
+                    :follow-bottom="bottomFollow"
+                    :highlighted-line-no="highlightedLogId"
+                    :loading-before="loadingBefore"
+                    @reach-top="loadBefore"
+                    @stick-bottom-change="onStickBottomChange"
+                    @locate="locate"
+                    @toggle-group="toggleLogGroup"
+                    @view-large-variable="openLargeVariable"
+                >
+                    <template #line-actions="{ line }">
+                        <button
+                            v-if="canAnalyzeLog(line)"
+                            type="button"
+                            class="log-ai-trigger"
+                            @click.stop="openAiAnalysis(line)"
+                        >
+                            {{ $t('logPanel.ai.title') }}
+                        </button>
+                    </template>
+                </log-lines-view>
+            </template>
         </div>
+        <log-ai-dialog
+            v-if="aiTarget"
+            :target="aiTarget"
+            :enabled="aiEnabled"
+            @close="aiTarget = null"
+        />
         <large-variable-dialog
             :value="largeVariable.visible"
             :variable-key="largeVariable.key"
@@ -98,6 +128,8 @@
     import LogGroupBar from './LogGroupBar'
     import LogLinesView from './LogLinesView'
     import LargeVariableDialog from './LargeVariableDialog'
+    import LogAiDialog from './LogAiDialog'
+    import { parseLogLine } from './logLineFormat'
     import { resolveLargeVariableResult } from './logLargeVariable'
     import {
         findLogMatchIds,
@@ -128,12 +160,12 @@
         resolveConditionSkipReason,
         withDisplayLineNumbers
     } from './logPanelAdapter'
-    import { countNewLogPanelLines, mergeLogPanelLines, nextAfterCursor } from './logPanelTail'
+    import { getLogPanelLineIndex, mergeLogPanelLines, nextAfterCursor } from './logPanelTail'
     import { buildLogStructure, isLogStructureFilterEligible, projectLogStructure, resolveLogGroupAncestors } from './logLineStructure.js'
 
     export default {
         name: 'StepLogPanel',
-        components: { LogGroupBar, LogLinesView, LargeVariableDialog },
+        components: { LogGroupBar, LogLinesView, LargeVariableDialog, LogAiDialog },
         props: {
             projectId: { type: String, required: true },
             pipelineId: { type: String, required: true },
@@ -171,6 +203,8 @@
                 cleanStatus: '',
                 serverMessage: '',
                 errorMessage: '',
+                beforeError: '',
+                afterError: '',
                 retryContext: '',
                 suppressLevelsReload: false,
                 beforeRetries: 0,
@@ -191,12 +225,17 @@
                 collapsedGroupIds: [],
                 pendingStatusResume: false,
                 largeVariable: { visible: false, key: '', length: 0, tag: '', state: 'loading', value: '', errorMessage: '' },
-                largeVariableSeq: 0
+                largeVariableSeq: 0,
+                aiEnabled: null,
+                aiTarget: null
             }
         },
         computed: {
             matchIds () {
                 return findLogMatchIds(this.logs, this.controls.search)
+            },
+            aiContext () {
+                return [this.projectId, this.pipelineId, this.buildId, this.tag, this.jobId, this.executeCount, this.archiveFlag].join('|')
             },
             numberedLogs () {
                 return withDisplayLineNumbers(this.logs, this.displayBase + 1)
@@ -224,11 +263,27 @@
             errorMessageText () {
                 return String(this.errorMessage || '').startsWith('logPanel.') ? this.$t(this.errorMessage) : this.errorMessage
             },
+            paginationError () {
+                if (this.beforeError && this.afterError) return 'logPanel.loadError'
+                if (this.beforeError) return this.beforeError === 'logPanel.loadError' ? 'logPanel.loadOlderLogsError' : this.beforeError
+                if (this.afterError) return this.afterError === 'logPanel.loadError' ? 'logPanel.loadNewerLogsError' : this.afterError
+                return ''
+            },
+            showPaginationUnavailableDetail () {
+                return Boolean(this.beforeError && this.afterError
+                    && [this.beforeError, this.afterError].includes('logPanel.loadUnavailable'))
+            },
+            canRetryPagination () {
+                return Boolean((this.beforeError && !this.loadingBefore) || (this.afterError && !this.loadingAfter))
+            },
             showStatusEmptyLine () {
                 return shouldShowStatusEmptyLine(this.cleanStatus, this.emptyLineText)
             },
         },
         watch: {
+            aiContext () {
+                this.aiTarget = null
+            },
             executeCount () {
                 this.collapsedGroupIds = []
                 if (!this.contextKey) {
@@ -308,6 +363,11 @@
         },
         mounted () {
             this.reload()
+            this.getAIStatus().then(res => {
+                this.aiEnabled = res.data === true
+            }).catch(() => {
+                this.aiEnabled = false
+            })
             this.$nextTick(() => {
                 this.suppressLevelsReload = false
             })
@@ -316,7 +376,20 @@
             this.invalidate()
         },
         methods: {
-            ...mapActions('atom', ['getLogPanelLatest', 'getLogPanelBefore', 'getLogPanelAfter', 'getLogStatus', 'getDownloadLogFromArtifactory', 'getBuildVariableValue']),
+            ...mapActions('atom', ['getLogPanelLatest', 'getLogPanelBefore', 'getLogPanelAfter', 'getLogStatus', 'getDownloadLogFromArtifactory', 'getBuildVariableValue', 'getAIStatus']),
+            canAnalyzeLog (line) {
+                return this.aiEnabled !== null && Boolean(this.tag || line.tag) && parseLogLine(line).aiAnalysis === true
+            },
+            openAiAnalysis (line) {
+                if (!this.canAnalyzeLog(line)) return
+                this.aiTarget = {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    buildId: this.buildId,
+                    tag: this.tag || line.tag,
+                    currentExe: this.executeCount
+                }
+            },
             openLargeVariable (payload = {}) {
                 this.largeVariable = {
                     visible: true,
@@ -444,17 +517,18 @@
                 this.cleanStatus = ''
                 this.serverMessage = ''
                 this.errorMessage = ''
+                this.beforeError = ''
+                this.afterError = ''
                 this.tailIdentity = {}
                 this.maxLineNo = 0
                 this.maxTimestamp = null
                 this.beforeCursor = null
                 let latestSucceeded = false
-                this.getLogPanelLatest(this.requestParams()).then(response => {
+                return this.getLogPanelLatest(this.requestParams()).then(response => {
                     if (generation !== this.generation) return
-                    const result = normalizeLogPanelResponse(response, { strictLatest: true })
-                    this.serverMessage = result.message
-                    this.applyResponse(result, 'latest', response, generation)
-                    latestSucceeded = result.status === 0 && !result.clean
+                    const result = normalizeLogPanelResponse(response)
+                    this.applyResponse(result, 'latest', generation)
+                    latestSucceeded = (result.status === 0 || result.status === 1) && !result.clean
                 }).catch(error => {
                     if (generation !== this.generation) return
                     if (this.controls.search) this.searchBackfillStopped = true
@@ -488,59 +562,70 @@
                 })
             },
             applyResult (result, direction) {
-                const incoming = result.logs.map((log, index) => ({ ...log, lineNo: log.lineNo ?? log.line ?? index + 1, time: formatLogTime(log) }))
-                const incomingCursor = nextAfterCursor(incoming)
-                if (incomingCursor.startLineNo !== undefined) this.maxLineNo = Math.max(this.maxLineNo, incomingCursor.startLineNo)
-                if (incomingCursor.sinceTimestamp !== undefined) this.maxTimestamp = this.maxTimestamp === null ? incomingCursor.sinceTimestamp : Math.max(this.maxTimestamp, incomingCursor.sinceTimestamp)
-                this.expireTailIdentity()
+                const structureWasComplete = this.logStructureComplete
+                const incoming = result.logs.map(log => ({ ...log, lineNo: log.lineNo ?? log.line, time: formatLogTime(log) }))
+                const nextBefore = result.startLineNo ?? incoming[0]?.lineNo
+                if (direction === 'before') {
+                    const previousBefore = this.beforeCursor ?? this.startLineNo
+                    if ((nextBefore !== undefined && nextBefore >= previousBefore)
+                        || incoming.some(log => log.lineNo >= previousBefore)) throw new Error('Invalid before log cursor')
+                }
+                if (direction !== 'before') {
+                    const incomingCursor = nextAfterCursor(incoming)
+                    if (incomingCursor.startLineNo !== null) this.maxLineNo = Math.max(this.maxLineNo, incomingCursor.startLineNo)
+                    if (incomingCursor.sinceTimestamp !== null) this.maxTimestamp = Math.max(this.maxTimestamp ?? 0, incomingCursor.sinceTimestamp)
+                    this.endLineNo = this.maxLineNo
+                    this.hasAfter = result.hasAfter
+                    this.finished = result.finished
+                    this.expireTailIdentity()
+                }
+                if (direction !== 'after') {
+                    if (nextBefore != null) this.beforeCursor = nextBefore
+                    this.startLineNo = this.beforeCursor ?? this.startLineNo
+                    this.hasBefore = result.hasBefore
+                }
                 const oldLogs = this.logs
-                const currentLineNos = new Set(oldLogs.map(log => Number(log.lineNo)))
-                const accepted = incoming.filter(log => direction !== 'after' || currentLineNos.has(Number(log.lineNo)) || this.tailIdentity[Number(log.lineNo)] === undefined)
-                const addedCount = direction === 'latest' ? accepted.length : countNewLogPanelLines(oldLogs, accepted)
+                const accepted = direction === 'after'
+                    ? incoming.filter(log => this.tailIdentity[log.lineNo] === undefined || getLogPanelLineIndex(oldLogs).has(log.lineNo))
+                    : incoming
                 const merged = direction === 'latest' ? mergeLogPanelLines([], accepted) : mergeLogPanelLines(oldLogs, accepted)
+                const addedCount = merged.length - oldLogs.length
                 if (direction === 'latest') {
-                    const total = Number(result.matchedTotal)
-                    if (Number.isFinite(total)) this.matchedTotal = total
+                    if (Number.isFinite(result.matchedTotal)) this.matchedTotal = result.matchedTotal
                     this.displayBase = latestDisplayBase(this.matchedTotal ?? merged.length, merged.length) - 1
                 } else if (direction === 'before') {
                     this.displayBase = Math.max(0, this.displayBase - addedCount)
                 } else if (direction === 'after' && addedCount > 0 && Number.isFinite(this.matchedTotal)) {
                     this.matchedTotal += addedCount
                 }
-                this.logs = merged
-                if (String(this.taskStatus || '').toUpperCase() === 'SKIP') {
-                    const reason = resolveConditionSkipReason(this.logs)
-                    if (reason) this.$emit('condition-skip-reason', reason)
+                if (merged !== oldLogs) {
+                    this.logs = merged
+                    if (String(this.taskStatus || '').toUpperCase() === 'SKIP') {
+                        const reason = resolveConditionSkipReason(this.logs)
+                        if (reason) this.$emit('condition-skip-reason', reason)
+                    }
+                    this.updateMatches()
+                    this.emitIssuesChange()
+                    this.emitLocateAvailability()
                 }
-                const validCollapsedIds = new Set(this.logStructure.groups.filter(group => group.complete).map(group => group.id))
-                this.collapsedGroupIds = this.collapsedGroupIds.filter(id => validCollapsedIds.has(id))
-                this.hasBefore = result.hasBefore
-                this.hasAfter = result.hasAfter
-                this.finished = result.finished
+                if (this.collapsedGroupIds.length && (merged !== oldLogs || structureWasComplete !== this.logStructureComplete)) {
+                    const validCollapsedIds = new Set(this.logStructure.groups.filter(group => group.complete).map(group => group.id))
+                    this.collapsedGroupIds = this.collapsedGroupIds.filter(id => validCollapsedIds.has(id))
+                }
                 if (direction === 'before') {
+                    this.beforeError = ''
                     this.beforeRetries = 0
                     clearTimeout(this.beforeTimer)
                     this.beforeTimer = null
                 } else if (direction === 'after') {
+                    this.afterError = ''
                     this.afterRetries = 0
                 }
-                this.errorMessage = ''
-                const rawFirstValue = result.logs.length ? (result.logs[0].lineNo ?? result.logs[0].line) : null
-                const rawFirstLineNo = rawFirstValue === null || rawFirstValue === undefined || rawFirstValue === '' ? NaN : Number(rawFirstValue)
-                if (direction === 'latest' || direction === 'before') {
-                    const responseCursor = result.startLineNo === null || result.startLineNo === undefined || result.startLineNo === '' ? NaN : Number(result.startLineNo)
-                    if (Number.isSafeInteger(responseCursor)) this.beforeCursor = responseCursor
-                    else if (Number.isSafeInteger(rawFirstLineNo)) this.beforeCursor = rawFirstLineNo
+                if (result.subTags.length || direction === 'latest') {
+                    this.subTags = result.subTags
+                    this.$emit('sub-tags', this.subTags)
                 }
-                const cursor = nextAfterCursor(this.logs)
-                this.endLineNo = this.maxLineNo || cursor.startLineNo || result.endLineNo || this.endLineNo
-                this.startLineNo = this.beforeCursor ?? this.startLineNo
-                this.subTags = result.subTags
-                this.$emit('sub-tags', this.subTags)
-                this.updateMatches()
-                this.emitIssuesChange()
-                this.emitLocateAvailability()
-                if (!result.finished || result.hasAfter) this.scheduleAfter()
+                if (direction !== 'before') this.scheduleAfter()
             },
             emitIssuesChange () {
                 this.$emit('issues-change', this.logs.some(log => Boolean(getLogIssueLevel(log))))
@@ -608,23 +693,30 @@
                     })) this.$refs.linesView?.scrollToLine(target)
                 })
             },
-            applyResponse (result, direction, response, generation = this.generation) {
+            applyResponse (result, direction, generation = this.generation) {
                 if (result.status === 2 || result.status === 3 || result.clean) {
+                    this.invalidate()
                     this.serverMessage = resolveCleanResponseMessage(result.message)
                     this.cleanStatus = result.status === 3 ? 'closed' : 'clean'
-                    clearTimeout(this.requestTimer)
-                    clearTimeout(this.beforeTimer)
-                    this.requestTimer = null
-                    this.beforeTimer = null
-                    this.loadingBefore = false
-                    this.loadingAfter = false
+                    this.loadingInitial = false
+                    this.hasBefore = false
+                    this.hasAfter = false
+                    this.finished = true
+                    this.beforeError = ''
+                    this.afterError = ''
                     this.$emit('locatable-change', false)
+                    if (direction === 'latest') {
+                        const cleanGeneration = this.generation
+                        this.$nextTick(() => {
+                            if (cleanGeneration === this.generation) this.$emit('logs-loaded')
+                        })
+                    }
                     return
                 }
-                this.serverMessage = result.message || this.serverMessage
                 if (result.status === 999) {
-                    this.errorMessage = resolveLogLoadErrorKey({ status: result.status })
+                    const message = resolveLogLoadErrorKey({ status: result.status })
                     if (direction === 'latest') {
+                        this.errorMessage = message
                         clearTimeout(this.requestTimer)
                         clearTimeout(this.beforeTimer)
                         this.requestTimer = null
@@ -632,6 +724,7 @@
                         return
                     }
                     if (direction === 'before') {
+                        this.beforeError = message
                         if (shouldRetryBeforeLoad({ status: result.status, beforeRetries: this.beforeRetries })) {
                             this.beforeRetries += 1
                             this.scheduleBefore(generation)
@@ -639,17 +732,32 @@
                         return
                     }
                     if (direction === 'after') {
+                        this.afterError = message
                         this.afterRetries += 1
                         this.scheduleAfter()
                         return
                     }
                     return
                 }
-                this.cleanStatus = result.status === 1 && direction === 'latest' ? 'empty' : ''
                 this.applyResult(result, direction)
+                this.serverMessage = result.message || this.serverMessage
+                this.cleanStatus = result.status === 1 && !this.logs.length ? 'empty' : ''
+            },
+            retryBefore () {
+                this.beforeRetries = 0
+                this.searchBackfillStopped = false
+                return this.loadBefore()
+            },
+            retryPagination () {
+                const requests = []
+                if (this.beforeError && !this.loadingBefore) requests.push(this.retryBefore())
+                if (this.afterError && !this.loadingAfter) requests.push(this.loadAfter())
+                return Promise.all(requests)
             },
             loadBefore () {
                 if (this.loadingBefore || !this.hasBefore || (!this.logs.length && !this.startLineNo)) return
+                clearTimeout(this.beforeTimer)
+                this.beforeTimer = null
                 const searchBackfillAtStart = Boolean(this.controls.search)
                 const searchAtStart = String(this.controls.search || '')
                 this.loadingBefore = true
@@ -668,20 +776,18 @@
                 const previousCursor = this.beforeCursor ?? this.startLineNo
                 let beforeSucceeded = false
                 const firstLine = this.beforeCursor ?? this.startLineNo
-                this.getLogPanelBefore({ ...this.requestParams(), endLineNo: firstLine }).then(response => {
+                return this.getLogPanelBefore({ ...this.requestParams(), endLineNo: firstLine }).then(response => {
                     if (generation !== this.generation) return
                     captureScrollState()
-                    const result = normalizeLogPanelResponse(response)
-                    if (result.status !== 999 && result.status !== 2 && result.status !== 3 && !result.clean) {
-                        beforeSucceeded = true
-                    }
-                    this.applyResponse(result, 'before', response, generation)
+                    const result = normalizeLogPanelResponse(response, { direction: 'before' })
+                    this.applyResponse(result, 'before', generation)
+                    beforeSucceeded = result.status !== 999 && !result.clean
                 }).catch(error => {
                     if (generation !== this.generation) return
                     captureScrollState()
                     if (isPermissionError(error)) this.$emit('permission', error)
                     else {
-                        this.errorMessage = error.message || String(error)
+                        this.beforeError = resolveLogLoadErrorKey(error)
                         if (!searchBackfillAtStart && !this.controls.search) {
                             this.beforeRetries = Math.min(this.beforeRetries + 1, 3)
                             this.scheduleBefore(generation)
@@ -727,31 +833,30 @@
                 })
             },
             loadAfter () {
+                clearTimeout(this.requestTimer)
                 this.requestTimer = null
                 if (this.loadingAfter || (!this.logs.length && this.finished) || (this.finished && !this.hasAfter)) return
                 this.loadingAfter = true
                 const generation = this.generation
                 const view = this.$refs.linesView
-                const cursor = nextAfterCursor(this.logs)
-                if (this.maxLineNo) cursor.startLineNo = this.maxLineNo
-                if (this.maxTimestamp !== null) cursor.sinceTimestamp = this.maxTimestamp
-                this.getLogPanelAfter({
+                return this.getLogPanelAfter({
                     ...this.requestParams(),
-                    ...cursor,
-                    startLineNo: cursor.startLineNo ?? this.endLineNo
+                    sinceTimestamp: this.maxTimestamp,
+                    startLineNo: this.endLineNo
                 }).then(response => {
                     if (generation !== this.generation) return
                     const wasFollowingAtResponse = this.bottomFollow
                     const anchor = !wasFollowingAtResponse ? view?.captureAnchor() : null
                     const interactionToken = view?.layoutInteractionToken
-                    const result = normalizeLogPanelResponse(response)
-                    this.applyResponse(result, 'after', response, generation)
-                    if (anchor) {
+                    const result = normalizeLogPanelResponse(response, { direction: 'after' })
+                    const previousLogs = this.logs
+                    this.applyResponse(result, 'after', generation)
+                    if (anchor && this.logs !== previousLogs) {
                         this.$nextTick(() => {
                             if (generation === this.generation && !this.bottomFollow
                                 && interactionToken === view?.layoutInteractionToken) view?.restoreAnchor(anchor)
                         })
-                    } else if (result.status === 0 && result.logs.length && this.bottomFollow && !this.controls.search) {
+                    } else if (this.logs !== previousLogs && this.bottomFollow && !this.controls.search) {
                         this.$nextTick(() => {
                             if (generation === this.generation && this.bottomFollow) this.scrollToBottom()
                         })
@@ -760,7 +865,7 @@
                     if (generation !== this.generation) return
                     if (isPermissionError(error)) this.$emit('permission', error)
                     else {
-                        this.errorMessage = error.message || String(error)
+                        this.afterError = resolveLogLoadErrorKey(error)
                         this.afterRetries += 1
                         this.scheduleAfter()
                     }
@@ -786,6 +891,7 @@
                 }, delay)
             },
             resumeLogPolling () {
+                if (this.permissionDenied || this.cleanStatus === 'clean' || this.cleanStatus === 'closed') return
                 if (this.loadingInitial || this.loadingAfter) {
                     this.pendingStatusResume = true
                     return
@@ -924,7 +1030,11 @@
     .log-panel-load-error button:disabled { opacity: .5; cursor: not-allowed; }
     .log-panel-status-empty { flex: 1; padding: 8px 24px; font: 12px/20px "Microsoft YaHei", sans-serif; color: #979ba5; background: #2c2d34; }
     .log-panel-status-empty .log-line-number { display: inline-block; min-width: 4ch; margin-right: 17px; text-align: right; color: #979ba5; font-variant-numeric: tabular-nums; user-select: none; }
-    .log-panel-error { margin: 8px 20px 0; color: #f06e6e; font: 12px/20px "Microsoft YaHei", sans-serif; }
+    .log-panel-error { flex: 0 0 auto; margin: 8px 20px 0; color: #f06e6e; font: 12px/20px "Microsoft YaHei", sans-serif; overflow-wrap: anywhere; }
+    .log-panel-error button,
+    .log-ai-trigger { flex: 0 0 auto; padding: 0 4px; color: #71a9ff; background: transparent; border: 0; line-height: 20px; cursor: pointer; }
+    .log-panel-error button:disabled { opacity: .5; cursor: not-allowed; }
+    .log-ai-trigger:hover { text-decoration: underline; }
     .loading-spinner { width: 32px; height: 32px; border: 2px solid #4d4f56; border-top-color: #3a84ff; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { .loading-spinner { animation: none; } }

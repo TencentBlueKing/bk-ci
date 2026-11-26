@@ -98,7 +98,6 @@
             lineOrigin: { type: Number, default: 0 },
             contentHeight: { type: Number, default: 0 },
             scrollMetrics: { type: Object, default: () => ({}) },
-            textMetrics: { type: Object, default: () => ({}) }
         },
         data () {
             return { trackHeight: 0, resizeObserver: null }

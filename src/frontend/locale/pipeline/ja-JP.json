@@ -933,6 +933,7 @@
     "noBranchAvailable": "選択可能なブランチがありません"
   },
   "details": {
+    "loadDetailFailed": "実行詳細の読み込みに失敗しました",
     "executorInfo": "{0} {1}が{2}にトリガー",
     "pipelineVersionDiffTips": "パイプライン編成バージョン番号が変更されました",
     "executeDetail": "実行詳細",
@@ -3038,6 +3039,18 @@
       "retry": "再読み込み"
     },
     "loadError": "ログの読み込みに失敗しました",
+    "loadOlderLogsError": "過去のログの読み込みに失敗しました",
+    "loadNewerLogsError": "最新ログの読み込みに失敗しました",
+    "ai": {
+      "title": "AI エラー分析",
+      "unavailable": "AI エラー分析を利用できません。管理者にお問い合わせください。",
+      "docs": "詳細はこちら",
+      "regenerate": "再生成",
+      "loadFailed": "AI 分析の読み込みに失敗しました",
+      "feedbackFailed": "AI 分析のフィードバックを保存または読み込みできませんでした",
+      "like": "役に立った",
+      "dislike": "役に立たなかった"
+    },
     "loadUnavailable": "新しいログインターフェースを利用できません",
     "reloadLogs": "ログを再読み込み",
     "largeVariable": {

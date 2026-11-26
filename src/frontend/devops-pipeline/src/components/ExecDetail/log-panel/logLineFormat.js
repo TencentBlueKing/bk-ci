@@ -5,6 +5,7 @@ const ANSI_COLORS = {
 }
 const FORMAT_CACHE = new WeakMap()
 const VALID_MARKER = /^##\[(command|info|warning|warn|error|debug|group|endgroup)(?:\s+([^\]]*))?\]\s*/i
+const AI_MARKER = '##[ai]'
 const MARKER_COLORS = { command: '#5fb4e1', info: '#f0f1f5', warning: '#e18732', warn: '#e18732', error: '#d25050', debug: '#83828c' }
 
 function escapeHtml (value) {
@@ -281,6 +282,8 @@ function normalizeControls (segments) {
             if (!item.color) item.color = markerColor
         })
     }
+    const aiAnalysis = text.startsWith(AI_MARKER, markerLength)
+    if (aiAnalysis) input.splice(0, AI_MARKER.length)
     const pushOutput = (item, width) => {
         column += width
         output.push(item)
@@ -306,7 +309,7 @@ function normalizeControls (segments) {
             pushOutput(item, visualColumnWidth(item.text))
         }
     }
-    return { marker, segments: mergeCharacterSegments(output) }
+    return { marker, aiAnalysis, segments: mergeCharacterSegments(output) }
 }
 
 function visualColumnWidth (value) {
@@ -338,12 +341,13 @@ export function parseLogLine (source) {
     }
     const prepared = prepareAnchors(raw)
     const ansi = parseAnsi(prepared.text, prepared.links)
-    const { marker, segments } = normalizeControls(ansi)
+    const { marker, aiAnalysis, segments } = normalizeControls(ansi)
     const plainText = flattenSegments(segments)
     const value = {
         plainText,
         segments,
         marker,
+        aiAnalysis,
         sourceKey
     }
     if (input) FORMAT_CACHE.set(input, { raw, sourceKey, value })

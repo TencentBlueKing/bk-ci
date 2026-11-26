@@ -1048,7 +1048,7 @@ export default {
     },
 
     praiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=${score}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
@@ -1056,7 +1056,7 @@ export default {
     },
 
     cancelPraiseAi ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, score }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=${score}`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=${score}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
@@ -1064,42 +1064,33 @@ export default {
     },
 
     getPraiseAiInfo ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
-        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&score=true`
+        let url = `/misc/api/user/gpt/script_error_analysis_score/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&score=true`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
         return request.get(url)
     },
 
-    getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack }) {
-        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${tag}&refresh=${refresh}`
+    async getLogAIMessage ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, refresh, callBack, signal }) {
+        let url = `/misc/api/user/gpt/script_error_analysis/${projectId}/${pipelineId}/${buildId}?taskId=${encodeURIComponent(tag)}&refresh=${refresh}`
         if (currentExe) {
             url += `&executeCount=${currentExe}`
         }
-        return window.fetch(url, {
-            method: 'post'
-        }).then((response) => {
-            const reader = response.body.getReader()
-            const decoder = new TextDecoder()
-
-            const readChunk = () => {
-                return reader.read().then(appendChunks)
+        const response = await window.fetch(url, { method: 'post', signal })
+        if (!response.ok || !response.body) throw new Error('AI analysis request failed')
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        try {
+            let done = false
+            while (!done) {
+                const result = await reader.read()
+                done = result.done
+                const chunk = decoder.decode(result.value, { stream: !done })
+                if (chunk) callBack(chunk)
             }
-
-            const appendChunks = (result) => {
-                const chunk = decoder.decode(result.value || new Uint8Array(), {
-                    stream: !result.done
-                })
-                if (chunk) {
-                    callBack(chunk)
-                }
-                if (!result.done) {
-                    readChunk()
-                }
-            }
-
-            readChunk()
-        })
+        } finally {
+            reader.releaseLock()
+        }
     },
 
     getAIStatus () {

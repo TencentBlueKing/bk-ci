@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import test from 'node:test'
-import Vue, { isReactive, markRaw, shallowRef } from 'vue'
+import Vue, { computed, isReactive, markRaw, ref, shallowRef } from 'vue'
 import * as adapter from '../logPanelAdapter.js'
 import * as largeVariable from '../logLargeVariable.js'
 import * as devMock from './logPanelDevMock.fixture.mjs'
 import * as logStructure from '../logLineStructure.js'
 import * as logTail from '../logPanelTail.js'
 import * as virtualWindow from '../logVirtualWindow.js'
+import { parseLogLine } from '../logLineFormat.js'
 import { resolveReviewUsers } from '../../../../utils/reviewUsers.js'
 import webSocketMessage from '../../../../utils/webSocketMessage.js'
 
@@ -20,6 +22,7 @@ function loadComponentOptions (path, dependencies, globals = {}) {
         angleDownIcon: '/mock-angle-down.svg',
         LogExecuteCountSelect: {},
         LargeVariableDialog: {},
+        LogAiDialog: {},
         resolveLargeVariableResult: largeVariable.resolveLargeVariableResult,
         isConditionSkipped: adapter.isConditionSkipped,
         isJobConditionSkipped: adapter.isJobConditionSkipped,
@@ -38,6 +41,20 @@ function loadComponentOptions (path, dependencies, globals = {}) {
     }
     const names = Object.keys(values).filter(name => /^[A-Za-z_$][\w$]*$/.test(name))
     return new Function(...names, script)(...names.map(name => values[name]))
+}
+
+function logPage (overrides = {}) {
+    return { status: 0, logs: [], subTags: [], finished: true, hasBefore: false, hasAfter: false, ...overrides }
+}
+
+function logRow (lineNo, timestamp = lineNo, message = 'log line') {
+    return { lineNo, timestamp, message, level: 'INFO' }
+}
+
+function loadExecutionDetailMethods () {
+    const source = readFileSync(new URL('../../../../views/subpages/ExecDetail.vue', import.meta.url), 'utf8')
+    const methods = source.match(/        methods: \{([\s\S]*?)\n            \.\.\.mapActions\('atom'/)[1]
+    return new Function('FETCH_ERROR', `return {${methods}}`)('FETCH_ERROR')
 }
 
 test('review user resolution honors actual users and falls back only for missing or invalid fields', () => {
@@ -100,10 +117,11 @@ test('ExecDetail isolates detail requests and restores permission state for a ne
 
     const lifecycle = execDetail.match(/loadPipelineExecDetail \(\) \{([\s\S]*?)\n            \},\n            handleRealtimeDetail/)
     assert.ok(lifecycle, 'ExecDetail uses a local request lifecycle')
-    const loadPipelineExecDetail = new Function(`return function loadPipelineExecDetail () {${lifecycle[1]}}`)()
+    const { loadPipelineExecDetail, isNewerDetailSnapshot } = loadExecutionDetailMethods()
     const requests = []
     const applied = []
     const context = {
+        isNewerDetailSnapshot,
         detailRequestId: 0,
         _isBeingDestroyed: false,
         _isDestroyed: false,
@@ -235,22 +253,23 @@ test('detail, history, and pipeline list websocket callbacks use current instanc
     assert.match(manageList, /webSocketMessage\.registeOnReconnect\(\(\) => this\.\$refs\.pipelineBox\?\.refresh\?\.\(\)\)/)
 })
 
-test('a realtime detail update invalidates an older in-flight HTTP snapshot', async () => {
+test('a newer realtime detail update is retained over an older in-flight HTTP snapshot', async () => {
     const execDetail = readFileSync(new URL('../../../../views/subpages/ExecDetail.vue', import.meta.url), 'utf8')
     const lifecycle = execDetail.match(/loadPipelineExecDetail \(\) \{([\s\S]*?)\n            \},\n            handleRealtimeDetail/)
     const realtime = execDetail.match(/handleRealtimeDetail \(data\) \{([\s\S]*?)\n            \},\n            \.\.\.mapActions/)
     assert.ok(lifecycle, 'detail request lifecycle is available')
     assert.ok(realtime, 'realtime detail updates have an explicit lifecycle')
-    const loadPipelineExecDetail = new Function(`return function loadPipelineExecDetail () {${lifecycle[1]}}`)()
-    const handleRealtimeDetail = new Function(`return function handleRealtimeDetail (data) {${realtime[1]}}`)()
+    const { loadPipelineExecDetail, handleRealtimeDetail, isNewerDetailSnapshot } = loadExecutionDetailMethods()
     const requests = []
     const applied = []
     const context = {
+        isNewerDetailSnapshot,
         detailRequestId: 0,
         _isBeingDestroyed: false,
         _isDestroyed: false,
         hasNoPermission: false,
         isLoading: false,
+        execDetail: { id: 'build-a', pipelineId: 'pipeline-a', executeCount: 1, currentTimestamp: 1 },
         routerParams: {
             projectId: 'project-a',
             pipelineId: 'pipeline-a',
@@ -267,18 +286,29 @@ test('a realtime detail update invalidates an older in-flight HTTP snapshot', as
             params.version,
             params.archiveFlag
         ].join('|'),
-        setPipelineDetail: value => applied.push(value),
+        setPipelineDetail (value) {
+            this.execDetail = value
+            applied.push(value)
+        },
         fetchPipelineExecDetail: params => new Promise((resolve, reject) => {
             requests.push({ params, resolve, reject })
         })
     }
+    context.detailRequestKey = context.getDetailRequestKey(context.routerParams)
+    context.loadedDetailKey = context.detailRequestKey
 
     const request = loadPipelineExecDetail.call(context)
-    handleRealtimeDetail.call(context, { buildNo: 'build-a', status: 'SUCCEED' })
-    requests[0].resolve({ buildNo: 'build-a', status: 'RUNNING' })
+    assert.deepEqual(applied, [], 'a same-detail refresh does not unmount the current content')
+    const updated = { id: 'build-a', pipelineId: 'pipeline-a', executeCount: 1, currentTimestamp: 2, status: 'SUCCEED' }
+    handleRealtimeDetail.call(context, { ...updated, id: 'build-b' })
+    handleRealtimeDetail.call(context, { ...updated, executeCount: 2 })
+    handleRealtimeDetail.call(context, { ...updated, currentTimestamp: 0 })
+    assert.deepEqual(applied, [], 'unrelated builds, other rounds and older snapshots leave the detail unchanged')
+    handleRealtimeDetail.call(context, updated)
+    requests[0].resolve({ ...updated, currentTimestamp: 1, status: 'RUNNING' })
     await request
 
-    assert.deepEqual(applied.filter(Boolean), [{ buildNo: 'build-a', status: 'SUCCEED' }])
+    assert.deepEqual(applied, [updated])
     assert.equal(context.isLoading, false)
 })
 
@@ -289,22 +319,30 @@ test('stage approval refreshes through the guarded detail lifecycle across build
 
     const lifecycle = execDetail.match(/loadPipelineExecDetail \(\) \{([\s\S]*?)\n            \},\n            handleRealtimeDetail/)
     assert.ok(lifecycle, 'detail request lifecycle is available')
-    const loadPipelineExecDetail = new Function(`return function loadPipelineExecDetail () {${lifecycle[1]}}`)()
+    const { loadPipelineExecDetail, isNewerDetailSnapshot } = loadExecutionDetailMethods()
     const requests = []
     const applied = []
+    const navigationErrors = []
     const context = {
+        isNewerDetailSnapshot,
         detailRequestId: 0,
         _isBeingDestroyed: false,
         _isDestroyed: false,
         hasNoPermission: false,
         isLoading: false,
+        execDetail: { buildNo: 'build-a' },
+        $store: { commit: (...args) => navigationErrors.push(args) },
         routerParams: { projectId: 'project-a', pipelineId: 'pipeline-a', buildNo: 'build-a', executeCount: '1' },
         getDetailRequestKey: params => [params.projectId, params.pipelineId, params.buildNo, params.executeCount].join('|'),
-        setPipelineDetail: value => applied.push(value),
+        setPipelineDetail (value) {
+            this.execDetail = value
+            applied.push(value)
+        },
         fetchPipelineExecDetail: params => new Promise((resolve, reject) => {
             requests.push({ params, resolve, reject })
         })
     }
+    context.loadedDetailKey = context.getDetailRequestKey(context.routerParams)
 
     const approveA = loadPipelineExecDetail.call(context)
     context.routerParams = { ...context.routerParams, buildNo: 'build-b' }
@@ -336,6 +374,182 @@ test('stage approval refreshes through the guarded detail lifecycle across build
     assert.equal(applied[applied.length - 1], null, 'a failed request does not keep showing the previous build')
     assert.equal(context.isLoading, false)
     assert.equal(context.hasNoPermission, false)
+    assert.equal(context.detailLoadFailed, true, 'a first-load failure exposes an explicit retry')
+
+    const retryC = loadPipelineExecDetail.call(context)
+    assert.equal(context.detailLoadFailed, false)
+    requests[5].resolve({ buildNo: 'build-c' })
+    await retryC
+    const refreshC = loadPipelineExecDetail.call(context)
+    assert.equal(context.isLoading, false, 'reconnecting does not cover an existing detail with the loading overlay')
+    requests[6].reject({ httpStatus: 500 })
+    await refreshC
+    assert.deepEqual(context.execDetail, { buildNo: 'build-c' })
+    assert.equal(context.detailLoadFailed, false)
+
+    const forbidden = loadPipelineExecDetail.call(context)
+    requests[7].reject({ code: '403' })
+    await forbidden
+    assert.equal(context.hasNoPermission, true)
+    assert.equal(context.execDetail, null)
+
+    const missing = loadPipelineExecDetail.call(context)
+    requests[8].reject({ httpStatus: 404, message: 'Not found' })
+    await missing
+    assert.deepEqual(navigationErrors, [['FETCH_ERROR', { code: 404, message: 'Not found' }]], 'the existing App 404 navigation is restored')
+})
+
+function createExecutionDetailContext () {
+    const requests = []
+    const navigationErrors = []
+    const context = {
+        ...loadExecutionDetailMethods(),
+        detailRequestId: 0,
+        loadedDetailKey: '',
+        pendingDetailKey: '',
+        pendingRealtimeDetail: null,
+        curItemTab: 'executeDetail',
+        execDetail: null,
+        routerParams: { projectId: 'p', pipelineId: 'pipe', buildNo: 'b', executeCount: '2' },
+        setPipelineDetail (value) {
+            this.execDetail = value
+        },
+        $store: { commit: (...args) => navigationErrors.push(args) },
+        fetchPipelineExecDetail: params => new Promise((resolve, reject) => requests.push({ params, resolve, reject }))
+    }
+    return { context, requests, navigationErrors }
+}
+
+function snapshot (overrides = {}) {
+    return { id: 'b', pipelineId: 'pipe', executeCount: 2, currentTimestamp: 1, status: 'RUNNING', ...overrides }
+}
+
+test('the first authorized detail adopts an early terminal push and ignores other rounds and builds', async () => {
+    const { context, requests } = createExecutionDetailContext()
+    const first = context.loadPipelineExecDetail()
+    const terminal = snapshot({ status: 'SUCCEED', currentTimestamp: 3, endTime: 3 })
+    context.handleRealtimeDetail(terminal)
+    context.handleRealtimeDetail(snapshot({ currentTimestamp: 2 }))
+    context.handleRealtimeDetail(snapshot({ id: 'other-build', currentTimestamp: 9 }))
+    context.handleRealtimeDetail(snapshot({ executeCount: 3, currentTimestamp: 9 }))
+    assert.equal(context.execDetail, null, 'the pending push is not displayed before authorization')
+    assert.equal(context.pendingRealtimeDetail, terminal)
+    requests[0].resolve(snapshot())
+    await first
+    assert.equal(context.execDetail, terminal)
+    assert.equal(context.pendingRealtimeDetail, null)
+
+    const reload = context.loadPipelineExecDetail()
+    context.handleRealtimeDetail(snapshot({ currentTimestamp: 4 }))
+    const newer = snapshot({ currentTimestamp: 5, status: 'SUCCEED', endTime: 3 })
+    requests[1].resolve(newer)
+    await reload
+    assert.equal(context.execDetail, newer, 'a newer HTTP response is not discarded just because a push arrived')
+})
+
+test('a push does not swallow a current permission or missing-record response on reconnect', async () => {
+    for (const status of [403, 404]) {
+        const { context, requests, navigationErrors } = createExecutionDetailContext()
+        const first = context.loadPipelineExecDetail()
+        requests[0].resolve(snapshot())
+        await first
+        const reconnect = context.loadPipelineExecDetail()
+        context.handleRealtimeDetail(snapshot({ status: 'SUCCEED', currentTimestamp: 3 }))
+        assert.equal(context.execDetail.status, 'SUCCEED')
+        requests[1].reject({ httpStatus: status })
+        await reconnect
+        assert.equal(context.execDetail, null, 'authorization and missing-record responses clear details')
+        assert.equal(context.pendingRealtimeDetail, null)
+        assert.equal(context.hasNoPermission, status === 403)
+        assert.equal(navigationErrors[0]?.[1].code, status === 404 ? 404 : undefined)
+        context.handleRealtimeDetail(snapshot({ currentTimestamp: 4 }))
+        assert.equal(context.execDetail, null, 'a push cannot restore a forbidden or missing record')
+        assert.equal(context.pendingRealtimeDetail, null)
+    }
+})
+
+test('pending snapshots and pause refresh closures cannot cross a route round change', async () => {
+    const { context, requests } = createExecutionDetailContext()
+    const secondRound = context.loadPipelineExecDetail()
+    context.handleRealtimeDetail(snapshot({ status: 'FAILED', currentTimestamp: 8 }))
+    context.routerParams = { ...context.routerParams, executeCount: '3' }
+    const thirdRound = context.loadPipelineExecDetail()
+    const third = snapshot({ executeCount: 3, currentTimestamp: 2 })
+    requests[1].resolve(third)
+    requests[0].resolve(snapshot({ currentTimestamp: 9 }))
+    await Promise.all([secondRound, thirdRound])
+    assert.equal(context.execDetail, third, 'the stale HTTP and pending push do not replace the selected round')
+
+    const pause = context.captureExecutionDetailContext()
+    context.routerParams = { ...context.routerParams, executeCount: undefined }
+    assert.equal(pause.refresh(), null)
+    assert.equal(requests.length, 2)
+
+    const latest = context.loadPipelineExecDetail()
+    const newerRound = snapshot({ executeCount: 4, currentTimestamp: 3 })
+    context.handleRealtimeDetail(newerRound)
+    requests[2].resolve(snapshot({ executeCount: 3, currentTimestamp: 4 }))
+    await latest
+    assert.equal(context.execDetail, newerRound, 'the latest view follows the newer round even if the old round has a later timestamp')
+    const priorLatestRound = context.captureExecutionDetailContext()
+    context.handleRealtimeDetail(snapshot({ executeCount: 5, currentTimestamp: 5 }))
+    assert.equal(priorLatestRound.isCurrent(), false, 'a new round can invalidate the prior operation without changing the URL')
+})
+
+test('pause actions use the owning detail loader and cannot refresh or reopen a new route', async () => {
+    const { context, requests } = createExecutionDetailContext()
+    const first = context.loadPipelineExecDetail()
+    requests[0].resolve(snapshot())
+    await first
+
+    const source = readFileSync(new URL('../../../AtomPropertyPanel/AtomContent.vue', import.meta.url), 'utf8')
+    const section = source.match(/            capturePauseContext \(\) \{([\s\S]*?)\n            setAtomValidate/)[1]
+    const methods = new Function(`return { capturePauseContext () {${section} }`)()
+    const toggles = []
+    const toasts = []
+    const legacyCalls = []
+    const actions = []
+    const atom = {
+        ...methods,
+        $route: { params: context.routerParams },
+        $showTips: error => toasts.push(error),
+        captureExecutionDetailContext: context.captureExecutionDetailContext.bind(context),
+        togglePropertyPanel: data => toggles.push(data),
+        projectId: 'p', pipelineId: 'pipe', element: { id: 'task' }, stage: { id: 'stage' }, container: { id: 'job' },
+        editingElementPos: { stageIndex: 0 },
+        requestPipelineExecDetail: params => legacyCalls.push(params),
+        pausePlugin: params => new Promise((resolve, reject) => actions.push({ params, resolve, reject }))
+    }
+    const settle = () => new Promise(resolve => setImmediate(resolve))
+    const staleRefresh = atom.handleExecutePluginPause(true, 'loading')
+    actions[0].resolve()
+    await settle()
+    assert.equal(requests.length, 2, 'the successful pause action refreshes through the guarded owner')
+    assert.deepEqual(legacyCalls, [])
+    assert.equal(actions[0].params.taskId, 'task')
+    context.routerParams = { ...context.routerParams, executeCount: '3' }
+    const current = context.loadPipelineExecDetail()
+    const third = snapshot({ executeCount: 3, currentTimestamp: 1 })
+    requests[2].resolve(third)
+    requests[1].resolve(snapshot({ currentTimestamp: 9 }))
+    await Promise.all([staleRefresh, current])
+    assert.equal(context.execDetail, third)
+
+    const currentPause = atom.handleExecutePluginPause(true, 'loading')
+    const delayedFailure = atom.handleExecutePluginPause(false, 'loading')
+    context.routerParams = { ...context.routerParams, buildNo: 'next-build' }
+    actions[1].resolve()
+    actions[2].reject(new Error('old action failed'))
+    await Promise.all([currentPause, delayedFailure])
+    assert.equal(requests.length, 3, 'an old pause does not fetch the new route')
+    assert.equal(toggles.some(state => state.isShow), false, 'an old error does not reopen a panel in the new route')
+    assert.deepEqual(toasts, [])
+
+    atom.captureExecutionDetailContext = null
+    const fallback = atom.handleExecutePluginPause(true, 'loading')
+    actions[3].resolve()
+    await fallback
+    assert.deepEqual(legacyCalls, [atom.$route.params], 'non-detail use still calls the existing refresh route')
 })
 
 test('pipeline list keeps websocket callbacks independent from layout component instances', () => {
@@ -1118,34 +1332,44 @@ test('new log interface errors are classified for explicit reload without legacy
     for (const status of [400, 429, 500, 0, 999]) assert.equal(adapter.resolveLogLoadErrorKey({ status }), 'logPanel.loadError')
 })
 
-test('strict latest response decoding accepts legacy success wrappers and rejects malformed pseudo-empty payloads', () => {
-    const panel = { logs: [], hasBefore: false }
+test('strict response decoding accepts contract pages and rejects malformed pseudo-empty payloads in every direction', () => {
+    const panel = logPage()
     const valid = [
-        { status: 0, logs: [] },
-        { data: { status: 0, logs: [] } },
+        panel,
+        { data: panel },
         { status: 0, data: panel },
         { data: { status: 0, data: panel } },
         { status: 200, data: { status: 0, data: panel } },
-        { status: 200, data: { logs: [] } },
-        { logs: [] },
-        { status: 1 }, { status: 2 }, { status: 3 }, { cleaned: true }, { emptyStatus: true },
+        logPage({ status: 1, finished: false, hasAfter: true }),
+        logPage({ logs: [logRow(10)], startLineNo: 10, endLineNo: 10 }),
+        { status: 2 }, { status: 3 }, { cleaned: true }, { emptyStatus: true },
         { status: 0, data: { cleaned: true } }, { status: 200, data: { cleaned: true } }, { status: 999 }
     ]
-    for (const response of valid) assert.doesNotThrow(() => adapter.normalizeLogPanelResponse(response, { strictLatest: true }))
-    assert.deepEqual(adapter.normalizeLogPanelResponse({ status: 0, data: panel }, { strictLatest: true }).logs, [])
-    assert.equal(adapter.normalizeLogPanelResponse({ status: 200, data: { status: 0, data: panel } }, { strictLatest: true }).status, 0)
-    assert.equal(adapter.normalizeLogPanelResponse({ status: 0, data: { cleaned: true } }, { strictLatest: true }).clean, true)
-    assert.equal(adapter.normalizeLogPanelResponse({ status: 1, finished: false, hasAfter: true }, { strictLatest: true }).finished, false)
-    for (const response of [
-        null, undefined, '<html>failure</html>', 'failure', [], {}, { data: null }, { status: 0, data: null },
-        { status: 0, logs: {} }, { logs: {} }, { status: '', logs: [] }, { status: ' ', logs: [] },
-        { status: true, logs: [] }, { status: 4, logs: [] }, { status: 0, logs: null }
-    ]) assert.throws(() => adapter.normalizeLogPanelResponse(response, { strictLatest: true }), /Invalid latest log response/)
-})
-
-test('latest response decoding remains permissive for non-latest pagination responses', () => {
-    assert.deepEqual(adapter.normalizeLogPanelResponse({ status: 0, logs: 'unexpected' }).logs, [])
-    assert.deepEqual(adapter.normalizeLogPanelResponse(null).logs, [])
+    for (const direction of ['latest', 'before', 'after']) {
+        const decode = response => adapter.normalizeLogPanelResponse(response, { direction })
+        for (const response of valid) assert.doesNotThrow(() => decode(response))
+        assert.deepEqual(decode({ status: 0, data: panel }).logs, [])
+        assert.equal(decode({ status: 200, data: { status: 0, data: panel } }).status, 0)
+        assert.equal(decode({ status: 0, data: { cleaned: true } }).clean, true)
+        assert.equal(decode(logPage({ status: 1, finished: false, hasAfter: true })).finished, false)
+        for (const response of [
+            null, undefined, '<html>failure</html>', 'failure', [], {}, { data: null }, { status: 0, data: null },
+            { status: 0, logs: [] }, { status: 1 }, { status: 403, data: panel },
+            ...[{}, 'unexpected', null, [null], [{ ...logRow(1), lineNo: null }]].map(logs => logPage({ logs })),
+            ...['', ' ', true, 4].map(status => logPage({ status })),
+            logPage({ finished: 'false' }), logPage({ hasBefore: 'false' }), logPage({ hasAfter: undefined }),
+            logPage({ startLineNo: 'bad-cursor' }), logPage({ endLineNo: -1 })
+        ]) assert.throws(() => decode(response), new RegExp(`Invalid ${direction} log response`))
+    }
+    for (const direction of ['latest', 'before']) {
+        const logs = [logRow(91, 100), logRow(92, 90)]
+        const decode = response => adapter.normalizeLogPanelResponse(response, { direction })
+        assert.equal(decode(logPage({ logs, hasBefore: true, startLineNo: 91 })).startLineNo, 91)
+        assert.throws(() => decode(logPage({ logs, hasBefore: true, startLineNo: 1 })))
+        assert.throws(() => decode(logPage({ logs, hasBefore: true, startLineNo: 92 })), 'the time-sorted first row is not the storage cursor')
+        assert.throws(() => decode(logPage({ hasBefore: true, startLineNo: 91 })), 'an empty page cannot advance the before cursor')
+        assert.deepEqual(decode(logPage({ startLineNo: null })).logs, [])
+    }
 })
 
 test('latest request clears stale pagination and only successful current-search results may backfill', () => {
@@ -1154,11 +1378,11 @@ test('latest request clears stale pagination and only successful current-search 
     for (const reset of ['this.hasBefore = false', 'this.hasAfter = false', 'this.startLineNo = 0', 'this.endLineNo = 0', 'this.beforeCursor = null', 'this.maxLineNo = 0', 'this.maxTimestamp = null', 'this.finished = true']) {
         assert.ok(reload.includes(reset), `reload resets ${reset}`)
     }
-    assert.match(reload, /normalizeLogPanelResponse\(response, \{ strictLatest: true \}\)/)
+    assert.match(reload, /normalizeLogPanelResponse\(response\)/)
     assert.match(reload, /let latestSucceeded = false/)
     assert.match(reload, /if \(!latestSucceeded \|\| generation !== this\.generation \|\| search !== String\(this\.controls\.search \|\| ''\)\)/)
     assert.doesNotMatch(reload, /searchAtStart/)
-    assert.match(reload, /latestSucceeded = result\.status === 0 && !result\.clean/)
+    assert.match(reload, /latestSucceeded = \(result\.status === 0 \|\| result\.status === 1\) && !result\.clean/)
 })
 
 test('search entered before or during latest loading backfills after success, while failed latest never follows stale cursors', async () => {
@@ -1221,9 +1445,9 @@ test('search entered before or during latest loading backfills after success, wh
         return { vm, beforeCalls }
     }
 
-    const beforeRequest = await scenario('needle', { status: 0, logs: [], hasBefore: true })
+    const beforeRequest = await scenario('needle', logPage({ logs: [logRow(1)], hasBefore: true, startLineNo: 1 }))
     assert.equal(beforeRequest.beforeCalls, 1, 'a search already active before latest is backfilled after its success')
-    const duringRequest = await scenario('', { status: 0, logs: [], hasBefore: true })
+    const duringRequest = await scenario('', logPage({ logs: [logRow(1)], hasBefore: true, startLineNo: 1 }))
     assert.equal(duringRequest.beforeCalls, 1, 'a search entered while latest is pending is backfilled after success')
     const failed = await scenario('', { status: 999, message: 'latest unavailable' })
     assert.equal(failed.beforeCalls, 0)
@@ -1528,6 +1752,7 @@ test('StepLogPanel search navigation expands hidden ancestors before guarded scr
         { lineNo: 4, timestamp: 4, level: 'INFO', text: 'after group' }
     ]
     vm.logs = logs
+    vm.beforeCursor = 1
     vm.finished = true
     vm.matchedTotal = logs.length
     vm.hasBefore = false
@@ -1705,7 +1930,7 @@ test('StepLogPanel history Before response keeps the user at the tail and restor
         vm.maybeAutoBackfill = () => {}
         vm.continueSearchBackfill = () => {}
         const settle = async () => {
-            resolveBefore({ status: 0, logs: [] })
+            resolveBefore(logPage())
             await new Promise(resolve => setImmediate(resolve))
             ticks.splice(0).forEach(callback => callback())
         }
@@ -2743,7 +2968,7 @@ test('minimap recomputes a bounded source window from scroll metrics and retains
     assert.match(minimap, /scrollMetrics: this\.scrollMetrics/)
     assert.match(minimap, /resolveLogMinimapCoordinates\(this\.minimapLayout, this\.viewport, this\.trackHeight, this\.scrollMetrics\)/)
     assert.match(linesView, /:height-index="heightIndex"[\s\S]*:index-version="indexVersion"[\s\S]*:line-origin="minimapLineOrigin"[\s\S]*:content-height="contentHeight"[\s\S]*:scroll-metrics="minimapScrollMetrics"/)
-    assert.match(linesView, /:text-metrics="minimapTextMetrics"/)
+    assert.doesNotMatch(linesView, /minimapTextMetrics|:text-metrics/)
     assert.match(linesView, /this\.scrollDelta = el\.scrollTop - this\.scrollTop/)
     assert.match(linesView, /dynamicOverscan: true/)
     assert.match(linesView, /this\._resizeFrame = requestAnimationFrame\(/)
@@ -3387,7 +3612,7 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(job, /:title="headerTitle"/)
     assert.match(job, /headerTitle \(\) \{\s*const title = \(this\.displayJob\.name[\s\S]*?return !this\.isHistoricalExecuteCount && this\.queueDetailModel \? `\$\{title\} · \$\{this\.\$t\('logPanel\.queue\.mutexQueue'\)\}` : title/)
     assert.match(panel, /mounted \(\) \{\s*this\.reload\(\)/)
-    assert.match(panel, /loadAfter \(\) \{\s*this\.requestTimer = null\s*if \(this\.loadingAfter/)
+    assert.match(panel, /loadAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)\s*this\.requestTimer = null\s*if \(this\.loadingAfter/)
     assert.match(panel, /scheduleAfter \(\) \{\s*clearTimeout\(this\.requestTimer\)[\s\S]*if \(this\.finished && !this\.hasAfter\) return/)
     assert.match(panel, /invalidate \(\) \{[\s\S]*clearTimeout\(this\.requestTimer\)[\s\S]*this\.requestTimer = null/)
     assert.match(plugin, /this\.progressSubtasksSnapshot/)
@@ -3469,7 +3694,7 @@ test('header and queue components preserve centered slots and dev-only mock wiri
     assert.match(panel, /\.log-panel-empty, \.log-panel-loading\s*\{[^}]*font:\s*12px\/20px "Microsoft YaHei", sans-serif/)
     assert.match(panel, /\.log-panel-error\s*\{[^}]*font:\s*12px\/20px "Microsoft YaHei", sans-serif/)
     assert.match(logLines, /\.lp-lines\s*\{[\s\S]*font-family:\s*Menlo, Consolas, monospace;[\s\S]*font-size:\s*12px;[\s\S]*line-height:\s*20px;[\s\S]*color:\s*#f0f1f5;/)
-    assert.match(logLines, /fontFamily: 'Menlo, Consolas, monospace', fontSize: '12px', lineHeight: '20px'/)
+    assert.match(logLines, /font-family: Menlo, Consolas, monospace;\s*font-size: 12px;\s*line-height: 20px;/)
     assert.match(logLines, /\.lp-lineno\s*\{[^}]*color:\s*#979ba5;/)
     assert.match(logLines, /\.lp-time\s*\{[^}]*color:\s*#83828c;/)
     assert.match(logLines, /\.lp-line\.is-warn \.lp-text \{ color: #e18732; \}/)
@@ -3557,11 +3782,391 @@ test('retry and skip actions expose pending feedback and suppress duplicate emit
     assert.match(parent, /<job[\s\S]*@continue="handlePluginContinue"[\s\S]*:actions-enabled="isExecuteDetailPanel"/)
 })
 
-test('retry and skip refresh the execution detail when no new execute count is returned', () => {
+test('retry and skip delegate to the single detail loader or navigate once to a new count', async () => {
     const pipeline = readFileSync(new URL('../../../ExecPipeline.vue', import.meta.url), 'utf8')
+    const parent = readFileSync(new URL('../../../../views/subpages/ExecDetail.vue', import.meta.url), 'utf8')
+    assert.match(parent, /'refresh-detail': this\.loadPipelineExecDetail/)
+    assert.doesNotMatch(pipeline, /requestPipelineExecDetail/)
     const retryHandler = pipeline.match(/async retryPipeline \(isStageRetry\) \{([\s\S]*?)\n            \},\n            locate \(/)
-    assert.ok(retryHandler)
-    assert.match(retryHandler[1], /if \(res\.id\) \{[\s\S]*await this\.requestPipelineExecDetail\(this\.routerParams\)/)
+    const changeHandler = pipeline.match(/handleExecuteCountChange \(executeCount\) \{([\s\S]*?)\n            \},\n            debugDocker/)
+    const retry = new Function(`return async function (isStageRetry) {${retryHandler[1]}}`)()
+    const change = new Function(`return function (executeCount) {${changeHandler[1]}}`)()
+    const events = []
+    const params = { projectId: 'project', pipelineId: 'pipe', buildNo: 'build-a', executeCount: '2' }
+    const vm = {
+        routerParams: params,
+        $route: { params },
+        $router: { push: route => events.push(['navigate', route.params.executeCount]) },
+        $emit: event => events.push([event]),
+        $t: key => key,
+        $showTips: () => {},
+        handleExecuteCountChange: change,
+        requestRetryPipeline: async () => ({ id: 'build-a' })
+    }
+    vm.skipTask = true
+    await retry.call(vm, false)
+    vm.requestRetryPipeline = async () => ({ id: 'build-a', executeCount: 2 })
+    await retry.call(vm, false)
+    vm.requestRetryPipeline = async () => ({ id: 'build-a', executeCount: 3 })
+    await retry.call(vm, false)
+    change.call(vm, '2')
+    assert.deepEqual(events, [['refresh-detail'], ['refresh-detail'], ['navigate', 3]])
+})
+
+test('pagination keeps separate cursors and metadata, and retries malformed pages without losing existing logs', async () => {
+    const options = loadComponentOptions('../StepLogPanel.vue', {
+        ...adapter, ...logTail, ...logStructure, shallowRef, markRaw,
+        mapActions: () => ({}), LogGroupBar: {}, LogLinesView: {}
+    })
+    const vm = {
+        ...options.data(),
+        controls: { levels: ['INFO'], search: '' },
+        $refs: {}, $emit: () => {}, $nextTick: () => {},
+        $delete: (object, key) => delete object[key]
+    }
+    vm.logs = []
+    for (const [name, method] of Object.entries(options.methods)) vm[name] = method.bind(vm)
+    vm.scheduleAfter = () => {}
+    vm.scheduleBefore = () => {}
+    vm.requestParams = () => ({})
+    vm.updateMatches = () => {}
+    vm.applyResult(logPage({
+        logs: [logRow(100, 10), logRow(120, 8)],
+        startLineNo: 100, hasBefore: true, hasAfter: true, finished: false, matchedTotal: 1000
+    }), 'latest')
+    assert.deepEqual([vm.beforeCursor, vm.endLineNo, vm.maxTimestamp], [100, 120, 10])
+
+    let beforePage = logPage({ logs: [logRow(90, 11)], startLineNo: 90, hasBefore: true, hasAfter: true, finished: true })
+    let afterPage = logPage({ logs: [logRow(200, 13), logRow(210, 12)], hasBefore: false, finished: true })
+    const requested = { before: [], after: [] }
+    vm.getLogPanelBefore = async params => {
+        requested.before.push(params.endLineNo)
+        return beforePage
+    }
+    vm.getLogPanelAfter = async params => {
+        requested.after.push([params.startLineNo, params.sinceTimestamp])
+        return afterPage
+    }
+    await vm.loadBefore()
+    assert.deepEqual([vm.beforeCursor, vm.endLineNo, vm.maxTimestamp, vm.hasBefore, vm.hasAfter, vm.finished], [90, 120, 10, true, true, false])
+    await vm.loadAfter()
+    assert.deepEqual([vm.beforeCursor, vm.endLineNo, vm.maxTimestamp, vm.hasBefore, vm.hasAfter, vm.finished], [90, 210, 13, true, false, true])
+    assert.equal(vm.matchedTotal, 1002)
+
+    const stableLogs = vm.logs
+    beforePage = logPage({ logs: 'malformed', hasBefore: false })
+    await vm.loadBefore()
+    assert.equal(vm.beforeError, 'logPanel.loadError')
+    assert.equal(vm.hasBefore, true)
+    assert.equal(vm.beforeCursor, 90)
+    assert.equal(vm.logs, stableLogs)
+    beforePage = logPage({ logs: [logRow(80), logRow(89)], startLineNo: 1, hasBefore: true })
+    await vm.loadBefore()
+    assert.equal(vm.beforeError, 'logPanel.loadError', 'an advertised cursor may not skip past the page')
+    assert.equal(vm.beforeCursor, 90)
+    assert.equal(vm.logs, stableLogs)
+    beforePage = logPage({ startLineNo: 90, hasBefore: true })
+    await vm.loadBefore()
+    assert.equal(vm.beforeError, 'logPanel.loadError', 'a stuck before cursor can be retried')
+    assert.equal(vm.beforeCursor, 90)
+    beforePage = logPage({ hasAfter: true, finished: false })
+    await vm.retryBefore()
+    assert.equal(vm.beforeError, '')
+    assert.equal(vm.hasBefore, false)
+    assert.equal(vm.hasAfter, false, 'a final Before response cannot restart the finished After side')
+    assert.equal(vm.finished, true)
+    assert.deepEqual(requested.before, [100, 90, 90, 90, 90])
+
+    vm.finished = false
+    vm.hasAfter = true
+    afterPage = { data: null }
+    await vm.loadAfter()
+    assert.equal(vm.afterError, 'logPanel.loadError')
+    assert.equal(vm.finished, false)
+    assert.equal(vm.hasAfter, true)
+    assert.equal(vm.logs, stableLogs)
+    afterPage = logPage({ logs: [logRow(200, 13)], hasBefore: true, hasAfter: true, finished: false })
+    await vm.loadAfter()
+    assert.equal(vm.afterError, '')
+    assert.equal(vm.hasBefore, false, 'an After lookback cannot reopen exhausted Before pagination')
+    assert.equal(vm.logs, stableLogs, 'an identical lookback page does not rebuild logs or group inputs')
+    assert.deepEqual(requested.after, [[120, 10], [210, 13], [210, 13]])
+})
+
+function createRenderedStepLogPanel (actions, props = {}) {
+    const path = '../StepLogPanel.vue'
+    const filename = new URL(path, import.meta.url).pathname
+    const compiler = createRequire(import.meta.url)('vue/compiler-sfc')
+    const template = compiler.parse({ source: readFileSync(filename, 'utf8'), filename }).template
+    const { code, errors } = compiler.compileTemplate({ source: template.content, filename })
+    assert.deepEqual(errors, [])
+    const renderOptions = new Function(`${code}; return { render, staticRenderFns }`)()
+    const options = loadComponentOptions(path, {
+        ...adapter, ...logTail, ...logStructure, shallowRef, markRaw,
+        mapActions: () => actions,
+        LogGroupBar: {}, LogLinesView: {}
+    })
+    const Step = Vue.extend({ ...options, ...renderOptions })
+    const vm = new Step({
+        propsData: {
+            projectId: 'p', pipelineId: 'pipe', buildId: 'b', executeCount: 1,
+            controls: { levels: ['INFO'], search: '', current: 0, total: 0 },
+            ...props
+        }
+    })
+    vm.$t = key => key
+    return vm
+}
+
+function findRenderedNodes (node, predicate) {
+    return [
+        ...(predicate(node) ? [node] : []),
+        ...(node.children || []).flatMap(child => findRenderedNodes(child, predicate))
+    ]
+}
+
+test('empty running logs render an After error and its retry without disabling polling', async () => {
+    let attempts = 0
+    const vm = createRenderedStepLogPanel({
+        getLogPanelLatest: async () => logPage({ status: 1, finished: false, hasAfter: true }),
+        async getLogPanelAfter () {
+            attempts += 1
+            if (attempts === 1) throw new Error('temporary failure')
+            return logPage({ logs: [logRow(45)], finished: true })
+        }
+    }, { emptyLineText: 'No results yet' })
+    try {
+        await vm.reload()
+        assert.equal(vm.cleanStatus, 'empty')
+        await vm.loadAfter()
+        assert.equal(vm.afterRetries, 1)
+        assert.ok(vm.requestTimer, 'an empty log still backs off and polls again')
+        const tree = vm._render()
+        assert.ok(findRenderedNodes(tree, node => node.data?.staticClass === 'log-panel-status-empty').length)
+        const [error] = findRenderedNodes(tree, node => node.data?.attrs?.role === 'alert')
+        assert.ok(error, 'the empty status and pagination failure render together')
+        const [retry] = findRenderedNodes(error, node => node.tag === 'button')
+        assert.equal(retry.data.attrs.disabled, false)
+        await retry.data.on.click()
+        await Vue.nextTick()
+        assert.equal(attempts, 2)
+        assert.equal(vm.requestTimer, null)
+        assert.equal(vm.afterError, '')
+        assert.deepEqual(vm.logs.map(row => row.lineNo), [45])
+    } finally {
+        vm.$destroy()
+    }
+})
+
+test('pagination renders one failure, retries only failed idle directions, and preserves interface errors', async () => {
+    const calls = { before: [], after: [] }
+    const track = key => params => new Promise((resolve, reject) => calls[key].push({ params, resolve, reject }))
+    const vm = createRenderedStepLogPanel({
+        getLogPanelLatest: async () => logPage({
+            logs: [logRow(100)], startLineNo: 100, finished: false, hasBefore: true, hasAfter: true
+        }),
+        getLogPanelBefore: track('before'),
+        getLogPanelAfter: track('after')
+    })
+    const renderAlert = (message, { unavailable = false, disabled = false } = {}) => {
+        const tree = vm._render()
+        assert.equal(findRenderedNodes(tree, node => node.componentOptions?.tag === 'log-lines-view').length, 1)
+        const alerts = findRenderedNodes(tree, node => node.data?.attrs?.role === 'alert')
+        assert.equal(alerts.length, 1)
+        const [alert] = alerts
+        const text = alert.children.filter(child => !child.tag).map(child => child.text || '').join('').trim()
+        assert.equal(text.replace(/\s+/g, ' '), unavailable ? `${message} · logPanel.loadUnavailable` : message)
+        const buttons = findRenderedNodes(alert, node => node.tag === 'button')
+        assert.equal(buttons.length, 1)
+        const [retry] = buttons
+        assert.equal(retry.children[0].text.trim(), 'retry')
+        assert.equal(retry.data.attrs.disabled, disabled)
+        return retry.data.on.click
+    }
+    try {
+        await vm.reload()
+        const firstBefore = vm.loadBefore()
+        calls.before[0].reject(new Error('network error'))
+        await firstBefore
+        const retryOlder = renderAlert('logPanel.loadOlderLogsError')()
+        assert.equal(calls.before.length, 2)
+        assert.equal(calls.after.length, 0, 'retrying older logs leaves a healthy After timer alone')
+        calls.before[1].reject({ httpStatus: 404 })
+        await retryOlder
+        renderAlert('logPanel.loadUnavailable')
+
+        const firstAfter = vm.loadAfter()
+        calls.after[0].reject(new Error('network error'))
+        await firstAfter
+        vm.beforeError = 'logPanel.loadError'
+        renderAlert('logPanel.loadError')
+        vm.beforeError = 'logPanel.loadUnavailable'
+        const retryBoth = renderAlert('logPanel.loadError', { unavailable: true })()
+        assert.deepEqual([calls.before.length, calls.after.length], [3, 2])
+        renderAlert('logPanel.loadError', { unavailable: true, disabled: true })
+        await vm.retryPagination()
+        assert.deepEqual([calls.before.length, calls.after.length], [3, 2], 'an active retry is not reissued')
+        calls.before[2].resolve(logPage({ hasBefore: false }))
+        await new Promise(resolve => setImmediate(resolve))
+        renderAlert('logPanel.loadNewerLogsError', { disabled: true })
+        calls.after[1].reject(new Error('still unavailable'))
+        await retryBoth
+
+        const retryAfter = renderAlert('logPanel.loadNewerLogsError')()
+        assert.deepEqual([calls.before.length, calls.after.length], [3, 3], 'the recovered Before direction stays untouched')
+        calls.after[2].resolve(logPage({ hasAfter: false }))
+        await retryAfter
+        assert.equal(findRenderedNodes(vm._render(), node => node.data?.attrs?.role === 'alert').length, 0)
+        assert.deepEqual(calls.before.map(call => call.params.endLineNo), [100, 100, 100])
+        assert.deepEqual(calls.after.map(call => call.params.startLineNo), [100, 100, 100])
+    } finally {
+        vm.$destroy()
+    }
+})
+
+test('new Step and ordinary Job log targets gate analysis on the legacy marker and carry the current round', () => {
+    const options = loadComponentOptions('../StepLogPanel.vue', { parseLogLine, mapActions: () => ({}), LogGroupBar: {}, LogLinesView: {} })
+    const canAnalyzeLog = options.methods.canAnalyzeLog
+    const marked = logRow(10, 10, '##[error]##[ai]script failed')
+    const vm = {
+        canAnalyzeLog, aiEnabled: null, tag: 'task-a', projectId: 'p', pipelineId: 'pipe', buildId: 'build', executeCount: 3
+    }
+    assert.equal(canAnalyzeLog.call(vm, marked), false, 'the feature status is not known yet')
+    vm.aiEnabled = true
+    assert.equal(canAnalyzeLog.call(vm, logRow(10, 10, 'script says ##[ai]')), false)
+    assert.equal(canAnalyzeLog.call(vm, marked), true)
+    options.methods.openAiAnalysis.call(vm, marked)
+    assert.deepEqual(vm.aiTarget, { tag: 'task-a', projectId: 'p', pipelineId: 'pipe', buildId: 'build', currentExe: 3 })
+    vm.tag = ''
+    vm.jobId = 'job-a'
+    options.methods.openAiAnalysis.call(vm, { ...marked, tag: 'task-in-job' })
+    assert.equal(vm.aiTarget.tag, 'task-in-job')
+    options.watch.aiContext.call(vm)
+    assert.equal(vm.aiTarget, null, 'a different context closes the analysis')
+})
+
+test('AI analysis dialog loads, regenerates, adds and removes both feedback choices, and can recover from failures', async () => {
+    let mount, unmount
+    let loadFails = false
+    let feedbackFails = false
+    let sentStreamSignal
+    let lateChunk
+    const calls = []
+    const messages = []
+    const votes = { goodUsers: [], badUsers: [] }
+    const target = { projectId: 'p', pipelineId: 'pipe', buildId: 'b', tag: 'step', currentExe: 3 }
+    const proxy = {
+        $userInfo: { username: 'u' },
+        $t: key => key,
+        $bkMessage: toast => messages.push(toast.message),
+        $store: {
+            async dispatch (action, params) {
+                assert.equal(params.tag, target.tag)
+                assert.equal(params.currentExe, target.currentExe)
+                calls.push(action)
+                if (action === 'atom/getLogAIMessage') {
+                    sentStreamSignal = params.signal
+                    lateChunk = params.callBack
+                    if (loadFails) throw new Error('stream failed')
+                    params.callBack(params.refresh ? 'regenerated' : 'initial')
+                    params.callBack(' analysis')
+                    return
+                }
+                if (feedbackFails) throw new Error('feedback failed')
+                if (action === 'atom/getPraiseAiInfo') return { data: { ...votes } }
+                const key = params.score ? 'goodUsers' : 'badUsers'
+                votes[key] = action === 'atom/praiseAi' ? ['u'] : []
+            }
+        }
+    }
+    const dialog = loadComponentOptions('../LogAiDialog.vue', {
+        computed, ref, nextTick: callback => callback(),
+        getCurrentInstance: () => ({ proxy }),
+        onMounted: callback => {
+            mount = callback
+        },
+        onBeforeUnmount: callback => {
+            unmount = callback
+        }
+    })
+    const settle = () => new Promise(resolve => setImmediate(resolve))
+    dialog.setup({ target, enabled: false }, { emit () {} })
+    mount()
+    assert.deepEqual(calls, [], 'disabled mode performs no analysis or feedback requests')
+    const vm = dialog.setup({ target, enabled: true }, { emit () {} })
+    mount()
+    await settle()
+    assert.equal(vm.message.value, 'initial analysis')
+    for (const index of [0, 1]) {
+        await vm.submitFeedback(vm.feedbackOptions.value[index])
+        assert.equal(vm.feedbackOptions.value[index].active, true)
+        await vm.submitFeedback(vm.feedbackOptions.value[index])
+        assert.equal(vm.feedbackOptions.value[index].active, false)
+    }
+    assert.deepEqual(messages, ['successPraise', 'successCancelPraise', 'successDownPraise', 'successCancelDownPraise'])
+    loadFails = true
+    await vm.loadAnalysis(true)
+    assert.equal(vm.loadFailed.value, true)
+    assert.equal(vm.lastRefresh.value, true)
+    loadFails = false
+    await vm.loadAnalysis(vm.lastRefresh.value)
+    await settle()
+    assert.equal(vm.message.value, 'regenerated analysis')
+    assert.equal(vm.loadFailed.value, false)
+    feedbackFails = true
+    await vm.submitFeedback(vm.feedbackOptions.value[0])
+    assert.equal(vm.feedbackFailed.value, true)
+    feedbackFails = false
+    await vm.loadFeedback()
+    assert.equal(vm.feedbackFailed.value, false)
+    unmount()
+    assert.equal(sentStreamSignal.aborted, true)
+    lateChunk(' stale')
+    assert.equal(vm.message.value, 'regenerated analysis')
+})
+
+test('AI stream action waits for EOF, decodes split UTF-8 and rejects transport or read failures', async () => {
+    const source = readFileSync(new URL('../../../../store/modules/atom/actions.js', import.meta.url), 'utf8')
+    const body = source.match(/async getLogAIMessage \(\{ commit \}, \{([^}]+)\}\) \{([\s\S]*?)\n    \},\n\n    getAIStatus/).slice(1)
+    const chunks = []
+    const queued = new Uint8Array(Buffer.from('结论'))
+    const expected = { projectId: 'p', pipelineId: 'pipe', buildId: 'b', tag: 'task&a', currentExe: 2, refresh: true, callBack: chunk => chunks.push(chunk) }
+    const controller = new AbortController()
+    let reader
+    const fetch = async (url, options) => {
+        assert.match(url, /taskId=task%26a&refresh=true&executeCount=2$/)
+        assert.equal(options.signal, controller.signal)
+        return { ok: true, body: reader }
+    }
+    const action = new Function('window', `return async function ({ commit }, {${body[0]}}) {${body[1]}}`)({ fetch })
+
+    let writer
+    reader = new ReadableStream({ start (stream) {
+        writer = stream
+    } })
+    let finished = false
+    const result = action({}, { ...expected, signal: controller.signal }).then(() => {
+        finished = true
+    })
+    writer.enqueue(queued.slice(0, 2))
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(finished, false)
+    assert.deepEqual(chunks, [], 'does not emit half of a UTF-8 character')
+    writer.enqueue(queued.slice(2))
+    writer.close()
+    await result
+    assert.equal(chunks.join(''), '结论')
+    assert.equal(reader.locked, false)
+
+    reader = new ReadableStream({ start (stream) {
+        stream.error(new Error('read failed'))
+    } })
+    await assert.rejects(action({}, { ...expected, signal: controller.signal }), /read failed/)
+    assert.equal(reader.locked, false)
+    const failing = new Function('window', `return async function ({ commit }, {${body[0]}}) {${body[1]}}`)({
+        fetch: async () => ({ ok: false, body: {} })
+    })
+    await assert.rejects(failing({}, expected), /AI analysis request failed/)
 })
 
 test('controlled progress detail delegates loading, errors, and retry to the parent owner', () => {

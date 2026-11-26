@@ -939,6 +939,7 @@
     "noBranchAvailable": "No branch available"
   },
   "details": {
+    "loadDetailFailed": "Failed to load execution details",
     "pipelineVersionDiffTips": "The pipeline config version has changed",
     "executeDetail": "Build Detail",
     "outputs": "Outputs",
@@ -3043,6 +3044,18 @@
       "retry": "Retry"
     },
     "loadError": "Failed to load logs",
+    "loadOlderLogsError": "Failed to load older logs",
+    "loadNewerLogsError": "Failed to load the latest logs",
+    "ai": {
+      "title": "AI error analysis",
+      "unavailable": "AI error analysis is unavailable. Contact your administrator to enable it.",
+      "docs": "Learn more",
+      "regenerate": "Regenerate",
+      "loadFailed": "Failed to load AI analysis",
+      "feedbackFailed": "AI feedback could not be saved or loaded",
+      "like": "Helpful",
+      "dislike": "Not helpful"
+    },
     "loadUnavailable": "The new log interface is unavailable",
     "reloadLogs": "Reload logs",
     "largeVariable": {

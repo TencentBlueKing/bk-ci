@@ -93,6 +93,10 @@
                     class="lp-text"
                     v-html="renderLineHtml(row.line)"
                 ></span>
+                <slot
+                    name="line-actions"
+                    :line="row.line"
+                />
             </div>
             <div
                 v-if="useVirtual"
@@ -111,7 +115,6 @@
             :line-origin="minimapLineOrigin"
             :content-height="contentHeight"
             :scroll-metrics="minimapScrollMetrics"
-            :text-metrics="minimapTextMetrics"
             @locate="$emit('locate', $event)"
             @locate-target="scrollToSourceTarget"
             @pan="onPan"
@@ -236,27 +239,6 @@
                     scrollHeight: this.contentHeight,
                     lineOrigin: this.lineOrigin(),
                     indexVersion: this.indexVersion
-                }
-            },
-            minimapTextMetrics () {
-                const indexVersion = this.indexVersion
-                const showTime = this.showTime
-                const box = this.$refs.box
-                const text = box?.querySelector('.lp-text')
-                if (!text || typeof window === 'undefined') {
-                    return { wrap: this.wrap, showTime, indexVersion, width: Math.max(1, (this.containerWidth || 0) - 64), fontFamily: 'Menlo, Consolas, monospace', fontSize: '12px', lineHeight: '20px', whiteSpace: this.wrap ? 'pre-wrap' : 'pre', wordBreak: this.wrap ? 'break-all' : 'normal' }
-                }
-                const style = window.getComputedStyle(text)
-                return {
-                    wrap: this.wrap,
-                    showTime,
-                    indexVersion,
-                    width: text.getBoundingClientRect().width,
-                    fontFamily: style.fontFamily,
-                    fontSize: style.fontSize,
-                    lineHeight: style.lineHeight,
-                    whiteSpace: style.whiteSpace,
-                    wordBreak: style.wordBreak
                 }
             },
             minimapLineOrigin () {
