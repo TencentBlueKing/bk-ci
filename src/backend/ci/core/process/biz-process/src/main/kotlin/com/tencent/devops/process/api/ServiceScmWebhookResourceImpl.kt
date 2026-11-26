@@ -27,17 +27,21 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
+import com.tencent.devops.process.trigger.event.GithubWebhookEvent
+import com.tencent.devops.process.trigger.scm.CodeWebhookEventDispatcher
+import com.tencent.devops.process.trigger.scm.PipelineWebhookService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
-import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
-import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +50,8 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val streamBridge: StreamBridge,
     private val pipelineWebhookService: PipelineWebhookService,
-    private val webhookGrayService: WebhookGrayService
+    private val webhookGrayService: WebhookGrayService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(
@@ -70,6 +75,18 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<PipelineWebhook>> {
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
         return Result(
             pipelineWebhookService.listWebhook(
                 userId = userId,

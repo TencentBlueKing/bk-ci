@@ -31,9 +31,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateAgentRequest(
     @get:Schema(title = "Agent Hash ID", required = true)
-    val agentId: String,
+    val agentId: String?,
     @get:Schema(title = "Gateway", required = true)
     val gateway: String,
     @get:Schema(title = "File Gateway", required = true)
-    val fileGateway: String
+    val fileGateway: String,
+    @get:Schema(title = "Agent Hash ID列表", required = true)
+    val agentIdList: List<String>?
 )

@@ -44,7 +44,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
-import com.tencent.devops.process.yaml.PipelineYamlReleaseService
+import com.tencent.devops.process.pac.PipelineYamlReleaseService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

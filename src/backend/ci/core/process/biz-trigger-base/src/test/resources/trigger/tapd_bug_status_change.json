@@ -1,0 +1,21 @@
+{
+  "event": "bug::update",
+  "event_from": "web",
+  "workspace_id": "20001234",
+  "current_user": "tester",
+  "id": "1020000000000000001",
+  "new_id": "1020000000000000001",
+  "new_title": "【样例】状态变更后标题不应为空",
+  "new_description": "状态变更后的缺陷描述",
+  "new_parent_id": "",
+  "new_priority_label": "urgent",
+  "new_status": "in_progress",
+  "old_status": "new",
+  "change_fields": "status,current_owner,participator,flows,modified",
+  "event_id": "700000001",
+  "object_id": "1020000000000000001",
+  "object_url": "https://example.com/tapd_fe/20001234/bug/detail/1020000000000000001",
+  "workspace_name": "示例项目",
+  "priority_label": "紧急",
+  "name": "【样例】状态变更后标题不应为空"
+}

@@ -52,7 +52,6 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
@@ -747,7 +746,7 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         forceTrigger: Boolean?
-    ): Result<BuildReplayResult> {
+    ): Result<BuildId> {
         return Result(
             pipelineBuildFacadeService.replayBuild(
                 projectId = projectId,
@@ -775,14 +774,14 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun replayStatus(
+    override fun canReplay(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Result<BuildReplayResult> {
+    ): Result<Boolean> {
         return Result(
-            pipelineBuildFacadeService.replayStatus(
+            pipelineBuildFacadeService.canReplay(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

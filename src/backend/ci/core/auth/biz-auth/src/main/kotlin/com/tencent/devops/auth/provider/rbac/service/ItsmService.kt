@@ -147,7 +147,7 @@ class ItsmService constructor(
                             .key("reminder")
                             .name(
                                 I18nUtil.getCodeLanMessage(
-                                    AuthI18nConstants.BK_PROJECT_CREATOR_ADMIN_REMINDER_TITLE
+                                    AuthI18nConstants.BK_PROJECT_CREATOR_ADMIN_REMINDER_COLUMN
                                 )
                             )
                             .type(TEXT_TYPE)

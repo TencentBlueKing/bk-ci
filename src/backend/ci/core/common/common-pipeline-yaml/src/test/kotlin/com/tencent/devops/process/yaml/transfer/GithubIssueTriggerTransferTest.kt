@@ -113,13 +113,15 @@ class GithubIssueTriggerTransferTest {
     }
 
     @Test
-    fun `should convert github pull request assignee filters in both directions`() {
+    fun `should convert github pull request user and assignee filters in both directions`() {
         val elements = mutableListOf<Element>()
         transfer.yaml2TriggerGithub(
             triggerOn = TriggerOn(
                 repoName = "bk-ci",
                 mr = MrRule(
                     action = listOf("assign", "unassign"),
+                    users = listOf("octocat", "hubot"),
+                    usersIgnore = listOf("hubot", "other-bot"),
                     assignees = listOf("alice"),
                     assigneesIgnore = listOf("bot"),
                 )
@@ -128,6 +130,8 @@ class GithubIssueTriggerTransferTest {
         )
 
         val element = elements.single() as CodeGithubWebHookTriggerElement
+        assertEquals("octocat,hubot", element.includeUsers)
+        assertEquals("hubot,other-bot", element.excludeUsers)
         assertEquals("alice", element.includeAssignees)
         assertEquals("bot", element.excludeAssignees)
 
@@ -137,6 +141,9 @@ class GithubIssueTriggerTransferTest {
             aspectWrapper = mockk<PipelineTransferAspectWrapper>(relaxed = true),
             defaultName = "GitHub事件触发"
         ).single().mr!!
+
+        assertEquals(listOf("octocat", "hubot"), mr.users)
+        assertEquals(listOf("hubot", "other-bot"), mr.usersIgnore)
         assertEquals(listOf("alice"), mr.assignees)
         assertEquals(listOf("bot"), mr.assigneesIgnore)
     }

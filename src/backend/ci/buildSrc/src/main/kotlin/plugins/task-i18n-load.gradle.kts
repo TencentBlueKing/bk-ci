@@ -60,38 +60,37 @@ if (File(i18nPath).isDirectory) {
                     )
                 )
                 logger.debug("copy srcFile: ${srcFile.absolutePath} now...")
+                // 模块目录下的子目录只用于按领域拆分properties文件，合并后放到顶层，不直接拷贝
                 copy {
-                    from(srcFile.toPath())
+                    from(srcFile.toPath()) {
+                        exclude("*/**")
+                    }
                     into(destFile.toPath())
+                    includeEmptyDirs = false
                 }
                 logger.debug("copy srcFile: ${srcFile.absolutePath} finish...")
-                // 处理模块的properties文件(要合并公共的properties文件)
-                destFile.listFiles()?.filter { it.name.endsWith("properties") }?.forEach { propertyFile ->
-                    val commonPropertyFile = File(joinPath(i18nPath, propertyFile.name))
+                // 处理模块的properties文件(要合并公共的properties文件和模块子目录下的同名文件)
+                val modulePropertyFiles = srcFile.walkTopDown()
+                    .filter { it.isFile && it.name.endsWith("properties") }
+                    .sortedBy { it.relativeTo(srcFile).path }
+                    .groupBy { it.name }
+                destFile.mkdirs()
+                modulePropertyFiles.forEach { (fileName, moduleFiles) ->
+                    checkDuplicateKeys(moduleName, srcFile, moduleFiles)
+                    val commonPropertyFile = File(joinPath(i18nPath, fileName))
                     val targetProperties = Properties()
                     if (commonPropertyFile.exists()) {
                         logger.debug("copy commonPropertyFile: ${commonPropertyFile.absolutePath} now...")
-                        targetProperties.load(
-                            InputStreamReader(
-                                FileInputStream(commonPropertyFile),
-                                StandardCharsets.UTF_8
-                            )
-                        )
+                        loadProperties(targetProperties, commonPropertyFile)
                     }
-                    // append second input to output file if it exists
-                    if (propertyFile.exists()) {
-                        logger.debug("copy modulePropertyFile: ${propertyFile.absolutePath} now...")
-                        targetProperties.load(
-                            InputStreamReader(
-                                FileInputStream(propertyFile),
-                                StandardCharsets.UTF_8
-                            )
-                        )
+                    // 模块的配置覆盖公共的配置
+                    moduleFiles.forEach { modulePropertyFile ->
+                        logger.debug("copy modulePropertyFile: ${modulePropertyFile.absolutePath} now...")
+                        loadProperties(targetProperties, modulePropertyFile)
                     }
-                    targetProperties.store(
-                        OutputStreamWriter(FileOutputStream(propertyFile), StandardCharsets.UTF_8),
-                        "i18n"
-                    )
+                    OutputStreamWriter(FileOutputStream(File(destFile, fileName)), StandardCharsets.UTF_8).use {
+                        targetProperties.store(it, "i18n")
+                    }
                 }
             }
         }
@@ -110,3 +109,42 @@ fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
 fun getFileNames(path: String) = File(path)
     .listFiles()?.filter { it.isFile }?.map { it.name }
     ?.toMutableSet() ?: mutableSetOf()
+
+fun loadProperties(properties: Properties, file: File) {
+    InputStreamReader(FileInputStream(file), StandardCharsets.UTF_8).use { properties.load(it) }
+}
+
+/**
+ * 读取properties文件中的key，保留重复项，用于检查重复
+ */
+fun readPropertyKeys(file: File): List<String> {
+    val keys = mutableListOf<String>()
+    var continuation = false
+    file.readLines(StandardCharsets.UTF_8).forEach { line ->
+        val trimmed = line.trim()
+        val isKeyLine = !continuation && trimmed.isNotEmpty() && trimmed[0] != '#' && trimmed[0] != '!'
+        if (isKeyLine) {
+            keys.add(trimmed.split('=', ':', ' ', '\t', limit = 2)[0])
+        }
+        continuation = (isKeyLine || continuation) && line.endsWith("\\")
+    }
+    return keys
+}
+
+/**
+ * 同一模块下同名的properties文件(含子目录)合并后只有一份，key重复会互相覆盖，直接让构建失败
+ */
+fun checkDuplicateKeys(moduleName: String, moduleDir: File, files: List<File>) {
+    val keyFiles = mutableMapOf<String, MutableList<String>>()
+    files.forEach { file ->
+        val relativePath = file.relativeTo(moduleDir).path
+        readPropertyKeys(file).forEach { key -> keyFiles.getOrPut(key) { mutableListOf() }.add(relativePath) }
+    }
+    val duplicates = keyFiles.filterValues { it.size > 1 }
+    if (duplicates.isNotEmpty()) {
+        throw GradleException(
+            "duplicate i18n keys in module $moduleName: " +
+                duplicates.entries.joinToString("; ") { "${it.key} in ${it.value}" }
+        )
+    }
+}

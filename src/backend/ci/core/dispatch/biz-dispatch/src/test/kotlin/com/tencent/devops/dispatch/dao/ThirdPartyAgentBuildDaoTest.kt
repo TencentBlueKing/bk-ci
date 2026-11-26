@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import io.mockk.every
 import io.mockk.mockkObject
@@ -13,9 +14,11 @@ import org.jooq.tools.jdbc.MockDataProvider
 import org.jooq.tools.jdbc.MockResult
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 
 class ThirdPartyAgentBuildDaoTest {
@@ -155,6 +158,31 @@ class ThirdPartyAgentBuildDaoTest {
                 dao.fetchAgentBuildsByBuildId(dslContext, projectId, agentId, envId, buildIdList = setOf("build"))
             }
         )
+    }
+
+    @Test
+    fun claimOnlyUpdatesBuildsStillQueuedForTheAgent() {
+        val sqlList = mutableListOf<String>()
+        val bindingsList = mutableListOf<List<Any?>>()
+        val dslContext = DSL.using(
+            MockConnection { context ->
+                sqlList.add(context.sql())
+                bindingsList.add(context.bindings().toList())
+                arrayOf(MockResult(0))
+            },
+            SQLDialect.MYSQL
+        )
+
+        assertFalse(dao.claimQueueBuild(dslContext, 7L, "agent"))
+        val sql = sqlList.single()
+        // SET 子句也会出现 STATUS，只检查 WHERE 之后的条件
+        val where = sql.split(Regex("\\swhere\\s", RegexOption.IGNORE_CASE)).last()
+        for (column in listOf("ID", "AGENT_ID", "STATUS")) {
+            assertTrue(Regex("`$column`\\s*=\\s*\\?", RegexOption.IGNORE_CASE).containsMatchIn(where), sql)
+        }
+        val bindings = bindingsList.single()
+        assertTrue(7L in bindings && "agent" in bindings, sql)
+        assertTrue(PipelineTaskStatus.QUEUE.status in bindings, sql)
     }
 
     private fun emptyQueryResult(sql: String): MockResult {

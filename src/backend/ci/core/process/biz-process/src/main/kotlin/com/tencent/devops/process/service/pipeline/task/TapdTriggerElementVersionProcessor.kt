@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TapdWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscription
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

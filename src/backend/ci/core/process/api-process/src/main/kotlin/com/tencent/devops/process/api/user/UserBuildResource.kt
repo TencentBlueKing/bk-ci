@@ -47,7 +47,6 @@ import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.ConcurrencyQueueView
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
 import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
@@ -817,7 +816,7 @@ interface UserBuildResource {
         @Parameter(description = "强制触发", required = false)
         @QueryParam("forceTrigger")
         forceTrigger: Boolean? = false
-    ): Result<BuildReplayResult>
+    ): Result<BuildId>
 
     @Operation(summary = "获取构建版本差异")
     @POST
@@ -837,10 +836,10 @@ interface UserBuildResource {
         buildId: String
     ): Result<BuildVersionDiff?>
 
-    @Operation(summary = "指定构建任务的回放状态")
+    @Operation(summary = "指定构建任务是否可以回放")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/replay/status")
-    fun replayStatus(
+    @Path("/{projectId}/{pipelineId}/{buildId}/replay/check")
+    fun canReplay(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -853,7 +852,7 @@ interface UserBuildResource {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
-    ): Result<BuildReplayResult>
+    ): Result<Boolean>
 
     @Deprecated("新接口放到了dispatch，等正式上线看看日志，没人用就删掉")
     @Operation(summary = "获取指定流水线和job的构建历史")

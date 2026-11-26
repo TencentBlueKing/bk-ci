@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.27
+**文档版本：** 1.0.28
 
 **文档描述：** devops_ci_process的数据库文档
 | 表名                  | 说明       |
@@ -34,6 +34,7 @@
 | T_PIPELINE_COPY_TASK_RESOURCE | 流水线复制任务资源表 |
 | T_PIPELINE_COPY_TASK_RESOURCE_REL | 流水线复制任务资源关系表 |
 | T_PIPELINE_DATA_CLEAR | 流水线数据清理统计表 |
+| T_PIPELINE_EVENT_REGISTER | 外部事件注册记录表 |
 | T_PIPELINE_EVENT_SUBSCRIPTION | 流水线事件订阅表 |
 | T_PIPELINE_FAVOR | 流水线收藏表 |
 | T_PIPELINE_GROUP | 流水线分组表 |
@@ -765,6 +766,27 @@
 |  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | DEL_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    |   |
 
+**表名：** <a>T_PIPELINE_EVENT_REGISTER</a>
+
+**说明：** 外部事件注册记录表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | EVENT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 事件编码  |
+|  4   | EVENT_SOURCE |   varchar   | 255 |   0    |    N     |  N   |       | 事件源  |
+|  5   | EVENT_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 事件类型  |
+|  6   | EVENT_SCOPE |   varchar   | 255 |   0    |    N     |  N   |       | 事件作用域,svn路径/制品路径,无则空串  |
+|  7   | CALLBACK_URL |   varchar   | 1024 |   0    |    Y     |  N   |       | 回调地址  |
+|  8   | EXTERNAL_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 外部系统webhookID  |
+|  9   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
+|  10   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
+|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
 **表名：** <a>T_PIPELINE_EVENT_SUBSCRIPTION</a>
 
 **说明：** 流水线事件订阅表
@@ -781,10 +803,11 @@
 |  6   | EVENT_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 事件编码  |
 |  7   | TRIGGER_TARGET |   varchar   | 32 |   0    |    Y     |  N   |       | 触发目标  |
 |  8   | CHANNEL |   varchar   | 32 |   0    |    N     |  N   |       | 流水线的来源渠道，如BS/AM/CODECC/GIT等  |
-|  9   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
-|  10   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
-|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  12   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  9   | EVENT_SCOPE |   varchar   | 255 |   0    |    Y     |  N   |       | 事件作用域,svn路径/制品路径  |
+|  10   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
+|  11   | MODIFIER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
+|  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  13   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_FAVOR</a>
 
@@ -843,7 +866,13 @@
 |  17   | LATEST_START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 最近启动时间  |
 |  18   | LATEST_VERSION_STATUS |   varchar   | 64 |   0    |    Y     |  N   |       | 最新分布版本状态  |
 |  19   | LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否锁定，PACv3.0新增锁定，取代原来setting表中的LOCK  |
-|  20   | AUTO_SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI自动生成的流水线摘要  |
+|  20   | LOCK_USER |   varchar   | 64 |   0    |    Y     |  N   |       | UI禁用操作人  |
+|  21   | LOCK_REASON |   varchar   | 255 |   0    |    Y     |  N   |       | UI禁用原因  |
+|  22   | LOCK_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | UI禁用操作时间  |
+|  23   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  24   | YAML_LOCK_USER |   varchar   | 64 |   0    |    Y     |  N   |       | YAML禁用操作人  |
+|  25   | YAML_LOCK_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | YAML禁用操作时间  |
+|  26   | AUTO_SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI自动生成的流水线摘要  |
 
 **表名：** <a>T_PIPELINE_JOB_MUTEX_GROUP</a>
 
@@ -1118,6 +1147,7 @@
 |  38   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
 |  39   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
 |  40   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  41   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SETTING_DRAFT_VERSION</a>
 
@@ -1164,6 +1194,7 @@
 |  35   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
 |  36   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
 |  37   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
+|  38   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SETTING_VERSION</a>
 
@@ -1212,6 +1243,7 @@
 |  37   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
 |  38   | ENV_HASH_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 环境HashId  |
 |  39   | ENV_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 环境名称  |
+|  40   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
 
 **表名：** <a>T_PIPELINE_SHARE_COPY_TRACE</a>
 
@@ -1459,10 +1491,11 @@
 |  19   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
 |  20   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
 |  21   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  22   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  23   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
-|  24   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  25   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  22   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  23   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  24   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  25   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  26   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_TEMPLATE_SETTING_VERSION</a>
 
@@ -1491,10 +1524,11 @@
 |  17   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1时表示取系统默认值。  |
 |  18   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
 |  19   | BUILD_CANCEL_POLICY |   varchar   | 32 |   0    |    Y     |  N   |   EXECUTE_PERMISSION    | 构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消  |
-|  20   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  21   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
-|  22   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  23   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  20   | YAML_LOCKED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | YAML是否禁用  |
+|  21   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  22   | UPDATER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  23   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  24   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_TIMER</a>
 

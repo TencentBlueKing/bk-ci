@@ -1,10 +1,13 @@
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Oauth2State
@@ -23,10 +26,14 @@ import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
 import com.tencent.devops.repository.service.hub.ScmUserApiService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
+import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
+import java.net.URLEncoder
 import java.util.Base64
 
 /**
@@ -39,8 +46,17 @@ class RepositoryOauthService @Autowired constructor(
     private val scmConfigService: RepositoryScmConfigService,
     private val scmTokenApiService: ScmTokenApiService,
     private val scmUserApiService: ScmUserApiService,
-    val githubOAuthService: GithubOAuthService
+    val githubOAuthService: GithubOAuthService,
+    private val tGitOAuthService: TGitOAuthService,
+    private val commonConfig: CommonConfig
 ) {
+
+    /**
+     * 额外允许的授权回调链接host，多个用逗号分隔，默认只允许蓝盾内外网域名
+     */
+    @Value("\${repository.oauth.redirectUrlAllowHosts:}")
+    private var redirectUrlAllowHosts: String = ""
+
     fun list(
         userId: String,
         page: Int?,
@@ -172,12 +188,49 @@ class RepositoryOauthService @Autowired constructor(
                 ).redirectUrl
             }
 
+            ScmType.CODE_TGIT.name -> {
+                tGitOAuthService.getOauthUrl(userId = userId, redirectUrl = redirectUrl)
+            }
+
             else -> {
                 val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl, username = oauthUserId)
                 scmTokenApiService.authorizationUrl(scmCode = scmCode, state = state)
             }
         }
         return Oauth2Url(url)
+    }
+
+    fun authorizeUrl(
+        userId: String,
+        scmCode: String,
+        redirectUrl: String,
+        oauthUserId: String
+    ): String {
+        checkRedirectUrl(redirectUrl)
+        return oauthUrl(
+            userId = userId,
+            scmCode = scmCode,
+            redirectUrl = redirectUrl,
+            oauthUserId = oauthUserId
+        ).url
+    }
+
+    /**
+     * 生成经用户态接口中转的授权链接，才能以点击链接的登录用户作为授权操作人
+     * 走api-html入口，未登录时网关会跳转到登录页
+     */
+    fun buildAuthorizeUrl(
+        scmCode: String,
+        redirectUrl: String,
+        oauthUserId: String?
+    ): String {
+        checkRedirectUrl(redirectUrl)
+        val params = mutableListOf("redirectUrl=${URLEncoder.encode(redirectUrl, "UTF-8")}")
+        if (!oauthUserId.isNullOrBlank()) {
+            params.add("oauthUserId=${URLEncoder.encode(oauthUserId, "UTF-8")}")
+        }
+        return "${HomeHostUtil.innerServerHost()}/ms/repository/api-html/user/repositories/oauth/$scmCode/authorize?" +
+                params.joinToString("&")
     }
 
     fun oauthCallback(
@@ -240,6 +293,43 @@ class RepositoryOauthService @Autowired constructor(
 
     private fun decodeOauthState(state: String): Oauth2State {
         return JsonUtil.to(String(Base64.getDecoder().decode(state)), Oauth2State::class.java)
+    }
+
+    private fun checkRedirectUrl(redirectUrl: String) {
+        val uri = try {
+            URI(redirectUrl)
+        } catch (ignored: Exception) {
+            null
+        }
+        val scheme = uri?.scheme?.lowercase()
+        val host = uri?.host?.lowercase()
+        val isHttpScheme = scheme == "http" || scheme == "https"
+        val isAllowedHost = !host.isNullOrBlank() && allowRedirectHosts().contains(host)
+        if (!isHttpScheme || !isAllowedHost) {
+            logger.warn("oauth redirect url [$redirectUrl] is not allowed")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("redirectUrl")
+            )
+        }
+    }
+
+    private fun allowRedirectHosts(): Set<String> {
+        val hosts = listOfNotNull(commonConfig.devopsHostGateway, commonConfig.devopsOuterHostGateWay) +
+                redirectUrlAllowHosts.split(",")
+        return hosts.map { it.trim() }
+            .filter { it.isNotBlank() }
+            .mapNotNull { parseHost(it) }
+            .toSet()
+    }
+
+    private fun parseHost(host: String): String? {
+        return try {
+            URI(HomeHostUtil.getHost(host)).host?.lowercase()
+        } catch (ignored: Exception) {
+            logger.warn("invalid oauth redirect url allow host [$host]")
+            null
+        }
     }
 
     private fun convertOauthVo(scmConfig: RepositoryScmConfigVo, oauthInfo: OauthTokenInfo): OauthTokenVo {

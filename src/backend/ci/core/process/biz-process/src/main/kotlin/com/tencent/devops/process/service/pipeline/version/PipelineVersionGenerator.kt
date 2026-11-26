@@ -54,7 +54,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
+import com.tencent.devops.process.pac.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext

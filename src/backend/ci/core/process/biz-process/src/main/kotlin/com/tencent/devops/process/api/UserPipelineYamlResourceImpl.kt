@@ -40,9 +40,9 @@ import com.tencent.devops.process.api.user.UserPipelineYamlResource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
-import com.tencent.devops.process.yaml.PipelineYamlService
-import com.tencent.devops.process.yaml.PipelineYamlSyncService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlSyncService
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 
 @RestResource
