@@ -1025,6 +1025,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             } returns dslContext.mockResult(
                 T_PIPELINE_INFO, pi
             )
+            every { pipelinePermissionService.isControlPipelineListPermission(any()) } returns false
             self.pipelineCount("test", "test", "test").let {
                 Assertions.assertEquals(it.deleteCount, 0)
                 Assertions.assertEquals(it.normalCount, 1)

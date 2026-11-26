@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.2.0-rc.10](#v420-rc10)
+   - [Changelog since v4.2.0-rc.9](#changelog-since-v420-rc9)
+
 - [v4.2.0-rc.9](#v420-rc9)
    - [Changelog since v4.2.0-rc.8](#changelog-since-v420-rc8)
 
@@ -31,6 +34,68 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.2.0-rc.10
+## 2026-11-24
+### Changelog since v4.2.0-rc.9
+### 变更概述
+当前版本主要变更特性如下:
+
+**特性**
+- 构建详情页每个阶段支持展示起止时间，便于查看各阶段耗时
+- 研发商店支持插件运行时契约的存储、读取与选型检索，便于 AI 获取插件能力
+- 触发器支持制品到达事件，可基于制品入库触发流水线
+- 支持在 UI 界面禁用/启用 PAC 流水线
+- 支持脚本插件上报错误码和错误信息
+- 创作流支持数字分身节点
+- 敏感权限用户组增加风险提醒确认，权限授权增加敏感操作提示
+
+**Bug 修复**
+- 修复依赖 Job id 通过变量指定时未生效的问题
+- 修复 PAC 发布流水线清理触发器订阅偶发 Lock wait timeout 的问题
+- 修复流水线执行完成后详情页未自动刷新展示制品质量、需手动刷新的问题
+
+#### 新增
+
+##### 流水线
+- [新增] feat：构建详情页，每个阶段支持展示起止时间 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13760)
+- [新增] feat: stage和插件审核支持企微的卡片按钮 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13390)
+- [新增] feat：支持 UI 界面禁用/启用 PAC 流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13505)
+- [新增] feat：触发器支持制品到达事件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13385)
+- [新增] feat：支持脚本插件上报错误码和错误信息 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13305)
+- [新增] feat：流水线并发排队支持新任务到达时的处理策略 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12840)
+
+##### 项目管理
+- [新增] feat：敏感权限用户组增加风险提醒确认 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13900)
+
+##### 其他
+- [新增] feat: 优化dispatch性能 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13925)
+- [新增] feat:创作流支持数字分身 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13770)
+- [新增] feat: 增加权限授权时的敏感操作提示 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13863)
+- [新增] 关闭service/op接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13843)
+
+#### 优化
+
+##### 流水线
+- [优化] perf: 移出cds触发器相关的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13696)
+- [优化] perf：流水线UI方式保存的脚本转为YAML后可读性不好 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13070)
+
+##### 其他
+- [优化] feat：支持Ai获取插件运行时契约：存储、读取、选型检索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13884)
+- [优化] pref:详情页取消逻辑展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13837)
+- [优化] perf:创作流消息通知优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13800)
+
+#### 修复
+
+##### 流水线
+- [修复] perf：审核描述内容过长被遮挡问题优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13828)
+- [修复] fix：当依赖的 Job id 通过变量指定时，未生效问题fix [链接](http://github.com/TencentBlueKing/bk-ci/issues/11022)
+- [修复] bug: 执行完流水线后，详情页没有自动刷新展示出制品质量，只能手动刷新页面 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13766)
+
+##### 其他
+- [修复] bug: PAC 发布流水线时清理触发器订阅偶发 Lock wait timeout [链接](http://github.com/TencentBlueKing/bk-ci/issues/13910)
+- [修复] bugfix: dispatch慢查询优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13894)
+- [修复] feat：matrix job 最大并发数支持变量占位 [链接](http://github.com/TencentBlueKing/bk-ci/issues/13737)
+
 # v4.2.0-rc.9
 ## 2026-11-05
 ### Changelog since v4.2.0-rc.8

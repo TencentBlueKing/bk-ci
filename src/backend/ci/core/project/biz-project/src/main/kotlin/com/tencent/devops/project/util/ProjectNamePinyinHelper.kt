@@ -39,6 +39,7 @@ object ProjectNamePinyinHelper {
     private val gb2312 = Charset.forName("GB2312")
 
     // GB2312 区位码区间对应拼音首字母，不含 i/u/v（普通话声母没有这三项）
+    // 最后一个值 5590 是一级汉字的上界（不含），二级汉字按部首排序，没有拼音区间
     private val gbRanges = intArrayOf(
         1601, 1637, 1833, 2078, 2274, 2302, 2433, 2594, 2787,
         3106, 3212, 3472, 3635, 3722, 3730, 3858, 4027, 4086,
@@ -49,6 +50,12 @@ object ProjectNamePinyinHelper {
         'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
         't', 'w', 'x', 'y', 'z'
     )
+
+    init {
+        require(gbRanges.size == initials.size + 1) {
+            "gbRanges/initials size mismatch: ${gbRanges.size} != ${initials.size} + 1"
+        }
+    }
 
     fun compare(left: String, right: String, collator: Collator): Int {
         val keyCompare = sortKey(left).compareTo(sortKey(right))
@@ -87,10 +94,10 @@ object ProjectNamePinyinHelper {
         }
         val sector = ((bytes[0].toInt() and 0xFF) - 160) * 100 +
             ((bytes[1].toInt() and 0xFF) - 160)
-        if (sector < gbRanges.first()) {
+        if (sector < gbRanges.first() || sector >= gbRanges.last()) {
             return null
         }
-        for (index in gbRanges.indices.reversed()) {
+        for (index in initials.indices.reversed()) {
             if (sector >= gbRanges[index]) {
                 return initials[index]
             }

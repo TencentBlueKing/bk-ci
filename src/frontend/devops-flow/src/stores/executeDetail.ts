@@ -1,5 +1,4 @@
 import {
-  replayFlow,
   requestBuildParamCombination,
   requestBuildParams,
   requestFlowVersion,
@@ -133,33 +132,6 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     }
   }
 
-  /**
-   * 重放创作流
-   */
-  async function requestRePlayFlow({
-    projectId,
-    pipelineId,
-    buildId,
-    forceTrigger,
-  }: {
-    projectId: string
-    pipelineId: string
-    buildId: string
-    forceTrigger?: boolean
-  }) {
-    try {
-      const params = {
-        projectId,
-        pipelineId,
-        buildId,
-        forceTrigger,
-      }
-      return await replayFlow(params)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
   async function requestUpdateRemark({
     projectId,
     pipelineId,
@@ -254,7 +226,6 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     updateFromWebSocket,
     $reset,
     stopExecute,
-    requestRePlayFlow,
     requestRetryFlow,
     requestTriggerStage,
     requestUpdateRemark,

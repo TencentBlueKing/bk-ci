@@ -9,6 +9,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.oauth.OauthUserVo
 import com.tencent.devops.repository.service.RepositoryOauthService
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriBuilder
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -82,5 +84,20 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
                 scmCode = scmCode
             )
         )
+    }
+
+    override fun authorize(
+        userId: String,
+        scmCode: String,
+        redirectUrl: String,
+        oauthUserId: String?
+    ): Response {
+        val authorizeUrl = repositoryOauthService.authorizeUrl(
+            userId = userId,
+            scmCode = scmCode,
+            redirectUrl = redirectUrl,
+            oauthUserId = (oauthUserId ?: "").ifBlank { userId }
+        )
+        return Response.temporaryRedirect(UriBuilder.fromUri(authorizeUrl).build()).build()
     }
 }

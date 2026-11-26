@@ -105,8 +105,9 @@ object ProjectMessageCode {
     const val ERROR_PRODUCT_NOT_BELONG_TO_BG = "2119057" // 运营产品[{0}]不归属[{1}],请重新选择正确的运营产品
     const val ERROR_KPI_PRODUCT_NOT_EXIST = "2119058" // KPI产品不存在
     const val ERROR_KPI_PRODUCT_INVALID = "2119059" // KPI产品无效
-    const val PROJECT_FAVOR_SUCC = "2119060" // 项目收藏成功
-    const val PROJECT_FAVOR_CANCEL_SUCC = "2119061" // 项目取消收藏成功
+    const val ERROR_KPI_PRODUCT_COMMON_NOT_ALLOWED = "2119060" // 不允许选择公共KPI代码，请选择其他KPI代码
+    const val PROJECT_FAVOR_SUCC = "2119061" // 项目收藏成功
+    const val PROJECT_FAVOR_CANCEL_SUCC = "2119062" // 项目取消收藏成功
     const val ENUM_LABEL_CANNOT_DELETE = "2119063" // 内置项目标签不允许删除
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务

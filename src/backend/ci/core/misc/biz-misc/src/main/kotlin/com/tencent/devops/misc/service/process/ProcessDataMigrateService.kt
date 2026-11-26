@@ -87,8 +87,8 @@ class ProcessDataMigrateService @Autowired constructor(
     @Value("\${sharding.migration.maxProjectCount:#{5}}")
     private val migrationMaxProjectCount: Int = DEFAULT_MIGRATION_MAX_PROJECT_COUNT
 
-    @Value("\${sharding.migration.processDbMicroServices:#{\"process,engine,misc,lambda\"}}")
-    private val migrationProcessDbMicroServices = "process,engine,misc,lambda"
+    @Value("\${sharding.migration.processDbMicroServices:#{\"process,engine,trigger,misc,lambda\"}}")
+    private val migrationProcessDbMicroServices = "process,engine,trigger,misc,lambda"
 
     @Value("\${sharding.migration.sourceDbDataDeleteFlag:#{false}}")
     private val migrationSourceDbDataDeleteFlag: Boolean = false
