@@ -32,5 +32,7 @@ export const PAC_BRANCH_CHANGE = 'PAC_BRANCH_CHANGE'
 export const UPDATE_PAC_ERROR_STATUS = 'UPDATE_PAC_ERROR_STATUS'
 export const PAC_BRANCH_LOADING = 'PAC_BRANCH_LOADING'
 export const PAC_BRANCH_INIT_DONE = 'PAC_BRANCH_INIT_DONE'
+/** PAC 分支编排滞后于最新正式版（仅警告、仍可执行） */
+export const UPDATE_EXPIRE_RELEASED_VERSION = 'UPDATE_EXPIRE_RELEASED_VERSION'
 // Use a bus for components communication,
 export const bus = new Vue()

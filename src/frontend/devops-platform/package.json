@@ -10,6 +10,7 @@
     "public:master": "vite build"
   },
   "dependencies": {
+    "@blueking/xss-filter": "0.0.10",
     "bkui-vue": "2.0.2-beta.45",
     "dayjs": "^1.11.2",
     "lodash": "^4.18.0",

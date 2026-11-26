@@ -18,6 +18,8 @@ export const TOGGLE_PERMISSION_DIALOG: string = 'TOGGLE_PERMISSION_DIALOG'
 export const TOGGLE_NOTICE_DIALOG: string = 'TOGGLE_NOTICE_DIALOG'
 export const SET_CURRENT_NOTICE: string = 'SET_CURRENT_NOTICE'
 export const GET_PERM_REDIRECT_URL: string = 'GET_PERM_REDIRECT_URL'
+export const SET_CONVENTION_STATUS: string = 'SET_CONVENTION_STATUS'
+export const SET_CONVENTION_CONTENT: string = 'SET_CONVENTION_CONTENT'
 
 // 服务列表
 const serviceList = [

@@ -17,7 +17,9 @@ interface RootState {
     showNotice: boolean,
     currentNotice: object,
     moduleLoading: boolean,
-    isPermissionDialogShow: boolean
+    isPermissionDialogShow: boolean,
+    conventionStatus: 'checking' | 'required' | 'passed',
+    conventionContent: string
 }
 
 interface Link {
