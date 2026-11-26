@@ -738,6 +738,8 @@ class PipelineYamlVersionUtilsTest {
                     types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
                 )
             ),
+            cancelSubscriptionList = null,
+            publishSubscriptionList = null,
             labels = null,
             waitQueueTimeMinute = 1,
             maxQueueSize = 1,
@@ -762,6 +764,8 @@ class PipelineYamlVersionUtilsTest {
                     types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
                 )
             ),
+            cancelSubscriptionList = null,
+            publishSubscriptionList = null,
             labels = null,
             waitQueueTimeMinute = 1,
             maxQueueSize = 1,
@@ -786,6 +790,8 @@ class PipelineYamlVersionUtilsTest {
                     types = setOf(PipelineSubscriptionType.RTX, PipelineSubscriptionType.EMAIL)
                 )
             ),
+            cancelSubscriptionList = null,
+            publishSubscriptionList = null,
             labels = null,
             waitQueueTimeMinute = 1,
             maxQueueSize = 1,

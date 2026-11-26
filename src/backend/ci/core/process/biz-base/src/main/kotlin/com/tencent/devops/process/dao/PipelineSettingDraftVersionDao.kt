@@ -28,6 +28,8 @@ class PipelineSettingDraftVersionDao {
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+        val cancelSubscriptionList = setting.cancelSubscriptionList ?: emptyList()
+        val publishSubscriptionList = setting.publishSubscriptionList ?: emptyList()
         with(TPipelineSettingDraftVersion.T_PIPELINE_SETTING_DRAFT_VERSION) {
             dslContext.insertInto(
                 this,
@@ -48,6 +50,8 @@ class PipelineSettingDraftVersionDao {
                 CONCURRENCY_SUB_GROUP,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
+                CANCEL_SUBSCRIPTION,
+                PUBLISH_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
@@ -71,6 +75,8 @@ class PipelineSettingDraftVersionDao {
                 setting.concurrencySubGroup,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
+                JsonUtil.toJson(cancelSubscriptionList, false),
+                JsonUtil.toJson(publishSubscriptionList, false),
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
                 setting.maxConRunningQueueSize,
                 setting.failIfVariableInvalid,
@@ -105,6 +111,8 @@ class PipelineSettingDraftVersionDao {
     ) {
         val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
         val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+        val cancelSubscriptionList = setting.cancelSubscriptionList ?: emptyList()
+        val publishSubscriptionList = setting.publishSubscriptionList ?: emptyList()
         with(T_PIPELINE_SETTING_DRAFT_VERSION) {
             val updateStep = dslContext.update(this)
                 .set(NAME, setting.pipelineName)
@@ -119,6 +127,8 @@ class PipelineSettingDraftVersionDao {
                 .set(CONCURRENCY_SUB_GROUP, setting.concurrencySubGroup)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(CANCEL_SUBSCRIPTION, JsonUtil.toJson(cancelSubscriptionList, false))
+                .set(PUBLISH_SUBSCRIPTION, JsonUtil.toJson(publishSubscriptionList, false))
                 .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) })
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
@@ -150,14 +160,10 @@ class PipelineSettingDraftVersionDao {
                         JsonUtil.getObjectMapper().readValue(self) as List<String>
                     },
                     buildNumRule = r.buildNumRule,
-                    successSubscriptionList = r.successSubscription?.let {
-                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                            .map { s -> s.fixWeworkGroupType() }
-                    },
-                    failSubscriptionList = r.failureSubscription?.let {
-                        JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                            .map { s -> s.fixWeworkGroupType() }
-                    },
+                    successSubscriptionList = r.successSubscription?.toSubscriptionList(),
+                    failSubscriptionList = r.failureSubscription?.toSubscriptionList(),
+                    cancelSubscriptionList = r.cancelSubscription?.toSubscriptionList(),
+                    publishSubscriptionList = r.publishSubscription?.toSubscriptionList(),
                     runLockType = r.runLockType?.let { PipelineRunLockType.valueOf(it) },
                     waitQueueTimeSecond = DateTimeUtil.secondToMinute(r.waitQueueTimeSecond ?: 600000),
                     maxQueueSize = r.maxQueueSize,
@@ -173,6 +179,14 @@ class PipelineSettingDraftVersionDao {
                     yamlLocked = r.yamlLocked
                 )
             }
+        }
+
+        /**
+         * 订阅列表列反序列化：列值为空时返回 null，不兜底为空列表（调用方据 null 判定该版本无此字段）。
+         */
+        private fun String?.toSubscriptionList(): List<Subscription>? = this?.let {
+            JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                .map { s -> s.fixWeworkGroupType() }
         }
     }
 

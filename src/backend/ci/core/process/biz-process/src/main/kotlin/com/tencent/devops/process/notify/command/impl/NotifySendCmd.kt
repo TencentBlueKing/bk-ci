@@ -1,7 +1,9 @@
 package com.tencent.devops.process.notify.command.impl
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.notify.command.NotifyCmd
@@ -64,6 +66,22 @@ abstract class NotifySendCmd(val client: Client) : NotifyCmd {
                 else ->
                     throw IllegalArgumentException("Unknown type($type) of Notify")
             }
+        }
+    }
+
+    companion object {
+        /**
+         * 是否按取消通知处理。
+         *
+         * 手动取消直接按取消处理；超时终态仅在取消订阅至少配置了一个通知类型时按取消处理，否则仍走失败通知。
+         * 通知分支选择与取消变量注入（PipelineNotifyService）共用本判据，避免两处口径不一致。
+         *
+         * @param setting 流水线设置，用于判断取消订阅是否配置了通知类型
+         * @param buildStatus 本次构建的终态
+         */
+        fun isCancelNotify(setting: PipelineSetting, buildStatus: BuildStatus): Boolean {
+            return buildStatus.isCancel() ||
+                (buildStatus.isTimeout() && setting.cancelSubscriptionList?.any { it.types.isNotEmpty() } == true)
         }
     }
 }

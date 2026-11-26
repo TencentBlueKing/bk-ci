@@ -219,6 +219,8 @@ open class DefaultModelCheckPlugin constructor(
     override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
         setting.successSubscriptionList?.checkSubscriptionList()
         setting.failSubscriptionList?.checkSubscriptionList()
+        setting.cancelSubscriptionList?.checkSubscriptionList()
+        setting.publishSubscriptionList?.checkSubscriptionList()
         setting.checkParam()
     }
 

@@ -1105,3 +1105,139 @@
     sender: "DevOps"
   creator: "system"
   modifior: "system"
+- index: 53
+  id: "62a83e13f5124a29a8c44242806c88ca"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
+  templateName: "実行キャンセルの通知テンプレートコード"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "62a83e13f5124a29a8c44242806c88ca"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            BlueKing CIパイプライン【${pipelineName}】#${buildNum}構築キャンセル</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        BlueKing CI DevOpsプラットフォームからの配信</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            パイプライン：${pipelineName}-${projectName}<br><br>構築番号：#${buildNum}<br><br>開始時間：${startTime}<br><br>所要時間：${duration}<br><br>トリガー方式：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">詳細を見る</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        何か問題があれば、いつでも管理者に連絡してください。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            このメールを受け取ったのは、${projectName}プロジェクトに関心を持っているか、他の人があなたを@したためです</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "62a83e13f5124a29a8c44242806c88ca"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "${cancelContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "構築キャンセル"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "62a83e13f5124a29a8c44242806c88ca"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "${cancelContent}"
+  creator: "system"
+  modifior: "system"
+- index: 54
+  id: "cb5878903c7945d596b224f630823c5f"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "実行キャンセルの詳細通知テンプレートコード"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "cb5878903c7945d596b224f630823c5f"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            BlueKing CIパイプライン【${pipelineName}】#${buildNum}構築キャンセル</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        BlueKing CI DevOpsプラットフォームからの配信</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            パイプライン：${pipelineName}-${projectName}<br><br>構築番号：#${buildNum}<br><br>開始時間：${startTime}<br><br>所要時間：${duration}<br><br>トリガー方式：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">詳細を見る</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        何か問題があれば、いつでも管理者に連絡してください。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            このメールを受け取ったのは、${projectName}プロジェクトに関心を持っているか、他の人があなたを@したためです</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "cb5878903c7945d596b224f630823c5f"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "${cancelContent}\n\n詳細を見る:${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "構築キャンセル"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "cb5878903c7945d596b224f630823c5f"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】#${buildNum} 構築キャンセル"
+    body: "${cancelContent}\n\n[詳細を見る](${detailUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 55
+  id: "d3f96afbf2fb4794932a9975f200fc8a"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE"
+  templateName: "新バージョン公開の通知テンプレートコード"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "edb28899ba394ca3860bcc6cc0285f3c"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        BlueKing CI DevOpsプラットフォームからの配信</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">プロジェクト：${projectName}<br><br>パイプライン：${pipelineName}<br><br>バージョン：${versionName}<br><br>公開者：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">詳細を見る</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        何か問題があれば、いつでも管理者に連絡してください。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            このメールを受け取ったのは、${projectName}プロジェクトに関心を持っているか、他の人があなたを@したためです</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "94ca6a41c7f94ddbb6ecc7bfd8645dbe"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "${publishContent}"
+  voiceTemplate:
+    id: "66d747258e374ff9ad81b8847d21a038"
+    taskName: "新バージョン公開"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "1d483656c02f42fa8ab0ea8af0bb637b"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "${publishContent}"
+  creator: "system"
+  modifior: "system"
+- index: 56
+  id: "1a9b378e46974655ba467cfcdc957b93"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "新バージョン公開の詳細通知テンプレートコード"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "14ab60b107fc493cafbaeb614c1b8996"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        BlueKing CI DevOpsプラットフォームからの配信</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">プロジェクト：${projectName}<br><br>パイプライン：${pipelineName}<br><br>バージョン：${versionName}<br><br>公開者：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">詳細を見る</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        何か問題があれば、いつでも管理者に連絡してください。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            このメールを受け取ったのは、${projectName}プロジェクトに関心を持っているか、他の人があなたを@したためです</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "5209ad2e06e041d2a3f970fde2854717"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "${publishContent}\n\n詳細を見る:${detailUrl}"
+  voiceTemplate:
+    id: "b65ae4877721429fb7924c44c036d04c"
+    taskName: "新バージョン公開"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "d8f8fd6243bf46789ccf9fb50e8c7cf9"
+    sender: "DevOps"
+    title: "BlueKing CIパイプライン【${pipelineName}】新バージョン ${versionName} をリリース"
+    body: "${publishContent}\n\n[詳細を見る](${detailUrl})"
+  creator: "system"
+  modifior: "system"

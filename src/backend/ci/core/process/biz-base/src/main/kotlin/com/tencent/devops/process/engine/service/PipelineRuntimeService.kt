@@ -827,6 +827,15 @@ class PipelineRuntimeService @Autowired constructor(
                 cancelUserId = cancelUserId
             )
         }
+        // 终态详情在停止在途任务之后才落库，这里先缓存取消原因供级联取消的子构建读取
+        buildEndInfo?.reasonCode?.takeIf { it.isNotBlank() }?.let { reasonCode ->
+            pipelineBuildRecordService.saveBuildCancelReasonCode(
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = executeCount,
+                reasonCode = reasonCode
+            )
+        }
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件

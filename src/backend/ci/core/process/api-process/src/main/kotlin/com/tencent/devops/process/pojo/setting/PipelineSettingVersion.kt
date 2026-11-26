@@ -61,6 +61,10 @@ data class PipelineSettingVersion(
     var successSubscriptionList: List<Subscription>?,
     @get:Schema(title = "订阅失败通知组", required = false)
     var failSubscriptionList: List<Subscription>?,
+    @get:Schema(title = "订阅取消通知组", required = false)
+    var cancelSubscriptionList: List<Subscription>?,
+    @get:Schema(title = "订阅发布新版本通知组", required = false)
+    var publishSubscriptionList: List<Subscription>?,
 
     // 运行控制、流水线禁用相关配置
     @get:Schema(title = "Lock 类型", required = false)
@@ -103,6 +107,8 @@ data class PipelineSettingVersion(
             runLockType = setting.runLockType,
             successSubscriptionList = setting.successSubscriptionList,
             failSubscriptionList = setting.failSubscriptionList,
+            cancelSubscriptionList = setting.cancelSubscriptionList,
+            publishSubscriptionList = setting.publishSubscriptionList,
             labels = setting.labels,
             waitQueueTimeMinute = setting.waitQueueTimeMinute,
             maxQueueSize = setting.maxQueueSize,

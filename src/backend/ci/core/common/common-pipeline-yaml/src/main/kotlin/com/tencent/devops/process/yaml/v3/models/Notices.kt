@@ -49,6 +49,10 @@ interface Notices {
     fun checkNotifyForSuccess() = false
 
     fun checkNotifyForFail() = false
+
+    fun checkNotifyForCancel() = false
+
+    fun checkNotifyForRelease() = false
 }
 
 /**
@@ -90,7 +94,12 @@ data class GitNotices(
         wechatGroup = chatId?.joinToString(",") ?: "",
         wechatGroupMarkdownFlag = false,
         detailFlag = false,
-        content = content ?: ""
+        content = content ?: when (ifField) {
+            IfType.CANCELED.name, IfType.CANCELLED.name ->
+                NotifyTemplateUtils.getCommonShutdownCancelContent()
+            IfType.RELEASED.name -> NotifyTemplateUtils.getCommonReleaseContent()
+            else -> ""
+        }
     )
 
     override fun checkNotifyForSuccess(): Boolean {
@@ -99,6 +108,14 @@ data class GitNotices(
 
     override fun checkNotifyForFail(): Boolean {
         return ifField == null || ifField == IfType.FAILURE.name || ifField == IfType.ALWAYS.name
+    }
+
+    override fun checkNotifyForCancel(): Boolean {
+        return ifField == IfType.CANCELED.name || ifField == IfType.CANCELLED.name
+    }
+
+    override fun checkNotifyForRelease(): Boolean {
+        return ifField == IfType.RELEASED.name
     }
 }
 
@@ -143,7 +160,8 @@ data class PacNotices(
     companion object {
         fun toPipelineSubscriptionType(type: String) = when (type) {
             NotifyType.EMAIL.yamlText -> PipelineSubscriptionType.EMAIL
-            NotifyType.RTX_CUSTOM.yamlText -> PipelineSubscriptionType.RTX
+            NotifyType.RTX_CUSTOM.yamlText -> PipelineSubscriptionType.WEWORK
+            NotifyType.RTX_GROUP.yamlText -> PipelineSubscriptionType.WEWORK
             NotifyType.SMS.yamlText -> PipelineSubscriptionType.SMS
             NotifyType.VOICE.yamlText -> PipelineSubscriptionType.VOICE
             else -> PipelineSubscriptionType.RTX
@@ -151,7 +169,8 @@ data class PacNotices(
 
         fun toNotifyType(type: PipelineSubscriptionType) = when (type) {
             PipelineSubscriptionType.EMAIL -> NotifyType.EMAIL.yamlText
-            PipelineSubscriptionType.RTX -> NotifyType.RTX_CUSTOM.yamlText
+            PipelineSubscriptionType.RTX,
+            PipelineSubscriptionType.WEWORK -> NotifyType.RTX_CUSTOM.yamlText
             PipelineSubscriptionType.SMS -> NotifyType.SMS.yamlText
             PipelineSubscriptionType.VOICE -> NotifyType.VOICE.yamlText
             else -> NotifyType.RTX_GROUP.yamlText
@@ -163,7 +182,7 @@ data class PacNotices(
         return Subscription(
             types = parseType.map { toPipelineSubscriptionType(it) }.toSet(),
             groups = groups?.toSet() ?: emptySet(),
-            users = receivers?.joinToString(",") ?: "\${{ci.actor}}",
+            users = receivers?.joinToString(",") ?: defaultReceivers(),
             wechatGroupFlag = parseType.contains(NotifyType.RTX_GROUP.yamlText),
             wechatGroup = chatId?.joinToString(",") ?: "",
             wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.text,
@@ -174,7 +193,16 @@ data class PacNotices(
 
     private fun defaultContent() = when {
         checkNotifyForSuccess() -> NotifyTemplateUtils.getCommonShutdownSuccessContent()
+        checkNotifyForCancel() -> NotifyTemplateUtils.getCommonShutdownCancelContent()
+        checkNotifyForRelease() -> NotifyTemplateUtils.getCommonReleaseContent()
         else -> NotifyTemplateUtils.getCommonShutdownFailureContent()
+    }
+
+    // 未配置接收人时的默认值：发布版本通知发给流水线拥有者，其余时机发给触发人
+    private fun defaultReceivers() = if (checkNotifyForRelease()) {
+        "\${{ci.pipeline_owner}}"
+    } else {
+        "\${{ci.actor}}"
     }
 
     override fun checkNotifyForSuccess(): Boolean {
@@ -183,6 +211,14 @@ data class PacNotices(
 
     override fun checkNotifyForFail(): Boolean {
         return ifField == null || ifField == IfType.FAILURE.name || ifField == IfType.ALWAYS.name
+    }
+
+    override fun checkNotifyForCancel(): Boolean {
+        return ifField == IfType.CANCELED.name || ifField == IfType.CANCELLED.name
+    }
+
+    override fun checkNotifyForRelease(): Boolean {
+        return ifField == IfType.RELEASED.name
     }
 
     private fun parseType(): List<String> = when (type) {

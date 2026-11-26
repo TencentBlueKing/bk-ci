@@ -138,6 +138,13 @@ class SubPipelineCallAtom constructor(
                         buildId = task.buildId,
                         executeCount = task.executeCount ?: 1
                     )
+                    // 父构建自身的取消原因，供子构建的取消通知还原父流水线的取消动作
+                    val parentCancelReasonCode = pipelineBuildRecordService.getBuildCancelReasonCode(
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        buildId = task.buildId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     pipelineRuntimeService.cancelBuild(
                         projectId = subBuildInfo.projectId,
                         pipelineId = subBuildInfo.pipelineId,
@@ -153,7 +160,8 @@ class SubPipelineCallAtom constructor(
                                 pipelineName = parentPipelineName,
                                 buildId = task.buildId,
                                 buildNum = parentBuildNum,
-                                operator = parentOperator
+                                operator = parentOperator,
+                                cancelReasonCode = parentCancelReasonCode
                             )
                         )
                     )

@@ -146,6 +146,12 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
+
+        // 取消原因的短期缓存键前缀，键内包含执行次数以区分重试轮次
+        private const val CANCEL_REASON_KEY_PREFIX = "pipeline:build:cancelReason"
+
+        // 缓存有效期，需覆盖父构建取消到子流水线级联取消之间的消息投递与消费耗时
+        private const val CANCEL_REASON_EXPIRE_SECONDS = 1800L
     }
 
     fun batchSave(
@@ -1303,6 +1309,50 @@ class PipelineBuildRecordService @Autowired constructor(
         return BuildEndInfo.confirmedOperator(
             getBuildCancelUser(projectId = projectId, buildId = buildId, executeCount = executeCount)
         )
+    }
+
+    /**
+     * 缓存构建本次取消动作的原因码，有效期为 [CANCEL_REASON_EXPIRE_SECONDS] 秒。
+     * 级联取消子流水线发生在父构建终态落库之前，子构建据此读取父构建的取消动作。
+     *
+     * @param reasonCode 终态原因国际化标识，由调用方保证非空
+     */
+    fun saveBuildCancelReasonCode(
+        projectId: String,
+        buildId: String,
+        executeCount: Int,
+        reasonCode: String
+    ) {
+        redisOperation.set(
+            key = "$CANCEL_REASON_KEY_PREFIX:$projectId:$buildId:$executeCount",
+            value = reasonCode,
+            expiredInSecond = CANCEL_REASON_EXPIRE_SECONDS
+        )
+    }
+
+    /**
+     * 读取构建的取消原因码。
+     * 优先读取短期缓存，未命中或已过期时读取已落库的终态详情。
+     *
+     * @return 终态原因国际化标识，两处来源均无值时返回 null
+     */
+    fun getBuildCancelReasonCode(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        redisOperation.get("$CANCEL_REASON_KEY_PREFIX:$projectId:$buildId:$executeCount")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { return it }
+        val record = recordModelDao.getRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        ) ?: return null
+        return parseBuildEndInfo(record.modelVar)?.reasonCode
     }
 
     fun updateModelRecord(

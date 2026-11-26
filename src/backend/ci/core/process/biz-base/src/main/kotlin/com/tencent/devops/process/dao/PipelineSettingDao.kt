@@ -61,6 +61,9 @@ class PipelineSettingDao {
             // #6090 先查询存在情况再做刷新或插入
             val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
             val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+            val cancelSubscriptionList = setting.cancelSubscriptionList ?: emptyList()
+            val publishSubscriptionList = setting.publishSubscriptionList ?: emptyList()
+
             val insert = buildInsert(dslContext = dslContext, setting = setting, isTemplate = isTemplate)
                 .onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
@@ -93,6 +96,8 @@ class PipelineSettingDao {
                 .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(CANCEL_SUBSCRIPTION, JsonUtil.toJson(cancelSubscriptionList, false))
+                .set(PUBLISH_SUBSCRIPTION, JsonUtil.toJson(publishSubscriptionList, false))
                 .set(VERSION, setting.version)
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
@@ -136,6 +141,8 @@ class PipelineSettingDao {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
             val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+            val cancelSubscriptionList = setting.cancelSubscriptionList ?: emptyList()
+            val publishSubscriptionList = setting.publishSubscriptionList ?: emptyList()
             return dslContext.insertInto(
                 this,
                 PROJECT_ID,
@@ -171,6 +178,8 @@ class PipelineSettingDao {
                 CLEAN_VARIABLES_WHEN_RETRY,
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
+                CANCEL_SUBSCRIPTION,
+                PUBLISH_SUBSCRIPTION,
                 VERSION,
                 PIPELINE_AS_CODE_SETTINGS,
                 FAIL_IF_VARIABLE_INVALID,
@@ -212,6 +221,8 @@ class PipelineSettingDao {
                 setting.cleanVariablesWhenRetry,
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
+                JsonUtil.toJson(cancelSubscriptionList, false),
+                JsonUtil.toJson(publishSubscriptionList, false),
                 setting.version,
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
                 setting.failIfVariableInvalid,
@@ -501,6 +512,18 @@ class PipelineSettingDao {
                         list.map { s -> s.fixWeworkGroupType() }
                     } else null
                 } ?: oldFailSubscription?.let { listOf(it) }
+                val cancelSubscriptionList = t.cancelSubscription?.let {
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        list.map { s -> s.fixWeworkGroupType() }
+                    } else emptyList()
+                } ?: emptyList()
+                val publishSubscriptionList = t.publishSubscription?.let {
+                    val list = JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
+                    if (list.isNotEmpty()) {
+                        list.map { s -> s.fixWeworkGroupType() }
+                    } else emptyList()
+                } ?: emptyList()
                 PipelineSetting(
                     projectId = t.projectId,
                     pipelineId = t.pipelineId,
@@ -511,6 +534,8 @@ class PipelineSettingDao {
                     failSubscription = oldFailSubscription ?: Subscription(),
                     successSubscriptionList = successSubscriptionList,
                     failSubscriptionList = failSubscriptionList,
+                    cancelSubscriptionList = cancelSubscriptionList,
+                    publishSubscriptionList = publishSubscriptionList,
                     labels = emptyList(), // 标签不在本表保存，在写入和查询时需要通过 PipelineGroupService.kt
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond?.toInt() ?: 600000),
                     maxQueueSize = t.maxQueueSize,

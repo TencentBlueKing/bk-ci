@@ -72,6 +72,10 @@ data class PipelineSetting(
     var successSubscriptionList: List<Subscription>? = null,
     @get:Schema(title = "订阅失败通知组", required = false)
     var failSubscriptionList: List<Subscription>? = null,
+    @get:Schema(title = "订阅取消通知组", required = false)
+    var cancelSubscriptionList: List<Subscription>? = null,
+    @get:Schema(title = "订阅发布新版本通知组", required = false)
+    var publishSubscriptionList: List<Subscription>? = null,
 
     // 运行控制、流水线禁用相关配置
     @get:Schema(title = "Lock 类型", required = false)
@@ -145,6 +149,8 @@ data class PipelineSetting(
                 failSubscription = null,
                 successSubscriptionList = emptyList(),
                 failSubscriptionList = failSubscription?.let { listOf(it) },
+                cancelSubscriptionList = emptyList(),
+                publishSubscriptionList = emptyList(),
                 pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
                     inheritedDialect = inheritedDialectSetting,
                     pipelineDialect = pipelineDialectSetting
@@ -166,6 +172,16 @@ data class PipelineSetting(
         }
         if (!this.failSubscriptionList.isNullOrEmpty() &&
             this.failSubscriptionList!!.any { it.types.isNotEmpty() }
+        ) {
+            res = false
+        }
+        if (!this.cancelSubscriptionList.isNullOrEmpty() &&
+            this.cancelSubscriptionList!!.any { it.types.isNotEmpty() }
+        ) {
+            res = false
+        }
+        if (!this.publishSubscriptionList.isNullOrEmpty() &&
+            this.publishSubscriptionList!!.any { it.types.isNotEmpty() }
         ) {
             res = false
         }
@@ -200,6 +216,8 @@ data class PipelineSetting(
         successSubscriptionList = other.successSubscriptionList
         failSubscription = other.failSubscription
         failSubscriptionList = other.failSubscriptionList
+        cancelSubscriptionList = other.cancelSubscriptionList
+        publishSubscriptionList = other.publishSubscriptionList
     }
 
     fun copyConcurrencyGroup(other: PipelineSetting) {

@@ -27,19 +27,28 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.constant.NUM_ZERO
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
@@ -50,9 +59,16 @@ import com.tencent.devops.common.pipeline.enums.PublicVarGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_NOT_PAC
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -61,6 +77,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryVersionServic
 import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.PipelineYamlBuildVersion
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -85,12 +102,17 @@ import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.pac.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import org.slf4j.MDC
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -110,13 +132,30 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineVersionManager: PipelineVersionManager,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val clientTokenService: ClientTokenService,
+    @Qualifier("publishNotifyExecutor")
+    private val publishNotifyExecutor: ThreadPoolTaskExecutor,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
+        /** 版本发布通知去重键前缀 */
+        private const val PUBLISH_NOTIFY_KEY_PREFIX = "pipeline:publish:notify:"
+
+        /** 通知去重键保留 24 小时，覆盖消息重投窗口 */
+        @Suppress("MagicNumber")
+        private const val PUBLISH_NOTIFY_TTL_SECONDS = 86400L
+
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
+        private const val CREATIVE_STREAM_PREFIX = "creative-stream"
+        private const val PIPELINE_OWNER_VAR = "ci.pipeline_owner"
+        private val USER_SEPARATOR_REGEX = "[,;]".toRegex()
         fun getReleaseBranchName(pipelineId: String, version: Int): String =
             "$PAC_BRANCH_PREFIX$pipelineId-$version"
+        private val logger = LoggerFactory.getLogger(PipelineVersionFacadeService::class.java)
     }
 
     /**
@@ -125,6 +164,18 @@ class PipelineVersionFacadeService @Autowired constructor(
      */
     @Value("\${pipeline.draft.max_reminder_days:7}")
     private val maxReminderDays: Long = 7L
+
+    /**
+     * 通知邮件模板顶部 logo 图标地址，未配置时为空
+     */
+    @Value("\${bkci.logo.iconUrl:}")
+    private val logoIconUrl: String = ""
+
+    /**
+     * 通知邮件模板顶部 logo 文字图片地址，未配置时为空
+     */
+    @Value("\${bkci.logo.textUrl:}")
+    private val logoTextUrl: String = ""
 
     fun getPipelineDetailIncludeDraft(
         userId: String,
@@ -337,13 +388,314 @@ class PipelineVersionFacadeService @Autowired constructor(
         version: Int,
         request: PipelineVersionReleaseRequest
     ): DeployPipelineResult {
-        return pipelineVersionManager.deployPipeline(
+        val result = pipelineVersionManager.deployPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
             request = request
         )
+        // 仅当本次发布版本配置了发布通知订阅时才提交通知
+        if (result.publishSubscriptionConfigured == true) {
+            sendPublishVersionNotify(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                result = result,
+                description = request.description
+            )
+        }
+        return result
+    }
+
+    /**
+     * 发送版本发布通知。
+     *
+     * 供草稿发布（[releaseDraftVersion]）与 PAC 默认分支保存（`PipelineYamlResourceService`）共用。
+     * 提交后立即返回，发送动作在独立线程池中异步执行；发送异常与线程池拒绝提交只记日志，不影响发布结果。
+     *
+     * @param result 发布结果，取其 pipelineName 与 version 定位发布版本的设置快照
+     * @param description 版本描述，作为通知中的 `ci.pipeline_desc`
+     */
+    fun sendPublishVersionNotify(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        result: DeployPipelineResult,
+        description: String?
+    ) {
+        // 同一版本只通知一次，避免消息重投重复发送；去重判断异常时放行，不影响发布主流程
+        val notifyKey = "$PUBLISH_NOTIFY_KEY_PREFIX$projectId:$pipelineId:${result.version}"
+        val firstNotify = try {
+            redisOperation.setIfAbsent(notifyKey, "1", PUBLISH_NOTIFY_TTL_SECONDS)
+        } catch (ignored: Throwable) {
+            logger.warn("check publish notify duplicated failed|$projectId|$pipelineId|${result.version}", ignored)
+            true
+        }
+        if (!firstNotify) {
+            logger.info("skip duplicated publish notify|$projectId|$pipelineId|${result.version}")
+            return
+        }
+        // 通知为旁路动作，提交到独立线程池执行，避免阻塞发布接口与 PAC 的构建触发
+        val channelCode = ChannelContext.getChannel()
+        val traceId = MDC.get(TraceTag.BIZID)
+        try {
+            publishNotifyExecutor.execute {
+                try {
+                    ChannelContext.withChannel(channelCode) {
+                        if (traceId != null) MDC.put(TraceTag.BIZID, traceId)
+                        doSendPublishVersionNotify(userId, projectId, pipelineId, result, description)
+                    }
+                } catch (ignored: Throwable) {
+                    logger.warn(
+                        "send publish version notify failed|$projectId|$pipelineId|${result.version}",
+                        ignored
+                    )
+                } finally {
+                    MDC.remove(TraceTag.BIZID)
+                }
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("submit publish version notify failed|$projectId|$pipelineId|${result.version}", ignored)
+        }
+    }
+
+    private fun doSendPublishVersionNotify(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        result: DeployPipelineResult,
+        description: String?
+    ) {
+        try {
+            // 按本次发布版本的设置版本读取订阅；版本无设置版本时（历史数据）回退当前正式设置
+            val settingVersion = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = result.version
+            )?.settingVersion ?: 0
+            val setting = pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = settingVersion
+            )
+            val publishList = setting.publishSubscriptionList.orEmpty()
+            if (publishList.isEmpty()) return
+            // 创作流的通知链接与模板与流水线控制台不同，按渠道区分
+            val channelCode = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
+            // 项目名查询失败只影响模板中的项目名展示，降级为项目 ID，不放弃本轮其它通知
+            val projectName = try {
+                client.get(ServiceProjectResource::class).get(projectId).data?.projectName ?: projectId
+            } catch (e: Throwable) {
+                logger.warn("query project name failed|$projectId", e)
+                projectId
+            }
+            // ci.pipeline_owner：流水线资源级拥有者组（多个拥有者以逗号连接，parseReceiver 会展开为多个接收人）
+            // 仅在订阅引用该变量时查询，未引用时为空列表
+            val pipelineOwners = if (publishList.any { it.requiresPipelineOwners() }) {
+                queryPipelineOwners(projectId, pipelineId)
+            } else {
+                emptyList()
+            }
+            val detailUrl = if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                "${HomeHostUtil.outerServerHost()}/console/$CREATIVE_STREAM_PREFIX/$projectId/flow/$pipelineId" +
+                    "/detail/${result.version}"
+            } else {
+                "${HomeHostUtil.outerServerHost()}/console/pipeline/$projectId/$pipelineId" +
+                    "/history/pipeline/${result.version}"
+            }
+            val params = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to result.pipelineName,
+                "versionName" to (result.versionName ?: result.version.toString()),
+                "version" to result.version.toString(),
+                "username" to userId,
+                "description" to (description ?: ""),
+                "logoIconUrl" to logoIconUrl,
+                "logoTextUrl" to logoTextUrl,
+                "detailUrl" to detailUrl,
+                "ci.project_name" to projectName,
+                "ci.pipeline_name" to result.pipelineName,
+                "ci.pipeline_version" to (result.versionName ?: result.version.toString()),
+                "ci.pipeline_modifier" to userId,
+                // 发布通知沿用既有默认接收人 ${{ci.actor}} 时也能取到值
+                "ci.actor" to userId,
+                "ci.pipeline_desc" to (description ?: ""),
+                PIPELINE_OWNER_VAR to pipelineOwners.joinToString(",")
+            ).toMutableMap()
+            // 角色组与订阅内容无关，只查一次，避免按订阅数重复请求
+            val roleUsersMap = if (publishList.any { it.groups.isNotEmpty() }) {
+                authProjectApi.getProjectGroupAndUserList(
+                    serviceCode = pipelineAuthServiceCode,
+                    projectCode = projectId
+                ).associate { it.roleName to it.userIdList }
+            } else {
+                emptyMap()
+            }
+            publishList.forEach { subscription ->
+                try {
+                    // 接收人
+                    val receivers = parseReceiver(subscription.users, params)
+                    subscription.groups.forEach { groupName ->
+                        receivers.addAll(roleUsersMap[groupName].orEmpty())
+                    }
+                    // 企微群 key 解析后放入 bodyParams（对齐 WEWORK_GROUP_KEY）
+                    val group = EnvUtils.parseEnv(subscription.wechatGroup, params, true)
+                    params[NotifyUtils.WEWORK_GROUP_KEY] = group
+                    // 订阅自定义通知内容解析后放入 bodyParams，供模板 ${publishContent}/${emailPublishContent} 使用
+                    val publishContent = EnvUtils.parseEnv(subscription.content, params, true)
+                    params["publishContent"] = publishContent
+                    params["emailPublishContent"] = publishContent
+                    // 创作流默认使用 markdown，与构建通知的渠道约定一致
+                    val notifyMarkdown = channelCode == ChannelCode.CREATIVE_STREAM
+                    val notifyType = subscription.types.filter {
+                        it != PipelineSubscriptionType.WEWORK_GROUP
+                    }.map { it.name }.toMutableSet()
+                    val templateCode = if (subscription.detailFlag) {
+                        PipelineNotifyTemplateEnum.PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE_DETAIL.templateCode
+                    } else {
+                        PipelineNotifyTemplateEnum.PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE.templateCode
+                    }
+                    if (notifyType.isNotEmpty() && receivers.isEmpty()) {
+                        logger.warn(
+                            "publish notify skipped, empty receivers|$projectId|$pipelineId|${result.version}" +
+                                "|notifyType=${notifyType.joinToString(",")}"
+                        )
+                    }
+                    // 仅勾选企微群时 notifyType 为空集合，且无接收人时主渠道发送无意义，均跳过（企微群走下方单独发送）
+                    if (notifyType.isNotEmpty() && receivers.isNotEmpty()) {
+                        val sendResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                            .sendNotifyMessageByTemplate(
+                                SendNotifyMessageTemplateRequest(
+                                    templateCode = templateCode,
+                                    receivers = receivers,
+                                    notifyType = notifyType,
+                                    titleParams = params,
+                                    bodyParams = params,
+                                    markdownContent = notifyMarkdown
+                                )
+                            )
+                        logSendResult(
+                            sendResult = sendResult,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = result.version,
+                            templateCode = templateCode,
+                            receiverCount = receivers.size
+                        )
+                    }
+                    // 企业微信群单独发送
+                    if (subscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP) && group.isNotBlank()) {
+                        val sendResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                            .sendNotifyMessageByTemplate(
+                                SendNotifyMessageTemplateRequest(
+                                    templateCode = templateCode,
+                                    receivers = receivers,
+                                    notifyType = mutableSetOf(PipelineSubscriptionType.WEWORK_GROUP.name),
+                                    titleParams = params,
+                                    bodyParams = params,
+                                    markdownContent = notifyMarkdown || subscription.wechatGroupMarkdownFlag
+                                )
+                            )
+                        logSendResult(
+                            sendResult = sendResult,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = result.version,
+                            templateCode = templateCode,
+                            receiverCount = receivers.size
+                        )
+                    }
+                } catch (e: Throwable) {
+                    logger.warn(
+                        "send publish version subscription failed|$projectId|$pipelineId|${result.version}",
+                        e
+                    )
+                }
+            }
+        } catch (ignored: Throwable) {
+            logger.warn(
+                "send publish version notify failed|$projectId|$pipelineId|${result.version}",
+                ignored
+            )
+        }
+    }
+
+    /**
+     * 查询流水线的资源级拥有者组。
+     *
+     * 资源类型按请求渠道确定，与发布权限校验同源；查询失败返回空列表，只影响依赖 owner 的订阅。
+     */
+    private fun queryPipelineOwners(projectId: String, pipelineId: String): List<String> {
+        return try {
+            client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = clientTokenService.getSystemToken(),
+                projectCode = projectId,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(
+                    AuthResourceType.PIPELINE_DEFAULT
+                ).value,
+                resourceCode = pipelineId,
+                group = BkAuthGroup.RESOURCE_MANAGER
+            ).data.orEmpty()
+        } catch (e: Throwable) {
+            logger.warn("query pipeline owners failed|$projectId|$pipelineId", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * 订阅是否引用了 ci.pipeline_owner。
+     *
+     * 接收人、企业微信群、通知内容这三个字段会经 EnvUtils.parseEnv 展开，是 owner 变量的消费入口。
+     */
+    private fun Subscription.requiresPipelineOwners(): Boolean {
+        return users.contains(PIPELINE_OWNER_VAR) ||
+            wechatGroup.contains(PIPELINE_OWNER_VAR) ||
+            content.contains(PIPELINE_OWNER_VAR)
+    }
+
+    /**
+     * 记录发布通知的发送结果。发送失败只影响本条通知，不影响发布结果。
+     *
+     * @param sendResult 通知服务返回结果，失败时记录 message
+     * @param receiverCount 接收人数量，避免日志输出全量用户 ID
+     */
+    private fun logSendResult(
+        sendResult: Result<Boolean>,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        templateCode: String,
+        receiverCount: Int
+    ) {
+        if (sendResult.isNotOk()) {
+            logger.warn(
+                "send publish version notify failed|$projectId|$pipelineId|$version|" +
+                    "templateCode=$templateCode|receiverCount=$receiverCount|${sendResult.message}"
+            )
+        } else {
+            logger.info(
+                "send publish version notify|$projectId|$pipelineId|$version|" +
+                    "templateCode=$templateCode|receiverCount=$receiverCount"
+            )
+        }
+    }
+
+    private fun parseReceiver(receiversStr: String?, variables: Map<String, String>): MutableSet<String> {
+        val receivers = mutableSetOf<String>()
+        if (!receiversStr.isNullOrBlank()) {
+            receiversStr.split(USER_SEPARATOR_REGEX).forEach {
+                val userId = EnvUtils.parseEnv(command = it, data = variables, replaceWithEmpty = true)
+                if (userId.contains(USER_SEPARATOR_REGEX)) {
+                    receivers.addAll(userId.split(USER_SEPARATOR_REGEX))
+                } else {
+                    receivers.add(userId)
+                }
+            }
+        }
+        return receivers.filter { it.isNotBlank() }.toMutableSet()
     }
 
     private fun getVersionStatusAndName(

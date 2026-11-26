@@ -79,7 +79,7 @@ open class BaseBuildRecordService(
     private val buildRecordModelDao: BuildRecordModelDao,
     val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val redisOperation: RedisOperation,
+    protected val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResourceDao: PipelineResourceDao,

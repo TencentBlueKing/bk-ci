@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.trigger.pac.common.YamlFileUtils
@@ -52,6 +53,7 @@ class PipelineYamlResourceService @Autowired constructor(
     @Lazy private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionManager: PipelineVersionManager,
+    @Lazy private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService
 ) : IPipelineYamlResourceService {
     override fun createYamlPipeline(
@@ -73,11 +75,22 @@ class PipelineYamlResourceService @Autowired constructor(
                 pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl
             )
-            return pipelineVersionManager.deployPipeline(
+            val result = pipelineVersionManager.deployPipeline(
                 userId = userId,
                 projectId = projectId,
                 request = pipelineYamlWebhookReq
             )
+            // PAC 流水线保存即发布，仅默认分支且本版本配置了发布通知订阅时才发送
+            if (isDefaultBranch && result.publishSubscriptionConfigured == true) {
+                pipelineVersionFacadeService.sendPublishVersionNotify(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = result.pipelineId,
+                    result = result,
+                    description = commit!!.commitMsg
+                )
+            }
+            return result
         }
     }
 
@@ -101,12 +114,23 @@ class PipelineYamlResourceService @Autowired constructor(
                 pullRequestId = pullRequestId,
                 pullRequestUrl = pullRequestUrl
             )
-            return pipelineVersionManager.deployPipeline(
+            val result = pipelineVersionManager.deployPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 request = pipelineYamlWebhookReq
             )
+            // PAC 流水线保存即发布，仅默认分支且本版本配置了发布通知订阅时才发送
+            if (isDefaultBranch && result.publishSubscriptionConfigured == true) {
+                pipelineVersionFacadeService.sendPublishVersionNotify(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    result = result,
+                    description = commit!!.commitMsg
+                )
+            }
+            return result
         }
     }
 

@@ -1107,3 +1107,139 @@
     sender: "DevOps"
   creator: "system"
   modifior: "system"
+- index: 53
+  id: "47bba7333e0847abad142ba8aa4aa99a"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
+  templateName: "Cancel notification template code"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "47bba7333e0847abad142ba8aa4aa99a"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            BlueKing pipeline【${pipelineName}】#${buildNum} build canceled</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        Push from BlueKing DevOps platform</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            pipeline：${pipelineName}-${projectName}<br><br>buildNum：#${buildNum}<br><br>startTime：${startTime}<br><br>duration：${duration}<br><br>trigger：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">View details</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        If you have any questions, please feel free to contact the administrator at any time。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            You received this email because you are following the ${projectName} project or someone @mentioned you</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "47bba7333e0847abad142ba8aa4aa99a"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "${cancelContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "Build Canceled"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "47bba7333e0847abad142ba8aa4aa99a"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "${cancelContent}"
+  creator: "system"
+  modifior: "system"
+- index: 54
+  id: "5fd66892f3b44ad5a7125a9563f54464"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "Canceled execution of details notification template code"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "5fd66892f3b44ad5a7125a9563f54464"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            pipeline【${pipelineName}】#${buildNum} build canceled</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        Push from the BlueKing DevOps platform</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            pipeline：${pipelineName}-${projectName}<br><br>buildNum：#${buildNum}<br><br>Start time：${startTime}<br><br>duration：${duration}<br><br>trigger：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">See details</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        If you have any questions, you can always contact the administrator。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            You received this email because you followed the ${projectName} project or someone else @ you</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "5fd66892f3b44ad5a7125a9563f54464"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "${cancelContent}\n\nView details: ${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "Build Canceled"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "5fd66892f3b44ad5a7125a9563f54464"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】#${buildNum} build canceled"
+    body: "${cancelContent}\n\n[View details](${detailUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 55
+  id: "59d144851c184fe7abfb90aee28cebc8"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE"
+  templateName: "Publish version notification template code"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "121cd90105164baab6cc0988add2630c"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">BlueKing pipeline【${pipelineName}】released new version ${versionName}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        Push from BlueKing DevOps platform</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">project：${projectName}<br><br>pipeline：${pipelineName}<br><br>version：${versionName}<br><br>publisher：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">View details</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        If you have any questions, please feel free to contact the administrator at any time。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            You received this email because you are following the ${projectName} project or someone @mentioned you</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "ba54c4d69ceb43199b23839a4faf18e9"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "${publishContent}"
+  voiceTemplate:
+    id: "2dd4331abe954e60924af8a3f59ccd2f"
+    taskName: "Publish version"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "a04d3be59d9d4a5dbb5d6c5bf6baa2e3"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "${publishContent}"
+  creator: "system"
+  modifior: "system"
+- index: 56
+  id: "9a0aae2fa90c44dc9d87bf79d83b914d"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "Publish version detail notification template code"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "6d0fa1b6d2a7450b9ae2397d35c8d865"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">BlueKing pipeline【${pipelineName}】released new version ${versionName}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        Push from BlueKing DevOps platform</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">project：${projectName}<br><br>pipeline：${pipelineName}<br><br>version：${versionName}<br><br>publisher：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">View details</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        If you have any questions, please feel free to contact the administrator at any time。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            You received this email because you are following the ${projectName} project or someone @mentioned you</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "1830a9ba1838455c8d68fd18818c92fb"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "${publishContent}\n\nView details:${detailUrl}"
+  voiceTemplate:
+    id: "70bb238ae8d548038fe95f1f489c2bba"
+    taskName: "Publish version"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "33316b1739ea4b6ea15b20767de26f3d"
+    sender: "DevOps"
+    title: "BlueKing pipeline【${pipelineName}】released new version ${versionName}"
+    body: "${publishContent}\n\n[View details](${detailUrl})"
+  creator: "system"
+  modifior: "system"

@@ -241,6 +241,9 @@ class PipelineSettingVersionService @Autowired constructor(
         settingInfo.successSubscriptionList =
             settingVersion.successSubscriptionList ?: settingInfo.successSubscriptionList
         settingInfo.failSubscriptionList = settingVersion.failSubscriptionList ?: settingInfo.failSubscriptionList
+        settingInfo.cancelSubscriptionList = settingVersion.cancelSubscriptionList ?: settingInfo.cancelSubscriptionList
+        settingInfo.publishSubscriptionList = settingVersion.publishSubscriptionList
+            ?: settingInfo.publishSubscriptionList
         settingInfo.pipelineName = settingVersion.pipelineName ?: settingInfo.pipelineName
         settingInfo.labels = settingVersion.labels ?: labels
         settingInfo.desc = settingVersion.desc ?: settingInfo.desc

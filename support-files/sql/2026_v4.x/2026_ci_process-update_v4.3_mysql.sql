@@ -118,6 +118,60 @@ BEGIN
             COMMENT '回调来源,MODEL-编排,API-接口';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'CANCEL_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING
+            ADD COLUMN `CANCEL_SUBSCRIPTION` text COMMENT '取消订阅设置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'PUBLISH_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING
+            ADD COLUMN `PUBLISH_SUBSCRIPTION` text COMMENT '发布新版本订阅设置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'CANCEL_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `CANCEL_SUBSCRIPTION` text COMMENT '取消订阅设置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'PUBLISH_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `PUBLISH_SUBSCRIPTION` text COMMENT '发布新版本订阅设置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_DRAFT_VERSION'
+                    AND COLUMN_NAME = 'CANCEL_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING_DRAFT_VERSION
+            ADD COLUMN `CANCEL_SUBSCRIPTION` text COMMENT '取消订阅设置';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_DRAFT_VERSION'
+                    AND COLUMN_NAME = 'PUBLISH_SUBSCRIPTION') THEN
+        ALTER TABLE T_PIPELINE_SETTING_DRAFT_VERSION
+            ADD COLUMN `PUBLISH_SUBSCRIPTION` text COMMENT '发布新版本订阅设置';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

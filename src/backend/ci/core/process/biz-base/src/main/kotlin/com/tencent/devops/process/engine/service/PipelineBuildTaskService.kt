@@ -198,6 +198,13 @@ class PipelineBuildTaskService @Autowired constructor(
                 val parentBuildNum = pipelineRuntimeService.getBuildInfo(
                     buildTask.projectId, buildId
                 )?.buildNum
+                // 父构建自身的取消原因，供子构建的取消通知还原父流水线的取消动作
+                val parentCancelReasonCode = pipelineBuildRecordService.getBuildCancelReasonCode(
+                    projectId = buildTask.projectId,
+                    pipelineId = buildTask.pipelineId,
+                    buildId = buildId,
+                    executeCount = buildTask.executeCount ?: 1
+                )
                 pipelineRuntimeService.cancelBuild(
                     projectId = subBuildInfo.projectId,
                     pipelineId = subBuildInfo.pipelineId,
@@ -214,7 +221,8 @@ class PipelineBuildTaskService @Autowired constructor(
                             pipelineName = parentPipelineName,
                             buildId = buildId,
                             buildNum = parentBuildNum,
-                            operator = parentOperator
+                            operator = parentOperator,
+                            cancelReasonCode = parentCancelReasonCode
                         )
                     )
                 )

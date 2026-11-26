@@ -861,6 +861,11 @@ object ProcessMessageCode {
     const val BK_CONCURRENCY_QUEUE_SIZE_CANCEL_BY_BUILD = "bkConcurrencyQueueSizeCancelByBuild"
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
+    const val BK_CANCEL_REASON_MANUAL = "bkCancelReasonManual" // 取消通知原因：手动/API取消
+    const val BK_CANCEL_REASON_TIMEOUT = "bkCancelReasonTimeout" // 取消通知原因：超时取消
+    const val BK_CANCEL_REASON_PARENT_PIPELINE = "bkCancelReasonParentPipeline" // 取消通知原因：父流水线级联取消，{0}=父取消人，{1}=父取消动作文案
+    const val BK_CANCEL_ACTION_TIMEOUT = "bkCancelActionTimeout" // 取消通知父取消动作：超时
+    const val BK_CANCEL_ACTION_MANUAL = "bkCancelActionManual" // 取消通知父取消动作：手动/API
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"

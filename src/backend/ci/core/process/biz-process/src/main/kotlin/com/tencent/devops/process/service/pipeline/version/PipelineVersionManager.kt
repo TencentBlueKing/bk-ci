@@ -56,7 +56,11 @@ class PipelineVersionManager @Autowired constructor(
             request = request
         )
         versionValidator.validate(context = context)
-        return getHandler(context).handle(context = context)
+        // 本次部署版本的设置已在上下文中，据此标记是否配置了发布通知订阅，供调用方决定是否发送发布通知
+        return getHandler(context).handle(context = context).copy(
+            publishSubscriptionConfigured = context.pipelineSettingWithoutVersion
+                .publishSubscriptionList.orEmpty().isNotEmpty()
+        )
     }
 
     private fun getHandler(context: PipelineVersionCreateContext): PipelineVersionCreateHandler {
