@@ -166,16 +166,18 @@
   import http from '@/http/api';
   import { h, ref, computed, watch, onMounted, resolveDirective, withDirectives } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { Message } from 'bkui-vue'
+  import { Message, InfoBox } from 'bkui-vue'
   import { Spinner, Copy  } from 'bkui-vue/lib/icon';
-  import { useRoute } from 'vue-router';
+  import { useRoute, useRouter } from 'vue-router';
   import abnormalIcon from '@/css/svg/abnormal.svg'
   import unknownIcon from '@/css/svg/unknown.svg'
   import normalIcon from '@/css/svg/normal.svg'
+  import warningIcon from '@/css/svg/warning.svg'
   import HandoverDetail from './handover-detail.vue'
   const bkTooltips = resolveDirective('bk-tooltips');
   const { t } = useI18n();
   const route = useRoute();
+  const router = useRouter();
   const refTable = ref(null);
   const isLoading = ref(false);
   const isFetchLoading = ref(false);
@@ -242,6 +244,13 @@
         label: t('移交详情'),
         field: 'title',
         showOverflowTooltip: true,
+        render ({ cell, row }) {
+          // 管理员申请单：与单头同一句（无句号），确认人视角显示「你」
+          if (row.applicationType === 'MANAGER_APPLY') {
+            return h('span', t('项目管理员X申请将授权人改为X共X项', [row.applicant, getGranteeText(row), row.authorizationCount]));
+          }
+          return h('span', cell)
+        }
       },
       ...(
         !isGiven.value ? [
@@ -267,6 +276,35 @@
         ] : []
       ),
       {
+        label: t('复制审批链接'),
+        field: 'approvalUrl',
+        showOverflowTooltip: true,
+        render ({ cell }) {
+          if (!cell) return h('span', '--')
+          return h('div', {
+            style: { 'display': 'flex', 'align-items': 'center' }
+          }, [
+            withDirectives(h('span', {
+              style: {
+                'overflow': 'hidden',
+                'text-overflow': 'ellipsis',
+                'white-space': 'nowrap'
+              }
+            }, cell), [[bkTooltips, { content: cell, disabled: false }]]),
+            h(Copy, {
+              style: {
+                'margin-left': '5px',
+                'flex': '0 0 auto',
+                'cursor': 'pointer'
+              },
+              onClick () {
+                copyText(cell)
+              }
+            })
+          ])
+        }
+      },
+      {
         label: t('状态'),
         field: 'handoverStatus',
         showOverflowTooltip: true,
@@ -290,28 +328,38 @@
           )
         }
       },
-      ...(
-        !isGiven.value ? [
-          {
-            label: t('操作'),
-            field: 'operation',
-            showOverflowTooltip: true,
-            render ({ cell, row }) {
-              return h('div', {
-                style: {
-                  'color': row.handoverStatus !== 'PENDING' ? '#C4C6CC' : '#3A84FF',
-                  'cursor': row.handoverStatus !== 'PENDING' ? 'not-allowed' : 'pointer'
-                },
-                onClick () {
-                  if (row.handoverStatus !== 'PENDING') return
-                  curHandoverInfo.value = row
-                  showHandoverDetail.value = true;
-                }
-              }, t('去处理'))
+      
+      {
+        label: t('操作'),
+        field: 'operation',
+        showOverflowTooltip: true,
+        render ({ cell, row }) {
+          // 移交给我的：去处理；我移交的：撤回（仅待处理状态显示）
+          if (!isGiven.value) {
+            return h('div', {
+              style: {
+                'color': row.handoverStatus !== 'PENDING' ? '#C4C6CC' : '#3A84FF',
+                'cursor': row.handoverStatus !== 'PENDING' ? 'not-allowed' : 'pointer'
+              },
+              onClick () {
+                if (row.handoverStatus !== 'PENDING') return
+                curHandoverInfo.value = row
+                showHandoverDetail.value = true;
+              }
+            }, t('去处理'))
+          }
+          if (row.handoverStatus !== 'PENDING') return h('div', '')
+          return h('div', {
+            style: {
+              'color': '#3A84FF',
+              'cursor': 'pointer'
+            },
+            onClick () {
+              handleRevoke(row)
             }
-          },
-        ] : []
-      )
+          }, t('撤回'))
+        }
+      }
     ]
   })
   const isEmpty = computed(() => !searchValue.value.length);
@@ -353,6 +401,8 @@
         children: [
           { name: t('已通过'), id: 'SUCCEED' },
           { name: t('已拒绝'), id: 'REJECT' },
+          { name: t('部分通过'), id: 'PARTIAL_SUCCEED' },
+          { name: t('未通过'), id: 'FAILED' },
           { name: t('待处理'), id: 'PENDING' },
           { name: t('已撤销'), id: 'REVOKE' },
         ]
@@ -381,6 +431,13 @@
   const disabledRowSelect = ({ row, index, isCheckAll }) => {
     return row.handoverStatus === 'PENDING'
   }
+  /**
+   * 单头受让人文案：确认人视角显示「你」，申请人视角显示目标用户姓名；英文名前后留空格
+   */
+  const getGranteeText = (row) => {
+    const name = isGiven.value ? row.approver : t('你');
+    return /^[a-zA-Z0-9]/.test(name || '') ? ` ${name} ` : name;
+  }
   const getStatusMap = (status) => {
     const statusMap = {
       'REJECT': {
@@ -394,6 +451,14 @@
       'REVOKE': {
         icon: unknownIcon,
         text: t('已撤销')
+      },
+      'PARTIAL_SUCCEED': {
+        icon: warningIcon,
+        text: t('部分通过')
+      },
+      'FAILED': {
+        icon: abnormalIcon,
+        text: t('未通过')
       }
     }
     return statusMap[status]
@@ -423,6 +488,10 @@
   }
   const handleChangeHandoverType = (value) => {
     isGiven.value = value;
+    if (route.query.type || route.query.flowNo) {
+      const { type, flowNo, ...restQuery } = route.query;
+      router.replace({ query: restQuery });
+    }
   }
   const handleBatchProcess = () => {
     if (!selectList.value.length) {
@@ -471,13 +540,51 @@
     batchApprovalData.value.remark = '';
     batchApprovalData.value.handoverAction = 'AGREE';
   }
+  /**
+   * 撤回我移交的申请（仅待处理状态）
+   */
+  const handleRevoke = (row) => {
+    InfoBox({
+      type: 'warning',
+      title: t('确定撤回此申请吗？'),
+      content: t('撤回后授权人不变，对方无需再处理。'),
+      confirmText: t('撤回'),
+      cancelText: t('取消'),
+      onConfirm: async () => {
+        try {
+          await http.handleHanoverApplication({
+            projectCode: row.projectCode,
+            flowNo: row.flowNo,
+            operator: userId.value,
+            handoverAction: 'REVOKE',
+          })
+          Message({
+            theme: 'success',
+            message: t('已撤回申请')
+          })
+          fetchHandoverList();
+        } catch (e) {
+          // 单据已被处理/已结束/已被撤回等竞态场景，静默刷新展示最新状态
+          if ([2121101, 2121102, 2121092].includes(e?.code)) {
+            fetchHandoverList();
+          } else {
+            Message({
+              theme: 'error',
+              message: e.message || e
+            })
+          }
+        }
+      },
+    })
+  }
   const handleSelectAll = () => {
+    // 点击表头全选框，退出全量选择模式
+    isSelectAll.value = false;
     selectList.value = refTable.value.getSelection();
   }
   const handleSelectAllData = () => {
-    if (!isSelectAll.value && selectList.value.length !== handoverList.value.filter(i => i.handoverStatus === 'PENDING').length) {
-      refTable.value.toggleAllSelection();
-    }
+    // 显式传 true 强制全选，避免无参 toggle 依赖 isCheckedAll（禁选行会被视为已勾选）导致反向清空
+    refTable.value.toggleAllSelection(true);
     isSelectAll.value = true;
   }
   const handleClear = () => {
@@ -508,23 +615,30 @@
   const clearSearchValue = () => {
     searchValue.value = [];
   }
-  const handleCopyFlowNo = (value) => {
+  const copyText = (value) => {
     const textarea = document.createElement('textarea')
-      document.body.appendChild(textarea)
-      textarea.value = curHandoverInfo.value.flowNo
-      textarea.select()
-      if (document.execCommand('copy')) {
-        document.execCommand('copy')
-        Message({
-          theme: 'success',
-          message: t('复制成功')
-        })
-      }
-      document.body.removeChild(textarea)
+    document.body.appendChild(textarea)
+    textarea.value = value
+    textarea.select()
+    if (document.execCommand('copy')) {
+      document.execCommand('copy')
+      Message({
+        theme: 'success',
+        message: t('复制成功')
+      })
+    }
+    document.body.removeChild(textarea)
   }
-  const handleApprovalSuccess = () => {
-    showHandoverDetail.value = false
-    fetchHandoverList();
+  const handleCopyFlowNo = () => {
+    copyText(curHandoverInfo.value.flowNo)
+  }
+  const handleApprovalSuccess = async (keepOpen = false) => {
+    if (!keepOpen) showHandoverDetail.value = false
+    await fetchHandoverList();
+    // 按条提交后单据保持打开，用最新行数据替换当前单据
+    if (keepOpen && curHandoverInfo.value?.flowNo) {
+      curHandoverInfo.value = handoverList.value.find(i => i.flowNo === curHandoverInfo.value.flowNo) || curHandoverInfo.value;
+    }
   }
   const init = () => {
     pagination.value.current = 1;
@@ -533,26 +647,73 @@
     isSelectAll.value = false;
     fetchHandoverList();
   }
+  /**
+   * 判断当前用户在该交接单中的真实身份。
+   */
+  const resolveHandoverIdentity = async (flowNo) => {
+    // 接口失败重试一次
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await http.fetchHandoverOverviewList({
+          memberId: userId.value,
+          flowNo,
+          page: 1,
+          pageSize: 1
+        });
+        const record = (res.records || []).find(i => i.flowNo === flowNo);
+        // 查不到：当前用户不是该单据的申请人或确认人（或单据不存在），无需重试
+        if (!record) return { notFound: true };
+        // applicant 与 approver 相同（本人交接）时两个页签等价，按「我移交的」处理
+        return { record, isApplicant: record.applicant === userId.value };
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    // 查询失败：无法判断身份，走 type 兜底
+    return null;
+  }
   onMounted(async () => {
     const { type, flowNo } = route.query;
 
+    // 1. type 只作为兜底默认值，不据此决定页签
     if (type) {
       isGiven.value = typeMapping[type] ?? isGiven.value;
     }
-    // isGiven参数获取之后调用接口
+    // 2. 带单号时，以当前用户在该单据中的真实身份覆盖，兼容已发出去的旧链接
+    let linkRecord = null;
+    let notFound = false;
+    if (flowNo) {
+      const identity = await resolveHandoverIdentity(flowNo);
+      if (identity?.record) {
+        isGiven.value = identity.isApplicant;
+        linkRecord = identity.record;
+      } else if (identity?.notFound) {
+        // 当前用户不是该单据的申请人或确认人，提示后停在默认页签
+        notFound = true;
+        Message({
+          theme: 'warning',
+          message: t('无权查看该交接单或单据不存在')
+        });
+      }
+    }
+    // 3. 身份确定后再拉列表（fetchHandoverList 按页签拼 applicant/approver 过滤条件）
     await fetchHandoverList();
 
-    if (type && flowNo) {
-      searchValue.value = [
-        {
-          name: t('单号'),
-          id: 'flowNo',
-          values: [{ id: flowNo, name: flowNo }]
-        }
-      ];
-      queryFlowNo.value = flowNo;
-      curHandoverInfo.value = handoverList.value.find(i => i.flowNo === queryFlowNo.value);
-      showHandoverDetail.value = true;
+    // 4. 定位到该单据并展开详情（不要求 query 带 type；无权或查不到则不展开）
+    if (flowNo && !notFound) {
+      const record = handoverList.value.find(i => i.flowNo === flowNo) || linkRecord;
+      if (record) {
+        searchValue.value = [
+          {
+            name: t('单号'),
+            id: 'flowNo',
+            values: [{ id: flowNo, name: flowNo }]
+          }
+        ];
+        queryFlowNo.value = flowNo;
+        curHandoverInfo.value = record;
+        showHandoverDetail.value = true;
+      }
     }
   })
 </script>

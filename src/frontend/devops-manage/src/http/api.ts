@@ -303,6 +303,18 @@ export default {
   resetAuthorization (projectId: string, params: any) {
     return http.post(`${USER_PERFIX}/auth/authorization/${projectId}/resetResourceAuthorization`, params)
   },
+  /**
+   * 申请使用授权-预检（代码库、流水线、部署节点）
+   */
+  checkAuthorizationApplication (projectId: string, params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/${projectId}/checkAuthorizationApplication`, params)
+  },
+  /**
+   * 申请使用授权-提交（代码库、流水线、部署节点）
+   */
+  submitAuthorizationApplication (projectId: string, params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/${projectId}/submitAuthorizationApplication`, params)
+  },
 
   /**
    * 用户态-iam用户组_同步
