@@ -127,15 +127,22 @@ const actions = {
     requestNodeList ({ commit }, { projectId, params, tags, ipListSearch }) {
         const query = new URLSearchParams(params).toString()
         const body = ipListSearch ? { tags, ipListSearch } : { tags }
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, body).then(response => {
+        return request.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, body).then(response => {
             return response
         })
     },
     /**
      * 预览动态环境按标签匹配到的节点列表
      */
-    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags, createMode = false }) {
-        const query = new URLSearchParams({ projectId, page, pageSize, createMode }).toString()
+    previewTagEnvNodes ({ commit }, { projectId, page, pageSize, tags, createMode = false, nodeSource }) {
+        const query = new URLSearchParams({
+            projectId,
+            page,
+            pageSize,
+            createMode,
+            // nodeSource 仅创作流生效
+            ...(createMode && nodeSource ? { nodeSource } : {})
+        }).toString()
         return request.post(`${prefix}/user/environment/previewTagEnvNodes?${query}`, tags).then(response => {
             return response
         })
@@ -153,13 +160,32 @@ const actions = {
             return []
         }
     },
-    async requestGetCounts ({ commit }, projectId) {
+    /**
+     * 节点数量；payload 兼容旧的 projectId 字符串，或 { projectId, createMode }
+     */
+    async requestGetCounts ({ commit }, payload) {
+        const { projectId, createMode = false } = typeof payload === 'string' ? { projectId: payload } : (payload || {})
         try {
-            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodesCount`)
+            const query = createMode ? '?createMode=true' : ''
+            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodesCount${query}`)
             commit('setNodeCount', res || {})
             return res
         } catch (err) {
             console.error(err)
+        }
+    },
+    /**
+     * 创作流各节点来源（数字分身/云桌面）数量
+     */
+    async requestNodeSourceCounts ({ commit }, projectId) {
+        try {
+            const res = await request.get(`${prefix}/user/envnode/${projectId}/nodeSourceCounts`)
+            commit('setNodeSourceCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+            commit('setNodeSourceCount', {})
+            return {}
         }
     },
     createdNodeTag ({ commit }, { projectId, params }) {
