@@ -13,6 +13,12 @@
         >
         </empty-tips>
 
+        <empty-tips
+            v-else-if="detailLoadFailed"
+            :title="$t('details.loadDetailFailed')"
+            :btns="[{ theme: 'primary', text: $t('retry'), handler: loadPipelineExecDetail }]"
+        />
+
         <template v-else-if="execDetail">
             <div class="exec-detail-summary-header">
                 <span
@@ -197,6 +203,10 @@
                     :editing-element-pos="editingElementPos"
                     :properties="curProject.properties?.pluginDetailsDisplayOrder"
                     @close="hideSidePanel"
+                    @continue="handlePluginContinue"
+                    @review="handlePluginReview"
+                    :actions-enabled="isExecuteDetailPanel"
+                    :is-latest-build="effectiveIsLatestBuild"
                 />
             </template>
             <template v-else-if="showContainerPanel">
@@ -205,6 +215,9 @@
                     :pipeline="pipelineModel"
                     :editing-element-pos="editingElementPos"
                     @close="hideSidePanel"
+                    @continue="handlePluginContinue"
+                    :actions-enabled="isExecuteDetailPanel"
+                    :is-latest-build="effectiveIsLatestBuild"
                 />
             </template>
             <template v-else-if="showStagePanel">
@@ -217,7 +230,7 @@
             <template v-else-if="showStageReviewPanel.isShow">
                 <stage-review-panel
                     :stage="stage"
-                    @approve="requestPipelineExecDetail(routerParams)"
+                    @approve="loadPipelineExecDetail"
                 />
             </template>
         </template>
@@ -249,6 +262,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
+    import { FETCH_ERROR } from '@/store/constants'
     import { convertTime } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -281,11 +295,19 @@
             PendingManualItemsAlert
         },
         mixins: [pipelineOperateMixin],
+        provide () {
+            return { captureExecutionDetailContext: this.captureExecutionDetailContext }
+        },
 
         data () {
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                detailLoadFailed: false,
+                detailRequestId: 0,
+                pendingDetailKey: '',
+                pendingRealtimeDetail: null,
+                loadedDetailKey: '',
                 linkUrl: WEB_URL_PREFIX + location.pathname,
                 show: false,
                 summaryVisible: true,
@@ -329,7 +351,6 @@
             ...mapGetters('atom', {
                 execDetail: 'getExecDetail'
             }),
-            ...mapState(['fetchError']),
             execFormatStartTime () {
                 return convertTime(this.execDetail?.queueTime)
             },
@@ -348,9 +369,12 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
+                            isLatestBuild: this.effectiveIsLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
+                        },
+                        listeners: {
+                            'refresh-detail': this.loadPipelineExecDetail
                         }
                     },
                     {
@@ -469,8 +493,14 @@
                 }
                 return PANELS.executeDetail
             },
+            isExecuteDetailPanel () {
+                return this.curItemTab === PANELS.executeDetail
+            },
             curPanel () {
                 return this.panels.find(panel => panel.name === this.curItemTab)
+            },
+            detailRequestKey () {
+                return this.getDetailRequestKey(this.routerParams)
             },
             statusTagTheme () {
                 return mapThemeOfStatus(this.execDetail?.status)
@@ -480,6 +510,9 @@
             },
             isLatestBuild () {
                 return this.execDetail?.buildNum === this.execDetail?.latestBuildNum && this.execDetail?.curVersion === this.execDetail?.latestVersion
+            },
+            effectiveIsLatestBuild () {
+                return this.archiveFlag ? !this.archiveFlag : this.isLatestBuild
             },
             pipelineModel () {
                 return this.execDetail?.model || {}
@@ -523,24 +556,12 @@
 
         watch: {
             execDetail (val) {
-                this.isLoading = val === null
-
                 if (val) {
                     this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
                 }
             },
-            'routerParams.buildNo': {
-                handler (val, oldVal) {
-                    if (val !== oldVal) {
-                        this.requestPipelineExecDetail(this.routerParams)
-                    }
-                }
-            },
-            fetchError (error) {
-                this.isLoading = false
-                if (error.code === 403) {
-                    this.hasNoPermission = true
-                }
+            detailRequestKey () {
+                this.loadPipelineExecDetail()
             },
             '$route.params.type': {
                 handler (newVal) {
@@ -570,10 +591,10 @@
             }
         },
         mounted () {
-            this.requestPipelineExecDetail(this.routerParams)
-            webSocketMessage.installWsMessage(this.setPipelineDetail)
+            this.loadPipelineExecDetail()
+            webSocketMessage.installWsMessage((data) => this.handleRealtimeDetail(data))
             webSocketMessage.registeOnReconnect(() => {
-                this.requestPipelineExecDetail(this.routerParams)
+                this.loadPipelineExecDetail()
             })
             // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
             const {
@@ -582,20 +603,26 @@
                 containerGroupIndex,
                 containerIndex
             } = this.$route.query
-            if (stageIndex) {
+            const normalizedStageIndex = this.normalizeIndex(stageIndex)
+            const normalizedContainerIndex = this.normalizeIndex(containerIndex)
+            const normalizedElementIndex = this.normalizeIndex(elementIndex)
+            const normalizedGroupIndex = this.normalizeIndex(containerGroupIndex)
+            if (normalizedStageIndex !== null) {
+                const editingElementPos = { stageIndex: normalizedStageIndex }
+                if (normalizedContainerIndex !== null) {
+                    editingElementPos.containerIndex = normalizedContainerIndex
+                    if (normalizedGroupIndex !== null) editingElementPos.containerGroupIndex = normalizedGroupIndex
+                    if (normalizedElementIndex !== null) editingElementPos.elementIndex = normalizedElementIndex
+                }
                 this.togglePropertyPanel({
                     isShow: true,
-                    editingElementPos: {
-                        containerGroupIndex,
-                        containerIndex,
-                        elementIndex,
-                        stageIndex
-                    }
+                    editingElementPos
                 })
             }
         },
 
         beforeDestroy () {
+            this.detailRequestId += 1
             this.setPipelineDetail(null)
             this.resetAtomModalMap()
             this.isLoading = false
@@ -603,11 +630,125 @@
         },
 
         methods: {
+            captureExecutionDetailContext () {
+                const key = this.getDetailRequestKey(this.routerParams)
+                const round = this.execDetail?.executeCount
+                const tab = this.curItemTab
+                const isCurrent = () => !this._isBeingDestroyed && !this._isDestroyed
+                    && key === this.getDetailRequestKey(this.routerParams)
+                    && round === this.execDetail?.executeCount
+                    && tab === this.curItemTab
+                return {
+                    isCurrent,
+                    refresh: () => isCurrent() ? this.loadPipelineExecDetail() : null
+                }
+            },
+            isNewerDetailSnapshot (candidate, baseline) {
+                if (!candidate) return false
+                if (!baseline) return true
+                const candidateRound = Number(candidate.executeCount)
+                const baselineRound = Number(baseline.executeCount)
+                if (candidateRound > 0 && baselineRound > 0 && candidateRound !== baselineRound) {
+                    return candidateRound > baselineRound
+                }
+                const candidateTime = Number(candidate.currentTimestamp)
+                const baselineTime = Number(baseline.currentTimestamp)
+                if (candidateTime === baselineTime) return Boolean(candidate.endTime && !baseline.endTime)
+                return Number.isFinite(candidateTime) && (!Number.isFinite(baselineTime) || candidateTime > baselineTime)
+            },
+            getDetailRequestKey (params) {
+                return [
+                    params.projectId,
+                    params.pipelineId,
+                    params.buildNo,
+                    params.executeCount,
+                    params.version,
+                    params.archiveFlag
+                ].map(value => value ?? '').join('|')
+            },
+            loadPipelineExecDetail () {
+                const params = { ...this.routerParams }
+                const requestId = ++this.detailRequestId
+                const requestKey = this.getDetailRequestKey(params)
+                const isCurrentRequest = () => (
+                    requestId === this.detailRequestId
+                    && !this._isBeingDestroyed
+                    && !this._isDestroyed
+                    && requestKey === this.getDetailRequestKey(this.routerParams)
+                )
+
+                const preserveDetail = Boolean(this.execDetail && this.loadedDetailKey === requestKey)
+                if (this.pendingDetailKey !== requestKey) this.pendingRealtimeDetail = null
+                this.pendingDetailKey = requestKey
+                this.hasNoPermission = false
+                this.detailLoadFailed = false
+                if (!preserveDetail) {
+                    this.loadedDetailKey = ''
+                    if (this.execDetail) this.setPipelineDetail(null)
+                    this.isLoading = true
+                }
+
+                return this.fetchPipelineExecDetail(params)
+                    .then(data => {
+                        if (!isCurrentRequest()) return null
+                        if (!data) throw new Error('Missing execution detail')
+                        const realtimeDetail = this.pendingRealtimeDetail
+                        const currentDetail = this.loadedDetailKey === requestKey ? this.execDetail : null
+                        const incoming = this.isNewerDetailSnapshot(realtimeDetail, data) ? realtimeDetail : data
+                        const newest = this.isNewerDetailSnapshot(currentDetail, incoming) ? currentDetail : incoming
+                        this.loadedDetailKey = requestKey
+                        if (newest !== currentDetail) this.setPipelineDetail(newest)
+                        this.isLoading = false
+                        return newest
+                    })
+                    .catch(error => {
+                        if (!isCurrentRequest()) return null
+                        this.isLoading = false
+                        const statuses = [error?.code, error?.status, error?.httpStatus, error?.response?.status].map(Number)
+                        if (statuses.includes(403)) {
+                            this.hasNoPermission = true
+                            this.loadedDetailKey = ''
+                            this.setPipelineDetail(null)
+                        } else if (statuses.includes(404)) {
+                            this.loadedDetailKey = ''
+                            if (this.execDetail) this.setPipelineDetail(null)
+                            this.$store.commit(FETCH_ERROR, { message: error?.message, code: 404 })
+                        } else if (!preserveDetail) {
+                            this.detailLoadFailed = true
+                        }
+                        return null
+                    })
+                    .finally(() => {
+                        if (!isCurrentRequest()) return
+                        this.pendingDetailKey = ''
+                        this.pendingRealtimeDetail = null
+                    })
+            },
+            handleRealtimeDetail (data) {
+                const params = this.routerParams
+                const { pipelineId, buildNo, executeCount, archiveFlag } = params
+                const round = Number(data?.executeCount)
+                if (this._isBeingDestroyed || this._isDestroyed || this.hasNoPermission
+                    || String(archiveFlag) === 'true'
+                    || data?.id !== buildNo || data?.pipelineId !== pipelineId
+                    || !Number.isSafeInteger(round) || round < 1
+                    || (executeCount && round !== Number(executeCount))) return
+
+                const key = this.getDetailRequestKey(params)
+                if (this.loadedDetailKey !== key || !this.execDetail) {
+                    // HTTP must authorize this build and round before any push is displayed.
+                    if (this.pendingDetailKey === key && this.isNewerDetailSnapshot(data, this.pendingRealtimeDetail)) {
+                        this.pendingRealtimeDetail = data
+                    }
+                    return
+                }
+                if (this.isNewerDetailSnapshot(data, this.execDetail)) this.setPipelineDetail(data)
+            },
             ...mapActions('atom', [
                 'reviewExcuteAtom',
                 'togglePropertyPanel',
                 'toggleStageReviewPanel',
-                'requestPipelineExecDetail',
+                'fetchPipelineExecDetail',
                 'setPipelineDetail',
                 'getInitLog',
                 'getAfterLog',
@@ -621,6 +762,32 @@
 
             hideSidePanel () {
                 this.showLog = false
+            },
+            async handlePluginContinue ({ taskId, skip }, done) {
+                try {
+                    if (!this.isExecuteDetailPanel || !this.$refs.execDetailPanel || typeof this.$refs.execDetailPanel.handleContinue !== 'function') {
+                        throw new Error(this.$t('subpage.retryFail'))
+                    }
+                    await this.$refs.execDetailPanel.handleContinue({ taskId, skip })
+                } catch (err) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: err.message || this.$t('subpage.retryFail')
+                    })
+                } finally {
+                    done?.()
+                }
+            },
+            async handlePluginReview (atom) {
+                if (!this.isExecuteDetailPanel || !this.$refs.execDetailPanel || typeof this.$refs.execDetailPanel.reviewAtom !== 'function') {
+                    this.$showTips({ theme: 'error', message: this.$t('subpage.retryFail') })
+                    return
+                }
+                await this.$refs.execDetailPanel.reviewAtom(atom)
+            },
+            normalizeIndex (value) {
+                const index = Number(value)
+                return Number.isInteger(index) && index >= 0 ? index : null
             },
             handlePipelineClick (args) {
                 this.togglePropertyPanel({
@@ -1067,7 +1234,6 @@
     margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
-    height: calc(100% - 205px);
     &.is-outputs-panel {
         overflow: hidden;
     }

@@ -210,12 +210,16 @@ class QueueInterceptor @Autowired constructor(
         outQueueBuilds.forEach { buildInfo ->
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[$pipelineId] queue outSize,cancel first Queue build",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_BUILD_CANCEL_SYSTEM_QUEUE_FULL
+                ),
                 tag = "QueueInterceptor",
                 containerHashId = "",
-                executeCount = 1,
+                executeCount = buildInfo.executeCount,
                 jobId = null,
-                stepId = "QueueInterceptor"
+                stepId = "QueueInterceptor",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
@@ -287,9 +291,11 @@ class QueueInterceptor @Autowired constructor(
                 ),
                 tag = "QueueInterceptor",
                 containerHashId = "",
-                executeCount = 1,
+                executeCount = buildInfo.executeCount,
                 jobId = null,
-                stepId = "QueueInterceptor"
+                stepId = "QueueInterceptor",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(

@@ -35,8 +35,8 @@
                 <span class="exec-status-label">
                     {{ $t("details.times", [statusLabel]) }}
                     <span
-                        v-if="execDetail.status === 'CANCELED'"
-                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                        v-if="execDetail.status === 'CANCELED' && !execDetail.buildEndInfo"
+                        v-bk-tooltips="`${$t('details.canceller')}：${cancelUserId}`"
                         class="devops-icon icon-info-circle"
                     >
                     </span>
@@ -203,19 +203,26 @@
                             />
                             <bk-table-column :label="$t('details.pipelineErrorInfo')">
                                 <template v-slot="props">
-                                    <div class="build-error-cell">
+                                    <div
+                                        class="build-error-cell"
+                                        :class="{ 'is-active': isActiveErrorAtom(props.row) }"
+                                    >
                                         <span class="build-error-info">
                                             {{ props.row.errorMsg }}
                                         </span>
-                                        <bk-button
+                                        <span
                                             v-if="!props.row.cleaned"
-                                            class="build-error-see-more"
-                                            theme="primary"
-                                            @click.stop="setAtomLocate(props.row, true)"
-                                            text
+                                            class="build-error-actions"
                                         >
-                                            {{ $t("history.viewLog") }}
-                                        </bk-button>
+                                            <bk-button
+                                                class="build-error-see-more"
+                                                theme="primary"
+                                                @click.stop="setAtomLocate(props.row, true)"
+                                                text
+                                            >
+                                                {{ $t("history.viewLog") }}
+                                            </bk-button>
+                                        </span>
                                     </div>
                                 </template>
                             </bk-table-column>
@@ -289,12 +296,16 @@
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
+    import { resolveReviewUsers } from '@/utils/reviewUsers'
     import { convertMillSec, convertTime } from '@/utils/util'
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
     import 'bkui-pipeline/dist/bk-pipeline.css'
     import { mapActions, mapState, mapGetters } from 'vuex'
+
+    // 与后端 BuildEndInfo.SYSTEM_CANCEL_USER 一致：系统取消时写入的占位，不是真实操作人
+    const SYSTEM_CANCEL_USER = 'System'
 
     const getSubPipelineAccessUrl = (atom) => {
         const {
@@ -441,7 +452,9 @@
                 : ''
             },
             cancelUserId () {
-                return this.execDetail?.cancelUserId ?? '--'
+                // 后端在系统取消且没有真实操作人时会落 System 占位，不展示成取消人
+                const cancelUserId = this.execDetail?.cancelUserId
+                return !cancelUserId || cancelUserId === SYSTEM_CANCEL_USER ? '--' : cancelUserId
             },
             executeCount () {
                 return this.execDetail?.executeCount ?? 1
@@ -558,13 +571,13 @@
                 this.setScrollBarPostion()
             }
             this.$nextTick(() => {
-                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
+                const scrollEle = this.$refs.scrollBox?.scrollElement
                 const viewportContent = this.$refs.scrollViewPort.querySelector('p')
-                this.$refs.scrollViewPort.style.width = `${this.$refs.scrollBox?.scrollElement?.offsetWidth}px`
-                this.$refs.scrollViewPort.style.height = `${parent.offsetHeight}px`
+                this.$refs.scrollViewPort.style.width = `${scrollEle?.offsetWidth}px`
+                this.$refs.scrollViewPort.style.height = `${scrollEle?.offsetHeight}px`
 
-                viewportContent.style.width = `${this.$refs.scrollBox?.scrollElement?.scrollWidth}px`
-                viewportContent.style.height = `${parent?.scrollHeight}px`
+                viewportContent.style.width = `${scrollEle?.scrollWidth}px`
+                viewportContent.style.height = `${scrollEle?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
                 this.expandAllMatrix()
@@ -588,7 +601,6 @@
                 'reviewExcuteAtom',
                 'togglePropertyPanel',
                 'toggleStageReviewPanel',
-                'requestPipelineExecDetail',
                 'pausePlugin'
             ]),
             ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
@@ -599,7 +611,7 @@
                 if (reviewTaskId) {
                     const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
                     if (targetElement && targetElement.status === 'REVIEWING') {
-                        this.reviewAtom({ id: reviewTaskId })
+                        this.reviewAtom(targetElement)
                     }
                 } else if (reviewStageSeq) {
                     this.handleStageCheck({
@@ -634,39 +646,30 @@
                 ])
             },
             initMiniMapScroll () {
-                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
                 const scrollEle = this.$refs.scrollBox?.scrollElement
                 const scrollViewPort = this.$refs.scrollViewPort
                 if (scrollEle && scrollViewPort) {
                     scrollEle.addEventListener('scroll', this.handelHerizontalScroll)
-                    parent.addEventListener('scroll', this.handelVerticalScroll)
                     scrollViewPort.addEventListener('scroll', this.handleMiniMapDrag)
                 }
             },
             removeMiniMapScroll () {
-                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
                 const scrollEle = this.$refs.scrollBox?.scrollElement
                 const scrollViewPort = this.$refs.scrollViewPort
                 if (scrollEle && scrollViewPort) {
                     scrollEle.removeEventListener('scroll', this.handelHerizontalScroll)
-                    parent?.removeEventListener('scroll', this.handelVerticalScroll)
                     scrollViewPort.removeEventListener('scroll', this.handleMiniMapDrag)
                 }
             },
             handelHerizontalScroll (e) {
-                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
-                this.$refs.miniMap.scrollTo(e.target.scrollLeft, parent.scrollTop)
-            },
-            handelVerticalScroll (e) {
-                const scrollEle = this.$refs.scrollBox?.scrollElement
-                this.$refs.miniMap.scrollTo(scrollEle.scrollLeft, e.target.scrollTop)
+                this.$refs.miniMap.scrollTo(e.target.scrollLeft, e.target.scrollTop)
             },
             handleMiniMapDrag () {
-                const parent = document.querySelector('.pipeline-detail-wrapper.biz-content')
                 const scrollEle = this.$refs.scrollBox?.scrollElement
                 const scrollViewPort = this.$refs.scrollViewPort
-                parent.scrollTop = scrollViewPort.scrollTop
+                if (!scrollEle || !scrollViewPort) return
                 scrollEle.scrollLeft = scrollViewPort.scrollLeft
+                scrollEle.scrollTop = scrollViewPort.scrollTop
             },
             setScrollBarPostion () {
                 const rootCssVar = document.querySelector(':root')
@@ -750,8 +753,13 @@
                 this.skipTask = skip
             },
             async reviewAtom (atom) {
+                const fullAtom = this.curPipelineAllElements.find(element => element.id === atom?.id) || atom
+                if (!resolveReviewUsers(fullAtom).includes(this.userName)) {
+                    this.$showTips({ theme: 'error', message: this.$t('noAuthToCheck') })
+                    return
+                }
                 // 人工审核
-                this.currentAtom = atom
+                this.currentAtom = fullAtom
                 this.toggleCheckDialog(true)
             },
             toggleCheckDialog (isShow = false) {
@@ -797,7 +805,10 @@
 
                             try {
                                 await this.pausePlugin(postData)
-                                await this.requestPipelineExecDetail(this.routerParams)
+                                if (!this._isBeingDestroyed && !this._isDestroyed
+                                    && this.routerParams.projectId === postData.projectId
+                                    && this.routerParams.pipelineId === postData.pipelineId
+                                    && this.routerParams.buildNo === postData.buildId) this.$emit('refresh-detail')
                             } catch (err) {
                                 this.$showTips({
                                     message: err.message || err,
@@ -827,12 +838,13 @@
             async retryPipeline (isStageRetry) {
                 let message, theme
                 this.showRetryStageDialog = false
+                const { projectId, pipelineId, buildNo } = this.routerParams
                 try {
                     // 请求执行构建
                     const res = await this.requestRetryPipeline({
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
+                        projectId,
+                        pipelineId,
+                        buildId: buildNo,
                         taskId: this.retryTaskId,
                         skip: this.skipTask,
                         ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
@@ -840,7 +852,16 @@
                     if (res.id) {
                         message = this.$t(this.skipTask ? 'skipSuc' : 'subpage.retrySuc')
                         theme = 'success'
-                    res?.executeCount && this.handleExecuteCountChange(res.executeCount)
+                        if (!this._isBeingDestroyed && !this._isDestroyed
+                            && this.routerParams.projectId === projectId
+                            && this.routerParams.pipelineId === pipelineId
+                            && this.routerParams.buildNo === buildNo) {
+                            if (res.executeCount && Number(res.executeCount) !== Number(this.$route.params.executeCount)) {
+                                await this.handleExecuteCountChange(res.executeCount)
+                            } else {
+                                this.$emit('refresh-detail')
+                            }
+                        }
                     } else {
                         message
                             = res?.message ?? this.$t(this.skipTask ? 'skipFail' : 'subpage.retryFail')
@@ -1052,19 +1073,14 @@
                 this.activeErrorAtom = row
             },
             handleExecuteCountChange (executeCount) {
-                this.$router.push({
+                if (Number(executeCount) === Number(this.$route.params.executeCount)) return
+                return this.$router.push({
                     ...this.$route,
                     params: {
                         ...this.$route.params,
                         type: this.$route.params.type ?? 'executeDetail',
                         executeCount
                     }
-                })
-                this.$nextTick(() => {
-                    this.requestPipelineExecDetail({
-                        ...this.routerParams,
-                        executeCount
-                    })
                 })
             },
             debugDocker ({ container }) {
@@ -1234,6 +1250,7 @@
   }
   .exec-pipeline-scroll-box {
     flex: 1;
+    min-height: 0;
     .simplebar-wrapper,
     .simplebar-content-wrapper {
       height: 100%;
@@ -1325,6 +1342,19 @@
       display: flex;
       align-items: center;
       width: 100%;
+      &:hover .build-error-actions,
+      &:active .build-error-actions,
+      &:focus-within .build-error-actions,
+      &.is-active .build-error-actions {
+        opacity: 1;
+      }
+      .build-error-actions {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.12s ease;
+      }
       .build-error-see-more {
         flex-shrink: 0;
         margin-left: 10px;

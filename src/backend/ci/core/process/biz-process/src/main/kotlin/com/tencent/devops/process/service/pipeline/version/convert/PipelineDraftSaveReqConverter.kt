@@ -58,7 +58,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreate
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
-import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.process.trigger.pac.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -304,6 +304,8 @@ class PipelineDraftSaveReqConverter(
                 templateRef = template.templateRef,
                 templateId = template.templateId,
                 templateVersionName = template.templateVersionName,
+                parsedTemplateId = template.parsedTemplateId,
+                parsedTemplateVersion = template.parsedTemplateVersion,
                 templateVariables = templateVariables,
                 triggerConfigs = triggerConfigs,
                 recommendedVersion = recommendedVersion,
@@ -363,6 +365,8 @@ class PipelineDraftSaveReqConverter(
                 refType = TemplateRefType.ID,
                 templateId = pipelineTemplateRelated.templateId,
                 templateVersionName = pipelineTemplateRelated.versionName,
+                parsedTemplateId = templateResource.templateId,
+                parsedTemplateVersion = templateResource.version,
                 templateVariables = templateVariables,
                 triggerConfigs = triggerConfigs,
                 recommendedVersion = recommendedVersion,

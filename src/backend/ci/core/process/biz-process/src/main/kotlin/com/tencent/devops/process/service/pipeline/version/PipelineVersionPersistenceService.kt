@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -93,43 +94,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 pipelineResourceVersion = pipelineResourceVersion,
                 pipelineSetting = pipelineSetting
             )
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                createPipelineInfo(
-                    transactionContext = transactionContext,
-                    userId = userId,
-                    pipelineBasicInfo = pipelineBasicInfo,
-                    pipelineModelBasicInfo = pipelineModelBasicInfo,
-                    version = pipelineResourceVersion.version,
-                    latestVersionStatus = pipelineResourceVersion.status
-                )
-                createPipelineResource(
-                    transactionContext = transactionContext,
-                    userId = userId,
-                    pipelineResourceVersion = pipelineResourceVersion
-                )
-                createPipelineResourceVersion(
-                    transactionContext = transactionContext,
-                    userId = userId,
-                    pipelineResourceVersion = pipelineResourceVersion
-                )
-                pipelineSettingDao.saveSetting(
-                    dslContext = transactionContext,
-                    setting = pipelineSetting
-                )
-                createPipelineSettingVersion(
-                    transactionContext = transactionContext,
-                    pipelineSetting = pipelineSetting
-                )
-
-                pipelineBuildSummaryDao.create(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildNo = pipelineModelBasicInfo.buildNo
-                )
-                postProcessInTransactionVersionCreate(
-                    transactionContext = transactionContext,
+            JooqUtils.retryWhenDeadLock(3) {
+                transactionInitializePipeline(
                     context = context,
                     pipelineResourceVersion = pipelineResourceVersion,
                     pipelineSetting = pipelineSetting
@@ -168,57 +134,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineSetting = pipelineSetting
                 )
                 watcher.start("transaction")
-                dslContext.transaction { configuration ->
-                    val transactionContext = DSL.using(configuration)
-                    updatePipelineInfo(
-                        transactionContext = transactionContext,
-                        userId = userId,
-                        pipelineBasicInfo = pipelineBasicInfo,
-                        pipelineModelBasicInfo = pipelineModelBasicInfo,
-                        version = pipelineResourceVersion.version,
-                        latestVersionStatus = pipelineResourceVersion.status,
-                    )
-                    updatePipelineResource(
-                        transactionContext = transactionContext,
-                        pipelineResourceVersion = pipelineResourceVersion
-                    )
-                    createPipelineResourceVersion(
-                        transactionContext = transactionContext,
-                        userId = userId,
-                        pipelineResourceVersion = pipelineResourceVersion
-                    )
-                    pipelineSettingDao.saveSetting(
-                        dslContext = transactionContext,
-                        setting = pipelineSetting
-                    )
-                    createPipelineSettingVersion(
-                        transactionContext = transactionContext,
-                        pipelineSetting = pipelineSetting
-                    )
-                    context.pipelineModelBasicInfo.buildNo?.let {
-                        if (resetBuildNo == true) {
-                            logger.info("reset build no|$projectId|$pipelineId|${it.buildNo}")
-                            pipelineBuildSummaryDao.updateBuildNo(
-                                dslContext = dslContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildNo = it.buildNo,
-                                debug = false
-                            )
-                        }
-                    }
-                    pipelineSetting.maxPipelineResNum?.let {
-                        val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            currentVersion = pipelineResourceVersion.version,
-                            maxPipelineResNum = it
-                        )
-                        logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
-                    }
-                    postProcessInTransactionVersionCreate(
-                        transactionContext = transactionContext,
+                JooqUtils.retryWhenDeadLock(3) {
+                    transactionCreateReleaseVersion(
                         context = context,
                         pipelineResourceVersion = pipelineResourceVersion,
                         pipelineSetting = pipelineSetting
@@ -483,6 +400,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     pipelineModelBasicInfo = pipelineModelBasicInfo,
                     version = pipelineResourceVersion.version,
                     latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
                 )
                 updatePipelineResource(
                     transactionContext = transactionContext,
@@ -602,6 +520,124 @@ class PipelineVersionPersistenceService @Autowired constructor(
         }
     }
 
+    private fun transactionInitializePipeline(
+        context: PipelineVersionCreateContext,
+        pipelineResourceVersion: PipelineResourceVersion,
+        pipelineSetting: PipelineSetting
+    ) {
+        with(context) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                createPipelineInfo(
+                    transactionContext = transactionContext,
+                    userId = userId,
+                    pipelineBasicInfo = pipelineBasicInfo,
+                    pipelineModelBasicInfo = pipelineModelBasicInfo,
+                    version = pipelineResourceVersion.version,
+                    latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
+                )
+                createPipelineResource(
+                    transactionContext = transactionContext,
+                    userId = userId,
+                    pipelineResourceVersion = pipelineResourceVersion
+                )
+                createPipelineResourceVersion(
+                    transactionContext = transactionContext,
+                    userId = userId,
+                    pipelineResourceVersion = pipelineResourceVersion
+                )
+                pipelineSettingDao.insertSetting(
+                    dslContext = transactionContext,
+                    setting = pipelineSetting
+                )
+                createPipelineSettingVersion(
+                    transactionContext = transactionContext,
+                    pipelineSetting = pipelineSetting
+                )
+
+                pipelineBuildSummaryDao.create(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildNo = pipelineModelBasicInfo.buildNo
+                )
+                postProcessInTransactionVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    pipelineSetting = pipelineSetting
+                )
+            }
+        }
+    }
+
+    private fun transactionCreateReleaseVersion(
+        context: PipelineVersionCreateContext,
+        pipelineResourceVersion: PipelineResourceVersion,
+        pipelineSetting: PipelineSetting
+    ) {
+        with(context) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                updatePipelineInfo(
+                    transactionContext = transactionContext,
+                    userId = userId,
+                    pipelineBasicInfo = pipelineBasicInfo,
+                    pipelineModelBasicInfo = pipelineModelBasicInfo,
+                    version = pipelineResourceVersion.version,
+                    latestVersionStatus = pipelineResourceVersion.status,
+                    yamlLocked = changedYamlLocked()
+                )
+                updatePipelineResource(
+                    transactionContext = transactionContext,
+                    pipelineResourceVersion = pipelineResourceVersion
+                )
+                createPipelineResourceVersion(
+                    transactionContext = transactionContext,
+                    userId = userId,
+                    pipelineResourceVersion = pipelineResourceVersion
+                )
+                pipelineSettingDao.saveSetting(
+                    dslContext = transactionContext,
+                    setting = pipelineSetting
+                )
+                createPipelineSettingVersion(
+                    transactionContext = transactionContext,
+                    pipelineSetting = pipelineSetting
+                )
+                context.pipelineModelBasicInfo.buildNo?.let {
+                    if (resetBuildNo == true) {
+                        logger.info("reset build no|$projectId|$pipelineId|${it.buildNo}")
+                        pipelineBuildSummaryDao.updateBuildNo(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildNo = it.buildNo,
+                            debug = false
+                        )
+                    }
+                }
+                pipelineSetting.maxPipelineResNum?.let {
+                    val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        currentVersion = pipelineResourceVersion.version,
+                        maxPipelineResNum = it
+                    )
+                    logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
+                }
+                postProcessInTransactionVersionCreate(
+                    transactionContext = transactionContext,
+                    context = context,
+                    pipelineResourceVersion = pipelineResourceVersion,
+                    pipelineSetting = pipelineSetting
+                )
+            }
+        }
+    }
+
     private fun createPipelineInfo(
         transactionContext: DSLContext,
         userId: String,
@@ -609,6 +645,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
         latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.create(
@@ -625,7 +662,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 taskCount = pipelineModelBasicInfo.taskCount,
                 id = id,
                 latestVersionStatus = latestVersionStatus,
-                pipelineDisable = pipelineDisable
+                yamlLocked = yamlLocked
             )
         }
     }
@@ -636,7 +673,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
         pipelineBasicInfo: PipelineBasicInfo,
         pipelineModelBasicInfo: PipelineModelBasicInfo,
         version: Int,
-        latestVersionStatus: VersionStatus?
+        latestVersionStatus: VersionStatus?,
+        yamlLocked: Boolean?
     ) {
         with(pipelineBasicInfo) {
             pipelineInfoDao.update(
@@ -652,7 +690,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                 taskCount = pipelineModelBasicInfo.taskCount,
                 latestVersion = version,
                 latestVersionStatus = latestVersionStatus,
-                locked = pipelineDisable
+                yamlLocked = yamlLocked
             )
         }
     }
@@ -790,7 +828,6 @@ class PipelineVersionPersistenceService @Autowired constructor(
             )
         }
     }
-
 
     companion object {
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"

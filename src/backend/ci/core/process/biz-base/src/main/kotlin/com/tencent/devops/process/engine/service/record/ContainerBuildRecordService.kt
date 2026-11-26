@@ -169,21 +169,36 @@ class ContainerBuildRecordService(
         oldExecuteCount: Int,
         newExecuteCount: Int,
         resetTaskIds: Set<String>,
-        skipTaskIds: Set<String>
+        skipTaskIds: Set<String>,
+        /**
+         * 子 Job 整体重跑时清掉起始时间。只重跑中间插件时保留上一轮起始时间，结束时间置空，本轮结束再写。
+         */
+        refreshContainerStart: Boolean = true
     ) {
         val ctx = transactionContext ?: dslContext
         val oldContainer = recordContainerDao.getRecord(
             dslContext = ctx, projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, containerId = childContainerId, executeCount = oldExecuteCount
         ) ?: return
-        val newContainerVar = oldContainer.containerVar.toMutableMap().apply {
-            remove(Container::timeCost.name)
-            remove(Container::startEpoch.name)
-            remove(Container::startVMStatus.name)
+        // 续上的子 Job 与普通 Job 同一口径：记录表只留本轮起止，上一轮的起始时间转存到变量里给展示用，
+        // 不进耗时计算，否则两轮之间等人重试的空档会被算成本轮的系统耗时
+        val resumed = !refreshContainerStart && newExecuteCount != oldExecuteCount
+        val newContainerVar = oldContainer.containerVar.toMutableMap()
+        newContainerVar.remove(Container::timeCost.name)
+        newContainerVar.remove(Container::startEpoch.name)
+        newContainerVar.remove(Container::startVMStatus.name)
+        // 执行次数变了才动展示起点：续上时保留最早记下的那个，整体重跑则清掉，本轮重新记
+        val inheritedStart = oldContainer.startTime?.timestampmilli()
+        when {
+            newExecuteCount == oldExecuteCount -> Unit
+            resumed && inheritedStart != null ->
+                newContainerVar.putIfAbsent(Container::startTime.name, inheritedStart)
+            !resumed -> newContainerVar.remove(Container::startTime.name)
         }
         val newContainer = oldContainer.copy(
             executeCount = newExecuteCount, status = null,
-            startTime = null, endTime = null, timestamps = mapOf(), containerVar = newContainerVar
+            startTime = if (refreshContainerStart || resumed) null else oldContainer.startTime,
+            endTime = null, timestamps = mapOf(), containerVar = newContainerVar
         )
         val oldTasks = recordTaskDao.getRecords(
             ctx, projectId, pipelineId, buildId, oldExecuteCount, childContainerId
@@ -331,6 +346,12 @@ class ContainerBuildRecordService(
                     if (recordContainer.endTime == null) {
                         endTime = now
                     }
+                    // 开机回报没写上终态时，用容器终态补齐「准备 Job」，已有终态不覆盖
+                    resolveTerminalStartVmStatus(
+                        containerStatus = buildStatus,
+                        matrixGroup = recordContainer.matrixGroupFlag,
+                        currentStartVmStatus = recordContainer.containerVar[Container::startVMStatus.name]?.toString()
+                    )?.let { containerVar[Container::startVMStatus.name] = it }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, now.timestampmilli()
                     )
@@ -361,6 +382,18 @@ class ContainerBuildRecordService(
                     startTime = recordContainer.startTime ?: startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
+                // 取消或失败收口时，没跑到的插件记录仍是 null，详情会和 UNEXEC 分成两种未执行
+                if (shouldMarkUnstartedTasksUnexec(buildStatus, recordContainer.matrixGroupFlag)) {
+                    recordTaskDao.updateNullRecordStatus(
+                        dslContext = context,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        containerId = containerId,
+                        buildStatus = BuildStatus.UNEXEC
+                    )
+                }
             }
         }
     }
@@ -470,7 +503,12 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null,
+        /**
+         * 一步到位完成、没有运行态刷新的作业（如触发作业）由调用方补一个真实的开始时间，
+         * 否则记录表只有结束时间，详情页无法展示起止区间。仅在记录本身还没有开始时间时生效。
+         */
+        fallbackStartTime: LocalDateTime? = null
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -493,8 +531,10 @@ class ContainerBuildRecordService(
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()
+            if (recordContainer.startTime == null) {
+                startTime = if (buildStatus?.isRunning() == true) now else fallbackStartTime
+            }
             if (buildStatus?.isRunning() == true) {
-                if (recordContainer.startTime == null) startTime = now
                 // #10751 增加对运行中重试的兼容，因为不新增执行次数，需要刷新上一次失败的结束时间
                 if (recordContainer.endTime != null) recordContainerDao.flushEndTimeWhenRetry(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
@@ -560,4 +600,39 @@ class ContainerBuildRecordService(
     companion object {
         private val logger = LoggerFactory.getLogger(ContainerBuildRecordService::class.java)
     }
+}
+
+/**
+ * 容器进入终态时，「准备 Job」仍停在非终态就补写。
+ * 已经结束的开机结果保持不变；矩阵组没有开机步骤。
+ * 成功收成 [BuildStatus.SUCCEED]，失败、取消、超时沿用容器终态。
+ */
+internal fun resolveTerminalStartVmStatus(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?,
+    currentStartVmStatus: String?
+): String? {
+    if (!containerStatus.isFinish() || matrixGroup == true) {
+        return null
+    }
+    if (BuildStatus.parse(currentStartVmStatus).isFinish()) {
+        return null
+    }
+    return if (containerStatus.isSuccess() && !containerStatus.isSkip()) {
+        BuildStatus.SUCCEED.name
+    } else {
+        containerStatus.name
+    }
+}
+
+/**
+ * Job 以取消或失败结束时，尚未写入状态的插件应记为未执行。
+ * 成功不改。跳过由 [ContainerBuildRecordService.containerSkip] 写成 SKIP。
+ * 矩阵组容器上的记录不是具体插件，不在这里补。
+ */
+internal fun shouldMarkUnstartedTasksUnexec(
+    containerStatus: BuildStatus,
+    matrixGroup: Boolean?
+): Boolean {
+    return containerStatus.isFinish() && !containerStatus.isSuccess() && matrixGroup != true
 }

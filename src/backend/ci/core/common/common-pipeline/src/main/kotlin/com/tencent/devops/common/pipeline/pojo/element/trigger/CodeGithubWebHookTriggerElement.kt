@@ -57,9 +57,9 @@ data class CodeGithubWebHookTriggerElement(
     val includePaths: String? = null,
     @get:Schema(title = "用于排除的路径", required = false)
     val excludePaths: String? = null,
-    @get:Schema(title = "用户白名单", required = false)
-    val includeUsers: List<String>? = null,
-    @get:Schema(title = "用于排除的user id", required = false)
+    @get:Schema(title = "包含的 GitHub 登录名", required = false)
+    val includeUsers: String? = null,
+    @get:Schema(title = "排除的 GitHub 登录名", required = false)
     val excludeUsers: String? = null,
     @get:Schema(title = "tag名称", required = false)
     val tagName: String? = null,
@@ -130,6 +130,7 @@ data class CodeGithubWebHookTriggerElement(
         val props = when (eventType) {
             CodeEventType.PUSH, CodeEventType.CREATE -> {
                 listOf(
+                    TriggerElementPropUtils.vuexInput(name = "includeUsers", value = includeUsers),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers)
@@ -139,6 +140,7 @@ data class CodeGithubWebHookTriggerElement(
             CodeEventType.PULL_REQUEST -> {
                 listOf(
                     TriggerElementPropUtils.selector(name = "action", value = includeMrAction),
+                    TriggerElementPropUtils.vuexInput(name = "includeUsers", value = includeUsers),
                     TriggerElementPropUtils.vuexInput(name = "branchName", value = branchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeBranchName", value = excludeBranchName),
                     TriggerElementPropUtils.vuexInput(name = "excludeUsers", value = excludeUsers),

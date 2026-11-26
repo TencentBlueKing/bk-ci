@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.atom.dao.AtomContractCandidateDao
 import com.tencent.devops.store.common.dao.StoreComponentContractDao
+import com.tencent.devops.store.common.service.StoreComponentSourceResolver.AtomRelease
 import com.tencent.devops.store.common.utils.StoreComponentContractPendingUtils
 import com.tencent.devops.store.common.utils.StoreComponentContractPendingUtils.Candidate
 import com.tencent.devops.store.pojo.common.contract.StoreComponentContractPendingReasonEnum
@@ -60,11 +61,14 @@ class StoreComponentContractExtractService @Autowired constructor(
         limit: Int,
         maxFailCount: Int,
         includeMissing: Boolean,
-        minRecentExecuteNum: Int
+        minRecentExecuteNum: Int,
+        leaseMinutes: Int = 0
     ): StoreComponentContractPendingResp {
         checkStoreType(storeType)
         val size = limit.coerceIn(1, MAX_LIMIT)
-        val scanSize = size + EXTRA_SCAN_SIZE
+        val leaseSeconds = leaseMinutes.coerceIn(0, MAX_LEASE_MINUTES) * 60L
+        // 开启租约时排在前面的可能都已租出，多扫一批，剔除后才不会扫空
+        val scanSize = size + EXTRA_SCAN_SIZE + if (leaseSeconds > 0) LEASE_EXTRA_SCAN_SIZE else 0
         val stale = storeComponentContractDao.listStaleForExtract(
             dslContext = dslContext,
             storeType = storeType,
@@ -93,11 +97,17 @@ class StoreComponentContractExtractService @Autowired constructor(
             hotReleases = hotReleases,
             existingCodes = existingCodes,
             maxFailCount = maxFailCount,
-            scanSize = scanSize
+            scanSize = scanSize,
+            leased = { storeCode -> leaseSeconds > 0 && redisOperation.hasKey(leaseKey(storeType, storeCode)) }
         ) { release -> getMissingFailCount(storeType, release.atomCode, release.version) }
         val releases = hotReleases.associateBy { it.atomCode } +
             atomContractCandidateDao.listLatestReleases(dslContext, stale.map { it.storeCode })
-        val resp = StoreComponentContractPendingUtils.pick(candidates, releases, size) { release ->
+        val resp = StoreComponentContractPendingUtils.pick(
+            candidates = candidates,
+            releases = releases,
+            limit = size,
+            acquire = { release -> acquireLease(storeType, release, leaseSeconds) }
+        ) { release ->
             try {
                 storeComponentSourceResolver.resolveAtomSource(release)
             } catch (ignored: Throwable) {
@@ -106,7 +116,7 @@ class StoreComponentContractExtractService @Autowired constructor(
             }
         }
         logger.info(
-            "contract pending|$storeType|candidates=${candidates.size}|" +
+            "contract pending|$storeType|lease=${leaseMinutes}m|candidates=${candidates.size}|" +
                 "items=${resp.items.map { "${it.storeCode}@${it.version}:${it.refType}" }}|" +
                 "skipped=${resp.skipped.map { "${it.storeCode}:${it.reason}" }}"
         )
@@ -127,12 +137,36 @@ class StoreComponentContractExtractService @Autowired constructor(
             redisOperation.expire(key, MISSING_FAIL_EXPIRE_SECONDS)
             count.toInt()
         }
+        releaseLease(storeType, storeCode)
         logger.info("contract extract fail|$userId|$storeType|$storeCode|$version|$failCount")
         return failCount
     }
 
     fun clearMissingFailCount(storeType: StoreTypeEnum, storeCode: String, version: String) {
         redisOperation.delete(missingFailKey(storeType, storeCode, version))
+    }
+
+    fun releaseLease(storeType: StoreTypeEnum, storeCode: String) {
+        redisOperation.delete(leaseKey(storeType, storeCode))
+    }
+
+    /**
+     * 候选清单是先查出来的，别的构建可能在这之后写完契约并释放了租约，抢到租约后要按最新的契约再确认一次
+     */
+    private fun acquireLease(storeType: StoreTypeEnum, release: AtomRelease, leaseSeconds: Long): Boolean {
+        if (leaseSeconds <= 0) {
+            return true
+        }
+        val key = leaseKey(storeType, release.atomCode)
+        if (!redisOperation.setIfAbsent(key = key, value = release.version, expiredInSecond = leaseSeconds)) {
+            return false
+        }
+        val contract = storeComponentContractDao.getContract(dslContext, storeType, release.atomCode)
+        if (contract != null && contract.staleFlag != true && contract.basedOnVersion == release.version) {
+            redisOperation.delete(key)
+            return false
+        }
+        return true
     }
 
     private fun getMissingFailCount(storeType: StoreTypeEnum, storeCode: String, version: String): Int {
@@ -151,10 +185,15 @@ class StoreComponentContractExtractService @Autowired constructor(
     private fun missingFailKey(storeType: StoreTypeEnum, storeCode: String, version: String) =
         "store:contract:extract_fail:$storeType:$storeCode:$version"
 
+    private fun leaseKey(storeType: StoreTypeEnum, storeCode: String) =
+        "store:contract:extract_lease:$storeType:$storeCode"
+
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentContractExtractService::class.java)
         private const val MAX_LIMIT = 10
         private const val EXTRA_SCAN_SIZE = 20
+        private const val LEASE_EXTRA_SCAN_SIZE = 200
+        private const val MAX_LEASE_MINUTES = 24 * 60
         private const val MISSING_FAIL_EXPIRE_SECONDS = 7 * 24 * 3600L
     }
 }

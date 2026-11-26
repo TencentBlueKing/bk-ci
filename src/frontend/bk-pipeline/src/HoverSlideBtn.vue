@@ -164,6 +164,16 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    // 单按钮模式下，仅 badge（及滑出的文字）响应鼠标，避免整个按钮区域 hover 即触发
+    &:not(.hover-slide-btn--group) {
+        pointer-events: none;
+
+        .hover-slide-btn__badge,
+        .hover-slide-btn__text {
+            pointer-events: auto;
+        }
+    }
+
     &:hover {
         .hover-slide-btn__badge {
             opacity: 0;

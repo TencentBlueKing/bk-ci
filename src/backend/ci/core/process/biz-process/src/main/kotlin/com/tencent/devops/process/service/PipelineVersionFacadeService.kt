@@ -80,9 +80,9 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
+import com.tencent.devops.process.trigger.pac.PipelineYamlFacadeService
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.process.pac.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
@@ -252,6 +252,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
             locked = detailInfo.locked,
+            lockUser = detailInfo.lockUser,
+            lockReason = detailInfo.lockReason,
+            lockTime = detailInfo.lockTime,
+            yamlLocked = detailInfo.yamlLocked,
+            yamlLockUser = detailInfo.yamlLockUser,
+            yamlLockTime = detailInfo.yamlLockTime,
             buildCancelPolicy = pipelineSetting?.buildCancelPolicy,
             draftVersion = draftResource?.draftVersion
         )
@@ -602,7 +608,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = resource.status,
             latestVersion = pipelineInfo.version,
             envHashId = setting.envHashId,
-            draftVersion = resource.draftVersion
+            draftVersion = resource.draftVersion,
+            yamlLocked = pipelineRepositoryService.isYamlLockedOnRun(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                setting = setting
+            )
         )
     }
 

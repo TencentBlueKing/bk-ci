@@ -16,26 +16,6 @@ export interface RetryPipelineResponse {
 }
 
 /**
- * 重放创作流状态
- */
-export type ReplayStatus =
-  | 'CANNOT_REPLAY'
-  | 'CAN_REPLAY'
-  | 'REPLAY_SUCCESS'
-  | 'REPLAYING'
-  | 'REPLAY_FAILED'
-
-/**
- * 重放创作流响应数据
- */
-export interface ReplayPipelineResponse {
-  status: ReplayStatus // 重放状态
-  id: string // 构建ID
-  code?: number // 错误码（可选）
-  message?: string // 错误信息（可选）
-}
-
-/**
  * 构建启动参数项
  */
 export interface BuildParamItem {
@@ -186,9 +166,11 @@ export function replayFlow({
   pipelineId: string
   buildId: string
   forceTrigger?: boolean
-}): Promise<ReplayPipelineResponse> {
-  return post<ReplayPipelineResponse>(
+}): Promise<RetryPipelineResponse> {
+  return post<RetryPipelineResponse>(
     `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`,
+    undefined,
+    { meta: { showBusinessError: false } },
   )
 }
 

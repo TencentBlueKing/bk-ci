@@ -150,6 +150,11 @@ const actions = {
             return response.data
         })
     },
+    requestConcurrencyQueue ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/concurrencyQueue`).then(response => {
+            return response.data
+        })
+    },
     /**
      * 获取当前流水线的历史记录
      *
@@ -310,16 +315,8 @@ const actions = {
             return e
         })
     },
-    requestPipelineRePlayStatus ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replay/status`).then(response => {
-            return response.data
-        }).catch(e => {
-            return e
-        })
-    },
-
-    requestRePlayEventDetail ({ commit, state, dispatch }, { projectId, eventId }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`).then(response => {
+    requestPipelineCanReplay ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replay/check`).then(response => {
             return response.data
         }).catch(e => {
             return e

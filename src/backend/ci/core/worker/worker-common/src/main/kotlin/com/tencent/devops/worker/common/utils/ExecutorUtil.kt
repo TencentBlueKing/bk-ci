@@ -33,13 +33,13 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import java.io.File
 
 object ExecutorUtil {
-    private val executor = DefaultExecutor()
+    // 走 CommandLineExecutor.launch 的 redirectErrorStream，与脚本任务同一套合流动
+    private val executor = CommandLineExecutor()
 
     private val threadLocal = ThreadLocal<String>()
 
@@ -52,6 +52,7 @@ object ExecutorUtil {
         return runCommand(command, maskCommand, outputStream, outputStream, workDir)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun runCommand(
         command: String,
         maskCommand: String,
@@ -61,7 +62,8 @@ object ExecutorUtil {
     ): Int {
         LoggerService.addNormalLine("Start to run the command - $maskCommand")
         val commandLine = CommandLine.parse(command)
-        val streamHandler = PumpStreamHandler(stdout, stderr)
+        // stderr 已在进程启动时并入 stdout，只挂一根泵；stderr 参数保留以兼容调用方
+        val streamHandler = PumpStreamHandler(stdout, null)
         executor.streamHandler = streamHandler
         if (workDir != null)
             executor.workingDirectory = workDir

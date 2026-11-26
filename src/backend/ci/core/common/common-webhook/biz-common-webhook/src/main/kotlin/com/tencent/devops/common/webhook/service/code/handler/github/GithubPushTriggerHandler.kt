@@ -213,6 +213,8 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
                 }
             )
         )
+        val headCommit = event.headCommit?.takeIf { it.id == event.after }
+        val afterCommit = event.commits.firstOrNull { it.id == event.after }
         // 兼容stream变量
         startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
         startParams[PIPELINE_GIT_REF] = event.ref
@@ -222,8 +224,7 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         } else {
             GitPushEvent.classType
         }
-        startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
-            event.commits.firstOrNull { it.id == event.after }?.author?.name ?: ""
+        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = headCommit?.author?.name ?: afterCommit?.author?.name ?: ""
         startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
         startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
         startParams[PIPELINE_GIT_ACTION] = when {
@@ -231,8 +232,10 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
             event.created -> TGitPushActionType.NEW_BRANCH.value
             else -> TGitPushActionType.PUSH_FILE.value
         }
-        startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.url}/commit/${event.commits.firstOrNull()?.id}"
-        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commits.firstOrNull()?.message ?: ""
+        val repoUrl = event.repository.htmlUrl?.takeIf { it.isNotBlank() }
+            ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${event.repository.fullName}"
+        startParams[PIPELINE_GIT_EVENT_URL] = "${repoUrl.trimEnd('/')}/commit/${event.after}"
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = headCommit?.message ?: afterCommit?.message ?: ""
         startParams[PIPELINE_GIT_SHA_SHORT] = GitUtils.getShortSha(event.after)
         return startParams
     }

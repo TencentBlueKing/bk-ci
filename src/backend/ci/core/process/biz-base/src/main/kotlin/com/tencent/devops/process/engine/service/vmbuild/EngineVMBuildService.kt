@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.utils.RecordTaskOutputUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -990,7 +991,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 result = result,
                 buildInfo = buildInfo,
                 vmSeqId = vmSeqId,
-                runCondition = buildTask.additionalOptions?.runCondition
+                runCondition = buildTask.additionalOptions?.runCondition,
+                task = buildTask
             )
         } finally {
             redisOperation.delete(key = tCompleteTaskKey)
@@ -1003,7 +1005,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         result: BuildTaskResult,
         buildInfo: BuildInfo,
         vmSeqId: String,
-        runCondition: RunCondition? = null
+        runCondition: RunCondition? = null,
+        task: PipelineBuildTask? = null
     ) {
         val projectId = buildInfo.projectId
         val buildId = buildInfo.buildId
@@ -1046,7 +1049,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             // 大变量引用串随插件执行记录一起留痕，供按执行次数回看内容（见 TaskBuildRecordService.taskEnd）
             largeVariables = result.buildResult
                 .filterValues { BuildVarOverflowUtils.isOverflowReference(it) }
-                .takeIf { it.isNotEmpty() }
+                .takeIf { it.isNotEmpty() },
+            outputValues = RecordTaskOutputUtils.resolveDeclaredOutputValues(
+                taskParams = task?.taskParams,
+                buildResult = result.buildResult,
+                sensitiveKeys = result.sensitiveKeys,
+                jobId = task?.jobId,
+                stepId = task?.stepId
+            ).takeIf { it.isNotEmpty() }
         )
         val (updateTaskStatusInfos, recordTask) = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->

@@ -118,6 +118,9 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import java.util.regex.Pattern
 
 @Suppress("TooManyFunctions")
@@ -317,7 +320,11 @@ object PipelineVarUtil {
         "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
         "ci.failed_tasks" to BK_CI_BUILD_FAIL_TASKS,
         "ci.failed_tasknames" to BK_CI_BUILD_FAIL_TASKNAMES,
-        "ci.authorizer" to BK_CI_AUTHORIZER
+        "ci.authorizer" to BK_CI_AUTHORIZER,
+        // 节点变量直接以 ci.node_* 入库，映射到自身后 ${{ ci.node_ip }} 才能按上下文引用
+        CI_NODE_ID to CI_NODE_ID,
+        CI_NODE_NAME to CI_NODE_NAME,
+        CI_NODE_IP to CI_NODE_IP
     )
 
     /**

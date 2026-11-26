@@ -69,8 +69,7 @@ class PipelineResourceFactory @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode,
         pipelineName: String,
-        pipelineDesc: String?,
-        pipelineDisable: Boolean? = false
+        pipelineDesc: String?
     ): PipelineBasicInfo {
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
         return PipelineBasicInfo(
@@ -79,8 +78,7 @@ class PipelineResourceFactory @Autowired constructor(
             pipelineName = pipelineName,
             pipelineDesc = pipelineDesc,
             channelCode = channelCode,
-            id = id,
-            pipelineDisable = pipelineDisable
+            id = id
         )
     }
 
@@ -152,6 +150,8 @@ class PipelineResourceFactory @Autowired constructor(
         refType: TemplateRefType?,
         templateId: String? = null,
         templateVersionName: String? = null,
+        parsedTemplateId: String? = null,
+        parsedTemplateVersion: Long? = null,
         templatePath: String? = null,
         templateRef: String? = null,
         templateVariables: List<TemplateVariable>? = null,
@@ -174,7 +174,9 @@ class PipelineResourceFactory @Autowired constructor(
                     templateRef = templateRef,
                     templateVariables = templateVariables,
                     triggerConfigs = triggerConfigs,
-                    recommendedVersion = recommendedVersion
+                    recommendedVersion = recommendedVersion,
+                    parsedTemplateId = parsedTemplateId,
+                    parsedTemplateVersion = parsedTemplateVersion
                 ),
                 overrideTemplateField = overrideTemplateField
             )
@@ -194,7 +196,9 @@ class PipelineResourceFactory @Autowired constructor(
                     templateVersionName = templateVersionName,
                     templateVariables = templateVariables,
                     triggerConfigs = triggerConfigs,
-                    recommendedVersion = recommendedVersion
+                    recommendedVersion = recommendedVersion,
+                    parsedTemplateId = parsedTemplateId,
+                    parsedTemplateVersion = parsedTemplateVersion
                 ),
                 overrideTemplateField = overrideTemplateField
             )

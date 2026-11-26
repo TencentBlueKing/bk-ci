@@ -120,4 +120,54 @@ class StoreComponentContractPendingUtilsTest {
         }
         Assertions.assertEquals(listOf("a"), resolved)
     }
+
+    @Test
+    fun leasedCandidatesDoNotTakeScanSlots() {
+        val result = StoreComponentContractPendingUtils.mergeCandidates(
+            stale = listOf(Candidate("a", NEW_VERSION, 0), Candidate("b", NEW_VERSION, 0)),
+            hotReleases = listOf(release("c"), release("d"), release("e")),
+            existingCodes = setOf("a", "b"),
+            maxFailCount = 3,
+            scanSize = 2,
+            leased = { it in setOf("a", "c") }
+        ) { 0 }
+        Assertions.assertEquals(listOf("b", "d"), result.map { it.storeCode })
+    }
+
+    @Test
+    fun pickSkipsLostLeaseWithoutReportingIt() {
+        val candidates = listOf("a", "b", "c").map { Candidate(it, MISSING, 0) }
+        val releases = listOf("a", "b", "c").associateWith { release(it) }
+        val resp = StoreComponentContractPendingUtils.pick(
+            candidates = candidates,
+            releases = releases,
+            limit = 1,
+            acquire = { it.atomCode != "a" }
+        ) { source(it) }
+        Assertions.assertEquals(listOf("b"), resp.items.map { it.storeCode })
+        Assertions.assertTrue(resp.skipped.isEmpty())
+    }
+
+    @Test
+    fun pickSkipsSourceFileOfBuiltinAtomBeforeLeasing() {
+        val acquired = mutableListOf<String>()
+        val candidates = listOf("linuxScript", "windowsScript", "ok").map { Candidate(it, MISSING, 0) }
+        val releases = mapOf(
+            "linuxScript" to release("linuxScript").copy(codeSrc = "https://git.example.com/bk-ci/blob/master/a.kt"),
+            "windowsScript" to release("windowsScript").copy(codeSrc = "https://git.example.com/bk-ci/tree/master/w"),
+            "ok" to release("ok")
+        )
+        val resp = StoreComponentContractPendingUtils.pick(
+            candidates = candidates,
+            releases = releases,
+            limit = 1,
+            acquire = { acquired.add(it.atomCode) }
+        ) { source(it) }
+        Assertions.assertEquals(listOf("ok"), resp.items.map { it.storeCode })
+        Assertions.assertEquals(listOf("ok"), acquired)
+        Assertions.assertEquals(
+            List(2) { StoreComponentContractPendingUtils.SKIP_NOT_REPOSITORY },
+            resp.skipped.map { it.reason }
+        )
+    }
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -102,4 +103,22 @@ interface UserPipelineYamlResource {
         @PathParam("repoHashId")
         repoHashId: String
     ): Result<List<PipelineYamlSyncInfo>>
+
+    @Operation(summary = "获取流水线指定版本的PAC信息")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{version}/yamlInfo")
+    fun getVersionYamlInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<PipelineYamlVo?>
 }

@@ -184,8 +184,6 @@ object StreamBinding {
 
     const val CDS_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.cds.webhook.trigger.event"
 
-    const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
-
     // TAPD webhook 请求事件
     const val TAPD_WEBHOOK_REQUEST_EVENT = "engine.pipeline.tapd.webhook.event"
 
@@ -231,9 +229,6 @@ object StreamBinding {
     const val AUTH_MANGER_CHANGE_FANOUT = "auth.manager.change.fanout"
     const val AUTH_MANGER_USER_CHANGE_FANOUT = "auth.manager.user.change.fanout"
     const val AUTH_STRATEGY_UPDATE_FANOUT = "auth.strategy.update.fanout"
-
-    // 流水线webhook commit记录
-    const val PIPELINE_BUILD_COMMIT_FINISH_FANOUT = "engine.pipeline.build.commits.finish.fanout"
 
     // 流水线质量红线人工审核时间广播
     const val PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "quality.pipeline.build.review.fanout"

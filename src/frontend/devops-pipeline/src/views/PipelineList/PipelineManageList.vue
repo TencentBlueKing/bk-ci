@@ -227,8 +227,12 @@
         <disable-dialog
             v-model="pipelineActionState.isDisableDialogShow"
             v-bind="pipelineActionState.activePipeline"
+            :yaml-locked="pipelineActionState.activePipeline?.yamlLocked"
+            :lock-user="pipelineActionState.activePipeline?.lockUser"
+            :lock-time="pipelineActionState.activePipeline?.lockTime"
+            :lock-reason="pipelineActionState.activePipeline?.lockReason"
+            :yaml-info="pipelineActionState.activePipelineYamlInfo"
             @close="closeDisableDialog"
-            :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
             @done="refresh"
         />
         <archive-dialog
@@ -427,7 +431,8 @@
         },
 
         mounted () {
-            webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
+            webSocketMessage.installWsMessage((data) => this.$refs.pipelineBox?.updatePipelineStatus?.(data))
+            webSocketMessage.registeOnReconnect(() => this.$refs.pipelineBox?.refresh?.())
             bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
             this.updateTableHeight()

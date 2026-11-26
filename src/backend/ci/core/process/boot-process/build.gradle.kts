@@ -29,6 +29,7 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:process:biz-engine"))
     api(project(":core:process:biz-process"))
+    api(project(":core:process:biz-trigger"))
     api(project(":core:process:biz-base"))
     api(project(":core:common:common-auth:common-auth-provider"))
 }

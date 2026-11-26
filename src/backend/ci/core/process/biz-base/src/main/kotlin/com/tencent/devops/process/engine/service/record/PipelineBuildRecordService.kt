@@ -609,7 +609,7 @@ class PipelineBuildRecordService @Autowired constructor(
         val positions = BuildEndPositionCollector.collectCancelPositions(model)
         // update() 在没有取消人时会写入 System，表示系统取消，不是真实操作人。
         // 阶段准入驳回走的就是这条路径，不能展示成「用户取消」。
-        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != "System"
+        val hasUser = !cancelUser.isNullOrBlank() && cancelUser != BuildEndInfo.SYSTEM_CANCEL_USER
         val info = if (hasUser) {
             BuildEndInfo(
                 endType = BuildEndType.CANCEL_USER,
@@ -865,6 +865,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
+            val now = LocalDateTime.now()
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
@@ -873,6 +874,8 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
+                // 终止后状态不再是运行中，随后的 buildEnd 按运行中过滤会漏掉这些记录，必须在这里补结束时间
+                if (stage.endTime == null) { stage.endTime = now }
                 // 第2层循环：刷新stage下运行中的container状态（包括矩阵）
                 val recordContainers = recordContainerDao.getRecords(
                     dslContext = context, projectId = projectId,
@@ -897,12 +900,14 @@ class PipelineBuildRecordService @Autowired constructor(
                         }
                     }
                     container.status = buildStatus.name
+                    if (container.endTime == null) { container.endTime = now }
                     // 第3层循环：刷新container下运行中的task状态
                     recordTasks.forEach nextTask@{ task ->
                         if (!BuildStatus.parse(task.status).isRunning()) {
                             return@nextTask
                         }
                         task.status = buildStatus.name
+                        if (task.endTime == null) { task.endTime = now }
                     }
                     recordTaskDao.batchSave(context, recordTasks)
                 }
@@ -1335,6 +1340,21 @@ class PipelineBuildRecordService @Autowired constructor(
         )
     }
 
+    /**
+     * 父构建取消子构建时要继续传递的操作人。
+     * 取消人在取消入口里先于取消事件同步落库，这里只查取消人列，不整行读 MODEL_VAR 解析终态详情。
+     * 系统取消没有真人操作，取消人列是 [BuildEndInfo.SYSTEM_CANCEL_USER] 占位或空，此时不往下传。
+     */
+    fun getInheritedCancelOperator(
+        projectId: String,
+        buildId: String,
+        executeCount: Int
+    ): String? {
+        return BuildEndInfo.confirmedOperator(
+            getBuildCancelUser(projectId = projectId, buildId = buildId, executeCount = executeCount)
+        )
+    }
+
     fun updateModelRecord(
         projectId: String,
         pipelineId: String,
@@ -1362,7 +1382,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount, cancelUser = null,
                 modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
-                startTime = startTime, endTime = endTime, errorInfoList = null,
+                // 起始时间只写一次。局部重试建记录时已继承上一轮起始时间，这里再写会把流水线起点刷成现在
+                startTime = if (recordModel.startTime == null) startTime else null,
+                endTime = endTime, errorInfoList = null,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }
