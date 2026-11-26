@@ -1,6 +1,6 @@
 package com.tencent.devops.process.trigger
 
-import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
+import com.tencent.devops.process.trigger.event.PipelineTimerBuildEvent
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Timer

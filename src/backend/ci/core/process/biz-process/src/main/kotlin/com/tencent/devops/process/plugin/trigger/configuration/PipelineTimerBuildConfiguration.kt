@@ -2,8 +2,8 @@ package com.tencent.devops.process.plugin.trigger.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
-import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerBuildListener
+import com.tencent.devops.process.trigger.event.PipelineTimerBuildEvent
+import com.tencent.devops.process.trigger.timer.listener.PipelineTimerBuildListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 

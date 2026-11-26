@@ -51,16 +51,16 @@ import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_SOURCE_I
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_STORY_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_ID
 import com.tencent.devops.process.constant.TapdWebhookConstant.TAPD_KEY_WORKSPACE_NAME
-import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.service.TapdSupportService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.trigger.event.TapdWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.TapdWebhookTriggerEvent
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getPayloadField
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -313,7 +313,7 @@ class TapdWebhookRequestService(
             body.getHookField(TAPD_KEY_STORY_ID)
         }
 
-        else -> body.getHookField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
+        else -> body.getPayloadField(TAPD_KEY_ID, eventAction == TapdEventAction.UPDATE)
     }
 
     private fun listSubscribers(

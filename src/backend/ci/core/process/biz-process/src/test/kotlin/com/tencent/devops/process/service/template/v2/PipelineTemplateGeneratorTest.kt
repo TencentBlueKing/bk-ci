@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
-import com.tencent.devops.process.yaml.PipelineYamlCommonService
+import com.tencent.devops.process.pac.PipelineYamlCommonService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

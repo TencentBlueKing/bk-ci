@@ -2,8 +2,8 @@ package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.PipelineEventRegisterDao
 import com.tencent.devops.process.pojo.trigger.PipelineEventRegister
+import com.tencent.devops.process.trigger.dao.PipelineEventRegisterDao
 import com.tencent.devops.process.trigger.pojo.PipelineEventRegisterLock
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext

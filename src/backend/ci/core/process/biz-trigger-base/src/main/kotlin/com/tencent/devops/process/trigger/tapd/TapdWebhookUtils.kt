@@ -64,6 +64,7 @@ import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildObjectUrl
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildPipelineBuildMsg
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.buildStartParams
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getHookField
+import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getPayloadField
 import com.tencent.devops.process.trigger.tapd.TapdWebhookUtils.getTitle
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
@@ -76,7 +77,7 @@ import org.slf4j.LoggerFactory
  * TAPD Webhook 工具类
  *
  * 汇集 TAPD webhook 请求与触发过程中所需的纯计算工具：
- * - body 字段读取（[getHookField]）
+ * - body 字段读取（[getHookField] 用于事件解析/过滤，[getPayloadField] 用于启动参数组装）
  * - 派生字段计算（[buildObjectUrl] / [getTitle]）
  * - 启动参数组装（[buildStartParams]）
  * - 事件描述组装（[buildEventDesc]）
@@ -107,6 +108,27 @@ object TapdWebhookUtils {
             key
         }
         return this[finalKey]?.toString() ?: ""
+    }
+
+    /**
+     * 读取报文中的业务字段（供启动参数、标题与对象 ID 组装使用）
+     *
+     * TAPD 更新类报文（含状态变更）字段带 `new_` 前缀，创建等报文为无前缀字段；
+     * 事件动作会被重新归类（如 `update` -> `status_change`），不能据此判断报文形态，
+     * 因此先按首选前缀取值，缺失或空白时回退另一前缀。
+     *
+     * 与 [getHookField] 的区别：仅用于启动参数/标题/对象 ID，不用于事件解析与触发器过滤，
+     * 避免把 API 补写的中文优先级等替换成报文中的原始英文值。
+     */
+    fun Map<String, Any?>.getPayloadField(
+        key: String,
+        update: Boolean = false
+    ): String {
+        val preferredKey = if (update) "${TAPD_KEY_NEW_PREFIX}_$key" else key
+        val fallbackKey = if (update) key else "${TAPD_KEY_NEW_PREFIX}_$key"
+        return this[preferredKey]?.toString()?.takeIf { it.isNotBlank() }
+            ?: this[fallbackKey]?.toString()?.takeIf { it.isNotBlank() }
+            ?: ""
     }
 
     /**
@@ -184,8 +206,8 @@ object TapdWebhookUtils {
             CI_EVENT_ID to body.getHookField(TAPD_KEY_EVENT_ID),
             CI_TAPD_WORKSPACE_ID to event.workspaceId,
             CI_TAPD_ID to objectId,
-            CI_TAPD_PARENT_ID to body.getHookField(TAPD_KEY_PARENT_ID, update),
-            CI_TAPD_PRIORITY_ID to body.getHookField(TAPD_KEY_PRIORITY_LABEL, update),
+            CI_TAPD_PARENT_ID to body.getPayloadField(TAPD_KEY_PARENT_ID, update),
+            CI_TAPD_PRIORITY_ID to body.getPayloadField(TAPD_KEY_PRIORITY_LABEL, update),
             CI_TAPD_TITLE to title,
             PIPELINE_BUILD_MSG to buildPipelineBuildMsg(
                 name = title,
@@ -195,7 +217,7 @@ object TapdWebhookUtils {
             ),
             PIPELINE_WEBHOOK_EVENT_TYPE to event.eventType.value,
             PIPELINE_START_WEBHOOK_USER_ID to event.triggerUser,
-            PIPELINE_WEBHOOK_NOTE_COMMENT to body.getHookField(TAPD_KEY_DESCRIPTION),
+            PIPELINE_WEBHOOK_NOTE_COMMENT to body.getPayloadField(TAPD_KEY_DESCRIPTION, update),
             // 用于 StartType.transform 与 WebhookInfo 展示，让构建历史正确识别为 TAPD 触发
             PIPELINE_WEBHOOK_TYPE to CodeType.TAPD.name,
             BK_REPO_WEBHOOK_REPO_TYPE to CodeType.TAPD.name,
@@ -282,24 +304,29 @@ object TapdWebhookUtils {
         return "[${eventAction.value} ${eventType.value}] $title"
     }
 
+    /**
+     * 按工单类型解析标题：缺陷优先 `title`，需求优先 `name`。
+     *
+     * 每组键都通过 [getPayloadField] 同时兼容无前缀与 `new_` 前缀，另一组键作为兜底，
+     * 以便 TAPD API 补写的基础信息（BUG/STORY 均写入 `name`）在没有报文标题时仍可提供标题。
+     */
     private fun getTitle(
         eventType: TapdEventType,
         body: Map<String, Any?>,
         update: Boolean
     ): String {
-        return when (eventType) {
-            TapdEventType.STORY -> {
-                body.getHookField(TAPD_KEY_NAME, update).ifBlank {
-                    body.getHookField(TAPD_KEY_TITLE)
-                }
-            }
-            TapdEventType.BUG -> {
-                body.getHookField(TAPD_KEY_TITLE, update).ifBlank {
-                    body.getHookField(TAPD_KEY_TITLE)
-                }
-            }
-            else -> ""
+        val keys = when (eventType) {
+            TapdEventType.STORY -> listOf(TAPD_KEY_NAME, TAPD_KEY_TITLE)
+            TapdEventType.BUG -> listOf(TAPD_KEY_TITLE, TAPD_KEY_NAME)
+            else -> return ""
         }
+        for (key in keys) {
+            val value = body.getPayloadField(key, update)
+            if (value.isNotBlank()) {
+                return value
+            }
+        }
+        return ""
     }
 
     @Suppress("CyclomaticComplexMethod")

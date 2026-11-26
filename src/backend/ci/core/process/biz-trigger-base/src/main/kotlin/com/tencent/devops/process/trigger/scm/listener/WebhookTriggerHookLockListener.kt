@@ -28,7 +28,7 @@
 package com.tencent.devops.process.trigger.scm.listener
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
+import com.tencent.devops.process.trigger.scm.PipelineWebHookQueueService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
