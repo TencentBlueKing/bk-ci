@@ -120,8 +120,13 @@ object TemplateInstanceUtil {
                 stages.add(stage)
             }
         }
+        val template = model.template?.copy(
+            parsedTemplateId = templateResource.templateId,
+            parsedTemplateVersion = templateResource.version
+        )
         return model.copy(
-            stages = stages
+            stages = stages,
+            template = template
         )
     }
 

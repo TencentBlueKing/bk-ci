@@ -266,6 +266,29 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun replayByBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        forceTrigger: Boolean?
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.replayBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId,
+                forceTrigger = forceTrigger ?: false
+            )
+        )
+    }
+
     override fun manualShutdown(
         userId: String,
         projectId: String,

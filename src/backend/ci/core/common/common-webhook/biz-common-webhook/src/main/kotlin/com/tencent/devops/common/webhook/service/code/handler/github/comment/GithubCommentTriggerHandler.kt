@@ -166,7 +166,7 @@ interface GithubCommentTriggerHandler<T : GithubCommentEvent> : CodeWebhookTrigg
             startParams[PIPELINE_WEBHOOK_NOTE_ID] = id
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_COMMENT] = body
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_ID] = id
-            startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = projectId.toString()
+            startParams[BK_REPO_GIT_WEBHOOK_NOTE_PROJECT_ID] = event.repository.id.toString()
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_AUTHOR_ID] = user.id
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_CREATED_AT] = createdAt ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_NOTE_UPDATED_AT] = updatedAt ?: ""

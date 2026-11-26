@@ -49,7 +49,7 @@ class GithubCommitCommentTriggerHandler : GithubCommentTriggerHandler<GithubComm
         val startParams = mutableMapOf<String, Any>()
         with(event.comment) {
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = user.login
-            startParams[PIPELINE_GIT_SHA] = id
+            startParams[PIPELINE_GIT_SHA] = commitId
             startParams[PIPELINE_GIT_SHA_SHORT] = commitId.substring(0, SHORT_COMMIT_SHA_LENGTH)
         }
         return startParams
