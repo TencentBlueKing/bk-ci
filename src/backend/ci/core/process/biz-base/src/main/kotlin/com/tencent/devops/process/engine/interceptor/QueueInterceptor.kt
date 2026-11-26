@@ -217,7 +217,9 @@ class QueueInterceptor @Autowired constructor(
                 containerHashId = "",
                 executeCount = buildInfo.executeCount,
                 jobId = null,
-                stepId = "QueueInterceptor"
+                stepId = "QueueInterceptor",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
@@ -291,7 +293,9 @@ class QueueInterceptor @Autowired constructor(
                 containerHashId = "",
                 executeCount = buildInfo.executeCount,
                 jobId = null,
-                stepId = "QueueInterceptor"
+                stepId = "QueueInterceptor",
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId
             )
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(

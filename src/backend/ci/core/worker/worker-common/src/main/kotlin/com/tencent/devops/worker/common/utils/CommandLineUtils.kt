@@ -40,13 +40,11 @@ import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 
@@ -76,7 +74,8 @@ object CommandLineUtils {
     ): String {
 
         val result = StringBuilder()
-        val errorResult = StringBuilder()
+        // 合流动后每行都进入失败摘要，但调用方只取末尾一段。定长尾部避免大构建把共享 worker 撑到 OOM。
+        val failureTail = MergedOutputTail(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -92,15 +91,9 @@ object CommandLineUtils {
             else -> Charset.defaultCharset().name()
         }
 
-        val outputStream = object : LogOutputStream() {
-
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
+        // CommandLineExecutor 已 redirectErrorStream，只读合并后的 stdout。
+        // 一律 addNormalLine：##[error] 等前缀仍由 LoggerService 分级；勿再按 fd 调 addErrorLine。
+        val outputStream = object : BoundedLogOutputStream(charsetName = charset) {
 
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
@@ -118,6 +111,8 @@ object CommandLineUtils {
                     buildId = buildId,
                     print2Logger = print2Logger
                 )
+                failureTail.append(tmpLine)
+                failureTail.append("\n")
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
@@ -128,38 +123,7 @@ object CommandLineUtils {
                 }
             }
         }
-
-        val errorStream = object : LogOutputStream() {
-
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                buffer.reset()
-            }
-
-            override fun processLine(line: String?, level: Int) {
-                if (line == null) {
-                    return
-                }
-
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    tmpLine = it.onParseLine(tmpLine)
-                }
-                if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
-                    appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
-                    LoggerService.addErrorLine(tmpLine)
-                } else {
-                    result.append(tmpLine).append("\n")
-                }
-                errorResult.append(tmpLine).append("\n")
-            }
-        }
-        executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
+        executor.streamHandler = PumpStreamHandler(outputStream, null)
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
@@ -168,7 +132,7 @@ object CommandLineUtils {
                     errorType = ErrorType.USER,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
                         "Error message tracking:\n" +
-                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
+                        failureTail.content()
                 )
             }
         } catch (ignored: Throwable) {
@@ -471,4 +435,29 @@ object CommandLineUtils {
             } else null
         }
     }
+}
+
+/**
+ * 只保留最近 [maxChars] 个字符。单行超过上限时只留下该行末尾。
+ */
+internal class MergedOutputTail(private val maxChars: Int) {
+    private val buffer = StringBuilder(maxChars.coerceAtLeast(0))
+
+    fun append(text: String) {
+        if (maxChars <= 0 || text.isEmpty()) {
+            return
+        }
+        if (text.length >= maxChars) {
+            buffer.setLength(0)
+            buffer.append(text, text.length - maxChars, text.length)
+            return
+        }
+        val overflow = buffer.length + text.length - maxChars
+        if (overflow > 0) {
+            buffer.delete(0, overflow)
+        }
+        buffer.append(text)
+    }
+
+    fun content(): String = buffer.toString()
 }

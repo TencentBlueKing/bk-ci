@@ -35,6 +35,10 @@ import com.tencent.devops.log.meta.Ansi
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
@@ -55,7 +59,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId) {
                 genLogPrintPrintResource().addLogLine(
                     buildId = buildId,
                     logMessage = genLogMessage(
@@ -86,7 +90,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId) {
                 genLogPrintPrintResource().addLogMultiLine(
                     buildId = buildId,
                     logMessages = logMessages,
@@ -188,7 +192,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId) {
                 genLogPrintPrintResource().addLogLine(
                     buildId = buildId,
                     logMessage = genLogMessage(
@@ -225,7 +229,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId) {
                 genLogPrintPrintResource().addLogLine(
                     buildId = buildId,
                     logMessage = genLogMessage(
@@ -262,7 +266,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId) {
                 genLogPrintPrintResource().addLogLine(
                     buildId = buildId,
                     logMessage = genLogMessage(
@@ -371,7 +375,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId, critical = true) {
                 genLogPrintPrintResource().updateLogStatus(
                     buildId = buildId,
                     finished = true,
@@ -402,7 +406,7 @@ class BuildLogPrinter(
         pipelineId: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
+            doWithCircuitBreaker(buildId = buildId, critical = true) {
                 genLogPrintPrintResource().addLogStatus(
                     buildId = buildId,
                     tag = tag,
@@ -412,11 +416,13 @@ class BuildLogPrinter(
                     jobId = jobId,
                     stepId = stepId,
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    ownerProjectId = projectId,
+                    ownerPipelineId = pipelineId
                 )
             }
         } catch (ignore: Exception) {
-            logger.warn("[$buildId]|stopLog fail", ignore)
+            logger.warn("[$buildId]|startLog fail", ignore)
         }
     }
 
@@ -445,19 +451,105 @@ class BuildLogPrinter(
         return client.get(ServiceLogPrintResource::class)
     }
 
-    private fun <T> doWithCircuitBreaker(
-        action: () -> T
-    ): T {
-        return circuitBreakerRegistry.let {
-            val breaker = it.circuitBreaker(this.javaClass.name)
-            breaker.executeCallable {
+    /**
+     * 按 buildId 分片到单线程队列异步执行，保证同一构建的 startLog / addLine / stopLog 严格保序。
+     * 连接、超时和熔断均在执行器内部消化，不中断构建主流程；
+     * 队列满时普通日志行丢弃，关键生命周期调用（startLog / stopLog）短时等待后回退同步执行。
+     */
+    private fun doWithCircuitBreaker(
+        buildId: String,
+        critical: Boolean = false,
+        action: () -> Unit
+    ) {
+        val task = Runnable { executeWithCircuitBreaker(buildId, action) }
+        submitToStripe(
+            stripe = stripeFor(buildId, logCallExecutors),
+            buildId = buildId,
+            critical = critical,
+            task = task
+        )
+    }
+
+    private fun executeWithCircuitBreaker(buildId: String, action: () -> Unit) {
+        try {
+            circuitBreakerRegistry.circuitBreaker(javaClass.name).executeCallable {
                 action()
             }
+        } catch (e: CallNotPermittedException) {
+            logger.warn(
+                "[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|",
+                e
+            )
+        } catch (thrown: Throwable) {
+            logger.warn("[$buildId]|build log call failed", thrown)
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildLogPrinter::class.java)
+        private const val LOG_CALL_STRIPE_COUNT = 8
+        private const val LOG_CALL_QUEUE_SIZE = 2048
+        private const val CRITICAL_OFFER_TIMEOUT_MS = 500L
+
+        private val logCallExecutors: Array<ThreadPoolExecutor> = createStripedExecutors(
+            stripeCount = LOG_CALL_STRIPE_COUNT,
+            queueCapacity = LOG_CALL_QUEUE_SIZE
+        )
+
+        internal fun createStripedExecutors(
+            stripeCount: Int,
+            queueCapacity: Int
+        ): Array<ThreadPoolExecutor> = Array(stripeCount) { index ->
+            ThreadPoolExecutor(
+                1,
+                1,
+                0L,
+                TimeUnit.MILLISECONDS,
+                LinkedBlockingQueue(queueCapacity),
+                { runnable ->
+                    Thread(runnable, "build-log-printer-$index").apply { isDaemon = true }
+                },
+                ThreadPoolExecutor.AbortPolicy()
+            )
+        }
+
+        internal fun stripeFor(
+            buildId: String,
+            executors: Array<ThreadPoolExecutor>
+        ): ThreadPoolExecutor {
+            val index = (buildId.hashCode() and Int.MAX_VALUE) % executors.size
+            return executors[index]
+        }
+
+        internal fun submitToStripe(
+            stripe: ThreadPoolExecutor,
+            buildId: String,
+            critical: Boolean,
+            task: Runnable,
+            criticalOfferTimeoutMs: Long = CRITICAL_OFFER_TIMEOUT_MS
+        ) {
+            try {
+                stripe.execute(task)
+            } catch (rejected: RejectedExecutionException) {
+                if (!critical) {
+                    logger.warn("[$buildId]|drop build log call, async queue is full")
+                    return
+                }
+                val enqueued = try {
+                    stripe.prestartCoreThread()
+                    stripe.queue.offer(task, criticalOfferTimeoutMs, TimeUnit.MILLISECONDS)
+                } catch (interrupted: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    false
+                }
+                if (!enqueued) {
+                    logger.warn("[$buildId]|critical log call queue full, run inline as fallback")
+                    task.run()
+                }
+            } catch (thrown: Throwable) {
+                logger.warn("[$buildId]|submit build log call failed", thrown)
+            }
+        }
 
         private const val LOG_DEBUG_FLAG = "##[debug]"
 
