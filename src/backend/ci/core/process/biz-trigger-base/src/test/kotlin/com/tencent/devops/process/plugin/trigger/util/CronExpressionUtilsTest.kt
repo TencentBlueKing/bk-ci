@@ -27,25 +27,33 @@
 
 package com.tencent.devops.process.plugin.trigger.util
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.util.Calendar
 
 class CronExpressionUtilsTest {
 
     @Test
     fun getRecentTriggerTime() {
+        // */5 30 11：每天 11:30 内每 5 秒一次。下一次触发取决于当前时间，
+        // 跑在 11:30 这一分钟里时第一次不是 11:30:00，不能把时刻写死。
         val cron = "*/5 30 11 * * ? *"
         val recentTriggerTimes = CronExpressionUtils.getRecentTriggerTime(
             cron = cron,
             numTimes = 2
         )
-        assertTrue(recentTriggerTimes.size == 2)
-        val format = "HH:mm:ss"
-        assertEquals(DateTimeUtil.formatDate(recentTriggerTimes[0], format), "11:30:00")
-        assertEquals(DateTimeUtil.formatDate(recentTriggerTimes[1], format), "11:30:05")
+        assertEquals(2, recentTriggerTimes.size)
+        recentTriggerTimes.forEach { date ->
+            val calendar = Calendar.getInstance().apply { time = date }
+            assertEquals(11, calendar.get(Calendar.HOUR_OF_DAY))
+            assertEquals(30, calendar.get(Calendar.MINUTE))
+            assertEquals(0, calendar.get(Calendar.SECOND) % 5)
+        }
+        val interval = recentTriggerTimes[1].time - recentTriggerTimes[0].time
+        // 仍在 11:30 内：相邻两次相差 5 秒；已过该分钟最后一档：下一次是次日 11:30:00
+        assertTrue(interval == 5_000L || interval >= 23 * 60 * 60 * 1000)
     }
 
     @Test
