@@ -52,5 +52,6 @@ data class PipelineBuildLessStartupEvent(
     val customBuildEnv: Map<String, String>?,
     val queueTimeoutMinutes: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 1
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills, retryTime)

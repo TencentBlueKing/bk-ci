@@ -47,7 +47,8 @@ data class PipelineAgentShutdownDemoteEvent(
     val dispatchType: DispatchType,
     override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 1
 ) : IPipelineEvent(
     actionType = actionType,
     source = source,
@@ -55,5 +56,6 @@ data class PipelineAgentShutdownDemoteEvent(
     pipelineId = pipelineId,
     userId = userId,
     delayMills = delayMills,
+    retryTime = retryTime,
     routeKeySuffix = routeKeySuffix
 )

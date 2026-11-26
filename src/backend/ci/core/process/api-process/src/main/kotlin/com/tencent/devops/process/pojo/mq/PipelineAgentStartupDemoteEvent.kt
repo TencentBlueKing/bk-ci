@@ -63,7 +63,8 @@ data class PipelineAgentStartupDemoteEvent(
     // 用来计算 dispatch 排队过程中的耗时
     var dispatchQueueStartTimeMilliSecond: Long? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 1
 ) : IPipelineEvent(
     actionType = actionType,
     source = source,
@@ -71,5 +72,6 @@ data class PipelineAgentStartupDemoteEvent(
     pipelineId = pipelineId,
     userId = userId,
     delayMills = delayMills,
+    retryTime = retryTime,
     routeKeySuffix = routeKeySuffix
 )

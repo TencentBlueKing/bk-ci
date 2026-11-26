@@ -237,7 +237,8 @@ class DockerVMListener @Autowired constructor(
                     dockerRoutingType = dockerRoutingType.name,
                     jobId = null,
                     singleNodeConcurrency = null,
-                    allNodeConcurrency = null
+                    allNodeConcurrency = null,
+                    retryTime = retryTime
                 )
             )
         }
