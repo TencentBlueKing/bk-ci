@@ -3,7 +3,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import com.tencent.devops.process.yaml.PipelineYamlViewService
+import com.tencent.devops.process.pac.PipelineYamlViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
