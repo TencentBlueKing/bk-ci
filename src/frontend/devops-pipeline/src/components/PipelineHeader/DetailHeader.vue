@@ -458,7 +458,7 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res?.code === 2101272) {
+                } else if (Number(res?.code) === 2101272) {
                     this.loading = false
                     this.$bkInfo({
                         title: this.$t('history.rePlay'),
@@ -597,13 +597,24 @@
                         return { stale: true }
                     }
                     // store 失败时 resolve 错误对象，不会进入 catch
-                    return { canReplay: typeof res === 'boolean' ? res : true }
+                    if (typeof res !== 'boolean') {
+                        this.$showTips({
+                            message: this.$t('history.replayCheckFailed'),
+                            theme: 'warning'
+                        })
+                        return { canReplay: false }
+                    }
+                    return { canReplay: res }
                 } catch (err) {
                     console.error(err)
                     if (this.$route.params.buildNo !== buildId) {
                         return { stale: true }
                     }
-                    return { canReplay: true }
+                    this.$showTips({
+                        message: this.$t('history.replayCheckFailed'),
+                        theme: 'warning'
+                    })
+                    return { canReplay: false }
                 } finally {
                     this.replayChecking = false
                 }

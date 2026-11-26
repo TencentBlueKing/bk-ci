@@ -79,7 +79,11 @@ export default defineComponent({
           forceTrigger,
         })
       } catch (err: any) {
-        if ((err?.status ?? err?.business?.code ?? err?.code) !== 2101272) throw err
+        // 优先取业务码；HttpError.status 是 HTTP 状态，不能用来判断 2101272
+        const businessCode = Number(
+          err instanceof HttpError ? err.business?.code : (err?.code ?? err?.status),
+        )
+        if (businessCode !== 2101272) throw err
         btnLoading.value = false
         InfoBox({
           title: t('flow.execute.rePlay'),
