@@ -281,6 +281,52 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.buildConcurrency"
+                    sortable="custom"
+                    :label="$t('environment.buildConcurrency')"
+                    min-width="120"
+                    prop="busyTaskSize"
+                    :render-header="(h) => renderCapacityHeader(h, $t('environment.buildConcurrency'))"
+                >
+                    <template slot-scope="props">
+                        {{ formatConcurrency(props.row, 'host') }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.dockerConcurrency"
+                    sortable="custom"
+                    :label="$t('environment.dockerBuildConcurrency')"
+                    min-width="180"
+                    prop="dockerBusyTaskSize"
+                    :render-header="(h) => renderCapacityHeader(h, $t('environment.dockerBuildConcurrency'))"
+                >
+                    <template slot-scope="props">
+                        {{ formatConcurrency(props.row, 'docker') }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.cpuCores"
+                    sortable="custom"
+                    :label="$t('environment.cpuCores')"
+                    min-width="110"
+                    prop="ncpus"
+                >
+                    <template slot-scope="props">
+                        {{ formatCpu(props.row) }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    v-if="showAgentCapacity && allRenderColumnMap.memory"
+                    sortable="custom"
+                    :label="$t('environment.nodeInfo.ram')"
+                    min-width="120"
+                    prop="memTotal"
+                >
+                    <template slot-scope="props">
+                        {{ formatMemory(props.row) }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column
                     v-if="allRenderColumnMap.usage"
                     :label="$t('environment.nodeInfo.usage')"
                     sortable="custom"
@@ -541,6 +587,54 @@
     import { mapActions } from 'vuex'
     import useEnvDetail from '@/hooks/useEnvDetail'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
+    const CAPACITY_COLUMNS_MIGRATED_KEY = 'node_list_capacity_columns_v1'
+    const CAPACITY_COLUMN_IDS = ['buildConcurrency', 'dockerConcurrency', 'cpuCores', 'memory']
+    const DEFAULT_NODE_COLUMNS = [
+        { id: 'displayName' },
+        { id: 'ip' },
+        { id: 'label' },
+        { id: 'os' },
+        { id: 'nodeStatus' },
+        { id: 'usage' },
+        { id: 'createdUser' },
+        { id: 'lastModifyBy' },
+        { id: 'lastModifyTime' },
+        { id: 'latestBuildPipeline' },
+        { id: 'latestBuildTime' }
+    ]
+    const DEPLOY_NODE_TYPES = ['CMDB', 'CC', 'UNKNOWN', 'OTHER']
+
+    const ensureCapacityColumns = (columns) => {
+        const cols = Array.isArray(columns) ? columns.slice() : []
+        let insertAt = cols.findIndex(col => col.id === 'nodeStatus')
+        insertAt = insertAt >= 0 ? insertAt + 1 : cols.length
+        CAPACITY_COLUMN_IDS.forEach((id) => {
+            if (!cols.some(col => col.id === id)) {
+                cols.splice(insertAt, 0, { id })
+                insertAt += 1
+            }
+        })
+        return cols
+    }
+
+    const loadSelectedColumns = () => {
+        let cached = null
+        try {
+            cached = JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))
+        } catch (err) {
+            cached = null
+        }
+        let columns = cached?.columns || DEFAULT_NODE_COLUMNS
+        if (!localStorage.getItem(CAPACITY_COLUMNS_MIGRATED_KEY)) {
+            columns = ensureCapacityColumns(columns)
+            localStorage.setItem(CAPACITY_COLUMNS_MIGRATED_KEY, '1')
+            localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
+                columns,
+                size: cached?.size || localStorage.getItem('node_table_size') || 'small'
+            }))
+        }
+        return columns
+    }
 
     export default {
         components: {
@@ -592,19 +686,7 @@
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
-                rawSelectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
-                    { id: 'displayName' },
-                    { id: 'ip' },
-                    { id: 'label' },
-                    { id: 'os' },
-                    { id: 'nodeStatus' },
-                    { id: 'usage' },
-                    { id: 'createdUser' },
-                    { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' },
-                    { id: 'latestBuildPipeline' },
-                    { id: 'latestBuildTime' }
-                ],
+                rawSelectedTableColumn: loadSelectedColumns(),
                 isShowSetTagSlider: false,
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
@@ -627,12 +709,18 @@
                     return result
                 }, {})
             },
+            showAgentCapacity () {
+                return this.isCreateResType || this.$route.params.nodeType !== 'CMDB'
+            },
             selectedTableColumn () {
-                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
+                let cols = this.rawSelectedTableColumn
                 if (this.isCreateResType) {
-                    return this.rawSelectedTableColumn.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
+                    cols = cols.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
                 }
-                return this.rawSelectedTableColumn
+                if (!this.showAgentCapacity) {
+                    cols = cols.filter(col => !CAPACITY_COLUMN_IDS.includes(col.id))
+                }
+                return cols
             },
             usageMap () {
                 return {
@@ -702,6 +790,22 @@
                         label: this.$t('environment.status')
                     },
                     {
+                        id: 'buildConcurrency',
+                        label: this.$t('environment.buildConcurrency')
+                    },
+                    {
+                        id: 'dockerConcurrency',
+                        label: this.$t('environment.dockerBuildConcurrency')
+                    },
+                    {
+                        id: 'cpuCores',
+                        label: this.$t('environment.cpuCores')
+                    },
+                    {
+                        id: 'memory',
+                        label: this.$t('environment.nodeInfo.ram')
+                    },
+                    {
                         id: 'usage',
                         label: this.$t('environment.nodeInfo.usage')
                     },
@@ -726,11 +830,10 @@
                         label: this.$t('environment.nodeInfo.lastRunAs')
                     }
                 ]
-                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
-                if (this.isCreateResType) {
-                    return columns.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
-                }
-                return columns
+                const hidden = []
+                if (this.isCreateResType) hidden.push('usage', 'latestBuildPipeline')
+                if (!this.showAgentCapacity) hidden.push(...CAPACITY_COLUMN_IDS)
+                return hidden.length ? columns.filter(col => !hidden.includes(col.id)) : columns
             },
             showEditIcon () {
                 return !this.isEditNodeStatus && !this.isCreateResType
@@ -759,6 +862,55 @@
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            renderCapacityHeader (h, label) {
+                return h('span', { class: 'capacity-header' }, [
+                    label,
+                    h('i', {
+                        class: 'bk-icon icon-info-circle',
+                        directives: [{
+                            name: 'bkTooltips',
+                            value: this.$t('environment.concurrencyColumnTip')
+                        }],
+                        on: {
+                            click: (event) => event.stopPropagation()
+                        }
+                    })
+                ])
+            },
+            isCapacityBlank (row) {
+                if (!row) return true
+                return DEPLOY_NODE_TYPES.includes(row.nodeType)
+            },
+            formatLimitText (limit) {
+                if (limit === 0 || limit === '0') {
+                    return { text: this.$t('environment.concurrencyUnlimited'), isDefault: false }
+                }
+                if (limit === null || limit === undefined || limit === '') {
+                    return { text: '4', isDefault: true }
+                }
+                return { text: String(limit), isDefault: false }
+            },
+            formatConcurrency (row, kind) {
+                if (this.isCapacityBlank(row)) return ''
+                const busyKey = kind === 'docker' ? 'dockerBusyTaskSize' : 'busyTaskSize'
+                const limitKey = kind === 'docker' ? 'dockerParallelTaskCount' : 'parallelTaskCount'
+                const busy = row[busyKey]
+                const busyText = (busy === null || busy === undefined || busy === '') ? '-' : String(busy)
+                const limit = this.formatLimitText(row[limitKey])
+                const cell = `${busyText}/${limit.text}`
+                return limit.isDefault ? `${cell} ${this.$t('environment.concurrencyDefault')}` : cell
+            },
+            formatCpu (row) {
+                if (this.isCapacityBlank(row)) return ''
+                const text = String(row?.ncpus ?? '').trim()
+                return text && text !== '0' ? text : '-'
+            },
+            formatMemory (row) {
+                if (this.isCapacityBlank(row)) return ''
+                const text = String(row?.memTotal ?? '').trim()
+                if (!text || text === '0' || /^0(\.0+)?\s/.test(text)) return '-'
+                return text
+            },
             handleExpandList () {
                 this.$emit('toggle-fold')
             },
@@ -1098,6 +1250,16 @@
   @import '@/scss/conf';
     .list-table-container {
         height: 100%;
+    }
+    .capacity-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        .bk-icon {
+            color: #979ba5;
+            font-size: 14px;
+            cursor: pointer;
+        }
     }
     .expand-btn {
         position: absolute;

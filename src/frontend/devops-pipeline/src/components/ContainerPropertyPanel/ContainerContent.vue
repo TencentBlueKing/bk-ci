@@ -299,15 +299,22 @@
 
             <form-field
                 :label="$t('editPage.workspace')"
+                :desc="workspaceDesc"
                 v-if="isThirdParty"
             >
-                <vuex-input
-                    :disabled="!editable"
-                    name="workspace"
-                    :value="container.dispatchType.workspace"
-                    :handle-change="changeBuildResource"
-                    :placeholder="workspacePlaceholder"
-                />
+                <div
+                    class="workspace-input-wrap"
+                    :class="{ 'is-mount-disabled': workspaceMountLocked }"
+                    v-bk-tooltips="workspaceMountTooltip"
+                >
+                    <vuex-input
+                        :disabled="workspaceDisabled"
+                        name="workspace"
+                        :value="workspaceValue"
+                        :handle-change="changeBuildResource"
+                        :placeholder="workspacePlaceholder"
+                    />
+                </div>
             </form-field>
             <form-field
                 class="container-app-field"
@@ -441,6 +448,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import { dockerWorkspaceValue, isDockerWorkspaceMounted } from '@/utils/normalizePipelineModel'
     import Vue from 'vue'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import ContainerAppSelector from './ContainerAppSelector'
@@ -699,10 +707,36 @@
             isEnableDocker () {
                 return this.isLinuxOsDockerImage && Object.keys(this.dockerInfo).length > 0
             },
+            mountWorkspace () {
+                return isDockerWorkspaceMounted(this.container.dispatchType)
+            },
+            workspaceMountLocked () {
+                return this.isEnableDocker && !this.mountWorkspace
+            },
+            workspaceValue () {
+                return dockerWorkspaceValue(this.container.dispatchType)
+            },
+            workspaceDisabled () {
+                return !this.editable || this.workspaceMountLocked
+            },
+            workspaceDesc () {
+                return this.isEnableDocker && this.mountWorkspace
+                    ? this.$t('editPage.dockerWorkspaceDesc')
+                    : ''
+            },
             workspacePlaceholder () {
-                return this.isEnableDocker
-                    ? this.$t('editPage.dockerWorkspaceTips')
-                    : this.$t('editPage.workspaceTips')
+                if (this.isEnableDocker && this.mountWorkspace) {
+                    return this.$t('editPage.dockerWorkspacePlaceholder')
+                }
+                if (this.isEnableDocker) return ''
+                return this.$t('editPage.workspaceTips')
+            },
+            workspaceMountTooltip () {
+                if (!this.workspaceMountLocked) return { disabled: true }
+                return {
+                    content: this.$t('editPage.mountWorkspaceDisabledTips'),
+                    placements: ['top']
+                }
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
@@ -1197,6 +1231,14 @@
         }
         .image-tag {
             flex: 1;
+        }
+    }
+
+    .workspace-input-wrap {
+        width: 100%;
+
+        &.is-mount-disabled .bk-form-input {
+            pointer-events: none;
         }
     }
 

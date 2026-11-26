@@ -285,11 +285,18 @@
                 </bk-button>
             </div>
         </bk-dialog>
+        <batch-container-limit-dialog
+            v-model="isShowBatchContainerLimit"
+            :nodes="selectedNodes"
+            @saved="requestList"
+        />
     </div>
 </template>
 
 <script>
     import ImportThirdPartyDialog from '@/components/devops/environment/ImportThirdPartyDialog.vue'
+    import BatchContainerLimitDialog from './components/BatchContainerLimitDialog.vue'
+    import { BATCH_LIMIT_MAX, isLinuxBuildNode } from '@/utils/containerLimit'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
     import {
@@ -317,6 +324,7 @@
         components: {
             ListTable,
             ImportThirdPartyDialog,
+            BatchContainerLimitDialog,
             SearchSelect,
             CollapseLayout,
             NodeDetail
@@ -420,6 +428,7 @@
                 isBatchDropdownShow: false,
                 selectedNodes: [],
                 isShowEditMaxConcurrency: false,
+                isShowBatchContainerLimit: false,
                 isShowResetImportUser: false,
                 parallelTaskCount: 0,
                 dockerParallelTaskCount: 0
@@ -503,6 +512,26 @@
                         name: this.$t('environment.nodeInfo.agentVersion'),
                         id: 'agentVersion'
                     },
+                    ...(this.showAgentCapacity ? [
+                        {
+                            name: this.$t('environment.buildConcurrencyLimit'),
+                            id: 'parallelTaskCount',
+                            remoteMethod: (keyword) => this.limitSearchOptions(keyword)
+                        },
+                        {
+                            name: this.$t('environment.dockerBuildConcurrencyLimit'),
+                            id: 'dockerParallelTaskCount',
+                            remoteMethod: (keyword) => this.limitSearchOptions(keyword)
+                        },
+                        {
+                            name: this.$t('environment.cpuCores'),
+                            id: 'ncpus'
+                        },
+                        {
+                            name: this.$t('environment.nodeInfo.ram'),
+                            id: 'memTotal'
+                        }
+                    ] : []),
                     {
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
@@ -570,6 +599,7 @@
                         disabled: (this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) || cannotEditNodes.length > 0,
                         handler: () => this.batchSetMaxConcurrency()
                     },
+                    ...(!this.isCreateResType ? [this.containerLimitMenuItem()] : []),
                     ...(!this.isCreateResType ? [
                         {
                             key: 'bulkResetImportUser',
@@ -637,6 +667,10 @@
             },
             isCreateResType () {
                 return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            showAgentCapacity () {
+                if (this.isCreateResType) return true
+                return (this.$route.params.nodeType || ALLNODE) !== 'CMDB'
             },
             currentResourceType () {
                 return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
@@ -792,6 +826,19 @@
             batchDropdown () {
                 this.isBatchDropdownShow = !this.isBatchDropdownShow
             },
+            limitSearchOptions (keyword) {
+                const presets = [
+                    { id: '0', name: this.$t('environment.concurrencyUnlimited') },
+                    { id: 'default', name: this.$t('environment.concurrencyDefault') }
+                ]
+                const text = String(keyword || '').trim()
+                if (/^\d+$/.test(text)) {
+                    if (text === '0') return Promise.resolve(presets)
+                    return Promise.resolve([{ id: text, name: text }, ...presets])
+                }
+                if (!text) return Promise.resolve(presets)
+                return Promise.resolve(presets.filter(item => item.name.includes(text)))
+            },
             hasSelectedNode (){
                 if (!this.selectedNodes.length) {
                     this.$bkMessage({
@@ -820,6 +867,41 @@
                 if (!this.hasSelectedNode() || this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY')) return
                 if (this.selectedNodes.some(node => !node.canEdit)) return
                 this.isShowEditMaxConcurrency = true
+            },
+            containerLimitMenuItem () {
+                const selected = this.selectedNodes
+                const linuxNodes = selected.filter(isLinuxBuildNode)
+                const editable = linuxNodes.filter(node => node.canEdit)
+                let disabled = false
+                let tooltips = ''
+                if (selected.length && !linuxNodes.length) {
+                    disabled = true
+                    tooltips = this.$t('environment.noLinuxBuildNodeTip')
+                } else if (selected.length && linuxNodes.length && !editable.length) {
+                    disabled = true
+                    tooltips = this.$t('environment.noEditableNodeTip')
+                }
+                return {
+                    key: 'batchContainerLimit',
+                    textKey: 'environment.batchEditContainerLimit',
+                    tooltips,
+                    disabled,
+                    handler: () => this.openBatchContainerLimit()
+                }
+            },
+            openBatchContainerLimit () {
+                if (!this.hasSelectedNode()) return
+                const item = this.containerLimitMenuItem()
+                if (item.disabled) return
+                const editable = this.selectedNodes.filter(node => node.canEdit && isLinuxBuildNode(node))
+                if (editable.length > BATCH_LIMIT_MAX) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: this.$t('environment.batchLimitMax')
+                    })
+                    return
+                }
+                this.isShowBatchContainerLimit = true
             },
             async handleSetMaxConcurrency () {
                 try {
@@ -1086,18 +1168,23 @@
 
                     // IP 搜索统一走 ipListSearch（请求体，后端按分隔符解析后精确 IN 查询）
                     const { ipListSearch, ...restParams } = params
-
+                    const listParams = {
+                        ...restParams,
+                        ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
+                        page: this.paginationData.current,
+                        pageSize: this.paginationData.limit,
+                        ...(this.isCreateResType ? {
+                            nodeType: 'CREATE'
+                        } : {})
+                    }
+                    if (!this.showAgentCapacity) {
+                        ['parallelTaskCount', 'dockerParallelTaskCount', 'ncpus', 'memTotal'].forEach((key) => {
+                            delete listParams[key]
+                        })
+                    }
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
-                        params: {
-                            ...restParams,
-                            ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
-                            page: this.paginationData.current,
-                            pageSize: this.paginationData.limit,
-                            ...(this.isCreateResType ? {
-                                nodeType: 'CREATE'
-                            }: {})
-                        },
+                        params: listParams,
                         ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {}),
                         ipListSearch
                     })
