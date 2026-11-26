@@ -27,12 +27,9 @@
 
 package com.tencent.devops.websocket.handler
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.websocket.utils.WsRedisUtils
-import com.tencent.devops.websocket.servcie.WebsocketService
-import com.tencent.devops.websocket.utils.HostUtils
+import com.tencent.devops.websocket.servcie.LegacySessionRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.socket.CloseStatus
@@ -45,41 +42,33 @@ class SessionHandler @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecorator(delegate) {
 
-    // 链接关闭记录去除session
     override fun afterConnectionClosed(session: WebSocketSession, closeStatus: CloseStatus) {
-        val uri = session.uri
-        if (closeStatus.code != CloseStatus.NORMAL.code && closeStatus.code != CloseStatus.PROTOCOL_ERROR.code) {
-            logger.warn("websocket close abnormal, [$closeStatus] [${session.uri}] [${session.remoteAddress}]")
-        }
-        val sessionId = HostUtils.getRealSession(session.uri?.query)
-        if (sessionId.isNullOrEmpty()) {
-            logger.warn("connection closed can not find sessionId, $uri| ${session.remoteAddress}")
+        try {
+            val sessionId = session.attributes[LegacySessionRegistry.SESSION_ATTRIBUTE] as? String
+            if (sessionId != null) {
+                SpringContextUtil.getBean(LegacySessionRegistry::class.java).disconnected(sessionId, session.id)
+            }
+        } catch (exception: Exception) {
+            logger.warn("Unable to clean closed websocket session", exception)
+        } finally {
             super.afterConnectionClosed(session, closeStatus)
         }
-        val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId!!)
-        val userId = WsRedisUtils.getUserBySession(redisOperation, sessionId)
-        if (userId.isNullOrEmpty()) {
-            logger.warn("connection closed can not find userId, $uri| ${session.remoteAddress}| $sessionId")
-            super.afterConnectionClosed(session, closeStatus)
-        } else {
-            logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
-            SpringContextUtil.getBean(WebsocketService::class.java)
-                .removeCacheSession(sessionId)
-        }
-
-        super.afterConnectionClosed(session, closeStatus)
     }
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
-        val uri = session.uri
-        val remoteId = session.remoteAddress
-        val sessionId = uri?.query?.split("&")
-            ?.firstOrNull { it.contains("sessionId") }?.substringAfter("sessionId=")
-        val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
-        SpringContextUtil.getBean(WebsocketService::class.java)
-            .addCacheSession(sessionId!!)
-        logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")
-        super.afterConnectionEstablished(session)
+        val sessionId = session.attributes[LegacySessionRegistry.SESSION_ATTRIBUTE] as? String
+        val userId = session.attributes[LegacySessionRegistry.USER_ATTRIBUTE] as? String
+        if (sessionId.isNullOrBlank() || userId.isNullOrBlank()) {
+            session.close(CloseStatus.POLICY_VIOLATION)
+            return
+        }
+        try {
+            SpringContextUtil.getBean(LegacySessionRegistry::class.java).connected(sessionId, userId, session)
+            super.afterConnectionEstablished(session)
+        } catch (exception: Exception) {
+            logger.warn("Unable to establish websocket session", exception)
+            session.close(CloseStatus.SERVER_ERROR)
+        }
     }
 
     companion object {

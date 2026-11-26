@@ -692,6 +692,7 @@
         encodeArtifactDownloadUrl
     } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
+    import { watchRealtime } from '../../../../common-lib/websocket/bridge'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     import {
@@ -1023,11 +1024,19 @@
             }
         },
         mounted () {
-            webSocketMessage.installWsMessage(this.requestHistory)
+            this.realtimeHistory = watchRealtime({
+                topics: [`ph:${this.projectId}:${this.pipelineId}`],
+                interval: 3000,
+                load: () => this.requestHistory()
+            })
+            webSocketMessage.installWsMessage(() => this.realtimeHistory?.refresh())
+            webSocketMessage.registeOnReconnect(() => this.realtimeHistory?.refresh())
             window.addEventListener('resize', this.updateTableHeight)
         },
 
         beforeDestroy () {
+            this.realtimeHistory?.dispose()
+            this.historyRequestVersion = (this.historyRequestVersion || 0) + 1
             webSocketMessage.unInstallWsMessage()
             window.removeEventListener('resize', this.updateTableHeight)
         },
@@ -1067,6 +1076,9 @@
                 this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {
+                const requestVersion = (this.historyRequestVersion || 0) + 1
+                this.historyRequestVersion = requestVersion
+                const routeKey = this.$route.fullPath
                 try {
                     const version = this.routePipelineVersion
                     if (!version) return
@@ -1082,6 +1094,7 @@
                         isDebug: this.isDebug,
                         archiveFlag: this.archiveFlag
                     })
+                    if (requestVersion !== this.historyRequestVersion || routeKey !== this.$route.fullPath) return
                     this.setHistoryPageStatus({
                         count: res.count
                     })

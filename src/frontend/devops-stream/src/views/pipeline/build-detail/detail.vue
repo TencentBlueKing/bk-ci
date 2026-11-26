@@ -221,7 +221,7 @@
                     this.buildDetail.status = res.status
                     this.buildDetail.startTime = res.startTime
                     this.buildDetail.executeTime = res.executeTime
-                }, 'IFRAMEprocess', 'detail')
+                }, 'IFRAMEprocess', 'detail', () => this.getPipelineBuildDetail())
                 return this.getPipelineBuildDetail()
             },
 
