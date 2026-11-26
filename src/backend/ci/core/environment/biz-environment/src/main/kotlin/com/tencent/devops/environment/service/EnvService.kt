@@ -1187,7 +1187,8 @@ class EnvService @Autowired constructor(
             )
         }
         // 校验全部创作节点环境
-        if (AllCreateNodeEnv.idList().any { it in envIds.toSet() } && !authProjectApi.checkProjectManager(
+        val builtinEnvIds = envIds.filter { AllCreateNodeEnv.hasId(it) }
+        if (builtinEnvIds.isNotEmpty() && !authProjectApi.checkProjectManager(
                 userId,
                 pipelineAuthServiceCode,
                 projectId
@@ -1195,7 +1196,7 @@ class EnvService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ERROR_ENV_NO_VIEW_PERMISSSION,
-                params = arrayOf(invalidEnvIds.joinToString(","))
+                params = arrayOf(builtinEnvIds.joinToString(","))
             )
         }
     }

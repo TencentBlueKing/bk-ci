@@ -289,12 +289,19 @@ class PipelineTimerBuildListener @Autowired constructor(
             ) {
                 return
             }
-            val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
+            // 这次没有发出去时要放掉限频标记，否则这一天都不会再提醒
+            val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: run {
+                redisOperation.delete(notifyKey)
+                return
+            }
             val receivers = setOfNotNull(
                 creativeStreamService.getPipelineOAuthUser(projectId, pipelineId)?.takeIf(String::isNotBlank),
                 userId.takeIf(String::isNotBlank)
             )
-            if (receivers.isEmpty()) return
+            if (receivers.isEmpty()) {
+                redisOperation.delete(notifyKey)
+                return
+            }
             val reason = reasonDetail.getReasonDetailList()?.joinToString("；").orEmpty()
             // 文案只按流水线写，创作流渠道由 MessageUtil 统一替换称谓。
             // MQ 消费没有 ChannelContext，渠道必须显式传，否则创作流收到的是「流水线」
@@ -317,7 +324,6 @@ class PipelineTimerBuildListener @Autowired constructor(
             }
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         } catch (ignored: Throwable) {
-            // 限频标记是在发送前占的，这次没发出去就要放掉，否则这一天都不会再提醒
             redisOperation.delete(notifyKey)
             logger.warn("[$pipelineId]|notify timer trigger failed error|taskId=$taskId", ignored)
         }

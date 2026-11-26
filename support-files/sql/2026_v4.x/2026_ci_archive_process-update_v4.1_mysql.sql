@@ -108,7 +108,6 @@ BEGIN
             ADD COLUMN `YAML_LOCK_TIME` timestamp NULL DEFAULT NULL COMMENT 'YAML禁用操作时间';
     END IF;
 
-    -- 创作流运行资源：数字分身/数字分身环境/云桌面/云桌面环境四选一，环境类资源的标识仍沿用 ENV_HASH_ID/ENV_NAME
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
@@ -118,6 +117,7 @@ BEGIN
             ADD COLUMN `YAML_LOCKED` bit(1) DEFAULT b'0' COMMENT 'YAML是否禁用';
     END IF;
 
+    -- 创作流运行资源：数字分身/数字分身环境/云桌面/云桌面环境四选一，环境类资源的标识仍沿用 ENV_HASH_ID/ENV_NAME
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
