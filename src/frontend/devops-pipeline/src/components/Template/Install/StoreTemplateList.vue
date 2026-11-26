@@ -2,9 +2,11 @@
     <div class="store-template-list">
         <bk-input
             v-model="searchValue"
+            clearable
             :placeholder="$t('template.searchTemplate')"
             right-icon="bk-icon icon-search"
-            @change="handleChangeSearchValue"
+            @enter="handleChangeSearchValue"
+            @clear="handleChangeSearchValue"
         />
         <ul
             class="template-list"
