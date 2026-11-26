@@ -125,7 +125,7 @@ class SubAgentFactory @Autowired constructor(
         )
         configs.forEach { config ->
             try {
-                val client = mcpServerService.createClient(config)
+                val client = mcpServerService.createClient(config, userId)
                 toolkit.registerMcpClient(client).block()
                 logger.info(
                     "[SubAgentFactory] Registered MCP: {} -> {}",
