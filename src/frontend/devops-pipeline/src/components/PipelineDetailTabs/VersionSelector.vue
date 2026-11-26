@@ -453,19 +453,42 @@
                         }
                     }
 
-                    // 默认选中项不在已加载的分页中时，自动继续加载下一页直到找到
+                    // 默认选中项不在已加载的分页中时，通过 version 精确搜索补入列表（避免逐页递归加载，性能差）
                     if (this.value
                         && !this.activeVersion
                         && this.hasNext
                         && !this.versionList.some(item => item.version === this.value)
                     ) {
-                        await this.loadMore()
+                        const target = await this.fetchVersion(this.value)
+                        if (target) {
+                            this.versionList.push(target)
+                            this.switchVersion(this.value)
+                        }
                     }
                 } catch (error) {
                     console.log(error)
                 } finally {
                     this.bottomLoadingOptions.isLoading = false
                     this.isLoading = false
+                }
+            },
+            // 通过 version 精确搜索指定版本（列表分页未覆盖时使用，一次请求代替逐页递归）
+            async fetchVersion (version) {
+                try {
+                    const res = await this.getDataSource('release')({
+                        ...this.buildReleaseParams({
+                            projectId: this.projectId,
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId,
+                            page: 1,
+                            pageSize: this.pagination.limit
+                        }),
+                        version,
+                    })
+                    const record = res?.records?.find(item => item.version === version)
+                    return record ? this.transformReleaseVersion(record) : null
+                } catch (error) {
+                    console.warn('fetch version failed:', error)
+                    return null
                 }
             },
             switchVersion (versionId) {
