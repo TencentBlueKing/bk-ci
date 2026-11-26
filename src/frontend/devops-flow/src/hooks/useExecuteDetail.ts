@@ -54,7 +54,6 @@ export function useExecuteDetail() {
     initExecuteDetail: store.initExecuteDetail,
     silentRefreshExecuteDetail: store.silentRefreshExecuteDetail,
     stopExecute: store.stopExecute,
-    requestRePlayFlow: store.requestRePlayFlow,
     requestRetryFlow: store.requestRetryFlow,
     requestTriggerStage: store.requestTriggerStage,
     requestUpdateRemark: store.requestUpdateRemark,

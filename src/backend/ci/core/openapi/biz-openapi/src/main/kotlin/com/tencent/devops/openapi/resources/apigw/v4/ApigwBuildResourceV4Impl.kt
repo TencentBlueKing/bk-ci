@@ -262,6 +262,37 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun replayByBuild(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        buildNumber: Int?,
+        forceTrigger: Boolean?
+    ): Result<BuildId> {
+        logger.info("OPENAPI_BUILD_V4|$userId|replay by build|$projectId|$pipelineId|$buildId|$buildNumber")
+
+        val checkPipelineId = if (buildId.isNullOrBlank()) {
+            pipelineId ?: throw ParamBlankException("pipelineId and buildId cannot be empty at the same time")
+        } else checkPipelineId(projectId, pipelineId, buildId)
+
+        val checkBuildId = if (buildId.isNullOrBlank()) {
+            val buildNum = buildNumber
+                ?: throw ParamBlankException("buildId and buildNumber cannot be empty at the same time")
+            checkBuildId(projectId, checkPipelineId, buildNum)
+        } else buildId
+
+        return client.get(ServiceBuildResource::class).replayByBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId,
+            buildId = checkBuildId,
+            forceTrigger = forceTrigger
+        )
+    }
+
     override fun getStatus(
         appCode: String?,
         apigwType: String?,

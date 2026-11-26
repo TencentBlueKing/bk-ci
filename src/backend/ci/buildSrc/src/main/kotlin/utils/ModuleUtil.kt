@@ -53,7 +53,13 @@ object ModuleUtil {
                 projectNameSb.append(parts[i])
             }
         }
-        return projectNameSb.toString().let { if (it == "engine") "process" else it }
+        return projectNameSb.toString().let {
+            if (it == "engine" || it == "trigger") {
+                "process"
+            } else {
+                it
+            }
+        }
     }
 
     fun getBkActualModuleNames(moduleName: String): List<String> {
