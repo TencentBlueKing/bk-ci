@@ -87,7 +87,7 @@ class PipelineYamlResourceService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = result.pipelineId,
                     result = result,
-                    description = commit!!.commitMsg
+                    description = commitMsg
                 )
             }
             return result
@@ -127,7 +127,7 @@ class PipelineYamlResourceService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     result = result,
-                    description = commit!!.commitMsg
+                    description = commitMsg
                 )
             }
             return result
