@@ -338,7 +338,7 @@ class PipelineTemplateInfoDao {
                 if (mode != null) conditions.add(MODE.eq(mode!!.name))
                 if (desc != null && desc!!.isNotBlank()) conditions.add(DESC.like("%$desc%"))
                 if (exactSearchName != null && exactSearchName!!.isNotBlank()) conditions.add(NAME.eq(exactSearchName))
-                if (type != null) conditions.add(TYPE.eq(type!!.value))
+                if (type != null) conditions.add(TYPE.eq(type!!.name))
                 if (enablePac != null) conditions.add(PAC.eq(enablePac))
                 if (releasedVersion != null) conditions.add(RELEASED_VERSION.eq(releasedVersion))
                 if (releasedVersionName != null) conditions.add(RELEASED_VERSION_NAME.eq(releasedVersionName))
