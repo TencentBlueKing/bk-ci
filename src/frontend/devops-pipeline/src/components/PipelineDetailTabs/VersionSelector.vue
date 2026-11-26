@@ -453,7 +453,7 @@
                         }
                     }
 
-                    // 默认选中项不在已加载的分页中时，通过 version 精确搜索补入列表（避免逐页递归加载，性能差）
+                    // 默认选中项不在已加载的分页中时，通过 version 精确搜索补入列表
                     if (this.value
                         && !this.activeVersion
                         && this.hasNext
@@ -472,7 +472,7 @@
                     this.isLoading = false
                 }
             },
-            // 通过 version 精确搜索指定版本（列表分页未覆盖时使用，一次请求代替逐页递归）
+            // 通过 version 精确搜索指定版本
             async fetchVersion (version) {
                 try {
                     const res = await this.getDataSource('release')({
