@@ -1748,6 +1748,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 templateRefType = TemplateRefType.ID,
                 templateId = pipelineTemplateRelated.templateId,
                 templateVersionName = templateResource.versionName,
+                parsedTemplateId = templateResource.templateId,
+                parsedTemplateVersion = templateResource.version,
                 templateVariables = triggerContainer.params.filter { param ->
                     param.constant != true
                 }.map { param ->

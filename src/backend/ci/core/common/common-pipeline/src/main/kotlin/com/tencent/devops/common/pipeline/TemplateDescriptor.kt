@@ -48,5 +48,11 @@ open class TemplateDescriptor(
     open val templateVersionName: String?,
 
     @get:Schema(title = "模板参数值", required = false)
-    open val templateVariables: List<TemplateVariable>?
+    open val templateVariables: List<TemplateVariable>?,
+
+    @get:Schema(title = "已解析的模板ID,不写入yaml", required = false)
+    open val parsedTemplateId: String? = null,
+
+    @get:Schema(title = "已解析的模板版本号,不写入yaml", required = false)
+    open val parsedTemplateVersion: Long? = null
 )

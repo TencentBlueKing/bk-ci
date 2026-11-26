@@ -274,6 +274,8 @@ class PipelineTemplateInstanceReqConverter(
                 refType = templateRefType,
                 templateId = templateId,
                 templateVersionName = templateResource.versionName,
+                parsedTemplateId = templateResource.templateId,
+                parsedTemplateVersion = templateResource.version,
                 templatePath = templatePath,
                 templateRef = templateRef,
                 templateVariables = templateVariables,

@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
@@ -168,7 +169,8 @@ class PipelineJobBean(
     private val pipelineTimerService: PipelineTimerService,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val commonConfig: CommonConfig
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -216,8 +218,13 @@ class PipelineJobBean(
             }
 
             watcher.start("projectRouterTagCheck")
-            // 创作流部署集群与项目所属集群不一致，跳过集群校验，否则定时任务不会触发
-            if (pipelineTimer.channelCode != ChannelCode.CREATIVE_STREAM) {
+            // 创作流部署集群与项目所属集群不一致，只能在创作流集群触发
+            if (pipelineTimer.channelCode == ChannelCode.CREATIVE_STREAM) {
+                if (!commonConfig.creativeStreamCluster) {
+                    logger.warn("timePipeline ${pipelineTimer.projectId}|$pipelineId is not creative stream cluster")
+                    return
+                }
+            } else {
                 val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
                     .checkProjectRouter(pipelineTimer.projectId).data ?: return
                 if (!projectRouterTagCheck) {

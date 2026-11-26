@@ -61,7 +61,7 @@ class TPASingleQueueService @Autowired constructor(
 
     /**
      * 尝试把任务调度到指定 agent
-     * @param deferPost 为 true 时只做占位及节点别名上下文写入，不做调度成功后的收尾（构建详情/MQ/日志），
+     * @param deferPost 为 true 时只做占位，不做调度成功后的收尾（节点别名/构建详情/MQ/日志），
      * 由调用方在释放环境锁后自行调用 [afterAgentInQueue]，用于缩短环境锁的持有时间；
      * 默认 false 保持原有行为，调度成功后立即收尾
      */
@@ -81,7 +81,7 @@ class TPASingleQueueService @Autowired constructor(
                 agentHashId = agent.agentId
             )
         }
-        // TODO: 共享 agent 的调度项目与所属项目可能不同，和领取端的锁 key 不一致；本次按约定不调整。
+        // TODO: 共享 agent 的调度项目与所属项目可能不同，不同项目调度同一台 agent 时锁 key 不一致；本次按约定不调整。
         val redisLock = ThirdPartyAgentLock(redisOperation, data.projectId, agent.agentId)
         val success = DispatchLockCleanup.run<Boolean>(
             description = "agent|${data.toLog()}|${agent.agentId}",
@@ -144,12 +144,15 @@ class TPASingleQueueService @Autowired constructor(
     }
 
     /**
-     * 调度成功后的收尾：保存构建机信息到构建详情、打印调度日志、发送监控事件。
+     * 调度成功后的收尾：写入节点别名上下文、保存构建机信息到构建详情、打印调度日志、发送监控事件。
      * 这些操作都是在任务已入库之后的附属动作，不影响并发判断，因此不需要放在环境锁/agent 锁内。
      * 执行到这里时任务已写库 + 写 Redis，agent 随时可能领取，收尾异常不能再向上抛，
      * 否则外层会当作调度失败处理；各步骤相互独立，单步失败不影响后续步骤（尤其是监控事件）。
      */
     fun afterAgentInQueue(data: ThirdPartyAgentDispatchData, agent: ThirdPartyAgent) {
+        // 节点别名供后续 Job 及本 Job 的上下文使用，本 Job 要等 worker 启动后取任务时才读取，放在锁外最先写入
+        runPostStep(data, agent, "setNodeAliasContextVar") { setNodeAliasContextVar(data, agent) }
+
         // 保存构建详情
         runPostStep(data, agent, "saveAgentInfoToBuildDetail") { saveAgentInfoToBuildDetail(data, agent) }
 
@@ -182,7 +185,7 @@ class TPASingleQueueService @Autowired constructor(
     }
 
     /**
-     * 检查 agent 可用性（升级中/复用互斥），通过后写库 + 写 Redis，并在 agent 锁内写入节点别名上下文。
+     * 检查 agent 可用性（升级中/复用互斥），通过后写 Redis + 写库。
      * 收尾逻辑见 [afterAgentInQueue]
      */
     private fun agentInQueue(
@@ -268,13 +271,10 @@ class TPASingleQueueService @Autowired constructor(
             }
         }
 
-        // #5806 入库失败就不再写Redis
+        // 先写 worker 鉴权记录再入库，见 inQueue
         inQueue(data, agent, envId)
 
-        // 同项目 agent 领取任务也使用这把锁；共享 agent 的锁归属差异见上方 TODO（内部已 catch）。
-        setNodeAliasContextVar(data, agent)
-
-        // 收尾（构建详情、日志、监控等）统一在 afterAgentInQueue 中处理
+        // 收尾（节点别名、构建详情、日志、监控等）统一在 afterAgentInQueue 中处理
         return true
     }
 
@@ -333,12 +333,7 @@ class TPASingleQueueService @Autowired constructor(
         agent: ThirdPartyAgent,
         envId: Long?
     ) {
-        thirdPartyAgentService.queueBuild(
-            agent = agent,
-            dispatchData = data,
-            envId = envId
-        )
-
+        // 领取不加锁，入库后 agent 随时可能领走任务，worker 鉴权记录要先于入库写入
         thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
             agent.secretKey,
             ThirdPartyRedisBuild(
@@ -351,6 +346,12 @@ class TPASingleQueueService @Autowired constructor(
                 channelCode = data.channelCode,
                 atoms = data.atoms
             )
+        )
+
+        thirdPartyAgentService.queueBuild(
+            agent = agent,
+            dispatchData = data,
+            envId = envId
         )
     }
 

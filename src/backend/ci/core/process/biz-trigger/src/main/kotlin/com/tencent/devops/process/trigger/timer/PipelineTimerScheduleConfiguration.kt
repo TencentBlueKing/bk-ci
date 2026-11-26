@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
@@ -70,7 +71,8 @@ class PipelineTimerScheduleConfiguration {
         pipelineTimerService: PipelineTimerService,
         redisOperation: RedisOperation,
         client: Client,
-        pipelineRepositoryService: PipelineRepositoryService
+        pipelineRepositoryService: PipelineRepositoryService,
+        commonConfig: CommonConfig
     ): PipelineJobBean {
         return PipelineJobBean(
             pipelineEventDispatcher = pipelineEventDispatcher,
@@ -78,7 +80,8 @@ class PipelineTimerScheduleConfiguration {
             pipelineTimerService = pipelineTimerService,
             redisOperation = redisOperation,
             client = client,
-            pipelineRepositoryService = pipelineRepositoryService
+            pipelineRepositoryService = pipelineRepositoryService,
+            commonConfig = commonConfig
         )
     }
 
