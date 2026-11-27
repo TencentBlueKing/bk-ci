@@ -35,6 +35,7 @@ import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.LazyStringContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
@@ -60,11 +61,19 @@ import java.io.InputStreamReader
 object ExprReplacementUtil {
     private val logger = LoggerFactory.getLogger(ExprReplacementUtil::class.java)
 
+    private const val VARIABLES_NAMESPACE = "variables"
+    private const val VARIABLES_PREFIX = "$VARIABLES_NAMESPACE."
+
     fun parseExpression(value: String, options: ExprReplacementOptions): String {
         with(options) {
             return try {
                 val (executeContext, nameValues) = contextPair
-                    ?: getCustomExecutionContextByMap(contextMap)
+                    ?: getCustomExecutionContextByMap(
+                        variables = contextMap,
+                        extendNamedValueMap = null,
+                        overflowKeys = overflowKeys,
+                        overflowLoader = overflowLoader
+                    )
                     ?: return value
                 parseExpression(
                     value = value,
@@ -86,6 +95,28 @@ object ExprReplacementUtil {
     fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
         extendNamedValueMap: List<RuntimeNamedValue>? = null
+    ): Pair<ExecutionContext, List<NamedValueInfo>>? = getCustomExecutionContextByMap(
+        variables = variables,
+        extendNamedValueMap = extendNamedValueMap,
+        overflowKeys = emptySet(),
+        overflowLoader = null
+    )
+
+    /**
+     * 构造表达式上下文，并允许把"溢出键"挂上懒加载节点。
+     *
+     * - [variables] 中包含的"溢出键"对应 value 是**纯引用串** `__BK_OVF__:<len>`；
+     *   表达式真正访问该 key 时才通过 [overflowLoader] 拉取完整值，
+     *   节省同一次评估、不同条任务都需要全量加载的内存峰值；
+     * - 支持任意层级的溢出键：单层键（如 testResult）与嵌套 context 键
+     *   （如 jobs.x.steps.y.outputs.z）都会沿点号路径下钻到叶子后替换为
+     *   [LazyStringContextData]；中间节点缺失时保持引用串降级。
+     */
+    fun getCustomExecutionContextByMap(
+        variables: Map<String, String>,
+        extendNamedValueMap: List<RuntimeNamedValue>? = null,
+        overflowKeys: Set<String> = emptySet(),
+        overflowLoader: ((String) -> String?)? = null
     ): Pair<ExecutionContext, List<NamedValueInfo>>? {
         try {
             val context = ExecutionContext(DictionaryContextData())
@@ -98,10 +129,64 @@ object ExprReplacementUtil {
                 )
             }
             ExpressionParser.fillContextByMap(variables, context, nameValue)
+            // 把溢出键的叶子节点替换为懒加载节点
+            if (overflowKeys.isNotEmpty() && overflowLoader != null) {
+                replaceOverflowLeaves(context.expressionValues, overflowKeys, overflowLoader)
+            }
             return Pair(context, nameValue)
         } catch (ignore: Throwable) {
             logger.warn("EnvReplacementParser context invalid: $variables", ignore)
             return null
+        }
+    }
+
+    private fun replaceOverflowLeaves(
+        root: DictionaryContextData,
+        overflowKeys: Set<String>,
+        loader: (String) -> String?
+    ) {
+        overflowKeys.forEach { rawKey ->
+            // variables.xxx 的落库 key 是 xxx；其余（含 jobs.x.steps.y.outputs.z 这类嵌套 context）
+            // 落库 key 即完整 rawKey，loader 必须用落库 key 去查。
+            val loadKey = if (rawKey.startsWith(VARIABLES_PREFIX)) rawKey.removePrefix(VARIABLES_PREFIX) else rawKey
+            // 按 rawKey 的点号路径逐层下钻，把叶子替换为懒加载节点，支持任意层级嵌套 key
+            // （如 ${{ jobs.job_UaD.steps.mfKTO5.outputs.testResult }}）
+            replaceLeafByPath(root, rawKey.split('.'), loadKey, loader)
+            // 单层 key（如 testResult）额外替换 variables 命名空间下的同名叶子，
+            // 使 ${{ variables.testResult }} 与 ${{ testResult }} 指向同一落库变量都能懒加载
+            if (!rawKey.contains('.')) {
+                val variablesNode = root[VARIABLES_NAMESPACE]
+                if (variablesNode is DictionaryContextData) {
+                    replaceLeafByPath(variablesNode, listOf(rawKey), loadKey, loader)
+                }
+            }
+        }
+    }
+
+    /**
+     * 沿点号路径 [path] 从 [root] 逐层下钻 [DictionaryContextData]，若叶子存在则替换为
+     * [LazyStringContextData]（懒加载 [loadKey] 对应的溢出真实值）。任一中间节点不是字典或缺失，
+     * 则保持引用串降级，不做替换。
+     */
+    private fun replaceLeafByPath(
+        root: DictionaryContextData,
+        path: List<String>,
+        loadKey: String,
+        loader: (String) -> String?
+    ) {
+        if (path.isEmpty()) return
+        var node: DictionaryContextData = root
+        for (i in 0 until path.size - 1) {
+            val child = node[path[i]]
+            if (child is DictionaryContextData) {
+                node = child
+            } else {
+                return
+            }
+        }
+        val leafKey = path.last()
+        if (node.containsKey(leafKey)) {
+            node[leafKey] = LazyStringContextData(supplier = { loader.invoke(loadKey) })
         }
     }
 

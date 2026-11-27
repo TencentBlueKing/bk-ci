@@ -122,6 +122,41 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        executeCount: Int?,
+        taskId: String?,
+        containerId: String?,
+        stageId: String?,
+        archiveFlag: Boolean?
+    ): Result<String?> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (varName.isBlank()) {
+            throw ParamBlankException("Invalid varName")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildVariableValue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                varName = varName,
+                executeCount = executeCount,
+                taskId = taskId,
+                containerId = containerId,
+                stageId = stageId,
+                archiveFlag = archiveFlag
+            )
+        )
+    }
+
     @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
     override fun manualStartup(
         userId: String,

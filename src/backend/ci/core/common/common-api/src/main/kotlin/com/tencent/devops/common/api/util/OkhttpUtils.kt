@@ -145,7 +145,8 @@ object OkhttpUtils {
         .hostnameVerifier { _, _ -> true }
         .build()
 
-    private fun getOkHttpClientWithCustomTimeout(
+    /** 每次调用都新建 client，频繁调用的场景应由调用方缓存复用。 */
+    fun getOkHttpClientWithCustomTimeout(
         connectTimeout: Long,
         readTimeout: Long,
         writeTimeout: Long,

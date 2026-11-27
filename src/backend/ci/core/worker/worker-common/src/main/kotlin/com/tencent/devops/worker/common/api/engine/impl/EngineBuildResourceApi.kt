@@ -82,7 +82,9 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun claimTask(retryCount: Int): Result<BuildTask> {
-        val path = getRequestUrl(path = "api/build/worker/claim", retryCount = retryCount)
+        // 声明由构建机替换传统方言参数中的变量，减轻引擎压力；引擎不识别该参数时仍按原逻辑在引擎侧替换
+        val path = getRequestUrl(path = "api/build/worker/claim", retryCount = retryCount) +
+            "&replaceVarOnWorker=true"
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             RECEIVE_BUILD_MACHINE_TASK_FAILED,

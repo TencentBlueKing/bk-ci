@@ -141,6 +141,8 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.record.LargeVariableRecordQuery
+import com.tencent.devops.process.pojo.record.LargeVariableScope
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.BuildDetailSimple
@@ -439,6 +441,64 @@ class PipelineBuildFacadeService(
                 it.defaultValue = HIDDEN_SYMBOL
             }
         }
+    }
+
+    /**
+     * 按变量名获取构建运行期变量真实值（大变量从制品库按需下载，敏感变量脱敏）。
+     * 供日志「查看完整值」等场景使用。
+     *
+     * 带了 [executeCount] 时，先按 [LargeVariableScope] 取该次执行的引用串。
+     * 插件级取不到直接返回 null（前端提示不可用）：变量表里的同名变量可能是别的插件写的，不能冒充。
+     * Job、Stage、流水线级取不到时用变量表里的当前值：最后一次写入，不区分执行次数；
+     * 都不带组件 id 时，构建结束后从模型记录取这一次的引用串，还没结束时同样退回变量表。
+     */
+    @Suppress("LongParameterList")
+    fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String,
+        executeCount: Int? = null,
+        taskId: String? = null,
+        containerId: String? = null,
+        stageId: String? = null,
+        archiveFlag: Boolean? = false
+    ): String? {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        val scope = LargeVariableScope.of(taskId, containerId, stageId)
+        // 指定执行次数时，引用串从该次执行的记录里取；null 则下面退回变量表当前值
+        val reference = executeCount?.let {
+            taskBuildRecordService.getLargeVariableReference(
+                query = LargeVariableRecordQuery(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = it,
+                    varName = varName,
+                    scope = scope
+                ),
+                queryDslContext = queryDslContext
+            )
+        }
+        if (executeCount != null && scope is LargeVariableScope.Task && reference == null) return null
+        return buildVariableService.getVariableValue(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            varName = varName,
+            reference = reference,
+            queryDslContext = queryDslContext,
+            maskSensitive = true
+        )
     }
 
     fun retry(

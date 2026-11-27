@@ -483,6 +483,10 @@ bkrepo:
   staticUserName: __BK_REPO_USERNAME__
   staticPassword: __BK_REPO_PASSWORD__
 
+# 制品库类型，所有微服务共用（process 据此判断超过 4K 的流水线变量能否存入蓝鲸制品库）
+artifactory:
+  realm: __BK_CI_ARTIFACTORY_REALM__  # 如果使用蓝鲸制品库，则该值要修改为 bkrepo
+
 # 企业微信api配置
 wechatWork:
   corpId: __BK_CI_WECHATWORK_CORPID__

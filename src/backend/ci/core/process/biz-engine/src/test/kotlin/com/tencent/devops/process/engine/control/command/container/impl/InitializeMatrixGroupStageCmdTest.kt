@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.service.PipelineContextService
 import io.mockk.every
@@ -92,7 +93,9 @@ class InitializeMatrixGroupStageCmdTest {
             modelTaskIdGenerator = mockk<ModelTaskIdGenerator>(),
             dispatchTypeParser = mockk<DispatchTypeParser>(),
             buildLogPrinter = mockk<BuildLogPrinter>(),
-            redisOperation = mockk<RedisOperation>()
+            redisOperation = mockk<RedisOperation>(),
+            // 这组用例只校验最大并发数解析，不触发矩阵组合，大变量加载不会被调用
+            buildVariableService = mockk<BuildVariableService>(relaxed = true)
         )
     }
 

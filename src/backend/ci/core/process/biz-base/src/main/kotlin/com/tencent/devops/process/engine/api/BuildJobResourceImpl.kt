@@ -70,14 +70,21 @@ class BuildJobResourceImpl @Autowired constructor(
         )
     }
 
-    override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
+    override fun claimTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        replaceVarOnWorker: Boolean?
+    ): Result<BuildTask> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
             vMBuildService.buildClaimTask(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                vmName = vmName
+                vmName = vmName,
+                replaceVarOnWorker = replaceVarOnWorker == true
             )
         )
     }
