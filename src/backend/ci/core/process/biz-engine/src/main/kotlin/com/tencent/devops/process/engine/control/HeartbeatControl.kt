@@ -50,7 +50,6 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
-import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -91,7 +90,7 @@ class HeartbeatControl @Autowired constructor(
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
         // 如果消息事件来源是取消构建操作，超时时间为CANCEL_TIMEOUT_IN_MS
         val timeOutLimit = if (event.source == BS_CANCEL_BUILD_SOURCE) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
-        val cancelElapse = if (event.source == BS_CANCEL_BUILD_SOURCE) cancelElapse(buildId) else 0
+        val cancelElapse = if (event.source == BS_CANCEL_BUILD_SOURCE) cancelElapse(event) else 0
         if (elapse > timeOutLimit) {
             timeout(event, elapse)
         } else if (cancelElapse > CANCEL_HANG_LIMIT_IN_MS && cancelDeadlocked(event)) {
@@ -108,11 +107,11 @@ class HeartbeatControl @Autowired constructor(
     }
 
     /**
-     * 取消动作发起至今的时长。取消标记由[BuildCancelControl]写入，Job闭环时清理，取不到则返回0表示不做兜底。
+     * 取消心跳事件自取消发起起已循环的时长（每轮间隔delayMills，retryTime随事件重投累加）。
+     * 不用构建级的取消时间key：同构建其他Job被取消或结束时会删除它，兜底会失效。
      */
-    private fun cancelElapse(buildId: String): Long {
-        val cancelTime = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toLongOrNull() ?: return 0
-        return System.currentTimeMillis() - cancelTime
+    private fun cancelElapse(event: PipelineContainerAgentHeartBeatEvent): Long {
+        return event.retryTime.toLong() * event.delayMills
     }
 
     /**

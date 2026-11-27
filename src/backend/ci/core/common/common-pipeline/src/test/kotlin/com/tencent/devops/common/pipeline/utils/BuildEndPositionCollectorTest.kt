@@ -325,8 +325,8 @@ class BuildEndPositionCollectorTest {
         val model = matrixModel(split = true)
         val stored = listOf(
             position(containerId = "1", taskId = null, position = "1-1"),
-            position(containerId = "101", taskId = "e-a", position = "1-1-1"),
-            position(containerId = "102", taskId = "e-b", position = "1-1-1")
+            position(containerId = "101", taskId = "e-a", position = "1-1-1", matrixFlag = true),
+            position(containerId = "102", taskId = "e-b", position = "1-1-1", matrixFlag = true)
         )
 
         val filtered = BuildEndPositionCollector.dropMatrixGroupShells(model, stored)
@@ -516,13 +516,19 @@ class BuildEndPositionCollectorTest {
         continueNoneZero = false
     )
 
-    private fun position(containerId: String, taskId: String?, position: String) = EndPosition(
+    private fun position(
+        containerId: String,
+        taskId: String?,
+        position: String,
+        matrixFlag: Boolean? = null
+    ) = EndPosition(
         position = position,
         componentPath = "stage-2/构建环境-LINUX",
         statusAtEnd = BuildStatus.CANCELED.name,
         stageId = "stage-2",
         containerId = containerId,
-        taskId = taskId
+        taskId = taskId,
+        matrixFlag = matrixFlag
     )
 
     private fun mutexCanceledJob(containerId: String) = NormalContainer(

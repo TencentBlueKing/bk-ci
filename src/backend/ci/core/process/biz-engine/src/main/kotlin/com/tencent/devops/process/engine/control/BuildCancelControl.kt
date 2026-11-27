@@ -335,9 +335,11 @@ class BuildCancelControl @Autowired constructor(
                     return@nextC
                 }
                 // 矩阵父容器只是分裂出的 Job 的分组，页面上不是一个独立 Job。
-                // 已经有子 Job 时，取消位置只记子 Job；父容器仍要走取消，否则矩阵组状态不会收口。
+                // 有在途子 Job 时，取消位置只记子 Job；父容器仍要走取消，否则矩阵组状态不会收口。
                 val matrixChildren = container.fetchGroupContainers()
-                val matrixShell = container.matrixGroupFlag == true && !matrixChildren.isNullOrEmpty()
+                val matrixShell = container.matrixGroupFlag == true && matrixChildren.orEmpty().any { c ->
+                    !c.status.isNullOrBlank() && !BuildStatus.parse(c.status).isFinish()
+                }
                 if (!matrixShell) {
                     collectEndPositions(endPositions, ctx, container, containerSeq)
                 }

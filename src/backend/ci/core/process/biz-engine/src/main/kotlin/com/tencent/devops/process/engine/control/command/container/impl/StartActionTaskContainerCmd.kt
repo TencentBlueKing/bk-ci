@@ -210,11 +210,13 @@ class StartActionTaskContainerCmd(
         val actionType = containerContext.event.actionType
         // Job已被取消时，后续事件（如取消前就在跑的插件执行完后发回的START）仍可能选出普通插件，
         // 但构建机在取消中不会认领它，插件停在QUEUE_CACHE占住队头，关机与结束节点排不到，Job无法闭环。
-        val jobCanceling = TaskUtils.isJobCancelFlag(
-            redisOperation = redisOperation,
-            buildId = containerContext.event.buildId,
-            containerId = containerContext.event.containerId
-        )
+        val jobCanceling by lazy {
+            TaskUtils.isJobCancelFlag(
+                redisOperation = redisOperation,
+                buildId = containerContext.event.buildId,
+                containerId = containerContext.event.containerId
+            )
+        }
         for ((index, t) in containerTasks.withIndex()) {
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
