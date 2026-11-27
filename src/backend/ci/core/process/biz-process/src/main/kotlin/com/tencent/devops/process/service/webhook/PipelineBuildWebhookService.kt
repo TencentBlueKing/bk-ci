@@ -37,10 +37,8 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEve
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -54,7 +52,6 @@ import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.scm.PipelineWebHookQueueService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
-import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -127,11 +124,11 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        val pipelineParamMap = convertBuildParameters(
+        val pipelineParamMap = buildParamCompatibilityTransformer.parseStartParams(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            triggerContainer = resource.model.getTriggerContainer(),
+            paramProperties = resource.model.getTriggerContainer().params,
             startParams = startParams
         )
 
@@ -228,11 +225,11 @@ class PipelineBuildWebhookService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-        val pipelineParamMap = convertBuildParameters(
+        val pipelineParamMap = buildParamCompatibilityTransformer.parseStartParams(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            triggerContainer = resource.model.getTriggerContainer(),
+            paramProperties = resource.model.getTriggerContainer().params,
             startParams = request.startParams ?: emptyMap()
         )
         request.pipelineParamMap?.let { pipelineParamMap.putAll(it) }
@@ -247,37 +244,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             signPipelineVersion = resource.version,
             frequencyLimit = request.frequencyLimit
         )
-    }
-
-    private fun convertBuildParameters(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        triggerContainer: TriggerContainer,
-        startParams: Map<String, Any>
-    ): MutableMap<String, BuildParameters> {
-        val pipelineParamMap = mutableMapOf<String, BuildParameters>()
-        val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            paramProperties = triggerContainer.params,
-            paramValues = startParams.mapValues { it.value.toString() }
-        )
-        pipelineParamMap.putAll(paramMap)
-        startParams.forEach {
-            if (paramMap.containsKey(it.key)) {
-                return@forEach
-            }
-            // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
-            val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
-            if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
-            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
-                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
-            }
-        }
-        return pipelineParamMap
     }
 
     private fun checkPermission(userId: String, projectId: String, pipelineId: String) {

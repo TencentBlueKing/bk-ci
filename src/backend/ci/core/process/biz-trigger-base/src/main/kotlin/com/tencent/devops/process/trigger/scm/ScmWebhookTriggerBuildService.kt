@@ -44,6 +44,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_COND
 import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -83,7 +84,8 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
     private val triggerProcessClient: TriggerProcessClient,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService
+    private val creativeStreamTriggerSupportService: CreateStreamTriggerSupportService,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     @Value("\${scm.webhook.trigger.max-count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
@@ -335,12 +337,26 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                // 旧版 process 的 pipelineInfo、pipelineParamMap、channelCode、resource 为必填，
+                // 滚动发布期间需同时传，所有 process 升级后再只传 version 和 startParams
                 request = WebhookStartPipelineRequest(
+                    pipelineInfo = pipelineInfo,
                     startType = StartType.WEB_HOOK,
+                    pipelineParamMap = buildParamCompatibilityTransformer.parseStartParams(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        paramProperties = resource.model.getTriggerContainer().params,
+                        startParams = startParams
+                    ).apply {
+                        putAll(externalWebhookStartParams)
+                    },
+                    channelCode = pipelineInfo.channelCode,
+                    resource = resource,
+                    signPipelineVersion = resource.version,
+                    frequencyLimit = false,
                     version = resource.version,
-                    startParams = startParams,
-                    pipelineParamMap = externalWebhookStartParams.toMutableMap(),
-                    frequencyLimit = false
+                    startParams = startParams
                 )
             ).data
         }
