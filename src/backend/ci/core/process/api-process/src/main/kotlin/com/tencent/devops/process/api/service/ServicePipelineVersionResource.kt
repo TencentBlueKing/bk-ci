@@ -264,7 +264,10 @@ interface ServicePipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "搜索字段：版本号（精确匹配）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<Page<PipelineVersionWithInfo>>
 
     @Operation(summary = "获取流水线操作日志列表（分页）")

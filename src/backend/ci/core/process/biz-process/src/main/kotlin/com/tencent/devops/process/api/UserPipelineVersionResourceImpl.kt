@@ -357,7 +357,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         buildOnly: Boolean?,
         page: Int?,
         pageSize: Int?,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        version: Int?
     ): Result<Page<PipelineVersionSimple>> {
         checkParam(userId, projectId)
         val userPipelinePermissionCheckStrategy =
@@ -380,7 +381,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 page = page ?: 1,
                 pageSize = pageSize ?: 5,
                 buildOnly = buildOnly,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                version = version
             )
         )
     }

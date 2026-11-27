@@ -340,7 +340,8 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         creator: String?,
         description: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        version: Int?
     ): Result<Page<PipelineVersionWithInfo>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
@@ -369,7 +370,8 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
                 page = page ?: 1,
-                pageSize = pageSize ?: 5
+                pageSize = pageSize ?: 5,
+                version = version
             )
         )
     }

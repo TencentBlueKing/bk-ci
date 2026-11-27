@@ -309,7 +309,10 @@ interface ApigwPipelineVersionResourceV4 {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "搜索字段：版本号（精确匹配）", required = false)
+        @QueryParam("version")
+        version: Int? = null
     ): Result<Page<PipelineVersionWithInfo>>
 
     @Operation(

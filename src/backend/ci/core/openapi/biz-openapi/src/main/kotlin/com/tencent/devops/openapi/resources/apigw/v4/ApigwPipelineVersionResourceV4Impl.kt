@@ -204,7 +204,8 @@ class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
         creator: String?,
         description: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        version: Int?
     ): Result<Page<PipelineVersionWithInfo>> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|versionList|$projectId|$pipelineId")
         return client.get(ServicePipelineVersionResource::class).versionList(
@@ -216,7 +217,8 @@ class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
             creator = creator,
             description = description,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            version = version
         )
     }
 
