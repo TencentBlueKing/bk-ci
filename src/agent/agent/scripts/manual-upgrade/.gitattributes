@@ -1,0 +1,3 @@
+upgrade.sh text eol=lf
+upgrade_macos.sh text eol=lf
+upgrade.ps1 text eol=crlf
