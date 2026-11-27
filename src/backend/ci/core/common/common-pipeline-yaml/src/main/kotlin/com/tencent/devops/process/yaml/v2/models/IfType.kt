@@ -33,5 +33,6 @@ enum class IfType {
     CANCELLED, // 兼容存量的使用，后续文档引导用户使用 CANCELED
     CANCELED,
     ALWAYS,
-    ALWAYS_UNLESS_CANCELLED
+    ALWAYS_UNLESS_CANCELLED,
+    RELEASED // 发布新版本
 }

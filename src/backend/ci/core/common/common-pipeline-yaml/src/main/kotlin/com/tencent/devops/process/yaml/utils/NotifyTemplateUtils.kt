@@ -37,6 +37,12 @@ object NotifyTemplateUtils {
     private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "commonShutdownFailureContent"
     // 【${%s}】- 【${%s}】#${%s} 执行失败，耗时${%s}, 触发人：${%s}。
 
+    private const val COMMON_SHUTDOWN_CANCEL_CONTENT = "commonShutdownCancelContent"
+    // 【${%s}】- 【${%s}】#${%s} 执行取消，耗时${%s}, 触发人：${%s}。
+
+    private const val COMMON_RELEASE_CONTENT = "commonReleaseContent"
+    // 【${%s}】- 【${%s}】 发布新版本成功，发布人：${%s}。
+
     fun getCommonShutdownSuccessContent(): String {
         return String.format(
             I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_SUCCESS_CONTENT),
@@ -56,6 +62,28 @@ object NotifyTemplateUtils {
             "ci.build_num",
             "ci.pipeline_execute_time",
             "ci.actor"
+        )
+    }
+
+    fun getCommonShutdownCancelContent(): String {
+        return String.format(
+            I18nUtil.getCodeLanMessage(COMMON_SHUTDOWN_CANCEL_CONTENT),
+            "ci.project_name",
+            "ci.pipeline_name",
+            "ci.build_num",
+            "ci.operator",
+            "ci.fail_reason"
+        )
+    }
+
+    fun getCommonReleaseContent(): String {
+        return String.format(
+            I18nUtil.getCodeLanMessage(COMMON_RELEASE_CONTENT),
+            "ci.project_name",
+            "ci.pipeline_name",
+            "ci.pipeline_version",
+            "ci.pipeline_modifier",
+            "ci.pipeline_desc"
         )
     }
 }

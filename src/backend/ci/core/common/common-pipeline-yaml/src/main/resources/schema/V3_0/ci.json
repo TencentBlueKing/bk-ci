@@ -3245,7 +3245,7 @@
             "type" : "boolean"
           },
           "if" : {
-            "enum" : [ "FAILURE", "SUCCESS" ]
+            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS", "RELEASED" ]
           }
         }
       }

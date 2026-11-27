@@ -414,5 +414,7 @@ data class ParentPipelineInfo(
     @get:Schema(title = "父构建号", required = false)
     val buildNum: Int? = null,
     @get:Schema(title = "父流水线操作人(仅用户主动操作时有值)", required = false)
-    val operator: String? = null
+    val operator: String? = null,
+    @get:Schema(title = "父流水线取消原因国际化标识", required = false)
+    val cancelReasonCode: String? = null
 )

@@ -30,6 +30,10 @@ data class PipelineSettingDraftVersion(
     val successSubscriptionList: List<Subscription>?,
     @get:Schema(title = "订阅失败通知组", required = false)
     val failSubscriptionList: List<Subscription>?,
+    @get:Schema(title = "订阅取消通知组", required = false)
+    val cancelSubscriptionList: List<Subscription>?,
+    @get:Schema(title = "订阅发布新版本通知组", required = false)
+    val publishSubscriptionList: List<Subscription>?,
     @get:Schema(title = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType?,
     @get:Schema(title = "最大排队时长", required = false)
@@ -65,6 +69,8 @@ data class PipelineSettingDraftVersion(
                 buildNumRule = draft.buildNumRule,
                 successSubscriptionList = draft.successSubscriptionList,
                 failSubscriptionList = draft.failSubscriptionList,
+                cancelSubscriptionList = draft.cancelSubscriptionList,
+                publishSubscriptionList = draft.publishSubscriptionList,
                 runLockType = draft.runLockType,
                 waitQueueTimeMinute = draft.waitQueueTimeSecond,
                 maxQueueSize = draft.maxQueueSize,

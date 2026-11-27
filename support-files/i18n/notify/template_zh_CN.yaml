@@ -1107,3 +1107,139 @@
     sender: "DevOps"
   creator: "system"
   modifior: "system"
+- index: 53
+  id: "eb56cf0974f546ad81b25d482c98da14"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
+  templateName: "执行取消的通知模板代码"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "eb56cf0974f546ad81b25d482c98da14"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}构建取消</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            流水线：${pipelineName}-${projectName}<br><br>构建号：#${buildNum}<br><br>开始时间：${startTime}<br><br>耗时：${duration}<br><br>触发方式：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "eb56cf0974f546ad81b25d482c98da14"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "${cancelContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "构建取消"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "eb56cf0974f546ad81b25d482c98da14"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "${cancelContent}"
+  creator: "system"
+  modifior: "system"
+- index: 54
+  id: "1e611cf139a943cf980fada56ec921ff"
+  templateCode: "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "执行取消的详情通知模板代码"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "1e611cf139a943cf980fada56ec921ff"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">\n                                            蓝盾流水线【${pipelineName}】#${buildNum}构建取消</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">\n                                                            流水线：${pipelineName}-${projectName}<br><br>构建号：#${buildNum}<br><br>开始时间：${startTime}<br><br>耗时：${duration}<br><br>触发方式：${trigger}（${username}）<br><br>${emailCancelContent}<br><br><br><a\n                                                                href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "1e611cf139a943cf980fada56ec921ff"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "${cancelContent}\n\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "构建取消"
+    content: "${cancelContent}"
+  weworkGroupTemplate:
+    id: "1e611cf139a943cf980fada56ec921ff"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建取消"
+    body: "${cancelContent}\n\n[查看详情](${detailUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 55
+  id: "9c0fbd659c6d4c8b86d7f3dd0adc90d7"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE"
+  templateName: "发布新版本的通知模板代码"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "15a9283c164f4406a6f9ddc4f765dcce"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">蓝盾流水线【${pipelineName}】发布新版本 ${versionName}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">项目：${projectName}<br><br>流水线：${pipelineName}<br><br>版本：${versionName}<br><br>发布人：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "047516e6ebfd4e07947280c48a0c73c0"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "${publishContent}"
+  voiceTemplate:
+    id: "06725d1a6fae4ad986d7d696d712c50c"
+    taskName: "发布新版本"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "6e89521105a4475586a5f950a136f5b9"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "${publishContent}"
+  creator: "system"
+  modifior: "system"
+- index: 56
+  id: "747645f2d5834d7fb7f5381ebf19f1e1"
+  templateCode: "PIPELINE_PUBLISH_VERSION_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "发布新版本的详情通知模板代码"
+  notifyTypeScope:
+    - "EMAIL"
+    - "RTX"
+    - "VOICE"
+    - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  emailTemplate:
+    id: "8c0c6ccd32a6434baaaa4443416bca45"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n    <tbody>\n        <tr>\n            <td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n                <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\"\n                    style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                    <tbody>\n                        <tr>\n                            <td valign=\"top\" align=\"center\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\"\n                                    class=\"layout layout-table root-table\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                    <tbody>\n                                        <tr style=\"height: 64px; background: #555;\">\n                                            <td style=\"padding-left: 24px;\" width=\"60\" align=\"center\"><img\n                                                    src=\"${logoIconUrl}\"\n                                                    width=\"52\" style=\"display: block\"></td>\n                                            <td style=\"padding-left: 6px;\"><img\n                                                    src=\"${logoTextUrl}\"\n                                                    width=\"176\" style=\"display: block\"></td>\n                                        </tr>\n                                    </tbody>\n                                </table>\n                            </td>\n                        </tr>\n                        <tr>\n                            <td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n                                <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                    style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n                                    <tr>\n                                        <td class=\"email-title\"\n                                            style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">蓝盾流水线【${pipelineName}】发布新版本 ${versionName}</td>\n                                    </tr>\n                                    <tr>\n                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"\n                                                style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                                                <tr>\n                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">\n                                                        来自蓝盾DevOps平台的推送</td>\n                                                </tr>\n                                                <tr class=\"information-item\">\n                                                    <td style=\"padding-top: 20px; color: #707070;\">\n                                                        <div class=\"item-value\"\n                                                            style=\"margin-top: 4px; line-height: 1.5;\">项目：${projectName}<br><br>流水线：${pipelineName}<br><br>版本：${versionName}<br><br>发布人：${username}<br><br>${emailPublishContent}<br><br><br><a href=\"${detailUrl}\">查看详情</a><br><br></div>\n                                                    </td>\n                                                </tr>\n                                                <tr class=\"prompt-tips\">\n                                                    <td\n                                                        style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">\n                                                        如有任何问题，可随时联系管理员。</td>\n                                                </tr>\n                                            </table>\n                                        </td>\n                                    </tr>\n                                    <tr class=\"email-footer\">\n                                        <td\n                                            style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">\n                                            你收到此邮件，是因为你关注了${projectName}项目，或其他人@了你</td>\n                                    </tr>\n                                </table>\n                            </td>\n                        </tr>\n                    </tbody>\n                </table>\n            </td>\n        </tr>\n    </tbody>\n</table>"
+    sender: "DevOps"
+    bodyFormat: 1
+    emailType: 1
+  weworkTemplate:
+    id: "34305cd386664091b008b3365caa04c8"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "${publishContent}\n\n查看详情:${detailUrl}"
+  voiceTemplate:
+    id: "7b65bb2ad53d439eb8f3621cc6a54063"
+    taskName: "发布新版本"
+    content: "${publishContent}"
+  weworkGroupTemplate:
+    id: "72ac198dda9141fda1aac693962237f7"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】发布新版本 ${versionName}"
+    body: "${publishContent}\n\n[查看详情](${detailUrl})"
+  creator: "system"
+  modifior: "system"

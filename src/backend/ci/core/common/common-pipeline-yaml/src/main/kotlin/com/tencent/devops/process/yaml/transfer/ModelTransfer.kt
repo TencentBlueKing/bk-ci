@@ -125,12 +125,20 @@ class ModelTransfer @Autowired constructor(
             labels = yaml2Labels(yamlInput),
             pipelineAsCodeSettings = yamlSyntaxDialect2Setting(yaml.syntaxDialect),
             successSubscriptionList = yamlNotice2Setting(
-                projectId = yamlInput.projectCode,
+                yamlInput = yamlInput,
                 notices = yaml.notices?.filter { it.checkNotifyForSuccess() }
             ),
             failSubscriptionList = yamlNotice2Setting(
-                projectId = yamlInput.projectCode,
+                yamlInput = yamlInput,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
+            ),
+            cancelSubscriptionList = yamlNotice2Setting(
+                yamlInput = yamlInput,
+                notices = yaml.notices?.filter { it.checkNotifyForCancel() }
+            ),
+            publishSubscriptionList = yamlNotice2Setting(
+                yamlInput = yamlInput,
+                notices = yaml.notices?.filter { it.checkNotifyForRelease() }
             ),
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
             buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
@@ -143,11 +151,13 @@ class ModelTransfer @Autowired constructor(
         )
     }
 
-    private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
+    private fun yamlNotice2Setting(
+        yamlInput: YamlTransferInput,
+        notices: List<Notices>?
+    ): List<Subscription> {
         if (notices.isNullOrEmpty()) return listOf()
         return notices.map {
-            val res = it.toSubscription()
-            prepareModelGroups(projectId, res)
+            prepareModelGroups(yamlInput.projectCode, it.toSubscription())
         }
     }
 
@@ -478,6 +488,18 @@ class ModelTransfer @Autowired constructor(
         setting.failSubscriptionList?.ifEmpty { setting.failSubscription?.let { listOf(it) } }?.forEach {
             if (it.types.isNotEmpty()) {
                 val notice = PacNotices(it, IfType.FAILURE.name)
+                res.add(prepareYamlGroups(setting.projectId, notice))
+            }
+        }
+        setting.cancelSubscriptionList.orEmpty().forEach {
+            if (it.types.isNotEmpty()) {
+                val notice = PacNotices(it, IfType.CANCELED.name)
+                res.add(prepareYamlGroups(setting.projectId, notice))
+            }
+        }
+        setting.publishSubscriptionList.orEmpty().forEach {
+            if (it.types.isNotEmpty()) {
+                val notice = PacNotices(it, IfType.RELEASED.name)
                 res.add(prepareYamlGroups(setting.projectId, notice))
             }
         }

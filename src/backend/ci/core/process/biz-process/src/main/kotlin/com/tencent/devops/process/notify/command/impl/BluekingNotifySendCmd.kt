@@ -21,8 +21,9 @@ class BluekingNotifySendCmd @Autowired constructor(
         val replaceWithEmpty = true
         val setting = commandContext.pipelineSetting
         val buildStatus = commandContext.buildStatus
+        val cancelNotify = NotifySendCmd.isCancelNotify(setting, buildStatus)
         val shutdownType = when {
-            buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
+            cancelNotify -> TYPE_SHUTDOWN_CANCEL
             buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
             else -> TYPE_SHUTDOWN_SUCCESS
         }
@@ -79,7 +80,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                     }
                 }
             }
-            buildStatus.isFailure() -> {
+            buildStatus.isFailure() && !cancelNotify -> {
                 setting.failSubscriptionList?.forEach { failSubscription ->
                     // 内容为null的时候处理为空字符串
                     val failContent = EnvUtils.parseEnv(
@@ -127,6 +128,58 @@ class BluekingNotifySendCmd @Autowired constructor(
                             titleParams = commandContext.notifyValue,
                             bodyParams = commandContext.notifyValue,
                             markdownContent = failSubscription.wechatGroupMarkdownFlag
+                        )
+                    }
+                }
+            }
+            cancelNotify -> {
+                setting.cancelSubscriptionList?.forEach { cancelSubscription ->
+                    // 内容为null的时候处理为空字符串
+                    val cancelContent = EnvUtils.parseEnv(
+                        cancelSubscription.content, commandContext.variables, replaceWithEmpty
+                    )
+                    val group = EnvUtils.parseEnv(
+                        command = cancelSubscription.wechatGroup,
+                        data = commandContext.variables,
+                        replaceWithEmpty = true
+                    )
+                    commandContext.notifyValue["cancelContent"] = cancelContent
+                    commandContext.notifyValue["emailCancelContent"] = cancelContent
+                    commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
+                    val receivers = cancelSubscription.users.split(",").map {
+                        EnvUtils.parseEnv(
+                            command = it,
+                            data = commandContext.variables,
+                            replaceWithEmpty = true
+                        )
+                    }.filter { it.isNotBlank() }.toSet()
+                    sendNotifyByTemplate(
+                        templateCode = getNotifyTemplateCode(
+                            type = shutdownType,
+                            detailFlag = cancelSubscription.detailFlag,
+                            channelCode = commandContext.channelCode
+                        ),
+                        receivers = receivers,
+                        notifyType = cancelSubscription.types.filter {
+                            it != PipelineSubscriptionType.WEWORK_GROUP
+                        }.map { it.name }.toMutableSet(),
+                        titleParams = commandContext.notifyValue,
+                        bodyParams = commandContext.notifyValue,
+                        markdownContent = false
+                    )
+                    // 企业微信通知组的模板和企业微信通知用的是同一个模板,但是企业微信通知没有markdown选项,所以需要单独发送
+                    if (cancelSubscription.types.contains(PipelineSubscriptionType.WEWORK_GROUP)) {
+                        sendNotifyByTemplate(
+                            templateCode = getNotifyTemplateCode(
+                                type = shutdownType,
+                                detailFlag = cancelSubscription.detailFlag,
+                                channelCode = commandContext.channelCode
+                            ),
+                            receivers = receivers,
+                            notifyType = setOf(PipelineSubscriptionType.WEWORK_GROUP.name),
+                            titleParams = commandContext.notifyValue,
+                            bodyParams = commandContext.notifyValue,
+                            markdownContent = cancelSubscription.wechatGroupMarkdownFlag
                         )
                     }
                 }
