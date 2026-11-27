@@ -113,6 +113,12 @@ interface IEnvService {
         nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo>
 
+    fun fetchEnvFirstAgentHashId(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): String?
+
     fun addEnvNodes(
         userId: String,
         projectId: String,

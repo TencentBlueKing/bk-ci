@@ -7,13 +7,18 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerResourceConfigResource
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.enums.CreateEnvType
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
@@ -232,4 +237,72 @@ class TransferCacheService @Autowired constructor(
 
     fun getAgentHashIdByWorkspace(userId: String, projectId: String, workspaceName: String): String? =
         workspaceToAgent.get("$userId@@$projectId@@$workspaceName")
+
+    /**
+     * 按环境 hashId 取环境。保存时调用，不缓存。
+     * 查不到或环境服务暂时失败时返回 null，调用方保留 YAML 里已写的 id，不中断保存。
+     */
+    fun findEnvByHashId(userId: String, projectId: String, envHashId: String): RuntimeEnvRef? {
+        if (projectId.isBlank() || envHashId.isBlank()) return null
+        return runCatching {
+            client.get(ServiceEnvironmentResource::class).get(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                checkPermission = false
+            ).data?.toRuntimeEnvRef()
+        }.onFailure { logger.warn("get env by hashId failed. projectId=$projectId, envHashId=$envHashId", it) }
+            .getOrNull()
+    }
+
+    /**
+     * 按环境名取环境。保存时调用，不缓存：环境改名后必须立刻对上新的 id。
+     * 查不到或环境服务暂时失败时返回 null；仅 pool-name 路径下调用方会拒绝保存，避免沿用旧 id。
+     */
+    fun findEnvByName(userId: String, projectId: String, envName: String): RuntimeEnvRef? {
+        if (projectId.isBlank() || envName.isBlank()) return null
+        return runCatching {
+            client.get(ServiceEnvironmentResource::class).getByName(
+                userId = userId,
+                projectId = projectId,
+                envName = envName,
+                checkPermission = false
+            ).data?.toRuntimeEnvRef()
+        }.onFailure { logger.warn("get env by name failed. projectId=$projectId, envName=$envName", it) }
+            .getOrNull()
+    }
+
+    /**
+     * 取流水线当前已保存的运行资源。保存时调用，不缓存。
+     * 供 YAML 侧沿用用户在 UI 上选过的运行资源类型，`pool-id` / `pool-name` 本身不带类型。
+     */
+    fun findSavedRuntimeResource(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode
+    ): RuntimeResource? {
+        if (projectId.isBlank() || pipelineId.isBlank()) return null
+        return runCatching {
+            client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            ).data?.runtimeResource()
+        }.onFailure {
+            logger.warn("get saved runtime resource failed. projectId=$projectId, pipelineId=$pipelineId", it)
+        }.getOrNull()
+    }
+}
+
+/** 保存运行资源时反查到的环境，只保留回写设置需要的字段 */
+data class RuntimeEnvRef(
+    val envHashId: String,
+    val name: String,
+    /** 环境限定的节点类型，存量环境未限定时为空 */
+    val nodeSource: CreateEnvType?
+)
+
+private fun EnvWithPermission.toRuntimeEnvRef(): RuntimeEnvRef? {
+    val hashId = envHashId.takeIf { it.isNotBlank() } ?: return null
+    return RuntimeEnvRef(envHashId = hashId, name = name, nodeSource = nodeSource)
 }

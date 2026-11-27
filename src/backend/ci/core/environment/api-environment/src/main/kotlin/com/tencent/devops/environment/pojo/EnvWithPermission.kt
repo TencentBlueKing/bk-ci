@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.pojo
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.pojo.enums.CreateEnvType
 import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.v3.oas.annotations.media.Schema
@@ -67,7 +68,12 @@ data class EnvWithPermission(
     @get:Schema(title = "是否可以使用", required = false)
     val canUse: Boolean?,
     @get:Schema(title = "项目名称", required = false)
-    val projectName: String?
+    val projectName: String?,
+    @get:Schema(
+        title = "创作流环境类型：IEG_IMATE 数字同事（含 REMOTEDEV 个人项目数字同事） / CLOUD_DESKTOP_NODE 云桌面，为空表示不限制（存量环境）",
+        required = false
+    )
+    val nodeSource: CreateEnvType? = null
 ) {
     constructor(
         envHashId: String,

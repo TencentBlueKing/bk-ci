@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -54,6 +55,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -77,6 +79,7 @@ import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.NODE_HASH_ID
 import com.tencent.devops.process.utils.NODE_OS
+import com.tencent.devops.process.utils.NODE_WORKSPACE
 import com.tencent.devops.process.utils.PIPELINE_BUILD_DEBUG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -86,6 +89,7 @@ import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -124,6 +128,7 @@ class PipelineBuildService(
     private val buildIdGenerator: BuildIdGenerator,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineStartupPermissionExtService: PipelineStartupPermissionExtService,
+    private val runtimeResourceResolver: RuntimeResourceResolver,
     private val client: Client
 ) {
     companion object {
@@ -149,7 +154,10 @@ class PipelineBuildService(
         val pipelineAuthorizer: String? = null,
         val pipelineDialectType: String,
         val failIfVariableInvalid: Boolean? = false,
-        val envHashId: String? = null
+        val envHashId: String? = null,
+        val runtimeResource: RuntimeResource? = null,
+        // 重新执行时原构建的触发人。局部重试不会带回原构建的启动参数，没有它触发人会回落成操作人
+        val originTriggerUser: String? = null
     )
 
     @ActionAuditRecord(
@@ -178,17 +186,9 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false
+        debug: Boolean? = false,
+        originTriggerUser: String? = null
     ): BuildId {
-
-        // 启动前的扩展权限校验（如基于 NODE_HASH_ID 校验节点操作权限），校验不通过会抛出异常阻断启动
-        pipelineStartupPermissionExtService.checkStartupPermission(
-            userId = userId,
-            projectId = pipeline.projectId,
-            pipelineId = pipeline.pipelineId,
-            pipelineParamMap = pipelineParamMap,
-            channelCode = channelCode
-        )
 
         var acquire = false
         val projectVO = projectCacheService.getProject(pipeline.projectId)
@@ -291,9 +291,28 @@ class PipelineBuildService(
                 },
                 pipelineDialectType = pipelineDialectType.name,
                 failIfVariableInvalid = setting.failIfVariableInvalid,
-                envHashId = setting.envHashId
+                envHashId = setting.envHashId,
+                // 运行资源只对「运行环境由设置指定」的渠道生效。没有类型、只存了环境的历史设置会被
+                // 还原成环境资源，不按渠道收口的话，普通流水线那些存量 envHashId 会让启动多出
+                // 「必须指定运行节点」的拦截，把原本能跑的构建挡住
+                // 以流水线自身的渠道为准，不用这次请求带的渠道。
+                // 重新执行经常不带创作流渠道，按请求渠道判断会把「节点已不在环境内」整段校验跳掉
+                runtimeResource = setting.runtimeResource()
+                    ?.takeIf { AtomUtils.isRunEnvSpecifiedBySetting(pipeline.channelCode) },
+                originTriggerUser = originTriggerUser
             )
             initPipelineParamMap(initContext)
+
+            // 启动前的扩展权限校验（基于 NODE_AGENT_ID 校验节点操作权限），校验不通过会抛出异常阻断启动。
+            // 必须放在运行资源解析之后：绑定单台机器时启动方不传节点，节点是上面解析运行资源才得出来的，
+            // 放在解析之前会因为拿不到节点而整个跳过校验，手动启动和定时触发就都绕过了节点权限
+            pipelineStartupPermissionExtService.checkStartupPermission(
+                userId = userId,
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                pipelineParamMap = pipelineParamMap,
+                channelCode = channelCode
+            )
 
             val context = StartBuildContext.init(
                 projectId = pipeline.projectId,
@@ -312,10 +331,13 @@ class PipelineBuildService(
                     .map { it.id }
                     .toMutableList()
                     .let {
-                        // 创作流启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID]为内置变量
-                        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                        // 运行资源由设置指定的渠道，启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID、NODE_WORKSPACE]为内置变量。
+                        // 看流水线自己的渠道：重新执行的请求渠道默认是 BS，按请求渠道判断会把这三个变量
+                        // 排出启动参数，下一次重跑就看不到原环境，环境被换掉的拦截会失效
+                        if (AtomUtils.isRunEnvSpecifiedBySetting(pipeline.channelCode)) {
                             it.add(NODE_AGENT_ID)
                             it.add(NODE_ENV_HASH_ID)
+                            it.add(NODE_WORKSPACE)
                         }
                         it
                     },
@@ -380,7 +402,10 @@ class PipelineBuildService(
             StartType.TIME_TRIGGER -> ctx.pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> ctx.startValues?.get(PIPELINE_START_REMOTE_USER_ID)
             StartType.TRIGGER_EVENT -> ctx.startValues?.get(PIPELINE_START_TRIGGER_EVENT_USER_ID)
-        } ?: ctx.userId
+            // 重新执行时优先沿用原构建的触发人：触发人代表构建因何而来，不应被重试的操作人改写。
+            // 局部重试（Stage/Job/插件重试）不会带回原构建的启动参数，上面按触发类型取不到值，
+            // 没有这个兜底就会落到操作人，webhook 的提交人、定时的授权人等触发来源都会丢失
+        } ?: ctx.originTriggerUser ?: ctx.userId
 
         val paramMap = ctx.pipelineParamMap
         // 维持原样，保证可修改
@@ -400,7 +425,7 @@ class PipelineBuildService(
         // 流水线类型
         paramMap[CI_CATEGORY] = BuildParameters(
             key = CI_CATEGORY,
-            value = if (ctx.channelCode == ChannelCode.CREATIVE_STREAM) {
+            value = if (AtomUtils.isRunEnvSpecifiedBySetting(ctx.pipeline.channelCode)) {
                 PipelineCategory.CREATIVE_STREAM
             } else {
                 PipelineCategory.PIPELINE
@@ -500,9 +525,66 @@ class PipelineBuildService(
      * 初始化节点/Agent 相关参数
      */
     private fun initNodeAgentParams(ctx: InitParamContext) {
-        val agentIdValue = ctx.startValues?.get(NODE_AGENT_ID)
-            ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+        val resource = ctx.runtimeResource
+        // 运行资源级工作空间对所有启动方式生效，Job 未指定时由 DispatchTypeBuilder 回落到该值
+        resource?.workspace?.takeIf(String::isNotBlank)?.let { workspace ->
+            ctx.pipelineParamMap[NODE_WORKSPACE] = BuildParameters(
+                key = NODE_WORKSPACE, value = workspace, readOnly = true
+            )
+        }
+        val startedAgentId = (
+            ctx.startValues?.get(NODE_AGENT_ID) ?: ctx.pipelineParamMap[NODE_AGENT_ID]?.value?.toString()
+            )?.takeIf(String::isNotBlank)
+        // 重放和重新执行都会把原构建的环境带过来，此时以它为准：两者都是要复现原来那次执行，
+        // 不能用流水线之后改成的运行资源。新触发的事件不带这个值，仍走设置里的环境
+        val startedEnvHashId = (
+            ctx.startValues?.get(NODE_ENV_HASH_ID) ?: ctx.pipelineParamMap[NODE_ENV_HASH_ID]?.value?.toString()
+            )?.takeIf(String::isNotBlank)
+        val agentIdValue = when {
+            // 没有绑定运行资源：沿用启动方传入的节点
+            resource == null -> startedAgentId
+            // 绑定环境只圈定了范围，到底在哪台机器上执行由触发方选定；触发方没传就是接入方的问题，直接拒绝启动，
+            // 否则会在环境内落到一台与触发语义无关的机器上
+            resource.group -> startedAgentId ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_REQUIRED,
+                params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+            )
+            // 绑定单台机器：执行对象固定，新发起的构建一律按当前设置换算，不接受启动方用启动参数改派。
+            // 唯一的例外是重跑历史构建（重新执行、重放）：那一次跑在哪台机器上是既成事实，
+            // 只要那台机器还在就继续用它，不能因为流水线后来改绑了另一台就把历史构建挪过去。
+            // 原机器已经不在时直接拒绝，不改跑当前设置里的那台：记录上仍是重跑原来那次，
+            // 执行对象却悄悄换了，用户看不出来。查原机器失败同样不回落，避免一次查询抖动把还在的机器换掉
+            else -> ctx.reusableOriginAgentId(startedAgentId)
+                ?: runtimeResourceResolver.resolveAgentHashId(
+                    projectId = ctx.pipeline.projectId,
+                    userId = ctx.pipelineAuthorizer ?: ctx.userId,
+                    resource = resource
+                )?.takeIf(String::isNotBlank)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+                    params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+                )
+        }
+        // 节点可能在上次构建之后被移出环境，重新执行、重放事件都会带着它启动。
+        // 这里不看 runtimeResource 是否解析得出来：重新执行读的是快照版本的设置，
+        // 本功能上线前保存的版本里没有运行资源字段，整组回放后 resource 为 null，
+        // 但启动参数里仍带着原构建认定的环境，那才是该校验的对象。
+        // 用原构建的环境校验时，设置里的环境名对不上这个 hashId，不能拿来报错。
+        // 绑定单台机器时执行对象由平台解析，不存在「节点属不属于环境」的问题，不参与校验
+        val checkEnvHashId = when {
+            // 运行环境不由设置指定的渠道，节点和环境都由编排里的 Job 自己声明，不存在「运行资源的环境」。
+            // 看流水线自己的渠道：重新执行的请求渠道经常不是创作流，不能据此跳过
+            !AtomUtils.isRunEnvSpecifiedBySetting(ctx.pipeline.channelCode) -> null
+            resource?.group == false -> null
+            else -> startedEnvHashId ?: resource?.envHashId
+        }
         agentIdValue?.takeIf(String::isNotBlank)?.let { agentId ->
+            checkAgentInEnv(
+                ctx = ctx,
+                envHashId = checkEnvHashId,
+                resourceName = resource?.resourceName?.takeIf { startedEnvHashId == null },
+                agentId = agentId
+            )
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
                 .getAgentById(ctx.pipeline.projectId, agentId).data
             val paramMap = ctx.pipelineParamMap
@@ -513,7 +595,7 @@ class PipelineBuildService(
             agentInfo?.nodeId?.takeIf(String::isNotBlank)?.let { nodeId ->
                 paramMap[NODE_HASH_ID] = BuildParameters(key = NODE_HASH_ID, value = nodeId, readOnly = true)
             }
-            ctx.envHashId?.takeIf(String::isNotBlank)?.let { envHashId ->
+            (startedEnvHashId ?: ctx.envHashId)?.takeIf(String::isNotBlank)?.let { envHashId ->
                 paramMap[NODE_ENV_HASH_ID] = BuildParameters(
                     key = NODE_ENV_HASH_ID, value = envHashId, readOnly = true
                 )
@@ -524,8 +606,90 @@ class PipelineBuildService(
     }
 
     /**
-     * 用已查到的 Agent 补齐节点内置变量。查询节点失败时退回 Agent 上的信息，不阻断启动。
+     * 重跑历史构建时沿用的原机器。
+     *
+     * 只在重新执行、重放这两种「把某一次重跑一遍」的操作上生效。
+     * 重新执行的标记由重试服务写入参数表；重放的标记只由 buildManualStartup 的 replayOriginBuildId 写入，
+     * 启动请求里自带的同名变量不算。
+     * 普通启动即使在参数里塞了节点也不认，否则绑定单台机器的「执行对象不可改派」就被绕过去了。
+     * 不是重跑、或者这次构建没有记下原机器时返回 null，由调用方按当前设置换算。
+     * 原机器已被删除或释放时直接拒绝，不改跑当前设置里的那台。
+     * 查询异常原样抛出，不当成机器已释放，也不回落到当前设置。
      */
+    private fun InitParamContext.reusableOriginAgentId(startedAgentId: String?): String? {
+        val replaying = pipelineParamMap[PIPELINE_REPLAY_ORIGIN_BUILD_ID]?.value?.toString()
+            ?.isNotBlank() == true
+        val retrying = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString()?.isNotBlank() == true
+        if (!replaying && !retrying) return null
+        val agentId = startedAgentId?.takeIf(String::isNotBlank) ?: return null
+        val stillThere = try {
+            client.get(ServiceThirdPartyAgentResource::class)
+                .getAgentById(pipeline.projectId, agentId).data != null
+        } catch (ignored: Exception) {
+            logger.warn("check origin agent failed|${pipeline.projectId}|$agentId", ignored)
+            throw ignored
+        }
+        if (stillThere) return agentId
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+            params = arrayOf(
+                runtimeResourceResolver.getNodeName(pipeline.projectId, pipelineAuthorizer ?: userId, agentId)
+                    ?: agentId
+            )
+        )
+    }
+
+    /**
+     * 校验运行节点确实属于本次构建要用的那个环境。
+     *
+     * 节点由触发方选定，环境来自流水线设置或原事件，两者会随时间脱节：节点被移出环境后，
+     * 重新执行、重放事件仍会带着这个节点启动，构建就跑在了一台已经不属于该运行资源的机器上。
+     *
+     * 查得到归属结论就按结果判定：不属于该环境一律拒绝，包括环境已被清空或删除的情况，
+     * 这正是「快照里的环境已经不存在了」要拦住的场景。
+     *
+     * 查询本身失败（环境服务未发布、调用异常）时同样不放行，但报的是「暂时无法确认」而不是「不在环境内」：
+     * 放行等于在最该拦的时候失效——定时触发按保存的节点快照启动，节点早被移出环境，构建却仍然成功。
+     * 节点归属问不到时没有别的兜底：派发只认传进来的 agent，不会再判它属不属于这个环境。
+     * 这类失败可重试，定时触发下一分钟会自己恢复。
+     */
+    private fun checkAgentInEnv(
+        ctx: InitParamContext,
+        envHashId: String?,
+        resourceName: String?,
+        agentId: String
+    ) {
+        val targetEnvHashId = envHashId?.takeIf(String::isNotBlank) ?: return
+        val authUserId = ctx.pipelineAuthorizer ?: ctx.userId
+        val stillInEnv = runtimeResourceResolver.agentStillInEnvOrNull(
+            projectId = ctx.pipeline.projectId,
+            userId = authUserId,
+            envHashId = targetEnvHashId,
+            agentHashId = agentId
+        ) ?: throw ErrorCodeException(
+            // 不带节点名和环境名：查这两个名字同样要问环境服务，这会儿正问不到
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_ENV_UNKNOWN
+        )
+        if (stillInEnv) return
+        // 报错给人看，要的是环境名称。设置里的名字只在校验的就是设置里那个环境时才可信，
+        // 用历史构建带来的环境校验时按 hashId 现查；环境已被删除等查不到名字的情况才退回展示 hashId
+        val envName = resourceName ?: runtimeResourceResolver.getEnvName(
+            projectId = ctx.pipeline.projectId,
+            userId = authUserId,
+            envHashId = targetEnvHashId
+        )
+        // 同一个环境里可能有多台机器，只报环境名看不出是哪台出了问题，必须带上节点名
+        val nodeName = runtimeResourceResolver.getNodeName(
+            projectId = ctx.pipeline.projectId,
+            userId = authUserId,
+            agentHashId = agentId
+        )
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_NOT_IN_ENV,
+            params = arrayOf(nodeName ?: agentId, envName ?: targetEnvHashId)
+        )
+    }
+
     private fun fillNodeBuiltinParams(
         ctx: InitParamContext,
         agentId: String,

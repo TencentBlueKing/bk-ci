@@ -2240,6 +2240,7 @@ class PipelineRepositoryService constructor(
                 }
             } ?: ChannelCode.getRequestChannelCode()
             val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
+                .withRuntimeResourceOf(old)
             if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,
                 projectId = processedSetting.projectId,
@@ -2280,6 +2281,23 @@ class PipelineRepositoryService constructor(
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)
+    }
+
+    /**
+     * 本次保存没带运行资源时沿用库里已有的值。
+     * 主表在五个字段全空时本就不动；版本表每次新插一行，不补的话这一版快照里运行资源为空，
+     * 和主表对不上，之后按最新版本判断「变更前的运行资源」也会出错。
+     * 原样拷贝存储字段，不经过 [PipelineSetting.applyRuntimeResource]，避免把存量数据补出类型。
+     */
+    private fun PipelineSetting.withRuntimeResourceOf(old: PipelineSetting?): PipelineSetting {
+        if (old == null || runtimeResource() != null || old.runtimeResource() == null) return this
+        return copy(
+            envHashId = old.envHashId,
+            envName = old.envName,
+            runtimeResourceType = old.runtimeResourceType,
+            runtimeResourceId = old.runtimeResourceId,
+            runtimeResourceWorkspace = old.runtimeResourceWorkspace
+        )
     }
 
     fun batchUpdatePipelineModel(

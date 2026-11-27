@@ -248,9 +248,9 @@ class PipelineSettingFacadeService @Autowired constructor(
         setting: PipelineSetting,
         savingModel: Model?
     ) {
-        // envHashId 是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存没有设置层面的运行环境。
+        // 运行资源是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存没有设置层面的运行环境。
         // 该判断置于最前，普通流水线保存设置不会走到后面任何一次查询，零额外开销
-        if (setting.envHashId.isNullOrBlank()) return
+        if (setting.runtimeResource() == null) return
         // 渠道以流水线自身记录为准，不能取请求上下文：openapi 的请求渠道由网关部署标签决定
         // (见 ApiGatewayUtil.getChannelCode)，与流水线实际所属渠道无关，取错会让校验静默失效
         val channelCode = pipelineRepositoryService.getPipelineInfo(

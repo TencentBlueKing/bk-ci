@@ -34,6 +34,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.TimerNodeType
 import com.tencent.devops.common.pipeline.utils.ModelVarRefValidator
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -43,6 +46,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MOD
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +57,8 @@ class PipelineVersionValidator @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectCacheService: ProjectCacheService,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     fun validate(context: PipelineVersionCreateContext) {
@@ -62,7 +67,75 @@ class PipelineVersionValidator @Autowired constructor(
             validateModelBasicInfo()
             validatePermission()
             validateSetting()
+            validateRuntimeResource()
         }
+    }
+
+    /**
+     * 发布前校验运行资源与定时触发选中的运行节点确实可用。
+     *
+     * 节点的可用性会随环境变动而失效：环境被清空或删除、节点被移出环境、单体资源的机器被释放。
+     * 发布时不拦，问题要等到下一次定时触发才暴露，而那时只有一条触发失败记录，编排的人未必看得到。
+     * 只在发布时校验，草稿保存是编写过程中的中间状态，不该被尚未定稿的节点配置挡住。
+     *
+     * 只在有确凿证据时拦截：查询本身失败（环境服务异常等）一律放行，不能因为问不到就挡住发布。
+     */
+    private fun PipelineVersionCreateContext.validateRuntimeResource() {
+        if (versionAction != PipelineVersionAction.RELEASE_DRAFT) return
+        if (pipelineBasicInfo.channelCode != ChannelCode.CREATIVE_STREAM) return
+        val resource = pipelineSettingWithoutVersion.runtimeResource() ?: return
+        // 查询身份与定时触发一致：用流水线授权人，没有授权人时才退回操作人。
+        // 节点归属按不过滤权限的接口判定，避免把「授权人没有该节点使用权」误判成「节点已被移出环境」
+        val authUserId = pipelineInfo?.let {
+            pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+        } ?: userId
+        if (!resource.group) {
+            // 单体资源：机器被释放后换不出 agent，发布出去也只会在派发阶段失败。
+            // 查询失败时拿不到结论，按放行处理，不能因为环境服务抖动把发布挡下来
+            val resolved = runtimeResourceResolver.resolveSingleAgent(
+                projectId = projectId,
+                userId = authUserId,
+                resource = resource
+            )
+            if (!resolved.queried) return
+            if (resolved.agentHashId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_NODE_UNRESOLVED,
+                    params = arrayOf(resource.resourceName ?: resource.resourceId ?: "")
+                )
+            }
+            return
+        }
+        val envHashId = resource.envHashId?.takeIf { it.isNotBlank() } ?: return
+        val envAgentIds = runtimeResourceResolver.listEnvAgentHashIdsForCheckOrNull(
+            projectId = projectId,
+            userId = authUserId,
+            envHashId = envHashId
+        ) ?: return
+        val envName = resource.resourceName
+            ?: runtimeResourceResolver.getEnvName(projectId, authUserId, envHashId)
+            ?: envHashId
+        if (envAgentIds.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_ENV_NO_NODE,
+                params = arrayOf(envName)
+            )
+        }
+        // 定时触发勾选的节点必须还在环境里，否则到点触发会逐个失败
+        val invalidAgentId = pipelineResourceWithoutVersion.model.getTriggerContainer().elements
+            .filterIsInstance<TimerTriggerElement>()
+            .filter { it.elementEnabled() && it.nodeType == TimerNodeType.NODE_LIST }
+            .flatMap { it.nodes.orEmpty() }
+            .distinct()
+            .firstOrNull { it.isNotBlank() && !envAgentIds.contains(it) }
+            ?: return
+        throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_TIMER_TRIGGER_NODE_NOT_IN_ENV,
+            params = arrayOf(
+                runtimeResourceResolver.getNodeName(projectId, authUserId, invalidAgentId) ?: invalidAgentId,
+                envName
+            )
+        )
     }
 
     fun PipelineVersionCreateContext.validateBasicInfo() {
@@ -93,7 +166,8 @@ class PipelineVersionValidator @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
             )
         }
-        if (pipelineInfo == null) {
+        val existedPipeline = pipelineInfo
+        if (existedPipeline == null) {
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             // codecc等无需注册鉴权的渠道不受项目流水线数量上限约束
@@ -111,11 +185,12 @@ class PipelineVersionValidator @Autowired constructor(
                 }
             }
         } else {
-            if (pipelineInfo.channelCode != pipelineBasicInfo.channelCode) {
+            val existedChannelCode = existedPipeline.channelCode
+            if (existedChannelCode != pipelineBasicInfo.channelCode) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    params = arrayOf(pipelineInfo.channelCode.name)
+                    params = arrayOf(existedChannelCode.name)
                 )
             }
         }

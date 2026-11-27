@@ -3339,10 +3339,19 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "avatar-id" : {
+            "type" : "string"
+          },
+          "desktop-id" : {
+            "type" : "string"
+          },
           "pool-name" : {
             "type" : "string"
           },
           "pool-id" : {
+            "type" : "string"
+          },
+          "workspace" : {
             "type" : "string"
           }
         }

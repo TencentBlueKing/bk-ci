@@ -166,15 +166,17 @@ class PipelineTriggerEventAspect(
         startType: StartType?,
         pipelineParamMap: MutableMap<String, BuildParameters>?
     ): Boolean {
-        // 非BS和CREATIVE_STREAM渠道的不需要记录,webhook的在webhook触发时已记录,在这不需要记录;重试不需要记录
+        // 非BS和CREATIVE_STREAM渠道的不需要记录。
+        // webhook、定时触发各自在触发侧记录：定时失败要按同一原因去重，这里再记就会每分钟一条。
+        // 重试不需要记录。
         val isAnyParamNull = pipeline == null || userId == null || channelCode == null || startType == null
         val isUnsupportedChannel = channelCode != ChannelCode.BS && channelCode != ChannelCode.CREATIVE_STREAM
-        val isWebHookStart = startType == StartType.WEB_HOOK
+        val isRecordedByTrigger = startType == StartType.WEB_HOOK || startType == StartType.TIME_TRIGGER
         val isRetryBuild = pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null
         return when {
             isAnyParamNull -> true
             isUnsupportedChannel -> true
-            isWebHookStart -> true
+            isRecordedByTrigger -> true
             isRetryBuild -> true
             else -> false
         }

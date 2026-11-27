@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER
+import com.tencent.devops.common.api.constant.CommonMessageCode.RUNTIME_RESOURCE_NOT_UNIQUE
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
@@ -47,6 +49,8 @@ import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
@@ -54,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.environment.pojo.enums.CreateEnvType
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
@@ -61,13 +66,13 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
-import com.tencent.devops.process.yaml.v3.models.CreativeRunsOn
 import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.RootRunsOn
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
@@ -134,13 +139,76 @@ class ModelTransfer @Autowired constructor(
             ),
             failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
             buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy),
-            envHashId = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                CreativeRunsOn.parse(yaml.runsOn).poolId
-            } else null,
-            envName = if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-                CreativeRunsOn.parse(yaml.runsOn).poolName
-            } else null
+        ).also { setting ->
+            if (yamlInput.channelCode == ChannelCode.CREATIVE_STREAM) {
+                parseRuntimeResource(yaml.runsOn, yamlInput)?.let(setting::applyRuntimeResource)
+            }
+        }
+    }
+
+    /** 解析根级 `runs-on`，并校验四个运行资源键只填了一个 */
+    private fun parseRuntimeResource(rawRunsOn: Any?, yamlInput: YamlTransferInput): RuntimeResource? {
+        val runsOn = RootRunsOn.parse(rawRunsOn)
+        val specifiedKeys = runsOn.specifiedKeys()
+        if (specifiedKeys.size > 1) {
+            throw PipelineTransferException(
+                RUNTIME_RESOURCE_NOT_UNIQUE,
+                arrayOf(specifiedKeys.joinToString(", "))
+            )
+        }
+        return runsOn.toRuntimeResource()?.let { resolvePool(it, yamlInput) }
+    }
+
+    /**
+     * `pool-id` / `pool-name` 本身不带类型。保存前补上 hashId 和环境名。
+     * 类型的判定见 [runtimeTypeOf]。
+     *
+     * 只写了环境名却查不到时必须拒绝保存，否则 [RuntimeResource.of] 视为未配置，旧的 pool-id 会留在库里。
+     * 已经写了 pool-id 但暂时查不到环境时，保留这个 id 继续保存。
+     */
+    private fun resolvePool(resource: RuntimeResource, yamlInput: YamlTransferInput): RuntimeResource {
+        if (!resource.group) return resource
+        val envHashId = resource.resourceId?.trim()?.takeIf { it.isNotEmpty() }
+        val envName = resource.resourceName?.trim()?.takeIf { it.isNotEmpty() }
+        if (envHashId == null && envName == null) return resource
+        val env = if (envHashId != null) {
+            transferCache.findEnvByHashId(yamlInput.userId, yamlInput.projectCode, envHashId)
+        } else {
+            transferCache.findEnvByName(yamlInput.userId, yamlInput.projectCode, envName!!)
+        }
+        if (env == null) {
+            if (envHashId != null) return resource
+            throw PipelineTransferException(DISPATCH_NOT_SUPPORT_TRANSFER, arrayOf(envName!!))
+        }
+        return resource.copy(
+            type = runtimeTypeOf(env, yamlInput),
+            resourceId = env.envHashId,
+            resourceName = env.name
         )
+    }
+
+    /**
+     * 环境自身限定的节点类型是唯一可靠的判据：创建环境时限定了只收数字分身或只收云桌面节点，两者一一对应。
+     * 环境用途 EnvType 做不到这件事，两种环境都是 EnvType.CREATE。
+     *
+     * 未限定节点类型的存量环境（[RuntimeEnvRef.nodeSource] 为空）退而求其次：这次写的还是流水线上已经
+     * 保存过的那个环境时，沿用用户在 UI 上选过的类型，不把他的显式选择冲掉；
+     * 换了环境或从没保存过运行资源，就按产品对存量环境的约定当作数字分身环境。
+     */
+    private fun runtimeTypeOf(env: RuntimeEnvRef, yamlInput: YamlTransferInput): RuntimeResourceType {
+        when (env.nodeSource) {
+            CreateEnvType.IEG_IMATE -> return RuntimeResourceType.AVATAR_GROUP
+            CreateEnvType.CLOUD_DESKTOP_NODE -> return RuntimeResourceType.DESKTOP_GROUP
+            null -> Unit
+        }
+        val savedType = yamlInput.pipelineInfo?.pipelineId?.let { pipelineId ->
+            transferCache.findSavedRuntimeResource(
+                projectId = yamlInput.projectCode,
+                pipelineId = pipelineId,
+                channelCode = yamlInput.channelCode
+            )
+        }?.let { saved -> saved.type?.takeIf { it.group && saved.resourceId == env.envHashId } }
+        return savedType ?: RuntimeResourceType.AVATAR_GROUP
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
@@ -365,9 +433,8 @@ class ModelTransfer @Autowired constructor(
         yaml.cancelPolicy =
             modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
         if (modelInput.channelCode == ChannelCode.CREATIVE_STREAM) {
-            yaml.runsOn = CreativeRunsOn.fromSetting(
-                envHashId = modelInput.setting.envHashId,
-                envName = modelInput.setting.envName
+            yaml.runsOn = RootRunsOn.fromRuntimeResource(
+                modelInput.setting.runtimeResource()
             ).toYaml()
         }
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)

@@ -157,6 +157,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.creative.CreativeStreamImateStageReviewService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
@@ -175,6 +176,8 @@ import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_REPLAY_ORIGIN_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
@@ -222,7 +225,8 @@ class PipelineBuildFacadeService(
     private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory,
     private val createStreamService: CreateStreamTriggerSupportService,
     private val creativeStreamImateStageReviewService: CreativeStreamImateStageReviewService,
-    private val buildRunningInfoResolver: BuildRunningInfoResolver
+    private val buildRunningInfoResolver: BuildRunningInfoResolver,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -483,11 +487,15 @@ class PipelineBuildFacadeService(
         triggerReviewers: List<String>? = null,
         version: Int? = null,
         imateSessionId: String? = null,
-        branch: String? = null
+        branch: String? = null,
+        replayOriginBuildId: String? = null
     ): BuildId {
+        // 重放标记只认本方法的 replayOriginBuildId。用户在启动参数里自带同名变量不能算重放，
+        // 否则单体运行资源「普通启动不可改派」会被这个标记绕过去
+        val startupValues = values - PIPELINE_REPLAY_ORIGIN_BUILD_ID
         val mergedValues = imateSessionId?.takeIf { it.isNotBlank() }?.let {
-            values + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
-        } ?: values
+            startupValues + (PipelineBuildParamKey.CI_IMATE_SESSION_ID to it)
+        } ?: startupValues
         logger.info(
             "[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $mergedValues " +
                     "and version[${version ?: branch}]"
@@ -627,6 +635,19 @@ class PipelineBuildFacadeService(
                 paramProperties = triggerContainer.params, paramValues = mergedValues
             )
             yamlParams.forEach { paramMap.putIfAbsent(it.key, it.value) }
+
+            // 重放链上的原触发器 id 不是编排里声明的流水线变量，parseTriggerParam 不会收它，
+            // 这里显式带上，保证重放出来的构建再被重放时仍按原触发器校验
+            mergedValues[PIPELINE_REPLAY_ORIGIN_TASK_ID]?.takeIf { it.isNotBlank() }?.let {
+                paramMap[PIPELINE_REPLAY_ORIGIN_TASK_ID] = BuildParameters(
+                    key = PIPELINE_REPLAY_ORIGIN_TASK_ID, value = it, readOnly = true
+                )
+            }
+            replayOriginBuildId?.takeIf { it.isNotBlank() }?.let {
+                paramMap[PIPELINE_REPLAY_ORIGIN_BUILD_ID] = BuildParameters(
+                    key = PIPELINE_REPLAY_ORIGIN_BUILD_ID, value = it, readOnly = true
+                )
+            }
 
             // 创作流流水线填充基础变量
             if (channelCode == ChannelCode.CREATIVE_STREAM) {
@@ -3194,7 +3215,8 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            keys = setOf(PIPELINE_START_TASK_ID)
+            // 原触发器 id 不是编排声明的流水线变量，进不了启动参数，只存在于构建变量里，要单独取
+            keys = setOf(PIPELINE_START_TASK_ID, PIPELINE_REPLAY_ORIGIN_TASK_ID)
         )
         // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = buildInfo.buildParameters?.filter {
@@ -3220,8 +3242,13 @@ class PipelineBuildFacadeService(
         )
         val model = resource.model
         val triggerContainer = model.getTriggerContainer()
-        // 检查触发器是否存在
-        val checkTriggerResult = forceTrigger || when (startType) {
+        // 检查触发器是否存在。重放保留原触发类型，定时触发的构建重放后仍是定时触发，
+        // 要校验的仍是它最初那个定时触发器，所以重放链上一路带着原触发器 id，
+        // 否则编排变更后按类型找不到原来那一个
+        val originTaskId = startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID]
+        val matchedTrigger = if (originTaskId != null) {
+            triggerContainer.elements.find { it.id == originTaskId }
+        } else when (startType) {
             StartType.WEB_HOOK, StartType.TRIGGER_EVENT -> {
                 triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
@@ -3241,7 +3268,21 @@ class PipelineBuildFacadeService(
             else -> {
                 EmptyElement()
             }
-        }?.takeIf { it.elementEnabled() } != null
+        }
+        // 环境被换成另一个时直接拒绝，二次确认放不过去。
+        // forceTrigger 只表示用户接受「触发器已经不在或被关掉」，不能用来绕过运行资源。
+        // 和重新执行同一条规则、同一个错误码，前端不会把它当成可确认的触发条件不满足。
+        if (!runtimeResourceStillMatch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = buildInfo.channelCode,
+                startParameters = startParameters
+            )
+        ) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_ENV_CHANGED)
+        }
+        val checkTriggerResult = forceTrigger || matchedTrigger?.takeIf { it.elementEnabled() } != null
         if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
@@ -3261,13 +3302,46 @@ class PipelineBuildFacadeService(
                 )
             } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
         }
+        // 只有按 id 认定触发器的定时触发需要传递：手动、远程触发是按类型认定的，
+        // 触发器 id 在编排变更后会变，带上反而会把正常的重放判成触发条件不满足
+        (originTaskId ?: startParameters[PIPELINE_START_TASK_ID]?.takeIf { startType == StartType.TIME_TRIGGER })
+            ?.let { startParameters[PIPELINE_REPLAY_ORIGIN_TASK_ID] = it }
+        // 重放是把原来那次重跑一遍，触发类型要跟着原构建走，和重新执行保持一致：
+        // 定时触发的构建重放后仍记为定时触发，否则执行记录里同一件事会出现两种触发类型。
+        // 触发人由启动流程按触发类型从原启动参数里算回来（webhook 为提交人，定时等算不出的落到操作人），
+        // 与重新执行同口径，触发来源不因重放而改变。
+        // 子流水线触发例外：父构建的上下文无法复现，按手动执行处理
+        val replayStartType = if (startType == StartType.PIPELINE) StartType.MANUAL else startType
+        // 原构建若是重放产生的，启动参数里会带上一次的重放标记。先去掉，避免和这次要写的标记混在一起
+        startParameters.remove(PIPELINE_REPLAY_ORIGIN_BUILD_ID)
         return buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = buildInfo.channelCode,
             values = startParameters,
-            startType = StartType.MANUAL
+            startType = replayStartType,
+            replayOriginBuildId = buildId
+        )
+    }
+
+    /**
+     * 判断流水线绑定的运行资源是否仍是原构建跑的那个，判定口径见
+     * [RuntimeResourceResolver.stillMatchRuntimeResource]。只有创作流由设置指定运行资源，其它渠道不参与。
+     */
+    private fun runtimeResourceStillMatch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        startParameters: Map<String, String>
+    ): Boolean {
+        if (channelCode != ChannelCode.CREATIVE_STREAM) return true
+        return runtimeResourceResolver.stillMatchRuntimeResource(
+            projectId = projectId,
+            userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
+            setting = pipelineRepositoryService.getSetting(projectId, pipelineId),
+            startParameters = startParameters
         )
     }
 
@@ -3652,12 +3726,12 @@ class PipelineBuildFacadeService(
             )
         )
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
-            // 查出环境信息
+            // 单体运行资源（数字分身 / 云桌面）固定一台机器，不展示「运行节点」，由启动时按运行资源解析
             val envHashId = pipelineRepositoryService.getSettingByPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineVersion = version
-            )?.envHashId
+            )?.runtimeResource()?.envHashId
             envHashId?.let {
                 val payload = mapOf(
                     "type" to "remote",

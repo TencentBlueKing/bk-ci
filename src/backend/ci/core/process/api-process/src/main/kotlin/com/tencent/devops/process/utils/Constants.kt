@@ -81,6 +81,10 @@ const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chines
 const val PIPELINE_START_MOBILE = "BK_CI_IS_MOBILE" // "pipeline.start.isMobile"
 
 const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task.id"
+// 定时触发可以有多个，重放只能靠元素 id 认定当初那一个；记在新构建上，否则再重放时对不上
+const val PIPELINE_REPLAY_ORIGIN_TASK_ID = "BK_CI_REPLAY_ORIGIN_TASK_ID"
+// 被重放的那个构建。重放出来的是一个新构建，没有这个标记就分不出「重跑历史构建」和「新发起一次构建」
+const val PIPELINE_REPLAY_ORIGIN_BUILD_ID = "BK_CI_REPLAY_ORIGIN_BUILD_ID"
 const val PIPELINE_TRIGGER_EVENT_ID = "BK_CI_TRIGGER_EVENT_ID"
 const val PIPELINE_TRIGGER_DETAIL_ID = "BK_CI_TRIGGER_DETAIL_ID"
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
@@ -244,6 +248,9 @@ const val NODE_OS = "BK_CI_NODE_OS"
 const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
 
 const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
+
+// 运行资源级工作空间，Job 未指定工作空间时回落到该值
+const val NODE_WORKSPACE = "BK_CI_NODE_WORKSPACE"
 
 /**
  * 保存流水线编排的最大个数

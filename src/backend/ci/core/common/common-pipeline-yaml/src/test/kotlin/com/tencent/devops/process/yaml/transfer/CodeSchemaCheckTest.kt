@@ -323,6 +323,76 @@ class CodeSchemaCheckTest {
         }
     }
 
+    @Test
+    fun `test root runs-on accepts runtime resource keys`() {
+        listOf(
+            """
+            version: v3.0
+            runs-on:
+              avatar-id: ins-9e3e4c439b23b96a
+            """.trimIndent(),
+            """
+            version: v3.0
+            runs-on:
+              desktop-id: desktop-01
+            """.trimIndent(),
+            """
+            version: v3.0
+            runs-on:
+              pool-id: ygpljeap
+            """.trimIndent(),
+            """
+            version: v3.0
+            runs-on:
+              pool-name: env-linux
+            """.trimIndent(),
+            """
+            version: v3.0
+            runs-on: self
+            """.trimIndent(),
+            """
+            version: v3.0
+            runs-on:
+              avatar-id: ins-9e3e4c439b23b96a
+              workspace: /data/workspace
+            """.trimIndent()
+        ).forEach { yaml ->
+            Assertions.assertDoesNotThrow {
+                codeSchemaCheck.check(yaml)
+            }
+        }
+    }
+
+    @Test
+    fun `test root runs-on still rejects unknown keys and job runs-on does not accept avatar-id`() {
+        assertThrows<PipelineTransferException> {
+            codeSchemaCheck.check(
+                """
+                version: v3.0
+                runs-on:
+                  node-name: agent-1
+                """.trimIndent()
+            )
+        }
+        assertThrows<PipelineTransferException> {
+            codeSchemaCheck.check(
+                """
+                version: v3.0
+                stages:
+                  - name: stage-1
+                    jobs:
+                      job1:
+                        runs-on:
+                          avatar-id: ins-9e3e4c439b23b96a
+                        steps:
+                          - uses: linuxScript@1.*
+                            with:
+                              script: echo hi
+                """.trimIndent()
+            )
+        }
+    }
+
     /**
      * 从资源文件读取内容
      */

@@ -186,9 +186,10 @@ class PipelineDraftSaveReqConverter(
             val context = pipelineVersionCreateContextFactory.create(
                 contextParam = contextParam
             )
-            if (context.templateInstanceBasicInfo != null) {
+            val basicInfo = context.templateInstanceBasicInfo
+            if (basicInfo != null) {
                 val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params
-                val instanceParams = context.templateInstanceBasicInfo.instanceModel.getTriggerContainer().params
+                val instanceParams = basicInfo.instanceModel.getTriggerContainer().params
                 TemplateInstanceUtil.assertInstanceParamProps(
                     projectId = projectId,
                     pipelineId = newPipelineId,
@@ -198,7 +199,7 @@ class PipelineDraftSaveReqConverter(
                 validateOptionalParamsNotOverridden(
                     projectId = projectId,
                     pipelineId = newPipelineId,
-                    info = context.templateInstanceBasicInfo,
+                    info = basicInfo,
                     instanceParams = instanceParams
                 )
             }
@@ -221,9 +222,9 @@ class PipelineDraftSaveReqConverter(
         requestChannelCode: ChannelCode,
         setting: PipelineSetting
     ): PipelineRunEnvOsChange? {
-        // envHashId 是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存无运行环境可校验。
+        // 运行资源是「运行环境由设置指定」这类渠道特有的字段，为空即本次保存无运行环境可校验。
         // 该判断置于最前，普通流水线保存草稿不会为解析渠道产生额外查询
-        if (setting.envHashId.isNullOrBlank()) return null
+        if (setting.runtimeResource() == null) return null
         val channelCode = if (isNewPipeline) {
             requestChannelCode
         } else {

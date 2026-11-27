@@ -61,6 +61,9 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.RuntimeResourceResolver
+import com.tencent.devops.process.utils.NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -93,7 +96,8 @@ class PipelineBuildRetryService @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
-    private val pipelineBuildRecordService: PipelineBuildRecordService
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val runtimeResourceResolver: RuntimeResourceResolver
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:28}")
@@ -157,6 +161,13 @@ class PipelineBuildRetryService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 
+            checkRuntimeResourceStillMatch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildInfo = buildInfo
+            )
+
             resource.model = pipelineBuildRecordService.getRecordModel(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -219,6 +230,17 @@ class PipelineBuildRetryService @Autowired constructor(
                 }
             }
 
+            // 环境类运行资源的节点是上次启动时选定的。Stage/Job/插件重试不会重新带上启动参数，
+            // 这里沿用上次的节点，避免被「必须指定运行节点」拦住。
+            reusePreviousRuntimeNode(
+                channelCode = buildInfo.channelCode,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                paramMap = paramMap,
+                webHookStartParam = webHookStartParam
+            )
+
             // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
             pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, resource.model)
 
@@ -249,6 +271,7 @@ class PipelineBuildRetryService @Autowired constructor(
             } else {
                 pipelineBuildService.startPipeline(
                     userId = userId,
+                    originTriggerUser = buildInfo.triggerUser,
                     pipeline = readyToBuildPipelineInfo,
                     startType = startType,
                     pipelineParamMap = paramMap,
@@ -262,6 +285,62 @@ class PipelineBuildRetryService @Autowired constructor(
                     webHookStartParam = webHookStartParam
                 )
             }
+        }
+    }
+
+    /**
+     * 环境被换成另一个时，原来那台机器已不属于该跑的范围，重新执行直接拒绝。
+     * 单体资源换绑不在这里拦，启动时仍用原构建那台机器。
+     * 节点只是被移出环境或机器被删除也放行，由启动流程报更具体的原因。
+     * 判定见 [RuntimeResourceResolver.stillMatchRuntimeResource]。
+     *
+     * 只拦已结束构建的重跑。构建还在跑时的局部重试是在补完这一次执行，机器已经占住了，
+     * 不能因为流水线期间改绑了别的环境就把它拦死，那会让正在跑的构建再也无法继续。
+     */
+    private fun checkRuntimeResourceStillMatch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildInfo: BuildInfo
+    ) {
+        if (buildInfo.channelCode != ChannelCode.CREATIVE_STREAM) return
+        if (!buildInfo.isFinish()) return
+        val startParameters = buildInfo.buildParameters
+            ?.associate { it.key to it.value.toString() } ?: return
+        val stillMatch = runtimeResourceResolver.stillMatchRuntimeResource(
+            projectId = projectId,
+            userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId) ?: userId,
+            setting = pipelineRepositoryService.getSetting(projectId, pipelineId),
+            startParameters = startParameters
+        )
+        if (!stillMatch) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RUNTIME_RESOURCE_ENV_CHANGED)
+        }
+    }
+
+    /**
+     * 重试沿用上一次已经跑过的节点。整次重试已经把启动参数抄进 [paramMap]，这里只补缺。
+     */
+    private fun reusePreviousRuntimeNode(
+        channelCode: ChannelCode,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        paramMap: MutableMap<String, BuildParameters>,
+        webHookStartParam: Map<String, BuildParameters>
+    ) {
+        // 只有该渠道会把节点当成启动必填项。其它流水线的 Stage 重试不能因为同名变量被改派
+        if (channelCode != ChannelCode.CREATIVE_STREAM) return
+        // 节点和它所属的环境要一起沿用：只带节点的话，启动时拿不到原构建认定的环境，
+        // 就无从判断这个节点是不是已经被移出环境了
+        listOf(NODE_AGENT_ID, NODE_ENV_HASH_ID).forEach { key ->
+            if (!paramMap[key]?.value?.toString().isNullOrBlank()) return@forEach
+            val previous = webHookStartParam[key]?.takeIf { it.value.toString().isNotBlank() }
+                ?: buildVariableService.getVariable(projectId, pipelineId, buildId, key)
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { BuildParameters(key = key, value = it, readOnly = true) }
+                ?: return@forEach
+            paramMap[key] = previous
         }
     }
 
@@ -294,6 +373,7 @@ class PipelineBuildRetryService @Autowired constructor(
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
+                originTriggerUser = buildInfo.triggerUser,
                 pipeline = pipeline,
                 startType = startType,
                 pipelineParamMap = paramMap,

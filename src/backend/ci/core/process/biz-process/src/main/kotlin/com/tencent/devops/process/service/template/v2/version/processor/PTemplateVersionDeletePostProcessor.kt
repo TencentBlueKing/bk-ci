@@ -26,10 +26,11 @@ class PTemplateVersionDeletePostProcessor(
         with(context) {
             when (versionAction) {
                 PipelineVersionAction.DELETE_VERSION -> {
+                    val version = version!!
                     val resource = pipelineTemplateResourceService.get(
                         projectId = projectId,
                         templateId = templateId,
-                        version = version!!
+                        version = version
                     )
                     operationLogService.addOperationLog(
                         userId = userId,

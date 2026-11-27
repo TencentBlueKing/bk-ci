@@ -30,11 +30,14 @@ package com.tencent.devops.process.engine.atom.parser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentDispatchType
+import com.tencent.devops.common.pipeline.type.agent.CreateAgentIdDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.NODE_ENV_HASH_ID
+import com.tencent.devops.process.utils.NODE_WORKSPACE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -87,13 +90,21 @@ class DispatchTypeBuilder @Autowired constructor(
             pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(
-            buildVariableService.getAllVariable(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                buildId = task.buildId
-            )
+        val variables = buildVariableService.getAllVariable(
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId
         )
+        dispatchType.replaceVariable(variables)
+        if (dispatchType is CreateAgentIdDispatchType) {
+            // 工作空间两级优先级：Job 级未指定时回落到运行资源级，仍为空则使用 Agent 默认工作空间
+            if (dispatchType.workspace.isNullOrBlank()) {
+                dispatchType.workspace = variables[NODE_WORKSPACE]?.takeIf { it.isNotBlank() }
+            }
+            // 运行资源是单台数字分身/云桌面时没有所属环境，此处必须置空：
+            // 否则默认值里的变量占位符无从替换，会被下游当成环境 hashId 解码出一个错误的环境
+            dispatchType.envHashId = variables[NODE_ENV_HASH_ID]?.takeIf { it.isNotBlank() }
+        }
         return dispatchType
     }
 }

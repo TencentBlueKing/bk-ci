@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResourceType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
@@ -82,6 +83,9 @@ class PipelineSettingVersionDao {
                 BUILD_CANCEL_POLICY,
                 ENV_HASH_ID,
                 ENV_NAME,
+                RUNTIME_RESOURCE_TYPE,
+                RUNTIME_RESOURCE_ID,
+                RUNTIME_RESOURCE_WORKSPACE,
                 YAML_LOCKED
             ).values(
                 id,
@@ -111,6 +115,9 @@ class PipelineSettingVersionDao {
                 setting.buildCancelPolicy.value,
                 setting.envHashId,
                 setting.envName,
+                setting.runtimeResourceType?.code,
+                setting.runtimeResourceId,
+                setting.runtimeResourceWorkspace,
                 setting.yamlLocked ?: false
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
@@ -132,11 +139,13 @@ class PipelineSettingVersionDao {
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
 
-            setting.envHashId?.let { envHashId ->
-                insert.set(ENV_HASH_ID, envHashId)
-            }
-            setting.envName?.let { envName ->
-                insert.set(ENV_NAME, envName)
+            // 类型为空也要整组覆盖，五个字段都空时才不动
+            if (setting.runtimeResource() != null) {
+                insert.set(RUNTIME_RESOURCE_TYPE, setting.runtimeResourceType?.code)
+                    .set(RUNTIME_RESOURCE_ID, setting.runtimeResourceId)
+                    .set(ENV_HASH_ID, setting.envHashId)
+                    .set(ENV_NAME, setting.envName)
+                    .set(RUNTIME_RESOURCE_WORKSPACE, setting.runtimeResourceWorkspace)
             }
             setting.yamlLocked?.let { yamlLocked ->
                 insert.set(YAML_LOCKED, yamlLocked)
@@ -170,11 +179,13 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 })
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
-            setting.envHashId?.let { envHashId ->
-                updateStep.set(ENV_HASH_ID, envHashId)
-            }
-            setting.envName?.let { envName ->
-                updateStep.set(ENV_NAME, envName)
+            // 类型为空也要整组覆盖，五个字段都空时才不动
+            if (setting.runtimeResource() != null) {
+                updateStep.set(RUNTIME_RESOURCE_TYPE, setting.runtimeResourceType?.code)
+                    .set(RUNTIME_RESOURCE_ID, setting.runtimeResourceId)
+                    .set(ENV_HASH_ID, setting.envHashId)
+                    .set(ENV_NAME, setting.envName)
+                    .set(RUNTIME_RESOURCE_WORKSPACE, setting.runtimeResourceWorkspace)
             }
             setting.yamlLocked?.let { yamlLocked ->
                 updateStep.set(YAML_LOCKED, yamlLocked)
@@ -308,6 +319,9 @@ class PipelineSettingVersionDao {
                     buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     envHashId = t.envHashId,
                     envName = t.envName,
+                    runtimeResourceType = RuntimeResourceType.parse(t.runtimeResourceType),
+                    runtimeResourceId = t.runtimeResourceId,
+                    runtimeResourceWorkspace = t.runtimeResourceWorkspace,
                     yamlLocked = t.yamlLocked
                 )
             }

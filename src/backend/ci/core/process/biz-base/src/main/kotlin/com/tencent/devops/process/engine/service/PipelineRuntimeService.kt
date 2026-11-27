@@ -1276,7 +1276,11 @@ class PipelineRuntimeService @Autowired constructor(
                     newList
                 },
                 concurrencyGroup = context.concurrencyGroup,
-                concurrencySubGroup = context.concurrencySubGroup
+                concurrencySubGroup = context.concurrencySubGroup,
+                // 执行人要对齐到本次操作人：权限按操作人校验，插件也以操作人身份运行，
+                // 记录上还写着原触发人的话，展示和实际执行身份就是脱节的。
+                // 触发人则不覆盖，它代表构建因何而来，重试不改变触发来源
+                startUser = context.userId
             )
         } else {
             // 自定义构建号生成, 如果是自定义构建号会有锁，放到事务外面防止影响整体事务性能

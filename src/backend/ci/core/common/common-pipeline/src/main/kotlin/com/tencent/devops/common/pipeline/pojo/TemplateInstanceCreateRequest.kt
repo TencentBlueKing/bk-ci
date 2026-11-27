@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.setting.RuntimeResource
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class TemplateInstanceCreateRequest(
@@ -57,6 +58,8 @@ data class TemplateInstanceCreateRequest(
     val labels: List<String> = emptyList(),
     @get:Schema(title = "流水线描述", required = false)
     val pipelineDesc: String? = null,
-    @get:Schema(title = "环境hashId", required = false)
-    val envHashId: String? = null
+    @get:Schema(title = "环境hashId，已由 runtimeResource 取代，仅兼容旧入参", required = false)
+    val envHashId: String? = null,
+    @get:Schema(title = "运行资源，四选一", required = false)
+    val runtimeResource: RuntimeResource? = null
 )
