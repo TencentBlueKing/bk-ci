@@ -4,26 +4,15 @@
         class="contract-detail"
     >
         <template v-if="desc">
-            <div class="meta-bar">
-                <span class="meta-item">
-                    {{ $t('store.基于版本') }}：{{ desc.basedOnVersion || '--' }}
-                </span>
-                <span class="meta-item source-item">
-                    <i class="bk-icon icon-magic-box source-icon"></i>
-                    {{ coverageText }}
-                </span>
-                <bk-tag
-                    v-if="desc.staleFlag"
-                    theme="warning"
-                >
-                    {{ $t('store.说明可能已过时') }}
-                </bk-tag>
-                <span
-                    v-if="desc.staleFlag"
-                    class="meta-hint"
-                >
-                    {{ $t('store.插件已发布新版本，说明尚未更新') }}
-                </span>
+            <!-- 说明来源提示：统一一句，不区分状态 -->
+            <div class="source-banner">
+                <i class="bk-icon icon-magic-box banner-icon"></i>
+                <div class="banner-content">
+                    <p class="banner-main">{{ bannerMain }}</p>
+                    <p class="banner-sub">
+                        {{ $t('store.可能与实际行为存在差异，请以插件配置页为准。') }}
+                    </p>
+                </div>
             </div>
             <mavon-editor
                 :editable="false"
@@ -70,14 +59,10 @@
         },
 
         computed: {
-            coverageText () {
-                const coverage = this.desc && this.desc.coverage
-                const map = {
-                    VERIFIED: this.$t('store.已人工核验'),
-                    PARTIALLY_VERIFIED: this.$t('store.由AI生成部分人工核验'),
-                    AUTO_EXTRACTED: this.$t('store.由AI生成')
-                }
-                return map[coverage] || this.$t('store.由AI生成')
+            // 统一提示条：不区分 coverage / stale，只说清来源和免责
+            bannerMain () {
+                const version = (this.desc && this.desc.basedOnVersion) || '--'
+                return this.$t('store.本说明由AI分析自动生成', [version])
             },
 
             // mavon-editor 不渲染原始 HTML，把 <details><summary> 折叠块降级成普通小标题，
@@ -129,29 +114,39 @@
     .contract-detail {
         min-height: 200px;
 
-        .meta-bar {
+        .source-banner {
             display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding: 12px 0 16px;
-            color: #63656e;
-            font-size: 12px;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 8px 0 20px;
+            padding: 12px 16px;
+            border-radius: 2px;
+            border-left: 3px solid #3a84ff;
+            background: #f0f5ff;
+            font-size: 13px;
+            line-height: 20px;
         }
 
-        .source-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .source-icon {
-            font-size: 14px;
+        .banner-icon {
+            margin-top: 3px;
+            font-size: 16px;
+            flex-shrink: 0;
             color: #3a84ff;
         }
 
-        .meta-hint {
-            color: #979ba5;
+        .banner-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .banner-main {
+            color: #313238;
+            margin: 0;
+        }
+
+        .banner-sub {
+            margin: 4px 0 0;
+            color: #63656e;
         }
 
         .g-empty {
