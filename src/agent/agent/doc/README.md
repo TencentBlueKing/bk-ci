@@ -8,7 +8,7 @@ BK-CI Agent（又称"第三方构建机"）是一个部署在用户自有机器�
 |---------|---------|---------|
 | Linux | amd64, arm64, loong64 | systemd 系统服务 / 用户级 systemd / 直接启动 |
 | macOS | amd64 (Intel), arm64 (Apple Silicon)  | 直接启动 / launchd 无头模式 |
-| Windows | x64, x86 | Windows 服务 / Session 桌面模式 / 计划任务（计划废弃,使用Session模式代替） |
+| Windows | x64, x86 | Windows 服务 / Session 桌面模式 / 计划任务 |
 
 ## 核心能力
 

@@ -38,7 +38,7 @@ devopsAgent <command> [options]
 |------|---------|------|------|
 | **Linux** | `service` / `user` / `direct` | root: `service`; 非 root: `direct` | `service` = 系统级 systemd; `user` = 用户级 systemd; `direct` = 直接启动 |
 | **macOS** | `login` / `background` | `login` | `login` = 直接启动, 需登录桌面; `background` = launchd 无头模式 |
-| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务; `session` = 服务 + 桌面会话; `task` = [计划废弃] 计划任务 |
+| **Windows** | `service` / `session` / `task` | `service` | `service` = Windows 服务; `session` = 服务 + 桌面会话; `task` = 计划任务 |
 
 ### 重复执行与模式切换
 

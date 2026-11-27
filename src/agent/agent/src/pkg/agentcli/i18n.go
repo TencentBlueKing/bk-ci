@@ -67,7 +67,7 @@ func printUsageLocalized() {
                        注意: 必须使用密码登录, 不能使用 PIN 码;
                        需关闭 Windows Hello PIN 登录, 否则自动登录不生效。
                        同时需确认无组策略禁用自动登录、无锁屏密码保护等。
-    task               [已废弃] 安装为计划任务
+    task               安装为计划任务
 `)
 		} else if isMac {
 			fmt.Print(`  install [模式]       安装并启动 Agent 守护进程
@@ -116,7 +116,7 @@ func printUsageLocalized() {
                        disable PIN sign-in, otherwise auto-logon will not work.
                        Also ensure no Group Policy disables auto-logon and
                        no lock-screen password protection is enforced.
-    task               [deprecated] Install as scheduled task
+    task               Install as scheduled task
 `)
 		} else if isMac {
 			fmt.Print(`  install [mode]       Install and start agent daemon

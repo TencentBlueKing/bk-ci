@@ -51,14 +51,14 @@ func handleStatus(workDir string, args []string) error {
 			statusLine(msg("Service state", "服务状态"), msg("not registered", "未注册"))
 		}
 
-		// Scheduled task (legacy)
+		// Scheduled task
 		hasSchtask := false
 		if serviceName != "" {
 			err := exec.Command("schtasks", "/query", "/tn", serviceName).Run()
 			hasSchtask = err == nil
 		}
 		if hasSchtask {
-			statusLine(msg("Scheduled task", "计划任务"), msg("exists (legacy)", "存在 (旧版)")+" ⚠")
+			statusLine(msg("Scheduled task", "计划任务"), msg("exists", "存在"))
 		}
 
 		// Process status
@@ -132,7 +132,7 @@ func detectRunMode(serviceName, installType string) string {
 		return msg("SERVICE (Windows service)", "服务模式 (Windows 服务)")
 	}
 	if hasSchtask {
-		return msg("TASK (scheduled task, legacy)", "计划任务模式 (旧版)")
+		return msg("TASK (scheduled task)", "计划任务模式")
 	}
 	return msg("MANUAL (not installed as service)", "手动模式 (未注册为服务)")
 }

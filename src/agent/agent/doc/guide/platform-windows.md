@@ -10,7 +10,7 @@ Windows 支持三种安装模式：
 |------|------|---------|
 | `service` | `devopsAgent.exe install` | 默认模式，后台服务运行，适合大多数场景 |
 | `session` | `devopsAgent.exe install session` | 需要访问桌面 UI 的构建（如 GUI 测试、UWP 打包） |
-| `task` | `devopsAgent.exe install task` | **已废弃**，计划任务模式，保留兼容 |
+| `task` | `devopsAgent.exe install task` | 计划任务模式，构建需要访问桌面 UI 时使用 |
 
 ### Service 模式（默认）
 
@@ -81,9 +81,9 @@ Agent 以 Windows 服务方式运行，通过 `sc.exe` 注册：
 > 5. **密码变更后需重新配置**：如果用户密码发生变更，需使用新密码重新执行 `install session --auto-logon` 命令。
 
 
-### Task 模式（已废弃）
+### Task 模式
 
-通过 Windows 计划任务（`schtasks`）管理 Agent，使用 `devopsctl.vbs` 隐藏窗口。此模式已废弃，建议迁移到 `service` 或 `session` 模式。
+通过 Windows 计划任务（`schtasks`）管理 Agent，使用 `devopsctl.vbs` 隐藏窗口，在用户登录时自动拉起 Agent。
 
 ## 环境变量自动刷新
 

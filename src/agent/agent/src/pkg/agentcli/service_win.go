@@ -122,9 +122,6 @@ func handleInstall(workDir string, args []string) error {
 		}
 		return enableSession(workDir, user, pass, autoLogon)
 	case "task":
-		printWarn(msg(
-			"[DEPRECATED] Task mode is deprecated. Consider using 'install session' for desktop access.",
-			"[已废弃] 计划任务模式已废弃, 建议使用 'install session' 获取桌面访问能力。"))
 		return installTask(workDir)
 	default:
 		return fmt.Errorf(msgf("unknown install mode: %s (valid: service, session, task)",
@@ -239,8 +236,8 @@ func installService(workDir string) error {
 
 func installTask(workDir string) error {
 	printDivider()
-	printStep(msg("Installing agent as scheduled task (Windows) [DEPRECATED]",
-		"以计划任务方式安装 Agent (Windows) [已废弃]"))
+	printStep(msg("Installing agent as scheduled task (Windows)",
+		"以计划任务方式安装 Agent (Windows)"))
 	printDivider()
 
 	printStep(msg("Step 1: preparing work directory ...", "步骤 1: 准备工作目录 ..."))
@@ -292,9 +289,6 @@ func installTask(workDir string) error {
 	}
 
 	printStep(msg("Install complete", "安装完成"))
-	printWarn(msg(
-		"Task mode is deprecated. Use 'devopsAgent install session' for desktop access.",
-		"计划任务模式已废弃。请使用 'devopsAgent install session' 获取桌面访问能力。"))
 	return nil
 }
 
@@ -450,7 +444,7 @@ func deleteService(name string) {
 
 func cleanupLegacySchtasks(serviceName string) {
 	if schtasksExists(serviceName) {
-		printStep(msgf("Removing legacy scheduled task: %s", "移除旧版计划任务: %s", serviceName))
+		printStep(msgf("Removing existing scheduled task: %s", "移除已有计划任务: %s", serviceName))
 		_ = exec.Command("schtasks", "/delete", "/tn", serviceName, "/f").Run()
 	}
 }

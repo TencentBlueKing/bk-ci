@@ -68,3 +68,4 @@ openspec/*
 openspec/changes/*
 !openspec/changes/archive/
 !openspec/specs/
+.work-agent-features/
