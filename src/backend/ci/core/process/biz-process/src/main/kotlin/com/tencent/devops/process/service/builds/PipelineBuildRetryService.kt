@@ -60,6 +60,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.service.SubPipelineRetryAttachService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -93,7 +94,8 @@ class PipelineBuildRetryService @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
-    private val pipelineBuildRecordService: PipelineBuildRecordService
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val subPipelineRetryAttachService: SubPipelineRetryAttachService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:28}")
@@ -129,142 +131,206 @@ class PipelineBuildRetryService @Autowired constructor(
 
         BuildIdLock(redisOperation = redisOperation, buildId = buildId).use { redisLock ->
             redisLock.lock()
-
-            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildId)
-                )
-
-            if (buildInfo.pipelineId != pipelineId) {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
-            }
-            buildInfo.startTime?.let {
-                // 判断当前时间是否超过最大重试时间
-                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_RETRY_TIME_INVALID,
-                        params = arrayOf(retryLimitDays.toString())
-                    )
-                }
-            }
-
-            val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, buildInfo.version
-            )
-            if (readyToBuildPipelineInfo.locked == true) {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-            }
-
-            resource.model = pipelineBuildRecordService.getRecordModel(
+            return retryWithinLock(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = buildInfo.version,
                 buildId = buildId,
-                executeCount = buildInfo.executeCount,
-                debug = buildInfo.debug
-            ) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask,
+                isMobile = isMobile,
+                channelCode = channelCode
             )
-
-            val paramMap = mutableMapOf<String, BuildParameters>()
-            // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
-            buildVariableService.getVariable(
-                projectId, pipelineId, buildId, PIPELINE_START_TASK_ID
-            )?.let { startTaskId ->
-                paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
-            }
-
-            val webHookStartParam = mutableMapOf<String, BuildParameters>()
-            // 填充构建参数时，若为流水线基础变量，则需补充[variable.]前缀
-            val paramKeys = resource.model.getTriggerContainer().params.map { it.id }
-            buildInfo.buildParameters?.forEach { param ->
-                webHookStartParam[param.key] = param
-                if (paramKeys.contains(param.key)) {
-                    val variableKey = PipelineVarUtil.getVariableKey(param.key)
-                    webHookStartParam[variableKey] = param.copy(
-                        key = variableKey
-                    )
-                }
-            }
-            webhookBuildParameterService.getBuildParameters(
-                projectId = projectId, buildId = buildId
-            )?.forEach { param ->
-                webHookStartParam[param.key] = param
-            }
-
-            if (!taskId.isNullOrBlank()) {
-                findRetryStartTaskId(
-                    userId = userId,
-                    projectId = projectId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    skipFailedTask = skipFailedTask,
-                    failedContainer = failedContainer,
-                    buildInfo = buildInfo,
-                    paramMap = paramMap,
-                    resource = resource
-                )
-            } else {
-                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
-                try {
-                    paramMap.putAll(webHookStartParam)
-                    val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
-                    if (setting?.cleanVariablesWhenRetry == true) {
-                        buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
-                    }
-                } catch (ignored: Exception) {
-                    logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
-                }
-            }
-
-            // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
-            pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, resource.model)
-
-            // rebuild重试计数
-            val retryCount = (paramMap[PIPELINE_RETRY_COUNT]?.value?.toString()?.toInt() ?: 0) + 1
-
-            logger.info(
-                "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
-            )
-
-            paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
-            paramMap[PIPELINE_RETRY_BUILD_ID] = BuildParameters(PIPELINE_RETRY_BUILD_ID, buildId, readOnly = true)
-
-            val startType = StartType.toStartType(buildInfo.trigger)
-            return if (!buildInfo.isFinish()) {
-                runningBuildRetry(
-                    userId = userId,
-                    pipeline = readyToBuildPipelineInfo,
-                    startType = startType,
-                    paramMap = paramMap,
-                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
-                    isMobile = isMobile,
-                    resource = resource,
-                    buildInfo = buildInfo,
-                    webHookStartParam = webHookStartParam
-                )
-            } else {
-                pipelineBuildService.startPipeline(
-                    userId = userId,
-                    pipeline = readyToBuildPipelineInfo,
-                    startType = startType,
-                    pipelineParamMap = paramMap,
-                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
-                    isMobile = isMobile,
-                    resource = resource,
-                    signPipelineVersion = buildInfo.version,
-                    frequencyLimit = true,
-                    handlePostFlag = false,
-                    debug = buildInfo.debug,
-                    webHookStartParam = webHookStartParam
-                )
-            }
         }
     }
 
+    /**
+     * #8609 在调用方已持有 BuildIdLock(buildId) 的前提下执行构建重试。
+     * 供手动 retry() 与子流水线重试联动 SubPipelineRetrySyncService 共同复用，
+     * 保证单步重试、运行中局部重试、矩阵子步骤局部重试与并发拦截逻辑完全一致。
+     *
+     * @param preAcquiredStageLock 运行中重试时是否已由调用方以非阻塞方式持有 StageIdLock
+     * @param clearAttachOnRetry true 表示普通手动重试，需清理残留的子流水线绑定凭证以防误复用旧子构建
+     * @param frequencyLimit 是否受构建频率限制（子流水线联动与 SubPipelineStartUpService 对齐为 false）
+     * @param extraParamMap 调用方附加透传的构建参数（如多级子流水线回溯链路）
+     */
+    @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "LongParameterList")
+    internal fun retryWithinLock(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String? = null,
+        failedContainer: Boolean? = false,
+        skipFailedTask: Boolean? = false,
+        isMobile: Boolean = false,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
+        preAcquiredStageLock: Boolean = false,
+        clearAttachOnRetry: Boolean = true,
+        frequencyLimit: Boolean = true,
+        extraParamMap: Map<String, BuildParameters> = emptyMap()
+    ): BuildId {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+
+        if (buildInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
+        }
+        // #8609 并发竞态拦截：构建刚被子流水线回调或并发请求切为 QUEUE/QUEUE_CACHE 时，
+        // 统一返回重复重试错误，避免全量/Job 重试误入 runningBuildRetry 抛出 PARAMETER_IS_NULL。
+        if (!buildInfo.isFinish() && buildInfo.status.isReadyToRun()) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
+        }
+        buildInfo.startTime?.let {
+            // 判断当前时间是否超过最大重试时间
+            if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_RETRY_TIME_INVALID,
+                    params = arrayOf(retryLimitDays.toString())
+                )
+            }
+        }
+
+        val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, buildInfo.version
+        )
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+
+        resource.model = pipelineBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
+
+        val paramMap = mutableMapOf<String, BuildParameters>()
+        // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
+        buildVariableService.getVariable(
+            projectId, pipelineId, buildId, PIPELINE_START_TASK_ID
+        )?.let { startTaskId ->
+            paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
+        }
+
+        val webHookStartParam = mutableMapOf<String, BuildParameters>()
+        // 填充构建参数时，若为流水线基础变量，则需补充[variable.]前缀
+        val paramKeys = resource.model.getTriggerContainer().params.map { it.id }
+        buildInfo.buildParameters?.forEach { param ->
+            webHookStartParam[param.key] = param
+            if (paramKeys.contains(param.key)) {
+                val variableKey = PipelineVarUtil.getVariableKey(param.key)
+                webHookStartParam[variableKey] = param.copy(
+                    key = variableKey
+                )
+            }
+        }
+        webhookBuildParameterService.getBuildParameters(
+            projectId = projectId, buildId = buildId
+        )?.forEach { param ->
+            webHookStartParam[param.key] = param
+        }
+
+        if (!taskId.isNullOrBlank()) {
+            findRetryStartTaskId(
+                userId = userId,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                skipFailedTask = skipFailedTask,
+                failedContainer = failedContainer,
+                buildInfo = buildInfo,
+                paramMap = paramMap,
+                resource = resource
+            )
+        } else {
+            // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数，并清理VAR表内容
+            try {
+                paramMap.putAll(webHookStartParam)
+                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                if (setting?.cleanVariablesWhenRetry == true) {
+                    buildVariableService.deleteBuildVars(projectId, pipelineId, buildId)
+                }
+            } catch (ignored: Exception) {
+                logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
+            }
+        }
+
+        // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
+        pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, resource.model)
+
+        // rebuild重试计数
+        val retryCount = (paramMap[PIPELINE_RETRY_COUNT]?.value?.toString()?.toInt() ?: 0) + 1
+
+        logger.info(
+            "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
+                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+        )
+
+        paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
+        paramMap[PIPELINE_RETRY_BUILD_ID] = BuildParameters(PIPELINE_RETRY_BUILD_ID, buildId, readOnly = true)
+        if (extraParamMap.isNotEmpty()) {
+            paramMap.putAll(extraParamMap)
+        }
+
+        // #8609 普通手动重试前清理可能残留的子流水线自动绑定凭证，确保用户手动重跑一定会启动全新的子构建
+        if (clearAttachOnRetry) {
+            if (taskId.isNullOrBlank() || taskId.startsWith("stage-")) {
+                subPipelineRetryAttachService.clearBuildAttachInfos(projectId, buildId)
+            } else {
+                val retryStartTaskId = paramMap[PIPELINE_RETRY_START_TASK_ID]?.value?.toString()
+                if (!retryStartTaskId.isNullOrBlank() && retryStartTaskId == taskId) {
+                    subPipelineRetryAttachService.clearTaskAttachInfo(projectId, buildId, retryStartTaskId)
+                } else {
+                    // Job 级或矩阵批量重试可能覆盖多个子流水线步骤，直接清理整条构建的残留凭证
+                    subPipelineRetryAttachService.clearBuildAttachInfos(projectId, buildId)
+                }
+            }
+        }
+
+        val startType = StartType.toStartType(buildInfo.trigger)
+        return if (!buildInfo.isFinish()) {
+            runningBuildRetry(
+                userId = userId,
+                pipeline = readyToBuildPipelineInfo,
+                startType = startType,
+                paramMap = paramMap,
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+                isMobile = isMobile,
+                resource = resource,
+                buildInfo = buildInfo,
+                webHookStartParam = webHookStartParam,
+                preAcquiredStageLock = preAcquiredStageLock,
+                frequencyLimit = frequencyLimit
+            )
+        } else {
+            pipelineBuildService.startPipeline(
+                userId = userId,
+                pipeline = readyToBuildPipelineInfo,
+                startType = startType,
+                pipelineParamMap = paramMap,
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
+                isMobile = isMobile,
+                resource = resource,
+                signPipelineVersion = buildInfo.version,
+                frequencyLimit = frequencyLimit,
+                handlePostFlag = false,
+                debug = buildInfo.debug,
+                webHookStartParam = webHookStartParam
+            )
+        }
+    }
+
+    @Suppress("LongParameterList")
     private fun runningBuildRetry(
         userId: String,
         pipeline: PipelineInfo,
@@ -274,7 +340,9 @@ class PipelineBuildRetryService @Autowired constructor(
         isMobile: Boolean,
         resource: PipelineResourceVersion,
         buildInfo: BuildInfo,
-        webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf()
+        webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
+        preAcquiredStageLock: Boolean = false,
+        frequencyLimit: Boolean = true
     ): BuildId {
         if (buildInfo.isStageSuccess()) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
@@ -284,15 +352,9 @@ class PipelineBuildRetryService @Autowired constructor(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf(PIPELINE_RETRY_TASK_IN_STAGE_ID)
             )
-        // 运行中重试,需要判断当前的stage的状态,防止当前stage已经执行完成,准备往下一个stage执行,那么运行中重试就会导致执行异常
-        val stageIdLock = StageIdLock(redisOperation, buildInfo.buildId, retryTaskInStageId)
-        stageIdLock.use {
-            if (!stageIdLock.tryLock()) {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
-            }
+        val doStart: () -> BuildId = {
             checkStatus(pipeline = pipeline, buildInfo = buildInfo, paramMap = paramMap)
-
-            return pipelineBuildService.startPipeline(
+            pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,
                 startType = startType,
@@ -301,11 +363,22 @@ class PipelineBuildRetryService @Autowired constructor(
                 isMobile = isMobile,
                 resource = resource,
                 signPipelineVersion = buildInfo.version,
-                frequencyLimit = true,
+                frequencyLimit = frequencyLimit,
                 handlePostFlag = false,
                 debug = buildInfo.debug,
                 webHookStartParam = webHookStartParam
             )
+        }
+        if (preAcquiredStageLock) {
+            return doStart()
+        }
+        // 运行中重试,需要判断当前的stage的状态,防止当前stage已经执行完成,准备往下一个stage执行,那么运行中重试就会导致执行异常
+        val stageIdLock = StageIdLock(redisOperation, buildInfo.buildId, retryTaskInStageId)
+        return stageIdLock.use {
+            if (!stageIdLock.tryLock()) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
+            }
+            doStart()
         }
     }
 

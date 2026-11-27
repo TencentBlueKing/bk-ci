@@ -32,11 +32,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRetrySyncRequest
+import com.tencent.devops.process.service.SubPipelineRetrySyncService
 import com.tencent.devops.process.service.SubPipelineStartUpService
 
 @RestResource
 class ServiceSubPipelineResourceImpl constructor(
-    private val subPipeService: SubPipelineStartUpService
+    private val subPipeService: SubPipelineStartUpService,
+    private val subPipelineRetrySyncService: SubPipelineRetrySyncService
 ) : ServiceSubPipelineResource {
 
     override fun subpipManualStartupInfo(
@@ -66,7 +69,8 @@ class ServiceSubPipelineResourceImpl constructor(
         taskId: String,
         runMode: String,
         values: Map<String, String>,
-        branch: String?
+        branch: String?,
+        enableRetrySync: Boolean?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = parentProjectId,
@@ -79,7 +83,19 @@ class ServiceSubPipelineResourceImpl constructor(
             runMode = runMode,
             values = values,
             executeCount = executeCount,
-            branch = branch
+            branch = branch,
+            enableRetrySync = enableRetrySync
         )
+    }
+
+    /**
+     * #8609 接收跨项目子流水线重试联动回调，仅入队父集群本地 MQ 后立即返回，避免阻塞跨集群 RPC。
+     */
+    override fun syncParentOnSubRetry(
+        parentProjectId: String,
+        request: SubPipelineRetrySyncRequest
+    ): Result<Boolean> {
+        subPipelineRetrySyncService.enqueueLocalSyncEvent(parentProjectId, request)
+        return Result(true)
     }
 }

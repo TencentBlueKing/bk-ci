@@ -62,7 +62,27 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         executeCount: Int?,
         branch: String?
     ): Result<ProjectBuildId> {
+        // #8609 跨项目转发前先在父集群本地校验是否命中子流水线重试绑定凭证：
+        // 若命中则跳过新建子构建，直接返回正在重试的原 subBuildId 供插件轮询，避免发多余跨集群启动请求。
+        subPipeService.tryAttachExistingSubBuild(
+            parentProjectId = projectId,
+            parentPipelineId = parentPipelineId,
+            parentBuildId = buildId,
+            callProjectId = callProjectId,
+            callPipelineId = callPipelineId,
+            taskId = taskId,
+            runMode = runMode,
+            executeCount = executeCount
+        )?.let { return it }
+
         return if (projectId != callProjectId) {
+            // #8609 跨项目/跨集群启动前在父集群本地解析父步骤开关，随请求透传至子集群写入只读变量
+            val enableRetrySync = subPipeService.isParentTaskRetrySyncEnabled(
+                parentProjectId = projectId,
+                parentBuildId = buildId,
+                parentTaskId = taskId,
+                runMode = runMode
+            )
             client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
                 callProjectId = callProjectId,
                 callPipelineId = callPipelineId,
@@ -74,7 +94,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
                 runMode = runMode,
                 values = values,
                 executeCount = executeCount,
-                branch = branch
+                branch = branch,
+                enableRetrySync = enableRetrySync
             )
         } else {
             subPipeService.callPipelineStartup(

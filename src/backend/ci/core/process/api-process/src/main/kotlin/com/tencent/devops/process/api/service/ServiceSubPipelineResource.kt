@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRetrySyncRequest
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -104,6 +105,24 @@ interface ServiceSubPipelineResource {
         values: Map<String, String>,
         @Parameter(description = "分支版本", required = false)
         @QueryParam("branch")
-        branch: String?
+        branch: String?,
+        @Parameter(description = "是否开启子流水线重试同步父状态", required = false)
+        @QueryParam("enableRetrySync")
+        enableRetrySync: Boolean? = null
     ): Result<ProjectBuildId>
+
+    /**
+     * #8609 跨项目子流水线重试联动回调入口：由子项目集群通过网关路由至父项目集群，
+     * 父集群仅负责将事件投递至本地异步队列后立即返回，不阻塞跨集群调用。
+     */
+    @Operation(summary = "跨项目子流水线重试联动回调父流水线")
+    @POST
+    @Path("/retrySync")
+    fun syncParentOnSubRetry(
+        @Parameter(description = "父项目ID（用于网关路由到父项目集群）", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        parentProjectId: String,
+        @Parameter(description = "子流水线重试联动请求体", required = true)
+        request: SubPipelineRetrySyncRequest
+    ): Result<Boolean>
 }
