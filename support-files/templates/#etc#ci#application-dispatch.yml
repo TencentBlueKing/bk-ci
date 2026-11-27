@@ -27,6 +27,16 @@ dispatch:
     enable: __BK_CI_DOCKER_JOB_QUOTA_ENABLE__
   # 默认的构建容器集群类型：VM, KUBERNETES, BCS
   defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
+  thirdPartyAgent:
+    # 每台第三方构建机最多保留的构建记录数，每天凌晨按 ID 清理更早的已结束记录，小于等于 0 时不清理
+    buildKeepNum: 100000
+    # 最近多少天内创建的构建记录不清理，留出时间给数据同步到其他平台
+    buildKeepDays: 14
+    # 清理时每批删除的记录数和批次之间的停顿（毫秒），首次清理存量数据时可按主从延迟调整
+    buildClearBatchSize: 500
+    buildClearIntervalMills: 100
+    # 每次清理最长运行的分钟数，到时停止，第二天继续
+    buildClearMaxMinutes: 240
 
 # kubernetes-dispatch集群配置
 kubernetes:

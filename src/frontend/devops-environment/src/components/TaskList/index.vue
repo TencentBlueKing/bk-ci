@@ -670,9 +670,8 @@
                 return { path: 'environment.pipelineViewCount', values: [pipelineCount.value, buildCount.value] }
             })
             // 是否还有更多数据
-            const hasMore = computed(() => {
-                return taskList.value.length < pagination.value.count
-            })
+            // 是否还有下一页，每次加载后按本页返回条数更新，见 loadTaskList
+            const hasMore = ref(false)
 
             const filterQuery = computed(() => {
                 return searchSelectValue.value.reduce((query, item) => {
@@ -969,8 +968,8 @@
                 }
             }
             
-            // 加载任务详情
-            const loadTaskDetail = async (task) => {
+            // 加载任务详情；翻页时沿用已有总数，不再让后端计数
+            const loadTaskDetail = async (task, withCount = true) => {
                 // 构建视图展开需要 buildId，后端列表未返回时跳过请求，避免 400
                 if (currentView.value === 'BUILD' && !task.buildId) {
                     task.records = []
@@ -983,6 +982,7 @@
                         ...timeRangeParams.value,
                         // 构建状态筛选时透传 taskStatusList 到展开明细接口（与列表过滤一致）
                         ...(filterQuery.value.taskStatusList ? { taskStatusList: filterQuery.value.taskStatusList } : {}),
+                        ...(withCount ? {} : { withCount: false }),
                         page: task.pagination.current,
                         pageSize: task.pagination.limit
                     }
@@ -995,7 +995,9 @@
                         params
                     })
                     task.records = (res.records || []).map(i => mapDetailRecord(currentView.value, i))
-                    task.pagination.count = res.count || 0
+                    if (withCount) {
+                        task.pagination.count = res.count || 0
+                    }
                 } catch (err) {
                     proxy.$bkMessage({
                         theme: 'error',
@@ -1019,16 +1021,23 @@
                     const params = {
                         ...filterQuery.value,
                         ...timeRangeParams.value,
+                        // 滚动加载第二页起筛选条件不变，沿用第一页的总数，不再让后端计数
+                        ...(isLoadMore ? { withCount: false } : {}),
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
                     }
-                    
+
                     const res = await fetchTaskList(currentView.value, params)
-                    pipelineCount.value = res.pipelineCount
-                    jobCount.value = res.jobCount
-                    buildCount.value = res.buildCount
+                    if (!isLoadMore) {
+                        pipelineCount.value = res.pipelineCount
+                        jobCount.value = res.jobCount
+                        buildCount.value = res.buildCount
+                    }
                     const newTasks = (res.result.records || []).map((task, idx) => mapListRecord(currentView.value, task, idx))
-                    
+                    // 第二页起沿用首页的总数，任务结束等导致结果变少后总数会偏大，是否还有下一页以本页是否取满为准
+                    const pageFull = newTasks.length >= pagination.value.limit
+                    hasMore.value = isLoadMore ? pageFull : pageFull && newTasks.length < (res.result.count || 0)
+
                     if (isLoadMore) {
                         // 加载更多，追加数据
                         taskList.value = [...taskList.value, ...newTasks]
@@ -1043,10 +1052,9 @@
                             firstTask.isExpanded = true
                             await loadTaskDetail(firstTask)
                         }
+                        // 更新总数
+                        updateCount(res.result.count || newTasks.length)
                     }
-                    
-                    // 更新总数
-                    updateCount(res.result.count || newTasks.length)
                 } catch (err) {
                     proxy.$bkMessage({
                         theme: 'error',
@@ -1104,10 +1112,10 @@
                 loadTaskList()
             }
             
-            // 分页变化
+            // 分页变化：只换页，沿用已有总数
             const handlePageChange = (task, page) => {
                 task.pagination.current = page
-                loadTaskDetail(task)
+                loadTaskDetail(task, false)
             }
             
             // 每页数量变化

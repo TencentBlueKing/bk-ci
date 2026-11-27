@@ -13,6 +13,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildHistory
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildView
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineQuery
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineReq
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineSearchReq
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -57,18 +58,22 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 100
         val jobId = if (data.view == TPAPipelineBuildView.JOB) data.jobId else null
-        val (pipelineCount, jobCount, buildCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = data.agentId,
-            envId = envId,
-            startTime = data.startTime,
-            endTime = data.endTime,
-            pipelineId = data.pipelineId,
-            jobId = jobId,
-            creator = data.creator,
-            status = data.taskStatusList
-        )
+        val (pipelineCount, jobCount, buildCount) = if (data.skipCount()) {
+            Triple(NOT_COUNTED, NOT_COUNTED, NOT_COUNTED)
+        } else {
+            thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                startTime = data.startTime,
+                endTime = data.endTime,
+                pipelineId = data.pipelineId,
+                jobId = jobId,
+                creator = data.creator,
+                status = data.taskStatusList
+            )
+        }
         val records = when (data.view) {
             TPAPipelineBuildView.PIPELINE -> {
                 val buildRecord = thirdPartyAgentBuildDao.fetchAgentBuildPipeline(
@@ -180,12 +185,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             pipelineCount = pipelineCount,
             jobCount = jobCount,
             buildCount = buildCount,
-            result = Page(
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                count = count,
-                records = records
-            )
+            result = pageOf(pageNotNull, pageSizeNotNull, count, records)
         )
     }
 
@@ -318,16 +318,20 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildsByJob(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = data.agentId,
-            envId = envId,
-            pipelineId = data.pipelineId,
-            jobId = data.jobId,
-            startTime = data.startTime,
-            endTime = data.endTime
-        )
+        val agentBuildCount = if (data.skipCount()) {
+            NOT_COUNTED
+        } else {
+            thirdPartyAgentBuildDao.countAgentBuildsByJob(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                pipelineId = data.pipelineId,
+                jobId = data.jobId,
+                startTime = data.startTime,
+                endTime = data.endTime
+            )
+        }
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildsByJob(
             dslContext = dslContext,
             projectId = projectId,
@@ -388,7 +392,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 )
             )
         }
-        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
+        return pageOf(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun fetchAgentBuildsByPipeline(
@@ -404,16 +408,20 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByPipeline(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = data.agentId,
-            envId = envId,
-            pipelineId = pipelineId,
-            status = data.taskStatusList,
-            startTime = data.startTime,
-            endTime = data.endTime
-        )
+        val agentBuildCount = if (data.skipCount()) {
+            NOT_COUNTED
+        } else {
+            thirdPartyAgentBuildDao.countAgentBuildGroupsByPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                pipelineId = pipelineId,
+                status = data.taskStatusList,
+                startTime = data.startTime,
+                endTime = data.endTime
+            )
+        }
         // buildId维度的
         val pipelineBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByPipeline(
             dslContext = dslContext,
@@ -428,7 +436,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             endTime = data.endTime
         ).toHashSet()
         if (pipelineBuilds.isEmpty()) {
-            return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
+            return pageOf(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
         // 带上job维度的
         val agentBuildRecords = thirdPartyAgentBuildDao.fetchAgentBuildsByBuildId(
@@ -498,7 +506,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
                 )
             }
         }
-        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
+        return pageOf(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun fetchAgentBuildsByBuild(
@@ -515,17 +523,21 @@ class ThirdPartyAgentBuildService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
-            dslContext = dslContext,
-            projectId = projectId,
-            agentId = data.agentId,
-            envId = envId,
-            buildId = buildId,
-            executeCount = executeCount,
-            status = data.taskStatusList,
-            startTime = data.startTime,
-            endTime = data.endTime
-        )
+        val agentBuildCount = if (data.skipCount()) {
+            NOT_COUNTED
+        } else {
+            thirdPartyAgentBuildDao.countAgentBuildGroupsByBuild(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = data.agentId,
+                envId = envId,
+                buildId = buildId,
+                executeCount = executeCount,
+                status = data.taskStatusList,
+                startTime = data.startTime,
+                endTime = data.endTime
+            )
+        }
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuildGroupsByBuild(
             dslContext = dslContext,
             projectId = projectId,
@@ -540,7 +552,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             endTime = data.endTime
         )
         if (agentBuilds.isEmpty()) {
-            return Page(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
+            return pageOf(pageNotNull, pageSizeNotNull, agentBuildCount, emptyList())
         }
         // 获取展示信息，不走鉴权，即使看到了跳转也没权限，这里展示job的状态
         val builds = client.get(ServiceBuildResource::class).fetchContainerRecordStatus(
@@ -593,7 +605,7 @@ class ThirdPartyAgentBuildService @Autowired constructor(
             )
         }
 
-        return Page(pageNotNull, pageSizeNotNull, agentBuildCount, result)
+        return pageOf(pageNotNull, pageSizeNotNull, agentBuildCount, result)
     }
 
     fun fetchPipelineIdAndName(
@@ -651,6 +663,17 @@ class ThirdPartyAgentBuildService @Autowired constructor(
     }
 
     companion object {
+        // 调用方不需要总数时总数和总页数都返回 -1，见 TPAPipelineQuery.withCount
+        private const val NOT_COUNTED = -1L
+
+        private fun TPAPipelineQuery.skipCount() = withCount == false
+
+        private fun <T> pageOf(page: Int, pageSize: Int, count: Long, records: List<T>) = if (count == NOT_COUNTED) {
+            Page(count = count, page = page, pageSize = pageSize, totalPages = -1, records = records)
+        } else {
+            Page(page, pageSize, count, records)
+        }
+
         private fun String.toStageNumb() =
             this.removePrefix("$KEY_STAGE-").toIntOrNull()?.let { it - 1 }?.toString()
 

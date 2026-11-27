@@ -512,24 +512,28 @@ class ThirdPartyAgentService @Autowired constructor(
         val offset = sqlLimit.offset
         val limit = sqlLimit.limit
 
-        // 这个方法在有executeCount前就是按build维度的，需要聚合下
-        val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(
-            dslContext = dslContext,
-            agentId = agentId,
-            status = status,
-            pipelineId = pipelineId,
-            jobId = null
-        )
-        // 这个方法在有executeCount前就是按build维度的，需要聚合下
-        val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(
-            dslContext = dslContext,
-            agentId = agentId,
-            status = status,
-            pipelineId = pipelineId,
-            jobId = null,
-            offset = offset,
-            limit = limit
-        ).map {
+        val taskStatus = status?.let { PipelineTaskStatus.parse(it) }
+        val active = taskStatus == PipelineTaskStatus.QUEUE || taskStatus == PipelineTaskStatus.RUNNING
+        // 排队中/运行中的行很少，多取一条一次取出全部，在内存分页和计数；超过上限时退回数据库分页和计数
+        // 其余状态多取一行判断是否还有下一页：首页不满一页或非空的末页时总数可直接算出，其余情况才计数
+        val fetchOffset = if (active) 0 else offset
+        val fetchLimit = if (active) ACTIVE_BUILDS_MAX + 1 else limit + 1
+        val rows = listAgentBuildRecords(agentId, status, pipelineId, fetchOffset, fetchLimit, active)
+        val (agentBuildCount, records) = when {
+            active && rows.size <= ACTIVE_BUILDS_MAX -> Pair(rows.size.toLong(), rows.drop(offset).take(limit))
+            // 已取出的前 1000 条覆盖了这一页时直接用，只需另外计数
+            active -> Pair(
+                countAgentBuilds(agentId, status, pipelineId),
+                if (offset + limit <= ACTIVE_BUILDS_MAX) {
+                    rows.drop(offset).take(limit)
+                } else {
+                    listAgentBuildRecords(agentId, status, pipelineId, offset, limit, active)
+                }
+            )
+            rows.size <= limit && (offset == 0 || rows.isNotEmpty()) -> Pair(offset.toLong() + rows.size, rows)
+            else -> Pair(countAgentBuilds(agentId, status, pipelineId), rows.take(limit))
+        }
+        val agentBuilds = records.map {
             AgentBuildInfo(
                 projectId = it.projectId,
                 agentId = it.agentId,
@@ -547,6 +551,35 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
+
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
+    private fun listAgentBuildRecords(
+        agentId: String,
+        status: String?,
+        pipelineId: String?,
+        offset: Int,
+        limit: Int,
+        forceStatusIndex: Boolean
+    ) = thirdPartyAgentBuildDao.listAgentBuilds(
+        dslContext = dslContext,
+        agentId = agentId,
+        status = status,
+        pipelineId = pipelineId,
+        jobId = null,
+        offset = offset,
+        limit = limit,
+        forceStatusIndex = forceStatusIndex
+    )
+
+    // 这个方法在有executeCount前就是按build维度的，需要聚合下
+    private fun countAgentBuilds(agentId: String, status: String?, pipelineId: String?) =
+        thirdPartyAgentBuildDao.countAgentBuilds(
+            dslContext = dslContext,
+            agentId = agentId,
+            status = status,
+            pipelineId = pipelineId,
+            jobId = null
+        )
 
     fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
         return thirdPartyAgentBuildDao.listLatestBuildPipelines(
@@ -984,6 +1017,9 @@ class ThirdPartyAgentService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
+
+        // 排队中/运行中的任务一次取出的上限，线上单个构建机的活跃任务最多几百条
+        private const val ACTIVE_BUILDS_MAX = 1000
 
         private const val QUEUE_RETRY_COUNT = 3
 

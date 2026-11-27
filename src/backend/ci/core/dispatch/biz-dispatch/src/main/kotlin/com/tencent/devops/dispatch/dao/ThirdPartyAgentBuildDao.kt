@@ -391,7 +391,11 @@ class ThirdPartyAgentBuildDao {
             }
     }
 
-    // 这个方法在有executeCount前就是按build维度的，需要聚合下
+    /**
+     * 这个方法在有executeCount前就是按build维度的，需要聚合下
+     * @param forceStatusIndex 强制走 IDX_AGENTID_STATUS_UPDATE。查排队中/运行中时使用：活跃行很少，
+     * 空闲的构建机一次定位即返回空，避免优化器为省排序改选 idx_agent_id 倒序扫完全部历史
+     */
     fun listAgentBuilds(
         dslContext: DSLContext,
         agentId: String,
@@ -399,7 +403,8 @@ class ThirdPartyAgentBuildDao {
         pipelineId: String?,
         jobId: String?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        forceStatusIndex: Boolean = false
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         val t = TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD.`as`("t")
         val statusValue = status?.let { PipelineTaskStatus.parse(it).status }
@@ -421,7 +426,7 @@ class ThirdPartyAgentBuildDao {
         // PIPELINE_ID / JOB_ID 在同一 (buildId, vmSeqId) 内不变，NOT EXISTS 里只需补上 STATUS 即可保持原口径。
         // 排序用 ID 而不是 CREATED_TIME：CREATED_TIME 只在插入时写入，与自增 ID 同序；按 ID 排序可直接沿
         // idx_agent_id(AGENT_ID, 隐含主键 ID) 倒序扫描，凑够 offset + limit 行就停止，且同一秒内的记录分页稳定。
-        return dslContext.selectFrom(t)
+        return dslContext.selectFrom(if (forceStatusIndex) t.forceIndex("IDX_AGENTID_STATUS_UPDATE") else t)
             .where(conditions)
             .and(notExistsNewerRecord(dslContext, t, statusValue))
             .orderBy(t.ID.desc())
@@ -1424,4 +1429,61 @@ class ThirdPartyAgentBuildDao {
         } else {
             DSL.noCondition()
         }
+
+    /**
+     * 下一台有构建记录的构建机：沿 idx_agent_id 定位到第一个大于 [afterAgentId] 的条目，每次只读一条索引，
+     * 遍历的代价只与构建机数量有关，不依赖优化器能否用上松散索引扫描
+     */
+    fun getNextAgentId(dslContext: DSLContext, afterAgentId: String): String? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.select(AGENT_ID).from(this.forceIndex("idx_agent_id"))
+                .where(AGENT_ID.gt(afterAgentId))
+                .orderBy(AGENT_ID.asc())
+                .limit(1)
+                .fetchOne(AGENT_ID)
+        }
+    }
+
+    /**
+     * 构建机按 ID 倒序第 [keepNum] + 1 条记录的 ID，不大于它的记录需要清理；记录不超过 [keepNum] 条时为空。
+     * 只读 idx_agent_id(AGENT_ID, 隐含主键 ID)，不回表。
+     */
+    fun getClearBoundaryId(dslContext: DSLContext, agentId: String, keepNum: Int): Long? {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.select(ID).from(this.forceIndex("idx_agent_id"))
+                .where(AGENT_ID.eq(agentId))
+                .orderBy(ID.desc())
+                .limit(keepNum, 1)
+                .fetchOne(ID)
+        }
+    }
+
+    /**
+     * 构建机 ID 在 ([afterId], [maxId]] 内的记录，按 ID 正序，只取清理需要判断的 ID、状态和创建时间。
+     * 不在 SQL 中按状态和时间过滤：由调用方遇到整批都是新记录时停止，避免取不满一批时扫完整个范围。
+     */
+    fun listClearCandidates(
+        dslContext: DSLContext,
+        agentId: String,
+        afterId: Long,
+        maxId: Long,
+        limit: Int
+    ): List<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.select(ID, STATUS, CREATED_TIME).from(this.forceIndex("idx_agent_id"))
+                .where(AGENT_ID.eq(agentId))
+                .and(ID.gt(afterId))
+                .and(ID.le(maxId))
+                .orderBy(ID.asc())
+                .limit(limit)
+                .fetchInto(this)
+        }
+    }
+
+    fun deleteByIds(dslContext: DSLContext, ids: Collection<Long>): Int {
+        if (ids.isEmpty()) return 0
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.deleteFrom(this).where(ID.`in`(ids)).execute()
+        }
+    }
 }
