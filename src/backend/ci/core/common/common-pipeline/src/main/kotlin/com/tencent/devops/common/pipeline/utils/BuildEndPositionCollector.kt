@@ -99,7 +99,34 @@ object BuildEndPositionCollector {
      * 未执行（UNEXEC）的后续步骤不进入卡片，避免把整条流水线都列进去。
      */
     fun collectCancelPositions(model: Model): List<EndPosition> {
-        return traverseModel(model) { ctx -> collectCancelFromContainer(ctx) }
+        // 矩阵父容器不是独立 Job。子 Job 已有位置时只记子 Job，口径与读取侧一致。
+        return dropMatrixGroupShells(model, traverseModel(model) { ctx -> collectCancelFromContainer(ctx) })
+    }
+
+    /**
+     * 去掉矩阵父容器的位置。
+     *
+     * 取消落库时父容器和它分裂出的子 Job 会被各记一条，读取侧再按模型补插件，
+     * 卡片就会比编排图上的 Job 多出父容器那几行。父容器下还没有子 Job 位置时保留，
+     * 避免矩阵尚未分裂就被取消时一条位置都不剩。
+     */
+    fun dropMatrixGroupShells(model: Model, positions: List<EndPosition>): List<EndPosition> {
+        if (positions.none { it.matrixFlag == true }) return positions
+        val present = positions.map { it.containerId }.filter { it.isNotBlank() }.toSet()
+        val shells = mutableSetOf<String>()
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                if (container.matrixGroupFlag != true) return@forEach
+                val childIds = container.fetchGroupContainers().orEmpty().mapNotNull { child ->
+                    child.containerId?.takeIf { it.isNotBlank() } ?: child.id?.takeIf { it.isNotBlank() }
+                }
+                if (childIds.none { it in present }) return@forEach
+                container.containerId?.takeIf { it.isNotBlank() }?.let { shells.add(it) }
+                container.id?.takeIf { it.isNotBlank() }?.let { shells.add(it) }
+            }
+        }
+        if (shells.isEmpty()) return positions
+        return positions.filterNot { it.containerId in shells }
     }
 
     /**

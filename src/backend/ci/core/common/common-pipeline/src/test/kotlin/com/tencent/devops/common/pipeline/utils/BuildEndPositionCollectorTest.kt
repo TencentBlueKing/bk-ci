@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -303,6 +304,46 @@ class BuildEndPositionCollectorTest {
     }
 
     @Test
+    fun `matrix group shell is not a cancel position when children exist`() {
+        val model = matrixModel(split = true)
+
+        val positions = BuildEndPositionCollector.collectCancelPositions(model)
+
+        Assertions.assertEquals(listOf("101", "102"), positions.map { it.containerId })
+        Assertions.assertTrue(positions.none { it.containerId == "1" })
+    }
+
+    @Test
+    fun `matrix group that has not split stays a cancel position`() {
+        val positions = BuildEndPositionCollector.collectCancelPositions(matrixModel(split = false))
+
+        Assertions.assertEquals(listOf("1"), positions.map { it.containerId })
+    }
+
+    @Test
+    fun `drop stored matrix group shell only when a child job is already listed`() {
+        val model = matrixModel(split = true)
+        val stored = listOf(
+            position(containerId = "1", taskId = null, position = "1-1"),
+            position(containerId = "101", taskId = "e-a", position = "1-1-1", matrixFlag = true),
+            position(containerId = "102", taskId = "e-b", position = "1-1-1", matrixFlag = true)
+        )
+
+        val filtered = BuildEndPositionCollector.dropMatrixGroupShells(model, stored)
+
+        Assertions.assertEquals(listOf("101", "102"), filtered.map { it.containerId })
+    }
+
+    @Test
+    fun `keep matrix group shell when no child job has a position yet`() {
+        val stored = listOf(position(containerId = "1", taskId = null, position = "1-1"))
+
+        val filtered = BuildEndPositionCollector.dropMatrixGroupShells(matrixModel(split = true), stored)
+
+        Assertions.assertEquals(listOf("1"), filtered.map { it.containerId })
+    }
+
+    @Test
     fun `keep the first fifty fail positions and drop the rest`() {
         val jobs = (1..51).map { index ->
             failedPluginJob(containerId = index.toString(), taskIds = listOf("e-$index"))
@@ -427,6 +468,67 @@ class BuildEndPositionCollectorTest {
                 continueNoneZero = false
             )
         }
+    )
+
+    private fun matrixModel(split: Boolean): Model {
+        val childA = matrixJob(containerId = "101", taskId = "e-a", taskName = "RunScript")
+        val childB = matrixJob(containerId = "102", taskId = "e-b", taskName = "Bash")
+        return Model(
+            name = "p",
+            desc = null,
+            stages = listOf(
+                Stage(containers = emptyList(), id = "stage-0", name = "trigger"),
+                Stage(
+                    id = "stage-2",
+                    name = "stage-2",
+                    containers = listOf(
+                        VMBuildContainer(
+                            id = "1",
+                            containerId = "1",
+                            name = "构建环境-LINUX",
+                            status = BuildStatus.CANCELED.name,
+                            matrixGroupFlag = true,
+                            elements = listOf(
+                                scriptElement(taskId = "e-group", taskName = "RunScript", status = BuildStatus.CANCELED)
+                            ),
+                            groupContainers = if (split) mutableListOf(childA, childB) else null
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    private fun matrixJob(containerId: String, taskId: String, taskName: String) = VMBuildContainer(
+        id = containerId,
+        containerId = containerId,
+        name = "构建环境-LINUX",
+        status = BuildStatus.CANCELED.name,
+        elements = listOf(scriptElement(taskId, taskName, BuildStatus.CANCELED))
+    )
+
+    private fun scriptElement(taskId: String, taskName: String, status: BuildStatus) = LinuxScriptElement(
+        id = taskId,
+        name = taskName,
+        status = status.name,
+        scriptType = BuildScriptType.SHELL,
+        script = "echo",
+        continueNoneZero = false
+    )
+
+    private fun position(
+        containerId: String,
+        taskId: String?,
+        position: String,
+        matrixFlag: Boolean? = null
+    ) = EndPosition(
+        position = position,
+        componentPath = "stage-2/构建环境-LINUX",
+        statusAtEnd = BuildStatus.CANCELED.name,
+        stageId = "stage-2",
+        containerId = containerId,
+        taskId = taskId,
+        matrixFlag = matrixFlag
     )
 
     private fun mutexCanceledJob(containerId: String) = NormalContainer(

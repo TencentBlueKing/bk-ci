@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildEndCategory
 import com.tencent.devops.common.pipeline.enums.BuildEndType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -79,6 +80,18 @@ data class BuildEndInfo(
     @get:Schema(title = "父流水线信息(父流水线级联终止时)", required = false)
     val parentPipelineInfo: ParentPipelineInfo? = null
 ) {
+    /**
+     * 矩阵已经分裂出子 Job 时，父容器那一行不是用户看到的 Job，从取消卡片里去掉。
+     * 位置数会随之重算，调用方再刷新「N 处」文案即可。失败卡片保持原样。
+     */
+    fun withoutMatrixGroupShells(model: Model): BuildEndInfo {
+        if (endType.category != BuildEndCategory.CANCEL) return this
+        val current = positions ?: return this
+        val filtered = BuildEndPositionCollector.dropMatrixGroupShells(model, current)
+        if (filtered.size == current.size) return this
+        return withPositions(filtered)
+    }
+
     /**
      * 统一设置位置列表，保证 positions 与 positionCount 不会出现不一致。
      * 空列表时 positions 置空，避免前端渲染出空的位置区块。

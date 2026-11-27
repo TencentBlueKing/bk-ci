@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildEndInfo
 import com.tencent.devops.common.pipeline.pojo.EndPosition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
@@ -47,7 +48,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -60,12 +63,14 @@ class HeartbeatControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     companion object {
         private const val TIMEOUT_IN_MS = 10 * 60 * 1000 // timeout in 10 minutes
         private const val CANCEL_TIMEOUT_IN_MS = 20000 // 取消构建超时时间为20秒
+        private const val CANCEL_HANG_LIMIT_IN_MS = 15 * 60 * 1000 // 取消后仍未闭环的兜底上限：15分钟
         private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
         private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }
@@ -85,8 +90,12 @@ class HeartbeatControl @Autowired constructor(
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
         // 如果消息事件来源是取消构建操作，超时时间为CANCEL_TIMEOUT_IN_MS
         val timeOutLimit = if (event.source == BS_CANCEL_BUILD_SOURCE) CANCEL_TIMEOUT_IN_MS else TIMEOUT_IN_MS
+        val cancelElapse = if (event.source == BS_CANCEL_BUILD_SOURCE) cancelElapse(event) else 0
         if (elapse > timeOutLimit) {
             timeout(event, elapse)
+        } else if (cancelElapse > CANCEL_HANG_LIMIT_IN_MS && cancelDeadlocked(event)) {
+            LOG.warn("ENGINE|$buildId|HEARTBEAT_CANCEL_HANG|j($containerId)|cancelElapse=$cancelElapse")
+            timeout(event, cancelElapse)
         } else {
             if (Math.floorMod(event.retryTime++, LOG_PER_TIMES) == 1) {
                 LOG.info("ENGINE|$buildId|HEARTBEAT_MONITOR|" +
@@ -95,6 +104,37 @@ class HeartbeatControl @Autowired constructor(
             // 正常是继续循环检查当前消息
             pipelineEventDispatcher.dispatch(event)
         }
+    }
+
+    /**
+     * 取消心跳事件自取消发起起已循环的时长（每轮间隔delayMills，retryTime随事件重投累加）。
+     * 不用构建级的取消时间key：同构建其他Job被取消或结束时会删除它，兜底会失效。
+     */
+    private fun cancelElapse(event: PipelineContainerAgentHeartBeatEvent): Long {
+        return event.retryTime.toLong() * event.delayMills
+    }
+
+    /**
+     * 判断Job是否卡在「取消中队头插件永远不会被认领」的死锁上：
+     * 队头任务未在运行，且按[TaskUtils.shouldSkipAgentClaimWhenJobCanceling]构建机不会认领它，
+     * 它既不会执行也不会结束，后面的关机与结束节点排不到，只能靠强制终止收场。
+     *
+     * 取消后仍要执行的收尾插件（如上传日志）正在运行时队头状态为RUNNING，耗时再久也不会命中，不会被误伤。
+     */
+    private fun cancelDeadlocked(event: PipelineContainerAgentHeartBeatEvent): Boolean {
+        if (!TaskUtils.isJobCancelFlag(redisOperation, event.buildId, event.containerId)) {
+            return false
+        }
+        val head = pipelineTaskService.listContainerBuildTasks(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            containerSeqId = event.containerId,
+            buildStatusSet = setOf(BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING)
+        ).firstOrNull() ?: return false
+        if (head.status.isRunning()) {
+            return false
+        }
+        return TaskUtils.shouldSkipAgentClaimWhenJobCanceling(task = head, jobCanceling = true)
     }
 
     @Suppress("ReturnCount", "LongMethod")
