@@ -594,7 +594,7 @@ func TestStatusValueHasIssue(t *testing.T) {
 	}{
 		{"ok_value", "JDK 17", "OK ✓", false},
 		{"fail_marker", "Disk writable", "FAIL: permission denied ✗", true},
-		{"warning_marker", "Scheduled task", "exists (legacy) ⚠", true},
+		{"warning_marker", "Disk available", "low ⚠", true},
 		{"daemon_not_running", "Daemon PID", "not running", true},
 		{"daemon_running", "Daemon PID", "1234 (running)", false},
 		{"session_not_configured_not_counted", "Session credentials", "not configured", false},
