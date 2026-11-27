@@ -76,5 +76,9 @@ export default {
     },
     getVersionLogs (storeType, code, params) {
         return vue.$ajax.get(`${prefix}/user/store/components/types/${storeType}/codes/${code}/version/logs/get`, { params })
+    },
+    // 组件运行时说明（基于契约生成，给人看的 Markdown），没有说明时 data 为 null
+    requestStoreComponentDescription (storeType, code) {
+        return vue.$ajax.get(`${prefix}/user/store/contract/types/${storeType}/codes/${code}/description`)
     }
 }

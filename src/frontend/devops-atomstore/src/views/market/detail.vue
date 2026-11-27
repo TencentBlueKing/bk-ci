@@ -39,6 +39,7 @@
                     <component
                         :is="tab.componentName"
                         v-bind="tab.bindData"
+                        v-on="tab.events || {}"
                     ></component>
                 </bk-tab-panel>
             </bk-tab>
@@ -58,6 +59,7 @@
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
     import versionLogDetail from '../../components/common/detailTab/versionLogDetail'
+    import contractDetail from '../../components/common/detailTab/contractDetail'
     import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
@@ -71,12 +73,15 @@
             yamlDetail,
             outputDetail,
             versionLogDetail,
+            contractDetail,
             qualityDetail
         },
 
         data () {
             return {
                 isLoading: true,
+                // 是否有使用说明：没有时不展示该 Tab，直接落在概述
+                hasContract: false,
                 currentTab: 'des'
             }
         },
@@ -95,6 +100,7 @@
             tabList () {
                 return {
                     atom: [
+                        { componentName: 'contractDetail', label: this.$t('store.使用说明'), name: 'contract', bindData: { storeType: 'ATOM', code: this.detailCode }, hidden: !this.hasContract },
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
                         { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
                         { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
@@ -180,20 +186,38 @@
                     this.requestAtom(atomCode),
                     this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
                     this.getUserApprovalInfo(atomCode),
-                    this.getQualityData(atomCode)
-                ]).then(([atomDetail, atomStatic, userAppInfo, quality]) => {
+                    this.getQualityData(atomCode),
+                    // 使用说明排在概述前面，但没有说明时不能让它成为默认落点
+                    this.hasDescription(atomCode)
+                ]).then(([atomDetail, atomStatic, userAppInfo, quality, hasDesc]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
                     detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
                     detail.hotFlag = atomStatic.hotFlag
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.qualityData = quality
+                    this.hasContract = hasDesc
+                    // 有说明才默认落在使用说明，否则停在概述
+                    this.currentTab = hasDesc ? 'contract' : 'des'
                     this.setDetail(detail)
                 })
             },
 
+            // 查使用说明是否存在，失败按没有处理
+            async hasDescription (atomCode) {
+                try {
+                    // $ajax 已解包 data，返回即为 StoreComponentContractDescription|null
+                    const desc = await api.requestStoreComponentDescription('ATOM', atomCode)
+                    return !!(desc && desc.description)
+                } catch (err) {
+                    return false
+                }
+            },
+
             getTemplateDetail () {
                 const templateCode = this.detailCode
+                // 模板没有使用说明 Tab，固定在概述
+                this.currentTab = 'des'
                 return this.requestTemplateDetail(templateCode).then((templateDetail) => {
                     const detail = templateDetail || {}
                     detail.detailId = templateDetail.templateId
@@ -204,6 +228,8 @@
 
             getImageDetail () {
                 const imageCode = this.detailCode
+                // 镜像没有使用说明 Tab，固定在概述
+                this.currentTab = 'des'
 
                 return Promise.all([
                     this.requestImageCategorys(),
