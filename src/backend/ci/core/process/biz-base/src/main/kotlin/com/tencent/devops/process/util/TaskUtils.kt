@@ -284,7 +284,7 @@ object TaskUtils {
     }
 
     /**
-     * 清理指定 Job 的取消集合和杀进程队列。
+     * 清理指定 Job 的取消集合、杀进程队列和取消信号索引。
      */
     fun clearJobCancelFlag(
         redisOperation: RedisOperation,
@@ -301,7 +301,7 @@ object TaskUtils {
     }
 
     /**
-     * 同 buildId 重试前，清掉上一轮取消残留，避免新一轮领取误命中旧集合。
+     * 同 buildId 重试前，清掉上一轮的取消集合、杀进程队列和取消信号索引，避免新一轮领取或心跳误命中旧数据。
      */
     fun clearBuildJobCancelFlags(
         redisOperation: RedisOperation,
