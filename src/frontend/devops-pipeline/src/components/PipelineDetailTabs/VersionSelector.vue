@@ -509,13 +509,13 @@
                 }
             },
 
-            // value 变化但不在列表时搜索补入，仅更新本地回显，不向父组件回发事件
+            // value 变化但不在列表时搜索补入，补入后通过 switchVersion 向父组件回发 change，
             async fetchAndAppendVersion (version) {
                 if (this.versionList.some(item => item.version === version)) return
                 const target = await this.fetchVersion(version)
                 if (target && !this.versionList.some(item => item.version === target.version)) {
                     this.versionList.push(target)
-                    this.activeVersion = target
+                    this.switchVersion(version)
                 }
             },
             // 通过 version 精确搜索指定版本
