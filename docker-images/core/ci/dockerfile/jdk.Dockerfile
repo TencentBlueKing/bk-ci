@@ -6,16 +6,16 @@ LABEL maintainer="Tencent BlueKing Devops"
 RUN dnf install -y bsdtar && \
     mkdir -p /data && \
     cd /data/ && \
-    curl -L https://github.com/Tencent/TencentKona-17/releases/download/TencentKona-17.0.8/TencentKona-17.0.8.b1-jdk_linux-x86_64.tar.gz -o kona.tar.gz && \
+    curl -fL https://github.com/Tencent/TencentKona-17/releases/download/TencentKona-17.0.21.1/TencentKona-17.0.21.1.b1-jdk_linux-x86_64.tar.gz -o kona.tar.gz && \
     bsdtar -xzf kona.tar.gz && \
     rm -f kona.tar.gz && \
     dnf remove -y bsdtar && \
     dnf clean all
-ENV JAVA_HOME=/data/TencentKona-17.0.8.b1
+ENV JAVA_HOME=/data/TencentKona-17.0.21.1.b1
 ENV PATH=${JAVA_HOME}/bin:$PATH
 ENV CLASSPATH=.:${JAVA_HOME}/lib
 
-# 移除 eMudhra 失陷中间证书所链到的根证书。17.0.8 的 cacerts 没有 emSign 根，只有 comodoaaaca。
+# 移除 eMudhra 失陷中间证书所链到的根证书。该 JDK 的 cacerts 没有 emSign 根，只有 comodoaaaca。
 # 别名不存在时跳过，删完后名单里还能搜到就让构建失败。
 RUN set -e; \
     for alias in \
