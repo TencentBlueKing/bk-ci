@@ -194,6 +194,21 @@ object TaskUtils {
         }
     }
 
+    /**
+     * 取消信号索引：记录"杀进程队列里确实有数据"的 Job，供心跳用极低成本判断是否需要读队列。
+     * 成员很少（只有正在取消的 Job），由 Job 结束清理 + 按分数过期兜底。
+     */
+    const val CANCEL_SIGNAL_INDEX_KEY = "CANCEL_TASK_IDS:signal:index"
+
+    fun getCancelSignalMember(buildId: String, containerId: String) = "$buildId:$containerId"
+
+    private fun removeCancelSignals(redisOperation: RedisOperation, members: Collection<String>) {
+        if (members.isEmpty()) {
+            return
+        }
+        redisOperation.zremove(CANCEL_SIGNAL_INDEX_KEY, *members.toTypedArray())
+    }
+
     private fun jobCancelTtlSec(): Long = TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS)
 
     /**
@@ -269,7 +284,7 @@ object TaskUtils {
     }
 
     /**
-     * 清理指定 Job 的取消集合和杀进程队列。
+     * 清理指定 Job 的取消集合、杀进程队列和取消信号索引。
      */
     fun clearJobCancelFlag(
         redisOperation: RedisOperation,
@@ -282,10 +297,11 @@ object TaskUtils {
                 getCancelTaskIdRedisKey(buildId, containerId, true)
             )
         )
+        removeCancelSignals(redisOperation, listOf(getCancelSignalMember(buildId, containerId)))
     }
 
     /**
-     * 同 buildId 重试前，清掉上一轮取消残留，避免新一轮领取误命中旧集合。
+     * 同 buildId 重试前，清掉上一轮的取消集合、杀进程队列和取消信号索引，避免新一轮领取或心跳误命中旧数据。
      */
     fun clearBuildJobCancelFlags(
         redisOperation: RedisOperation,
@@ -296,11 +312,14 @@ object TaskUtils {
             return
         }
         val keys = mutableListOf<String>()
+        val signalMembers = mutableListOf<String>()
         containerIds.forEach { containerId ->
             keys.add(getCancelTaskIdRedisKey(buildId, containerId, false))
             keys.add(getCancelTaskIdRedisKey(buildId, containerId, true))
+            signalMembers.add(getCancelSignalMember(buildId, containerId))
         }
         redisOperation.delete(keys)
+        removeCancelSignals(redisOperation, signalMembers)
     }
 
     /**

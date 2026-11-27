@@ -189,8 +189,8 @@ class UpdateStateContainerCmdFinally(
         val buildId = commandContext.event.buildId
         val containerId = commandContext.event.containerId
         redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
-        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
-        redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId))
+        // 取消集合、杀进程队列和取消信号索引一起清掉，避免索引残留让心跳持续空查队列
+        TaskUtils.clearJobCancelFlag(redisOperation, buildId, containerId)
     }
 
     /**

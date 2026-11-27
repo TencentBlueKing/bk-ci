@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMill
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
+import com.tencent.devops.process.engine.control.CancelTaskSignalService
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -153,6 +154,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+    private val cancelTaskSignalService: CancelTaskSignalService,
     private val redisOperation: RedisOperation,
     private val pipelineProgressRateService: PipelineProgressRateService,
     private val projectCacheService: ProjectCacheService
@@ -1306,16 +1308,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     ): HeartBeatInfo {
         LOG.info("ENGINE|$projectId|$buildId|HEART_BEAT|j($vmSeqId)|$vmName|$executeCount")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
-        var cancelTaskIds: MutableSet<String>? = null
-        val key = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId)
-        loop@ while (true) {
-            // 获取redis队列中被取消的task任务
-            val cancelTaskId = redisOperation.rightPop(key) ?: break@loop
-            if (cancelTaskIds == null) {
-                cancelTaskIds = mutableSetOf()
-            }
-            cancelTaskIds.add(cancelTaskId)
-        }
+        // 心跳 2 秒一次，不能每次都去空查杀进程队列，由索引判断有信号时才真正读队列
+        val cancelTaskIds = cancelTaskSignalService.drainCancelTaskIds(buildId = buildId, vmSeqId = vmSeqId)
         pipelineProgressRateService.reportProgressRate(
             projectId = projectId,
             buildId = buildId,
