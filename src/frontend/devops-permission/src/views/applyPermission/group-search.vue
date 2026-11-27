@@ -287,6 +287,7 @@ const renderSelectionHeader = (col: any) => h(
 const handleChangeTab = (id) => {
   groupLevel.value = id;
   filter.value = [];
+  pagination.value.current = 1;
   fetchGroupList(filter.value);
 };
 
