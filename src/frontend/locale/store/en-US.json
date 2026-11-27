@@ -667,5 +667,12 @@
   "部分可见": "Partial visible",
   "当前模板的版本已全部上架": "All versions of the current template have been listed",
   "typeError": "Type Error",
-  "已上架至商店": "Listed in the store"
+  "已上架至商店": "Listed in the store",
+  "基于版本": "Based on version",
+  "覆盖程度": "Coverage",
+  "已过期": "Outdated",
+  "Usage Guide": "Usage Guide",
+  "No usage guide available": "No usage guide available",
+  "使用说明": "Usage Guide",
+  "暂无使用说明": "No usage guide available"
 }
