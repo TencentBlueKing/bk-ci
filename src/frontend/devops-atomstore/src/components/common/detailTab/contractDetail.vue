@@ -8,15 +8,22 @@
                 <span class="meta-item">
                     {{ $t('store.基于版本') }}：{{ desc.basedOnVersion || '--' }}
                 </span>
-                <span class="meta-item">
-                    {{ $t('store.覆盖程度') }}：{{ coverageText }}
+                <span class="meta-item source-item">
+                    <i class="bk-icon icon-magic-box source-icon"></i>
+                    {{ coverageText }}
                 </span>
                 <bk-tag
                     v-if="desc.staleFlag"
                     theme="warning"
                 >
-                    {{ $t('store.已过期') }}
+                    {{ $t('store.说明可能已过时') }}
                 </bk-tag>
+                <span
+                    v-if="desc.staleFlag"
+                    class="meta-hint"
+                >
+                    {{ $t('store.插件已发布新版本，说明尚未更新') }}
+                </span>
             </div>
             <mavon-editor
                 :editable="false"
@@ -42,12 +49,6 @@
 <script>
     import api from '@/api'
 
-    const COVERAGE_MAP = {
-        VERIFIED: '已人工核验',
-        PARTIALLY_VERIFIED: '部分核验',
-        AUTO_EXTRACTED: '自动抽取'
-    }
-
     export default {
         props: {
             storeType: {
@@ -71,7 +72,12 @@
         computed: {
             coverageText () {
                 const coverage = this.desc && this.desc.coverage
-                return COVERAGE_MAP[coverage] || coverage || '--'
+                const map = {
+                    VERIFIED: this.$t('store.已人工核验'),
+                    PARTIALLY_VERIFIED: this.$t('store.由AI生成部分人工核验'),
+                    AUTO_EXTRACTED: this.$t('store.由AI生成')
+                }
+                return map[coverage] || this.$t('store.由AI生成')
             }
         },
 
@@ -108,10 +114,26 @@
         .meta-bar {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 16px;
             padding: 12px 0 16px;
             color: #63656e;
             font-size: 12px;
+        }
+
+        .source-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .source-icon {
+            font-size: 14px;
+            color: #3a84ff;
+        }
+
+        .meta-hint {
+            color: #979ba5;
         }
 
         .g-empty {

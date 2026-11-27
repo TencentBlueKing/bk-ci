@@ -669,10 +669,13 @@
   "typeError": "Type Error",
   "已上架至商店": "Listed in the store",
   "基于版本": "Based on version",
-  "覆盖程度": "Coverage",
-  "已过期": "Outdated",
   "Usage Guide": "Usage Guide",
   "No usage guide available": "No usage guide available",
   "使用说明": "Usage Guide",
-  "暂无使用说明": "No usage guide available"
+  "暂无使用说明": "No usage guide available",
+  "由AI生成": "AI generated",
+  "由AI生成部分人工核验": "AI generated, partially reviewed",
+  "已人工核验": "Manually reviewed",
+  "说明可能已过时": "May be outdated",
+  "插件已发布新版本，说明尚未更新": "New version released, guide not updated yet"
 }
