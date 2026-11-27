@@ -175,6 +175,7 @@ class TaskUtilsTest : TestBase() {
     fun clearBuildJobCancelFlagsDeletesOriginalKeys() {
         val redisOperation = mockk<RedisOperation>()
         every { redisOperation.delete(any<Collection<String>>(), any()) } just runs
+        every { redisOperation.zremove(any(), *anyVararg(), any()) } returns 1L
 
         TaskUtils.clearBuildJobCancelFlags(redisOperation, "b1", listOf("c1"))
 
@@ -185,6 +186,13 @@ class TaskUtilsTest : TestBase() {
                         keys.contains(TaskUtils.getCancelTaskIdRedisKey("b1", "c1", true))
                 },
                 any()
+            )
+        }
+        // 重试前还要清掉取消信号索引，否则新一轮心跳会误命中上一轮的取消
+        verify {
+            redisOperation.zremove(
+                TaskUtils.CANCEL_SIGNAL_INDEX_KEY,
+                TaskUtils.getCancelSignalMember("b1", "c1")
             )
         }
     }
