@@ -349,7 +349,12 @@ class SubPipelineRetrySyncServiceTest {
         every { pipelineRuntimeService.getBuildInfo("p1", "b-parent") } returns parentBuild
         every {
             pipelineTaskService.getByTaskId(null, "p1", "b-parent", "e-task1")
-        } returns mockParentTask(status = BuildStatus.FAILED, subProjectId = "p1", subBuildId = "b-sub-1", enabled = true)
+        } returns mockParentTask(
+            status = BuildStatus.FAILED,
+            subProjectId = "p1",
+            subBuildId = "b-sub-1",
+            enabled = true
+        )
 
         val stage = mockk<PipelineBuildStage>(relaxed = true)
         every { stage.status } returns BuildStatus.QUEUE
@@ -366,7 +371,12 @@ class SubPipelineRetrySyncServiceTest {
 
         assertEquals(1, requeued.captured.lockRetryCount)
         assertEquals(1000, requeued.captured.delayMills)
-        verify(exactly = 0) { pipelineBuildRetryService.retryWithinLock(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            pipelineBuildRetryService.retryWithinLock(
+                any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any()
+            )
+        }
     }
 
     @Test

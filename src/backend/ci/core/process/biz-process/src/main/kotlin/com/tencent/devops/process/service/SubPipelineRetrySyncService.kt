@@ -130,29 +130,18 @@ class SubPipelineRetrySyncService @Autowired constructor(
             if (!vars[PIPELINE_START_SUB_RETRY_SYNC].equals("true", ignoreCase = true)) {
                 return
             }
-            val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID]
-            val parentPipelineId = vars[PIPELINE_START_PARENT_PIPELINE_ID]
-            val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID]
-            val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID]
-            if (parentProjectId.isNullOrBlank() ||
-                parentPipelineId.isNullOrBlank() ||
-                parentBuildId.isNullOrBlank() ||
-                parentTaskId.isNullOrBlank()
-            ) {
-                logger.warn(
-                    "SUB_PIPELINE_RETRY_SYNC|incomplete parent info|subBuildId=${event.buildId}|vars=$vars"
-                )
-                return
-            }
+            val anchor = resolveParentAnchor(event.buildId, vars) ?: return
 
             val subBuildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, event.buildId) ?: return
             // 与构建主表记录的父构建/父步骤交叉校验，防止脏变量导致回写到错误父构建
-            if ((!subBuildInfo.parentBuildId.isNullOrBlank() && subBuildInfo.parentBuildId != parentBuildId) ||
-                (!subBuildInfo.parentTaskId.isNullOrBlank() && subBuildInfo.parentTaskId != parentTaskId)
-            ) {
+            val buildAnchorMismatch = !subBuildInfo.parentBuildId.isNullOrBlank() &&
+                subBuildInfo.parentBuildId != anchor.parentBuildId
+            val taskAnchorMismatch = !subBuildInfo.parentTaskId.isNullOrBlank() &&
+                subBuildInfo.parentTaskId != anchor.parentTaskId
+            if (buildAnchorMismatch || taskAnchorMismatch) {
                 logger.warn(
                     "SUB_PIPELINE_RETRY_SYNC|parent anchor mismatch|subBuildId=${event.buildId}|" +
-                        "varParent=$parentBuildId/$parentTaskId|" +
+                        "varParent=${anchor.parentBuildId}/${anchor.parentTaskId}|" +
                         "dbParent=${subBuildInfo.parentBuildId}/${subBuildInfo.parentTaskId}"
                 )
                 return
@@ -165,20 +154,20 @@ class SubPipelineRetrySyncService @Autowired constructor(
 
             val previousVisited = parseVisitedBuildIds(vars[PIPELINE_SUB_PIPELINE_RETRY_SYNC_CHAIN])
             val visitedBuildIds = (previousVisited + event.buildId).distinct()
-            if (visitedBuildIds.size > MAX_SYNC_DEPTH || parentBuildId in visitedBuildIds) {
+            if (visitedBuildIds.size > MAX_SYNC_DEPTH || anchor.parentBuildId in visitedBuildIds) {
                 logger.error(
                     "SUB_PIPELINE_RETRY_SYNC|cycle or max depth reached|subBuildId=${event.buildId}|" +
-                        "parentBuildId=$parentBuildId|visited=$visitedBuildIds"
+                        "parentBuildId=${anchor.parentBuildId}|visited=$visitedBuildIds"
                 )
                 return
             }
 
             sampleEventDispatcher.dispatch(
                 SubPipelineRetrySyncEvent(
-                    parentProjectId = parentProjectId,
-                    parentPipelineId = parentPipelineId,
-                    parentBuildId = parentBuildId,
-                    parentTaskId = parentTaskId,
+                    parentProjectId = anchor.parentProjectId,
+                    parentPipelineId = anchor.parentPipelineId,
+                    parentBuildId = anchor.parentBuildId,
+                    parentTaskId = anchor.parentTaskId,
                     subProjectId = event.projectId,
                     subPipelineId = event.pipelineId,
                     subPipelineName = subPipelineName,
@@ -388,7 +377,9 @@ class SubPipelineRetrySyncService @Autowired constructor(
                         needRequeueReason = "parent_stage_transitioning_${stage.status}"
                         return
                     }
-                    if (stage == null || !stage.status.isRunning() || container == null || !container.status.isFinish()) {
+                    val stageRunning = stage?.status?.isRunning() == true
+                    val containerFinished = container?.status?.isFinish() == true
+                    if (!stageRunning || !containerFinished) {
                         logger.info(
                             "SUB_PIPELINE_RETRY_SYNC|skip|running parent not eligible|" +
                                 "${event.parentBuildId}|stage=${stage?.status}(exec=${stage?.executeCount}," +
@@ -526,10 +517,46 @@ class SubPipelineRetrySyncService @Autowired constructor(
         )
     }
 
+    private fun resolveParentAnchor(subBuildId: String, vars: Map<String, String>): ParentRetryAnchor? {
+        val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID]?.takeIf { it.isNotBlank() }
+        val parentPipelineId = vars[PIPELINE_START_PARENT_PIPELINE_ID]?.takeIf { it.isNotBlank() }
+        val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID]?.takeIf { it.isNotBlank() }
+        val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID]?.takeIf { it.isNotBlank() }
+        val parentPipeline = if (parentProjectId != null && parentPipelineId != null) {
+            parentProjectId to parentPipelineId
+        } else {
+            null
+        }
+        val parentTask = if (parentBuildId != null && parentTaskId != null) {
+            parentBuildId to parentTaskId
+        } else {
+            null
+        }
+        if (parentPipeline == null || parentTask == null) {
+            logger.warn(
+                "SUB_PIPELINE_RETRY_SYNC|incomplete parent info|subBuildId=$subBuildId|vars=$vars"
+            )
+            return null
+        }
+        return ParentRetryAnchor(
+            parentProjectId = parentPipeline.first,
+            parentPipelineId = parentPipeline.second,
+            parentBuildId = parentTask.first,
+            parentTaskId = parentTask.second
+        )
+    }
+
     private fun parseVisitedBuildIds(raw: String?): List<String> {
         if (raw.isNullOrBlank()) return emptyList()
         return runCatching {
             JsonUtil.to(raw, object : TypeReference<List<String>>() {})
         }.getOrDefault(emptyList())
     }
+
+    private data class ParentRetryAnchor(
+        val parentProjectId: String,
+        val parentPipelineId: String,
+        val parentBuildId: String,
+        val parentTaskId: String
+    )
 }

@@ -457,8 +457,11 @@ class SubPipelineStartUpService @Autowired constructor(
                 parentTaskId = parentTaskId,
                 runMode = runMode
             )
-            params[PIPELINE_START_SUB_RETRY_SYNC] =
-                BuildParameters(key = PIPELINE_START_SUB_RETRY_SYNC, value = retrySyncEnabled.toString(), readOnly = true)
+            params[PIPELINE_START_SUB_RETRY_SYNC] = BuildParameters(
+                key = PIPELINE_START_SUB_RETRY_SYNC,
+                value = retrySyncEnabled.toString(),
+                readOnly = true
+            )
             // 父流水线执行次数
             parentExecuteCount?.let {
                 params[PIPELINE_START_PARENT_EXECUTE_COUNT] =

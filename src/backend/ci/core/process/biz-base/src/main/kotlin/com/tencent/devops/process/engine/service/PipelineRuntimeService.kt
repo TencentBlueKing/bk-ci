@@ -1399,11 +1399,9 @@ class PipelineRuntimeService @Autowired constructor(
         // #8609 子流水线触发的构建在重试重新入队时，需在发出 BuildStartEvent 前将状态缓存置为 RUNNING：
         // 此时仍在子构建 BuildIdLock 保护下且尚未开始执行，严格保证 RUNNING 写入早于后续 BuildEndControl -> onFinish 终态写入，
         // 防止子构建秒级跑完后父步骤复用轮询时读到过期终态或被晚到的 RUNNING 覆盖导致死等。
-        if (context.actionType == ActionType.RETRY &&
-            context.startType == StartType.PIPELINE &&
-            !context.retryOnRunningBuild &&
-            context.startBuildStatus.isReadyToRun()
-        ) {
+        val isSubPipelineRetry =
+            context.actionType == ActionType.RETRY && context.startType == StartType.PIPELINE
+        if (isSubPipelineRetry && !context.retryOnRunningBuild && context.startBuildStatus.isReadyToRun()) {
             SubPipelineStatusService.markSubPipelineRunning(redisOperation, context.buildId)
         }
 
