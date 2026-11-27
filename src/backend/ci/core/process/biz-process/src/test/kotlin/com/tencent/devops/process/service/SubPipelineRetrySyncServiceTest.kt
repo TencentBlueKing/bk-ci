@@ -68,6 +68,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.springframework.data.redis.core.script.RedisScript
 
 @DisplayName("#8609 子流水线同步模式重试联动父流水线单步重试服务单测")
 class SubPipelineRetrySyncServiceTest {
@@ -394,8 +395,22 @@ class SubPipelineRetrySyncServiceTest {
     }
 
     private fun mockAcquireAllLocks() {
-        every { redisOperation.setNxEx(any(), any(), any(), any()) } returns true
-        every { redisOperation.execute<Long>(any(), any(), any(), any()) } returns 1L
+        every {
+            redisOperation.setNxEx(
+                key = any(),
+                value = any(),
+                expiredInSecond = any(),
+                isRedisLock = any()
+            )
+        } returns true
+        every {
+            redisOperation.execute(
+                script = any<RedisScript<Long>>(),
+                keys = any(),
+                args = anyVararg(),
+                isRedisLock = any()
+            )
+        } returns 1L
     }
 
     private fun mockParentPipelineAndAuth(projectId: String, pipelineId: String, oauthUser: String) {
