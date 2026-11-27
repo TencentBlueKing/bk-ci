@@ -86,6 +86,50 @@ class MarketAtomVersionLogDao {
         }
     }
 
+    /**
+     * 查询版本日志，记录不存在时返回 null。
+     */
+    fun getAtomVersionOrNull(dslContext: DSLContext, atomId: String): TAtomVersionLogRecord? {
+        with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
+            return dslContext.selectFrom(this)
+                .where(ATOM_ID.eq(atomId))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 仅在版本日志不存在时插入，已存在记录的所有字段保持不变。
+     */
+    fun addMarketAtomVersionIfAbsent(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        releaseType: Byte,
+        versionContent: String
+    ) {
+        with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                ATOM_ID,
+                RELEASE_TYPE,
+                CONTENT,
+                CREATOR,
+                MODIFIER
+            )
+                .values(
+                    UUIDUtil.generate(),
+                    atomId,
+                    releaseType,
+                    versionContent,
+                    userId,
+                    userId
+                )
+                .onDuplicateKeyIgnore()
+                .execute()
+        }
+    }
+
     fun getAtomVersions(
         dslContext: DSLContext,
         atomIds: List<String>,

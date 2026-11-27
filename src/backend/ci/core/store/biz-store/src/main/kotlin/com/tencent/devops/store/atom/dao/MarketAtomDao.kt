@@ -759,19 +759,29 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     /**
-     * 设置原子状态（单个版本）
+     * 设置原子状态（单个版本）。
+     * @param expectedAtomStatus 非空时仅更新处于该状态的记录
+     * @return 实际更新行数
      */
-    fun setAtomStatusById(dslContext: DSLContext, atomId: String, atomStatus: Byte, userId: String, msg: String?) {
+    fun setAtomStatusById(
+        dslContext: DSLContext,
+        atomId: String,
+        atomStatus: Byte,
+        userId: String,
+        msg: String?,
+        expectedAtomStatus: Byte? = null
+    ): Int {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomStatus)
             if (!msg.isNullOrEmpty()) {
                 baseStep.set(ATOM_STATUS_MSG, msg)
             }
-            baseStep.set(MODIFIER, userId)
+            val conditionStep = baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
-                .execute()
+            expectedAtomStatus?.let { conditionStep.and(ATOM_STATUS.eq(it)) }
+            return conditionStep.execute()
         }
     }
 
