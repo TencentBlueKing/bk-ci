@@ -326,11 +326,12 @@ class TaskBuildRecordService(
      * 取 [query] 指定范围内、某一次执行的大变量引用串。
      *
      * 先按组件查：插件写的大变量落在自己那一行 `TASK_VAR` 上，同名变量各留各的。
-     * 组件记录里没有，再查流水线级快照——Stage 审核入参、Job 级互斥信息这类不经插件产生的大变量
+     * Job、Stage 记录里没有，再查流水线级快照——Stage 审核入参、Job 级互斥信息这类不经插件产生的大变量
      * 只在构建结束时统一快照进 `MODEL_VAR`，不落到 Job、Stage 的记录行上。
      *
-     * 两处都没有时返回 null，这不是「变量不存在」：调用方会退回变量表里的当前值
-     * （最后一次写入，不区分执行次数）。构建还在跑、快照还没写时就是这种情况。
+     * 插件级只认自己那一行：没有就返回 null，不回退到快照，否则会拿到别的插件写入的同名变量。
+     * Job、Stage、流水线级两处都没有时返回 null，调用方退回变量表里的当前值（最后一次写入，
+     * 不区分执行次数）；构建还在跑、快照还没写时就是这种情况。
      */
     fun getLargeVariableReference(
         query: LargeVariableRecordQuery,
@@ -338,7 +339,7 @@ class TaskBuildRecordService(
     ): String? {
         val context = queryDslContext ?: dslContext
         val componentReference = when (query.scope) {
-            is LargeVariableScope.Task -> recordTaskDao.getLargeVariableReference(context, query)
+            is LargeVariableScope.Task -> return recordTaskDao.getLargeVariableReference(context, query)
             is LargeVariableScope.Job -> recordContainerDao.getLargeVariableReference(context, query)
             is LargeVariableScope.Stage -> recordStageDao.getLargeVariableReference(context, query)
             LargeVariableScope.Pipeline -> null
@@ -427,7 +428,15 @@ class TaskBuildRecordService(
                     taskVar[Element::timeCost.name] = it
                 }
                 // 只写本插件这一次执行的引用串。别的插件、Job、Stage 上的同名变量留在它们自己的记录行里
-                taskBuildEndParam.largeVariables?.let { taskVar[BK_LARGE_VARIABLES_TASK_VAR] = it }
+                // 同一执行次数内自动重试会多次上报，合并保留前几次的引用串，同名以最后一次为准
+                taskBuildEndParam.largeVariables?.let { refs ->
+                    val merged = mutableMapOf<String, String>()
+                    (recordTask.taskVar[BK_LARGE_VARIABLES_TASK_VAR] as? Map<*, *>)?.forEach { (k, v) ->
+                        if (k is String && v is String) merged[k] = v
+                    }
+                    merged.putAll(refs)
+                    taskVar[BK_LARGE_VARIABLES_TASK_VAR] = merged
+                }
                 // 自动重试时，retryCountAuto + 1
                 if (taskBuildEndParam.buildStatus == BuildStatus.RETRY) {
                     taskVar[Element::retryCountAuto.name] =

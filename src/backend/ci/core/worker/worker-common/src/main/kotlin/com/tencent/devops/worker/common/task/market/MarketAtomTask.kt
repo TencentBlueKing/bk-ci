@@ -724,22 +724,12 @@ open class MarketAtomTask : ITask() {
                     }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
-                    // 大变量入参只在日志里展示引用串，避免把 256KB 级真实值刷进构建日志；
-                    // 插件通过 input.json 拿到的仍是真实值，不受此展示截断影响。
-                    val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
-                        "__BK_OVF__:${value.length}"
-                    } else {
-                        value
-                    }
-                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$display")
+                    // 超长入参不刷进构建日志，插件通过 input.json 拿到的仍是真实值。
+                    // 入参名不是变量名，点查取不到它，所以不打 __BK_OVF__ 引用格式、不给「查看」入口。
+                    LoggerService.addNormalLine("input(normal): (${def["label"]})$key=${inputDisplay(value)}")
                 }
             } else {
-                val display = if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
-                    "__BK_OVF__:${value.length}"
-                } else {
-                    value
-                }
-                LoggerService.addWarnLine("input(except): $key=$display")
+                LoggerService.addWarnLine("input(except): $key=${inputDisplay(value)}")
             }
         }
         LoggerService.addFoldEndLine("-----")
@@ -1009,16 +999,14 @@ open class MarketAtomTask : ITask() {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else if (value.length > TaskDaemon.PARAM_MAX_LENGTH) {
                         // 超长输出不打印真实值：约定 output(overflow) 前缀，前端可渲染「查看」按钮并调 variables/value
-                        LoggerService.addNormalLine(
-                            "output(overflow): $key=__BK_OVF__:${value.length}"
-                        )
+                        LoggerService.addNormalLine("output(overflow): $key=${overflowOutputDisplay(value)}")
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
                     val display = when {
                         isSensitive -> "******"
-                        value.length > TaskDaemon.PARAM_MAX_LENGTH -> "__BK_OVF__:${value.length}"
+                        value.length > TaskDaemon.PARAM_MAX_LENGTH -> overflowOutputDisplay(value)
                         else -> value
                     }
                     LoggerService.addWarnLine("output(except): $key=$display")
@@ -1084,6 +1072,22 @@ open class MarketAtomTask : ITask() {
                 )
             }
             checkOversizeOutputs(oversizeOutputs)
+        }
+    }
+
+    private fun inputDisplay(value: String): String =
+        if (value.length > TaskDaemon.PARAM_MAX_LENGTH) "(omitted, len=${value.length})" else value
+
+    /**
+     * 超长输出在日志里的展示。只有能存入制品库的值才打 `__BK_OVF__:<长度>`（前端据此渲染「查看」）；
+     * 超过单值上限或制品库不可用的值会被丢弃，点查只会退回到别处写入的同名变量，不能给出入口。
+     */
+    private fun overflowOutputDisplay(value: String): String {
+        LargeVariableStore.ensureLargeValueLimit()
+        return if (LargeVariableStore.isSupported() && !BuildVarOverflowUtils.exceedsLargeValueLimit(value)) {
+            "${BuildVarOverflowUtils.OVERFLOW_PREFIX}${value.length}"
+        } else {
+            "(discarded, len=${value.length})"
         }
     }
 

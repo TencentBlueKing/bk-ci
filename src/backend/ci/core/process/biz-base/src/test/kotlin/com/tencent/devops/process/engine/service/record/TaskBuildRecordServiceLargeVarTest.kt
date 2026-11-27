@@ -110,11 +110,13 @@ class TaskBuildRecordServiceLargeVarTest {
     }
 
     @Test
-    fun `missing reference stays null`() {
+    fun `task miss does not fall back to the pipeline snapshot`() {
+        // 快照里的同名变量可能是别的插件写的，插件级查不到只能返回 null
         val query = query(LargeVariableScope.Task(TASK_ID))
         every { recordTaskDao.getLargeVariableReference(any(), any()) } returns null
-        every { recordModelDao.getLargeVariableReference(any(), any()) } returns null
+        every { recordModelDao.getLargeVariableReference(any(), any()) } returns "pipe-ref"
         assertNull(service.getLargeVariableReference(query))
+        verify(exactly = 0) { recordModelDao.getLargeVariableReference(any(), any()) }
     }
 
     @Test
