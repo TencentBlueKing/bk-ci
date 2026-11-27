@@ -34,7 +34,7 @@
                 :external-link="false"
                 :language="mavenLang"
                 preview-background="#fff"
-                v-model="desc.description"
+                v-model="renderedDescription"
             />
         </template>
         <p
@@ -78,6 +78,24 @@
                     AUTO_EXTRACTED: this.$t('store.由AI生成')
                 }
                 return map[coverage] || this.$t('store.由AI生成')
+            },
+
+            // mavon-editor 不渲染原始 HTML，把 <details><summary> 折叠块降级成普通小标题，
+            // 否则页面上会原样显示 "<summary>附录：其他配置</summary>"
+            renderedDescription () {
+                const raw = (this.desc && this.desc.description) || ''
+                return raw
+                    // <details><summary>标题</summary> → #### 标题（前后补空行，避免和正文粘连）
+                    .replace(
+                        /<details[^>]*>\s*<summary>([\s\S]*?)<\/summary>/gi,
+                        (match, title) => `\n\n#### ${String(title).trim()}\n\n`
+                    )
+                    // 其余残留的 details/summary 标签直接去掉
+                    .replace(/<\/?details[^>]*>/gi, '')
+                    .replace(/<\/?summary[^>]*>/gi, '')
+                    // 清掉降级后可能出现的连续空行
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim()
             }
         },
 
