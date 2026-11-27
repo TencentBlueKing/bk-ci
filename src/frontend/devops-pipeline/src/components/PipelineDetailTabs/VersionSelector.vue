@@ -267,8 +267,13 @@
         watch: {
             value (val) {
                 const activeVersion = this.versionList.find(item => item.version === val)
-                if (activeVersion && this.activeVersion?.version !== activeVersion.version) {
-                    this.activeVersion = activeVersion
+                if (activeVersion) {
+                    if (this.activeVersion?.version !== activeVersion.version) {
+                        this.activeVersion = activeVersion
+                    }
+                } else if (val !== '' && val !== null && val !== undefined && !String(val).startsWith('draft-')) {
+                    // 新值不在已加载列表（如点击"切换至最新版本"后发布版本在未加载的分页），搜索补入以保证回显
+                    this.fetchAndAppendVersion(val)
                 }
             },
             uniqueId: {
@@ -438,7 +443,16 @@
                             }
                         }
                     } else {
-                        this.versionList.push(...versions)
+                        // 后续分页追加，分页数据优先：补入的版本在分页中再次出现时移除补入条目，保留分页数据归位
+                        const incomingVersions = new Map(versions.map(item => [item.version, item]))
+                        if (incomingVersions.size > 0) {
+                            this.versionList = this.versionList.filter(item => !incomingVersions.has(item.version))
+                            if (this.activeVersion && incomingVersions.has(this.activeVersion.version)) {
+                                this.activeVersion = incomingVersions.get(this.activeVersion.version)
+                            }
+                        }
+                        const existVersions = new Set(this.versionList.map(item => item.version))
+                        this.versionList.push(...versions.filter(item => !existVersions.has(item.version)))
                     }
                     
                     // 设置初始选中版本
@@ -453,16 +467,38 @@
                         }
                     }
 
-                    // 默认选中项不在已加载的分页中时，通过 version 精确搜索补入列表
+                    // 草稿对比场景：正式版本可能不在第一页，精确搜索后置顶补入（须先于下方选中项补入，否则会被 push 到末尾）
+                    if (this.shouldLoadDraftList
+                        && !this.searchKeyword
+                        && this.pipelineInfo?.releaseVersion
+                        && !this.versionList.some(item =>
+                            item.version === this.pipelineInfo.releaseVersion
+                            && item.status === VERSION_STATUS_ENUM.RELEASED)
+                    ) {
+                        const releaseTarget = await this.fetchVersion(this.pipelineInfo.releaseVersion)
+                        if (releaseTarget && !this.versionList.some(item => item.version === releaseTarget.version)) {
+                            this.versionList.unshift(releaseTarget)
+                            if (!this.activeVersion && this.value === releaseTarget.version) {
+                                this.switchVersion(this.value)
+                            }
+                        }
+                    }
+
+                    // 选中版本不在已加载分页时，精确搜索一次请求补入代替逐页递归（草稿值与搜索态跳过）
                     if (this.value
-                        && !this.activeVersion
-                        && this.hasNext
+                        && !this.searchKeyword
+                        && !String(this.value).startsWith('draft-')
                         && !this.versionList.some(item => item.version === this.value)
                     ) {
                         const target = await this.fetchVersion(this.value)
-                        if (target) {
+                        if (target && !this.versionList.some(item => item.version === target.version)) {
                             this.versionList.push(target)
-                            this.switchVersion(this.value)
+                            if (!this.activeVersion) {
+                                this.switchVersion(this.value)
+                            } else if (this.activeVersion.version === target.version) {
+                                // 替换为列表内对象，保证下拉高亮与触发器一致
+                                this.activeVersion = target
+                            }
                         }
                     }
                 } catch (error) {
@@ -470,6 +506,16 @@
                 } finally {
                     this.bottomLoadingOptions.isLoading = false
                     this.isLoading = false
+                }
+            },
+
+            // value 变化但不在列表时搜索补入，仅更新本地回显，不向父组件回发事件
+            async fetchAndAppendVersion (version) {
+                if (this.versionList.some(item => item.version === version)) return
+                const target = await this.fetchVersion(version)
+                if (target && !this.versionList.some(item => item.version === target.version)) {
+                    this.versionList.push(target)
+                    this.activeVersion = target
                 }
             },
             // 通过 version 精确搜索指定版本
