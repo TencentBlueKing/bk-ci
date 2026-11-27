@@ -80,8 +80,9 @@
         data () {
             return {
                 isLoading: true,
-                // 插件有使用说明时默认落在这里，其余类型或没有说明时回退到概述
-                currentTab: 'contract'
+                // 是否有使用说明：没有时不展示该 Tab，直接落在概述
+                hasContract: false,
+                currentTab: 'des'
             }
         },
 
@@ -99,7 +100,7 @@
             tabList () {
                 return {
                     atom: [
-                        { componentName: 'contractDetail', label: this.$t('store.使用说明'), name: 'contract', bindData: { storeType: 'ATOM', code: this.detailCode } },
+                        { componentName: 'contractDetail', label: this.$t('store.使用说明'), name: 'contract', bindData: { storeType: 'ATOM', code: this.detailCode }, hidden: !this.hasContract },
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
                         { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false, name: 'YAMLV2', currentTab: this.currentTab, getDataFunc: this.getAtomYamlV2 }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
                         { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
@@ -195,6 +196,8 @@
                     detail.hotFlag = atomStatic.hotFlag
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.qualityData = quality
+                    this.hasContract = hasDesc
+                    // 有说明才默认落在使用说明，否则停在概述
                     this.currentTab = hasDesc ? 'contract' : 'des'
                     this.setDetail(detail)
                 })
