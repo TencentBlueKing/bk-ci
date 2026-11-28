@@ -244,6 +244,14 @@
                 emit('branch-change', value, branchInfo)
             }
 
+            const switchToReleaseVersion = (version) => {
+                const release = branchList.value.find(branch => branch.versionStatus === 'RELEASED' && branch.version === version)
+                if (!release) return false
+                selectedBranch.value = release.name
+                handleBranchChange(release.name)
+                return true
+            }
+
             // 下拉框展开/收起
             const handleToggle = (isOpen) => {
                 if (isOpen && branchList.value.length === 0) {
@@ -284,6 +292,7 @@
                 pipelineId,
                 isDebug,
                 bottomLoadingOptions,
+                switchToReleaseVersion,
                 handleSearch,
                 handleBranchChange,
                 handleToggle,

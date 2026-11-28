@@ -39,6 +39,15 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
+            <bk-button
+                v-if="versionNotMatch && pipelineInfo?.releaseVersion"
+                :disabled="executeStatus || branchLoading"
+                text
+                theme="primary"
+                @click="switchToReleaseVersion"
+            >
+                {{ $t("switchToReleaseVersion") }}
+            </bk-button>
             <span v-bk-tooltips="execTips">
                 <bk-button
                     theme="primary"
@@ -101,7 +110,8 @@
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 isBranchVersion: 'atom/isBranchVersion',
-                isReleaseVersion: 'atom/isReleaseVersion'
+                isReleaseVersion: 'atom/isReleaseVersion',
+                pacEnabled: 'atom/pacEnabled'
             }),
             ...mapState('atom', [
                 'pipelineInfo'
@@ -221,6 +231,22 @@
             },
             goBack () {
                 this.$router.back()
+            },
+            switchToReleaseVersion () {
+                const version = this.pipelineInfo?.releaseVersion
+                if (!this.versionNotMatch || !version) return
+
+                if (this.pacEnabled && this.$refs.pacBranchSelectorRef?.switchToReleaseVersion(version)) return
+
+                this.$router.replace({
+                    name: this.pacEnabled ? 'pipelinesHistory' : this.$route.name,
+                    params: {
+                        ...this.$route.params,
+                        ...(this.pacEnabled ? { type: 'history' } : {}),
+                        version
+                    },
+                    query: this.$route.query
+                })
             },
             handleBranchChange (branchName, branchInfo) {
                 bus.$emit(PAC_BRANCH_CHANGE, branchName, branchInfo)
